@@ -1,0 +1,55 @@
+{
+    "RCODE"  : ".read",
+    "INEXT"  : ".fq.gz",
+    "SAMPLES": {
+	 "Cond01":{
+         	"name":"Cond1",
+         	"files": ["Cond1.read1", "Cond1.read2"]
+	  }, 
+ 	 "Cond02":{
+         	"name":"Cond2",
+         	"files": ["Cond2.read1", "Cond2.read2"]
+	  }, 
+ 	 "Cond03":{
+         	"name":"Cond3",
+         	"files": ["Cond3.read1", "Cond3.read2"]
+	  }, 
+ 	 "Cond04":{
+        	"name":"Cond4",
+         	"files": ["Cond4.read1", "Cond4.read2"]
+	  }, 
+ 	 "Cond05":{
+         	"name":"Cond5",
+         	"files": ["Cond5.read1", "Cond5.read2"]
+	  }, 
+ 	 "Cond06":{
+         	"name":"Cond6",
+         	"files": ["Cond6.read1", "Cond6.read2"]
+	  } 
+    },
+    "paths": {
+       "GTOOLBOX"   : "~/.guix-profile/bin/",
+       "PATHIN"     : "/data/akalin/bosberg/Sun_PNAS_RAW/Mixture/",
+       "PATHOUT"    : "/data/akalin/bosberg/Sun_PNAS_processed_MIX/",
+       "GENOMEPATH" : "/data/akalin/Base/Genomes/hg19/",
+       "LOGS"       : "Final_report_logs/"
+             },
+    "files":  {
+       "CHROM_INFO" : "/home/bosberg/Bisulfide/ref/hg19.chrom.sizes.ucsc_hapdel.txt",
+       "VERSION"    : "hg19"
+             },
+    "progs": {
+        "FASTQC"          : "fastqc",
+        "TRIMGALORE"      : "trim_galore",
+        "CUTADAPT"        : "cutadapt",
+        "BOWTIE2"         : "bowtie2" ,
+        "BISMARK"         : "bismark",
+        "DEDUPLICATE"         : "deduplicate_bismark",
+        "BOWTIE2"             : "bowtie2" ,
+        "DEDUPLICATE_BISMARK" : "deduplicate_bismark",
+        "BISMARK_GENOME_PREPARATION"     : "bismark_genome_preparation",
+        "BISMARK_METHYLATION_EXTRACTOR"  : "bismark_methylation_extractor",
+        "BISMARK2REPORT"                 : "bismark2report",
+        "SAMTOOLS"                       : "samtools"
+    }
+}
