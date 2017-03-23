@@ -37,7 +37,7 @@ def list_files_bismark(PATH, files):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_Dedupe(PATH, files):
+def list_files_dedupe(PATH, files):
     if len(files) == 1:
         return [PATH+files[0]+"_trimmed_bismark_bt2.deduplicated.bam",
                 PATH+files[0]+"_trimmed_bismark_bt2.deduplication_report.txt"] #---- single end

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3.5
-# ---last updated on  Wed Mar 15 14:35:28 CET 2017  by  bosberg  at location  , sl-bimsb-p-ap1
+# ---last updated on  Thu Mar 23 15:44:48 CET 2017  by  blosberg  at location  , Bren-Osbergs-MacBook.local
+
+#  changes from  Thu Mar 23 15:44:48 CET 2017 : Eliminated race condition (from file latency) in dedupe rule by no-longer moving output to separate subfolder. decremented folder names accordingly.
 
 #  changes from  Mon Mar 13 12:25:28 CET 2017 : manually set the bismark_se_ output to .bam with the "--bam" option and removed commented-out sections of the total [OUTPUT_FILE] list to make it cleaner
 
@@ -74,11 +76,11 @@ OUTPUT_FILES = [
                 #               [ expand ( list_files_TG( PATHOUT+"02_trimmed/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
                 #               [ expand ( list_files_TG( PATHOUT+"02_trimmed/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                
                 #               ====rule 04 Mapping ======
-                #               [ expand ( list_files_bismark(PATHOUT+"04_mapped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+                #               [ expand ( list_files_bismark(PATHOUT+"04_mapped_n_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
                 #               ====rule 05 Deduplication ======
-                #               [ expand ( list_files_Dedupe(PATHOUT+"05_Deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                                
+                #               [ expand ( list_files_dedupe(PATHOUT+"04_mapped_n_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                                
                 #               ====rule 06 extract_methylation ======           
-                #               [ expand   ( list_files_xmeth( PATHOUT+"06_xmeth/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ]  
+                #               [ expand   ( list_files_xmeth( PATHOUT+"05_xmeth/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ]  
                                             
                 # ==================  FINAL REPORT =========================
                 [ expand (PATHOUT+config["SAMPLES"][sampleID]["files"][0]+SEPEstr(config["SAMPLES"][sampleID]["files"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
@@ -113,11 +115,11 @@ rule all:
 
 rule bismark_se_report:
     input:
-        aln   = PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2_SE_report.txt",
-        sp    = PATHOUT+"06_xmeth/{sample}_trimmed_bismark_bt2.deduplicated_splitting_report.txt",
-        dd    = PATHOUT+"05_Deduped/{sample}_trimmed_bismark_bt2.deduplication_report.txt",
-        mbias = PATHOUT+"06_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias.txt",
-        nuc   = PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt"
+        aln   = PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2_SE_report.txt",
+        sp    = PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated_splitting_report.txt",
+        dd    = PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplication_report.txt",
+        mbias = PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias.txt",
+        nuc   = PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt"
     output:
         PATHOUT+"{sample}_trimmed_bismark_bt2_SE_report.html",
     params:
@@ -136,11 +138,11 @@ rule bismark_se_report:
 #----------
 rule bismark_pe_report:
     input:
-        aln   = PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt",
-        sp    = PATHOUT+"06_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt",
-        dd    = PATHOUT+"05_Deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplication_report.txt",
-        mbias = PATHOUT+"06_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
-        nuc   = PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt"
+        aln   = PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt",
+        sp    = PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt",
+        dd    = PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplication_report.txt",
+        mbias = PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
+        nuc   = PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt"
     output:
         PATHOUT+"{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.html"
     params:
@@ -160,28 +162,28 @@ rule bismark_pe_report:
 # ==========================================================================================
 rule bismark_se_methylation_extractor:
     input:
-        PATHOUT+"05_Deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam"
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam"
     output:
-        expand(PATHOUT+"06_xmeth/{{sample}}_trimmed_bismark_bt2.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
-        PATHOUT+"06_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias.txt",
-        PATHOUT+"06_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias_R1.png",
-        PATHOUT+"06_xmeth/{sample}_trimmed_bismark_bt2.deduplicated_splitting_report.txt"
-	#      	expand(PATHOUT+"06_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB","CTOT","CTOB"]),
-	#      	expand(PATHOUT+"06_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB"]),
+        expand(PATHOUT+"05_xmeth/{{sample}}_trimmed_bismark_bt2.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
+        PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias.txt",
+        PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias_R1.png",
+        PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated_splitting_report.txt"
+	#      	expand(PATHOUT+"05_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB","CTOT","CTOB"]),
+	#      	expand(PATHOUT+"05_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB"]),
 	#----- MANUALLY EXPANDED HERE : -----------
-	# PATHOUT+"06_xmeth/CHG_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	# PATHOUT+"06_xmeth/CHG_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	# PATHOUT+"06_xmeth/CHH_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	# PATHOUT+"06_xmeth/CHH_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	# PATHOUT+"06_xmeth/CpG_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	# PATHOUT+"06_xmeth/CpG_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
+	# PATHOUT+"05_xmeth/CHG_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	# PATHOUT+"05_xmeth/CHG_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	# PATHOUT+"05_xmeth/CHH_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	# PATHOUT+"05_xmeth/CHH_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	# PATHOUT+"05_xmeth/CpG_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	# PATHOUT+"05_xmeth/CpG_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
 	#-----  AND WITH THE CTOT/CTOB FILES: ----
-	#	PATHOUT+"06_xmeth/CpG_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	#	PATHOUT+"06_xmeth/CpG_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	#	PATHOUT+"06_xmeth/CHH_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	#	PATHOUT+"06_xmeth/CHH_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	#	PATHOUT+"06_xmeth/CHG_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
-	#	PATHOUT+"06_xmeth/CHG_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",       
+	#	PATHOUT+"05_xmeth/CpG_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	#	PATHOUT+"05_xmeth/CpG_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	#	PATHOUT+"05_xmeth/CHH_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	#	PATHOUT+"05_xmeth/CHH_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	#	PATHOUT+"05_xmeth/CHG_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
+	#	PATHOUT+"05_xmeth/CHG_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
 	#-----------------------------------------
 
     threads: 4
@@ -192,20 +194,20 @@ rule bismark_se_methylation_extractor:
         bg = "--bedgraph",
 
         genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output "+PATHOUT+"06_xmeth/"
-    log: PATHOUT+"06_xmeth/{sample}_bismark_methylation_extraction.log"
+        outdir = "--output "+PATHOUT+"05_xmeth/"
+    log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
     message: """--------------  Extracting  Methylation Information --------------- \n"""
     shell:
         "{BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
 #-----------------
 rule bismark_pe_methylation_extractor:
     input:
-        PATHOUT+"05_Deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam"
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam"
     output:
-        expand(PATHOUT+"06_xmeth/{{sample}}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
-        PATHOUT+"06_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
-        PATHOUT+"06_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias_R1.png",
-        PATHOUT+"06_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt"    
+        expand(PATHOUT+"05_xmeth/{{sample}}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
+        PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
+        PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias_R1.png",
+        PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt"
     threads: 4
     params:
         pe = "--paired-end",
@@ -214,8 +216,8 @@ rule bismark_pe_methylation_extractor:
         bg = "--bedgraph",
         
         genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output "+PATHOUT+"06_xmeth/"
-    log: PATHOUT+"06_xmeth/{sample}_bismark_methylation_extraction.log"
+        outdir = "--output "+PATHOUT+"05_xmeth/"
+    log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
     message: """--------------  Extracting  Methylation Information --------------- \n"""
     shell:
         "{BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
@@ -224,36 +226,34 @@ rule bismark_pe_methylation_extractor:
 
 rule bismark_se_deduplication:
     input:
-        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2.bam"
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.bam"
     output:
-        PATHOUT+"05_Deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam",
-        PATHOUT+"05_Deduped/{sample}_trimmed_bismark_bt2.deduplication_report.txt"
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam",
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplication_report.txt"
     params:
         bam="--bam ",
         sampath="--samtools_path "+SAMTOOLS
     log:
-        PATHOUT+"04_mapped/{sample}_deduplication.log"
+        PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
     message: """-----------   Deduplicating read alignments ---------------------- """
     shell:
-        """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} ; 
-        mv {PATHOUT}04_mapped/*dedupl* {PATHOUT}05_Deduped/"""
+        """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
 
 rule bismark_pe_deduplication:
     input:
-        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam"
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam"
     output:
-        PATHOUT+"05_Deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam",
-        PATHOUT+"05_Deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplication_report.txt"
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam",
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplication_report.txt"
     params:
         bam="--bam ",
         sampath="--samtools_path "+SAMTOOLS,
         paired="--paired "
     log:
-        PATHOUT+"04_mapped/{sample}_deduplication.log"
+        PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
     message: """-----------   Deduplicating read alignments ---------------------- """
     shell:
-        """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} ; 
-            mv {PATHOUT}04_mapped/*dedupl* {PATHOUT}05_Deduped/"""
+        """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
 
 # ==========================================================================================
 
@@ -261,15 +261,15 @@ rule bismark_se_nondirectional:
     input:
        PATHOUT+"02_trimmed/{sample}_trimmed.fq.gz"
     output:
-        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2.bam",
-        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt",
-        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2_SE_report.txt"
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.bam",
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt",
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2_SE_report.txt"
     threads: 4
     params:
         N = "-N 1",
         L = "-L 20",
         genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output_dir  "+PATHOUT+"04_mapped/",
+        outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
         nucCov = "--nucleotide_coverage",
         nonDir = "--non_directional ",
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
@@ -277,7 +277,7 @@ rule bismark_se_nondirectional:
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
-        PATHOUT+"04_mapped/{sample}_bismark_se_mapping.log"
+        PATHOUT+"04_mapped_n_deduped/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping reads to genome {VERSION}. ------------- """
     shell:
         "{BISMARK} {params} --multicore {threads} {input} 2> {log}"
@@ -289,15 +289,15 @@ rule bismark_pe_nondirectional:
         fin1 = PATHOUT+"02_trimmed/{sample}"+RCODE+"1_val_1.fq.gz",
         fin2 = PATHOUT+"02_trimmed/{sample}"+RCODE+"2_val_2.fq.gz"
     output:
-        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
-        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt",
-        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt",
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
     threads: 4
     params:
         N = "-N 1",
         L = "-L 20",
         genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output_dir  "+PATHOUT+"04_mapped/",
+        outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
         nucCov = "--nucleotide_coverage",
         nonDir = "--non_directional ",
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
@@ -305,7 +305,7 @@ rule bismark_pe_nondirectional:
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
-        PATHOUT+"04_mapped/{sample}_bismark_pe_mapping.log"
+        PATHOUT+"04_mapped_n_deduped/{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping reads to genome {VERSION}. ------------- """
     shell:
         "{BISMARK} {params} --multicore {threads} -1 {input.fin1} -2 {input.fin2} 2> {log}"
