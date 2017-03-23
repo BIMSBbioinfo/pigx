@@ -166,7 +166,6 @@ rule bismark_se_methylation_extractor:
     output:
         expand(PATHOUT+"05_xmeth/{{sample}}_trimmed_bismark_bt2.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
         PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias.txt",
-        PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias_R1.png",
         PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated_splitting_report.txt"
 	#      	expand(PATHOUT+"05_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB","CTOT","CTOB"]),
 	#      	expand(PATHOUT+"05_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB"]),
@@ -206,7 +205,6 @@ rule bismark_pe_methylation_extractor:
     output:
         expand(PATHOUT+"05_xmeth/{{sample}}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
         PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
-        PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias_R1.png",
         PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt"
     threads: 4
     params:
