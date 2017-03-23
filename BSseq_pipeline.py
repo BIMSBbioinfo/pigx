@@ -38,9 +38,9 @@ GENOMEPATH      = config["paths"]["GENOMEPATH"]     #--- where the reference gen
 LOGS            = config["paths"]["LOGS"]           #--- subfolder name for the logs of some programs
 
 INEXT           = config["INEXT"]                   #--- input file extension; usually .fq.gz, but can also be .bz2 among other possibilities.
-VERSION         = config["files"]["VERSION"]        #--- version of the genome being mapped to.
+VERSION         = config["genomedat"]["VERSION"]        #--- version of the genome being mapped to.
 
-CHROM_INFO      = config["files"]["CHROM_INFO"]     #--- details of the reference genome (length, etc.) haploid chroms have been removed.
+CHROM_INFO      = config["genomedat"]["CHROM_INFO"]     #--- details of the reference genome (length, etc.) haploid chroms have been removed.
 
 
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------

@@ -34,7 +34,7 @@
        "GENOMEPATH" : "/data/akalin/Base/Genomes/hg19/",
        "LOGS"       : "Final_report_logs/"
              },
-    "files":  {
+    "genomedat":  {
        "CHROM_INFO" : "/home/bosberg/Bisulfide/ref/hg19.chrom.sizes.ucsc_hapdel.txt",
        "VERSION"    : "hg19"
              },
