@@ -30,5 +30,3 @@ echo "------ Commencing Snakemake : ------"   >>${LOG}
 
 nohup  snakemake -s BSseq_pipeline.py --jobs ${numjobs}        >> ${LOG} &
 
-echo "" >>${LOG}
-echo "concluded bash control of Snakemake session on " $(date) >>  ${LOG}
