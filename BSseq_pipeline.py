@@ -255,7 +255,7 @@ rule bismark_pe_deduplication:
 
 # ==========================================================================================
 
-rule bismark_se_nondirectional:
+rule bismark_se_directional:
     input:
        PATHOUT+"02_trimmed/{sample}_trimmed.fq.gz"
     output:
@@ -269,7 +269,7 @@ rule bismark_se_nondirectional:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
         nucCov = "--nucleotide_coverage",
-        nonDir = "--non_directional ",
+	#---nonDir = "--non_directional ", #--- THE DATA PROBABLY ACTUALLY IS DIRECTIONAL. 
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
@@ -282,7 +282,7 @@ rule bismark_se_nondirectional:
 
 #--------
 
-rule bismark_pe_nondirectional:
+rule bismark_pe_directional:
     input:
         fin1 = PATHOUT+"02_trimmed/{sample}"+RCODE+"1_val_1.fq.gz",
         fin2 = PATHOUT+"02_trimmed/{sample}"+RCODE+"2_val_2.fq.gz"
@@ -297,7 +297,7 @@ rule bismark_pe_nondirectional:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
         nucCov = "--nucleotide_coverage",
-        nonDir = "--non_directional ",
+        #---nonDir = "--non_directional ", #--- THE DATA PROBABLY ACTUALLY IS DIRECTIONAL. 
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
