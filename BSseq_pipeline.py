@@ -1,5 +1,7 @@
 #!/usr/bin/env python3.5
-# ---last updated on  Thu Mar 23 15:44:48 CET 2017  by  blosberg  at location  , Bren-Osbergs-MacBook.local
+# ---last updated on  Wed Mar 29 16:05:58 CEST 2017  by  blosberg  at location  , Bren-Osbergs-MacBook.local
+
+#  changes from  Wed Mar 29 16:05:58 CEST 2017 : mapping alignment rule can now be directional or non-directional
 
 #  changes from  Thu Mar 23 15:44:48 CET 2017 : Eliminated race condition (from file latency) in dedupe rule by no-longer moving output to separate subfolder. decremented folder names accordingly.
 
@@ -41,7 +43,12 @@ INEXT           = config["INEXT"]                   #--- input file extension; u
 VERSION         = config["genomedat"]["VERSION"]        #--- version of the genome being mapped to.
 
 CHROM_INFO      = config["genomedat"]["CHROM_INFO"]     #--- details of the reference genome (length, etc.) haploid chroms have been removed.
+NUMTHREADS      = config["NUMTHREADS"]
 
+if ( config["directional"] ):
+    NON_DIR_FLAG=""
+else:
+    NON_DIR_FLAG=" --non_directional "
 
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
@@ -95,7 +102,6 @@ OUTPUT_FILES = [
 #--- 
 
 
-
 # =======================================================================================================
 #
 #                                         BEGIN RULES    
@@ -126,7 +132,7 @@ rule bismark_se_report:
         dir = "--dir "+PATHOUT
     log: 
         PATHOUT+LOGS+"{sample}_SE_final_report.log"
-    message: """----------- Generating Bismark report ----------- (with the following command:) \n  """
+    message: """----------- Generating single-end Bismark report ----------- (with the following command:) \n  """
     shell:
         " {BISMARK2REPORT} {params} \
             --alignment_report {input.aln} \
@@ -149,7 +155,7 @@ rule bismark_pe_report:
         dir = "--dir "+PATHOUT
     log: 
         PATHOUT+LOGS+"{sample}_PE_final_report.log"
-    message: """----------- Generating Bismark report ----------- \n  """
+    message: """----------- Generating paired-end Bismark report ----------- \n  """
     shell:
         " {BISMARK2REPORT} {params} \
         --alignment_report {input.aln} \
@@ -185,7 +191,7 @@ rule bismark_se_methylation_extractor:
 	#	PATHOUT+"05_xmeth/CHG_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
 	#-----------------------------------------
 
-    threads: 4
+    threads: 2 
     params:
         se = "--single-end",
         gz = "--gzip",
@@ -195,7 +201,7 @@ rule bismark_se_methylation_extractor:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output "+PATHOUT+"05_xmeth/"
     log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
-    message: """--------------  Extracting  Methylation Information --------------- \n"""
+    message: """--------------  Extracting  single-end Methylation Information --------------- \n"""
     shell:
         "{BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
 #-----------------
@@ -206,7 +212,7 @@ rule bismark_pe_methylation_extractor:
         expand(PATHOUT+"05_xmeth/{{sample}}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
         PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
         PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt"
-    threads: 4
+    threads: 2
     params:
         pe = "--paired-end",
         gz = "--gzip",
@@ -216,7 +222,7 @@ rule bismark_pe_methylation_extractor:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output "+PATHOUT+"05_xmeth/"
     log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
-    message: """--------------  Extracting  Methylation Information --------------- \n"""
+    message: """--------------  Extracting  paired-end Methylation Information --------------- \n"""
     shell:
         "{BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
 
@@ -233,7 +239,7 @@ rule bismark_se_deduplication:
         sampath="--samtools_path "+SAMTOOLS
     log:
         PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
-    message: """-----------   Deduplicating read alignments ---------------------- """
+    message: """-----------   Deduplicating single-end read alignments ---------------------- """
     shell:
         """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
 
@@ -249,40 +255,40 @@ rule bismark_pe_deduplication:
         paired="--paired "
     log:
         PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
-    message: """-----------   Deduplicating read alignments ---------------------- """
+    message: """-----------   Deduplicating paired-end read alignments ---------------------- """
     shell:
         """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
 
 # ==========================================================================================
 
-rule bismark_se_directional:
+rule bismark_se:
     input:
        PATHOUT+"02_trimmed/{sample}_trimmed.fq.gz"
     output:
         PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.bam",
         PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt",
         PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2_SE_report.txt"
-    threads: 4
+    threads: 2
     params:
         N = "-N 1",
         L = "-L 20",
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
         nucCov = "--nucleotide_coverage",
-	#---nonDir = "--non_directional ", #--- THE DATA PROBABLY ACTUALLY IS DIRECTIONAL. 
+	    nonDir = NON_DIR_FLAG,             #--- THIS IS EMPTY IF DATA IS DIRECTIONAL (DEFAULT) OTHERWISE "non_directional". 
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
         PATHOUT+"04_mapped_n_deduped/{sample}_bismark_se_mapping.log"
-    message: """-------------   Mapping reads to genome {VERSION}. ------------- """
+    message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
         "{BISMARK} {params} --multicore {threads} {input} 2> {log}"
 
 #--------
 
-rule bismark_pe_directional:
+rule bismark_pe:
     input:
         fin1 = PATHOUT+"02_trimmed/{sample}"+RCODE+"1_val_1.fq.gz",
         fin2 = PATHOUT+"02_trimmed/{sample}"+RCODE+"2_val_2.fq.gz"
@@ -290,21 +296,21 @@ rule bismark_pe_directional:
         PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
         PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt",
         PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
-    threads: 4
+    threads: 2
     params:
         N = "-N 1",
         L = "-L 20",
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
         nucCov = "--nucleotide_coverage",
-        #---nonDir = "--non_directional ", #--- THE DATA PROBABLY ACTUALLY IS DIRECTIONAL. 
+        nonDir = NON_DIR_FLAG,             #--- THIS IS EMPTY IF DATA IS DIRECTIONAL (DEFAULT) OTHERWISE "non_directional".
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
         PATHOUT+"04_mapped_n_deduped/{sample}_bismark_pe_mapping.log"
-    message: """-------------   Mapping reads to genome {VERSION}. ------------- """
+    message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
         "{BISMARK} {params} --multicore {threads} -1 {input.fin1} -2 {input.fin2} 2> {log}"
 
@@ -339,7 +345,7 @@ rule fastqc_after_trimming_se:
         outdir = "--outdir "+PATHOUT+"03_posttrim_QC/"
     log:
    	    PATHOUT+"03_posttrim_QC/{sample}_trimmed_fastqc.log"
-    message: """ ------------  Quality checkin trimmmed data with Fastqc ------------- """
+    message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
     shell:
       	"{FASTQC} {params.outdir} {input} 2> {log}"
 
@@ -356,7 +362,7 @@ rule fastqc_after_trimming_pe:
         outdir = "--outdir "+PATHOUT+"03_posttrim_QC/"
     log:
    	    PATHOUT+"03_posttrim_QC/{sample}_trimmed_fastqc.log"
-    message: """ ------------  Quality checkin trimmmed data with Fastqc ------------- """
+    message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
     shell:
       	"{FASTQC} {params.outdir} {input} 2> {log}"
 #
@@ -404,7 +410,7 @@ rule trimgalore_pe:
     log:
         PATHOUT+"02_trimmed/{sample}.trimgalore.log"
     message:
-        " ---------  Trimming raw paired read data using {TRIMGALORE} -------  "
+        " ---------  Trimming raw paired-end read data using {TRIMGALORE} -------  "
     shell:
         "{TRIMGALORE} {params} {input} 2> {log}"
 

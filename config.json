@@ -1,5 +1,7 @@
 {
-    "RCODE"  : ".read",
+    "RCODE"        : ".read",
+    "directional"  : true,
+    "NUMTHREADS"   : "2"
     "INEXT"  : ".fq.gz",
     "SAMPLES": {
 	 "Cond01":{
