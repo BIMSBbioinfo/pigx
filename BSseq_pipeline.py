@@ -24,10 +24,15 @@
 #
 #============================================================================================================
 
+#------ set config file, include function definitions, and set os:
 import os
-#------ set config file and include function definitions:
 configfile: "./config.json"
 include   : "./func_defs.py"
+
+NICE=config["NICE"]
+#--- NICE is an option to gauge the burden on computational resources, ranges from -19 to +19. 
+#--- The more "nice" you are, the more you allow other processes to jump ahead of you 
+#--- (like in traffic). Generally set to maximally nice=19 to avoid interference with system processes.
 
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
@@ -70,11 +75,11 @@ SAMTOOLS                       =  GTOOLBOX+config["progs"]["SAMTOOLS"]
 OUTPUT_FILES = [
 
                 #               ======  rule 01 raw QC    =========
-                [ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.html")  ) for sampleID in config["SAMPLES"]  ],
-                [ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.zip" )  ) for sampleID in config["SAMPLES"]  ],
+                #3[ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.html")  ) for sampleID in config["SAMPLES"]  ],
+                # [ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.zip" )  ) for sampleID in config["SAMPLES"]  ],
                 #               ======  rule 03 posttrim_QC_ ======
-                [ expand ( list_files_posttrim_QC(PATHOUT+"03_posttrim_QC/", config["SAMPLES"][sampleID]["files"],".html")  ) for sampleID in config["SAMPLES"]  ],
-                [ expand ( list_files_posttrim_QC(PATHOUT+"03_posttrim_QC/", config["SAMPLES"][sampleID]["files"],".html")  ) for sampleID in config["SAMPLES"]  ],
+                # [ expand ( list_files_posttrim_QC(PATHOUT+"03_posttrim_QC/", config["SAMPLES"][sampleID]["files"],".html")  ) for sampleID in config["SAMPLES"]  ],
+                # [ expand ( list_files_posttrim_QC(PATHOUT+"03_posttrim_QC/", config["SAMPLES"][sampleID]["files"],".html")  ) for sampleID in config["SAMPLES"]  ],
                 #--- fastQC output files are not needed downstream and need to be called explicitly.
 
                 
@@ -84,20 +89,24 @@ OUTPUT_FILES = [
                 #               [ expand ( list_files_TG( PATHOUT+"02_trimmed/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                
                 #               ====rule 04 Mapping ======
                 #               [ expand ( list_files_bismark(PATHOUT+"04_mapped_n_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+
+                #               ====rule 04a sorting ======
+                [ expand ( list_files_sortbam(PATHOUT+"04a_sorted/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+
                 #               ====rule 05 Deduplication ======
                 #               [ expand ( list_files_dedupe(PATHOUT+"04_mapped_n_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                                
                 #               ====rule 06 extract_methylation ======           
                 #               [ expand   ( list_files_xmeth( PATHOUT+"05_xmeth/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ]  
                                             
                 # ==================  FINAL REPORT =========================
-                [ expand (PATHOUT+config["SAMPLES"][sampleID]["files"][0]+SEPEstr(config["SAMPLES"][sampleID]["files"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
+                # [ expand (PATHOUT+config["SAMPLES"][sampleID]["files"][0]+SEPEstr(config["SAMPLES"][sampleID]["files"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
                 
 ]
 
 #--- In case you want to debug the code with interactive commands:
 # import IPython;
 # IPython.embed()
-# print(" \n output files = \n")
+# print(" \n debugging strings here \n")
 # for x in OUTPUT_FILES: print( x)
 #--- 
 
@@ -134,7 +143,7 @@ rule bismark_se_report:
         PATHOUT+LOGS+"{sample}_SE_final_report.log"
     message: """----------- Generating single-end Bismark report ----------- (with the following command:) \n  """
     shell:
-        " {BISMARK2REPORT} {params} \
+        "nice -"+str(NICE)+" {BISMARK2REPORT} {params} \
             --alignment_report {input.aln} \
             --splitting_report {input.sp} \
             --dedup_report {input.dd} \
@@ -157,7 +166,7 @@ rule bismark_pe_report:
         PATHOUT+LOGS+"{sample}_PE_final_report.log"
     message: """----------- Generating paired-end Bismark report ----------- \n  """
     shell:
-        " {BISMARK2REPORT} {params} \
+        "nice -"+str(NICE)+" {BISMARK2REPORT} {params} \
         --alignment_report {input.aln} \
         --splitting_report {input.sp} \
         --dedup_report {input.dd} \
@@ -193,17 +202,16 @@ rule bismark_se_methylation_extractor:
 
     threads: 2 
     params:
-        se = "--single-end",
-        gz = "--gzip",
-        cReport = "--cytosine_report",
-        bg = "--bedgraph",
-
+        se = "--single-end ",
+        gz = "--gzip ",
+        cReport = "--cytosine_report ",
+        bg = "--bedgraph ",
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output "+PATHOUT+"05_xmeth/"
     log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
     message: """--------------  Extracting  single-end Methylation Information --------------- \n"""
     shell:
-        "{BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
 #-----------------
 rule bismark_pe_methylation_extractor:
     input:
@@ -224,8 +232,23 @@ rule bismark_pe_methylation_extractor:
     log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
     message: """--------------  Extracting  paired-end Methylation Information --------------- \n"""
     shell:
-        "{BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
+# ==========================================================================================
+rule sortbam_se:
+    input:
+        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam"
+    output:
+        PATHOUT+"04a_sorted/{sample}_trimmed_bismark_bt2.deduplicated.sorted.bam"
+    shell:
+        "nice -"+str(NICE)+" samtools sort {input} -o {output}"
 
+rule sortbam_pe:
+    input:
+        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam"
+    output:
+        PATHOUT+"04a_sorted/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.sorted.bam",
+    shell:
+        "nice -"+str(NICE)+" samtools sort {input} -o {output}"
 # ==========================================================================================
 
 rule bismark_se_deduplication:
@@ -241,7 +264,7 @@ rule bismark_se_deduplication:
         PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
     message: """-----------   Deduplicating single-end read alignments ---------------------- """
     shell:
-        """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
+        """nice -"+str(NICE)+" {DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
 
 rule bismark_pe_deduplication:
     input:
@@ -257,7 +280,7 @@ rule bismark_pe_deduplication:
         PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
     message: """-----------   Deduplicating paired-end read alignments ---------------------- """
     shell:
-        """{DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
+        """nice -"+str(NICE)+" {DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
 
 # ==========================================================================================
 
@@ -284,7 +307,7 @@ rule bismark_se:
         PATHOUT+"04_mapped_n_deduped/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
-        "{BISMARK} {params} --multicore {threads} {input} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK} {params} --multicore {threads} {input} 2> {log}"
 
 #--------
 
@@ -312,7 +335,7 @@ rule bismark_pe:
         PATHOUT+"04_mapped_n_deduped/{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
-        "{BISMARK} {params} --multicore {threads} -1 {input.fin1} -2 {input.fin2} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK} {params} --multicore {threads} -1 {input.fin1} -2 {input.fin2} 2> {log}"
 
 # ==========================================================================================
 #### ----  THIS ONLY GETS INVOKED WHEN MANUALLY CALLED SPECIFICIALLY ------
@@ -331,7 +354,7 @@ rule bismark_genome_preparation:
         PATHOUT+'bismark_genome_preparation_'+VERSION+'.log'
     message: """ --------  converting {VERSION} Genome into Bisulfite analogue ------- """
     shell:
-        "{BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}"
 
 # ==========================================================================================
 
@@ -347,7 +370,7 @@ rule fastqc_after_trimming_se:
    	    PATHOUT+"03_posttrim_QC/{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
     shell:
-      	"{FASTQC} {params.outdir} {input} 2> {log}"
+        "nice -"+str(NICE)+" {FASTQC} {params.outdir} {input} 2> {log}"
 
 rule fastqc_after_trimming_pe:
     input:
@@ -364,7 +387,7 @@ rule fastqc_after_trimming_pe:
    	    PATHOUT+"03_posttrim_QC/{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
     shell:
-      	"{FASTQC} {params.outdir} {input} 2> {log}"
+        "nice -"+str(NICE)+" {FASTQC} {params.outdir} {input} 2> {log}"
 #
 # ==========================================================================================
 
@@ -386,7 +409,7 @@ rule trimgalore_se:
    message:
        " ---------  Trimming raw single-end read data using {TRIMGALORE} -------  "
    shell:
-       "{TRIMGALORE} {params} {input} 2> {log}"
+       "nice -"+str(NICE)+" {TRIMGALORE} {params} {input} 2> {log}"
 
 #-----------------------
 
@@ -412,7 +435,7 @@ rule trimgalore_pe:
     message:
         " ---------  Trimming raw paired-end read data using {TRIMGALORE} -------  "
     shell:
-        "{TRIMGALORE} {params} {input} 2> {log}"
+        "nice -"+str(NICE)+" {TRIMGALORE} {params} {input} 2> {log}"
 
 # ==========================================================================================
 
@@ -429,4 +452,4 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
         PATHOUT+"01_rawqc/{sample}_fastqc.log"
     message: """ ----------  Quality checking raw read data with {FASTQC}.  --------------   """
     shell:
-        "{FASTQC} {params.outdir}  {input} 2> {log}"
+        "nice -"+str(NICE)+" {FASTQC} {params.outdir}  {input} 2> {log}"

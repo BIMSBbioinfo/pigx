@@ -1,7 +1,8 @@
 {
+    "NICE"         : "19",
     "RCODE"        : ".read",
     "directional"  : true,
-    "NUMTHREADS"   : "2"
+    "NUMTHREADS"   : "2",
     "INEXT"  : ".fq.gz",
     "SAMPLES": {
 	 "Cond01":{

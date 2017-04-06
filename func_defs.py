@@ -48,6 +48,14 @@ def list_files_dedupe(PATH, files):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
+def list_files_sortbam(PATH, files):
+    if len(files) == 1:
+        return [PATH+files[0]+"_trimmed_bismark_bt2.deduplicated.sorted.bam"] #---- single end
+    elif len(files) == 2:
+        return [PATH+files[0]+"_val_1_bismark_bt2_pe.deduplicated.sorted.bam"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 
 def list_files_xmeth(PATH, files):
     if len(files) == 1:
