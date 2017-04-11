@@ -1,4 +1,4 @@
-#== BSseq_deconv_funcs.R -deconvolves BSseq pipeline output  (.cov file) into cell fractions ======
+#== BSseq_deconv.R -deconvolves BSseq pipeline output  (.cov file) into cell fractions ======
 # ---last updated on  Sat Apr 8 23:11:46 CEST 2017  by  blosberg  at location  , brenosbsmacbook.fritz.box
 #
 #  changes from  Sat Apr 8 23:11:46 CEST 2017 : Made first draft template: script executes bug free but output inconsistent with expectations. Further testing needed
@@ -21,13 +21,50 @@ rm(list=ls()) # CLEAN UP EVERYTHING
 library(GenomicRanges)
 library("stringr")
 library(methylKit)
-source('~/postdoc_work/bs/pigx_bsseq/BSseq_deconv_funcs.R');
+library(rtracklayer)
 
+whereami="MDC_server"
+# whereami="laptop"
+
+if(whereami=="MDC_server")
+  {  
+  WORKDIR          ="/home/bosberg/bs/pigx_bsseq"
+  SIGMAT_PATH      ="/home/bosberg/bs/pigx_out/HK_Sun_data"
+  ATLAS_WIG_FOLDER ="/data/akalin/bosberg/genome_atlas"
+  }
+elseif(whereami=="laptop")
+  {
+  ATLAS_WIG_FOLDER   ="/Users/blosberg/postdoc_work/Lit/Sun_data/genome_atlas_dat"
+  WORKDIR="/Users/blosberg/postdoc_work/bs/pigx_bsseq/"
+  SIGMAT_PATH="/Users/blosberg/postdoc_work/bs/pigx_out/HK_Sun_data/"
+  PATH_DATA  = "/Users/blosberg/postdoc_work/bs/pigx_out/HK_Sun_data/Cond_read_data/"; #--- laptop:
+  }
+elseif(whereami=="home_linuxbox")
+  {
+  PATH_DATA  ="/home/bren/Desktop/Science/postdoc_MDC/bs/pigx_out/HK_Sun_data/Cond_read_data/"; #--- home machine:
+  }
+
+
+setwd(WORKDIR)
+source('./BSseq_deconv_funcs.R');
 #================================================================================
 #---------- IMPORT SIGNATURE MATRIX AND LIST OF BIOMARKER LOCATIONS -------------
 
-SIGMAT_PATH="/Users/blosberg/postdoc_work/bs/pigx_out/HK_Sun_data/"
 Sundat = get_refdat(SIGMAT_PATH)
+
+#================================================================================
+#----------- READ IN YOUR TEST SAMPLE (WIGFILE IN THIS CASE):
+# readcov_file       = "UCSD.Adipose_Tissue.Bisulfite-Seq.STL003.readcoverage.wig" --> already converted to bigwig (binary)
+bw_rc_dat_file = "UCSD.Adipose_Tissue.Bisulfite-Seq.STL003.readcoverage.bw"
+# wig_file           = "UCSD.Adipose_Tissue.Bisulfite-Seq.STL003.wig" --> already converted to bigwig (binary)
+bw_dat_file    = "UCSD.Adipose_Tissue.Bisulfite-Seq.STL003.bw"
+
+# first you need to convert your wig file to bigwig using: wigToBigWig()
+# it should be included in one of the above packages
+# to do this, you'll need to generate a Seq object, using the length and chromosome names provided in 
+# hg19_std_chrom_sizes_ucsc_sorted.csv in the home folder on beast.
+Atlas_dat = get_Atlas_dat(ATLAS_WIG_FOLDER, bw_dat_file, bw_rc_dat_file , Sundat$Biomarks_gr)
+
 
 #================================================================================
 #----------- READ IN YOUR SAMPLE DATA:
@@ -37,19 +74,23 @@ deconv_subset_out = list()
 
 mincounts  = 10;  
 
-#PATH_DATA  ="/home/bren/Desktop/Science/postdoc_MDC/bs/pigx_out/HK_Sun_data/Cond_read_data/"; #--- home machine:
-PATH_DATA  = "/Users/blosberg/postdoc_work/bs/pigx_out/HK_Sun_data/Cond_read_data/"; #--- laptop:
 prefix     = "Cond"
 suffix     = ".read1_val_1_bismark_bt2_pe.deduplicated.bismark.cov"
 
 NCT=14;
 epsilon=0.01
-conditions <- get_conditions(NCT, 1, 0, epsilon ) # DEFINITION: return ui_COND, ci_COND, w, s.t. ui_COND * w >= ci_COND
+conditions <- get_conditions(NCT, 1, 1, epsilon ) # DEFINITION: return ui_COND, ci_COND, w, s.t. ui_COND * w >= ci_COND
 ui_COND = conditions$ui_COND; 
 ci_COND = conditions$ci_COND; 
-w       = conditions$w
 
-i=1
+CTsubset=c(1, 11, 12, 13, 14)
+NCT_subset =length(CTsubset)
+conditions_subset <- get_conditions(NCT_subset, 1, 1, epsilon ) # DEFINITION: return ui_COND, ci_COND, w, s.t. ui_COND * w >= ci_COND
+ui_COND_subset = conditions_subset$ui_COND; 
+ci_COND_subset = conditions_subset$ci_COND; 
+
+
+i=4
 # for (i in c(1:18))
 # {
 #  print(paste(" ---------- Working on dataset i = ",as.character(i), " ----------------" ) )
@@ -57,29 +98,31 @@ i=1
 
    Cond_dat[[i]] = get_Cond_dat(fin, refdat=Sundat , mincounts=1 )
 
-   temp=dim(Cond_dat[[i]]$Sigmat_red);
+   temp=dim(Cond_dat[[i]]$Sigmat_whits);
    L=temp[1]
 
    #============     Start deconvolving:  ==================
    
-   CTsubset=c(1,13,14)
-   Sigmat_red_CTsubset = Cond_dat[[i]]$Sigmat_red[,CTsubset]
-   
-   NCT_subset =length(CTsubset)
-   conditions_subset <- get_conditions(NCT_subset, 1, 0, epsilon ) # DEFINITION: return ui_COND, ci_COND, w, s.t. ui_COND * w >= ci_COND
-   ui_COND_subset = conditions_subset$ui_COND; 
-   ci_COND_subset = conditions_subset$ci_COND; 
+   Sigmat_whits_CTsubset = Cond_dat[[i]]$Sigmat_whits[,CTsubset]
+   w              = conditions$w
    w_subset       = conditions_subset$w
-   
-   deconv_out[[i]]        = constrOptim(w, function(w){func_SQ(w, y_target = Cond_dat[[i]]$ROI_meth_profile,  SigMat_in= Cond_dat[[i]]$Sigmat_red)}, ui=ui_COND, ci=ci_COND, mu = 1e-04, control = list(), method = "Nelder-Mead") 
-   deconv_subset_out[[i]] = constrOptim(w_subset , function(w_subset){func_SQ(w_subset, y_target = Cond_dat[[i]]$ROI_meth_profile,  SigMat_in = Sigmat_red_CTsubset)},     ui=ui_COND_subset, ci=ci_COND_subset, mu = 1e-04, control = list(), method = "Nelder-Mead") 
+ 
+deconv_out        = constrOptim(w, function(w){func_SQ(w, y_target = Atlas_dat$ROI_meth_profile, SigMat_in= as.matrix(Sundat$Sigmat))  },
+                                     ui=ui_COND, ci=ci_COND, mu = 1e-04, control = list(), method = "Nelder-Mead") 
+
+#   deconv_out[[i]]        = constrOptim(w, function(w){func_SQ(w, y_target = Cond_dat[[i]]$ROI_meth_profile,  SigMat_in= Cond_dat[[i]]$Sigmat_whits)}, ui=ui_COND, ci=ci_COND, mu = 1e-04, control = list(), method = "Nelder-Mead") 
+   deconv_subset_out[[i]] = constrOptim(w_subset , function(w_subset){func_SQ(w_subset, y_target = Cond_dat[[i]]$ROI_meth_profile,  SigMat_in = Sigmat_whits_CTsubset)},     ui=ui_COND_subset, ci=ci_COND_subset, mu = 1e-04, control = list(), method = "Nelder-Mead") 
+
+   plot(c(1:NCT),deconv_out[[1]]$par, c(1:NCT),deconv_out[[2]]$par, c(1:NCT), deconv_out[[3]]$par, color=c("black","red","blue") )
+
+   plot(deconv_subset_out[[1]]$par)
 
    methods=c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B",   "SANN", "Brent")
    #--- for other methods you have to supply the gradient.
      for( j in c(1:length(methods)) ) 
      {
      m=methods[j]
-     deconv_subset_out[[j]] = constrOptim(w_subset , function(w_subset){func_SQ(w_subset, y_target = Cond_dat[[i]]$ROI_meth_profile,  SigMat_in = Sigmat_red_CTsubset)},     ui=ui_COND_subset, ci=ci_COND_subset, mu = 1e-04, control = list(), method = m) 
+     deconv_subset_out[[j]] = constrOptim(w_subset , function(w_subset){func_SQ(w_subset, y_target = Cond_dat[[i]]$ROI_meth_profile,  SigMat_in = Sigmat_whits_CTsubset)},     ui=ui_COND_subset, ci=ci_COND_subset, mu = 1e-04, control = list(), method = m) 
      deconv_subset_out[[j]]$par
      }
 
@@ -89,6 +132,6 @@ i=1
 N=matrix(0,NCT,1)
 for( k in c(1:NCT))
 {
-  N[k,1] =  norm(as.matrix(Cond_dat[[i]]$ROI_meth_profile -  Cond_dat[[i]]$Sigmat_red[,k] ) ,"F")
+  N[k,1] =  norm(as.matrix(Cond_dat[[i]]$ROI_meth_profile -  Cond_dat[[i]]$Sigmat_whits[,k] ) ,"F")
 }
 

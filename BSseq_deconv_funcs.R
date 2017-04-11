@@ -2,9 +2,79 @@
 # ---last updated on  Sat Apr 8 23:11:46 CEST 2017  by  blosberg  at location  , brenosbsmacbook.fritz.box
 
 #  changes from  Sat Apr 8 23:11:46 CEST 2017 : Made first draft template: script executes bug free but output inconsistent with expectations. Further testing needed
+
+
+
 #==================================================================
 #--- get experimental data ranges: ----
 
+get_Atlas_dat  <- function( ATLAS_WIG_FOLDER, bw_dat_file, bw_rc_dat_file, Biomarks_gr)
+{ 
+  #----- imports bigwig files:
+bw_rc_gr    =   sort( sortSeqlevels( import(file.path(ATLAS_WIG_FOLDER, bw_rc_dat_file) ) ) )
+bw_gr       =   sort( sortSeqlevels( import(file.path(ATLAS_WIG_FOLDER, bw_dat_file) ) ) )
+
+Atlas_dat_gr = subsetByOverlaps(bw_gr, bw_rc_gr) 
+names(mcols(Atlas_dat_gr))<-"meth_pc"
+
+temp             = subsetByOverlaps(bw_rc_gr, bw_gr) 
+Atlas_dat_gr$cov = temp$score  #----these are now all of the reads with >3 coverage. not necessarily found on a ROI
+
+biomarkers_with_hits_gr = subsetByOverlaps(Biomarks_gr, Atlas_dat_gr) 
+L                       = length(biomarkers_with_hits_gr)
+if(L!=5820)
+  {
+  stop("not all the biomarkers in matrix are accounted for")
+  }
+ROI_meth_profile=matrix(0,L,1)
+
+ranges_hits = findOverlaps(Atlas_dat_gr, Sundat$Biomarks_gr)
+ranges_mat  = as.matrix(ranges_hits)
+
+
+# in this loop:  ranges_mat[,2]==j is true for the block of reads corresponding to the j-th ROI 
+# the left column then tells you the corresponding read indexes for that ROI -it should be ordered but NOT comprehensive. Thus: 
+# ranges_mat[ ranges_mat[,2]==j ,1] then tells us the list of reads to grab from the total atlas data for this ROI 
+# Atlas_dat_gr[ranges_mat[ ranges_mat[,2]==j ,1] ]  <== this is then the GRanges object of reads for the j-th ROI
+# "used" just keeps track of which entries were used 
+
+used=matrix(0, length(ranges_hits), 1)
+
+window_min=1
+for (j in c(1:L)) #---- now loop through each j biomarker being considered and grab the avg. meth.
+  {
+  # ROI_meth_profile[j,1] = sum( (Atlas_dat_gr[ranges_mat[ ranges_mat[,2]==j ,1] ]$meth_pc)*(Atlas_dat_gr[ranges_mat[ ranges_mat[,2]==j ,1] ]$cov) ) /sum(Atlas_dat_gr[ranges_mat[ ranges_mat[,2]==j ,1] ]$cov)
+
+  #---- trying to find a faster method:
+  temp=which(ranges_mat[,2]==j)  
+  window_min=temp[1]
+  window_max=tail(temp, n=1)
+
+  ROI_meth_profile[j,1] = sum( (Atlas_dat_gr[ranges_mat[ window_min:window_max ,1] ]$meth_pc)*(Atlas_dat_gr[ranges_mat[ window_min:window_max ,1] ]$cov) ) /sum(Atlas_dat_gr[ranges_mat[ window_min:window_max ,1] ]$cov)
+
+  if(j %%10 ==0)
+    {  print(paste("--working on ROI ",as.character(j), " out of", as.character(L) ))  }
+
+  used[ window_min:window_max ] =  used[ window_min:window_max ] +1
+
+  #  window_min=window_max+1
+  }
+
+if(min(used)!=1 || max(used)!=1)
+  {
+  stop("at least one entry used a number of times different from 1")
+  }
+  
+# ---the above is equivalent to this:
+# range                 = Atlas_dat_gr[ranges_mat[ ranges_mat[,2]==j ,1] ]
+# avg_meth_range[j]        = sum( (range$meth_pc)*(range$cov) ) / ( sum(  range$cov) ) 
+
+
+return( list( "GR" = Atlas_dat_gr, "ROI_meth_profile"=ROI_meth_profile) )
+}
+
+#==================================================================
+#--- get experimental data ranges: ----
 get_Cond_dat <- function(fin, refdat, mincounts ) 
 {    
   genome="hg19"
@@ -28,7 +98,7 @@ get_Cond_dat <- function(fin, refdat, mincounts )
   biomark_hits  = which(countLnodeHits(ovlps)>0)
   #--- list of RsOI that were hit upon
   
-  Sigmat_red      = as.matrix( refdat$Sigmat[biomark_hits,] )                #---- Matrix using just the biomarkers hit on in the experiment, 
+  Sigmat_whits      = as.matrix( refdat$Sigmat[biomark_hits,] )                #---- Matrix using just the biomarkers hit on in the experiment, 
   #--- target values for each tissue type are listed by col.
   
 
@@ -44,8 +114,35 @@ get_Cond_dat <- function(fin, refdat, mincounts )
   
 
   #----------------------------------
-  result <- list("EXP_gr" = EXP_gr, "ROI_meth_profile" = ROI_meth_profile, "biomark_hits"= biomark_hits, "biomarkers_with_hits_gr" = biomarkers_with_hits_gr, "Sigmat_red" = Sigmat_red )
+  result <- list("EXP_gr" = EXP_gr, "ROI_meth_profile" = ROI_meth_profile, "biomark_hits"= biomark_hits, "biomarkers_with_hits_gr" = biomarkers_with_hits_gr, "Sigmat_whits" = Sigmat_whits )
   return(result)
+}
+
+#==================================================================
+#--- get experimental data ranges: ----
+
+get_grange_from_wig <- function( WIG_PATH, wig_file, readcov_file)
+{    
+  wig    = import.wig(file.path(WIG_PATH, wig_file))
+  wigcov = import.wig(file.path(WIG_PATH, readcov_file))
+  
+#  ?readWig
+  
+  w2g_out         = c(wig, wigcov)
+  w2g_out$score = NULL
+  w2g_out = unique(w2g_out)
+  
+  w2g_out$percmet = 0
+  w2g_out$cov     = 0
+  
+  fow = findOverlaps(w2g_out, wig)
+  w2g_out$percmet[queryHits(fow)] = wig$score[subjectHits(fow)]
+  
+  
+  foc = findOverlaps(w2g_out, wigcov)
+  w2g_out$cov[queryHits(foc)] = wigcov$score[subjectHits(foc)]
+  
+  return(w2g_out)
 }
 
 #==================================================================
@@ -54,14 +151,14 @@ get_Cond_dat <- function(fin, refdat, mincounts )
 get_refdat <- function(SIGMAT_PATH) 
   {   
 
-  Sun_biomark_file = paste(SIGMAT_PATH,"Sun_biomarkers_locs_sorted.csv", sep="");
+  Sun_biomark_file = file.path(SIGMAT_PATH,"Sun_biomarkers_locs_sorted.csv");
   
   Sun_biomark_locs = read.csv(Sun_biomark_file, sep="\t", header=FALSE, stringsAsFactors=TRUE, col.names=c("chrom","start","end"))
   
   Biomarks_gr      = GRanges(seqnames=stringr::str_replace(as.character(Sun_biomark_locs[,1]),' ',''),
                              ranges=IRanges(start=Sun_biomark_locs[,2],end=Sun_biomark_locs[,3]))
   
-  Sun_sigmat_file  = paste(SIGMAT_PATH,"Sun_sigmat_sorted.csv", sep="");
+  Sun_sigmat_file  = file.path(SIGMAT_PATH,"Sun_sigmat_sorted.csv");
   Sigmat       = read.csv(Sun_sigmat_file, sep=" ", header=TRUE, stringsAsFactors=TRUE)
   
   result <- list("Sigmat" = Sigmat, "Biomarks_gr" = Biomarks_gr)
