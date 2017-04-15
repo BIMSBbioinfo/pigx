@@ -159,7 +159,7 @@ get_refdat <- function(SIGMAT_PATH)
                              ranges=IRanges(start=Sun_biomark_locs[,2],end=Sun_biomark_locs[,3]))
   
   Sun_sigmat_file  = file.path(SIGMAT_PATH,"Sun_sigmat_sorted.csv");
-  Sigmat       = read.csv(Sun_sigmat_file, sep=" ", header=TRUE, stringsAsFactors=TRUE)
+  Sigmat           = (1.0/100.0)*read.csv(Sun_sigmat_file, sep=" ", header=TRUE, stringsAsFactors=TRUE)
   
   result <- list("Sigmat" = Sigmat, "Biomarks_gr" = Biomarks_gr)
   return(result)
