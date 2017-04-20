@@ -4,11 +4,23 @@
 #  changes from  Sat Apr 8 23:11:46 CEST 2017 : Made first draft template: script executes bug free but output inconsistent with expectations. Further testing needed
 
 
+#==================================================================
+#--- plot deconvolution output: ----
+
+plot_deconv <- function( yvals, name_list, Title)
+  {
+  L=length(yvals)
+  
+  plot(yvals, xaxt = "n", xlab='cell type', ylab = "cell fraction", main=Title)
+  axis(side=1, at=seq(1,L,2), labels=name_list[seq(1,L,2)], cex.axis=0.85)
+  axis(side=1, at=seq(2,L,2), labels=name_list[seq(2,L,2)], cex.axis=0.85)
+  
+  }
 
 #==================================================================
 #--- get experimental data ranges: ----
 
-get_Atlas_dat  <- function( ATLAS_WIG_FOLDER, bw_dat_file, bw_rc_dat_file, Biomarks_gr)
+get_Atlas_dat  <- function( ATLAS_WIG_FOLDER, bw_dat_file, bw_rc_dat_file, Biomarks_gr, name="unnamed")
 { 
   #----- imports bigwig files:
 bw_rc_gr    =   sort( sortSeqlevels( import(file.path(ATLAS_WIG_FOLDER, bw_rc_dat_file) ) ) )
@@ -52,8 +64,8 @@ for (j in c(1:L)) #---- now loop through each j biomarker being considered and g
 
   ROI_meth_profile[j,1] = sum( (Atlas_dat_gr[ranges_mat[ window_min:window_max ,1] ]$meth_pc)*(Atlas_dat_gr[ranges_mat[ window_min:window_max ,1] ]$cov) ) /sum(Atlas_dat_gr[ranges_mat[ window_min:window_max ,1] ]$cov)
 
-  if(j %%10 ==0)
-    {  print(paste("--working on ROI ",as.character(j), " out of", as.character(L) ))  }
+#  if(j %%100 ==0)
+#    {  print(paste("--working on ROI ",as.character(j), " out of", as.character(L) ))  }
 
   used[ window_min:window_max ] =  used[ window_min:window_max ] +1
 
@@ -70,7 +82,7 @@ if(min(used)!=1 || max(used)!=1)
 # avg_meth_range[j]        = sum( (range$meth_pc)*(range$cov) ) / ( sum(  range$cov) ) 
 
 
-return( list( "GR" = Atlas_dat_gr, "ROI_meth_profile"=ROI_meth_profile) )
+return( list( "GR" = Atlas_dat_gr, "ROI_meth_profile"=ROI_meth_profile, "name"= name) )
 }
 
 #==================================================================
@@ -167,12 +179,14 @@ get_refdat <- function(SIGMAT_PATH)
 
 #==================================================================
 #--- DEFINE RESIDUAL FUNCTION TO SEEK A MINIMUM IN ----
-func_SQ <- function(w, y_target, SigMat_in) 
+func_SQ <- function(w, yEXP_target, SigMat_in) 
 {   
   y_calc   = SigMat_in %*% w   
-  Res      = (y_calc - y_target)
+  Res      = (y_calc - yEXP_target)
   
-  result = sqrt( sum( Res*Res ) )
+   result = sqrt( sum( Res*Res ) )
+  # result = sum(abs( Res ))
+  
   return(result)
   
 }
