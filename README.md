@@ -23,6 +23,7 @@ Various scripts are used in this package as listed in the table below:
 The config file must specify the following features of the input data:
 
 | Variable name | default value | description |
+| ------------- |:-------------:|:-----------:|
 | NICE          |    19         | integer: from -20 to 19; higher values make the program execution less demanding on computational resources |
 | RCODE         |  ".read"      | string: describing the naming convention of files within the full data set  |
 | directional   |    TRUE       | boolean: : is the sequencing experiment directional |
