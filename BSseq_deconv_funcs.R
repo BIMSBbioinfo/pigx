@@ -3,6 +3,73 @@
 
 #  changes from  Sat Apr 8 23:11:46 CEST 2017 : Made first draft template: script executes bug free but output inconsistent with expectations. Further testing needed
 
+#==================================================================
+#--- plot deconvolution output: ----
+get_cell_fracs <- function(initial_profile, target_profile,  Sigmat , epsilon, mu_in, maxbound=TRUE, minbound=FALSE)
+{
+  PARTOL = 0.0001; #==== tolerance on the change in parameter elements
+  VALTOL = 0.0001; #==== tolerance on the change in value of the function
+  
+  temp=dim(Sigmat)
+  if(is.null(temp))
+  {stop("Invalid signature matrix fed to get_cell_fracs")}
+
+  NCT= temp[2]
+  
+
+  conditions <- get_conditions(NCT, maxbound, minbound, epsilon ) # DEFINITION: return ui_COND, ci_COND, w, s.t. ui_COND * w >= ci_COND
+  ui_COND = conditions$ui_COND; 
+  ci_COND = conditions$ci_COND; 
+
+  
+  w       = initial_profile 
+  temp_old = constrOptim(w, function(w){func_SQ(w, yEXP_target = target_profile, SigMat_in= Sigmat) },
+              ui=ui_COND, ci=ci_COND, mu = mu_in, control = list(), method = "Nelder-Mead") 
+
+  w        = temp_old$par 
+  temp_new = constrOptim(w, function(w){func_SQ(w, yEXP_target = target_profile, SigMat_in= Sigmat) },
+                         ui=ui_COND, ci=ci_COND, mu = mu_in, control = list(), method = "Nelder-Mead") 
+  temp_new$value = rbind(temp_new$value, temp_old$value)
+  
+  if(temp_new$value[1] > temp_old$value)
+  {stop("Function value increasing on first iteration. Something's gone wrong.")}
+  
+  num_iter=1
+  
+  while( max( abs( temp_new$par -temp_old$par) ) > PARTOL ||  ( (temp_new$value[2] - temp_new$value[1])/temp_new$value[1] ) > VALTOL )
+    {
+    temp_old       = temp_new
+
+    temp_new       = constrOptim(w, function(w){func_SQ(w, yEXP_target = target_profile, SigMat_in= Sigmat) },
+                           ui=ui_COND, ci=ci_COND, mu = mu_in, control = list(), method = "Nelder-Mead") 
+    
+    temp_new$value = rbind(temp_new$value, temp_old$value)
+    
+    if(temp_new$value[1,1] > temp_new$value[2,1] )
+      {stop("Function value increasing between iterations. Something's gone wrong.")}
+  
+    num_iter = num_iter+1
+    }
+  
+  temp_new$num_iter = num_iter
+
+  return(temp_new)
+}
+
+
+#=============================================================================
+#--- randomize an initial array of cell fracs (and normalize s.t. sum=1): ----
+randomize_fracs <- function( v_in)
+{
+  L=dim(v_in)[1]
+  if(is.null(L) || dim(v_in)[2]!=1 )
+    stop("in randomize_fracs, v_in must be an Lx1 matrix")
+  r1=runif(matrix(1,L,1))
+  N=sum(r1)
+  
+  r2=as.matrix((1./N)*r1 )
+  return(r2)
+}
 
 #==================================================================
 #--- plot deconvolution output: ----

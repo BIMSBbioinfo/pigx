@@ -124,16 +124,10 @@ for (i in c(1:Num_atlas_files))
 NCT=14;
  
 epsilon=0.01
-conditions <- get_conditions(NCT, 1, 1, epsilon ) # DEFINITION: return ui_COND, ci_COND, w, s.t. ui_COND * w >= ci_COND
-ui_COND = conditions$ui_COND; 
-ci_COND = conditions$ci_COND; 
+
 
 CT_subset=c(1, 11, 12, 13, 14)
 NCT_subset =length(CTsubset)
-conditions_subset <- get_conditions(NCT_subset, 1, 1, epsilon ) # DEFINITION: return ui_COND, ci_COND, w, s.t. ui_COND * w >= ci_COND
-ui_COND_subset = conditions_subset$ui_COND; 
-ci_COND_subset = conditions_subset$ci_COND; 
-
 
 residue=matrix(0,14,1)
 unit_CT_meth_profiles = as.matrix(Sundat$Sigmat) %*% diag(14) 
@@ -151,8 +145,11 @@ for (i in c(1:Num_atlas_files))
 #=========================================================================================
 
 
-deconv_out        = list()
-deconv_subset_out = list()
+deconv_out          = list()
+deconv_subset_out   = list()
+
+p_init        =   matrix(1/NCT-(0.1*epsilon/NCT),NCT,1) #--- INITIAL CONDITION OF CELL TYPE FRACTIONS ------
+p_init_subset =   matrix(1/NCT_subset-(0.1*epsilon/NCT_subset),NCT_subset,1) #--- INITIAL CONDITION OF CELL TYPE FRACTIONS ------
 
 #============     Start deconvolving:  ==================
 
@@ -160,19 +157,15 @@ deconv_subset_out = list()
   for ( i in c(1: Num_samples))
   {
   print(paste(" ---------- Now deconvolving dataset i = ",as.character(i), " of ", as.character(Num_samples), " ----------------" ) )
-  w              = conditions$w
-  w_subset       = conditions_subset$w
-  # #--- Atlas data sets 
-  # deconv_out[[i]]        = constrOptim(w, function(w){func_SQ(w, yEXP_target = Atlas[[i]]$ROI_meth_profile, SigMat_in= as.matrix(Sundat$Sigmat))  },
-  #                                     ui=ui_COND, ci=ci_COND, mu = 1e-04, control = list(), method = "Nelder-Mead") 
-  # # mixture data sets 
-    deconv_out[[i]]        = constrOptim(w, function(w){func_SQ(w, yEXP_target = Cond_dat[[i]]$ROI_meth_profile, SigMat_in= Cond_dat[[i]]$Sigmat_whits) },
-                                       ui=ui_COND, ci=ci_COND, mu = 1e-04, control = list(), method = "Nelder-Mead") 
-    deconv_subset_out[[i]] = constrOptim(w_subset, function(w_subset){func_SQ(w_subset, yEXP_target = Cond_dat[[i]]$ROI_meth_profile, 
-                                         SigMat_in= Cond_dat[[i]]$Sigmat_whits[,CTsubset] ) }, ui=ui_COND_subset, 
-                                         ci=ci_COND_subset, mu = 1e-04, control = list(), method = "Nelder-Mead") 
+
+  deconv_out_minbound[[i]]        = get_cell_fracs(initial_profile=p_init,        target_profile= Cond_dat[[i]]$ROI_meth_profile,   
+                                            Sigmat=Cond_dat[[i]]$Sigmat_whits, epsilon=0.01, mu_in=1e-5, minbound=TRUE, maxbound=TRUE) 
+  deconv_subset_out_minbound[[i]] = get_cell_fracs(initial_profile=p_init_subset, target_profile= Cond_dat[[i]]$ROI_meth_profile,   
+                                            Sigmat=Cond_dat[[i]]$Sigmat_whits[,CT_subset], epsilon=0.01, mu_in=1e-5, minbound=TRUE, maxbound=TRUE) 
   } ## --- end of for loop running deconvolution on data sets.
 
+par(mfrow=c(1,1))
+plot(deconv_out[[i]]$par,deconv_out_2[[i]]$par)
 
 
 #=========================================================================================
@@ -189,6 +182,54 @@ labels_subset = labels[CT_subset]
 plot_deconv( deconv_out[[i]]$par, labels, paste("Condition : ", as.character(i)) ) 
 plot_deconv( deconv_subset_out[[i]]$par, labels_subset, paste("Condition : ", as.character(i)) ) 
 
+#=========================================================================================
+#==============----  TRY TO MAKE SOME PIE CHARTS   ---====================================
+
+Exp_ref=read.table(file.path(PATH_DATA,"info.mix.table"), stringsAsFactors = FALSE, header=TRUE)[,2:4]
+
+  Liver_index=1
+  Placenta_index=14
+  Placenta_index_subset=5
+  
+  blood_indices=c(11:13)
+  blood_indices_subset=c(2:4)
+  
+  Liver_index=1
+  Placenta_index=14
+  blood_indices=c(11:13)
+
+  other_indices = setdiff(1:NCT,c(Liver_index, Placenta_index, blood_indices) )
+  lbls <- c("blood cells (B-cell+T-cell+Neutrophils)", "Placenta", "Liver", "Other")
+  
+  # Simple Pie Chart
+  par(mfrow=c(1,2))
+  i=3
+  cell_frac_calcd         <- c(sum(deconv_out[[i]]$par[blood_indices]), deconv_out[[i]]$par[Placenta_index], deconv_out[[i]]$par[Liver_index] , sum(deconv_out[[i]]$par[other_indices]) ) 
+  cell_frac_expected <- cbind(Exp_ref[i,], 0)
+  pie(labels=NA,  col=c("Green","red","blue","black"), border="black", cell_frac_calcd,     main="calculated")
+
+  i=9
+  cell_frac_calcd_subset  <- c(sum(deconv_subset_out[[i]]$par[blood_indices_subset]), deconv_subset_out[[i]]$par[Placenta_index_subset], deconv_subset_out[[i]]$par[Liver_index] ) 
+  cell_frac_expected <- cbind(Exp_ref[i,], 0)
+  pie(labels=NA,  col=c("Green","red","blue","black"), border="black", cell_frac_calcd_subset ,     main="calculated")
+  pie(labels=NA,  col=c("Green","red","blue","black"), border="black", as.numeric(cell_frac_expected),  main="claimed")
+
+
+  pie(cell_frac_calcd,
+      labels=NA,
+      clockwise=TRUE,
+      col=c("Green","red","blue","black"),
+      border="black",
+      radius=0.7,
+      cex=0.8,
+      main="calculated")
+
+#  legend("bottom", legend=lbls,
+#       fill=c("Green","red","blue","brown"), 
+#       ncol=1)
+  
+  
+  
    # methods=c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B",   "SANN", "Brent")
    # #--- for other methods you have to supply the gradient.
    #   for( j in c(1:length(methods)) ) 
