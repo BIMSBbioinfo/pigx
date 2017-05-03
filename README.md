@@ -1,4 +1,10 @@
-![](images/Logo_PIGx.png )
+
+
+<a name="logo"/>
+<div align="center">
+<img src="images/Logo_PIGx.png" alt="PiGx Logo"  width="110%" height="110%" ></img>
+</a>
+</div>
 
 ######  Copyright 2017: Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg.
 ######  This work is distributed under the terms of the GNU General Public License,  and is free to use for academic purposes
