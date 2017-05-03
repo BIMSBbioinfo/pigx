@@ -2,7 +2,7 @@
 
 <a name="logo"/>
 <div align="center">
-<img src="images/Logo_PIGx.png" alt="PiGx Logo"  width="70%" height="70%" ></img>
+<img src="images/Logo_PIGx.png" alt="PiGx Logo"  width="30%" height="30%" ></img>
 </a>
 </div>
 
