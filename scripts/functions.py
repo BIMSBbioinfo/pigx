@@ -36,23 +36,20 @@ def parseConfig(config_args):
 
 def config2JSON(conf):
   import json
-  data = {}
   # filter(None, my_list) removes empty elements from the list my_list
   if conf['SAMPLES'] is None:
      raise Exception( """Config file has to have a key called 'SAMPLES'.""" )
   if conf['TREATMENT'] is None:
      data['TREATMENT']=""
   #  
-  data['SAMPLES'] = conf['SAMPLES']
-  data['UNITS'] = conf['UNITS']
-  data['PATHS'] = {"GTOOLBOX":conf["gtoolbox"],
+  conf['PATHS'] = {"GTOOLBOX":conf["gtoolbox"],
                  "PATHIN":conf["in"],
                  "PATHOUT":conf["out"],
                  "GENOMEPATH":conf["genome_folder"],
                  "LOGS":conf["log"]}
-  data['GENOMEDAT'] = {"CHROM_INFO":conf["chrominfo"],
+  conf['GENOMEDAT'] = {"CHROM_INFO":conf["chrominfo"],
                  "VERSION":conf["version"]}
-  data["PROGS"] = {"FASTQC"          : "fastqc",
+  conf["PROGS"] = {"FASTQC"          : "fastqc",
                  "TRIMGALORE"      : "trim_galore",
                  "CUTADAPT"        : "cutadapt",
                  "BOWTIE2"         : "bowtie2" ,
@@ -62,14 +59,14 @@ def config2JSON(conf):
                  "BISMARK_METHYLATION_EXTRACTOR"  : "bismark_methylation_extractor",
                  "BISMARK2REPORT"                 : "bismark2report",
                  "SAMTOOLS"                       : "samtools"}
-  data["NICE"]="19"
-  data["RCODE"]=".read"
-  data["DIRECTIONAL"]=conf["directional"]
-  data["NUMTHREADS"]=conf['numthreads']
-  data["INEXT"]=".fq.gz"                                                  # TODO
-  data["FTP_SRA"]=conf["FTP_SRA"] if "FTP_SRA" in conf.keys() else None   # TODO
+  conf["NICE"]="19"
+  conf["RCODE"]=".read"
+  conf["DIRECTIONAL"]=conf["directional"]
+  conf["NUMTHREADS"]=conf['numthreads']
+  conf["INEXT"]=".fq.gz"                                                  # TODO
+  conf["FTP_SRA"]=conf["FTP_SRA"] if "FTP_SRA" in conf.keys() else None   # TODO
   #
-  return(data)                 
+  return(conf)                 
                 
 
 def parseTable( path_table ):

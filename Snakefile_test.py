@@ -2,7 +2,7 @@
 
 
 ## Note: I ran it like this:
-# /home/kwreczy/.local/bin/snakemake --snakefile ./Snakefile_test.py --cores 8 --forceall --config tablesheet=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/TableSheet_SRA.csv gtoolbox=./programs/ in=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/ out=/data/akalin/kwreczy/my_output/ genome_folder=/data/akalin/Base/Genomes/ce10/ log=/data/akalin/kwreczy/logs/ chrominfo=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/chromInfo.txt
+#/home/kwreczy/.local/bin/snakemake --snakefile ./Snakefile_test.py --cores 8 --forceall --config tablesheet=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/TableSheet_SRA.csv gtoolbox=./programs/ in=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/ out=/data/akalin/kwreczy/my_output/ genome_folder=/data/akalin/Base/Genomes/ce10/ log=/data/akalin/kwreczy/logs/ chrominfo=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/chromInfo.txt bismark_args=" --non-directional --PBAT"
 ##
 
 
@@ -36,7 +36,6 @@ config["TREATMENT"] = dict(zip(sample_ids, [r[4] for r in rows][1:]))
 config=config2JSON(config)
 with open(config['PATHS']['PATHOUT']+"config.json", 'w') as outfile:
     json.dump(config, outfile)
-
 
 
 
@@ -105,10 +104,8 @@ else:
         "dummy.txt"
     run:
         os.system("touch dummy.txt")
-  
+
 ######### END the SRA part
-
-
 
 
 
@@ -127,11 +124,6 @@ VERSION         = config["GENOMEDAT"]["VERSION"]        #--- version of the geno
 CHROM_INFO      = config["GENOMEDAT"]["CHROM_INFO"]     #--- details of the reference genome (length, etc.) haploid chroms have been removed.
 NUMTHREADS      = config["NUMTHREADS"]
 
-if ( config["DIRECTIONAL"] ):
-    NON_DIR_FLAG=""
-else:
-    NON_DIR_FLAG=" --non_directional "
-
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
 FASTQC                         =  GTOOLBOX+config["PROGS"]["FASTQC"]            #--- self-explanatory program names.
@@ -149,13 +141,29 @@ SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
 
-
-
 rule final: 
   input: 
-    "dummy.txt"      
+    "anotherdummy.txt"
         
-        
-        
-        
+rule stupid_rule:
+    input:
+        "dummy.txt"
+    output:
+        "anotherdummy.txt"
+    params:
+      extra=config["bismark_args"]
+    shell: "echo {params.extra} > anotherdummy.txt "
+
+
+
+
+
+
+
+
+
+
+
+
+
         
