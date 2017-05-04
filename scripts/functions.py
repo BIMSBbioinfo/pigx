@@ -8,10 +8,8 @@ def parseConfig(config_args):
                       snakemake -s Snakemake.py --config tablesheet=./TableSheet.csv gtoolbox=./programs/ in=./my_fastq_files/ out=./my_output/ genome_folder=./Genomes/hg19/ log=./logs/ chrominfo=./hg19.chrom.sizes.ucsc.txt numthreads=2""" )
   #      
   tablesheet = config_args.get("tablesheet")
-  genome_folder = config_args.get("genome_folder")
-  chrominfo = config_args.get("chrominfo")
-  if ((tablesheet is None) or (genome_folder is None) or (chrominfo is None)):
-     raise Exception( """Missing arguments indicating 'tablesheet', 'genome_folder' or 'chrominfo'.
+  if (tablesheet is None):
+     raise Exception( """Missing an argument indicating 'tablesheet'.
                       Use argument --config and then type paths to the arguments, e.g.:
                       snakemake -s Snakemake.py --config tablesheet=./TableSheet.csv gtoolbox=./programs/ in=./my_fastq_files/ out=./my_output/ genome_folder=./Genomes/hg19/ log=./logs/  chrominfo=./hg19.chrom.sizes.ucsc.txt numthreads=2""" )
   #
@@ -45,7 +43,7 @@ def config2JSON(conf):
   conf['PATHS'] = {"GTOOLBOX":conf["gtoolbox"],
                  "PATHIN":conf["in"],
                  "PATHOUT":conf["out"],
-                 "GENOMEPATH":conf["genome_folder"],
+                 #"GENOMEPATH":conf["genome_folder"],
                  "LOGS":conf["log"]}
   conf['GENOMEDAT'] = {"CHROM_INFO":conf["chrominfo"],
                  "VERSION":conf["version"]}

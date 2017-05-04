@@ -2,7 +2,7 @@
 
 
 ## Note: I ran it like this:
-#/home/kwreczy/.local/bin/snakemake --snakefile ./Snakefile_test.py --cores 8 --forceall --config tablesheet=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/TableSheet_SRA.csv gtoolbox=./programs/ in=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/ out=/data/akalin/kwreczy/my_output/ genome_folder=/data/akalin/Base/Genomes/ce10/ log=/data/akalin/kwreczy/logs/ chrominfo=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/chromInfo.txt bismark_args=" --non-directional --PBAT"
+# /home/kwreczy/.local/bin/snakemake --snakefile ./Snakefile_test.py --cores 8 --forceall --config tablesheet=/home/kwreczy/repositories/pigx_bsseq/test_dataset/TableSheet_test.csv gtoolbox=~/.guix-profile/bin/ in=/home/kwreczy/repositories/pigx_bsseq/test_dataset/in/ out=/data/akalin/kwreczy/my_output/ genome_folder=/data/akalin/Base/Genomes/ce10/ log=/data/akalin/kwreczy/logs/ chrominfo=/home/kwreczy/repositories/makeNGSnake/test/test_dataset/chromInfo.txt bismark_args="  --bowtie2 -N 1 -L 2 --genome_folder /data/akalin/kwreczy/ce10/"
 ##
 
 
@@ -97,28 +97,27 @@ if len(SRA2download)!=0:
   # Download fastq files here based on their SRA ids
   include: "rules/SRA2fastq/Snakefile"
   
-else:
-
-  rule create_dummy_log:
-    output:
-        "dummy.txt"
-    run:
-        os.system("touch dummy.txt")
+# else:
+# 
+#   rule create_dummy_log:
+#     output:
+#         "dummy.txt"
+#     run:
+#         os.system("touch dummy.txt")
 
 ######### END the SRA part
 
 
-
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-RCODE           = "TMP"                   #--- the string that denotes which read the file corresponds to (only relevent for paired-end experiments.)
+RCODE           = "TMP"    #TODO               #--- the string that denotes which read the file corresponds to (only relevent for paired-end experiments.)
 PATHIN          = config["PATHS"]["PATHIN"]         #--- location of the data files to be imported
 PATHOUT         = config["PATHS"]["PATHOUT"]        #--- where to send the output
 GTOOLBOX        = config["PATHS"]["GTOOLBOX"]       #--- where the programs are stored to carry out the necessary operations
-GENOMEPATH      = config["PATHS"]["GENOMEPATH"]     #--- where the reference genome being mapped to is stored
+#GENOMEPATH      = config["PATHS"]["GENOMEPATH"]     #--- where the reference genome being mapped to is stored
 LOGS            = config["PATHS"]["LOGS"]           #--- subfolder name for the logs of some programs
 
-INEXT           = "TMP"                   #--- input file extension; usually .fq.gz, but can also be .bz2 among other possibilities.
+INEXT           = "TMP"   #TODO                #--- input file extension; usually .fq.gz, but can also be .bz2 among other possibilities.
 VERSION         = config["GENOMEDAT"]["VERSION"]        #--- version of the genome being mapped to.
 
 CHROM_INFO      = config["GENOMEDAT"]["CHROM_INFO"]     #--- details of the reference genome (length, etc.) haploid chroms have been removed.
@@ -141,29 +140,41 @@ SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
 
+
+def list_files_bismark(PATH, files):
+    if len(files) == 1:
+        return [PATH+files[0]+"_trimmed_bismark_bt2_SE_report.txt",
+                PATH+files[0]+"_trimmed_bismark_bt2.bam" ] #---- single end
+    elif len(files) == 2:
+        return [PATH+files[0]+"_val_1_bismark_bt2_PE_report.txt",
+                PATH+files[0]+"_val_1_bismark_bt2_pe.bam"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+
+o1 = [expand ( list_files_bismark(PATHOUT, config["SAMPLES"][sample])  ) for sample in config["SAMPLES"]]
+o1 = sum(o1, [])
+
+
 rule final: 
   input: 
-    "anotherdummy.txt"
-        
-rule stupid_rule:
+    o1
+
+rule bismark_dummy_rule:
     input:
-        "dummy.txt"
+        PATHIN+"{sample}_trimmed.fq.gz"
     output:
-        "anotherdummy.txt"
+       PATHOUT+"{sample}_trimmed_bismark_bt2.bam",
+       PATHOUT+"{sample}_trimmed_bismark_bt2_SE_report.txt"
+    threads: 20
     params:
-      extra=config["bismark_args"]
-    shell: "echo {params.extra} > anotherdummy.txt "
-
-
-
-
-
-
-
-
-
-
-
+      extra=config["bismark_args"],
+      tempdir = "--temp_dir "+ PATHOUT+"/cos/",
+      outputdir = "--output_dir "+ PATHOUT
+    log:
+        PATHOUT+"{sample}_bismark_se_mapping.log"
+    shell: 
+      "{BISMARK} {params} --multicore {threads} {input} 2> {log}"
 
 
         
