@@ -1,0 +1,3 @@
+Read1,Read2,Sample id,Read type,Treatment,Covariate1
+A_trimmed_first4K,,B,WGBS,A,
+B_trimmed_first4K,,A,WGBS,B,
