@@ -1,0 +1,202 @@
+####################################################################
+#
+# Rules to be applied after mapping reads with Bismark
+# ====================================================
+
+# These rules generate a report, such that the user can 
+# see wich commands generated the output and 
+# can recreate data with modified parameters if not happy with the results.
+# 
+# 
+
+#
+#
+# Dependencies:
+# - python-rp2, pandoc, methylKit(r), DT(r), genomation(r),
+#   annotationhub(r), rtracklayer(r)
+# 
+
+
+    # TODO: 
+    # - we need to define a fixed location of TEMPLATEDIR and 
+    #   SCRIPTDIR in the config file
+####################################################################
+
+
+"""
+This is how the minimal config file should look like, in order to inlcude this snakefile
+
+
+{
+    "reference": {
+        "ce10": ["/home/agosdsc/Base/Genomes/ce10/"]
+    },
+    "samples": {
+        "A":["A"],
+        "B":["B"]
+    },
+    "units": {
+        "A":
+            ["path/to/A_R1.fastq.gz", "path/to/A_R2.fastq.gz"],
+        "B":
+            ["path/to/B.fastq.gz"]
+    },
+    "treatment": {
+        "A": 1,
+        "B": 0
+    },
+    "params_bam_methCall": {
+        "mincov": 10,
+        "minqual": 20
+    }     
+}
+"""
+
+## we have to define default parameters to be included in the config
+
+min_config = { 
+    "params": { 
+        "params_bam_methCall": {
+            "mincov": 10,
+            "minqual": 20
+        }     
+    }
+}
+
+
+
+import json
+from snakemake.utils import update_config
+
+
+if "params" not in config:
+    update_config(config, min_config)
+else:
+    if "params_bam_methCall" not in config.get("params"):
+        update_config(config, min_config) 
+
+with open(config['paths']['PATHOUT']+"config.json", 'w') as outfile:
+    json.dump(config, outfile)
+
+
+
+
+# SCRIPTDIR   = "/Users/agosdsc/Development/Snakemake/pigx_bsseq/scripts/"
+# TEMPLATEDIR = "/Users/agosdsc/Development/Snakemake/pigx_bsseq/report_templates/"
+
+SCRIPTDIR    = config["paths"]["SCRIPTDIR"]
+TEMPLATEDIR  = config["paths"]["TEMPLATEDIR"]
+
+# PATHOUT = "/Users/agosdsc/Development/Snakemake/pigx_bsseq/"
+
+PATHOUT      = config["paths"]["PATHOUT"]
+LOGS         = config["paths"]["LOGS"] 
+
+## the in/output directories can be renamed easily
+
+BAMDIR       = "sample_bam_files/"
+METHCALLDIR  = "methylation_calls/"
+SEGDIR       = "segmentation/"
+ANNODIR      = "annotation/"
+
+
+
+
+
+
+
+## Bam processing
+rule bam_methCall:
+    input:  
+        template    = TEMPLATEDIR + "methCall.report.Rmd",
+        bamfile     = BAMDIR  + "{prefix}.sorted.bam"
+    output: 
+        report      = METHCALLDIR + "{prefix}.sorted_meth_calls.nb.html",
+        rdatafile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
+        callFile    = METHCALLDIR + "{prefix}.sorted_CpG.txt"
+    params:
+        inBam       = PATHOUT + BAMDIR + "{prefix}.sorted.bam",
+        assembly    = config["genomedat"]["VERSION"],
+        mincov      = config["params"]["params_bam_methCall"]["mincov"],
+        minqual     = config["params"]["params_bam_methCall"]["minqual"],
+        rdata       = PATHOUT + METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
+    log:
+        PATHOUT+LOGS+"{prefix}.sorted_meth_calls.log"
+    message:
+        "Processing of bam file:\n" 
+        "   input     : {input.bamfile}" + "\n"
+        "Generating:"+ "\n" 
+        "   report    : {output.report}" + "\n" 
+        "   rdata     : {output.rdatafile}" + "\n" 
+        "   methCalls : {output.callFile}"
+    script:
+        SCRIPTDIR + "report_functions.R"  
+
+
+
+
+## Segmentation
+rule methseg:
+    input:  
+        template    = TEMPLATEDIR + "methseg.report.Rmd",
+        rdatafile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
+    output: 
+        report      = SEGDIR + "{prefix}.sorted_meth_segments.nb.html",
+        grfile      = SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
+        bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed"
+    params:
+        rdata       = PATHOUT + METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
+        grdata      = PATHOUT + SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
+        outBed      = PATHOUT + SEGDIR + "{prefix}.sorted_meth_segments.bed"
+    log:
+        PATHOUT+LOGS+"{prefix}.sorted_meth_segments.log"
+    message:
+        "Segmentation of sample file:\n"
+        "   input     : {input.rdatafile}" + "\n" 
+        "Generating:"+ "\n"
+        "   report    : {output.report}" + "\n"  
+        "   grfile    : {output.grfile} " +"\n" 
+        "   bedfile   : {output.bedfile}" +"\n"
+
+    script:
+        SCRIPTDIR + "report_functions.R" 
+
+
+## Aquisition of gene features
+rule fetch_refGene:
+    output: refgenes = ANNODIR + "refseq.genes.{assembly}.bed"
+    params: 
+        assembly = "{assembly}"
+    log:
+        PATHOUT+LOGS+"fetch_refseq.genes.{assembly}.log"
+    message:
+        "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
+    script:  
+        SCRIPTDIR + "fetch_refGene.R" 
+
+
+
+## Annotation with gene features
+rule annotation:
+    input:  
+        template    = TEMPLATEDIR + "annotation.report.Rmd",
+        bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed",
+        refgenes    = ANNODIR + "refseq.genes.{assembly}.bed"
+    output: 
+        report      = ANNODIR + "{prefix}.sorted_{assembly}_annotation.nb.html"
+    params:
+        inBed       = PATHOUT + SEGDIR + "{prefix}.sorted_meth_segments.bed",
+        assembly    = "{assembly}",# expand(config["reference"]),
+        refseqfile    = PATHOUT + ANNODIR + "refseq.genes.{assembly}.bed"
+    log:
+        PATHOUT+LOGS+"{prefix}.sorted_{assembly}_annotation.log"
+    message:
+        "Annotation of Segments:\n"
+        "   input     : {input.bedfile}" + "\n"
+        "Generating:" + "\n"
+        "   report    : {output.report}"
+    script:
+        SCRIPTDIR + "report_functions.R"   
+
+
+
