@@ -94,7 +94,7 @@ LOGS         = config["paths"]["LOGS"]
 
 ## the in/output directories can be renamed easily
 
-BAMDIR       = "sample_bam_files/"
+BAMDIR       = "test_dataset/sample_bam_files/" 
 METHCALLDIR  = "methylation_calls/"
 SEGDIR       = "segmentation/"
 ANNODIR      = "annotation/"

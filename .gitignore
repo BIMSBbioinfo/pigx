@@ -8,19 +8,20 @@
 snakemakeObj.RData
 
 # ignore all folders, except for:
-*/
+#*/
 !scripts/
 !images/
 !report_templates/
 !rules/
-!test/
-!test_dataset/
+!tests/
+!test_dataset/sample_bam_files/
 
 # ignore on my (alex) machine 
 .snakemake/
 annotation/
 methylation_calls/
 segmentation/
+bam_files/
 new.config.json
 config.json
 *.Rproj
