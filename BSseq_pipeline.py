@@ -75,11 +75,13 @@ SAMTOOLS                       =  GTOOLBOX+config["progs"]["SAMTOOLS"]
 OUTPUT_FILES = [
 
                 #               ======  rule 01 raw QC    =========
-                #3[ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.html")  ) for sampleID in config["SAMPLES"]  ],
+                [ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.html")  ) for sampleID in config["SAMPLES"]  ],
                 # [ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.zip" )  ) for sampleID in config["SAMPLES"]  ],
+
+                #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
+                
                 #               ======  rule 03 posttrim_QC_ ======
-                # [ expand ( list_files_posttrim_QC(PATHOUT+"03_posttrim_QC/", config["SAMPLES"][sampleID]["files"],".html")  ) for sampleID in config["SAMPLES"]  ],
-                # [ expand ( list_files_posttrim_QC(PATHOUT+"03_posttrim_QC/", config["SAMPLES"][sampleID]["files"],".html")  ) for sampleID in config["SAMPLES"]  ],
+                [ expand ( list_files_posttrim_QC(PATHOUT+"03_posttrim_QC/", config["SAMPLES"][sampleID]["files"],".html")  ) for sampleID in config["SAMPLES"]  ],
                 #--- fastQC output files are not needed downstream and need to be called explicitly.
 
                 
@@ -88,16 +90,21 @@ OUTPUT_FILES = [
                 #               [ expand ( list_files_TG( PATHOUT+"02_trimmed/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
                 #               [ expand ( list_files_TG( PATHOUT+"02_trimmed/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                
                 #               ====rule 04 Mapping ======
-                #               [ expand ( list_files_bismark(PATHOUT+"04_mapped_n_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+                [ expand ( list_files_bismark(PATHOUT+"04_mapped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+              
+                #               ====formerly rule 05 Deduplication ======
+                [ expand ( list_files_dedupe(PATHOUT+"05_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                                
 
-                #               ====rule 04a sorting ======
-                [ expand ( list_files_sortbam(PATHOUT+"04a_sorted/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+                #               ====rule 06 sorting ======
+                [ expand ( list_files_sortbam(PATHOUT+"06_sorted/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
 
-                #               ====rule 05 Deduplication ======
-                #               [ expand ( list_files_dedupe(PATHOUT+"04_mapped_n_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                                
-                #               ====rule 06 extract_methylation ======           
-                #               [ expand   ( list_files_xmeth( PATHOUT+"05_xmeth/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ]  
+                
+                #               ====rule 07 deconvolution ======           
+                [ expand   ( list_files_deconv( PATHOUT+"07_deconv/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ]  
                                             
+                
+                
+                
                 # ==================  FINAL REPORT =========================
                 # [ expand (PATHOUT+config["SAMPLES"][sampleID]["files"][0]+SEPEstr(config["SAMPLES"][sampleID]["files"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
                 
@@ -106,10 +113,9 @@ OUTPUT_FILES = [
 #--- In case you want to debug the code with interactive commands:
 # import IPython;
 # IPython.embed()
-# print(" \n debugging strings here \n")
+# print("Executing job to produce the following files: ")
 # for x in OUTPUT_FILES: print( x)
 #--- 
-
 
 # =======================================================================================================
 #
@@ -128,175 +134,84 @@ rule all:
 
 # ==========================================================================================
 
-rule bismark_se_report:
+rule deconvolve_se:
     input:
-        aln   = PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2_SE_report.txt",
-        sp    = PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated_splitting_report.txt",
-        dd    = PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplication_report.txt",
-        mbias = PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias.txt",
-        nuc   = PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt"
+        PATHOUT+"06_sorted/{sample}_se.deduplicated.sorted.bam"
     output:
-        PATHOUT+"{sample}_trimmed_bismark_bt2_SE_report.html",
-    params:
-        dir = "--dir "+PATHOUT
-    log: 
-        PATHOUT+LOGS+"{sample}_SE_final_report.log"
-    message: """----------- Generating single-end Bismark report ----------- (with the following command:) \n  """
+        PATHOUT+"07_deconv/{sample}_se.deconv_out.RData"
     shell:
-        "nice -"+str(NICE)+" {BISMARK2REPORT} {params} \
-            --alignment_report {input.aln} \
-            --splitting_report {input.sp} \
-            --dedup_report {input.dd} \
-            --mbias_report {input.mbias} \
-            --nucleotide_report {input.nuc} \
-            2> {log} "
-#----------
-rule bismark_pe_report:
+        "nice -"+str(NICE)+" Rscript BSseq_deconv.R {input} {{sample}}_se"
+
+#------
+rule deconvolve_pe:
     input:
-        aln   = PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt",
-        sp    = PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt",
-        dd    = PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplication_report.txt",
-        mbias = PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
-        nuc   = PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt"
+        PATHOUT+"06_sorted/{sample}"+RCODE+"1_val_1.deduplicated.sorted.bam"
     output:
-        PATHOUT+"{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.html"
-    params:
-        dir = "--dir "+PATHOUT
-    log: 
-        PATHOUT+LOGS+"{sample}_PE_final_report.log"
-    message: """----------- Generating paired-end Bismark report ----------- \n  """
+        PATHOUT+"07_deconv/{sample}"+RCODE+"1_val_1.deconv_out.RData"
     shell:
-        "nice -"+str(NICE)+" {BISMARK2REPORT} {params} \
-        --alignment_report {input.aln} \
-        --splitting_report {input.sp} \
-        --dedup_report {input.dd} \
-        --mbias_report {input.mbias} \
-        --nucleotide_report {input.nuc} \
-        2> {log} "
+        "nice -"+str(NICE)+" Rscript BSseq_deconv.R {input} {{sample}}"+RCODE+"1_val_1"
 
 # ==========================================================================================
-rule bismark_se_methylation_extractor:
-    input:
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam"
-    output:
-        expand(PATHOUT+"05_xmeth/{{sample}}_trimmed_bismark_bt2.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
-        PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated.M-bias.txt",
-        PATHOUT+"05_xmeth/{sample}_trimmed_bismark_bt2.deduplicated_splitting_report.txt"
-	#      	expand(PATHOUT+"05_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB","CTOT","CTOB"]),
-	#      	expand(PATHOUT+"05_xmeth/{type}_{strand}_{{sample}}_trimmed_bismark_bt2.deduplicated.txt.gz",type=["CHG","CHH","CpG"],strand=["OT","OB"]),
-	#----- MANUALLY EXPANDED HERE : -----------
-	# PATHOUT+"05_xmeth/CHG_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	# PATHOUT+"05_xmeth/CHG_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	# PATHOUT+"05_xmeth/CHH_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	# PATHOUT+"05_xmeth/CHH_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	# PATHOUT+"05_xmeth/CpG_OT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	# PATHOUT+"05_xmeth/CpG_OB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	#-----  AND WITH THE CTOT/CTOB FILES: ----
-	#	PATHOUT+"05_xmeth/CpG_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	#	PATHOUT+"05_xmeth/CpG_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	#	PATHOUT+"05_xmeth/CHH_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	#	PATHOUT+"05_xmeth/CHH_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	#	PATHOUT+"05_xmeth/CHG_CTOT_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	#	PATHOUT+"05_xmeth/CHG_CTOB_{sample}_trimmed_bismark_bt2.deduplicated.txt.gz",
-	#-----------------------------------------
 
-    threads: 2 
-    params:
-        se = "--single-end ",
-        gz = "--gzip ",
-        cReport = "--cytosine_report ",
-        bg = "--bedgraph ",
-        genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output "+PATHOUT+"05_xmeth/"
-    log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
-    message: """--------------  Extracting  single-end Methylation Information --------------- \n"""
-    shell:
-        "nice -"+str(NICE)+" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
-#-----------------
-rule bismark_pe_methylation_extractor:
-    input:
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam"
-    output:
-        expand(PATHOUT+"05_xmeth/{{sample}}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
-        PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt",
-        PATHOUT+"05_xmeth/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt"
-    threads: 2
-    params:
-        pe = "--paired-end",
-        gz = "--gzip",
-        cReport = "--cytosine_report",
-        bg = "--bedgraph",
-        
-        genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output "+PATHOUT+"05_xmeth/"
-    log: PATHOUT+"05_xmeth/{sample}_bismark_methylation_extraction.log"
-    message: """--------------  Extracting  paired-end Methylation Information --------------- \n"""
-    shell:
-        "nice -"+str(NICE)+" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore {threads} {input} 2> {log}"
-# ==========================================================================================
 rule sortbam_se:
     input:
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam"
+        PATHOUT+"05_deduped/{sample}_se.deduplicated.bam"
     output:
-        PATHOUT+"04a_sorted/{sample}_trimmed_bismark_bt2.deduplicated.sorted.bam"
+        PATHOUT+"06_sorted/{sample}_se.deduplicated.sorted.bam"
     shell:
         "nice -"+str(NICE)+" samtools sort {input} -o {output}"
 
+#-------- TWO SORTING STEPS ARE REQUIRED IN PAIRED END (see bismark deduplication doc) -----
 rule sortbam_pe:
     input:
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam"
+        PATHOUT+"05_deduped/{sample}"+RCODE+"1_val_1.deduplicated.bam"
     output:
-        PATHOUT+"04a_sorted/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.sorted.bam",
+        PATHOUT+"06_sorted/{sample}"+RCODE+"1_val_1.deduplicated.sorted.bam"
     shell:
         "nice -"+str(NICE)+" samtools sort {input} -o {output}"
+
 # ==========================================================================================
 
 rule bismark_se_deduplication:
     input:
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.bam"
+        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2.bam"
     output:
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplicated.bam",
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.deduplication_report.txt"
+        PATHOUT+"05_deduped/{sample}_se.deduplicated.bam"
     params:
         bam="--bam ",
         sampath="--samtools_path "+SAMTOOLS
     log:
-        PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
+        PATHOUT+"05_deduped/{sample}_deduplication.log"
     message: """-----------   Deduplicating single-end read alignments ---------------------- """
     shell:
-        """nice -"+str(NICE)+" {DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
+        "nice -"+str(NICE)+" samtools rmdup {input}  {output} 2> {log}"
 
 rule bismark_pe_deduplication:
     input:
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam"
+        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam"
     output:
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplicated.bam",
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.deduplication_report.txt"
-    params:
-        bam="--bam ",
-        sampath="--samtools_path "+SAMTOOLS,
-        paired="--paired "
+        PATHOUT+"05_deduped/{sample}"+RCODE+"1_val_1.deduplicated.bam"
     log:
-        PATHOUT+"04_mapped_n_deduped/{sample}_deduplication.log"
+        PATHOUT+"05_deduped/{sample}_deduplication.log"
     message: """-----------   Deduplicating paired-end read alignments ---------------------- """
     shell:
-        """nice -"+str(NICE)+" {DEDUPLICATE_BISMARK} {params} {input} 2> {log} """
-
+        "nice -"+str(NICE)+" samtools rmdup {input}  {output} 2> {log}"
 # ==========================================================================================
+# Align and map:
 
 rule bismark_se:
     input:
        PATHOUT+"02_trimmed/{sample}_trimmed.fq.gz"
     output:
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.bam",
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt",
-        PATHOUT+"04_mapped_n_deduped/{sample}_trimmed_bismark_bt2_SE_report.txt"
+        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2.bam",
+        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2.nucleotide_stats.txt",
+        PATHOUT+"04_mapped/{sample}_trimmed_bismark_bt2_SE_report.txt"
     threads: 2
     params:
         N = "-N 1",
         L = "-L 20",
         genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
+        outdir = "--output_dir  "+PATHOUT+"04_mapped/",
         nucCov = "--nucleotide_coverage",
 	    nonDir = NON_DIR_FLAG,             #--- THIS IS EMPTY IF DATA IS DIRECTIONAL (DEFAULT) OTHERWISE "non_directional". 
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
@@ -304,7 +219,7 @@ rule bismark_se:
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
-        PATHOUT+"04_mapped_n_deduped/{sample}_bismark_se_mapping.log"
+        PATHOUT+"04_mapped/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK} {params} --multicore {threads} {input} 2> {log}"
@@ -316,15 +231,15 @@ rule bismark_pe:
         fin1 = PATHOUT+"02_trimmed/{sample}"+RCODE+"1_val_1.fq.gz",
         fin2 = PATHOUT+"02_trimmed/{sample}"+RCODE+"2_val_2.fq.gz"
     output:
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt",
-        PATHOUT+"04_mapped_n_deduped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
+        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
+        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt",
+        PATHOUT+"04_mapped/{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
     threads: 2
     params:
         N = "-N 1",
         L = "-L 20",
         genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output_dir  "+PATHOUT+"04_mapped_n_deduped/",
+        outdir = "--output_dir  "+PATHOUT+"04_mapped/",
         nucCov = "--nucleotide_coverage",
         nonDir = NON_DIR_FLAG,             #--- THIS IS EMPTY IF DATA IS DIRECTIONAL (DEFAULT) OTHERWISE "non_directional".
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
@@ -332,13 +247,13 @@ rule bismark_pe:
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
-        PATHOUT+"04_mapped_n_deduped/{sample}_bismark_pe_mapping.log"
+        PATHOUT+"04_mapped/{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK} {params} --multicore {threads} -1 {input.fin1} -2 {input.fin2} 2> {log}"
 
 # ==========================================================================================
-#### ----  THIS ONLY GETS INVOKED WHEN MANUALLY CALLED SPECIFICIALLY ------
+# generate reference genome: ----  THIS ONLY GETS INVOKED WHEN MANUALLY CALLED SPECIFICIALLY ------
 
 rule bismark_genome_preparation:
     input:

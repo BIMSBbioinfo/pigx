@@ -3,9 +3,101 @@
 
 #  changes from  Sat Apr 8 23:11:46 CEST 2017 : Made first draft template: script executes bug free but output inconsistent with expectations. Further testing needed
 
+search_NM_bloodfrac  <- function (liver_frac, placenta_frac, spacing, Exp_dat, conditions, should_return_w =FALSE, epsilon, mu_in)
+{
+  ui_COND = conditions$ui_COND; 
+  ci_COND = conditions$ci_COND; 
+  
+  blood_frac = (1.0-liver_frac-placenta_frac)*randomize_fracs( as.matrix(c(1,2,3)) ) 
+    
+  w=rbind((1-epsilon)*liver_frac, blood_frac, (1-epsilon)*placenta_frac)
+  for( i in c(1:length(w) ) )
+    {
+    if(w[i]<= 0)
+      { w[i]=w[i]+epsilon }
+    }
+  w=(1.0/sum(w))*w
+  
+  NCT= length(w)
+
+  NM_out   = constrOptim(w, function(w){func_SQ(w, yEXP_target =  Exp_dat$ROI_meth_profile, SigMat_in= Exp_dat$Sigmat_whits) },
+                                       ui=ui_COND, ci=ci_COND, mu = mu_in, control = list(), method = "Nelder-Mead") 
+
+  if(should_return_w)
+  {return(NM_out) }
+  else
+  {return(NM_out$value)}
+  
+}
+#=================================================================================
+get_best_bloodfrac  <- function (liver_frac, placenta_frac, spacing, Exp_dat, conditions, should_return_w =FALSE)
+{
+  blood_frac_list = get_fraclist( liver_frac, placenta_frac, spacing )
+  ui_COND = conditions$ui_COND; 
+  ci_COND = conditions$ci_COND; 
+  
+  best_err   = func_SQ( w=blood_frac_list[[1]], yEXP_target=Exp_dat$ROI_meth_profile, SigMat_in= Exp_dat$Sigmat_whits)
+  best_index = 1
+  for ( m in c(2:length(blood_frac_list)) )
+    {
+    err = func_SQ( w=blood_frac_list[[1]], yEXP_target=Exp_dat$ROI_meth_profile, SigMat_in= Exp_dat$Sigmat_whits)
+    
+    if(err < best_err)
+      {
+      best_err   = err;
+      best_index = m
+      }
+    }
+  
+  if(should_return_w)
+    {return(list(w=blood_frac_list[[best_index]], err=best_err ) ) }
+  else
+    {return(best_err)}
+    
+}
+#==================================================================
+#--- get a systematic list of cell fraction candidates: ----
+get_fraclist <- function(liver_frac, placenta_frac, spacing) 
+{ 
+  if( min(liver_frac,placenta_frac) <0 || max(liver_frac,placenta_frac)>1)
+  { stop("input fractions out of bounds.")}
+  
+  k=1
+  frac_list = list()
+  
+  free_frac= 1.0 - (liver_frac + placenta_frac)
+  if(free_frac<0 || free_frac > 1)
+    {stop("available fraction out of bounds")}
+  
+  frac_array_1=seq(0,free_frac,spacing)
+  for(i in c(1:length(frac_array_1)))
+  {
+    Tcell_frac = frac_array_1[i]
+    
+    frac_array_2=seq(0,free_frac-Tcell_frac,spacing)
+    
+    for(j in c(1:length(frac_array_2)))
+    {
+      Bcell_frac = frac_array_2[j]
+      
+      Neut_frac  = free_frac - Tcell_frac - Bcell_frac;
+      
+      if(Neut_frac < 0.9*spacing)
+        {Neut_frac=0}
+      
+      frac_list[[k]]= c(liver_frac, Tcell_frac, Bcell_frac, Neut_frac, placenta_frac);
+      if( abs(sum(frac_list[[k]])-1)> 0.01*spacing)
+        {stop("frac_list doesnt sum to unity! problem.")}
+      k=k+1
+      
+    }
+  }
+  return(frac_list)
+}
+
 #==================================================================
 #--- plot deconvolution output: ----
-get_cell_fracs <- function(initial_profile, target_profile,  Sigmat , epsilon, mu_in, maxbound=TRUE, minbound=FALSE)
+get_cell_fracs <- function(initial_profile, target_profile,  Sigmat , epsilon, mu_in, maxbound=TRUE, minbound=TRUE)
 {
   PARTOL = 0.0001; #==== tolerance on the change in parameter elements
   VALTOL = 0.0001; #==== tolerance on the change in value of the function
@@ -25,7 +117,7 @@ get_cell_fracs <- function(initial_profile, target_profile,  Sigmat , epsilon, m
   w       = initial_profile 
   temp_old = constrOptim(w, function(w){func_SQ(w, yEXP_target = target_profile, SigMat_in= Sigmat) },
               ui=ui_COND, ci=ci_COND, mu = mu_in, control = list(), method = "Nelder-Mead") 
-
+  
   w        = temp_old$par 
   temp_new = constrOptim(w, function(w){func_SQ(w, yEXP_target = target_profile, SigMat_in= Sigmat) },
                          ui=ui_COND, ci=ci_COND, mu = mu_in, control = list(), method = "Nelder-Mead") 
@@ -153,14 +245,32 @@ return( list( "GR" = Atlas_dat_gr, "ROI_meth_profile"=ROI_meth_profile, "name"= 
 }
 
 #==================================================================
-#--- get experimental data ranges: ----
-get_Cond_dat <- function(fin, refdat, mincounts ) 
+# get data for the specific experiment under consideration.
+get_Exp_dat <- function(fin, refdat, mincounts, filetype , ID, genome) 
 {    
-  genome="hg19"
-  label=paste("Cond",as.character(i),sep="")
   
-  EXP_methraw           = methRead(fin, label, genome, skip=1, pipeline="bismarkCoverage", mincov = 1)  
-
+  if(  filetype == ".bam")
+    {
+    EXP_methraw <- processBismarkAln(location = fin,
+                              sample.id = ID,  #---this is usually the SRA of the experiment, unless none exists.
+                              assembly = "hg19",
+                              mincov = 0,
+                              save.db = TRUE,
+                              read.context="CpG",
+                              save.context="CpG"
+                              # save.folder="..." ##<--Here, one can specify a location to save the methylation calls.
+                              # Instead, we opt to include the final output in the saved parameters at the end of deconvolution.
+                              )
+    }
+  else if( filetype == ".cov" )
+    {
+    EXP_methraw = methRead(fin, sample.id=ID, genome, skip=1, pipeline="bismarkCoverage", mincov = 1)  
+    }
+  else
+    {
+    stop(paste0("Error in get_Exp_dat -- did not recognize filetype=", filetype) )
+    }
+  
   #---- now filter only the experimental reads that hit upon the selected biomarkers.
   EXP_methraw_filtered  = regionCounts( EXP_methraw, refdat$Biomarks_gr, strand.aware = FALSE, cov.bases=mincounts) 
   ROI_meth_profile      = EXP_methraw_filtered$numCs/EXP_methraw_filtered$coverage
@@ -177,7 +287,8 @@ get_Cond_dat <- function(fin, refdat, mincounts )
   biomark_hits  = which(countLnodeHits(ovlps)>0)
   #--- list of RsOI that were hit upon
   
-  Sigmat_whits      = as.matrix( refdat$Sigmat[biomark_hits,] )                #---- Matrix using just the biomarkers hit on in the experiment, 
+  Sigmat_whits      = as.matrix( refdat$Sigmat[biomark_hits,] )                
+  #--- Matrix using just the biomarkers hit on in the experiment, 
   #--- target values for each tissue type are listed by col.
   
 
@@ -282,7 +393,6 @@ else if( impose_le_1 && !impose_ge_1 ) #--- impose constraint that sum(w)<=1 doe
   ui_COND[NCT+1,] <- -1
 
   #--- NOW WE IMPOSE THAT ALL FRACTIONS ARE POSITIVE AND SUM TO <= UNITY.
-  #--- PERHAPS WE SHOULD ADD A LOWER BOUND TO THE SUM AS WELL @@@ 
   ci_COND[NCT+1] <- -1-epsilon
   }
 else if( impose_le_1 && impose_ge_1 ) #--- impose BOTH constraints that 1-eps <= sum(w) <= 1+eps --that sum is within eps of one
@@ -297,7 +407,6 @@ else if( impose_le_1 && impose_ge_1 ) #--- impose BOTH constraints that 1-eps <=
     ui_COND[NCT+2,] <-  1
     
     #--- NOW WE IMPOSE THAT ALL FRACTIONS ARE POSITIVE AND SUM TO <= UNITY.
-    #--- PERHAPS WE SHOULD ADD A LOWER BOUND TO THE SUM AS WELL @@@ 
     ci_COND[NCT+1] <- -1-epsilon
     ci_COND[NCT+2] <-  1-epsilon
   }

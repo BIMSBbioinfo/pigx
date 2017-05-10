@@ -1,4 +1,4 @@
-numjobs=36
+numjobs=1
 
 
 i=1

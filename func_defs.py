@@ -39,33 +39,27 @@ def list_files_bismark(PATH, files):
 
 def list_files_dedupe(PATH, files):
     if len(files) == 1:
-        return [PATH+files[0]+"_trimmed_bismark_bt2.deduplicated.bam",
-                PATH+files[0]+"_trimmed_bismark_bt2.deduplication_report.txt"] #---- single end
+        return [PATH+files[0]+"_se.deduplicated.bam"] #---- single end
     elif len(files) == 2:
-        return [PATH+files[0]+"_val_1_bismark_bt2_pe.deduplicated.bam",
-                PATH+files[0]+"_val_1_bismark_bt2_pe.deduplication_report.txt"] #---- paired end
+        return [PATH+files[0]+"_val_1.deduplicated.bam"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
 def list_files_sortbam(PATH, files):
     if len(files) == 1:
-        return [PATH+files[0]+"_trimmed_bismark_bt2.deduplicated.sorted.bam"] #---- single end
+        return [PATH+files[0]+"_se.deduplicated.sorted.bam"] #---- single end
     elif len(files) == 2:
-        return [PATH+files[0]+"_val_1_bismark_bt2_pe.deduplicated.sorted.bam"] #---- paired end
+        return [PATH+files[0]+"_val_1.deduplicated.sorted.bam"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_xmeth(PATH, files):
+def list_files_deconv(PATH, files):
     if len(files) == 1:
-        return [ PATH+files[0]+"_trimmed_bismark_bt2.deduplicated.bedGraph.gz",
-                 PATH+files[0]+"_trimmed_bismark_bt2.deduplicated.bismark.cov.gz",
-                 PATH+files[0]+"_trimmed_bismark_bt2.deduplicated.CpG_report.txt.gz"] #---- single end
+        return [ PATH+files[0]+"_se.deconv_out.RData"] #---- single end
     elif len(files) == 2:
-        return [PATH+files[0]+"_val_1_bismark_bt2_pe.deduplicated.bedGraph.gz",
-                PATH+files[0]+"_val_1_bismark_bt2_pe.deduplicated.bismark.cov.gz",
-                PATH+files[0]+"_val_1_bismark_bt2_pe.deduplicated.CpG_report.txt.gz"] #---- paired end
+        return [PATH+files[0]+"_val_1.deconv_out.RData"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
