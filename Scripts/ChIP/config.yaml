@@ -1,0 +1,15 @@
+genome: '/data/akalin/Base/Genomes/mm9/mm9.fa'
+index: 
+    
+params:
+    extend: 200
+        
+samples:
+    ChIP: ChIP.fq
+    Cont: Cont.fq
+
+peak_calling:
+    Peaks1:
+        ChIP: ChIP
+        Cont: Cont   
+        
