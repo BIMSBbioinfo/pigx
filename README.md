@@ -39,7 +39,19 @@ The dependencies are as follows:
  - BISMARK2REPORT                
  - SAMTOOLS 
 
-All of these dependencies must be present in folder indicated in the config.json file by  ["paths"]["GTOOLBOX"]
+All of these dependencies must be present in folder indicated in the config.json file by  ["paths"]["GTOOLBOX"].
+
+There are additional dependencies that do need to be installed, but not located in ["paths"]["GTOOLBOX"]:
+
+ - [python-rp2](https://rpy2.bitbucket.io/)
+ - [pandoc](http://pandoc.org/)
+ - [methylKit](https://github.com/al2na/methylKit)
+ - [genomation](http://bioinformatics.mdc-berlin.de/genomation/)
+ - [DT](https://rstudio.github.io/DT/) 
+ - [annotationhub](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html)
+ - [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html)
+
+
 To run PIGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```

@@ -1,0 +1,13 @@
+TODO 
+=====
+
+- remove GTOOLBOX variable 
+ 	? cleaner to have config["progs"][XY] storing absolute path of tool, 
+ 	  since not all tools need to be located in the same dir
+ 	  + autoconf will replace placeholder with absolute paths anyways
+
+- restructure pipeline to extract methylation calls using methylKit
+	? faster than bismark_methylation_extractor
+
+- replace fixed folder names with variables, to allow easy changing
+
