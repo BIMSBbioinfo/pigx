@@ -11,3 +11,8 @@ TODO
 
 - replace fixed folder names with variables, to allow easy changing
 
+- integrate paring CSV table and converting it to a yaml config file
+- add rules for differential methylation and create a html report for that
+
+
+
