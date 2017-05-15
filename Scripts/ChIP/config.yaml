@@ -1,15 +1,43 @@
 genome: '/data/akalin/Base/Genomes/mm9/mm9.fa'
-index: 
-    
+index:
+
+fastq:
+
 params:
     extend: 200
-        
+    idr: 0.1
+
 samples:
-    ChIP: ChIP.fq
-    Cont: Cont.fq
+    ChIP1: ChIP.fq
+    Cont1: Cont.fq
+    ChIP2: ChIP.fq
+    Cont2: Cont.fq
 
 peak_calling:
     Peaks1:
-        ChIP: ChIP
-        Cont: Cont   
-        
+        ChIP: ChIP1
+        Cont: Cont1
+    Peaks2:
+        ChIP: ChIP2
+        Cont: Cont2
+
+idr:
+    IDR:
+        ChIP1: Peaks1
+        ChIP2: Peaks2
+
+software:
+    fastqc: fastqc
+    bamToBed: bamToBed
+    bowtie: bowtie
+    bowtie-build: bowtie-build
+    genomeCoverageBed: genomeCoverageBed
+    idr: idr
+    macs2: macs2
+    perl: perl
+    R: R # data.table dependency
+    samtools: samtools
+    wig2bigwig: wig2bigwig
+
+# unspecified dependencies:
+# sytem ln
