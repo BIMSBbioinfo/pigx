@@ -21,7 +21,9 @@
 #------ set config file, include function definitions, and set os:
 import os
 configfile: "./config.json"
-include   : "./func_defs.py"
+include   : "./scripts/func_defs.py"
+include   : "./rules/post_mapping.rules"
+include   : "./rules/samtools.rules"
 
 NICE=config["NICE"]
 #--- NICE is an option to gauge the burden on computational resources, ranges from -19 to +19. 
