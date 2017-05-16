@@ -22,6 +22,7 @@ library(GenomicRanges)
 library(stringr)
 library(methylKit)
 library(rtracklayer)
+library(limSolve)
 
 CLargs = commandArgs(trailingOnly=TRUE)
 if(length(CLargs) != 2)
@@ -64,42 +65,42 @@ NCT_full = dim(refdat$Sigmat)[2];
 #------------     IMPORT  YOUR SAMPLE DATA:      ----------------
 mincounts  = 1;  
 
-fin=paste0(PATH_DATA,filename)
+# fin=paste0(PATH_DATA,filename)
+fin=filename #--- snakemake just feeds the whole filename into the command line.
+
 type=".bam"
-
-
 
 print(paste("Importing experimental data"))
 
 Exp_dat = get_Exp_dat(fin, refdat=refdat , mincounts, filetype=type, ID=sampleID, genome="hg19")  
 
-
 #================================================================
 #---------------------    DECONVOLVE    -------------------------
 
+epsilon=0.01  #---- tolerance parameter for the sum of cell-type fractions.
+mu=1e-5       #---- tolerance parameter for Nelder mead convergence.
+
 print(paste("Generating matrix conditions"))
+p_init       =   matrix(1/NCT_full-(0.1*epsilon/NCT_full),NCT_full,1) #--- INITIAL CONDITION OF CELL TYPE FRACTIONS ------
+conditions   =  get_conditions(NCT_full, 1, 0, epsilon )
 
-p_init       =   matrix(1/NCT_subset-(0.1*epsilon/NCT_subset),NCT_subset,1) #--- INITIAL CONDITION OF CELL TYPE FRACTIONS ------
-conditions   =  get_conditions(NCT_full, 1, 1, epsilon )
-
-
+print(paste("finished getting matrix conditions"))
 #============     Start deconvolving:  ==================
 
-E_in = matrix(1,1,NCT_subset)
+E_in = matrix(1,1,NCT_full)
 F_in = 1
 
-print(paste(" ---------- Now deconvolving dataset i = ",as.character(i), " of ", as.character(Num_samples), " ----------------" ) )
+# ===== starting my own convolution     =====
+deconv_out = get_cell_fracs(initial_profile=p_init,        target_profile= Exp_dat$ROI_meth_profile,   
+                                          Sigmat=Exp_dat$Sigmat_whits, epsilon=epsilon, mu_in=mu, minbound=FALSE, maxbound=TRUE) 
 
-print(paste("starting my own convolution"))
-deconv_out = get_cell_fracs(initial_profile=p_init,        target_profile= Exp_dat[[i]]$ROI_meth_profile,   
-                                          Sigmat=Exp_dat[[i]]$Sigmat_whits, epsilon=epsilon, mu_in=1e-5, minbound=TRUE, maxbound=TRUE) 
-
-print(paste("starting Peiyongs deconvolution"))
+# ===== starting Peiyongs deconvolution =====
 # this is the function recommended by Peiyong
-Peis_fracs = lsei(A = Exp_dat[[i]]$Sigmat_whits, B =  Exp_dat[[i]]$ROI_meth_profile, E=E_in, F=F_in, 
+Peis_fracs = lsei(A = Exp_dat$Sigmat_whits, B =  Exp_dat$ROI_meth_profile, E=E_in, F=F_in, 
                          G = conditions$ui_COND, H = conditions$ci_COND)
   
 print(paste("saving data"))
-save(deconv_out, Peis_fracs, refdat, Exp_dat, sampleID, file = paste0(PATHOUT, sampleID, ".RData") )
+save(deconv_out, Peis_fracs, refdat, Exp_dat, sampleID, file = paste0(PATHOUT, sampleID, "deconv_out.RData") )
 
-print(paste("program complete."))
+print(paste("BSseq_deconv.R program complete."))
+# par(mfrow=c(1,1))

@@ -255,7 +255,7 @@ get_Exp_dat <- function(fin, refdat, mincounts, filetype , ID, genome)
                               sample.id = ID,  #---this is usually the SRA of the experiment, unless none exists.
                               assembly = "hg19",
                               mincov = 0,
-                              save.db = TRUE,
+                              save.db = FALSE,
                               read.context="CpG",
                               save.context="CpG"
                               # save.folder="..." ##<--Here, one can specify a location to save the methylation calls.
@@ -273,9 +273,10 @@ get_Exp_dat <- function(fin, refdat, mincounts, filetype , ID, genome)
   
   #---- now filter only the experimental reads that hit upon the selected biomarkers.
   EXP_methraw_filtered  = regionCounts( EXP_methraw, refdat$Biomarks_gr, strand.aware = FALSE, cov.bases=mincounts) 
-  ROI_meth_profile      = EXP_methraw_filtered$numCs/EXP_methraw_filtered$coverage
+  EXP_methraw_filtered2 = as( EXP_methraw_filtered,"methylRaw")
+  ROI_meth_profile      = EXP_methraw_filtered2$numCs/EXP_methraw_filtered2$coverage
   
-  EXP_gr    = as(EXP_methraw_filtered,"GRanges")  # convert methylraw object to GRange
+  EXP_gr    = as(EXP_methraw_filtered2,"GRanges")  # convert methylraw object to GRange
   EXP_gr    = sortSeqlevels(EXP_gr)                        # sort internal chromosome ordering
   EXP_gr    = sort(EXP_gr)                                 # sort by chromosome level
   #--- GRanges object containing all of the experimental data that hits upon RsOI
@@ -315,8 +316,6 @@ get_grange_from_wig <- function( WIG_PATH, wig_file, readcov_file)
 {    
   wig    = import.wig(file.path(WIG_PATH, wig_file))
   wigcov = import.wig(file.path(WIG_PATH, readcov_file))
-  
-#  ?readWig
   
   w2g_out         = c(wig, wigcov)
   w2g_out$score = NULL
