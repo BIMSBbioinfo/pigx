@@ -1,3 +1,3 @@
 Read1,Read2,Sample id,Read type,Treatment,Covariate1
-A_trimmed,,B,WGBS,A,
-B_trimmed,,A,WGBS,B,
+sampleB.pe1.fq.gz,sampleB.pe2.fq.gz,sampleB,WGBS,B,,
+sampleB.fq.gz,,sampleB1,WGBS,B,,
