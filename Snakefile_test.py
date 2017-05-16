@@ -410,7 +410,7 @@ rule trimgalore_pe:
 
 # ==========================================================================================
 # raw quality control 
-
+#
 
 rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
     input:
