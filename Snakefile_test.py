@@ -6,6 +6,8 @@
 # To process bisulfite sequencing data from raw fastq files to performing integrated bioinformatics analysis.
 #============================================================================================================
 
+# snakemake  --forceall --snakefile /home/kwreczy/repositories/pigx_bsseq//Snakefile_test.py --cores 2 --config tablesheet=/home/kwreczy/repositories/pigx_bsseq/test_dataset/TableSheet_test.csv gtoolbox=/home/kwreczy/tmp/ggtoolbox/ in=/home/kwreczy/repositories/pigx_bsseq/test_dataset/in/ out=~/tmp/my_output/ genome_folder=~/tmp/ce10/ log=/home/kwreczy/logs/ chrominfo=/home/kwreczy/repositories/pigx_bsseq/test_dataset/chromInfo.txt bismark_args="  --bowtie2 -N 1 -L 2 --genome_folder ~/tmp/ce10/"
+# snakemake  --forceall --snakefile /home/kwreczy/repositories/pigx_bsseq//Snakefile_test.py --config configfile=my_output~/tmp/my_output/config.json
 
 #------ set config file, include function definitions, and set os:
 import os,csv,json
@@ -55,6 +57,7 @@ if(TABLESHEET is not None):
 
 ######### BEGIN the SRA part: Download fastq files based on their SRA ids
 
+
 # Check if in first column of a csv table there are SRA ids
 acc = ['PRJ', #Study accession
        #'SAMN', #Sample accession
@@ -63,6 +66,8 @@ acc = ['PRJ', #Study accession
        'SRR'] #Run accession
 SRA2download = [] # rows with SRA ids
 SRA2download_indx = [] # indecies of rows with SRA ids
+
+firscol = [x[0] for x in config["units"].values()]
 for i in range(len(firstcol)):
   if ( (firstcol[i][:3] in acc ) or ( firstcol[i][:4]=='SAMN') ) and ( check_if_fastq(firstcol[i]) is True ):
     SRA2download.append(firstcol[i])
@@ -172,11 +177,11 @@ for x in [config["in"], config["out"], config["log"]]:
   
 DIR_sorted=PATHOUT+'06_sorted/'
 DIR_mapped_n_deduped=PATHOUT+'04_mapped_n_deduped/'
-DIR_POSTTRIM_QC=PATHOUT+'03_posttrim_QC/'
+DIR_posttrim_QC=PATHOUT+'03_posttrim_QC/'
 DIR_trimmed=PATHOUT+'02_trimmed/'
-DIR_RAWQC=PATHOUT+'01_rawqc/'
+DIR_rawqc=PATHOUT+'01_rawqc/'
 
-for x in [DIR_RAWQC, DIR_trimmed, DIR_POSTTRIM_QC, DIR_mapped_n_deduped, DIR_sorted]:
+for x in [DIR_rawqc, DIR_trimmed, DIR_posttrim_QC, DIR_mapped_n_deduped, DIR_sorted]:
   if not os.path.exists(x):
     os.makedirs(x)
 
@@ -195,10 +200,10 @@ if config.get("fastqc_args") is None: config["fastqc_args"]=""
 
 OUTPUT_FILES = [
       #               ======  rule 01 raw QC    =========
-      [ expand (list_files(DIR_RAWQC, config["units"][x], "_fastqc.html")  ) for x in config["samples"].keys()  ],
+      [ expand (list_files(DIR_rawqc, config["units"][x], "_fastqc.html")  ) for x in config["samples"].keys()  ],
       #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
       #               ======  rule 03 posttrim_QC_ ======
-      [ expand ( list_files_posttrim_QC(DIR_POSTTRIM_QC, config["units"][x],".html")  ) for x in config["samples"].keys()  ],
+      [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["units"][x],".html")  ) for x in config["samples"].keys()  ],
       #--- fastQC output files are not needed downstream and need to be called explicitly.
       #               ====rule 02 trimgalore ======
       [ expand ( list_files_TG( DIR_trimmed, config["units"][x])  ) for x in config["samples"].keys()  ],
@@ -336,13 +341,13 @@ rule fastqc_after_trimming_se:
     input:
        DIR_trimmed+"{sample}_trimmed.fq.gz",
     output:
-    	  DIR_POSTTRIM_QC+"{sample}_trimmed_fastqc.html",
-    	  DIR_POSTTRIM_QC+"{sample}_trimmed_fastqc.zip"
+    	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.html",
+    	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
     params:
        fastqc_args = config["fastqc_args"],
-       outdir = "--outdir "+DIR_POSTTRIM_QC
+       outdir = "--outdir "+DIR_posttrim_QC
     log:
-   	   DIR_POSTTRIM_QC+"{sample}_trimmed_fastqc.log"
+   	   DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
     shell:
        "{FASTQC} {params.outdir} {input} 2> {log}"
@@ -352,15 +357,15 @@ rule fastqc_after_trimming_pe:
         DIR_trimmed+"{sample}"+RCODE[0]+"_val_1.fq.gz",
         DIR_trimmed+"{sample}"+RCODE[1]+"_val_2.fq.gz"
     output:
-    	DIR_POSTTRIM_QC+"{sample}"+RCODE[0]+"_val_1_fastqc.html",
-    	DIR_POSTTRIM_QC+"{sample}"+RCODE[0]+"_val_1_fastqc.zip",
-    	DIR_POSTTRIM_QC+"{sample}"+RCODE[1]+"_val_2_fastqc.zip",
-        DIR_POSTTRIM_QC+"{sample}"+RCODE[1]+"_val_2_fastqc.html"
+    	DIR_posttrim_QC+"{sample}"+RCODE[0]+"_val_1_fastqc.html",
+    	DIR_posttrim_QC+"{sample}"+RCODE[0]+"_val_1_fastqc.zip",
+    	DIR_posttrim_QC+"{sample}"+RCODE[1]+"_val_2_fastqc.zip",
+        DIR_posttrim_QC+"{sample}"+RCODE[1]+"_val_2_fastqc.html"
     params:
         fastqc_args = config["fastqc_args"],
-        outdir = "--outdir "+DIR_POSTTRIM_QC
+        outdir = "--outdir "+DIR_posttrim_QC
     log:
-   	    DIR_POSTTRIM_QC+"{sample}_trimmed_fastqc.log"
+   	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
     shell:
         "{FASTQC} {params.outdir} {input} 2> {log}"
@@ -416,14 +421,14 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
     input:
         PATHIN+"{sample}"+INEXT
     output:
-        DIR_RAWQC + "{sample}_fastqc.html",
-        DIR_RAWQC + "{sample}_fastqc.zip"
+        DIR_rawqc + "{sample}_fastqc.html",
+        DIR_rawqc + "{sample}_fastqc.zip"
     params:
         fastqc_args = config["fastqc_args"],
-        outdir = "--outdir "+ DIR_RAWQC    # usually pass params as strings instead of wildcards.
+        outdir = "--outdir "+ DIR_rawqc    # usually pass params as strings instead of wildcards.
 
     log:
-        DIR_RAWQC + "{sample}_fastqc.log"
+        DIR_rawqc + "{sample}_fastqc.log"
     message: """ ----------  Quality checking raw read data with {FASTQC}.  --------------   """
     shell:
         "{FASTQC} {params.outdir}  {input} 2> {log}"
