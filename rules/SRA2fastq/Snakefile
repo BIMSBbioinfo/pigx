@@ -1,26 +1,12 @@
 import os, csv
 from SRA2fastq_functions import *
 
-
 # An example to test it
-# config = {"ftp_sra":{'SRR2075691': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR207/001/SRR2075691/SRR2075691.fastq.gz', 'SRR1042451_1': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR104/001/SRR1042451/SRR1042451_1.fastq.gz', 'SRR2075687': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR207/007/SRR2075687/SRR2075687.fastq.gz', 'SRR2075689': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR207/009/SRR2075689/SRR2075689.fastq.gz'}}
+# config = {"ftp_sra":{'SRR2075691': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR207/001/SRR2075691/SRR2075691.fastq.gz', 'SRR1042451_1': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR104/001/SRR1042451/SRR1042451_1.fastq.gz', 'SRR2075687': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR207/007/SRR2075687/SRR2075687.fastq.gz', 'SRR2075689': 'ftp.sra.ebi.ac.uk/vol1/fastq/SRR207/009/SRR2075689/SRR2075689.fastq.gz'}, 'in'="~/mydirectory/"}
 
 SAMPLES_DICT = config["ftp_sra"]
 MYDIR = config['in']
 
-# 'create_dummy_log' rule is needed, because I need to have .fastq.gz files 
-# as an input in a rule (doesnt matter which rule and it cant be in the main
-# Snakemake file).
-# That's why I created dummy rule for that, and it also, by the way, creates dummy file 
-# 'log_download_raw_files.txt' to make sure that rule 'download' will be executed.
-# 'log_download_raw_files.txt' is in input of a rule 'final' in the main Snakemake file.
-rule create_dummy_log:
-    input:
-        expand(MYDIR + "{run_id}.fastq.gz", run_id=SAMPLES_DICT.keys())
-    output:
-        "dummy.txt"
-    run:
-        os.system("touch dummy.txt")
         
 # Get fastq files from the ENA database.
 rule download: 

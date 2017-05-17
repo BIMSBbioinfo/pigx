@@ -8,6 +8,8 @@
 
 # snakemake  --forceall --snakefile /home/kwreczy/repositories/pigx_bsseq//Snakefile_test.py --cores 2 --config tablesheet=/home/kwreczy/repositories/pigx_bsseq/test_dataset/TableSheet_test.csv gtoolbox=/home/kwreczy/tmp/ggtoolbox/ in=/home/kwreczy/repositories/pigx_bsseq/test_dataset/in/ out=~/tmp/my_output/ genome_folder=~/tmp/ce10/ log=/home/kwreczy/logs/ chrominfo=/home/kwreczy/repositories/pigx_bsseq/test_dataset/chromInfo.txt bismark_args="  --bowtie2 -N 1 -L 2 --genome_folder ~/tmp/ce10/"
 # snakemake  --forceall --snakefile /home/kwreczy/repositories/pigx_bsseq//Snakefile_test.py --config configfile=my_output~/tmp/my_output/config.json
+# snakemake  --forceall --snakefile /home/kwreczy/repositories/pigx_bsseq//Snakefile_test.py --cores 2 --config tablesheet=/home/kwreczy/repositories/pigx_bsseq/test_dataset/TableSheet_SRA.csv gtoolbox=/home/kwreczy/tmp/ggtoolbox/ in=/home/kwreczy/repositories/pigx_bsseq/test_dataset/in/ out=~/tmp/my_output/ genome_folder=~/tmp/ce10/ log=/home/kwreczy/logs/ chrominfo=/home/kwreczy/repositories/pigx_bsseq/test_dataset/chromInfo.txt bismark_args="  --bowtie2 -N 1 -L 2 --genome_folder ~/tmp/ce10/"
+
 
 #------ set config file, include function definitions, and set os:
 import os,csv,json
@@ -20,17 +22,13 @@ include   : "./rules/SRA2fastq/SRA2fastq_functions.py"
 config = parseConfig(config)
 
 # Read a Table Sheet in the CSV format
-TABLESHEET =   config["tablesheet"]
+TABLESHEET =  config["tablesheet"]
 if(TABLESHEET is not None):
   
   # Parse Sheet Table provided by the user
   (rows, sample_ids, list_units) = parseTable(TABLESHEET)
   firstcol = [r[0] for r in rows]
-
-  # Extract and remove extensions from list of units
-  (list_units, inext) = remove_ext_from_units(list_units)
-  config["inext"] = inext # Todo and what if file is not gzipped?
-
+  
   # Add samples, units and treatment information from a sheet table to config
   config["samples"] = dict(zip(sample_ids, sample_ids))
   config["units"] = dict(zip(sample_ids, list_units))
@@ -66,13 +64,13 @@ acc = ['PRJ', #Study accession
        'SRR'] #Run accession
 SRA2download = [] # rows with SRA ids
 SRA2download_indx = [] # indecies of rows with SRA ids
-
 firscol = [x[0] for x in config["units"].values()]
 for i in range(len(firstcol)):
   if ( (firstcol[i][:3] in acc ) or ( firstcol[i][:4]=='SAMN') ) and ( check_if_fastq(firstcol[i]) is True ):
     SRA2download.append(firstcol[i])
     SRA2download_indx.append(i)
 
+    
 if len(SRA2download)!=0:
   
   # Fastq files suppose to be in 'in' directory.
@@ -106,14 +104,11 @@ if len(SRA2download)!=0:
   config["samples"] = dict(zip(sample_ids_new, sample_ids_new))
   config["units"] = dict(zip(sample_ids_new, list_units_new))
   config["treatment"] = dict(zip(sample_ids_new, [r[4] for r in new_sheet_rows][1:]))
-  
-  # Extract an extension from list of units
-  (list_units, inext) = remove_ext_from_units(config["units"])
-  config["inext"] = inext 
 
   ftplinks = sum(list(dict_SRA_ftp.values()), [])
   sraids = [filter_filename_no_ext( x ) for x in ftplinks]
   config["ftp_sra"] = dict(zip(sraids, ftplinks))
+  
   # Update config file and save it in the output directory
   with open(config['out']+"config.json", 'w') as outfile: # TODO: remove it?
      json.dump(config, outfile)
@@ -121,17 +116,21 @@ if len(SRA2download)!=0:
   # Download fastq files here based on their SRA ids
   include: "rules/SRA2fastq/Snakefile"
 
-# TODO: check if its needed  
-# else:
-#   rule create_dummy_log:
-#     output:
-#         "dummy.txt"
-#     run:
-#         os.system("touch dummy.txt")
 
 ######### END the SRA part
 
 
+# Extract and remove extensions from list of units
+samplesids = config['units'].keys() # dicts in python are not ordered
+#There has to be nicer way than this
+#Because right now, every time when there is at least 1 SRA ids in the sheet
+# only .fastq.gz suffixes can be used
+(list_units, inext) = remove_ext_from_units([config['units'][x] for x in samplesids])
+new_units = dict(zip(samplesids, list_units))
+config["inext"] = inext # Todo and what if file is not gzipped?
+for x in samplesids:
+  config['units'][x] = new_units[x]
+  
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
@@ -149,8 +148,8 @@ NUMTHREADS      = config["numthreads"]
 
 INEXT=config["inext"] #TODO: it can be more flexible
 
-
-RCODE = [".pe1", ".pe2"] #TODO: it has to be more flexible!!
+#RCODE = [".pe1", ".pe2"] #TODO: it has to be more flexible!!
+RCODE = ["_1", "_2"] #TODO: this si for SRA IDS
 
 
 
@@ -196,6 +195,9 @@ if config.get("fastqc_args") is None: config["fastqc_args"]=""
 
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
+
+
+# TODO: acutally here should be instead of config["samples"].keys() then config["samples"].values()....
 
 
 OUTPUT_FILES = [
