@@ -1,0 +1,19 @@
+macs2:
+  help: 'callpeak -h'
+  remove:
+    - t
+    - c
+    - outdir
+    - n
+idr:
+  help: '-h'
+  remove:
+    - input-file-type
+    - rank
+    - output-file
+    - l
+    - plot
+
+bowtie:
+  help: '-h'
+  remove:

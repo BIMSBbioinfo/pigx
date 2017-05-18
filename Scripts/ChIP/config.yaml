@@ -1,11 +1,10 @@
-genome: '/data/akalin/Base/Genomes/mm9/mm9.fa'
-index:
+genome:
+    name: 'mm9'
+    fasta:
+index: '/data/local/vfranke/AAkalin_PIX/ChIP/Bowtie_Index/'
 
-fastq:
+fastq: '/data/local/vfranke/AAkalin_PIX/ChIP/Fastq'
 
-params:
-    extend: 200
-    idr: 0.1
 
 samples:
     ChIP1: ChIP.fq
@@ -22,9 +21,26 @@ peak_calling:
         Cont: Cont2
 
 idr:
-    IDR:
+    ChIP_IDR:
         ChIP1: Peaks1
         ChIP2: Peaks2
+
+params:
+    extend: 200
+    bowtie:
+        k: 1
+        m: 1
+        best: ''
+        strata: ''
+    idr:
+        idr-threshold: 0.1
+    macs2:
+        g: hs
+        keep-dup: auto
+        B: False
+        SPMR: False
+        q: 0.05
+
 
 software:
     fastqc: fastqc
@@ -37,7 +53,8 @@ software:
     perl: perl
     R: R # data.table dependency
     samtools: samtools
-    wig2bigwig: wig2bigwig
+    wigToBigWig: wigToBigWig
+
 
 # unspecified dependencies:
 # sytem ln
