@@ -1,16 +1,24 @@
 genome:
     name: 'mm9'
-    fasta:
-index: '/data/local/vfranke/AAkalin_PIX/ChIP/Bowtie_Index/'
+    fasta: '/data/akalin/Base/Genomes/mm9/mm9.fa'
+index: 
 
-fastq: '/data/local/vfranke/AAkalin_PIX/ChIP/Fastq'
+fastq: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Fastq'
 
 
 samples:
-    ChIP1: ChIP.fq
-    Cont1: Cont.fq
-    ChIP2: ChIP.fq
-    Cont2: Cont.fq
+    ChIP1: 
+        fastq: ChIP.fq
+        library: single
+    Cont1:
+        fastq: ChIP.fq
+        library: single
+    ChIP2:
+        fastq: ChIP.fq
+        library: single
+    Cont2:
+        fastq: Cont.fq
+        library: single
 
 peak_calling:
     Peaks1:
@@ -27,11 +35,8 @@ idr:
 
 params:
     extend: 200
-    bowtie:
+    bowtie2:
         k: 1
-        m: 1
-        best: ''
-        strata: ''
     idr:
         idr-threshold: 0.1
     macs2:
@@ -42,18 +47,7 @@ params:
         q: 0.05
 
 
-software:
-    fastqc: fastqc
-    bamToBed: bamToBed
-    bowtie: bowtie
-    bowtie-build: bowtie-build
-    genomeCoverageBed: genomeCoverageBed
-    idr: idr
-    macs2: macs2
-    perl: perl
-    R: R # data.table dependency
-    samtools: samtools
-    wigToBigWig: wigToBigWig
+
 
 
 # unspecified dependencies:
