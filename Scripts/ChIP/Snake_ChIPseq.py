@@ -1,10 +1,14 @@
 """
+jump conda3
+source ./activate p35
 SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX/Scripts/ChIP/Snake_ChIPseq.py'
-WORKDIR='/data/akalin/vfranke/AAkalin_PIX/ChIP'
+WORKDIR='/data/local/vfranke/AAkalin_PIX/ChIP'
 CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX/Scripts/ChIP/config.yaml'
 
 # Beast run
 snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
+
+snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
 
 # Visualize the graph horizontally
 snakemake --dag --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE | perl -pe 's|graph\[|graph[rankdir=LR,|'| dot -T png > Snake_ChIPseq.png
@@ -35,7 +39,7 @@ rm $(snakemake --summary | tail -n+2 | cut -f1)
     - Fastqc for paired end reads
 
 11. Run multiqc
-12. Add samplesheet to yaml file
+12. Add samplesheet To yaml file
 13. Check for params:idr
 * 14. Extract the input file for the fastqs as a config parameter
 * 15. application placeholders in config files
@@ -55,42 +59,19 @@ Q:
 3. How to speed up the extension?
 
 """
+
+SCRIPT_PATH = 'Scripts'
+PARAMS_PATH = '.'
+
+# ---------------------------------------------------------------------------- #
 import glob
 import os
 import re
-from SnakeFun import *
+import sys
+import yaml
 
+from SnakeFunctions import *
 localrules: makelinks
-
-# Variable definition
-GENOME = config['genome']
-NAMES = config['samples'].keys()
-PATH_FASTQ = config['fastq']
-SOFTWARE = config['software']
-
-# Directory structure definition
-PATH_MAPPED = "Mapped/Bowtie"
-PATH_QC     = "FastQC"
-PATH_GENOME = 'Bowtie_Index'
-PATH_LOG    = 'Log'
-PATH_PEAK   = 'Peaks/MACS2'
-PATH_BW     = 'Links_bw'
-PATH_IDR    = 'IDR'
-
-
-
-# ---------------------------------------------------------------------------- #
-# config defaults
-if not ('extend' in config['params'].keys()):
-    config['params']['extend'] = 0
-
-PREFIX = ''
-PREFIX = set_default('index', os.path.join(PATH_GENOME, os.path.splitext(os.path.basename(GENOME))[0]), config)
-
-IDR=''
-IDR = set_default('idr','', config)
-
-
 
 
 # ---------------------------------------------------------------------------- #
@@ -98,6 +79,45 @@ IDR = set_default('idr','', config)
 if check_config(config) == 1:
     print('config.yaml is not properly formatted - exiting')
     quit()
+
+# ---------------------------------------------------------------------------- #
+# Variable definition
+GENOME       = config['genome']['name']
+GENOME_FASTA = config['genome']['fasta']
+NAMES        = config['samples'].keys()
+PATH_FASTQ   = config['fastq']
+SOFTWARE     = config['software']
+PARAMS 		 = config['params']
+
+# Directory structure definition
+PATH_MAPPED = "Mapped/Bowtie"
+PATH_QC     = "FastQC"
+PATH_INDEX  = 'Bowtie_Index'
+PATH_LOG    = 'Log'
+PATH_PEAK   = 'Peaks/MACS2'
+PATH_BW     = 'Links_bw'
+PATH_IDR    = 'IDR'
+
+# ---------------------------------------------------------------------------- #
+# Function parameter
+with open(os.path.join(PARAMS_PATH,'app_params.yaml'), 'r') as stream:
+    app_params = yaml.load(stream)
+
+
+# ---------------------------------------------------------------------------- #
+# config defaults
+if not ('extend' in config['params'].keys()):
+    config['params']['extend'] = 0
+
+
+if GENOME_FASTA == None:
+	prefix_default = ''
+	GENOME_FASTA = ''
+else:
+	prefix_default = os.path.join(PATH_INDEX, GENOME_NAME)
+
+
+PREFIX = os.path.join(set_default('index', prefix_default, config), GENOME)
 
 
 
@@ -108,18 +128,17 @@ MAPPING = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), n
 FASTQC  = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name=NAMES)
 BW      = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS   = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
-MACS    = expand(os.path.join(PATH_PEAK,    "{name}", "{name}.narrowPeak"), name=config['peak_calling'].keys())
+MACS    = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_peaks.narrowPeak"), name=config['peak_calling'].keys())
 IDR     = expand(os.path.join(PATH_IDR,    "{name}", "{name}.narrowPeak"), name=config['idr'].keys())
 
 rule all:
     input:
         INDEX + MAPPING + BW + LINKS + FASTQC + MACS + IDR
 
-
 # ----------------------------------------------------------------------------- #
 rule bowtie_build:
     input:
-        genome = GENOME
+        genome = GENOME_FASTA
     output:
         outfile = PREFIX + '.1.ebwt'
     params:
@@ -129,12 +148,16 @@ rule bowtie_build:
         bowtie_bild = SOFTWARE['bowtie-build']
     log:
         os.path.join(PATH_LOG, "bowtie_build.log")
-    message: """
-        Bowtie build ...
-    """
-    shell:     """
+    message:
+    	"""
+        	Constructing bowtie index:
+        		input : {input.genome}
+        		output: {output.outfile}
+    	"""
+    shell:"""
         {params.bowtie_build} {input.genome} {params.prefix} 2> {log}
     """
+
 
 #----------------------------------------------------------------------------- #
 def fastq_input(wc):
@@ -159,8 +182,12 @@ rule bowtie:
         samtools = SOFTWARE['samtools']
     log:
         log = os.path.join(PATH_MAPPED, "{name}/{name}.bowtie.log")
-    message: """
-        Mapping ...
+    message:
+    """
+        Mapping with bowtie:
+        	sample: {input.infile}
+        	genome: {input.genome}
+        	output: {output.bamfile}
     """
     run:
         genome = input.genome.replace('.1.ebwt','')
@@ -185,9 +212,12 @@ rule samtools_sort:
         threads = 4,
         mem = '16G',
         samtools = SOFTWARE['samtools']
-    message: """
-        Sorting ...
-    """
+    message:
+    	"""
+        	Sorting mapped reads:
+        		input: {input}
+        		output: {output}
+	    """
     shell: """
         {params.samtools} sort --threads {params.threads} -o {output} {input}
     """
@@ -202,11 +232,13 @@ rule samtools_index:
         threads = 1,
         mem = '8G',
         samtools = SOFTWARE['samtools']
-    message: """
-        Index ...
+    message:
+    """
+        Indexing bam file:\n
+        	input: {input}
     """
     shell:
-        "{software.samtools} index {input}"
+        "{params.samtools} index {input}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -221,7 +253,11 @@ rule fastqc:
         mem = '8G',
         fastqc = SOFTWARE['fastqc']
     message:
-        """FastQC"""
+        """
+        	FastQC:
+        		input: {input.infile}
+        		output: {output.outfile}
+        """
     shell: """
         {params.fastqc} --outdir {params.outpath} --extract -f fastq -t 1 {input.infile}
         touch {output.outfile}
@@ -238,9 +274,6 @@ rule chrlen:
         mem = '4G',
         samtools = SOFTWARE['samtools'],
         perl = SOFTWARE['perl']
-    message: """
-        chrlen ...
-    """
     shell:"""
         {params.samtools} view -H {input} | grep @SQ | {params.perl} -pe 's/^@.+?://;s/LN://' > {output}
     """
@@ -256,33 +289,31 @@ rule bam2bed:
         threads = 1,
         mem = '16G',
         bamToBed = SOFTWARE['bamToBed']
-    message: """
-        bam2bed extend...
-    """
     shell: """
         {params.bamToBed} -i {input.file} > {output}
     """
-
 
 rule bam2bed_extend:
     input:
         file = rules.bam2bed.output,
         chrlen = rules.chrlen.output
     output:
-        os.path.join(PATH_MAPPED, "{name}/{name}.ext.bed")
+        file = os.path.join(PATH_MAPPED, "{name}/{name}.ext.bed")
     params:
-        extend=config['params']['extend'],
+        extend = config['params']['extend'],
         threads = 1,
         mem = '16G',
-        R = SOFTWARE['R']
-    message: """
-        bam2bed extend...
-    """
-    shell:"""
-    {params.R} --silent -e "library(data.table); f = fread('{input.file}'); setnames(f,c('chr','start','end','name','x','strand')); f[strand == '+', end := start[strand == '+'] + as.integer({params.extend})]; f[strand == '-', start := end[strand == '-'] - as.integer({params.extend})]; write.table(f, '{output}', row.names=F, col.names=F, quote=F, sep='\\t');"
-    """
-#
+    message:
+    	"""
+    		Extending reads for coverage file:
+    			input : {input.file}
+    			extend: {params.extend}
+    			output: {output.file}
+	    """
+    script:
+    	os.path.join(SCRIPT_PATH, 'Extend_Regions.R')
 
+#
 rule bam2bigWig:
     input:
         chrlen = rules.chrlen.output,
@@ -294,9 +325,12 @@ rule bam2bigWig:
         mem = '16G',
         bedgraph = os.path.join(PATH_MAPPED, "{name}/{name}.bedGraph"),
         genomeCoverageBed = SOFTWARE['genomeCoverageBed'],
-        wig2BigWig = SOFTWARE['bam2BigWig']
-    message: """
-        bam2bedgraph ...
+        wigToBigWig = SOFTWARE['wigToBigWig']
+    message:
+    """
+    	Making bigWig:
+    		input : {input.bedfile}
+    		output: {output}
     """
     shell: """
         {params.genomeCoverageBed} -i {input.bedfile} -g {input.chrlen} -bg > {params.bedgraph}
@@ -320,29 +354,44 @@ def get_sample_macs(wc):
     samps = dict(zip(name.keys(),[os.path.join('Mapped','Bowtie',i, i + '.sorted.bam') for i in name.values()]))
     return(samps)
 
-rule macs:
+rule macs2:
     input:
         unpack(get_sample_macs)
     output:
-        outdir = os.path.join(PATH_PEAK, "{name}", "{name}.narrowPeak")
+    	outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.narrowPeak")
     params:
+    	outpath = os.path.join(PATH_PEAK, "{name}"),
         name = "{name}",
         threads = 1,
         mem = '16G',
         macs2 = SOFTWARE['macs2']
+        params = PARAMS['macs2']
     log:
     	os.path.join(PATH_LOG, 'macs.log')
-    message: """
-        macs ...
+    message:
     """
-    shell: """
-        {params.macs2} callpeak -t {input.ChIP} -c {input.Cont} --outdir {output.outdir} -n {params.name} 2> {log}
+    	Running macs2:
+			ChIP:   {input.ChIP}
+			Cont:   {input.Cont}
+			output: {output.outfile}
     """
+    run:
+        command = " ".join(
+        [params.macs2, 'callpeak',
+        '-t', input.ChIP,
+        '-c', input.Cont,
+        '--outdir', params.outpath,
+        '-n', params.name,
+        join_params(params.macs2, app_params, config),
+        '2>', log
+        ])
+    	shell(command)
+
 
 # ----------------------------------------------------------------------------- #
 def get_sample_idr(wc):
     name = config['idr'][wc.name]
-    samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '.narrowPeak') for i in name.values()]))
+    samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_peaks.narrowPeak') for i in name.values()]))
     return(samps)
 
 rule idr:
@@ -351,15 +400,26 @@ rule idr:
 	output:
 		outfile = os.path.join(PATH_IDR, "{name}", "{name}.narrowPeak")
 	params:
-		idr = config['params']['idr'],
 		threads = 1,
 		mem = '8G',
-        idr = SOFTWARE['idr']
+		idr = SOFTWARE['idr']
 	log:
 		os.path.join(PATH_LOG, 'idr.log')
-	message: """
-		idr ...
-	"""
-	shell: """
-		{params.idr} --samples {input.ChIP1} {input.ChIP2} --input-file-type narrowPeak --rank q.value --output-file {output.outfile} -l {log} --verbose --plot --idr-threshold {params.idr}
-    """
+	message:
+		"""
+			Running IDR2:
+				input : {input.ChIP1} {input.ChIP2}
+				output: {output.outfile}
+		"""
+	run:
+		command = " ".join(
+        [params.idr,
+        '--samples', input.ChIP1, input.ChIP2,
+        '--input-file-type', 'narrowPeak',
+        '--rank', 'q.value',
+        '--output-file', output.outfile,
+        '-l', log,
+        '--plot',
+        join_params(params.idr, app_params, config)
+        ])
+        shell(command)
