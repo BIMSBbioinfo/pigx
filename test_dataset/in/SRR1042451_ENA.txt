@@ -1,0 +1,2 @@
+study_accession	secondary_study_accession	sample_accession	secondary_sample_accession	experiment_accession	run_accession	tax_id	scientific_name	instrument_model	library_layout	library_strategy	library_selection	fastq_ftp
+SRP033491	SRP033491	SAMN02434868	SRS510685	SRX386694	SRR1042451	9606	Homo sapiens	Illumina Genome Analyzer II	PAIRED	Bisulfite-Seq	other	ftp.sra.ebi.ac.uk/vol1/fastq/SRR104/001/SRR1042451/SRR1042451_1.fastq.gz;ftp.sra.ebi.ac.uk/vol1/fastq/SRR104/001/SRR1042451/SRR1042451_2.fastq.gz

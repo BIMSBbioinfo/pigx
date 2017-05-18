@@ -145,12 +145,11 @@ CHROM_INFO      = config["chrominfo"]     #--- details of the reference genome (
 NUMTHREADS      = config["numthreads"]
 
 
-
 INEXT=config["inext"] #TODO: it can be more flexible
-
-#RCODE = [".pe1", ".pe2"] #TODO: it has to be more flexible!!
-RCODE = ["_1", "_2"] #TODO: this si for SRA IDS
-
+RCODE = [".pe1", ".pe2"] #TODO: would be awesome if it could be more flexible, bbecause right now its impossible to mix it with SRA
+#RCODE = ["_1", "_2"] #TODO: this si for SRA IDS
+#RCODE_pref = {'sampleB':["pe1.", "pe2."], 'sampleB1':["pe1."]} 
+#RCODE_suff = {'sampleB':["", "pe2."], 'sampleB1':[""]}
 
 
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
@@ -185,15 +184,6 @@ for x in [DIR_rawqc, DIR_trimmed, DIR_posttrim_QC, DIR_mapped_n_deduped, DIR_sor
     os.makedirs(x)
 
 
-#---------------------------     EXTRA ARGUMENTS PROVIDED BY USER     ------------------------------
-
-# if additional args for tools, e.g. bismark are not given set them to ""
-if config.get("bismark_deduplication_args") is None: config["bismark_deduplication_args"]=""
-if config.get("bismark_args") is None: config["bismark_args"]=""
-if config.get("trim_galore_args") is None: config["trim_galore_args"]=""
-if config.get("fastqc_args") is None: config["fastqc_args"]=""
-
-
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
 
 
@@ -202,23 +192,27 @@ if config.get("fastqc_args") is None: config["fastqc_args"]=""
 
 OUTPUT_FILES = [
       #               ======  rule 01 raw QC    =========
-      [ expand (list_files(DIR_rawqc, config["units"][x], "_fastqc.html")  ) for x in config["samples"].keys()  ],
+      #[ expand (list_files(DIR_rawqc, config["units"][x], "_fastqc.html")  ) for x in config["samples"].keys()  ],
       #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
       #               ======  rule 03 posttrim_QC_ ======
-      [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["units"][x],".html")  ) for x in config["samples"].keys()  ],
+      #[ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["units"][x],".html")  ) for x in config["samples"].keys()  ],
       #--- fastQC output files are not needed downstream and need to be called explicitly.
       #               ====rule 02 trimgalore ======
-      [ expand ( list_files_TG( DIR_trimmed, config["units"][x])  ) for x in config["samples"].keys()  ],
+      #[ expand ( list_files_TG( DIR_trimmed, config["units"][x])  ) for x in config["samples"].keys()  ],
       #               ====rule 04 Mapping ======
-      #[ expand ( list_files_bismark( DIR_mapped_n_deduped, config["units"][x] )  ) for x in config["samples"].keys()  ],
+      [ expand ( list_files_bismark( DIR_mapped_n_deduped, config["units"][x] )  ) for x in config["samples"].keys()  ],
       #               ====rule 05 Deduplication ======
       #[ expand ( list_files_dedupe( DIR_mapped_n_deduped, config["units"][x], config["samples"][x], RCODE )  ) for x in config["samples"].keys()  ],                                
-      #               ====rule 04a sorting ======
+      #               ====rule 04a Sorting ======
       #[ expand (list_files_sortbam( DIR_sorted, config["units"][x], config["samples"][x] )  ) for x in config["samples"].keys()  ],
-      #               ====rule 04a indexing ======
+      #               ====rule 04a Indexing ======
       #[ expand (list_files_indexbam( DIR_sorted, config["units"][x], config["samples"][x] )  ) for x in config["samples"].keys()  ]
 
       ]
+
+print('---------------OUTPUT_FILES----------------')
+print(OUTPUT_FILES)
+
 
 rule final: 
   input: 
@@ -291,49 +285,49 @@ rule final:
 
 
 # ==========================================================================================
-# 
-# rule bismark_pe:
-#     input:
-#         fin1=DIR_trimmed+"{sample}"+RCODE[0]+"_val_1.fq.gz",
-#         fin2=DIR_trimmed+"{sample}"+RCODE[1]+"_val_2.fq.gz"
-#     output:
-#         DIR_mapped_n_deduped+"{sample}"+RCODE[0]+"_val_1_bismark_bt2_pe.bam",
-#         DIR_mapped_n_deduped+"{sample}"+RCODE[0]+"_val_1_bismark_bt2_PE_report.txt"
-#     threads: 2
-#     params:
-#         extra        = config["bismark_args"],
-#         useBowtie2   = "--bowtie2 ",
-#         outdir       = "--output_dir  "+ DIR_mapped_n_deduped,
-#         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2),
-#         samtools     = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-#         tempdir      = "--temp_dir " + PATHOUT,
-#     log:
-#         DIR_mapped_n_deduped+"{sample}_bismark_pe_mapping.log"
-#     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
-#     shell:
-#         "{BISMARK} {params} --multicore {threads} -1 {input.fin1} -2 {input.fin2} 2> {log}"
-# 
-# 
-# rule bismark_se:
-#     input:
-#         DIR_trimmed+"{sample}_trimmed.fastq.gz" 
-#     output:
-#         "{DIR_mapped_n_deduped}/{sample}_trimmed_bismark_bt2.bam",
-#         "{DIR_mapped_n_deduped}/{sample}_trimmed_bismark_bt2_SE_report.txt"
-#     threads: 2
-#     params:
-#         extra       = config["bismark_args"],
-#         outdir      = "--output_dir " + DIR_mapped_n_deduped,
-#         tempdir     = "--temp_dir " + PATHOUT,
-#         sampath     ="--samtools_path " + os.path.dirname(SAMTOOLS),
-#         useBowtie2  = "--bowtie2 ",
-#         bowtie2path = "--path_to_bowtie " + os.path.dirname(BOWTIE2)
-#     log:
-#         "{DIR_mapped_n_deduped}/{sample}_bismark_se_mapping.log"
-#     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
-#     shell:
-#         "{BISMARK} {params} --multicore {threads} {input} 2> {log}"
-# 
+
+rule bismark_pe:
+    input:
+        fin1=DIR_trimmed+"{sample}"+RCODE[0]+"_val_1.fq.gz",
+        fin2=DIR_trimmed+"{sample}"+RCODE[1]+"_val_2.fq.gz"
+    output:
+        DIR_mapped_n_deduped+"{sample}"+RCODE[0]+"_val_1_bismark_bt2_pe.bam",
+        DIR_mapped_n_deduped+"{sample}"+RCODE[0]+"_val_1_bismark_bt2_PE_report.txt"
+    threads: 2
+    params:
+        extra        = config.get("bismark_args", ""),
+        useBowtie2   = "--bowtie2 ",
+        outdir       = "--output_dir  "+ DIR_mapped_n_deduped,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2),
+        samtools     = "--samtools_path "+ os.path.dirname(SAMTOOLS),
+        tempdir      = "--temp_dir " + PATHOUT,
+    log:
+        DIR_mapped_n_deduped+"{sample}_bismark_pe_mapping.log"
+    message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
+    shell:
+        "{BISMARK} {params} --multicore {threads} -1 {input.fin1} -2 {input.fin2} 2> {log}"
+
+
+rule bismark_se:
+    input:
+        DIR_trimmed+"{sample}_trimmed.fq.gz"
+    output:
+        "{DIR_mapped_n_deduped}/{sample}_trimmed_bismark_bt2.bam",
+        "{DIR_mapped_n_deduped}/{sample}_trimmed_bismark_bt2_SE_report.txt"
+    threads: 2
+    params:
+        extra       = config.get("bismark_args", ""),
+        outdir      = "--output_dir " + DIR_mapped_n_deduped,
+        tempdir     = "--temp_dir " + PATHOUT,
+        sampath     ="--samtools_path " + os.path.dirname(SAMTOOLS),
+        useBowtie2  = "--bowtie2 ",
+        bowtie2path = "--path_to_bowtie " + os.path.dirname(BOWTIE2)
+    log:
+        "{DIR_mapped_n_deduped}/{sample}_bismark_se_mapping.log"
+    message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
+    shell:
+        "{BISMARK} {params} --multicore {threads} {input} 2> {log}"
+
 
 
 # ==========================================================================================
@@ -346,7 +340,7 @@ rule fastqc_after_trimming_se:
     	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.html",
     	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
     params:
-       fastqc_args = config["fastqc_args"],
+       fastqc_args = config.get("fastqc_args", ""),
        outdir = "--outdir "+DIR_posttrim_QC
     log:
    	   DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
@@ -364,24 +358,26 @@ rule fastqc_after_trimming_pe:
     	DIR_posttrim_QC+"{sample}"+RCODE[1]+"_val_2_fastqc.zip",
         DIR_posttrim_QC+"{sample}"+RCODE[1]+"_val_2_fastqc.html"
     params:
-        fastqc_args = config["fastqc_args"],
+        fastqc_args = config.get("fastqc_args", ""),
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
     shell:
         "{FASTQC} {params.outdir} {input} 2> {log}"
-# #
-# # ==========================================================================================
-# # trim the reads
-# 
+        
+# # #
+# # # ==========================================================================================
+# # # trim the reads
+# # 
+
 rule trimgalore_se:
    input:
        PATHIN+"{sample}"+INEXT
    output:
        DIR_trimmed+"{sample}_trimmed.fq.gz" #---- this ALWAYS outputs .fq.qz format.
    params:
-       extra        = config["trim_galore_args"],
+       extra        = config.get("trim_galore_args", ""),
        outdir       = "--output_dir "+  DIR_trimmed,
        phred        = "--phred33",
        gz           = "--gzip",
@@ -402,7 +398,7 @@ rule trimgalore_pe:
         DIR_trimmed+"{sample}" + RCODE[0] + "_val_1.fq.gz", #---- this ALWAYS outputs .fq.qz format.
         DIR_trimmed+"{sample}" + RCODE[1] + "_val_2.fq.gz",
     params:
-        extra          = config["trim_galore_args"],
+        extra          = config.get("trim_galore_args", ""),
         outdir         = "--output_dir " + DIR_trimmed,
         gz             = "--gzip",
         cutadapt       = "--path_to_cutadapt "+ CUTADAPT,
@@ -412,7 +408,7 @@ rule trimgalore_pe:
     message:
         " ---------  Trimming raw paired-end read data using {TRIMGALORE} -------  "
     shell:
-        "{TRIMGALORE} {params} {input} -o {DIR_trimmed} 2> {log}"
+        "echo {output}; {TRIMGALORE} {params} {input} -o {DIR_trimmed} 2> {log}"
 
 
 # ==========================================================================================
@@ -426,7 +422,7 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
         DIR_rawqc + "{sample}_fastqc.html",
         DIR_rawqc + "{sample}_fastqc.zip"
     params:
-        fastqc_args = config["fastqc_args"],
+        fastqc_args = config.get("fastqc_args", ""),
         outdir = "--outdir "+ DIR_rawqc    # usually pass params as strings instead of wildcards.
 
     log:
