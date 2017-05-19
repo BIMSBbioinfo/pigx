@@ -1,8 +1,8 @@
-numjobs=36
-
+numjobs=1
 
 i=1
 LOG="./nohup_SM_submit_"${i}".log"
+# ================================================================
 
 while [ -f ${LOG} ]
 do
@@ -30,3 +30,5 @@ echo "------ Commencing Snakemake : ------"   >>${LOG}
 
 nohup  snakemake -s BSseq_pipeline.py --jobs ${numjobs}        >> ${LOG} &
 
+# The following line can be used for cluster submission of the SM script:
+# snakemake -s BSseq_pipeline_v2.py --jobs ${numjobs}   --cluster "qsub -V -l h_vmem=500M -pe smp 1  -l h_rt=32:00:00 -l h_stack=128k"       >> ${LOG} &

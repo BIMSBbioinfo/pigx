@@ -48,7 +48,7 @@
         "BOWTIE2"         : "bowtie2" ,
         "BISMARK"         : "bismark",
         "DEDUPLICATE"         : "deduplicate_bismark",
-        "BOWTIE2"             : "bowtie2" ,
+        "BOWTIE2"             : "bowtie2",
         "DEDUPLICATE_BISMARK" : "deduplicate_bismark",
         "BISMARK_GENOME_PREPARATION"     : "bismark_genome_preparation",
         "BISMARK_METHYLATION_EXTRACTOR"  : "bismark_methylation_extractor",

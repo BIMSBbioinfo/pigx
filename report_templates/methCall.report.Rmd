@@ -5,11 +5,31 @@ output:
     toc:        TRUE
     toc_float:  TRUE
     theme:      "lumen"
+<<<<<<< HEAD
 date: "`r Sys.Date()`"
+=======
+    number_sections: FALSE
+    code_folding: "hide"
+    self_contained: TRUE
+    includes:
+      in_header: pigx_bsseq_logo.html
+output_dir: "methylation_calls/"
+output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.meth_calls.html"
+date: "`r Sys.Date()`"
+bibliography: reports.bib
+params:
+  inBam:    "../bam_files/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.bam"
+  assembly: "ce10"
+  mincov:   10
+  minqual:  20
+  rdata:    "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_methylRaw.RData"
+  outDir: "methylation_calls/"
+>>>>>>> master
 ---
 
 ```{r eval_params, echo=FALSE}
 
+<<<<<<< HEAD
 args = commandArgs(trailingOnly=TRUE)
 
 input=args[1]
@@ -21,6 +41,14 @@ assembly = args[5]
 mincov=args[6]
 minqual=args[7]
 
+=======
+input     <- params$inBam
+# output    <- params$outBed
+assembly  <- params$assembly
+mincov    <- params$mincov
+minqual   <- params$minqual
+rdatafile <- params$rdata
+>>>>>>> master
 ```
 
 
@@ -54,10 +82,17 @@ paramsDesc <- c("Input file",
             "Minimum Coverage",
             "Minimim Mapping Quality")
 
+<<<<<<< HEAD
 paramsValues <- c( input,
              assembly,
              mincov,
              minqual)
+=======
+paramsValues <- c( params$inBam,
+             params$assembly,
+             params$mincov,
+             params$minqual)
+>>>>>>> master
 
 inputParams <- data.frame(Parameters = paramsDesc,
                           Values = paramsValues,
@@ -88,7 +123,11 @@ We first extract the methylation calls from the sequence alignment produced by t
                                 assembly = assembly,
                                 mincov = mincov,
                                 minqual = minqual,
+<<<<<<< HEAD
                                 save.context = context,
+=======
+                                save.context = "CpG",
+>>>>>>> master
                                 save.folder = save_folder)
 
 

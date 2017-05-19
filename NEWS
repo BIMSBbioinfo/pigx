@@ -1,0 +1,12 @@
+NEWS
+====
+
+add small update-config script
+- small example script how to update the config without screwing the old one
+
+add post mapping rules
+ - includes Rmd report templates (content needs to updated)
+ - report render wrapper
+ - rules directory for additional rules
+ - scripts directory for additional python or R scripts
+ - add some small dataset and shell script to test dry runs

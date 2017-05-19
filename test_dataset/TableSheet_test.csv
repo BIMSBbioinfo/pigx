@@ -1,3 +1,19 @@
-Read1,Read2,Sample id,Read type,Treatment,Covariate1
+[[ GENERAL PARAMETERS ]]
+PATHIN=''
+PATHOUT=''
+GENOMEPATH=''
+LOG=''
+CHROM_INFO=''
+GENOME_VERSION=''
+Bismark_args=''
+Fastqc_args=''
+Trim_galore_args=''
+
+[[ SAMPLES ]]
+Read1,Read2,SampleID,Read type,Treatment
 sampleB.pe1.fq.gz,sampleB.pe2.fq.gz,sampleB,WGBS,B,,
 pe1.single.fq.gz,,sampleB1,WGBS,B,,
+
+
+[[ DIFFERENTIAL METHYLATION ]]
+sampleB, sampleB1

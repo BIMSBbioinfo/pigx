@@ -1,0 +1,207 @@
+---
+title: "PiGx: BS-seq"
+output: 
+  html_notebook:
+    toc:        TRUE
+    toc_float:  TRUE
+    theme:      "lumen"
+    number_sections: FALSE
+    code_folding: "hide"
+    self_contained: TRUE
+    includes:
+      in_header: pigx_bsseq_logo.html
+output_dir: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation_rule/"
+output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.annotation.nb.html"
+date: "`r Sys.Date()`"
+bibliography: reports.bib
+params:
+  inBed:    "/Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/test1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.bed"
+  assembly: "ce10"
+  refseqfile: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation/refseq.genes.{assembly}.bed"
+---
+
+```{r eval_params, echo=FALSE}
+
+inBed     <- params$inBed
+assembly  <- params$assembly
+refgenes.file <- params$refseqfile
+```
+
+## Annotation Report
+
+The annotation with 
+
+```{r, include=FALSE,warning=FALSE}
+
+  suppressPackageStartupMessages(expr = {
+    library("genomation")
+
+  })
+```
+
+### Libraries
+```{r, eval=FALSE, include=TRUE}
+
+    library("genomation")
+    library("AnnotationHub")
+    library("rtracklayer")
+
+```
+
+### Parameters
+```{r print_params, echo=TRUE, results="asis"}
+
+paramsDesc <- c("Input file",
+                "Genome Assembly",
+                "RefSeq Genes")
+
+paramsValues <- c(params$inBed,
+                  params$assembly,
+                  params$refseqfile)
+
+
+
+inputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
+
+
+
+### Preprocessing
+
+We first need to fetch the reference gene set for the given genome assembly. To do this we check the data from the [AnnotationHub](http://bioconductor.org/packages/release/bioc/html/AnnotationHub.html) Package [@ah2017] wich provides fast access to tracks and datasets available at BroadInstitute, UCSC, Ensembl and others. Whilst this package allows us to query a current snapshot of those databases, there is the possibility that a certain track might be newer than the current snapshot. This is why we query the UCSC table browser directly using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009].
+
+
+
+
+```{r, eval=FALSE, include=TRUE}
+## this function tries to fetch the reference genes for the given assembly
+fetchRefGene <- function(refgenes.loc = NULL,
+                         refgenes.assembly) {
+  
+  if(is.null(refgenes.loc)) refgenes.loc <- paste0("refseq.genes.",refgenes.assembly,".bed")
+  
+  ## import local bed file if available
+  if( file.exists(refgenes.loc) ) {
+    ## parse it 
+    message("Found RefSeq track at:")
+    return(refgenes.loc)
+    
+  } else {
+    message("Trying to fetch from AnnotationHub.\n")
+    ## else query it from AnnotationHub 
+    ah = AnnotationHub()
+    ## query refseq genes for assembly
+    refseq.q <- query(ah,c("refseq","genes",assembly))
+    ## either there is exactly one record, so fetch it
+    if(length(refseq.q) == 1) {
+      message("Found single RefSeq track, downloading...\n")
+      refGenes <- ah[[names(refseq.q)]]
+      ## and write it to BED file
+      export.bed(object = refGenes,
+                 con = refgenes.loc,
+                 trackLine=FALSE)
+      message("Written the RefSeq track to:")
+      return(refgenes.loc)
+      
+    } else if ( length(refseq.q) == 0 ) { 
+      message("Trying to fetch from UCSC table browser.\n")
+      ## or there is none, 
+      ## so we check with rtracklayer for the latest ucsc data
+      mySession = browserSession("UCSC")
+      genome(mySession) <- assembly
+      track.names <- trackNames(ucscTableQuery(mySession))
+      # I am interested in the refGene track 
+      if("refGene" %in% track.names) {
+        message("Found single RefSeq track, downloading...\n")
+        # fetch it as a GRanges object 
+        targetTrack <- track(mySession,"refGene")
+        ## and write it to BED file
+        export.bed(object = targetTrack,
+                   con = refgenes.loc,
+                   trackLine=FALSE)
+        
+        message("Written the RefSeq track to:")
+        return(refgenes.loc)
+      } 
+    } else {
+      stop(paste("Could not find reference gene set for the given assembly <'",assembly,"'>." ))
+    }
+    
+  }
+}
+```
+
+
+After we have aquired the reference genes, we can determine different features intrinsic to each gene, such as promoter, exon or intron using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014]. 
+
+
+```{r, message=FALSE, include=TRUE, eval=FALSE}
+
+## filename can either be passed as argument or be this generic pasted one
+refgenes.file <- paste0("refseq.genes.",assembly,".bed")
+
+fetchRefGene(refgenes.loc = refgenes.file,refgenes.assembly = assembly)
+
+## now we parse the gene features
+refgenes.grl <- readTranscriptFeatures(refgenes.file)
+```
+
+```{r, echo=FALSE, message=FALSE}
+
+## now we parse the gene features
+refgenes.grl <- readTranscriptFeatures(refgenes.file)
+```
+
+### Annotation
+
+Now we can load the segments to detect to overlap percentage with gene features.
+
+```{r, message=FALSE,fig.show="hold"}
+
+# now load segments 
+segments.gr <- readBed(file = inBed,
+                      track.line = "auto")
+# split according
+segments.grl <- split(x = segments.gr,f = segments.gr$name)
+
+
+# and detect overlaps 
+annot.gene.list <- lapply(segments.grl,
+                          function(x) annotateWithGeneParts(target = x,
+                                                            feature = refgenes.grl,
+                                                            intersect.chr = TRUE))
+
+## percentage of target features overlapping with annotation:
+## (with promoter > exon > intron precedence)
+annot.gene.mat <- as.matrix(sapply(annot.gene.list, function(x) x@precedence))
+
+  par(mfrow=c(1,2))
+boxplot(sapply(split(x = segments.gr,f = segments.gr$name),FUN = function(x) x$score),
+        ylab = "Methylation (%)",
+        xlab = "Segment")
+
+# plot the target overlap for each segemnt type
+# barplot(annot.gene.mat,legend.text = TRUE)
+barplot(annot.gene.mat,
+        ylab = "Overlap (%)",
+        xlab = "Segment")
+legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,length.out = ncol(annot.gene.mat))))
+
+```
+
+
+## Session Info
+
+```{r }
+sessionInfo()
+```
+
+
+
+## References
