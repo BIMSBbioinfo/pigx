@@ -1,3 +1,9 @@
+
+import subprocess
+import re
+import os
+import sys
+
 # ---------------------------------------------------------------------------- #
 # given a config dictionary sets the default value
 def set_default(param, default, config):
@@ -67,10 +73,13 @@ def get_app_params(app, app_name, app_params):
 
 # ---------------------------------------------------------------------------- #
 def join_params(app, app_params, config):
+    import subprocess
+    import os
+    import re
     app_name = os.path.basename(app)
     params_all = get_app_params(app, app_name, app_params)
     names  = set(params_all.keys())
-    params_set = config['params'][app_name]
+    params_set = config[app_name]
     params_diff = set(params_set) - names
     if len(params_diff) > 0:
         print(app_name + 'contains unknown parameters:' + ", ".join(list(params_diff)))
@@ -83,3 +92,7 @@ def join_params(app, app_params, config):
     params = [params_all[i] +' '+ str(params_set[i]) for i in params_set_keys]
     params = " ".join(params)
     return(params)
+
+
+
+

@@ -47,8 +47,11 @@ rm $(snakemake --summary | tail -n+2 | cut -f1)
 
 17. cofigure the pipeline for broad histone data
 
+[] enable trimming
 [] write tests
 [] write checks for the config proper formatting 
+[] rewrite fastqc to go through each individual file
+
 
 Integrate_Expression_Mouse_Hamster_Difference
 1. Figure out how to prevent bombing
@@ -97,7 +100,7 @@ GENOME       = config['genome']['name']
 GENOME_FASTA = config['genome']['fasta']
 NAMES        = config['samples'].keys()
 PATH_FASTQ   = config['fastq']
-PARAMS          = config['params']
+PARAMS       = config['params']
 
 SOFTWARE     = SOFTWARE_CONFIG['software']
 
@@ -194,7 +197,6 @@ rule bowtie2:
         bowtie2  = SOFTWARE['bowtie2'],
         samtools = SOFTWARE['samtools'],
         library  = get_library_type,
-        params_bowtie2 = PARAMS['bowtie2']
     log:
         log = os.path.join(PATH_MAPPED, "{name}/{name}.bowtie2.log")
     message:"""
@@ -216,7 +218,7 @@ rule bowtie2:
         '-p', str(params.threads),
         '-x', genome,
         map_args,
-        join_params(params.params_bowtie2, APP_PARAMS, config),
+        join_params("bowtie2", APP_PARAMS, PARAMS),
         '2>',log.log,
         '|', params.samtools,'view -bhS >', output.bamfile
         ])
@@ -380,9 +382,8 @@ rule macs2:
         threads = 1,
         mem = '16G',
         macs2 = SOFTWARE['macs2'],
-        params_macs2 = PARAMS['macs2']
     log:
-        os.path.join(PATH_LOG, 'macs.log')
+        log = os.path.join(PATH_LOG, 'macs.log')
     message:"""
         Running macs2:
             ChIP:   {input.ChIP}
@@ -396,8 +397,8 @@ rule macs2:
         '-c', input.Cont,
         '--outdir', params.outpath,
         '-n', params.name,
-        join_params(params.params_macs2, APP_PARAMS, config),
-        '2>', log
+        join_params("macs2", APP_PARAMS, PARAMS),
+        '2>', log.log
         ])
         shell(command)
 
@@ -419,7 +420,7 @@ rule idr:
         idr = SOFTWARE['idr'],
         params_idr = PARAMS['idr']
     log:
-        os.path.join(PATH_LOG, 'idr.log')
+        log = os.path.join(PATH_LOG, 'idr.log')
     message:"""
             Running IDR2:
                 input : {input.ChIP1} {input.ChIP2}
@@ -432,8 +433,8 @@ rule idr:
         '--input-file-type', 'narrowPeak',
         '--rank', 'q.value',
         '--output-file', output.outfile,
-        '-l', log,
+        '-l', log.log,
         '--plot',
-        join_params(params.params_idr, APP_PARAMS, config)
+        join_params("idr", APP_PARAMS, PARAMS)
         ])
         shell(command)

@@ -11,7 +11,7 @@ samples:
         fastq: ChIP.fq
         library: single
     Cont1:
-        fastq: ChIP.fq
+        fastq: Cont.fq
         library: single
     ChIP2:
         fastq: ChIP.fq
@@ -42,8 +42,6 @@ params:
     macs2:
         g: hs
         keep-dup: auto
-        B: False
-        SPMR: False
         q: 0.05
 
 
