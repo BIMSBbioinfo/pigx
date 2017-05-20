@@ -41,7 +41,25 @@ def parseGeneralParams2dict(lines):
   (keys,values) = list(map(list, zip(*list_of_tuples)))
   dict_params=dict(zip(keys, values))
   return(dict_params)
-                
+    
+    
+def getFilenames(mylist):
+  if len(mylist)==2:
+    return( [splitext_fqgz(mylist[0])[0], splitext_fqgz(mylist[1])[0]] )
+  if len(mylist)==1:
+    return( [splitext_fqgz(mylist[0])[0]] )
+  else:
+    raise Exception("Sth went wrong in getFilenames())")
+    
+    
+def getExtension(mylist):
+  if len(mylist)==2:
+    return( [splitext_fqgz(mylist[0])[1], splitext_fqgz(mylist[1])[1]] )
+  if len(mylist)==1:
+    return( [splitext_fqgz(mylist[0])[1]] )
+  else:
+    raise Exception("Sth went wrong in getExtension())")   
+    
 
 def parseTable2dict( path_table, skip=None):
   """
@@ -88,6 +106,9 @@ def parseTable2dict( path_table, skip=None):
         raise Exception( "Number of columns in row"+j+" doesn't match number of elements in header." )
       
     sampleid_dict.update(  { 'fastq' : units[row[2]] }  )
+    sampleid_dict.update(  { 'fastq_name' : getFilenames(units[row[2]]) }  )
+    sampleid_dict.update(  { 'fastq_ext' : getExtension(units[row[2]]) }  )
+    
     #sampleid_dict.update(  { 'inext' : units[row[2]] }  )
     #sampleid_dict.update(  { 'units' : units[row[2]] }  )
     outputdict[row[2]] = sampleid_dict
@@ -120,35 +141,4 @@ def uniq_inext(list_units_only_ext):
     exit()
   return(ext)
 
-
-def getFilenames(mylist):
-  if len(mylist)==2:
-    return( [splitext_fqgz(mylist[0])[0], splitext_fqgz(mylist[1])[0]] )
-  if len(mylist)==1:
-    return( [splitext_fqgz(mylist[0])[0]] )
-  else:
-    raise Exception("Sth went wrong in getFilenames())")
-
-#  TODO: propably can be just removed   
-# def remove_ext_from_units(list_of_lists):
-#   list_units_no_ext = []
-#   list_units_only_ext = []
-#   for x in list_of_lists:
-#     if len(x)==2:
-#       core = [ splitext_fqgz(x[0])[0], splitext_fqgz(x[1])[0] ]
-#       ext = [ splitext_fqgz(x[0])[1], splitext_fqgz(x[1])[1] ]
-#       list_units_no_ext.append(core)
-#       list_units_only_ext.extend(ext)
-#     if len(x)==1:
-#       core = [ splitext_fqgz(x[0])[0] ]
-#       ext =  [ splitext_fqgz(x[0])[1] ]
-#       list_units_no_ext.append(core)
-#       list_units_only_ext.extend(ext)
-# 
-#   #TODO:make it more flexible?
-#   ext = uniq_inext(list_units_only_ext)
-#     
-#   return ( list_units_no_ext, "."+ext[0]) 
-# 
-#     
-# 
+  
