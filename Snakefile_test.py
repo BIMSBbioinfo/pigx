@@ -115,7 +115,7 @@ OUTPUT_FILES = [
       [ expand (list_files(DIR_rawqc, getFilenames(config["SAMPLES"][x]['fastq']), x,"_fastqc.html")  ) for x in config["SAMPLES"].keys()  ],
       #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
       #               ======  rule 03 posttrim_QC_ ======
-      #[ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][x]['fastq'],x, ".html")  ) for x in config["SAMPLES"].keys()  ],
+      [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][x]['fastq'],x, ".html")  ) for x in config["SAMPLES"].keys()  ],
       #--- fastQC output files are not needed downstream and need to be called explicitly.
       #               ====rule 02 trimgalore ======
       [ expand (list_files_TG(DIR_trimmed, getFilenames(config["SAMPLES"][x]['fastq']), x  )) for x in config["SAMPLES"].keys()  ],
@@ -289,51 +289,51 @@ rule bismark_se:
 ######### this si wrong, change it!!!!
 
 
-# rule fastqc_after_trimming_se:
-#     input:
-#        get_fastqc_after_trimming_input
-#     output:
-#     	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.html",
-#     	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
-#     params:
-#        fastqc_args = config.get("fastqc_args", ""),
-#        outdir = "--outdir "+DIR_posttrim_QC
-#     log:
-#    	   DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-#     message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
-#     run:
-#         cmd=FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[0] + " "+ " 2> "+ " "+log.log
-#         # Here a hack to generate files named like samples and not like units, even though
-#         # trimgalore will produce files named using units
-#         cmd = cmd + "; for x in {output.o1} {output.o2}; do touch $x; done"
-#         # Execute
-#         shell(cmd)
+rule fastqc_after_trimming_se:
+    input:
+       infile=get_fq_after_trimming
+    output:
+    	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.html"
+    	  #DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
+    params:
+       fastqc_args = config.get("fastqc_args", ""),
+       outdir = "--outdir "+DIR_posttrim_QC
+    log:
+   	   DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
+    message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
+    run:
+        cmd=FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[0] + " "+ " 2> "+ " "+log.log
+        # Here a hack to generate files named like samples and not like units, even though
+        # trimgalore will produce files named using units
+        cmd = cmd + "; for x in {output.o1} {output.o2}; do touch $x; done"
+        # Execute
+        shell(cmd)
        
 #--------
-# rule fastqc_after_trimming_pe:
-#     input:
-#         infile=get_fastqc_after_trimming_input
-#     output:
-#     	o1=DIR_posttrim_QC+"{sample}"+"_val_1_fastqc.html",
-#     	o2=DIR_posttrim_QC+"{sample}"+"_val_1_fastqc.zip",
-#     	o3=DIR_posttrim_QC+"{sample}"+"_val_2_fastqc.zip",
-#         o4=DIR_posttrim_QC+"{sample}"+"_val_2_fastqc.html"
-#     params:
-#         fastqc_args = config.get("fastqc_args", ""),
-#         outdir = "--outdir "+DIR_posttrim_QC
-#     log:
-#    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-#     message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
-#     #shell:
-#     #    "{FASTQC} {params.outdir} {input} 2> {log}"
-#     run:
-#         cmd=FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[0] + " "+ " 2> "+ " "+log.log
-#         cmd=cmd+" ; "+ FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[1] + " "+ " 2> "+ " "+log.log
-#         # Here a hack to generate files named like samples and not like units, even though
-#         # trimgalore will produce files named using units
-#         cmd = cmd + "; for x in {output.o1} {output.o2} {output.o3} {output.o4}; do touch $x; done"
-#         # Execute
-#         shell(cmd)
+rule fastqc_after_trimming_pe:
+    input:
+        infile=get_fq_after_trimming
+    output:
+    	o1=DIR_posttrim_QC+"{sample}"+"_val_1_fastqc.html",
+    	#o2=DIR_posttrim_QC+"{sample}"+"_val_1_fastqc.zip",
+    	#o3=DIR_posttrim_QC+"{sample}"+"_val_2_fastqc.zip",
+        o4=DIR_posttrim_QC+"{sample}"+"_val_2_fastqc.html"
+    params:
+        fastqc_args = config.get("fastqc_args", ""),
+        outdir = "--outdir "+DIR_posttrim_QC
+    log:
+   	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
+    message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
+    #shell:
+    #    "{FASTQC} {params.outdir} {input} 2> {log}"
+    run:
+        cmd=FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[0] + " "+ " 2> "+ " "+log.log
+        cmd=cmd+" ; "+ FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[1] + " "+ " 2> "+ " "+log.log
+        # Here a hack to generate files named like samples and not like units, even though
+        # trimgalore will produce files named using units
+        cmd = cmd + "; for x in {output.o1} {output.o2} {output.o3} {output.o4}; do touch $x; done"
+        # Execute
+        shell(cmd)
 
 #
 # #
