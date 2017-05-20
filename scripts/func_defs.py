@@ -1,4 +1,4 @@
-def list_files(PATH, files, ext):
+def list_files(PATH, files, sampleid, ext):
     if len(files) == 1:
         return [PATH+files[0]+ext] #---- single end
     elif len(files) == 2:
@@ -7,14 +7,34 @@ def list_files(PATH, files, ext):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
+# def list_files(PATH, files, sampleid, ext):
+#     if len(files) == 1:
+#         return [PATH+sampleid+ext] #---- single end
+#     elif len(files) == 2:
+#         return [PATH+sampleid+ext, PATH+sampleid+ext] #---- paired end
+#     else:
+#         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_TG(PATH, files, sampleid,):
+
+
+
+def mylist_files_TG(PATH, files, sampleid):
     if len(files) == 1:
-        return [PATH+sampleid+"whathever_trimmed.fq.gz"] #---- single end
+        return [PATH+sampleid+"_trimmed.fq.gz"] #---- single end
     elif len(files) == 2:
         return [PATH+sampleid+"_val_1.fq.gz", PATH+sampleid+"_val_2.fq.gz"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+
+def list_files_TG(PATH, files, sampleid):
+    if len(files) == 1:
+        return [PATH+files[0]+"_trimmed.fq.gz"] #---- single end
+    elif len(files) == 2:
+        return [PATH+files[0]+"_val_1.fq.gz", PATH+files[1]+"_val_2.fq.gz"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 
 
 def list_files_posttrim_QC(PATH, files, sampleid, ext):
@@ -26,7 +46,7 @@ def list_files_posttrim_QC(PATH, files, sampleid, ext):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def list_files_bismark(PATH, files, sampleid):
-    return(PATH+sampleid+"whathever.bam")
+    return(PATH+sampleid+".bam")
     
 def real_list_files_bismark(PATH, files, sampleid):
     if len(files) == 1:
