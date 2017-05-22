@@ -1,6 +1,6 @@
 [[ GENERAL PARAMETERS ]]
-PATHIN='/home/kwreczy/repositories/pigx_bsseq/in/'
-PATHOUT='/home/kwreczy//tmp/my_output/'
+PATHIN='/home/kwreczy/repositories/pigx_bsseq/test_dataset/in/'
+PATHOUT='/home/kwreczy/tmp/my_output/'
 GENOMEPATH='/home/kwreczy//tmp/ce10/'
 LOG='/home/kwreczy/logs/'
 CHROM_INFO='/home/kwreczy/repositories/pigx_bsseq/test_dataset/chromInfo.txt'
@@ -16,8 +16,8 @@ RCODE='.pe'
 
 [[ SAMPLES ]]
 Read1,Read2,SampleID,ReadType,Treatment
-sampleB_1.fq.gz,sampleB_2.fq.gz,sampleB,WGBS,B,,
-sampleB1.fq.gz,,sampleB1,WGBS,B,,
+sampleB.pe1.fq.gz,sampleB.pe2.fq.gz,sampleB,WGBS,B,,
+pe1.single.fq.gz,,sampleB1,WGBS,B,,
 
 
 [[ DIFFERENTIAL METHYLATION ]]

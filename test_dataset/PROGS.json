@@ -1,0 +1,16 @@
+{
+    "GTOOLBOX":"/home/kwreczy/tmp/ggtoolbox/",
+
+    "PROGS": {
+        "FASTQC"          : "fastqc",
+        "TRIMGALORE"      : "trim_galore",
+        "CUTADAPT"        : "cutadapt",
+        "BOWTIE2"         : "bowtie2" ,
+        "BISMARK"         : "bismark",
+        "DEDUPLICATE_BISMARK" : "deduplicate_bismark",
+        "BISMARK_GENOME_PREPARATION"     : "bismark_genome_preparation",
+        "BISMARK_METHYLATION_EXTRACTOR"  : "bismark_methylation_extractor",
+        "BISMARK2REPORT"                 : "bismark2report",
+        "SAMTOOLS"                       : "samtools"
+    }
+}

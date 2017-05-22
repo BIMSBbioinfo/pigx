@@ -10,8 +10,6 @@ INEXT=".fq.gz"
 bismark_args=' -N 1 -L 2 '
 fastqc_args=''
 trim_galore_args=''
-INEXT='.fq.gz'
-RCODE='.pe'
 
 
 [[ SAMPLES ]]

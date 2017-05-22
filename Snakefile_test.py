@@ -6,59 +6,9 @@
 # To process bisulfite sequencing data from raw fastq files to performing integrated bioinformatics analysis.
 #============================================================================================================
 
-
-# This is how now it should be done
-#snakemake  --forceall --snakefile /home/kwreczy/repositories/pigx_bsseq//Snakefile_test.py -configfile=./config.py --config tablesheet=/home/kwreczy/repositories/pigx_bsseq/test_dataset/TableSheet_test.csv
-
-#------  include function definitions, and set os:
-
-import os,csv,json
-include   : "./scripts/func_defs.py"
-include   : "./scripts/functions_parsing.py"
-#include   : "bismark_rule.py"
-
-
-#------  Parse table sheet and write config file:
-
-# Check configuration parameters  
-tablesheetpath = parse_config_args(config)
-
-# Read a Table Sheet in the CSV format
-TABLESHEET =  config["tablesheet"]
-# TODO: for now instead of reading a big table I splitted it into few smaller ones
-# TODO: split this table to separate files
-# save it in eg tmp and then remove it
-#f = open(TABLESHEET,'r')
-#text = f.readlines()
-general_paramspath = open("/home/kwreczy/repositories/pigx_bsseq/test_dataset/GENERALPARAMETERS.txt",'r').readlines() # TODO:
-pathtable = "/home/kwreczy/repositories/pigx_bsseq/test_dataset/SAMPLES.txt" # TODO:
-progspath= "/home/kwreczy/repositories/pigx_bsseq/test_dataset/PROGS.json" # TODO:
-
-# Load general parameters
-gen_params=parseGeneralParams2dict(general_paramspath)
-
-# Load parameters specific to samples
-sample_params = parseTable2dict( pathtable, skip=1)
-# Load paths to tools
-with open(progspath) as data_file:    
-    progs=json.load(data_file)
-
-# Create a config file  
-config=gen_params
-config.update(sample_params)
-config.update(progs)
-
-# Check if given directories exist, if they dont create them
-for x in [config["PATHIN"], config["PATHOUT"], config["LOG"]]:
-  if not os.path.exists(x):
-    os.makedirs(x)
-
-# Save the config file
-with open(config["PATHOUT"]+"config.json", 'w') as outfile:
- json.dump(config, outfile)
-
-print(config)
-print(config["PATHOUT"]+"config.json")
+#------ set config file, include function definitions, and set os:
+import os
+include   : "./scripts/Snakefiletest_func_defs.py"
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
@@ -93,6 +43,11 @@ SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
 
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
 
+# Check if given directories exist, if they dont create them:
+for x in [config["PATHIN"], config["PATHOUT"], config["LOG"]]:
+  if not os.path.exists(x):
+    os.makedirs(x)
+
 DIR_sorted=PATHOUT+'06_sorted/'
 DIR_mapped_n_deduped=PATHOUT+'04_mapped_n_deduped/'
 DIR_posttrim_QC=PATHOUT+'03_posttrim_QC/'
@@ -102,25 +57,21 @@ DIR_rawqc=PATHOUT+'01_rawqc/'
 for x in [DIR_rawqc, DIR_trimmed, DIR_posttrim_QC, DIR_mapped_n_deduped, DIR_sorted]:
   if not os.path.exists(x):
     os.makedirs(x)
-
+    
 
 # #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
 
-
-
-## OUTPUTFILE contain files named nnot by fastq files but for sampleid!!!! (besides fastqc.)
-
 OUTPUT_FILES = [
       #               ======  rule 01 raw QC    =========
-      #[ expand (list_files(DIR_rawqc, getFilenames(config["SAMPLES"][x]['fastq']), x,"_fastqc.html")  ) for x in config["SAMPLES"].keys()  ],
+      #[ expand (list_files(DIR_rawqc, getFilenames(config["SAMPLES"][x]['files']), x,"_fastqc.html")  ) for x in config["SAMPLES"].keys()  ],
       #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
-      #               ======  rule 03 posttrim_QC_ ======
-      #[ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][x]['fastq'],x, ".html")  ) for x in config["SAMPLES"].keys()  ],
-      #--- fastQC output files are not needed downstream and need to be called explicitly.
       #               ====rule 02 trimgalore ======
-      [ expand (mylist_files_TG(DIR_trimmed, getFilenames(config["SAMPLES"][x]['fastq']), x  )) for x in config["SAMPLES"].keys()  ],
+      [ expand (mylist_files_TG(DIR_trimmed, getFilenames(config["SAMPLES"][x]['files']), x  )) for x in config["SAMPLES"].keys()  ],
+      #               ======  rule 03 posttrim_QC_ ======
+      [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][x]['files'],x, ".html")  ) for x in config["SAMPLES"].keys()  ],
+      #--- fastQC output files are not needed downstream and need to be called explicitly.
       #               ====rule 04 Mapping ======
-      [ expand ( list_files_bismark( DIR_mapped_n_deduped, getFilenames(config["SAMPLES"][x]['fastq']), x  )) for x in config["SAMPLES"].keys()  ]
+      [ expand ( list_files_bismark( DIR_mapped_n_deduped, getFilenames(config["SAMPLES"][x]['files']), x  )) for x in config["SAMPLES"].keys()  ]
       #               ====rule 05 Deduplication ======
       #[ expand ( list_files_dedupe( DIR_mapped_n_deduped, config["units"][x], config["samples"][x], RCODE )  ) for x in config["samples"].keys()  ],
       #               ====rule 04a Sorting ======
@@ -133,18 +84,27 @@ OUTPUT_FILES = [
 print('---------------OUTPUT_FILES----------------')
 print(OUTPUT_FILES)
 
+
+
+# subworkflow trimgalore:
+#     #workdir: "rules/trimgalore/"
+#     snakefile: "rules/trimgalore/Snakefile"
+# 
+# rule a:
+#     input:  trimgalore("test.txt")
+#     output: ...
+#     shell:  ...
+
+
+
+
 rule final:
   input:
     OUTPUT_FILES
 
 
 # # ==========================================================================================
-# 
-# # #TODO: remove it. I created it only to force sortindex rule be ran be snakemake.
-# # rule dummy_bai:
-# #     input:
-# #         DIR_sorted+"{sample}_trimmed_bismark_bt2.deduplicated.sorted.bam.bai"
-# # 
+
 # # 
 # # rule sortindex:
 # #     input:
@@ -205,33 +165,59 @@ rule final:
 # 
 # # ==========================================================================================
 
-def get_fq_after_trimming(wc):
+# def get_fq_after_trimming(wc):
+# 
+#    print('---------------wc------get_fq_after_trimming-----2222')
+#    print(list(wc))
+# 
+#    samps = config['SAMPLES'][wc.sample]['fastq_name']
+# 
+#    if type(samps) is str:
+#         samps = [samps]
+# 
+#    if(len(samps)==2):
+#      d=[os.path.join(DIR_trimmed, samps[0]+'_val_1.fq.gz'), os.path.join(DIR_trimmed, samps[1]+'_val_2.fq.gz')]
+#    else:
+#      d=[os.path.join(DIR_trimmed, samps[0]+'_trimmed.fq.gz')]
+#    print('d')
+#    print(d)
+#    return(d)
+   
 
-   print('---------------wc------get_fq_after_trimming-----2222')
-   print(list(wc))
+def run_bismark(iinput, output, params, log, threads):
+        print('--------bismark-------infile---------')
+        print(iinput.infile)
 
-   samps = config['SAMPLES'][wc.sample]['fastq_name']
+        cmd_prms = " ".join(
+        [params.extra,
+         params.outdir,
+         params.tempdir,
+         params.sampath,
+         params.bowtie2path,
+         params.useBowtie2,
+         params.genome_folder,
+         '--multicore', str(threads)
+         ])
 
-   if type(samps) is str:
-        samps = [samps]
+        if len(iinput.infile)==1:
+          cmd_in = " ".join([" ", iinput.infile[0]])
+        elif len(iinput.infile)==2:
+          cmd_in = " ".join([" ", " -1 ", iinput.infile[0], " -2 ", iinput.infile[1]])
+        
+        cmd_log = ' 2>' + log.log
+        
+        command = BISMARK + cmd_prms + cmd_in + cmd_log
+        print("----------commad bismark--------")
+        print(command)
+        shell(command)
 
-   if(len(samps)==2):
-     d=[os.path.join(DIR_trimmed, samps[0]+'_val_1.fq.gz'), os.path.join(DIR_trimmed, samps[1]+'_val_2.fq.gz')]
-   else:
-     d=[os.path.join(DIR_trimmed, samps[0]+'_trimmed.fq.gz')]
-   print('d')
-   print(d)
-   return(d)
-
-rule bismark_se:
+rule bismark_pe:
     input:
-        infile = get_fq_after_trimming
-        #infile = lambda wc:  [DIR_trimmed + config['SAMPLES'][wc.sample]['fastq_name'][0]+'_trimmed.fq.gz']
+        infile = lambda wc:  [os.path.join(DIR_trimmed, config['SAMPLES'][wc.sample]['fastq_name'][0]+'_val_1.fq.gz'), os.path.join(DIR_trimmed, config['SAMPLES'][wc.sample]['fastq_name'][1]+'_val_2.fq.gz')]
     output:
-        o=DIR_mapped_n_deduped+"{sample}.bam"
+        o=DIR_mapped_n_deduped+"{sample}_pe.bam"
     threads: 2
     params:
-        program     = BISMARK,
         extra       = config.get("bismark_args", ""),
         outdir      = "--output_dir " + DIR_mapped_n_deduped,
         tempdir     = "--temp_dir " + PATHOUT,
@@ -243,42 +229,30 @@ rule bismark_se:
         log=DIR_mapped_n_deduped+"{sample}_bismark_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     run:
-        print('--------bismark-------infile---------')
-        print(input.infile)
+        run_bismark(input, output, params, log, threads)
 
-        cmd1 = " ".join(
-        [BISMARK,
-         params.extra,
-         params.outdir,
-         params.tempdir,
-         params.sampath,
-         params.bowtie2path,
-         params.useBowtie2,
-         params.genome_folder,
-         '--multicore', str(threads)
-         ])
 
-        if len(input.infile)==1:
-          cmd2 = " ".join(
-            [" ", input.infile[0],
-             '2>',log.log
-             ])
-        elif len(input.infile)==2:
-          cmd2 = " ".join(
-            [" ", " -1 ", input.infile[0],
-             " -2 ", input.infile[1],
-             '2>',log.log
-             ])
+rule bismark_se:
+    input:
+        infile = lambda wc:  [DIR_trimmed + config['SAMPLES'][wc.sample]['fastq_name'][0]+'_trimmed.fq.gz']
+    output:
+        o=DIR_mapped_n_deduped+"{sample}.bam"
+    threads: 2
+    params:
+        extra       = config.get("bismark_args", ""),
+        outdir      = "--output_dir " + DIR_mapped_n_deduped,
+        tempdir     = "--temp_dir " + PATHOUT,
+        sampath     ="--samtools_path " + os.path.dirname(SAMTOOLS),
+        bowtie2path = "--path_to_bowtie " + os.path.dirname(BOWTIE2),
+        useBowtie2  = "--bowtie2 ",
+        genome_folder=GENOMEPATH
+    log:
+        log=DIR_mapped_n_deduped+"{sample}_bismark_mapping.log"
+    message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
+    run:
+        run_bismark(input, output, params, log, threads)
 
-        #real_list_files_bismark(input.infile)
-        command = cmd1 + cmd2 + "; touch " +  output.o
-        print("----------commad bismark--------")
-        print(command)
-        shell(command)
 
-#        unit.pe1_trimmed.bismark_bt2.bam
-#        mv unit.pe1_trimmed.bismark_bt2.bam {sample}.bismark_bt2.bam
-        
 # # 
 # # 
 # # 
@@ -286,12 +260,29 @@ rule bismark_se:
 # # # post-trimming quality control
 # # 
 
-######### this si wrong, change it!!!!
+def get_fq_after_trimming(wc):
+
+   print('---------------wc------get_fq_after_trimming-----2222')
+   print(list(wc))
+
+   samps = config['SAMPLES'][wc.sample]['fastq_name']
+
+   if type(samps) is str:
+        samps = [samps]
+
+   if(len(samps)==2):
+     d=[os.path.join(DIR_trimmed, wc.sample+'_1_val_1.fq.gz'), os.path.join(DIR_trimmed, wc.sample+'_1_val_2.fq.gz')]
+   else:
+     d=[os.path.join(DIR_trimmed, wc.sample+'_trimmed.fq.gz')]
+   print('d')
+   print(d)
+   return(d)
 
 
 rule fastqc_after_trimming_se:
     input:
-       infile=get_fq_after_trimming
+       #infile=get_fq_after_trimming
+        infile=DIR_trimmed+"{sample}_trimmed.fq.gz"
     output:
     	  DIR_posttrim_QC+"{sample}_trimmed_fastqc.html"
     	  #DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
@@ -303,43 +294,33 @@ rule fastqc_after_trimming_se:
     message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
     run:
         cmd=FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[0] + " "+ " 2> "+ " "+log.log
-        # Here a hack to generate files named like samples and not like units, even though
-        # trimgalore will produce files named using units
-        cmd = cmd + "; for x in {output.o1} {output.o2}; do touch $x; done"
         # Execute
         shell(cmd)
-       
+
 #--------
 rule fastqc_after_trimming_pe:
     input:
-        infile=get_fq_after_trimming
+        infile=[DIR_trimmed+"{sample}_1_val_1.fq.gz",
+                DIR_trimmed+"{sample}_2_val_2.fq.gz"]
+        
     output:
-    	o1=DIR_posttrim_QC+"{sample}"+"_val_1_fastqc.html",
+    	o1=DIR_posttrim_QC+"{sample}"+"_1_val_1_fastqc.html",
     	#o2=DIR_posttrim_QC+"{sample}"+"_val_1_fastqc.zip",
     	#o3=DIR_posttrim_QC+"{sample}"+"_val_2_fastqc.zip",
-        o4=DIR_posttrim_QC+"{sample}"+"_val_2_fastqc.html"
+        o4=DIR_posttrim_QC+"{sample}"+"_2_val_2_fastqc.html"
     params:
         fastqc_args = config.get("fastqc_args", ""),
         outdir = "--outdir "+DIR_posttrim_QC
     log:
-   	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
+   	    log=DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
-    #shell:
-    #    "{FASTQC} {params.outdir} {input} 2> {log}"
     run:
         cmd=FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[0] + " "+ " 2> "+ " "+log.log
         cmd=cmd+" ; "+ FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile[1] + " "+ " 2> "+ " "+log.log
-        # Here a hack to generate files named like samples and not like units, even though
-        # trimgalore will produce files named using units
-        cmd = cmd + "; for x in {output.o1} {output.o2} {output.o3} {output.o4}; do touch $x; done"
         # Execute
         shell(cmd)
 
-#
-# #
-# # ==========================================================================================
-# # trim the reads
-# 
+
 # def get_trimgalore_input(wc):
 # 
 #    print('---------------wc------get_trimgalore_input-----1111')
@@ -354,15 +335,16 @@ rule fastqc_after_trimming_pe:
 #    else:
 #      return( [os.path.join(PATHIN, samps[0])] )
 
-
 rule trimgalore_pe:
     input:
-        #infile = get_trimgalore_input
+        infile = [PATHIN+"{name}_1.fq.gz",
+                  PATHIN+"{name}_2.fq.gz"]
+        #infile = get_trimgalore_input(wc)
         #infile = lambda wc: [os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0]), os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][1])] if len(config['SAMPLES'][wc.sample]['fastq_name'])==2 else [os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0])]
-        infile = lambda wc: [os.path.join(PATHIN, config['SAMPLES'][wc.name]['fastq_name'][0]+".fq.gz"), os.path.join(PATHIN, config['SAMPLES'][wc.name]['fastq_name'][1]+".fq.gz")]
+        #infile = lambda wc: [os.path.join(PATHIN, config['SAMPLES'][wc.name]['fastq_name'][0]+".fq.gz"), os.path.join(PATHIN, config['SAMPLES'][wc.name]['fastq_name'][1]+".fq.gz")]
     output:
-        output1 = DIR_trimmed+"{name}_val_1.fq.gz",
-        output2 = DIR_trimmed+"{name}_val_2.fq.gz",
+        output1 = DIR_trimmed+"{name}_1_val_1.fq.gz",
+        output2 = DIR_trimmed+"{name}_2_val_2.fq.gz",
     params:
         extra          = config.get("trim_galore_args", ""),
         outdir         = "--output_dir " + DIR_trimmed,
@@ -399,11 +381,7 @@ rule trimgalore_pe:
 
 rule trimgalore_se:
     input:
-        #infile = get_trimgalore_input
-        infile = lambda wc: os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0]+".fq.gz")
-        #infile = lambda wc: [wc.sample]
-        #infile=PATHIN+'{sample}'+'.fq.gz'
-        #infile = lambda wc: [PATHIN +config['SAMPLES'][wc.sample]['fastq_name'][0], os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][1])] if len(config['SAMPLES'][wc.sample]['fastq_name'])==2 else [PATHIN+config['SAMPLES'][wc.sample]['fastq_name'][0]+".fq.gz"]
+        infile=PATHIN+'{sample}'+'.fq.gz'
     output:
         output = DIR_trimmed+"{sample}_trimmed.fq.gz"
     params:
@@ -428,17 +406,8 @@ rule trimgalore_se:
         shell(cmd)
 
 
-# def get_fastq_input(wc):
-#    print('---------------wc------fastqc-----000000000000000')
-#    # wc.name is e.g. single.pe1
-#    filename = PATHIN+wc.name+".fq.gz" #TODO: not all files should have to have .fq.gz suffix
-#    return(filename)
-
-
 rule fastqc_raw:
     input:
-        #infile = get_fastq_input
-        #infile = lambda wc: PATHIN+wc.name+".fq.gz" 
         infile=PATHIN+"{name}"+".fq.gz"
     output:
         DIR_rawqc + "{name}_fastqc.html",
@@ -454,8 +423,3 @@ rule fastqc_raw:
         cmd=FASTQC + " "+ params.fastqc_args + " "+ params.outdir + " "+  input.infile + " "+ " 2> "+ " "+log.log
         shell(cmd)
 
-
-#print("------------cmd----------")
-#print(cmd)
-#"touch sampleid for fastqc or rename"
-#"for bowtie vdran renames outfile from unit.bam to sample.bam"
