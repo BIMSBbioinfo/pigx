@@ -60,7 +60,24 @@ def parseGeneralParams2dict(file, skip=None):
   dict_params=dict(zip(keys, values))
   return(dict_params)
     
-
+    
+def getFilenames(mylist):
+  if len(mylist)==2:
+    return( [splitext_fqgz(mylist[0])[0], splitext_fqgz(mylist[1])[0]] )
+  if len(mylist)==1:
+    return( [splitext_fqgz(mylist[0])[0]] )
+  else:
+    raise Exception("Sth went wrong in getFilenames())")
+    
+    
+def getExtension(mylist):
+  if len(mylist)==2:
+    return( [splitext_fqgz(mylist[0])[1], splitext_fqgz(mylist[1])[1]] )
+  if len(mylist)==1:
+    return( [splitext_fqgz(mylist[0])[1]] )
+  else:
+    raise Exception("Sth went wrong in getExtension())")   
+    
 
 def parseTable2dict( path_table, skip=None):
   """
@@ -107,7 +124,7 @@ def parseTable2dict( path_table, skip=None):
       except IndexError:
         raise Exception( "Number of columns in row"+j+" doesn't match number of elements in header." )
       
-    sampleid_dict.update(  { 'fastq' : units[row[2]] }  )
+    sampleid_dict.update(  { 'files' : units[row[2]] }  )
     sampleid_dict.update(  { 'fastq_name' : getFilenames(units[row[2]]) }  )
     sampleid_dict.update(  { 'fastq_ext' : getExtension(units[row[2]]) }  )
     outputdict[row[2]] = sampleid_dict

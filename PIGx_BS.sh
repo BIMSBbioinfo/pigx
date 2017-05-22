@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #===== PATHS ===== #
-tablesheet="test_dataset/TableSheet_test.csv"
+tablesheet="test_dataset/TableSheet_test_BSseq_pipeline.csv"
 path2configfile="config.json"
 path2programsJSON="test_dataset/PROGS.json"
 
