@@ -1,3 +1,7 @@
+#!/usr/bin/env python3.5
+
+import os, sys, json
+
 
 def parse_config_args(config_args):
   """
@@ -17,7 +21,16 @@ def parse_config_args(config_args):
   return(tablesheet)
 
 
-def parseGeneralParams2dict(lines):
+def splitInputFile2separateFile(file):
+  """ It splits file into 3 separate files: 1.txt, 2.txt, 3.txt
+  using regex [[ .* ]].
+  """
+  import os
+  cmd="awk '/\[\[.*\]\]/{g++} { print $0 > g"+'"'+'.txt"'+"}'" + " " + file
+  os.system(cmd)
+  
+
+def parseGeneralParams2dict(file, skip=None):
   """lines are lines from the file with general parameters for snakemake, such as:
   PATHIN='./in'
   PATHOUT=''
@@ -28,38 +41,26 @@ def parseGeneralParams2dict(lines):
   bismark_args=''
   fastqc_args=''
   trim_galore_args=''
-  It returns a dictionary in which keys are variables (e.g. PATHIN) and values are e.g. ('./in')
+  It returns a dictionary in which keys are variables (e.g. PATHIN) 
+  and values are given by a user.
   """
-  text=lines
+  text=open(file,'r').readlines()
+
+  if skip is not None and skip>=1:
+    text = text[skip:]
+  
+  # remove \n characters after arguments
+  text = [x.rstrip() for x in text]
   # remove empty lines
   text = list(filter(None, text))
-  # remove \n and \t characters after arguments
-  text = [x.rstrip('\r\n')for x in text]
-  # list of tuples (variable, value)
-  list_of_tuples = [(x.split("=")[0], x.split("=")[1].replace("'", "")) for x in text[1:]]
+  # list of lists (variable, value)
+  list_of_list =[x.replace("'", "").split("=") for x in text]
   # convert it to list of variables and list of values
-  (keys,values) = list(map(list, zip(*list_of_tuples)))
+  (keys,values) = list(map(list, zip(*list_of_list)))
   dict_params=dict(zip(keys, values))
   return(dict_params)
     
-    
-def getFilenames(mylist):
-  if len(mylist)==2:
-    return( [splitext_fqgz(mylist[0])[0], splitext_fqgz(mylist[1])[0]] )
-  if len(mylist)==1:
-    return( [splitext_fqgz(mylist[0])[0]] )
-  else:
-    raise Exception("Sth went wrong in getFilenames())")
-    
-    
-def getExtension(mylist):
-  if len(mylist)==2:
-    return( [splitext_fqgz(mylist[0])[1], splitext_fqgz(mylist[1])[1]] )
-  if len(mylist)==1:
-    return( [splitext_fqgz(mylist[0])[1]] )
-  else:
-    raise Exception("Sth went wrong in getExtension())")   
-    
+
 
 def parseTable2dict( path_table, skip=None):
   """
@@ -69,13 +70,14 @@ def parseTable2dict( path_table, skip=None):
   sampleB.pe1.fq.gz,sampleB.pe2.fq.gz,sampleB,WGBS,B,,
   pe1.single.fq.gz,,sampleB1,WGBS,B,,
   
-  It returns lines fo the file, sample ids (3rd column), 
-  dictionary where keys are samples ids and values units (Read1 and Read1 columns)
-  and other columns
+  It returns a dictionary required for the config file.
   """
   import csv
   sreader = csv.reader(open(path_table), delimiter=',')
   rows = [row for row in sreader]
+  
+  # remove empty lines
+  rows = list(filter(None, rows))
   
   if skip is not None and skip>=1:
     rows = [x for x in rows[skip:]]
@@ -108,14 +110,70 @@ def parseTable2dict( path_table, skip=None):
     sampleid_dict.update(  { 'fastq' : units[row[2]] }  )
     sampleid_dict.update(  { 'fastq_name' : getFilenames(units[row[2]]) }  )
     sampleid_dict.update(  { 'fastq_ext' : getExtension(units[row[2]]) }  )
-    
-    #sampleid_dict.update(  { 'inext' : units[row[2]] }  )
-    #sampleid_dict.update(  { 'units' : units[row[2]] }  )
     outputdict[row[2]] = sampleid_dict
     
   outputdict1 = {}
   outputdict1['SAMPLES'] =  outputdict 
   return( outputdict1 )
+
+
+def createConfigfile(tablesheet, outfile, *args):
+  """
+  Create a config file in the JSON format. Arguments:
+  tablesheet indicates a file that contain general parameters,
+             info. about samples, sample specific arguments,
+             and differential methylation
+  outfile is a path to config file
+  *args    is an additional argument, a path to the JSON file 
+           or a dictionary which content will be added to the config file
+  """
+  dir_tablesheet = os.path.dirname(tablesheet)
+  args=args[0] # only 1 additional argument
+  
+  splitInputFile2separateFile(tablesheet)
+  general_paramspath = "1.txt"
+  pathtable = "2.txt"
+  sample_params = "3.txt"
+  
+  # Load general parameters
+  gen_params=parseGeneralParams2dict(general_paramspath, skip=1)
+
+  # Load parameters specific to samples
+  sample_params = parseTable2dict( pathtable, skip=1)
+  sample_params = dict(sample_params)
+  
+  # Create a config file  
+  config=gen_params
+  config.update(sample_params)
+  
+  # Remove temporary files
+  os.remove("1.txt")
+  os.remove("2.txt")
+  os.remove("3.txt")
+
+  # Add additional args to the config file
+  if isinstance(args,dict):
+    # convert OrderedDict to dict
+    args=dict(args)
+    config.update( args )
+    
+  if isinstance(args, str):
+    with open(args) as data_file:    
+      progs=json.load(data_file)
+      # convert OrderedDict to dict
+      progs=dict(progs)
+      print("aaaaaaaaaa")
+      print(args)
+      print(progs)
+      config.update( progs )
+
+  # Save the config file to the output directory
+  with open(outfile, 'w') as outfile:
+    json.dump(config, outfile)
+  
+  
+  print(config)
+  return(config)
 
 
 def check_if_fastq(string):
@@ -124,6 +182,7 @@ def check_if_fastq(string):
     return True
   else:
     return False
+    
     
 def splitext_fqgz(string):
   ext = string.split(".")[-2:]
@@ -134,11 +193,51 @@ def splitext_fqgz(string):
   core = ".".join(core)
   return (core, ext)
 
+
 def uniq_inext(list_units_only_ext):
   ext = list(set(list_units_only_ext))
   if len(ext)!=1:
     print("Input fastq files have different suffixes!")
     exit()
   return(ext)
-
   
+
+def main(argv):
+    """
+    Without the main sentinel, the code would be executed even if the script were imported as a module.
+    """
+    if len(argv)>1:
+      
+      # input table sheet
+      tablesheet = argv[1]
+      # path to config file
+      outfile = argv[2]
+      
+      # Save config file
+      if len(argv)<=2:
+        config = createConfigfile(tablesheet, outfile)
+      elif len(argv)>2:
+        progsjson = argv[3]
+        config = createConfigfile(tablesheet, outfile, progsjson)
+
+
+if __name__ == "__main__":
+    main(sys.argv)  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
