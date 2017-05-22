@@ -112,13 +112,13 @@ for x in [DIR_rawqc, DIR_trimmed, DIR_posttrim_QC, DIR_mapped_n_deduped, DIR_sor
 
 OUTPUT_FILES = [
       #               ======  rule 01 raw QC    =========
-      [ expand (list_files(DIR_rawqc, getFilenames(config["SAMPLES"][x]['fastq']), x,"_fastqc.html")  ) for x in config["SAMPLES"].keys()  ],
+      #[ expand (list_files(DIR_rawqc, getFilenames(config["SAMPLES"][x]['fastq']), x,"_fastqc.html")  ) for x in config["SAMPLES"].keys()  ],
       #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
       #               ======  rule 03 posttrim_QC_ ======
-      [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][x]['fastq'],x, ".html")  ) for x in config["SAMPLES"].keys()  ],
+      #[ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][x]['fastq'],x, ".html")  ) for x in config["SAMPLES"].keys()  ],
       #--- fastQC output files are not needed downstream and need to be called explicitly.
       #               ====rule 02 trimgalore ======
-      [ expand (list_files_TG(DIR_trimmed, getFilenames(config["SAMPLES"][x]['fastq']), x  )) for x in config["SAMPLES"].keys()  ],
+      [ expand (mylist_files_TG(DIR_trimmed, getFilenames(config["SAMPLES"][x]['fastq']), x  )) for x in config["SAMPLES"].keys()  ],
       #               ====rule 04 Mapping ======
       [ expand ( list_files_bismark( DIR_mapped_n_deduped, getFilenames(config["SAMPLES"][x]['fastq']), x  )) for x in config["SAMPLES"].keys()  ]
       #               ====rule 05 Deduplication ======
@@ -359,17 +359,17 @@ rule trimgalore_pe:
     input:
         #infile = get_trimgalore_input
         #infile = lambda wc: [os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0]), os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][1])] if len(config['SAMPLES'][wc.sample]['fastq_name'])==2 else [os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0])]
-        infile = lambda wc: [os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0]), os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][1])]
+        infile = lambda wc: [os.path.join(PATHIN, config['SAMPLES'][wc.name]['fastq_name'][0]+".fq.gz"), os.path.join(PATHIN, config['SAMPLES'][wc.name]['fastq_name'][1]+".fq.gz")]
     output:
-        output1 = DIR_trimmed+"{sample}_val_1.fq.gz",
-        output2 = DIR_trimmed+"{sample}_val_2.fq.gz",
+        output1 = DIR_trimmed+"{name}_val_1.fq.gz",
+        output2 = DIR_trimmed+"{name}_val_2.fq.gz",
     params:
         extra          = config.get("trim_galore_args", ""),
         outdir         = "--output_dir " + DIR_trimmed,
         gz             = "--gzip",
         cutadapt       = "--path_to_cutadapt "+ CUTADAPT,
     log:
-        log=DIR_trimmed+"{sample}.trimgalore.log"
+        log=DIR_trimmed+"{name}.trimgalore.log"
     message:
         " ---------  Trimming raw paired-end read data using {TRIMGALORE} -------  "
     run:
@@ -400,9 +400,9 @@ rule trimgalore_pe:
 rule trimgalore_se:
     input:
         #infile = get_trimgalore_input
-        #infile = lambda wc: os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0])
+        infile = lambda wc: os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][0]+".fq.gz")
         #infile = lambda wc: [wc.sample]
-        infile=PATHIN+'{sample}'+'.fq.gz'
+        #infile=PATHIN+'{sample}'+'.fq.gz'
         #infile = lambda wc: [PATHIN +config['SAMPLES'][wc.sample]['fastq_name'][0], os.path.join(PATHIN, config['SAMPLES'][wc.sample]['fastq_name'][1])] if len(config['SAMPLES'][wc.sample]['fastq_name'])==2 else [PATHIN+config['SAMPLES'][wc.sample]['fastq_name'][0]+".fq.gz"]
     output:
         output = DIR_trimmed+"{sample}_trimmed.fq.gz"
