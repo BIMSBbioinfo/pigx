@@ -20,38 +20,39 @@ snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --timestamp --jobs 24 -
 rm $(snakemake --summary | tail -n+2 | cut -f1)
 
 # TODO
-* 0. Make test data
-* 1. Variables into config file:
-*    - genome path
-*    - read extension
+[]. enable sample specific parameter deposition
+[]. write tests
+[]. write checks for the config proper formatting 
 
-* 2. Automatic reference generation
-* 3. check globbing
-* 4. Add peak calling
-5. Add peak QC
-6. Add interactive macs parameters
-7. Add tests for rules
-8. Add checks for the config file
-9. Add possible pseudonims for samples
+[] Add peak QC
+
 10. Extent to paired end reads
     - Testing for paired end reads
     - Mapping
     - Fastqc for paired end reads
 
-11. Run multiqc
-12. Add samplesheet To yaml file
-13. Check for params:idr
-* 14. Extract the input file for the fastqs as a config parameter
-* 15. application placeholders in config files
-16. Format messages
+[]. Run multiqc
+[]. Add samplesheet To yaml file
+[]. Check for params:idr
+[]. cofigure the pipeline for broad histone data
+[]. enable trimming
+[]. rewrite fastqc to go through each individual file
+[]. write markdown
 
-17. cofigure the pipeline for broad histone data
 
-[] enable trimming
-[] write tests
-[] write checks for the config proper formatting 
-[] rewrite fastqc to go through each individual file
-
+DONE
+[*] 0. Make test data
+[*] 1. Variables into config file:
+[*]    - genome path
+[*]    - read extension
+[*] 2. Automatic reference generation
+[*] 3. check globbing
+[*] 4. Add peak calling
+[*]. Extract the input file for the fastqs as a config parameter
+[*]. application placeholders in config files
+[*]. Format messages
+[*] Add interactive macs parameters
+[*] Add possible pseudonims for samples
 
 Integrate_Expression_Mouse_Hamster_Difference
 1. Figure out how to prevent bombing
@@ -197,6 +198,7 @@ rule bowtie2:
         bowtie2  = SOFTWARE['bowtie2'],
         samtools = SOFTWARE['samtools'],
         library  = get_library_type,
+        params_bowtie2 = PARAMS['bowtie2']
     log:
         log = os.path.join(PATH_MAPPED, "{name}/{name}.bowtie2.log")
     message:"""
@@ -218,7 +220,7 @@ rule bowtie2:
         '-p', str(params.threads),
         '-x', genome,
         map_args,
-        join_params("bowtie2", APP_PARAMS, PARAMS),
+        join_params("bowtie2", APP_PARAMS, params.params_bowtie2),
         '2>',log.log,
         '|', params.samtools,'view -bhS >', output.bamfile
         ])
@@ -368,7 +370,8 @@ rule makelinks:
 # ----------------------------------------------------------------------------- #
 def get_sample_macs(wc):
     name = config['peak_calling'][wc.name]
-    samps = dict(zip(name.keys(),[os.path.join('Mapped','Bowtie',i, i + '.sorted.bam') for i in name.values()]))
+    samps = ['ChIP','Cont']
+    samps = dict(zip(samps,[os.path.join('Mapped','Bowtie',name[i], name[i] + '.sorted.bam') for i in samps]))
     return(samps)
 
 rule macs2:
@@ -382,6 +385,7 @@ rule macs2:
         threads = 1,
         mem = '16G',
         macs2 = SOFTWARE['macs2'],
+        params_macs = PARAMS['macs2']
     log:
         log = os.path.join(PATH_LOG, 'macs.log')
     message:"""
@@ -391,13 +395,18 @@ rule macs2:
             output: {output.outfile}
     """
     run:
+        params_macs = params_macs.local
+        if 'params' in config['peak_calling'][params.name].keys():
+            if 'macs2' in config['peak_calling'][params.name]['params'].keys():
+                params_macs.update(config['peak_calling'][params.name]['params']['macs2'])
+                
         command = " ".join(
         [params.macs2, 'callpeak',
         '-t', input.ChIP,
         '-c', input.Cont,
         '--outdir', params.outpath,
         '-n', params.name,
-        join_params("macs2", APP_PARAMS, PARAMS),
+        join_params("macs2", APP_PARAMS, params_macs),
         '2>', log.log
         ])
         shell(command)
@@ -435,6 +444,6 @@ rule idr:
         '--output-file', output.outfile,
         '-l', log.log,
         '--plot',
-        join_params("idr", APP_PARAMS, PARAMS)
+        join_params("idr", APP_PARAMS, params.params_idr)
         ])
         shell(command)

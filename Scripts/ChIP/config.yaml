@@ -1,3 +1,4 @@
+# ------------------------------------------------------------ #
 genome:
     name: 'mm9'
     fasta: '/data/akalin/Base/Genomes/mm9/mm9.fa'
@@ -19,20 +20,28 @@ samples:
     Cont2:
         fastq: Cont.fq
         library: single
-
+        
+# ------------------------------------------------------------ #
+# ChIP and Cont are hardcoded and must exist in the config file
 peak_calling:
     Peaks1:
         ChIP: ChIP1
         Cont: Cont1
+        params:
+            macs2:
+                nomodel: ''
+                extsize: 300
     Peaks2:
         ChIP: ChIP2
         Cont: Cont2
 
+# ------------------------------------------------------------ #
 idr:
     ChIP_IDR:
         ChIP1: Peaks1
         ChIP2: Peaks2
 
+# ------------------------------------------------------------ #
 params:
     extend: 200
     bowtie2:

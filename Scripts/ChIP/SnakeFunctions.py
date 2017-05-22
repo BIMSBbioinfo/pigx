@@ -29,7 +29,6 @@ def is_number(s):
 def check_config(config):
 
 	message = ''
-
 	# checks for proper top level config categories
 	params = ['genome','genome_fasta','index','fastq','params','samples','peak_calling','idr','software']
 	params_diff = set(config.keys()) - set(params)
@@ -42,7 +41,8 @@ def check_config(config):
 
 	# checks for correspondence between peak calling and samples
 	samples = list(config['samples'].keys())
-	peaks = [config['peak_calling'][i].values() for i in list(config['peak_calling'].keys())]
+	keys = list(config['peak_calling'].keys())
+	peaks = [(config['peak_calling'][i]['ChIP'],config['peak_calling'][i]['Cont'])  for i in keys]
 	samples_diff = (set(peaks[0]) - set(samples))
 	if len(samples_diff) > 0:
 		message = message + "some peak calling samples are not specified\n"
@@ -72,14 +72,13 @@ def get_app_params(app, app_name, app_params):
     return(args)
 
 # ---------------------------------------------------------------------------- #
-def join_params(app, app_params, config):
+def join_params(app, app_params, params_set):
     import subprocess
     import os
     import re
     app_name = os.path.basename(app)
     params_all = get_app_params(app, app_name, app_params)
     names  = set(params_all.keys())
-    params_set = config[app_name]
     params_diff = set(params_set) - names
     if len(params_diff) > 0:
         print(app_name + 'contains unknown parameters:' + ", ".join(list(params_diff)))
