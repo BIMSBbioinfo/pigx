@@ -17,7 +17,7 @@ bibliography: reports.bib
 params:
   inBed:    "/Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/test1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.bed"
   assembly: "ce10"
-  refseqfile: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation/refseq.genes.{assembly}.bed"
+  refseqfile: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation/refseq.genes.ce10.bed"
 ---
 
 ```{r eval_params, echo=FALSE}

@@ -15,12 +15,11 @@ output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.meth_calls.htm
 date: "`r Sys.Date()`"
 bibliography: reports.bib
 params:
-  inBam:    "../bam_files/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.bam"
+  inBam:    ""#../test_dataset/sample_bam_files/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.bam"
   assembly: "ce10"
   mincov:   10
   minqual:  20
   rdata:    "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_methylRaw.RData"
-  outDir: "methylation_calls/"
 ---
 
 ```{r eval_params, echo=FALSE}
@@ -38,6 +37,7 @@ rdatafile <- params$rdata
 
 
 <!-- this is the local dir: `r  getwd()` -->
+<!-- this is output dir: `r outputDir` -->
 <!-- Here I need to write a short section why we do this -->
 
 ```{r, include=FALSE,warning=FALSE}
@@ -107,11 +107,8 @@ We first extract the methylation calls from the sequence alignment produced by t
 The methylation calls are written to the text file "`r paste0(sample_id,"_CpG.txt")`", 
 but to enable direct loading of the `methylRaw` object it is saved for further analysis at `r rdatafile`
 ```{r}
-
-    (outputFile <- normalizePath(rdatafile))
-
     ## Saving object
-    save(methRaw,file=outputFile) 
+    save(methRaw,file=normalizePath(rdatafile)) 
 ```
 
 Here we show some simple statistics as distribution of methylation and coverage.

@@ -64,40 +64,72 @@ min_config = {
 }
 
 
-
+## we can update the config recursively using the update_config() function
 import json
 from snakemake.utils import update_config
 
-
+## it will only update the config if the required keys are not there
 if "params" not in config:
     update_config(config, min_config)
 else:
     if "params_bam_methCall" not in config.get("params"):
         update_config(config, min_config) 
 
-with open(config['paths']['PATHOUT']+"config.json", 'w') as outfile:
-    json.dump(config, outfile)
+## for now we write the config to "new.config.json" to save current config
+with open(config['paths']['PATHOUT']+"new.config.json", 'w') as outfile:
+    # json.dump(config, outfile)
+    dumps = json.dumps(config,
+                        indent=4, sort_keys=True,
+                        separators=(',', ': '), ensure_ascii=False)
+    outfile.write(dumps)
 
 
 
+## show base dir
+# print(workflow.basedir)
 
-# SCRIPTDIR   = "/Users/agosdsc/Development/Snakemake/pigx_bsseq/scripts/"
-# TEMPLATEDIR = "/Users/agosdsc/Development/Snakemake/pigx_bsseq/report_templates/"
+import os
+## show working dir
+# print(os.getcwd())
 
-SCRIPTDIR    = config["paths"]["SCRIPTDIR"]
-TEMPLATEDIR  = config["paths"]["TEMPLATEDIR"]
 
-# PATHOUT = "/Users/agosdsc/Development/Snakemake/pigx_bsseq/"
 
-PATHOUT      = config["paths"]["PATHOUT"]
-LOGS         = config["paths"]["LOGS"] 
+## show current dir
+# print(srcdir(""))
 
-## the in/output directories can be renamed easily
+#---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-BAMDIR       = "test_dataset/sample_bam_files/" 
-METHCALLDIR  = "methylation_calls/"
-SEGDIR       = "segmentation/"
-ANNODIR      = "annotation/"
+#--- we need to define some directory variables to use rmarkdown from snakemake
+#---                !!!! IMPORTANT !!!!
+#--- ! paths inside input and output should be relative
+#--- ! if params are passed to Rmarkdown document, paths to files or folders should be absolute   
+
+
+BASEDIR = workflow.basedir + "/"                    #--- the base dir (where Snakefile is) 
+WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
+
+SCRIPTDIR   = BASEDIR + "scripts/"                  #--- scripts dir (relative to snakefile)
+TEMPLATEDIR = BASEDIR + "report_templates/"         #--- template dir (relative to snakefile)
+
+#--- pathout is ignored, since all paths are relative from either base or workdir
+## notes:
+## maybe set pathout by setting working dir in snakemake call
+# PATHOUT      = config["paths"]["PATHOUT"]
+LOGS        = config["paths"]["LOGS"] 
+
+
+
+#--- the in/output directories can be renamed easily
+#--- path to bam files is absolute, such that I can run workflow in any other directory
+BAMDIR      = BASEDIR + "test_dataset/sample_bam_files/" 
+
+
+#--- output paths have to be relative to working directory, 
+#--- such that I can run workflow in any other directory and
+#--- it always sets up the same structure
+METHCALLDIR = "methylation_calls/"
+SEGDIR      = "segmentation/"
+ANNODIR     = "annotation/"
 
 
 
@@ -115,13 +147,15 @@ rule bam_methCall:
         rdatafile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
         callFile    = METHCALLDIR + "{prefix}.sorted_CpG.txt"
     params:
-        inBam       = PATHOUT + BAMDIR + "{prefix}.sorted.bam",
+        ## absolute path to bamfiles
+        inBam       = BAMDIR + "{prefix}.sorted.bam",
         assembly    = config["genomedat"]["VERSION"],
         mincov      = config["params"]["params_bam_methCall"]["mincov"],
         minqual     = config["params"]["params_bam_methCall"]["minqual"],
-        rdata       = PATHOUT + METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
+        ## absolute path to output folder in working dir
+        rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
     log:
-        PATHOUT+LOGS+"{prefix}.sorted_meth_calls.log"
+        LOGS+"{prefix}.sorted_meth_calls.log"
     message:
         "Processing of bam file:\n" 
         "   input     : {input.bamfile}" + "\n"
@@ -137,6 +171,7 @@ rule bam_methCall:
 
 ## Segmentation
 rule methseg:
+    ## paths inside input and output should be relative
     input:  
         template    = TEMPLATEDIR + "methseg.report.Rmd",
         rdatafile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
@@ -145,11 +180,11 @@ rule methseg:
         grfile      = SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
         bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed"
     params:
-        rdata       = PATHOUT + METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
-        grdata      = PATHOUT + SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
-        outBed      = PATHOUT + SEGDIR + "{prefix}.sorted_meth_segments.bed"
+        rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
+        grdata      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
+        outBed      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments.bed"
     log:
-        PATHOUT+LOGS+"{prefix}.sorted_meth_segments.log"
+        LOGS+"{prefix}.sorted_meth_segments.log"
     message:
         "Segmentation of sample file:\n"
         "   input     : {input.rdatafile}" + "\n" 
@@ -168,7 +203,7 @@ rule fetch_refGene:
     params: 
         assembly = "{assembly}"
     log:
-        PATHOUT+LOGS+"fetch_refseq.genes.{assembly}.log"
+        LOGS+"fetch_refseq.genes.{assembly}.log"
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
     script:  
@@ -185,11 +220,11 @@ rule annotation:
     output: 
         report      = ANNODIR + "{prefix}.sorted_{assembly}_annotation.nb.html"
     params:
-        inBed       = PATHOUT + SEGDIR + "{prefix}.sorted_meth_segments.bed",
+        inBed       = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments.bed",
         assembly    = "{assembly}",# expand(config["reference"]),
-        refseqfile    = PATHOUT + ANNODIR + "refseq.genes.{assembly}.bed"
+        refseqfile  = WORKDIR + ANNODIR + "refseq.genes.{assembly}.bed"
     log:
-        PATHOUT+LOGS+"{prefix}.sorted_{assembly}_annotation.log"
+        LOGS+"{prefix}.sorted_{assembly}_annotation.log"
     message:
         "Annotation of Segments:\n"
         "   input     : {input.bedfile}" + "\n"

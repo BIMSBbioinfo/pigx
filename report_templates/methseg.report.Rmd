@@ -29,6 +29,8 @@ grFile    <- params$grdata
 
 ## Segmentation Report
 
+<!-- this is the local dir: `r  getwd()` -->
+
 The segmentation based on methylation provides a way to compress the information from base-pair into regional resolution, allowing the detection of regions with similar methylation values, that might be interesting for further investigations.
 
 ```{r, include=FALSE,warning=FALSE}
