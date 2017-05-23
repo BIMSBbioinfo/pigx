@@ -80,13 +80,13 @@ SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
 OUTPUT_FILES = [
                 #               ======  rule 01 raw QC    =========
                 [ expand (list_files(DIR_rawqc, config["SAMPLES"][sampleID]["fastq_name"], "_fastqc.html")  ) for sampleID in config["SAMPLES"]  ],
-                #[ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["files"], "_fastqc.zip" )  ) for sampleID in config["SAMPLES"]  ],
+                [ expand (list_files(PATHOUT+"01_rawqc/", config["SAMPLES"][sampleID]["fastq_name"], "_fastqc.zip" )  ) for sampleID in config["SAMPLES"]  ],
 
                 #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
                 
                 #               ======  rule 03 posttrim_QC_ ======
                 [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][sampleID]["fastq_name"],".html")  ) for sampleID in config["SAMPLES"]  ],
-                #[ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][sampleID]["files"],".zip")  ) for sampleID in config["SAMPLES"]  ],
+                [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][sampleID]["fastq_name"],".zip")  ) for sampleID in config["SAMPLES"]  ],
 
                 #--- fastQC output files are not needed downstream and need to be called explicitly.
 
@@ -98,18 +98,17 @@ OUTPUT_FILES = [
                 [ expand ( list_files_bismark(DIR_mapped, config["SAMPLES"][sampleID]["fastq_name"] )  ) for sampleID in config["SAMPLES"]  ],
               
                 #               ====formerly rule 05 Deduplication ======
-                #[ expand ( list_files_dedupe(DIR_deduped, config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                                
+                [ expand ( list_files_dedupe(DIR_deduped, config["SAMPLES"][sampleID]["fastq_name"] )  ) for sampleID in config["SAMPLES"]  ],                                
 
                 #               ====rule 06 sorting ======
-                #[ expand ( list_files_sortbam(DIR_sorted, config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+                [ expand ( list_files_sortbam(DIR_sorted, config["SAMPLES"][sampleID]["fastq_name"] )  ) for sampleID in config["SAMPLES"]  ],
                 
                 # ==================  FINAL REPORT =========================
                 # @@@! This needs to be editted once we determine what final reports we want to export!
-		# [ expand (PATHOUT+config["SAMPLES"][sampleID]["files"][0]+SEPEstr(config["SAMPLES"][sampleID]["files"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
+		# [ expand (PATHOUT+config["SAMPLES"][sampleID]["fastq_name"][0]+SEPEstr(config["SAMPLES"][sampleID]["fastq_name"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
                 
 ]
 
-print(OUTPUT_FILES)
 
 # =======================================================================================================
 #
@@ -125,48 +124,51 @@ rule all:
 # rule clean:
 #    shell: "if [ -d {PATHOUT} ]; then rm -r {PATHOUT}; fi"
 # ==========================================================================================
-# rule sortbam_se:
-#     input:
-#         DIR_deduped+"{sample}_se.deduplicated.bam"
-#     output:
-#         DIR_sorted+"{sample}_se.deduplicated.sorted.bam"
-#     shell:
-#         "nice -"+str(NICE)+" samtools sort {input} -o {output}"
-# 
-# #-------- TWO SORTING STEPS ARE REQUIRED IN PAIRED END (see bismark deduplication doc) -----
-# rule sortbam_pe:
-#     input:
-#         DIR_deduped+"{sample}"+RCODE+"1_val_1.deduplicated.bam"
-#     output:
-#         DIR_sorted+"{sample}"+RCODE+"1_val_1.deduplicated.sorted.bam"
-#     shell:
-#         "nice -"+str(NICE)+" samtools sort {input} -o {output}"
+
+
+rule sortbam_se:
+    input:
+        DIR_deduped+"{sample}_se_bt2.deduped.bam"
+    output:
+        DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
+    shell:
+        "nice -"+str(NICE)+" {SAMTOOLS} sort {input} -o {output}"
+
+#-------- TWO SORTING STEPS ARE REQUIRED IN PAIRED END (see bismark deduplication doc) -----
+rule sortbam_pe:
+    input:
+        DIR_deduped+"{sample}"+RCODE+"1_val_1_bt2.deduped.bam"
+    output:
+        DIR_sorted+"{sample}"+RCODE+"1_val_1_bt2.deduped.sorted.bam"
+    shell:
+        "nice -"+str(NICE)+" {SAMTOOLS} sort {input} -o {output}"
 
 # ==========================================================================================
-# rule bismark_se_deduplication:
-#     input:
-#         DIR_mapped+"{sample}_trimmed_bismark_bt2.bam"
-#     output:
-#         DIR_deduped+"{sample}_se.deduplicated.bam"
-#     params:
-#         bam="--bam ",
-#         sampath="--samtools_path "+SAMTOOLS
-#     log:
-#         DIR_deduped+"{sample}_deduplication.log"
-#     message: """-----------   Deduplicating single-end read alignments ---------------------- """
-#     shell:
-#         "nice -"+str(NICE)+" samtools rmdup {input}  {output} 2> {log}"
+
+rule bismark_se_deduplication:
+    input:
+        DIR_mapped+"{sample}_trimmed_bismark_bt2.bam"
+    output:
+        DIR_deduped+"{sample}_se_bt2.deduped.bam"
+    params:
+        bam="--bam ",
+        sampath="--samtools_path "+SAMTOOLS
+    log:
+        DIR_deduped+"{sample}_deduplication.log"
+    message: """-----------   Deduplicating single-end read alignments ---------------------- """
+    shell:
+        "nice -"+str(NICE)+" {SAMTOOLS} rmdup {input}  {output} 2> {log}"
 # #--------
-# rule bismark_pe_deduplication:
-#     input:
-#         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam"
-#     output:
-#         DIR_deduped+"{sample}"+RCODE+"1_val_1.deduplicated.bam"
-#     log:
-#         DIR_deduped+"{sample}_deduplication.log"
-#     message: """-----------   Deduplicating paired-end read alignments ---------------------- """
-#     shell:
-#         "nice -"+str(NICE)+" samtools rmdup {input}  {output} 2> {log}"
+rule bismark_pe_deduplication:
+    input:
+        DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam"
+    output:
+        DIR_deduped+"{sample}"+RCODE+"1_val_1_bt2.deduped.bam"
+    log:
+        DIR_deduped+"{sample}_deduplication.log"
+    message: """-----------   Deduplicating paired-end read alignments ---------------------- """
+    shell:
+        "nice -"+str(NICE)+" {SAMTOOLS} rmdup {input}  {output} 2> {log}"
 # ==========================================================================================
 # Align and map:
 # 
@@ -175,7 +177,6 @@ rule bismark_se:
        DIR_trimmed+"{sample}_trimmed.fq.gz"
     output:
         DIR_mapped+"{sample}_trimmed_bismark_bt2.bam",
-        DIR_mapped+"{sample}_trimmed_bismark_bt2.nucleotide_stats.txt",
         DIR_mapped+"{sample}_trimmed_bismark_bt2_SE_report.txt"
     threads: 2
     params:
@@ -195,11 +196,10 @@ rule bismark_se:
 #--------
 rule bismark_pe:
     input:
-        fin1 = PATHOUT+"02_trimmed/{sample}"+RCODE+"1_val_1.fq.gz",
-        fin2 = PATHOUT+"02_trimmed/{sample}"+RCODE+"2_val_2.fq.gz"
+        fin1 = DIR_trimmed+"{sample}"+RCODE+"1_val_1.fq.gz",
+        fin2 = DIR_trimmed+"{sample}"+RCODE+"2_val_2.fq.gz"
     output:
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
-        DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.nucleotide_stats.txt",
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
     threads: 2
     params:

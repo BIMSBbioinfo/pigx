@@ -11,13 +11,13 @@ bismark_args=' -N 1 -L 2 '
 fastqc_args=''
 trim_galore_args=''
 INEXT='.fq.gz'
-RCODE='.pe'
+RCODE='2K_'
 
 
 [[ SAMPLES ]]
 Read1,Read2,SampleID,ReadType,Treatment
-output_1.fq.gz,output_2.fq.gz,sampleB,WGBS,B,,
-output_1.fq.gz,,sampleB1,WGBS,B,,
+output2K_1.fq.gz,output2K_2.fq.gz,sampleA,WGBS,B,,
+output2K_1.fq.gz,,sampleB,WGBS,B,,
 
 
 [[ DIFFERENTIAL METHYLATION ]]

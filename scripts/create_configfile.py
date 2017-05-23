@@ -179,17 +179,15 @@ def createConfigfile(tablesheet, outfile, *args):
       progs=json.load(data_file)
       # convert OrderedDict to dict
       progs=dict(progs)
-      print("aaaaaaaaaa")
-      print(args)
-      print(progs)
       config.update( progs )
 
-  # Save the config file to the output directory
+  # Save the config file
   with open(outfile, 'w') as outfile:
-    json.dump(config, outfile)
-  
-  
-  print(config)
+    dumps = json.dumps(config, 
+                        indent=4, sort_keys=True, 
+                        separators=(",",": "), ensure_ascii=True)
+    outfile.write(dumps)
+
   return(config)
 
 
@@ -233,7 +231,9 @@ def main(argv):
       # Save config file
       if len(argv)<=2:
         config = createConfigfile(tablesheet, outfile)
-      elif len(argv)>2:
+      elif len(argv)==3:
+        # if there is 3rd argument that indicate paths to tools
+        # in JSON format include it to the config file
         progsjson = argv[3]
         config = createConfigfile(tablesheet, outfile, progsjson)
 
