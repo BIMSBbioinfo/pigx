@@ -97,11 +97,11 @@ OUTPUT_FILES = [
                 [ expand ( list_files_dedupe(PATHOUT+"05_deduped/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],                                
               
                 #               ====rule 06 sorting ======
-                [ expand ( list_files_sortbam(PATHOUT+"06_sorted/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ],
+                [ expand ( list_files_sortbam(PATHOUT+"06_sorted/", config["SAMPLES"][sampleID]["files"] )  ) for sampleID in config["SAMPLES"]  ]
               
                 # ==================  FINAL REPORT =========================
                 # @@@! This needs to be editted once we determine what final reports we want to export!
--               # [ expand (PATHOUT+config["SAMPLES"][sampleID]["files"][0]+SEPEstr(config["SAMPLES"][sampleID]["files"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ], 
+                # [ expand (PATHOUT+config["SAMPLES"][sampleID]["files"][0]+SEPEstr(config["SAMPLES"][sampleID]["files"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
 ]
 
 #--- In case you want to debug the code with interactive commands:
