@@ -16,8 +16,8 @@ RCODE='.pe'
 
 [[ SAMPLES ]]
 Read1,Read2,SampleID,ReadType,Treatment
-sampleB.pe1.fq.gz,sampleB.pe2.fq.gz,sampleB,WGBS,B,,
-pe1.single.fq.gz,,sampleB1,WGBS,B,,
+output_1.fq.gz,output_2.fq.gz,sampleB,WGBS,B,,
+output_1.fq.gz,,sampleB1,WGBS,B,,
 
 
 [[ DIFFERENTIAL METHYLATION ]]
