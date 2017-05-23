@@ -187,7 +187,6 @@ def createConfigfile(tablesheet, outfile, *args):
                         indent=4, sort_keys=True, 
                         separators=(",",": "), ensure_ascii=True)
     outfile.write(dumps)
-
   return(config)
 
 
@@ -216,22 +215,25 @@ def uniq_inext(list_units_only_ext):
     exit()
   return(ext)
   
-
+  
+# Without the main sentinel, the code would be executed even if the script were imported as a module.
 def main(argv):
     """
-    Without the main sentinel, the code would be executed even if the script were imported as a module.
+    The main function to create a ocnfig file in the JSON format out of a table sheet
+    (and optionally paths to tools in the JSON file).
     """
+
+    
     if len(argv)>1:
-      
       # input table sheet
       tablesheet = argv[1]
       # path to config file
       outfile = argv[2]
       
       # Save config file
-      if len(argv)<=2:
+      if len(argv)<=3:
         config = createConfigfile(tablesheet, outfile)
-      elif len(argv)==3:
+      elif len(argv)==4:
         # if there is 3rd argument that indicate paths to tools
         # in JSON format include it to the config file
         progsjson = argv[3]

@@ -1,6 +1,16 @@
 NEWS
 ====
 
+May 23, 2017
+add a python script that generates a config file out of a input csv file
+- created bash file PIGx_BS.sh that calls the python script (scripts/create_configfile.py) to generate config.json file and then it calls snakemake. I executed PIGx_BS.sh in the same directory as snakemake file and config file is generated in the same directory as PIGx_BS.sh. An example of a config file that the python script creates you can find here test_dataset/example_config.json. 
+- An example of the input CSV file is here test_dataset/TableSheet_test.csv. It contain 3 sections - "[[ GENERAL PARAMETERS ]]", "[[ SAMPLES ]]" and "[[ DIFFERENTIAL METHYLATION ]]".
+--In the first section user set the global variables. For the python script scripts/create_configfile.py doesnt matter which variables are there - it read everything which is separated using "=" and the values of variables have to be in the quotation marks ''.
+--The second section contains columns that indicate first mate in fastq gzipped format, the second mate (if the second mate is not given then sample will be treated as single-end) , sample ID, Read type (for now only WGBS is implemented), Treatment (important for differential methylation, it will be matched with the 3rd section of the file). Additional arguments that could be sample-specific, such as arguments for bismark, trimgalore etc can't be implemented with the current implementation of the pipeline.
+-- Third section indicate which pairs of samples should be processed for the differential methylation. So, in each row there will be a pair of sample ID separated by comma. 
+
+
+May 10, 2017
 add small update-config script
 - small example script how to update the config without screwing the old one
 
