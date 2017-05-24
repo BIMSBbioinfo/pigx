@@ -37,7 +37,6 @@ rdatafile <- params$rdata
 
 
 <!-- this is the local dir: `r  getwd()` -->
-<!-- this is output dir: `r outputDir` -->
 <!-- Here I need to write a short section why we do this -->
 
 ```{r, include=FALSE,warning=FALSE}

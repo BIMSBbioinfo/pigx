@@ -2,8 +2,6 @@
 ## which does the computation and generates an HTML report with code included
 
 
-
-
 render2Report <- function(reportFile,
                           outFile,
                           outDir,

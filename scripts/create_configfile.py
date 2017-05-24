@@ -54,7 +54,7 @@ def parseGeneralParams2dict(file, skip=None):
   # remove empty lines
   text = list(filter(None, text))
   # list of lists (variable, value)
-  list_of_list =[x.replace("'", "").split("=") for x in text]
+  list_of_list =[x.replace('"', "").split("=") for x in text]
   # convert it to list of variables and list of values
   (keys,values) = list(map(list, zip(*list_of_list)))
   dict_params=dict(zip(keys, values))

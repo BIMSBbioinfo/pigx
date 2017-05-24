@@ -51,6 +51,7 @@ def list_files_sortbam(PATH, files):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
+
 def SEPEstr(files):
     if len(files) == 1:
         return  "_trimmed_bismark_bt2_SE" #---- single end
@@ -58,3 +59,13 @@ def SEPEstr(files):
         return  "_val_1_bismark_bt2_PE" #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length for file[0]="+files[0]+". HALTING! ===")
+
+def Annot(PATH, files, assembly):
+    if len(files) == 1:
+      return  PATH+files[0]+"_se_bt2.deduped.sorted_"+assembly+"_annotation.nb.html" #---- single end
+    elif len(files) == 2:
+        return [PATH+files[0]+"_val_1_bt2.deduped.sorted_"+assembly+"_annotation.nb.html"] #---- paired end
+
+        
+        
+        
