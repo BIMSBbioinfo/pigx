@@ -107,6 +107,7 @@ OUTPUT_FILES = [
                 # @@@! This needs to be editted once we determine what final reports we want to export!
 		# [ expand (PATHOUT+config["SAMPLES"][sampleID]["fastq_name"][0]+SEPEstr(config["SAMPLES"][sampleID]["fastq_name"] )+"_report.html"  ) for sampleID in config["SAMPLES"]  ],
                 
+
 ]
 
 
