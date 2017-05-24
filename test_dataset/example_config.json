@@ -1,0 +1,60 @@
+{
+    "CHROM_INFO": "/home/kwreczy/repositories/pigx_bsseq/test_dataset/chromInfo.txt",
+    "GENOMEPATH": "/home/kwreczy//tmp/ce10/",
+    "GENOME_VERSION": "ce10",
+    "GTOOLBOX": "/home/kwreczy/tmp/ggtoolbox/",
+    "INEXT": ".fq.gz",
+    "LOG": "/home/kwreczy/logs/",
+    "NUMTHREADS": "2",
+    "PATHIN": "/home/kwreczy/repositories/pigx_bsseq/test_dataset/in/",
+    "PATHOUT": "/home/kwreczy/tmp/my_output/",
+    "PROGS": {
+        "BISMARK": "bismark",
+        "BISMARK2REPORT": "bismark2report",
+        "BISMARK_GENOME_PREPARATION": "bismark_genome_preparation",
+        "BISMARK_METHYLATION_EXTRACTOR": "bismark_methylation_extractor",
+        "BOWTIE2": "bowtie2",
+        "CUTADAPT": "cutadapt",
+        "DEDUPLICATE_BISMARK": "deduplicate_bismark",
+        "FASTQC": "fastqc",
+        "SAMTOOLS": "samtools",
+        "TRIMGALORE": "trim_galore"
+    },
+    "RCODE": "2K_",
+    "SAMPLES": {
+        "sampleA": {
+            "ReadType": "WGBS",
+            "SampleID": "sampleA",
+            "Treatment": "B",
+            "fastq_ext": [
+                "fq.gz",
+                "fq.gz"
+            ],
+            "fastq_name": [
+                "output2K_1",
+                "output2K_2"
+            ],
+            "files": [
+                "output2K_1.fq.gz",
+                "output2K_2.fq.gz"
+            ]
+        },
+        "sampleB": {
+            "ReadType": "WGBS",
+            "SampleID": "sampleB",
+            "Treatment": "B",
+            "fastq_ext": [
+                "fq.gz"
+            ],
+            "fastq_name": [
+                "output2K_1"
+            ],
+            "files": [
+                "output2K_1.fq.gz"
+            ]
+        }
+    },
+    "bismark_args": " -N 1 -L 2 ",
+    "fastqc_args": "",
+    "trim_galore_args": ""
+}

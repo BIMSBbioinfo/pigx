@@ -1,0 +1,25 @@
+[[ GENERAL PARAMETERS ]]
+PATHIN="/home/kwreczy/repositories/pigx_bsseq/test_dataset/in/"
+PATHOUT="/home/kwreczy/tmp/my_output/"
+GENOMEPATH="/home/kwreczy//tmp/ce10/"
+LOG="/home/kwreczy/logs/"
+CHROM_INFO="/home/kwreczy/repositories/pigx_bsseq/test_dataset/chromInfo.txt"
+GENOME_VERSION="ce10"
+NUMTHREADS="2"
+bismark_args=" -N 1 -L 2 "
+fastqc_args=""
+trim_galore_args=""
+INEXT=".fq.gz"
+RCODE="2K_"
+bam_methCall_args_mincov="0"
+bam_methCall_args_minqual="10"
+
+
+[[ SAMPLES ]]
+Read1,Read2,SampleID,ReadType,Treatment
+output2K_1.fq.gz,output2K_2.fq.gz,sampleA,WGBS,A
+output2K_1.fq.gz,,sampleB,WGBS,B
+
+
+[[ DIFFERENTIAL METHYLATION ]]
+sampleB, sampleB1

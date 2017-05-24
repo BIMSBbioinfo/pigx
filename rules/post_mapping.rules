@@ -68,22 +68,6 @@ min_config = {
 import json
 from snakemake.utils import update_config
 
-## it will only update the config if the required keys are not there
-if "params" not in config:
-    update_config(config, min_config)
-else:
-    if "params_bam_methCall" not in config.get("params"):
-        update_config(config, min_config) 
-
-## for now we write the config to "new.config.json" to save current config
-with open(config['paths']['PATHOUT']+"new.config.json", 'w') as outfile:
-    # json.dump(config, outfile)
-    dumps = json.dumps(config,
-                        indent=4, sort_keys=True,
-                        separators=(',', ': '), ensure_ascii=False)
-    outfile.write(dumps)
-
-
 
 ## show base dir
 # print(workflow.basedir)
@@ -114,14 +98,14 @@ TEMPLATEDIR = BASEDIR + "report_templates/"         #--- template dir (relative 
 #--- pathout is ignored, since all paths are relative from either base or workdir
 ## notes:
 ## maybe set pathout by setting working dir in snakemake call
-# PATHOUT      = config["paths"]["PATHOUT"]
-LOGS        = config["paths"]["LOGS"] 
+# PATHOUT      = config["PATHOUT"]
+LOGS        = config["LOG"] 
 
 
 
 #--- the in/output directories can be renamed easily
 #--- path to bam files is absolute, such that I can run workflow in any other directory
-BAMDIR      = BASEDIR + "test_dataset/sample_bam_files/" 
+BAMDIR      = '06_sorted/'  # BASEDIR + "test_dataset/sample_bam_files/" 
 
 
 #--- output paths have to be relative to working directory, 
@@ -148,10 +132,10 @@ rule bam_methCall:
         callFile    = METHCALLDIR + "{prefix}.sorted_CpG.txt"
     params:
         ## absolute path to bamfiles
-        inBam       = BAMDIR + "{prefix}.sorted.bam",
-        assembly    = config["genomedat"]["VERSION"],
-        mincov      = config["params"]["params_bam_methCall"]["mincov"],
-        minqual     = config["params"]["params_bam_methCall"]["minqual"],
+        inBam       = WORKDIR + BAMDIR + "{prefix}.sorted.bam",
+        assembly    = config["GENOME_VERSION"],
+        mincov      = int(config["bam_methCall_args_mincov"]), ##TODO
+        minqual     = int(config["bam_methCall_args_minqual"]), ##TODO
         ## absolute path to output folder in working dir
         rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
     log:
