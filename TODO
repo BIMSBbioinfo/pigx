@@ -14,5 +14,9 @@ TODO
 - integrate paring CSV table and converting it to a yaml config file
 - add rules for differential methylation and create a html report for that
 
+- add version specific requirements for methylKit (at least 1.1.8) and rmarkdown (1.5 worked for Kasia)
+
+- add tests
+
 
 
