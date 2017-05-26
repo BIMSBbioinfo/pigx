@@ -76,14 +76,14 @@ SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
 
 OUTPUT_FILES = [
                 #               ==== rule 01 raw QC    =========
-                #[ expand (list_files(DIR_rawqc, config["SAMPLES"][sampleID]["fastq_name"], "_fastqc.html")  ) for sampleID in config["SAMPLES"]  ],
+                [ expand (list_files(DIR_rawqc, config["SAMPLES"][sampleID]["fastq_name"], "_fastqc.html")  ) for sampleID in config["SAMPLES"]  ],
 
                 #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
                 #               ==== rule 02 trimgalore ======
                 #[ expand ( list_files_TG( DIR_trimmed, config["SAMPLES"][sampleID]["fastq_name"] )  ) for sampleID in config["SAMPLES"]  ],
                 
                 #               ==== rule 03 posttrim_QC_ ======
-                #[ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][sampleID]["fastq_name"],".html")  ) for sampleID in config["SAMPLES"]  ],
+                [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][sampleID]["fastq_name"],".html")  ) for sampleID in config["SAMPLES"]  ],
                 #--- fastQC output files are not needed downstream and need to be called explicitly.
                 
                 #               ==== rule 04 mapping ======
@@ -97,7 +97,7 @@ OUTPUT_FILES = [
                 
                 # ==================  FINAL REPORT =========================
                 # TODO: This needs to be editted once we determine what final reports we want to export!
-		            [ expand ( Annot(DIR_annot, config["SAMPLES"][sampleID]["fastq_name"], VERSION )) for sampleID in config["SAMPLES"]  ]
+		#            [ expand ( Annot(DIR_annot, config["SAMPLES"][sampleID]["fastq_name"], VERSION )) for sampleID in config["SAMPLES"]  ]
                 
 
 ]
@@ -164,7 +164,7 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_deduplication.log"
     message: """-----------   Deduplicating paired-end read alignments ---------------------- """
     shell:
-        "nice -"+str(NICE)+" {SAMTOOLS} rmdup {input}  {output} 2> {log}"
+        "nice -"+str(NICE)+" {SAMTOOLS} fixmate {input}  {output} 2> {log}"
 
 # ==========================================================================================
 # align and map:
