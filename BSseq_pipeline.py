@@ -32,10 +32,10 @@ DIR_annot = 'annotation/'
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = config["PATHIN"]         #--- location of the data files to be imported
-PATHOUT         = config["PATHOUT"]        #--- where to send the output
+PATHIN          = "path_links/input/"      #--- symbolic link to location of the data files to be imported
+GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
+
 GTOOLBOX        = config["GTOOLBOX"]       #--- where the programs are stored to carry out the necessary operations
-GENOMEPATH      = config["GENOMEPATH"]     #--- where the reference genome being mapped to is stored
 
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
@@ -113,9 +113,6 @@ rule all:
     input:
         OUTPUT_FILES
 
-# --------------------------------------------------------------------------------
-# rule clean:
-#    shell: "if [ -d {PATHOUT} ]; then rm -r {PATHOUT}; fi"
 # ==========================================================================================
 # sort the bam file:
 
@@ -207,7 +204,7 @@ rule bismark_pe:
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+PATHOUT
+        tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
