@@ -32,10 +32,10 @@ DIR_annot = 'annotation/'
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = config["PATHIN"]         #--- location of the data files to be imported
-PATHOUT         = config["PATHOUT"]        #--- where to send the output
+PATHIN          = "path_links/input/"      #--- symbolic link to location of the data files to be imported
+GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
+
 GTOOLBOX        = config["GTOOLBOX"]       #--- where the programs are stored to carry out the necessary operations
-GENOMEPATH      = config["GENOMEPATH"]     #--- where the reference genome being mapped to is stored
 
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
@@ -116,9 +116,6 @@ rule all:
     input:
         OUTPUT_FILES
 
-# --------------------------------------------------------------------------------
-# rule clean:
-#    shell: "if [ -d {PATHOUT} ]; then rm -r {PATHOUT}; fi"
 # ==========================================================================================
 # sort the bam file:
 
@@ -185,9 +182,9 @@ rule bismark_se:
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+PATHOUT
+        tempdir     = "--temp_dir "+DIR_mapped
     log:
-        PATHOUT+DIR_mapped+"/{sample}_bismark_se_mapping.log"
+        DIR_mapped+"/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK} {params} --multicore "+NUMTHREADS+" {input.fqfile} 2> {log}"
@@ -211,9 +208,9 @@ rule bismark_pe:
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+PATHOUT
+        tempdir     = "--temp_dir "+DIR_mapped
     log:
-        PATHOUT+DIR_mapped+"{sample}_bismark_pe_mapping.log"
+        DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK} {params} --multicore "+NUMTHREADS+" -1 {input.fin1} -2 {input.fin2} 2> {log}"
@@ -234,7 +231,7 @@ rule bismark_genome_preparation:
         useBowtie2 = "--bowtie2 ",
         verbose = "--verbose "
     log:
-        PATHOUT+'bismark_genome_preparation_'+VERSION+'.log'
+        'bismark_genome_preparation_'+VERSION+'.log'
     message: """ --------  converting {VERSION} Genome into Bisulfite analogue ------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}"
@@ -332,7 +329,7 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
         outdir = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
 
     log:
-        PATHOUT+"01_rawqc/{sample}_fastqc.log"
+        DIR_rawqc+"{sample}_fastqc.log"
     message: """ ----------  Quality checking raw read data with {FASTQC}.  --------------   """
     shell:
         "nice -"+str(NICE)+" {FASTQC} {params.outdir}  {input} 2> {log}"

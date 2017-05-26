@@ -1,0 +1,4 @@
+PATHIN="/home/bosberg/bs/pigx_sandbox/test_dataset/in/"
+PATHOUT="/home/bosberg/bs/pigx_sandbox/test_dataset/out/"
+GENOMEPATH="/home/bosberg/bs/ref_genome/ce10/"
+LOG="/home/bosberg/bs/pigx_sandbox/test_dataset/out/"
