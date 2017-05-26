@@ -1,5 +1,5 @@
 {
-    "GTOOLBOX":"/home/kwreczy/tmp/ggtoolbox/",
+    "GTOOLBOX":"/home/bosberg/.guix-profile/bin/",
 
     "PROGS": {
         "FASTQC"          : "fastqc",
