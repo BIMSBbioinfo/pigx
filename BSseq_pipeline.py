@@ -49,9 +49,6 @@ NICE=config["NICE"]
      #--- The more "nice" you are, the more you allow other processes to jump ahead of you 
      #--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
 
-NON_DIR_FLAG=config["NON_DIR_FLAG"] # If left as ="", then directional mapping is assumed by default. 
-# if it is explicity set to NON_DIR_FLAG=" --non_directional " in the table input sheet, then non-directional mapping is performed.
-
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
 FASTQC                         =  GTOOLBOX+config["PROGS"]["FASTQC"]            #--- self-explanatory program names.
@@ -181,7 +178,6 @@ rule bismark_se:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-	nonDir = NON_DIR_FLAG,             #--- EMPTY IF DATA IS DIRECTIONAL (DEFAULT) OTHERWISE "--non_directional"
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
@@ -190,7 +186,7 @@ rule bismark_se:
         PATHOUT+DIR_mapped+"/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
-        "nice -"+str(NICE)+" {BISMARK} {params} --multicore "+NUMTHREADS+" {input.fqfile} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK} {params} "+config["bismark_args"]+" {input.fqfile} 2> {log}"
 
 #--------
 rule bismark_pe:
@@ -202,7 +198,6 @@ rule bismark_pe:
     output:
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
-    threads: 2
     params:
         bismark_genome_preparation_args = config.get("bismark_genome_preparation",""),
         genomeFolder = "--genome_folder " + GENOMEPATH,
@@ -216,7 +211,7 @@ rule bismark_pe:
         PATHOUT+DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
-        "nice -"+str(NICE)+" {BISMARK} {params} --multicore "+NUMTHREADS+" -1 {input.fin1} -2 {input.fin2} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK} {params} "+config["bismark_args"]+" -1 {input.fin1} -2 {input.fin2} 2> {log}"
 
 
 # ==========================================================================================
