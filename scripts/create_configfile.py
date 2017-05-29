@@ -25,9 +25,26 @@ def splitInputFile2separateFile(file):
   """ It splits file into 3 separate files: 1.txt, 2.txt, 3.txt
   using regex [[ .* ]].
   """
-  import os
-  cmd="awk '/\[\[.*\]\]/{g++} { print $0 > g"+'"'+'.txt"'+"}'" + " " + file
-  os.system(cmd)
+  import re
+  
+  
+  brac = re.compile('\[\[.*\]\]')
+  i=0
+  with open(file,"r") as f:
+  	for line in f:
+  		if(re.match(brac,line)):
+  			if(i>=1):
+  				## close old file
+  				o.close()
+  			## increase file counter
+  			i += 1
+  			## open new file
+  			o = open(str(i)+".txt","w")
+  			o.write(line)
+  		elif(i>=1):
+  			o.write(line)
+  	o.close()
+
   
 
 def parseGeneralParams2dict(file, skip=None):
