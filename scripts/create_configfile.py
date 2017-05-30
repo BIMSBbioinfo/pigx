@@ -170,19 +170,14 @@ def createConfigfile(tablesheet, outfile, *args):
   return(config)
 
 
-def check_if_fastq(string):
-  fq = ["fasta", "fastq", "fq"]
-  if string.find(fq[0]) == -1 or string.find(fq[1]) == -1 or string.find(fq[2]) == -1:
-    return True
-  else:
-    return False
-    
-    
+def is_fastq(string):
+  return any(string.find(x) >= 0 for x in ["fasta", "fastq", "fq"])
+
 def splitext_fqgz(string):
   ext = string.split(".")[-2:]
   core = string.split(".")[:-2]
   ext = ".".join(ext)
-  if check_if_fastq(ext)==False:
+  if not is_fastq(ext):
     print("Input files are not fastq files!!")
   core = ".".join(core)
   return (core, ext)
