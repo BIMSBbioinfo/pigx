@@ -2,11 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-
 # ignore all logging data
 *.log
 snakemakeObj.RData
-
 # ignore all folders, except for:
 #*/
 !scripts/
@@ -15,8 +13,7 @@ snakemakeObj.RData
 !rules/
 !tests/
 !test_dataset/sample_bam_files/
-
-# ignore on my (alex) machine 
+# ignore on my (alex) machine
 .snakemake/
 annotation/
 methylation_calls/
@@ -27,5 +24,6 @@ config.json
 *.Rproj
 *.DS_Store
 scripts/.snakemake*
-
 test_dataset/TableSheet_test.csv
+test_dataset/PROGS.json
+tmp
