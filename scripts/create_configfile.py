@@ -66,22 +66,10 @@ def parseGeneralParams2dict(lines):
     
     
 def getFilenames(mylist):
-  if len(mylist)==2:
-    return( [splitext_fqgz(mylist[0])[0], splitext_fqgz(mylist[1])[0]] )
-  if len(mylist)==1:
-    return( [splitext_fqgz(mylist[0])[0]] )
-  else:
-    raise Exception("Sth went wrong in getFilenames())")
-    
+  return list(map(lambda x: splitext_fqgz(x)[0], mylist))
     
 def getExtension(mylist):
-  if len(mylist)==2:
-    return( [splitext_fqgz(mylist[0])[1], splitext_fqgz(mylist[1])[1]] )
-  if len(mylist)==1:
-    return( [splitext_fqgz(mylist[0])[1]] )
-  else:
-    raise Exception("Sth went wrong in getExtension())")   
-    
+  return list(map(lambda x: splitext_fqgz(x)[1], mylist))
 
 def parseTable2dict(lines):
   """
