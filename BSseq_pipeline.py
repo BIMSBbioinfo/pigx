@@ -183,7 +183,7 @@ rule bismark_se:
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
-        PATHOUT+DIR_mapped+"/{sample}_bismark_se_mapping.log"
+        DIR_mapped+"/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK} {params} "+config["bismark_args"]+" {input.fqfile} 2> {log}"
@@ -208,7 +208,7 @@ rule bismark_pe:
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+PATHOUT
     log:
-        PATHOUT+DIR_mapped+"{sample}_bismark_pe_mapping.log"
+        DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK} {params} "+config["bismark_args"]+" -1 {input.fin1} -2 {input.fin2} 2> {log}"
@@ -229,7 +229,7 @@ rule bismark_genome_preparation:
         useBowtie2 = "--bowtie2 ",
         verbose = "--verbose "
     log:
-        PATHOUT+'bismark_genome_preparation_'+VERSION+'.log'
+        'bismark_genome_preparation_'+VERSION+'.log'
     message: """ --------  converting {VERSION} Genome into Bisulfite analogue ------- """
     shell:
         "nice -"+str(NICE)+" {BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}"
@@ -327,7 +327,7 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
         outdir = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
 
     log:
-        PATHOUT+"01_rawqc/{sample}_fastqc.log"
+        DIR_rawqc+"01_rawqc/{sample}_fastqc.log"
     message: """ ----------  Quality checking raw read data with {FASTQC}.  --------------   """
     shell:
         "nice -"+str(NICE)+" {FASTQC} {params.outdir}  {input} 2> {log}"
