@@ -24,6 +24,7 @@ def parse_config_args(config_args):
 def parseTableSheet(file):
   """ Parse the tablesheet given in FILE and return its sections.
   """
+
   sections = {}
   section = None
   with open(file) as f:
