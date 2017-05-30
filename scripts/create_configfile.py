@@ -21,16 +21,26 @@ def parse_config_args(config_args):
   return(tablesheet)
 
 
-def splitInputFile2separateFile(file):
-  """ It splits file into 3 separate files: 1.txt, 2.txt, 3.txt
-  using regex [[ .* ]].
+def parseTableSheet(file):
+  """ Parse the tablesheet given in FILE and return its sections.
   """
-  import os
-  cmd="awk '/\[\[.*\]\]/{g++} { print $0 > g"+'"'+'.txt"'+"}'" + " " + file
-  os.system(cmd)
+  sections = {}
+  section = None
+  with open(file) as f:
+    for line in f:
+      if line.startswith("["):
+        section = line.strip('[]\n ').lower()
+        sections[section] = list()
+      else:
+        line = line.strip()
+        if not section and line:
+          print("WARNING: ignoring line outside of section.")
+        if section and line:
+          sections[section].append(line)
   
+  return sections
 
-def parseGeneralParams2dict(file, skip=None):
+def parseGeneralParams2dict(lines):
   """lines are lines from the file with general parameters for snakemake, such as:
   PATHIN='./in'
   PATHOUT=''
@@ -44,15 +54,9 @@ def parseGeneralParams2dict(file, skip=None):
   It returns a dictionary in which keys are variables (e.g. PATHIN) 
   and values are given by a user.
   """
-  text=open(file,'r').readlines()
 
-  if skip is not None and skip>=1:
-    text = text[skip:]
-  
   # remove \n characters after arguments
-  text = [x.rstrip() for x in text]
-  # remove empty lines
-  text = list(filter(None, text))
+  text = [x.rstrip() for x in lines]
   # list of lists (variable, value)
   list_of_list =[x.replace('"', "").split("=") for x in text]
   # convert it to list of variables and list of values
@@ -79,7 +83,7 @@ def getExtension(mylist):
     raise Exception("Sth went wrong in getExtension())")   
     
 
-def parseTable2dict( path_table, skip=None):
+def parseTable2dict(lines):
   """
   Parse csv table with information about samples, eg:
   
@@ -90,15 +94,9 @@ def parseTable2dict( path_table, skip=None):
   It returns a dictionary required for the config file.
   """
   import csv
-  sreader = csv.reader(open(path_table), delimiter=',')
+  sreader = csv.reader(lines, delimiter=',')
   rows = [row for row in sreader]
   
-  # remove empty lines
-  rows = list(filter(None, rows))
-  
-  if skip is not None and skip>=1:
-    rows = [x for x in rows[skip:]]
-
   header = rows[0]
   minimal_header = ['Read1', 'Read2', 'SampleID', 'ReadType', 'Treatment']
   
@@ -147,26 +145,20 @@ def createConfigfile(tablesheet, outfile, *args):
   dir_tablesheet = os.path.dirname(tablesheet)
   args=args[0] # only 1 additional argument
   
-  splitInputFile2separateFile(tablesheet)
-  general_paramspath = "1.txt"
-  pathtable = "2.txt"
-  sample_params = "3.txt"
+  sections = parseTableSheet(tablesheet)
+  # TODO: this section is completely ignored
+  sample_params = sections['differential methylation']
   
   # Load general parameters
-  gen_params=parseGeneralParams2dict(general_paramspath, skip=1)
+  gen_params = parseGeneralParams2dict(sections['general parameters'])
 
   # Load parameters specific to samples
-  sample_params = parseTable2dict( pathtable, skip=1)
+  sample_params = parseTable2dict(sections['samples'])
   sample_params = dict(sample_params)
   
   # Create a config file  
   config=gen_params
   config.update(sample_params)
-  
-  # Remove temporary files
-  os.remove("1.txt")
-  os.remove("2.txt")
-  os.remove("3.txt")
 
   # Add additional args to the config file
   if isinstance(args,dict):
