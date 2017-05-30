@@ -13,6 +13,6 @@ scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
 #========================================================================================
 #----------  NOW START RUNNING SNAKEMAKE:  ----------------------------------------------
 
-pathout=$(cat $path2configfile | \
-          python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])")
+pathout=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])" < $path2configfile)
+
 snakemake -s BSseq_pipeline.py --configfile $path2configfile -d $pathout
