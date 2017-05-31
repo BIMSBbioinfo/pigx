@@ -16,24 +16,27 @@ snakemake --dag --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIG
 # Cluster run
 snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --timestamp --jobs 24 --cluster "qsub -V -l h_vmem={params.mem} -pe smp {params.threads} -l h_rt=36:00:00" --rerun-incomplete --latency-wait 30
 
+for i in `ls $WORKDIR | grep -v Fastq$ | grep -v Genome`;do rm -r $WORKDIR/$i;done
 
-rm $(snakemake --summary | tail -n+2 | cut -f1)
+rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE --summary | tail -n+2 | cut -f1)
 
 # TODO
-[]. enable sample specific parameter deposition
-[]. write tests
-[]. write checks for the config proper formatting 
+[#]. enable sample specific parameter deposition
+    - works for macs2
+[] write yaml schema 
+    https://github.com/Grokzen/pykwalify,
+    http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
+[].write tests
+[] set default app parameters in config
+[] the pipeline does not work without app params - change config check
+
 
 [] Add peak QC
-
-10. Extent to paired end reads
-    - Testing for paired end reads
-    - Mapping
-    - Fastqc for paired end reads
+[] add support for peak calling without control
+[] add check for gzipped bowtie reference
 
 []. Run multiqc
 []. Add samplesheet To yaml file
-[]. Check for params:idr
 []. cofigure the pipeline for broad histone data
 []. enable trimming
 []. rewrite fastqc to go through each individual file
@@ -53,6 +56,19 @@ DONE
 [*]. Format messages
 [*] Add interactive macs parameters
 [*] Add possible pseudonims for samples
+
+172405
+[*]. write checks for the config proper formatting :
+    - ChIP and Cont parameters in peak calling
+    - idr samples
+[*]. Check for params:idr
+[*] Add paired end test data
+[*]. Extent to paired end reads
+    - Testing for paired end reads
+    - Mapping
+    - Fastqc for paired end reads
+
+
 
 Integrate_Expression_Mouse_Hamster_Difference
 1. Figure out how to prevent bombing
@@ -78,13 +94,13 @@ import sys
 import yaml
 
 from SnakeFunctions import *
+from Check_Config import *
 localrules: makelinks
 
 
 # ---------------------------------------------------------------------------- #
 # check config validity
 if check_config(config) == 1:
-    print('config.yaml is not properly formatted - exiting')
     quit()
 
 
@@ -200,7 +216,7 @@ rule bowtie2:
         library  = get_library_type,
         params_bowtie2 = PARAMS['bowtie2']
     log:
-        log = os.path.join(PATH_MAPPED, "{name}/{name}.bowtie2.log")
+        log = os.path.join(PATH_LOG, "{name}.bowtie2.log")
     message:"""
         Mapping with bowtie2:
             sample: {input.infile}
@@ -387,7 +403,7 @@ rule macs2:
         macs2 = SOFTWARE['macs2'],
         params_macs = PARAMS['macs2']
     log:
-        log = os.path.join(PATH_LOG, 'macs.log')
+        log = os.path.join(PATH_LOG, '{name}.macs.log')
     message:"""
         Running macs2:
             ChIP:   {input.ChIP}
@@ -395,7 +411,7 @@ rule macs2:
             output: {output.outfile}
     """
     run:
-        params_macs = params_macs.local
+        params_macs = params.params_macs
         if 'params' in config['peak_calling'][params.name].keys():
             if 'macs2' in config['peak_calling'][params.name]['params'].keys():
                 params_macs.update(config['peak_calling'][params.name]['params']['macs2'])
@@ -429,7 +445,7 @@ rule idr:
         idr = SOFTWARE['idr'],
         params_idr = PARAMS['idr']
     log:
-        log = os.path.join(PATH_LOG, 'idr.log')
+        log = os.path.join(PATH_LOG, '{name}.idr.log')
     message:"""
             Running IDR2:
                 input : {input.ChIP1} {input.ChIP2}
