@@ -16,50 +16,6 @@ def set_default(param, default, config):
 	return(VALUE)
 
 # ---------------------------------------------------------------------------- #
-# checks the config file for validity
-# config check
-def is_number(s):
-	try:
-		float(s)
-		return True
-	except ValueError:
-		return False
-
-
-def check_config(config):
-
-	message = ''
-	# checks for proper top level config categories
-	params = ['genome','genome_fasta','index','fastq','params','samples','peak_calling','idr','software']
-	params_diff = set(config.keys()) - set(params)
-	if len(params_diff) > 0:
-		message = message + "config file contains unknown parameters"
-
-	# checks for index or genome specification
-	if (config['genome'] == None) and (config['index'] == None):
-		message = message + "neither genome nor index are specified\n"
-
-	# checks for correspondence between peak calling and samples
-	samples = list(config['samples'].keys())
-	keys = list(config['peak_calling'].keys())
-	peaks = [(config['peak_calling'][i]['ChIP'],config['peak_calling'][i]['Cont'])  for i in keys]
-	samples_diff = (set(peaks[0]) - set(samples))
-	if len(samples_diff) > 0:
-		message = message + "some peak calling samples are not specified\n"
-
-	# checks whether extend is a number
-	# if not (is.number(config['params']['extend'])):
-	#     message = message + "extend must be a number\n"
-
-	if len(message) > 0:
-		print(message)
-		return(1);
-
-	return(0)
-
-
-
-# ---------------------------------------------------------------------------- #
 # given a app name calls the help and parses the parameters
 def get_app_params(app, app_name, app_params):
     import subprocess
@@ -91,7 +47,4 @@ def join_params(app, app_params, params_set):
     params = [params_all[i] +' '+ str(params_set[i]) for i in params_set_keys]
     params = " ".join(params)
     return(params)
-
-
-
 
