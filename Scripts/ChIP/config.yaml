@@ -1,7 +1,7 @@
 # ------------------------------------------------------------ #
 genome:
     name: 'mm9'
-    fasta: '/data/akalin/Base/Genomes/mm9/mm9.fa'
+    fasta: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Genome/chr19.fa'
 index: 
 
 fastq: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Fastq'
@@ -9,17 +9,26 @@ fastq: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Fastq'
 
 samples:
     ChIP1: 
-        fastq: ChIP.fq
+        fastq: 
+            - ChIP.fq.gz
         library: single
     Cont1:
-        fastq: Cont.fq
+        fastq: 
+            - Cont.fq.gz
         library: single
     ChIP2:
-        fastq: ChIP.fq
+        fastq: 
+            - ChIP.fq
         library: single
     Cont2:
-        fastq: Cont.fq
+        fastq: 
+            - Cont.fq
         library: single
+    ChIPpe:
+        fastq: 
+            - ChIP_1.fq.gz
+            - ChIP_2.fq.gz
+        library: paired
         
 # ------------------------------------------------------------ #
 # ChIP and Cont are hardcoded and must exist in the config file
@@ -34,6 +43,17 @@ peak_calling:
     Peaks2:
         ChIP: ChIP2
         Cont: Cont2
+        params:
+            macs2:
+                nomodel: ''
+                extsize: 147
+    Peaks3:
+        ChIP: ChIPpe
+        Cont: Cont2
+        params:
+            macs2:
+                nomodel: ''
+                
 
 # ------------------------------------------------------------ #
 idr:
