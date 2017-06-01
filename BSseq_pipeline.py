@@ -175,13 +175,14 @@ rule bismark_se:
         DIR_mapped+"{sample}_trimmed_bismark_bt2.bam",
         DIR_mapped+"{sample}_trimmed_bismark_bt2_SE_report.txt"
     params:
+        bismark_args = config.get("bismark_args",""),
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+PATHOUT
+        tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
@@ -199,7 +200,7 @@ rule bismark_pe:
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
     params:
-        bismark_genome_preparation_args = config.get("bismark_genome_preparation",""),
+        bismark_args = config.get("bismark_args",""),
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
@@ -327,7 +328,7 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
         outdir = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
 
     log:
-        DIR_rawqc+"01_rawqc/{sample}_fastqc.log"
+        DIR_rawqc+"{sample}_fastqc.log"
     message: """ ----------  Quality checking raw read data with {FASTQC}.  --------------   """
     shell:
         "nice -"+str(NICE)+" {FASTQC} {params.outdir}  {input} 2> {log}"
