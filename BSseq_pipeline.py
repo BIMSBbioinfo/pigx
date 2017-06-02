@@ -32,15 +32,12 @@ DIR_annot = 'annotation/'
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = "path_links/input/"      #--- symbolic link to location of the data files to be imported
-GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
-
+PATHIN          = config["PATHIN"]         #--- location of the data files to be imported
+PATHOUT         = config["PATHOUT"]        #--- where to send the output
 GTOOLBOX        = config["GTOOLBOX"]       #--- where the programs are stored to carry out the necessary operations
+GENOMEPATH      = config["GENOMEPATH"]     #--- where the reference genome being mapped to is stored
 
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
-
-CHROM_INFO      = config["CHROM_INFO"]     #--- details of the reference genome (length, etc.) haploid chroms have been removed.
-NUMTHREADS      = config["NUMTHREADS"]
 
 INEXT = config["INEXT"]
 RCODE = config["RCODE"]
@@ -48,9 +45,6 @@ NICE=config["NICE"]
      #--- NICE gauges the computational burden, ranging from -19 to +19. 
      #--- The more "nice" you are, the more you allow other processes to jump ahead of you 
      #--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
-
-NON_DIR_FLAG=config["NON_DIR_FLAG"] # If left as ="", then directional mapping is assumed by default. 
-# if it is explicity set to NON_DIR_FLAG=" --non_directional " in the table input sheet, then non-directional mapping is performed.
 
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
@@ -175,10 +169,10 @@ rule bismark_se:
         DIR_mapped+"{sample}_trimmed_bismark_bt2.bam",
         DIR_mapped+"{sample}_trimmed_bismark_bt2_SE_report.txt"
     params:
+        bismark_args = config.get("bismark_args",""),
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-	nonDir = NON_DIR_FLAG,             #--- EMPTY IF DATA IS DIRECTIONAL (DEFAULT) OTHERWISE "--non_directional"
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
@@ -187,7 +181,7 @@ rule bismark_se:
         DIR_mapped+"/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
-        "nice -"+str(NICE)+" {BISMARK} {params} --multicore "+NUMTHREADS+" {input.fqfile} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK} {params} "+config["bismark_args"]+" {input.fqfile} 2> {log}"
 
 #--------
 rule bismark_pe:
@@ -199,21 +193,20 @@ rule bismark_pe:
     output:
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
         DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
-    threads: 2
     params:
-        bismark_genome_preparation_args = config.get("bismark_genome_preparation",""),
+        bismark_args = config.get("bismark_args",""),
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+DIR_mapped
+        tempdir     = "--temp_dir "+PATHOUT
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
-        "nice -"+str(NICE)+" {BISMARK} {params} --multicore "+NUMTHREADS+" -1 {input.fin1} -2 {input.fin2} 2> {log}"
+        "nice -"+str(NICE)+" {BISMARK} {params} "+config["bismark_args"]+" -1 {input.fin1} -2 {input.fin2} 2> {log}"
 
 
 # ==========================================================================================

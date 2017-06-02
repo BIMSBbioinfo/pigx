@@ -99,7 +99,7 @@ TEMPLATEDIR = BASEDIR + "report_templates/"         #--- template dir (relative 
 ## notes:
 ## maybe set pathout by setting working dir in snakemake call
 # PATHOUT      = config["PATHOUT"]
-LOGS        = config["LOG"] 
+# LOGS        = config["LOG"] 
 
 
 
@@ -139,7 +139,7 @@ rule bam_methCall:
         ## absolute path to output folder in working dir
         rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
     log:
-        LOGS+"{prefix}.sorted_meth_calls.log"
+        METHCALLDIR + "{prefix}.sorted_meth_calls.log"
     message:
         "Processing of bam file:\n" 
         "   input     : {input.bamfile}" + "\n"
@@ -168,7 +168,7 @@ rule methseg:
         grdata      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
         outBed      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments.bed"
     log:
-        LOGS+"{prefix}.sorted_meth_segments.log"
+        SEGDIR + "{prefix}.sorted_meth_segments.log"
     message:
         "Segmentation of sample file:\n"
         "   input     : {input.rdatafile}" + "\n" 
@@ -187,7 +187,7 @@ rule fetch_refGene:
     params: 
         assembly = "{assembly}"
     log:
-        LOGS+"fetch_refseq.genes.{assembly}.log"
+        ANNODIR + "fetch_refseq.genes.{assembly}.log"
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
     script:  
@@ -208,7 +208,7 @@ rule annotation:
         assembly    = "{assembly}",# expand(config["reference"]),
         refseqfile  = WORKDIR + ANNODIR + "refseq.genes.{assembly}.bed"
     log:
-        LOGS+"{prefix}.sorted_{assembly}_annotation.log"
+        ANNODIR + "{prefix}.sorted_{assembly}_annotation.log"
     message:
         "Annotation of Segments:\n"
         "   input     : {input.bedfile}" + "\n"

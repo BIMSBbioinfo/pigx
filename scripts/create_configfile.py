@@ -21,16 +21,27 @@ def parse_config_args(config_args):
   return(tablesheet)
 
 
-def splitInputFile2separateFile(file):
-  """ It splits file into 3 separate files: 1.txt, 2.txt, 3.txt
-  using regex [[ .* ]].
+def parseTableSheet(file):
+  """ Parse the tablesheet given in FILE and return its sections.
   """
-  import os
-  cmd="awk '/\[\[.*\]\]/{g++} { print $0 > g"+'"'+'.txt"'+"}'" + " " + file
-  os.system(cmd)
-  
 
-def parseGeneralParams2dict(file, skip=None):
+  sections = {}
+  section = None
+  with open(file) as f:
+    for line in f:
+      if line.startswith("["):
+        section = line.strip('[]\n ').lower()
+        sections[section] = list()
+      else:
+        line = line.strip()
+        if not section and line:
+          print("WARNING: ignoring line outside of section.")
+        if section and line:
+          sections[section].append(line)
+  
+  return sections
+
+def parseGeneralParams2dict(lines):
   """lines are lines from the file with general parameters for snakemake, such as:
   PATHIN='./in'
   PATHOUT=''
@@ -44,15 +55,9 @@ def parseGeneralParams2dict(file, skip=None):
   It returns a dictionary in which keys are variables (e.g. PATHIN) 
   and values are given by a user.
   """
-  text=open(file,'r').readlines()
 
-  if skip is not None and skip>=1:
-    text = text[skip:]
-  
   # remove \n characters after arguments
-  text = [x.rstrip() for x in text]
-  # remove empty lines
-  text = list(filter(None, text))
+  text = [x.rstrip() for x in lines]
   # list of lists (variable, value)
   list_of_list =[x.replace('"', "").split("=") for x in text]
   # convert it to list of variables and list of values
@@ -62,24 +67,12 @@ def parseGeneralParams2dict(file, skip=None):
     
     
 def getFilenames(mylist):
-  if len(mylist)==2:
-    return( [splitext_fqgz(mylist[0])[0], splitext_fqgz(mylist[1])[0]] )
-  if len(mylist)==1:
-    return( [splitext_fqgz(mylist[0])[0]] )
-  else:
-    raise Exception("Sth went wrong in getFilenames())")
-    
+  return list(map(lambda x: splitext_fqgz(x)[0], mylist))
     
 def getExtension(mylist):
-  if len(mylist)==2:
-    return( [splitext_fqgz(mylist[0])[1], splitext_fqgz(mylist[1])[1]] )
-  if len(mylist)==1:
-    return( [splitext_fqgz(mylist[0])[1]] )
-  else:
-    raise Exception("Sth went wrong in getExtension())")   
-    
+  return list(map(lambda x: splitext_fqgz(x)[1], mylist))
 
-def parseTable2dict( path_table, skip=None):
+def parseTable2dict(lines):
   """
   Parse csv table with information about samples, eg:
   
@@ -90,15 +83,9 @@ def parseTable2dict( path_table, skip=None):
   It returns a dictionary required for the config file.
   """
   import csv
-  sreader = csv.reader(open(path_table), delimiter=',')
+  sreader = csv.reader(lines, delimiter=',')
   rows = [row for row in sreader]
   
-  # remove empty lines
-  rows = list(filter(None, rows))
-  
-  if skip is not None and skip>=1:
-    rows = [x for x in rows[skip:]]
-
   header = rows[0]
   minimal_header = ['Read1', 'Read2', 'SampleID', 'ReadType', 'Treatment']
   
@@ -147,26 +134,20 @@ def createConfigfile(tablesheet, outfile, *args):
   dir_tablesheet = os.path.dirname(tablesheet)
   args=args[0] # only 1 additional argument
   
-  splitInputFile2separateFile(tablesheet)
-  general_paramspath = "1.txt"
-  pathtable = "2.txt"
-  sample_params = "3.txt"
+  sections = parseTableSheet(tablesheet)
+  # TODO: this section is completely ignored
+  sample_params = sections['differential methylation']
   
   # Load general parameters
-  gen_params=parseGeneralParams2dict(general_paramspath, skip=1)
+  gen_params = parseGeneralParams2dict(sections['general parameters'])
 
   # Load parameters specific to samples
-  sample_params = parseTable2dict( pathtable, skip=1)
+  sample_params = parseTable2dict(sections['samples'])
   sample_params = dict(sample_params)
   
   # Create a config file  
   config=gen_params
   config.update(sample_params)
-  
-  # Remove temporary files
-  os.remove("1.txt")
-  os.remove("2.txt")
-  os.remove("3.txt")
 
   # Add additional args to the config file
   if isinstance(args,dict):
@@ -190,19 +171,14 @@ def createConfigfile(tablesheet, outfile, *args):
   return(config)
 
 
-def check_if_fastq(string):
-  fq = ["fasta", "fastq", "fq"]
-  if string.find(fq[0]) == -1 or string.find(fq[1]) == -1 or string.find(fq[2]) == -1:
-    return True
-  else:
-    return False
-    
-    
+def is_fastq(string):
+  return any(string.find(x) >= 0 for x in ["fasta", "fastq", "fq"])
+
 def splitext_fqgz(string):
   ext = string.split(".")[-2:]
   core = string.split(".")[:-2]
   ext = ".".join(ext)
-  if check_if_fastq(ext)==False:
+  if not is_fastq(ext):
     print("Input files are not fastq files!!")
   core = ".".join(core)
   return (core, ext)
