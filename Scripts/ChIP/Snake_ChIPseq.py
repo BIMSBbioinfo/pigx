@@ -21,26 +21,33 @@ for i in `ls $WORKDIR | grep -v Fastq$ | grep -v Genome`;do rm -r $WORKDIR/$i;do
 rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE --summary | tail -n+2 | cut -f1)
 
 # TODO
+## Main
 [#]. enable sample specific parameter deposition
+[#].write tests
+[] set default app parameters in config
     - works for macs2
-[] write yaml schema 
+[] the pipeline does not work without app params - change config check    
+[] add check for gzipped bowtie reference
+[]. Add samplesheet To yaml file
+[]. write markdown
+    
+[] write yaml schema
     https://github.com/Grokzen/pykwalify,
     http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
-[].write tests
-[] set default app parameters in config
-[] the pipeline does not work without app params - change config check
 
-
+## Additional
 [] Add peak QC
 [] add support for peak calling without control
-[] add check for gzipped bowtie reference
-
 []. Run multiqc
-[]. Add samplesheet To yaml file
 []. cofigure the pipeline for broad histone data
 []. enable trimming
 []. rewrite fastqc to go through each individual file
-[]. write markdown
+[]. Enable running subsections of the pipeline
+[]. Automatic UCSC hub setup
+[]. Add test genome data (genome subset)
+[]. Set default for genome name if genome specified but genome name is not
+[]. Delete temporary files - bed and bedGraph files
+[]. Sample specific read extension
 
 
 DONE
@@ -197,7 +204,7 @@ def get_fastq_input(wc):
 
     infiles = [os.path.join(PATH_FASTQ, i) for i in samps]
     return(infiles)
-    
+
 def get_library_type(wc):
     lib = config['samples'][wc.name]['library']
     return(lib)
@@ -232,7 +239,7 @@ rule bowtie2:
             map_args = '-1 ' + input.infile[0] + ' -2 ' + input.infile[1]
 
         command = " ".join(
-        [params.bowtie2, 
+        [params.bowtie2,
         '-p', str(params.threads),
         '-x', genome,
         map_args,
@@ -241,7 +248,7 @@ rule bowtie2:
         '|', params.samtools,'view -bhS >', output.bamfile
         ])
         shell(command)
-         
+
 #----------------------------------------------------------------------------- #
 rule samtools_sort:
     input:
@@ -415,7 +422,7 @@ rule macs2:
         if 'params' in config['peak_calling'][params.name].keys():
             if 'macs2' in config['peak_calling'][params.name]['params'].keys():
                 params_macs.update(config['peak_calling'][params.name]['params']['macs2'])
-                
+
         command = " ".join(
         [params.macs2, 'callpeak',
         '-t', input.ChIP,

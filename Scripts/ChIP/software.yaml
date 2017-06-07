@@ -7,9 +7,19 @@ software:
     idr: idr
     macs2: macs2
     perl: perl
-    R: R # data.table dependency
+    R: R
+    R_deps:
+      - data.table
+      - dependency
     samtools: samtools
     wigToBigWig: wigToBigWig
+    python: pyton
+    python_deps:
+      - os
+      - sys
+      - yaml
+      - pytest
+      - itertools
 
 params:
     macs2:
