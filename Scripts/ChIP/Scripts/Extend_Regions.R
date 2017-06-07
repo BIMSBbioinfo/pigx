@@ -11,7 +11,7 @@ Extend_Regions = function(inpath, outpath, extend=NULL){
   setnames(f,c('chr','start','end','name','x','strand'))
   f[strand == '+', end := start[strand == '+'] + as.integer(extend)]
   f[strand == '-', start := end[strand == '-'] - as.integer(extend)]
-  if(any(f$start > 0)){
+  if(any(f$start < 0)){
       warning('Removing reads with start < 0')
       f = f[f$start >= 0]
   }
