@@ -3,6 +3,7 @@
 import os, sys, json
 
 
+# -------------------------------------------------------------------------------
 def parse_config_args(config_args):
   """
   Check if user provided a tablesheet
@@ -21,32 +22,34 @@ def parse_config_args(config_args):
   return(tablesheet)
 
 
+# -------------------------------------------------------------------------------
 def parseTableSheet(file):
   """ Parse the tablesheet given in FILE and return its sections.
   """
-
-  sections = {}
-  section = None
-  with open(file) as f:
-    for line in f:
-      if line.startswith("["):
-        section = line.strip('[]\n ').lower()
-        sections[section] = list()
-      else:
-        line = line.strip()
-        if not section and line:
-          print("WARNING: ignoring line outside of section.")
-        if section and line:
-          sections[section].append(line)
-  
+  if os.path.isfile(file):
+    sections = {}
+    section = None
+    with open(file) as f:
+      for line in f:
+        if line.startswith("["):
+          section = line.strip('[]\n ').lower()
+          sections[section] = list()
+        else:
+          line = line.strip()
+          if not section and line:
+            print("WARNING: ignoring line outside of section.")
+          if section and line:
+            sections[section].append(line)
+  else:
+    print("ERROR: File supplied to parseTableSheet does not exist.")
   return sections
 
+# -------------------------------------------------------------------------------
 def parseGeneralParams2dict(lines):
   """lines are lines from the file with general parameters for snakemake, such as:
   PATHIN='./in'
   PATHOUT=''
   GENOMEPATH=''
-  LOGS=''
   CHROM_INFO=''
   GENOME_VERSION=''
   bismark_args=''
@@ -66,12 +69,15 @@ def parseGeneralParams2dict(lines):
   return(dict_params)
     
     
+# -------------------------------------------------------------------------------
 def getFilenames(mylist):
   return list(map(lambda x: splitext_fqgz(x)[0], mylist))
     
+# -------------------------------------------------------------------------------
 def getExtension(mylist):
   return list(map(lambda x: splitext_fqgz(x)[1], mylist))
 
+# -------------------------------------------------------------------------------
 def parseTable2dict(lines):
   """
   Parse csv table with information about samples, eg:
@@ -119,10 +125,10 @@ def parseTable2dict(lines):
   outputdict1 = {}
   outputdict1['SAMPLES'] =  outputdict 
   return( outputdict1 )
-
-
+  
+# -------------------------------------------------------------------------------
 def createConfigfile(tablesheet, outfile, *args):
-  """
+  """------------------------
   Create a config file in the JSON format. Arguments:
   tablesheet indicates a file that contain general parameters,
              info. about samples, sample specific arguments,
@@ -130,7 +136,8 @@ def createConfigfile(tablesheet, outfile, *args):
   outfile is a path to config file
   *args    is an additional argument, a path to the JSON file 
            or a dictionary which content will be added to the config file
-  """
+  ---------------------------"""
+
   dir_tablesheet = os.path.dirname(tablesheet)
   args=args[0] # only 1 additional argument
   
@@ -171,27 +178,72 @@ def createConfigfile(tablesheet, outfile, *args):
   return(config)
 
 
+# -------------------------------------------------------------------------------
 def is_fastq(string):
-  return any(string.find(x) >= 0 for x in ["fasta", "fastq", "fq"])
+  result = False
+  if fq_suffix(string):
+    result = True
+  else:
+    if string.endswith(".gz"):
+      suffix = ".gz"
+      zipped = True
+    elif string.endswith(".bz2"):
+      suffix = ".bz2"
+      zipped = True
+    else:
+      zipped = False
+    if zipped:
+      result = fq_suffix(string[:-len(suffix)])
+  return result
 
+# -------------------------------------------------------------------------------
+def fq_suffix(string):
+  result = False
+  if (string.endswith(".fq") or string.endswith(".fastq")) or string.endswith(".fasta"):
+    result = True
+  return result
+
+# -------------------------------------------------------------------------------
 def splitext_fqgz(string):
-  ext = string.split(".")[-2:]
-  core = string.split(".")[:-2]
-  ext = ".".join(ext)
-  if not is_fastq(ext):
-    print("Input files are not fastq files!!")
-  core = ".".join(core)
+
+  if string.endswith(".gz"):
+    ext1   = ".gz"; zipped = True
+    string = string[:-len(ext1)]
+  elif string.endswith(".bz2"):
+    ext1   = ".bz2"; zipped = True
+    string = string[:-len(ext1)]
+  else:
+    zipped = False
+
+  if string.endswith(".fq"):
+    ext2   = ".fq"; fastq = True
+  elif string.endswith(".fastq"):
+    ext2   = ".fastq"; fastq = True
+  elif string.endswith(".fasta"):
+    ext2   = ".fasta"; fastq = True
+  else:
+    fastq = False; core = string; ext = ""
+    print("ERROR: Input files are not fastq files!!")
+
+  if fastq:
+    core   = string[:-len(ext2)]
+    if(zipped):
+      ext = ext2 + ext1 
+    else:
+      ext = ext2
+
   return (core, ext)
 
-
+# -------------------------------------------------------------------------------
 def uniq_inext(list_units_only_ext):
   ext = list(set(list_units_only_ext))
   if len(ext)!=1:
-    print("Input fastq files have different suffixes!")
+    print("ERROR: Input fastq files have different suffixes!")
     exit()
   return(ext)
   
   
+# -------------------------------------------------------------------------------
 # Without the main sentinel, the code would be executed even if the script were imported as a module.
 def main(argv):
     """
@@ -199,7 +251,7 @@ def main(argv):
     (and optionally paths to tools in the JSON file).
     """
 
-    
+
     if len(argv)>1:
       # input table sheet
       tablesheet = argv[1]
@@ -207,14 +259,17 @@ def main(argv):
       outfile = argv[2]
       
       # Save config file
-      if len(argv)<=3:
+      if len(argv)==3:
         config = createConfigfile(tablesheet, outfile)
       elif len(argv)==4:
         # if there is 3rd argument that indicate paths to tools
         # in JSON format include it to the config file
         progsjson = argv[3]
         config = createConfigfile(tablesheet, outfile, progsjson)
-
+      else: 
+        print("ERROR in create_configfile: expected input argument and output file (and perhaps functions list [TODO: remove this last part]")
+    else:
+      print("ERROR: no input argument supplied to create_configfile. Exiting") 
 
 if __name__ == "__main__":
     main(sys.argv)  
