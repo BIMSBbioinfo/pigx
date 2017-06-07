@@ -18,8 +18,6 @@ def set_default(param, default, config):
 # ---------------------------------------------------------------------------- #
 # given a app name calls the help and parses the parameters
 def get_app_params(app, app_name, app_params):
-    import subprocess
-    import re
     app_return = subprocess.check_output(app +' '+ app_params[app_name]['help'], shell=True)
     app_return = str(app_return)
     vals = list(set(re.findall('(\-{1,2}[a-zA-Z][\w\-]*)\W' , app_return)))
@@ -29,9 +27,6 @@ def get_app_params(app, app_name, app_params):
 
 # ---------------------------------------------------------------------------- #
 def join_params(app, app_params, params_set):
-    import subprocess
-    import os
-    import re
     app_name = os.path.basename(app)
     params_all = get_app_params(app, app_name, app_params)
     names  = set(params_all.keys())
