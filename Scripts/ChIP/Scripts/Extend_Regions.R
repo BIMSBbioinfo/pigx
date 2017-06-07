@@ -13,7 +13,7 @@ Extend_Regions = function(inpath, outpath, extend=NULL){
   f[strand == '-', start := end[strand == '-'] - as.integer(extend)]
   if(any(f$start > 0)){
       warning('Removing reads with start < 0')
-      f = f[f$start > 0]
+      f = f[f$start >= 0]
   }
   write.table(f, outpath, row.names=F, col.names=F, quote=F, sep="\t")
 }
