@@ -32,15 +32,12 @@ DIR_annot = 'annotation/'
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = config["PATHIN"]         #--- location of the data files to be imported
-PATHOUT         = config["PATHOUT"]        #--- where to send the output
+PATHIN          = "path_links/input/"      #--- location of the data files to be imported
+GENOMEPATH      = "path_links/refGenome/"     #--- where the reference genome being mapped to is stored
 GTOOLBOX        = config["GTOOLBOX"]       #--- where the programs are stored to carry out the necessary operations
-GENOMEPATH      = config["GENOMEPATH"]     #--- where the reference genome being mapped to is stored
 
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
-INEXT = config["INEXT"]
-RCODE = config["RCODE"]
 NICE=config["NICE"]
      #--- NICE gauges the computational burden, ranging from -19 to +19. 
      #--- The more "nice" you are, the more you allow other processes to jump ahead of you 
@@ -123,9 +120,9 @@ rule sortbam_se:
 
 rule sortbam_pe:
     input:
-        DIR_deduped+"{sample}"+RCODE+"1_val_1_bt2.deduped.bam"
+        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
     output:
-        DIR_sorted+"{sample}"+RCODE+"1_val_1_bt2.deduped.sorted.bam"
+        DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
     shell:
         "nice -"+str(NICE)+" {SAMTOOLS} sort {input} -o {output}"
 
@@ -148,9 +145,9 @@ rule deduplication_se:
 # #--------
 rule deduplication_pe:
     input:
-        DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam"
+        DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam"
     output:
-        DIR_deduped+"{sample}"+RCODE+"1_val_1_bt2.deduped.bam"
+        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
     log:
         DIR_deduped+"{sample}_deduplication.log"
     message: """-----------   Deduplicating paired-end read alignments ---------------------- """
@@ -188,11 +185,11 @@ rule bismark_pe:
     input:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
-        fin1 = DIR_trimmed+"{sample}"+RCODE+"1_val_1.fq.gz",
-        fin2 = DIR_trimmed+"{sample}"+RCODE+"2_val_2.fq.gz"
+        fin1 = DIR_trimmed+"{sample}_1_val_1.fq.gz",
+        fin2 = DIR_trimmed+"{sample}_2_val_2.fq.gz"
     output:
-        DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_pe.bam",
-        DIR_mapped+"{sample}"+RCODE+"1_val_1_bismark_bt2_PE_report.txt"
+        DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam",
+        DIR_mapped+"{sample}_1_val_1_bismark_bt2_PE_report.txt"
     params:
         bismark_args = config.get("bismark_args",""),
         genomeFolder = "--genome_folder " + GENOMEPATH,
@@ -201,7 +198,7 @@ rule bismark_pe:
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2  = "--bowtie2 ",
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+PATHOUT
+        tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
@@ -249,13 +246,13 @@ rule fastqc_after_trimming_se:
 #--------
 rule fastqc_after_trimming_pe:
     input:
-        DIR_trimmed+"{sample}"+RCODE+"1_val_1.fq.gz",
-        DIR_trimmed+"{sample}"+RCODE+"2_val_2.fq.gz"
+        DIR_trimmed+"{sample}_1_val_1.fq.gz",
+        DIR_trimmed+"{sample}_2_val_2.fq.gz"
     output:
-    	DIR_posttrim_QC+"{sample}"+RCODE+"1_val_1_fastqc.html",
-    	DIR_posttrim_QC+"{sample}"+RCODE+"1_val_1_fastqc.zip",
-    	DIR_posttrim_QC+"{sample}"+RCODE+"2_val_2_fastqc.zip",
-        DIR_posttrim_QC+"{sample}"+RCODE+"2_val_2_fastqc.html"
+    	DIR_posttrim_QC+"{sample}_1_val_1_fastqc.html",
+    	DIR_posttrim_QC+"{sample}_1_val_1_fastqc.zip",
+    	DIR_posttrim_QC+"{sample}_2_val_2_fastqc.zip",
+        DIR_posttrim_QC+"{sample}_2_val_2_fastqc.html"
     params:
         fastqc_args = config.get("fastqc_args", ""),
         outdir = "--outdir "+DIR_posttrim_QC
@@ -270,7 +267,7 @@ rule fastqc_after_trimming_pe:
 
 rule trimgalore_se:
     input:
-       PATHIN+"{sample}"+INEXT
+       PATHIN+"{sample}.fq.gz"
     output:
        DIR_trimmed+"{sample}_trimmed.fq.gz" #---- this ALWAYS outputs .fq.qz format.
     params:
@@ -289,11 +286,11 @@ rule trimgalore_se:
 #-----------------------
 rule trimgalore_pe:
     input:
-        PATHIN+"{sample}"+RCODE+"1"+INEXT,
-        PATHIN+"{sample}"+RCODE+"2"+INEXT
+        PATHIN+"{sample}_1.fq.gz",
+        PATHIN+"{sample}_2.fq.gz"
     output:
-        DIR_trimmed+"{sample}"+RCODE+"1_val_1.fq.gz", #---- this ALWAYS outputs .fq.qz format.
-        DIR_trimmed+"{sample}"+RCODE+"2_val_2.fq.gz",
+        DIR_trimmed+"{sample}_1_val_1.fq.gz", #---- this ALWAYS outputs .fq.qz format.
+        DIR_trimmed+"{sample}_2_val_2.fq.gz",
     params:
         extra          = config.get("trim_galore_args", ""),
         outdir         = "--output_dir "+DIR_trimmed,
@@ -313,7 +310,7 @@ rule trimgalore_pe:
 
 rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
     input:
-        PATHIN+"{sample}"+INEXT
+        PATHIN+"{sample}.fq.gz"
     output:
         DIR_rawqc+"{sample}_fastqc.html",
         DIR_rawqc+"{sample}_fastqc.zip"
