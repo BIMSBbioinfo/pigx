@@ -104,7 +104,7 @@ We first extract the methylation calls from the sequence alignment produced by t
   
 ```
 The methylation calls are written to the text file "`r paste0(sample_id,"_CpG.txt")`", 
-but to enable direct loading of the `methylRaw` object it is saved for further analysis at `r rdatafile`
+but to enable direct loading of the `methylRaw` object it is saved for further analysis to "`r basename(rdatafile)`" in the methylation calls folder.
 ```{r}
     ## Saving object
     save(methRaw,file=normalizePath(rdatafile)) 
@@ -123,45 +123,7 @@ Here we show some simple statistics as distribution of methylation and coverage.
     
 ```
 
-
-<!-- ### Segmentation of methylation profile -->
-
-<!-- The segmentation of the methylation profile is done using the methSeg() function, where change-points in the genome wide  signal are recorded and the genome is partitioned into regions between consecutive change points. This approach is typically used in the context of copy number variation detection [@klambauer2012] but can be applied to methylome segmentation as well [@Wreczycka2017]. Here the identified segments are further clustered based on their average methylation signal using a mixture modeling approach allowing the detection of distinct regions inside the genome  [@Wreczycka2017]. -->
-
-<!-- ```{r} -->
-
-<!--     ## Segmentation -->
-<!--     res.gr = methSeg(methRaw,diagnostic.plot=TRUE) -->
-
-<!--     ## convert to data.frame -->
-<!--     res.df <- as.data.frame(res.gr) -->
-<!--     res.df$seg.mean <- round(res.df$seg.mean,digits = 3) -->
-
-<!--     ## show the regions -->
-<!--     datatable(res.df, -->
-<!--               extensions = 'Buttons',  -->
-<!--               options = list( -->
-<!--                 dom = 'Bfrtip', -->
-<!--                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), -->
-<!--                 scrollX = TRUE), -->
-<!--               caption = "Resulting Segments", -->
-<!--               rownames = FALSE) -->
-<!-- ``` -->
-
-<!-- ### Export -->
-
-<!-- Finally we export the regions to a *BED* file, which can be loaded into any genome browser like [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.  -->
-<!-- ```{r} -->
-<!--     ## export segments to bed file -->
-<!--     methSeg2bed(segments = res.gr, -->
-<!--                 trackLine = paste0("track name='meth segments ' description='meth segments of ", -->
-<!--                                     sample_id," mapped to ",assembly,"' itemRgb=On"), -->
-<!--                 colramp=colorRamp(c("gray","green", "darkgreen")), -->
-<!--                 filename = output) -->
-
-<!-- ``` -->
-
-## Session Info
+### Session Info
 
 ```{r }
 sessionInfo()
@@ -169,4 +131,4 @@ sessionInfo()
 
 
 
-## References
+### References

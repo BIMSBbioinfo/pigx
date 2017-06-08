@@ -1,23 +1,23 @@
 ---
-title: "PiGx: BS-seq"
-output: 
+title: 'PiGx: BS-seq'
+date: '`r Sys.Date()`'
+output:
   html_notebook:
-    toc:        TRUE
-    toc_float:  TRUE
-    theme:      "lumen"
-    number_sections: FALSE
-    code_folding: "hide"
-    self_contained: TRUE
+    code_folding: hide
     includes:
       in_header: pigx_bsseq_logo.html
-output_dir: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation_rule/"
-output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.annotation.nb.html"
-date: "`r Sys.Date()`"
-bibliography: reports.bib
+    number_sections: no
+    self_contained: yes
+    theme: lumen
+    toc: yes
+    toc_float: yes
+output_dir: /Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation_rule/
+output_file: sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.annotation.nb.html
 params:
-  inBed:    "/Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/test1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.bed"
-  assembly: "ce10"
-  refseqfile: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation/refseq.genes.ce10.bed"
+  assembly: ce10
+  inBed: /Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/test1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.bed
+  refseqfile: /Users/agosdsc/Development/Snakemake/pigx_bsseq/refseq.genes.ce10.bed
+bibliography: reports.bib
 ---
 
 ```{r eval_params, echo=FALSE}
@@ -35,6 +35,9 @@ The annotation with
 
   suppressPackageStartupMessages(expr = {
     library("genomation")
+    library("GenomicRanges")
+    require("AnnotationHub")
+    require("rtracklayer")
 
   })
 ```
@@ -43,8 +46,7 @@ The annotation with
 ```{r, eval=FALSE, include=TRUE}
 
     library("genomation")
-    library("AnnotationHub")
-    library("rtracklayer")
+    library("GenomicRanges")
 
 ```
 
@@ -80,6 +82,10 @@ We first need to fetch the reference gene set for the given genome assembly. To 
 
 
 ```{r, eval=FALSE, include=TRUE}
+
+require("AnnotationHub")
+require("rtracklayer")
+
 ## this function tries to fetch the reference genes for the given assembly
 fetchRefGene <- function(refgenes.loc = NULL,
                          refgenes.assembly) {
@@ -152,7 +158,7 @@ fetchRefGene(refgenes.loc = refgenes.file,refgenes.assembly = assembly)
 refgenes.grl <- readTranscriptFeatures(refgenes.file)
 ```
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
 
 ## now we parse the gene features
 refgenes.grl <- readTranscriptFeatures(refgenes.file)
@@ -162,21 +168,26 @@ refgenes.grl <- readTranscriptFeatures(refgenes.file)
 
 Now we can load the segments to detect to overlap percentage with gene features.
 
-```{r, message=FALSE,fig.show="hold"}
+```{r, message=FALSE,warning=FALSE}
 
 # now load segments 
 segments.gr <- readBed(file = inBed,
                       track.line = "auto")
-# split according
-segments.grl <- split(x = segments.gr,f = segments.gr$name)
 
+# split according
+segments.grl <- GenomicRanges::split(x = segments.gr,f = segments.gr$name)
 
 # and detect overlaps 
-annot.gene.list <- lapply(segments.grl,
-                          function(x) annotateWithGeneParts(target = x,
-                                                            feature = refgenes.grl,
-                                                            intersect.chr = TRUE))
 
+annot.gene.list <- annotateWithGeneParts(target = segments.grl,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+
+```
+
+
+Finally we plot the average methylation per segment group and the overlap with gene features.
+```{r fig.show="hold"}
 ## percentage of target features overlapping with annotation:
 ## (with promoter > exon > intron precedence)
 annot.gene.mat <- as.matrix(sapply(annot.gene.list, function(x) x@precedence))
@@ -196,7 +207,7 @@ legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,l
 ```
 
 
-## Session Info
+### Session Info
 
 ```{r }
 sessionInfo()
@@ -204,4 +215,4 @@ sessionInfo()
 
 
 
-## References
+### References

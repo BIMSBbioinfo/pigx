@@ -52,23 +52,6 @@ This is how the minimal config file should look like, in order to inlcude this s
 }
 """
 
-## we have to define default parameters to be included in the config
-
-min_config = { 
-    "params": { 
-        "params_bam_methCall": {
-            "mincov": 10,
-            "minqual": 20
-        }     
-    }
-}
-
-
-## we can update the config recursively using the update_config() function
-import json
-from snakemake.utils import update_config
-
-
 ## show base dir
 # print(workflow.basedir)
 
@@ -114,9 +97,7 @@ BAMDIR      = '06_sorted/'  # BASEDIR + "test_dataset/sample_bam_files/"
 METHCALLDIR = "methylation_calls/"
 SEGDIR      = "segmentation/"
 ANNODIR     = "annotation/"
-
-
-
+FINALDIR    = "final_Report/"
 
 
 
@@ -129,7 +110,8 @@ rule bam_methCall:
     output: 
         report      = METHCALLDIR + "{prefix}.sorted_meth_calls.nb.html",
         rdatafile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
-        callFile    = METHCALLDIR + "{prefix}.sorted_CpG.txt"
+        callFile    = METHCALLDIR + "{prefix}.sorted_CpG.txt",
+        knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_notuse.rds")
     params:
         ## absolute path to bamfiles
         inBam       = WORKDIR + BAMDIR + "{prefix}.sorted.bam",
@@ -148,7 +130,7 @@ rule bam_methCall:
         "   rdata     : {output.rdatafile}" + "\n" 
         "   methCalls : {output.callFile}"
     script:
-        SCRIPTDIR + "report_functions.R"  
+        SCRIPTDIR + "new_report_functions.R"  
 
 
 
@@ -162,7 +144,8 @@ rule methseg:
     output: 
         report      = SEGDIR + "{prefix}.sorted_meth_segments.nb.html",
         grfile      = SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
-        bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed"
+        bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed",
+        knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_notuse.rds")    
     params:
         rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
         grdata      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
@@ -178,7 +161,7 @@ rule methseg:
         "   bedfile   : {output.bedfile}" +"\n"
 
     script:
-        SCRIPTDIR + "report_functions.R" 
+        SCRIPTDIR + "new_report_functions.R" 
 
 
 ## Aquisition of gene features
@@ -194,15 +177,18 @@ rule fetch_refGene:
         SCRIPTDIR + "fetch_refGene.R" 
 
 
-
 ## Annotation with gene features
-rule annotation:
+rule methseg_annotation:
     input:  
         template    = TEMPLATEDIR + "annotation.report.Rmd",
         bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed",
         refgenes    = ANNODIR + "refseq.genes.{assembly}.bed"
     output: 
-        report      = ANNODIR + "{prefix}.sorted_{assembly}_annotation.nb.html"
+        ## touch this imaginary file, to get the directory
+        knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_{assembly}_notuse.rds"),
+        report      = ANNODIR + "{prefix}.sorted_{assembly}_annotation.nb.html",
+        # knitr_meta  = FINALDIR + "{prefix}/knitr_meta_{assembly}.rds"
+        #knitr_meta  = lambda wildcards: pass_knitr_meta(FINALDIR,wildcards.prefix)
     params:
         inBed       = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments.bed",
         assembly    = "{assembly}",# expand(config["reference"]),
@@ -215,7 +201,43 @@ rule annotation:
         "Generating:" + "\n"
         "   report    : {output.report}"
     script:
-        SCRIPTDIR + "report_functions.R"   
+        SCRIPTDIR + "new_report_functions.R"   
+
+
+
+### note that Final report can only be generated 
+### if one of the intermediate has been genereted,
+### so make sure that at least one has been run already
+### right now ensured with 'rules.methseg_annotation.output' as input
+### 
+
+rule multiqc:
+    input:
+        workdir = WORKDIR + "."
+
+
+## Final Report
+rule final_report:
+    input:  
+        rules.methseg_annotation.output,
+        index       = TEMPLATEDIR + "index.Rmd",   
+        references  = TEMPLATEDIR + "references.Rmd",
+        raw
+        # knitr_meta  = FINALDIR + "{prefix}/knitr_meta.rds"
+        #anno.out= rules.annotation.output#,
+        #rules.
+    output: 
+        finalreport = FINALDIR + "{prefix}.sorted_{assembly}_final.nb.html"
+    params:
+        finalreportdir = WORKDIR + FINALDIR + "{prefix}/"
+    log:
+        FINALDIR + "{prefix}.sorted_{assembly}_final.log"
+    message:
+        "Compiling Final Report:\n"
+        "   report    : {output.finalreport}"
+    script:
+        SCRIPTDIR + "multireport_functions.R"  
+
 
 
 

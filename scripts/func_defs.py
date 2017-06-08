@@ -94,3 +94,12 @@ def list_files_xmeth(PATH, files, sampleID):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")   
 
 
+        
+def Final(PATH, files, assembly):
+    if len(files) == 1:
+      return  PATH+files[0]+"_se_bt2.deduped.sorted_"+assembly+"_final.nb.html" #---- single end
+    elif len(files) == 2:
+        return [PATH+files[0]+"_val_1_bt2.deduped.sorted_"+assembly+"_final.nb.html"] #---- paired end
+
+        
+        

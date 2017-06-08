@@ -5,6 +5,8 @@
 # ignore all logging data
 *.log
 snakemakeObj.RData
+report_templates/*.md
+report_templates/*.nb.html
 # ignore all folders, except for:
 #*/
 !scripts/

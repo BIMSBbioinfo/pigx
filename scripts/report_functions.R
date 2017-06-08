@@ -2,6 +2,77 @@
 ## which does the computation and generates an HTML report with code included
 
 
+render2Markdown <- function(reportFile,
+                            outFile,
+                            outDir,
+                            finalReportDir,
+                            report.params=NULL)
+{
+  
+  
+  
+  output_format = rmarkdown::all_output_formats(reportFile, 'UTF-8')
+  
+  dir.create(finalReportDir,recursive = FALSE)
+  
+  ## save a copy of render arguments in a temp file
+  render_args = tempfile('render', tmpdir = finalReportDir, '.rds')
+  on.exit(unlink(render_args), add = TRUE)
+  saveRDS(
+    list(output_format = "rmarkdown::html_notebook",# rmarkdown::html_notebook(
+         #   toc = TRUE,
+         #   toc_float = TRUE,
+         #   theme = 'lumen',
+         #   number_sections = FALSE,
+         #   code_folding = "hide",
+         #   self_contained = TRUE,
+         #   includes = list(in_header = pathToLogo)
+         # ), 
+         #knit_root_dir = outDir,
+         params=report.params,
+         output_file = outFile,
+         output_dir = finalReportDir,
+         intermediates_dir = finalReportDir, 
+         clean = FALSE, 
+         quiet = TRUE,
+         envir = parent.frame()
+    ),
+    render_args
+  )
+  ## store metadata for Final Report
+  render_meta = paste0(finalReportDir,"/knitr_meta.rds")#,bookdown:::with_ext(outFile, '.rds'))
+  # render_meta = paste0(finalReportDir,"/",bookdown:::with_ext(outFile, '.rds'))
+  
+  ## render single report
+  rmarkdown::render(
+    input = reportFile,
+    output_dir = outDir,
+    #intermediates_dir = outDir,paste0(outDir,"/tmp"),
+    output_file = outFile,
+    knit_root_dir = outDir,
+    output_format = rmarkdown::html_document(
+      # toc = TRUE,
+      # toc_float = TRUE,
+      # theme = 'lumen',
+      # number_sections = FALSE,
+      code_folding = "hide",
+      code_download = TRUE,
+      self_contained = TRUE#,
+      #includes = list(in_header = pathToLogo)
+    ),
+    params = report.params,
+    quiet = FALSE,
+    clean = TRUE,
+    envir = new.env()
+  )
+  
+  ## render for multireport
+  bookdown:::Rscript_render(file = reportFile,render_args,render_meta)
+  
+}
+
+
+
 render2Report <- function(reportFile,
                           outFile,
                           outDir,
@@ -78,13 +149,21 @@ cat(paste(
   "into directory:",normalizePath(dirname(snakemake@output[["report"]])),"\n"
   ))
 
+# 
+# render2Report(reportFile = normalizePath(snakemake@input[["template"]]),
+#               outFile = basename(snakemake@output[["report"]]),
+#               outDir = normalizePath(dirname(snakemake@output[["report"]])),
+#               #report.params = snakeParams )
+#               report.params = snakemake@params[nchar(names(snakemake@params)) > 0] )
 
-render2Report(reportFile = normalizePath(snakemake@input[["template"]]),
-              outFile = basename(snakemake@output[["report"]]),
-              outDir = normalizePath(dirname(snakemake@output[["report"]])),
-              #report.params = snakeParams )
-              report.params = snakemake@params[nchar(names(snakemake@params)) > 0] )
+render2Markdown(reportFile = normalizePath(snakemake@input[["template"]]),
+                outFile = basename(snakemake@output[["report"]]),
+                outDir = normalizePath(dirname(snakemake@output[["report"]])),
+                finalReportDir = normalizePath(dirname(snakemake@output[["knitr_meta"]])),
+                report.params = snakemake@params[nchar(names(snakemake@params)) > 0])
 
+## remove empty intermediate file
+unlink(snakemake@output[["knitr_meta"]])
 
 
 #load("snakemakeObj.RData")
