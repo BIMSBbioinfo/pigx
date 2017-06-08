@@ -68,8 +68,7 @@ When PIGx is run, the data from this file will be used to automatically generate
 | Variable name | default value | description |
 | ------------- |:-------------:|:-----------:|
 | NICE          |    19         | integer: from -20 to 19; higher values make the program execution less demanding on computational resources |
-| RCODE         |  ".read"      | string: describing the naming convention of files within the full data set  |
-| bismark_args  |  " --multicore 2 -N 1 -L 2 "      |  string: optional arguments supplied to bismark during alignment |
+| bismark_args  |  " --multicore 2 -N 1 -L 2 "      |  string: optional arguments supplied to bismark during alignment. See the [Bismark User Guide](https://rawgit.com/FelixKrueger/Bismark/master/Docs/Bismark_User_Guide.html#appendix-ii-bismark)  |
 | SAMPLES       |     --        | struct: list of all the samples to be considered. |
 |  files        |     --        | string(s): part of SAMPLE: lists files (without extension) to read. when 2 are specified, paired-end is assumed, otherwise, single end. |
 |  PATHIN       |     ---       | string: location of the experimental data files (.fastq[.gz|.bz2])   |
