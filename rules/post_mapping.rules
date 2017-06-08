@@ -221,11 +221,8 @@ rule final_report:
     input:  
         rules.methseg_annotation.output,
         index       = TEMPLATEDIR + "index.Rmd",   
-        references  = TEMPLATEDIR + "references.Rmd",
-        raw
-        # knitr_meta  = FINALDIR + "{prefix}/knitr_meta.rds"
-        #anno.out= rules.annotation.output#,
-        #rules.
+        references  = TEMPLATEDIR + "references.Rmd"#,
+        ## add rawqc at some point
     output: 
         finalreport = FINALDIR + "{prefix}.sorted_{assembly}_final.nb.html"
     params:

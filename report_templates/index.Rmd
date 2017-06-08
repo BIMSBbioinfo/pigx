@@ -48,6 +48,5 @@ To compile this example to PDF, you need to install XeLaTeX.
 
 <!-- ## Quality Control {-} -->
 
-<!-- [qc_path](`r qc_path`) -->
 
 
