@@ -1,7 +1,0 @@
-chrV	20924180	/gbdb/ce11/ce11.2bit
-chrX	17718942	/gbdb/ce11/ce11.2bit
-chrIV	17493829	/gbdb/ce11/ce11.2bit
-chrII	15279421	/gbdb/ce11/ce11.2bit
-chrI	15072434	/gbdb/ce11/ce11.2bit
-chrIII	13783801	/gbdb/ce11/ce11.2bit
-chrM	13794	/gbdb/ce11/ce11.2bit

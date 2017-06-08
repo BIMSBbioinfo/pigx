@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # PIGx BSseq Pipeline.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -123,6 +124,29 @@ if [ ! -f $path2configfile ]
     echo "${warning}"
 fi
  
+
+#======================================================================================
+#----------  NOW CREATE SYMBOLIC LINKS TO THE INPUTS AND REFERENCE GENOME -------------
+
+path_OUT=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])" < $path2configfile)
+path_IN=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHIN'])" < $path2configfile)
+path_refG=$( python -c "import sys, json; print(json.load(sys.stdin)['GENOMEPATH'])" < $path2configfile)
+
+mkdir -p ${path_OUT}
+mkdir -p ${path_OUT}"path_links"
+mkdir -p ${path_OUT}"path_links/input"
+
+# create links within the output folder that point directly to the 
+# reference genome, as well as to each sample input file  
+# so that it's clear where the source data came from.
+# N.B. Any previous links of the same name are over-written.
+
+# link to reference genome:
+ln -sfn ${path_refG} ${path_OUT}"/path_links/refGenome"
+
+# create file links:
+scripts/create_file_links.py $path2configfile 
+
 
 #========================================================================================
 #----------  NOW START RUNNING SNAKEMAKE:  ----------------------------------------------
