@@ -1,6 +1,23 @@
 #!/bin/bash
 
-#===== DEFAULT PATHS ===== #
+
+# PIGx BSseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# #===== DEFAULT PATHS ===== #
 tablesheet="test_dataset/TableSheet_test.csv"
 path2configfile="./config.json"
 path2programsJSON="test_dataset/PROGS.json"
@@ -8,104 +25,105 @@ path2programsJSON="test_dataset/PROGS.json"
 #=========== PARSE PARAMETERS ============#
 
 usage="
+PIGx BSseq Pipeline.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-DESCRIPTION
-
-
-PIGx is a data processing pipeline for raw fastq read data of bisulfite experiments.
-It produces methylation and coverage information and can be used to produce information 
-on differential methylation and segmentation. 
+PIGx is a data processing pipeline for raw fastq read data of
+bisulfite experiments.  It produces methylation and coverage
+information and can be used to produce information on differential
+methylation and segmentation.
 
 It was first developed by the Akalin group at MDC in Berlin in 2017.
 
+Usage: $(basename "$0") [OPTION]...
 
-USAGE: $(basename "$0") [-h] [-t|--tablesheet FILE] 
-                        [-p|--programs FILE] 
-                        [-c|--configfile FILE] 
-                        [-s|--snakeparams PARAMS]
+Options:
 
-OPTIONAL ARGUMENTS: 
+  -t, --tablesheet FILE     The tablesheet containing the basic configuration information
+                             for running the BSseq_pipeline.
 
-[-t|--tablesheet FILE]      The tablesheet containing the basic configuration information 
-                            for running the BSseq_pipeline. 
-                        
-[-p|--programs FILE]        A json file containing the paths to the required tools.     
+  -p, --programs FILE       A JSON file containing the absolute paths of the required tools.
 
-[-c|--configfile FILE]      The config file used for calling the underlying snakemake process.
-                            By default the file '${path2configfile}' is dynamically created from tablesheet and 
-                            programs file.
+  -c, --configfile FILE     The config file used for calling the underlying snakemake process.
+                             By default the file '${path2configfile}' is dynamically created
+                             from tablesheet and programs file.
+                             
+  -C, --create-config       Force the re-creation of the config file, even if it already exists                            
 
-[-s|--snakeparams PARAMS]   Additional parameters to be passed down to snakemake, e.g. 
-                                --dryrun    do not exectute anything
-                                --forceall  rerun the whole pipeline 
-
+  -s, --snakeparams PARAMS  Additional parameters to be passed down to snakemake, e.g.
+                               --dryrun    do not execute anything
+                               --forceall  re-run the whole pipeline
 
 "
 
-# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
-#
-# Use -gt 1 to consume two arguments per pass in the loop (e.g. each
-# argument has a corresponding value to go with it).
-# Use -gt 0 to consume one or more arguments per pass in the loop (e.g.
-# some arguments don't have a corresponding value to go with it such
-# as in the --default example).
-# note: if this is set to -gt 0 the /etc/hosts part is not recognized ( may be a bug )
-while [[ $# -gt 0 ]]
-do
-key="$1"
+createConfig=false
 
-case $key in
-    -t|--tablesheet)
-    tablesheet="$2"
-    shift # past argument
-    ;;
-    -c|--configfile)
-    path2configfile="$2"
-    shift # past argument
-    ;;
-    -p|--programs)
-    path2programsJSON="$2"
-    shift # past argument
-    ;;
-    -s|--snakeparams)
-    snakeparams="$2"
-    shift # past argument=value
-    ;;
-    -h|--help)
-    echo "$usage"
-    shift # past argument=value
-    exit 1
-    ;;
-    # --default)
-    # DEFAULT=YES
-    # ;;
-    *)
+# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    shift
+
+    case $key in
+        -t|--tablesheet)
+            tablesheet="$1"
+            shift
+            ;;
+        -c|--configfile)
+            path2configfile="$1"
+            shift
+            ;;
+        -C|--create-config)
+            createConfig=true
+            shift
+            ;;
+        -p|--programs)
+            path2programsJSON="$1"
+            shift
+            ;;
+        -s|--snakeparams)
+            snakeparams="$1"
+            shift
+            ;;
+        -h|--help)
+            echo "$usage"
+            exit 1
+            ;;
+        *)
             # unknown option
-    ;;
-esac
-shift # past argument or value
+            echo "$usage"
+            echo "$(basename "$0"): Error: unkown argument provided"
+            exit 1
+            ;;
+    esac
 done
 
 # echo "${tablesheet} ${path2configfile} ${path2programsJSON} ${snakeparams}" 
 
-#======================================================================================
+#========================================================================================
 #----------  CREATE CONFIG FILE:  ----------------------------------------------
+ 
+ 
+warning="$(basename "$0"): Warning:
 
-scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
+The config file ${path2configfile} does already exist and is not re-generated by default.
+You can savely ignore this warning, unless changes were made to either: 
+    tablesheet: ${tablesheet}  
+    or 
+    programs: ${path2programsJSON}
+    
+If that is the case, please remove ${path2configfile} or use the '-C/--create-config' option,
+to enforce the recreation of the config file.
+"
+  
+if [ ! -f $path2configfile ]
+  then
+    scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
+  elif $createConfig
+    then
+     scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
+  else    
+    echo "${warning}"
+fi
+ 
 
 #======================================================================================
 #----------  NOW CREATE SYMBOLIC LINKS TO THE INPUTS AND REFERENCE GENOME -------------
@@ -133,6 +151,11 @@ scripts/create_file_links.py $path2configfile
 #========================================================================================
 #----------  NOW START RUNNING SNAKEMAKE:  ----------------------------------------------
 
+
 pathout=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])" < $path2configfile)
 
-snakemake -s BSseq_pipeline.py --configfile $path2configfile -d $pathout
+snakemake -s BSseq_pipeline.py --configfile $path2configfile -d $pathout $snakeparams
+
+
+
+
