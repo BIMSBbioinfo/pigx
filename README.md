@@ -59,6 +59,13 @@ To run PIGx on your experimental data, first enter the necessary parameters in t
 $ PIGx.x [options] 
 ```
 
+Upon doing so, the folder specified by "PATHOUT" in the input table will be created in addition to several subdirectories.
+Most of these directories correspond to various stages of completion in the data-processing pipeline; however one additional folder will be called path_links/.
+In this folder, symbolic links will be established that point directly to the reference genome and input files used for the calculation --provided they don't already exist. If they *do* already exist, then they will NOT be updated, and warnings to this effect will be suppressed. For this reason, you must BE CAREFUL WHEN RENAMING FILES IN THE INPUT FOLDER.
+If, for example, you rename an input file to a name that has already been used (e.g. if you have "Sample1.fq.gz", "Sample2.fq.gz", and then delete Sample1 and decrement the names of subsequent files) or if you modify an extension (e.g. from ".fastq" to the standard ".fq") then the link can persist despite pointing to the wrong data.
+If you absolutely must rename input files after having already run PiGx once, then go into ../PATHOUT/path_links/input/ and delete the corresponding links so that they can be generated from scratch automatically the next time PiGx is run. You have been warned.
+
+
 ---- 
 # Input parameters
 
