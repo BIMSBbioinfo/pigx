@@ -1,9 +1,9 @@
 """
 jump conda3
 source ./activate p35
-SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX/Scripts/ChIP/Snake_ChIPseq.py'
+SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX/Snake_ChIPseq.py'
 WORKDIR='/data/akalin/vfranke/AAkalin_PIX/ChIP'
-CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX/Scripts/ChIP/config.yaml'
+CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX/config.yaml'
 
 # Beast run
 snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
@@ -165,6 +165,7 @@ FASTQC  = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name
 BW      = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS   = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 MACS    = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_peaks.narrowPeak"), name=config['peak_calling'].keys())
+QSORT   = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_qsort.narrowPeak"), name=config['peak_calling'].keys())
 IDR     = expand(os.path.join(PATH_IDR,    "{name}", "{name}.narrowPeak"), name=config['idr'].keys())
 
 rule all:
@@ -434,12 +435,32 @@ rule macs2:
         ])
         shell(command)
 
+# ----------------------------------------------------------------------------- #
+rule sort_narrow_peak:
+    input:
+        rules.macs2.output
+    output:
+        outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.narrowPeak")
+    params:
+        threads = 1,
+        mem = '8G'
+    message:"""
+            Sorting narrow peak:
+                input : {input}
+                output: {output}
+        """
+    shell:"""
+        sort -r -k9 -n {input} > {output.outfile}
+    """
+        
 
 # ----------------------------------------------------------------------------- #
+
 def get_sample_idr(wc):
     name = config['idr'][wc.name]
-    samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_peaks.narrowPeak') for i in name.values()]))
+    samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_qsort.narrowPeak') for i in name.values()]))
     return(samps)
+
 
 rule idr:
     input:
