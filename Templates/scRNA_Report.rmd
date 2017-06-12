@@ -1,0 +1,150 @@
+---
+title: "Single Cell Dropseq Analysis Report"
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: yes
+    keep_tex: yes
+
+# params:
+#     inpath: './'
+#     dropseq: '/data/akalin/Base/Dropseq'
+
+params:
+    inpath: '/data/akalin/Projects/FDamm_scRNAseq/Mapped/STAR/DROP-SEQ-T4-HUMANMOUSE3/K562U937_S1_L001'
+    dropseq: '/data/akalin/Base/Dropseq'
+
+
+# params = list()
+# params$inpath =  '/data/akalin/Projects/FDamm_scRNAseq/Mapped/STAR/DROP-SEQ-T4-HUMANMOUSE3/K562U937_S1_L001'
+# params$dropseq = '/data/akalin/Base/Dropseq'
+---
+
+```{r setup, include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache=FALSE, message=FALSE, warning=FALSE,
+                      autodep=TRUE, error=FALSE)
+
+```
+
+
+```{r libs, include=FALSE, cache=FALSE}
+library(SCStats)
+library(ggplot2)
+```
+
+
+```{r input, include=FALSE, cache=FALSE}
+gtf.path = file.path(params$dropseq,'mm9_hg19','mm9_hg19.gtf')
+gtf = RCAS::importGtf(gtf.path, keepStandardChr=FALSE)
+```
+
+```{r drop, include=FALSE, cache=FALSE}
+drop = read_dropseq(params$inpath, gtf=gtf)
+```
+
+---
+
+# Methods
+
+Drop-seq files were processed using the pipeline from McCarroll Lab,
+published in the Macosko et al. 2015: http://mccarrolllab.com/dropseq/
+
+Genes annotations were downloaded form Ensembl, and quantified as
+number of unique UMIs which map to the corresponding gene model.
+
+For the mixed species experiment, the samples were mapped onto the
+human - mouse concatenated genome. Only reads mapping uniquely either
+to one of the genomes were used. The reads were quantified as described above.
+
+Cells with < 10 detected UMIs were filtered out before the summary statistics.
+
+# Basic Statistics
+
+### Cell Statistics
+
+```{r Statistics, include=FALSE, cache=FALSE}
+exprs = exprs(drop[[1]])
+gpc = exprs[,list(sum=sum(value>0)),by=cell_id]
+umi_per_cell = exprs[,list(N = sum(value)),by=cell_id]
+stats = data.frame('Number_of_cells_gt10'   = length(unique(exprs$cell_id)),
+                   'Number_of_cells_gt100'  = length(unique(subset(umi_per_cell, N>100)$cell_id)),
+                   'Number_of_cells_gt1000' = length(unique(subset(umi_per_cell, N>1000)$cell_id)),
+                   'Number_of_genes'        = length(unique(subset(exprs, value>=1)$gene_id)),
+                   'Maximum_UMIs_per_cell'  = max(gpc$sum),
+                   'Median_UMIs_per_cell'   = median(gpc$sum),
+                   'Average_UMIs_per_gene'  = round(exprs[exprs$value > 0,mean(value)],2),
+                   'Maximum_UMIs_per_gene'  = exprs[exprs$value > 0,max(value)])
+
+stats = reshape2::melt(stats)
+colnames(stats) = c('statistic','value')
+```
+
+```{r Stats_Table, include=TRUE, cache=FALSE}
+DT::datatable(stats)
+```
+
+1. Number_of_cells_gt10: Number of cells with >= 10 detected UMIs
+
+2. Number_of_genes: Number of genes detected with > 1 UMI
+
+3. Maximum_UMIs_per_cell: Maximum number of detected genes in one cell
+
+4. Median_UMIs_per_cell: Median number of detected genes in one cell
+
+5. Average_UMIs_per_gene: Average number of UMIs per gene
+
+6. Maximum_UMIs_per_gene: Maximum number of UMIs for one gene in the whole dataset
+
+
+
+### Total Number Of UMI Per Cell
+
+The plot shows the distribution of the number of UMIs per cell.
+
+```{r Total_Number_Of_UMI_Per_Cell, fig.width = 5, fig.height=5}
+print(plot_TotalUMIPerCell(drop$target) + theme_bw() + scale_x_log10())
+```
+
+### Total Number Of Detected Genes Per Cell
+
+The plot shows the distribution of the number of detected genes per cell.
+A gene was counted as detected if it had at least 1 UMI mapped to it's gene model.
+
+```{r DetectedGenesPerCell, fig.width = 5, fig.height=5}
+print(plot_DetectedGenesPerCell(drop$target) + theme_bw() + scale_x_log10())
+```
+
+### Cumulative Number of Genes Expressed Per Cell
+
+The plot shows cumulative distribution of the number of genes
+with a given UMI, detected per cell.
+
+```{r GeneExpressionPerCell, fig.width = 5, fig.height=5}
+print(plot_GeneExpressionPerCell(drop$target) + theme_bw())
+```
+
+### Average Gene Expression Vs Number of Detected Cell
+
+The plot shows average expression of gene in the cell where it contained > 1 UMI,
+Vs the number of cell in which the gene was detected.
+
+```{r DetectedVsMeanPerGene, fig.width = 5, fig.height=5}
+print(plot_DetectedVsMeanPerGene(drop$target) + theme_bw())
+```
+
+---
+
+# Mixed Species
+
+### Number of UMI Mapping to Human and Mouse genome
+
+The plot shows the number of UMIs per cell, mapping to the human
+and mouse genomes.
+**X axis** is the number of UMIs mapping onto the mouse genome.
+**Y axis** is the number of UMIs mapping onto the human genome.
+
+```{r HumanMouse, fig.width = 5, fig.height=5}
+plot_HumanMouse(drop$merged) + theme_bw()
+```
+
+---
