@@ -392,15 +392,21 @@ rule makelinks:
 
 
 # ----------------------------------------------------------------------------- #
-def get_sample_macs(wc):
-    name = config['peak_calling'][wc.name]
-    samps = ['ChIP','Cont']
-    samps = dict(zip(samps,[os.path.join('Mapped','Bowtie',name[i], name[i] + '.sorted.bam') for i in samps]))
-    return(samps)
+def get_set_macs(wc, which_sample):
+    name = config['peak_calling'][wc.name][which_sample]
+    if isinstance(name,str):
+        name = [name]
+    paths = [os.path.join('Mapped','Bowtie', i, i + '.sorted.bam') for i in name]
+    return(paths)
+
+from functools import partial
+get_sample_chip = partial(get_set_macs, which_sample='ChIP')
+get_sample_cont = partial(get_set_macs, which_sample='Cont')
 
 rule macs2:
     input:
-        unpack(get_sample_macs)
+        ChIP = get_sample_chip,
+        Cont = get_sample_cont
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.narrowPeak")
     params:
@@ -414,8 +420,7 @@ rule macs2:
         log = os.path.join(PATH_LOG, '{name}.macs.log')
     message:"""
         Running macs2:
-            ChIP:   {input.ChIP}
-            Cont:   {input.Cont}
+            sample: {params.name}
             output: {output.outfile}
     """
     run:
@@ -426,8 +431,8 @@ rule macs2:
 
         command = " ".join(
         [params.macs2, 'callpeak',
-        '-t', input.ChIP,
-        '-c', input.Cont,
+        '-t', " ".join(input.ChIP),
+        '-c', " ".join(input.Cont),
         '--outdir', params.outpath,
         '-n', params.name,
         join_params("macs2", APP_PARAMS, params_macs),
