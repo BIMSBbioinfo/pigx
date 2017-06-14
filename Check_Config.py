@@ -49,8 +49,9 @@ def check_config(config):
     if(len(config['samples']) > 0 and len(config['peak_calling']) > 0):
         samples = list(config['samples'].keys())
         keys = list(config['peak_calling'].keys())
-        peaks = [(config['peak_calling'][i]['ChIP'],
-                  config['peak_calling'][i]['Cont'])  for i in keys]
+        peaks = [[config['peak_calling'][i]['ChIP'],
+                  config['peak_calling'][i]['Cont']]  for i in keys]
+        peaks = flatten(peaks)
         samples_diff = (set(peaks[0]) - set(samples))
         if len(samples_diff) > 0:
             message = message + "\tsome peak calling samples are not specified\n"
@@ -106,6 +107,18 @@ def check_file_exists(config, message=''):
                     message = message + '\t'+file + "file does not exist\n"
 
     return(message)
+    
+# ---------------------------------------------------------------------------- #
+# given a list of lists, returns a flattened version
+def flatten(l):
+    out = []
+    for item in l:
+        if isinstance(item, (list, tuple)):
+            out.extend(flatten(item))
+        else:
+            out.append(item)
+    return out
+
 
 
 # ---------------------------------------------------------------------------- #
