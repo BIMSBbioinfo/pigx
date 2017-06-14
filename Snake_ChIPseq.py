@@ -24,16 +24,21 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
 ## Main
 [#]. enable sample specific parameter deposition
 [#].write tests
-[] set default app parameters in config
+[]. set default app parameters in config
     - works for macs2
-[] the pipeline does not work without app params - change config check    
-[] add check for gzipped bowtie reference
+[]. the pipeline does not work without app params - change config check    
+[]. add check for gzipped bowtie reference
 []. Add samplesheet To yaml file
 []. write markdown
     
-[] write yaml schema
+[]. write yaml schema
     https://github.com/Grokzen/pykwalify,
     http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
+    
+[]. Tests:
+        - for no control sample
+        - for multiple chip and control samples
+        - add test if control not set in yaml file
 
 ## Additional
 [] Add peak QC
@@ -74,6 +79,10 @@ DONE
     - Testing for paired end reads
     - Mapping
     - Fastqc for paired end reads
+    
+170614
+[*]. extended the pipeline to accept multiple ChIP/Cont samples for peak calling
+[*]. peak calling can be run without control samples - useful for ATAC data
 
 
 
@@ -392,21 +401,28 @@ rule makelinks:
 
 
 # ----------------------------------------------------------------------------- #
-def get_set_macs(wc, which_sample):
-    name = config['peak_calling'][wc.name][which_sample]
-    if isinstance(name,str):
-        name = [name]
-    paths = [os.path.join('Mapped','Bowtie', i, i + '.sorted.bam') for i in name]
+def get_files_macs(wc):
+    paths = {}
+
+    chip = config['peak_calling'][wc.name]['ChIP']
+    if isinstance(chip,str):
+        chip = [chip]
+    chips = [os.path.join('Mapped','Bowtie', i, i + '.sorted.bam') for i in chip]
+    paths['ChIP'] = chips
+    
+    cont = config['peak_calling'][wc.name]['Cont']
+    if not cont == None:
+        if isinstance(cont,str):
+            cont = [cont]
+        cont = [os.path.join('Mapped','Bowtie', i, i + '.sorted.bam') for i in cont]
+        paths['Cont'] = cont
+
     return(paths)
 
-from functools import partial
-get_sample_chip = partial(get_set_macs, which_sample='ChIP')
-get_sample_cont = partial(get_set_macs, which_sample='Cont')
 
 rule macs2:
     input:
-        ChIP = get_sample_chip,
-        Cont = get_sample_cont
+        unpack(get_files_macs)
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.narrowPeak")
     params:
@@ -429,10 +445,16 @@ rule macs2:
             if 'macs2' in config['peak_calling'][params.name]['params'].keys():
                 params_macs.update(config['peak_calling'][params.name]['params']['macs2'])
 
+        # checks whether the control samples are specified
+        samples = ''
+        samples = samples + " ".join(['-t'] + input.ChIP)
+        
+        if hasattr(input, 'Cont'):
+            samples = samples + " ".join(['-c'] + input.cont)
+            
         command = " ".join(
         [params.macs2, 'callpeak',
-        '-t', " ".join(input.ChIP),
-        '-c', " ".join(input.Cont),
+        samples,
         '--outdir', params.outpath,
         '-n', params.name,
         join_params("macs2", APP_PARAMS, params_macs),

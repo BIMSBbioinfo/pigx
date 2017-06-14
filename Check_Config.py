@@ -42,8 +42,8 @@ def check_config(config):
             if config['peak_calling'][samp]['ChIP'] == None:
                 message = message + '\t' + samp + ": " + "ChIP not specified\n"
 
-            if config['peak_calling'][samp]['Cont'] == None:
-                message = message + '\t' + samp + ": " + "Cont not specified\n"
+            # if config['peak_calling'][samp]['Cont'] == None:
+#                 message = message + '\t' + samp + ": " + "Cont not specified\n"
 
     # checks for correspondence between peak calling and samples
     if(len(config['samples']) > 0 and len(config['peak_calling']) > 0):
@@ -52,7 +52,8 @@ def check_config(config):
         peaks = [[config['peak_calling'][i]['ChIP'],
                   config['peak_calling'][i]['Cont']]  for i in keys]
         peaks = flatten(peaks)
-        samples_diff = (set(peaks[0]) - set(samples))
+        peaks = list(filter(None, peaks))
+        samples_diff = (set(peaks) - set(samples))
         if len(samples_diff) > 0:
             message = message + "\tsome peak calling samples are not specified\n"
 
