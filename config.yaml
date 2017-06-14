@@ -65,6 +65,14 @@ peak_calling:
             macs2:
                 nomodel: ''
                 
+    Peaks5:
+        ChIP: ChIP2
+        Cont: 
+            - Cont1
+            - Cont2        
+        params:
+            macs2:
+                nomodel: ''
 
 # ------------------------------------------------------------ #
 idr:
