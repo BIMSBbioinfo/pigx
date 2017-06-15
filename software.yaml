@@ -9,17 +9,19 @@ software:
     perl: perl
     R: R
     R_deps:
-      - data.table
-      - dependency
+        - data.table
+        - stringr
     samtools: samtools
     wigToBigWig: wigToBigWig
     python: pyton
     python_deps:
-      - os
-      - sys
-      - yaml
-      - pytest
-      - itertools
+        - fnmatch
+        - os
+        - sys
+        - yaml
+        - pytest
+        - itertools
+    bedToBigBed: bedToBigBed
 
 params:
     macs2:

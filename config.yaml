@@ -86,7 +86,36 @@ idr:
     ChIP_IDR:
         ChIP1: Peaks1
         ChIP2: Peaks2
-
+        
+# ------------------------------------------------------------ #
+hub:
+    name: Pix_Hub
+    shortLabel: Pix_Short
+    longLabel: Pix_Hub_Long
+    email: vedran.franke@mdc-berlin.de
+    descriptionUrl: hub.html
+    super_tracks:
+        Tracks1:
+            track11:
+                name: Peaks1
+                type: macs
+            track12:
+                name: ChIP1
+                type: bigWig
+            long_label: Tracks1_long
+        Tracks2:
+            track21:
+                name: Peaks2
+                type: macs
+            track22:
+                name: ChIP2
+                type: bigWig
+            track23:
+                name: Peaks3
+                type: macs
+            track24:
+                name: ChIPpe
+                type: bigWig
 # ------------------------------------------------------------ #
 params:
     extend: 200

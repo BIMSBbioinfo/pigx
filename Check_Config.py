@@ -8,7 +8,7 @@ def check_config(config):
     from itertools import chain
     message = ''
     # checks for proper top level config categories
-    params = ['genome','index','fastq','params','samples','peak_calling','idr','software']
+    params = ['genome','index','fastq','params','samples','peak_calling','idr','hub','software']
 
     # ---------------------------------------------------------------------------- #
     params_diff = set(config.keys()) - set(params)

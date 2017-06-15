@@ -34,12 +34,17 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
 []. write yaml schema
     https://github.com/Grokzen/pykwalify,
     http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
+
+[]. extension for paired end data to be automatically determined from the pairs
+[]. add scalling to the bedgraph construction
     
 []. Tests:
         - for no control sample
         - for multiple chip and control samples
         - add test if control not set in yaml file - check for multiple types of input
         - check whether IDR test works
+
+[]. Tests for hub
 
 ## Additional
 [] Add peak QC
@@ -111,6 +116,7 @@ PARAMS_PATH = '.'
 
 # ---------------------------------------------------------------------------- #
 import glob
+import fnmatch
 import os
 import re
 import sys
@@ -142,6 +148,7 @@ NAMES        = config['samples'].keys()
 PATH_FASTQ   = config['fastq']
 PARAMS       = config['params']
 
+
 SOFTWARE     = SOFTWARE_CONFIG['software']
 
 
@@ -153,6 +160,14 @@ PATH_LOG    = 'Log'
 PATH_PEAK   = 'Peaks/MACS2'
 PATH_BW     = 'BigWig'
 PATH_IDR    = 'IDR'
+PATH_HUB    = 'UCSC_HUB'
+
+# Hub variables which describe the types of files that can be used in the hub
+TRACK_PATHS = {
+    'bigWig' : {'path': PATH_MAPPED, 'suffix': 'bw', 'type':'bigWig'},
+    'macs' :{'path': PATH_PEAK, 'suffix': 'bb', 'type':'bigBed'},
+    'idr' : {'path': PATH_IDR, 'suffix': 'IDR.narrowPeak'}
+}
 
 
 # ---------------------------------------------------------------------------- #
@@ -172,7 +187,6 @@ PREFIX = os.path.join(set_default('index', prefix_default, config), GENOME)
 print(PREFIX)
 
 
-
 # ----------------------------------------------------------------------------- #
 # RULE ALL
 COMMAND = []
@@ -183,17 +197,24 @@ BW      = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"), 
 LINKS   = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
 COMMAND = COMMAND + INDEX + BOWTIE2 + BW + LINKS + FASTQC
-
+# ----------------------------------------------------------------------------- #
 if 'peak_calling' in set(config.keys()):
-    MACS    = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_peaks.narrowPeak"),     name=config['peak_calling'].keys())
-    QSORT   = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_qsort.narrowPeak"), name=config['peak_calling'].keys())
-    COMMAND = COMMAND + MACS + QSORT
+    MACS    = expand(os.path.join(PATH_PEAK,  "{name}", "{name}_peaks.narrowPeak"),     name=config['peak_calling'].keys())
+    QSORT   = expand(os.path.join(PATH_PEAK,  "{name}", "{name}_qsort.narrowPeak"), name=config['peak_calling'].keys())
+    BB      = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
+    COMMAND = COMMAND + MACS + QSORT + BB
 
+# ----------------------------------------------------------------------------- #
 if 'idr' in set(config.keys()):
     IDR     = expand(os.path.join(PATH_IDR,    "{name}", "{name}.narrowPeak"),     name=config['idr'].keys())
     COMMAND = COMMAND + IDR
 
-
+# ----------------------------------------------------------------------------- #
+HUB_NAME = None
+if 'hub' in set(config.keys()):
+    HUB_NAME = config['hub']['name']
+    HUB = [os.path.join(PATH_HUB, HUB_NAME, 'done.txt')]
+    COMMAND = COMMAND + HUB
 
 rule all:
     input:
@@ -497,6 +518,33 @@ rule sort_narrow_peak:
     shell:"""
         sort -r -k9 -n {input} > {output.outfile}
     """
+    
+# ----------------------------------------------------------------------------- #
+def get_chrlen(wc):
+    matches = []
+    for root, dirnames, filenames in os.walk(PATH_MAPPED):
+        for filename in fnmatch.filter(filenames, 'chrlen.txt'):
+            matches.append(os.path.join(root, filename))
+    return(matches[0])
+    
+rule bedTobigBed:
+    input:
+        peaks  = rules.macs2.output,
+        chrlen = get_chrlen
+    output:
+        outfile = os.path.join(PATH_PEAK, "{name}", "{name}.bb")
+    params:
+        threads = 1,
+        mem = '8G',
+        bedToBigBed = SOFTWARE['bedToBigBed']
+    message:"""
+            bedToBigBed:
+                input : {input}
+                output: {output}
+        """
+    shell:"""
+        {params.bedToBigBed} -type=bed3+7 {input.peaks} {input.chrlen} {output.outfile} 
+    """
         
 
 # ----------------------------------------------------------------------------- #
@@ -536,3 +584,26 @@ rule idr:
         join_params("idr", APP_PARAMS, params.params_idr)
         ])
         shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule make_ucsc_hub:
+    input:
+        peaks  = BB,
+        tracks = BW,
+    output:
+        outfile = os.path.join(PATH_HUB, HUB_NAME, 'done.txt')
+    params:
+        threads     = 1,
+        mem         = '8G',
+        hub         = config['hub'],
+        genome_name = GENOME,
+        paths       = TRACK_PATHS,
+        path_hub    = os.path.join(PATH_HUB, HUB_NAME)
+    log:
+        log = os.path.join(PATH_LOG, 'UCSC_HUB.log')
+    message:"""
+            Running UCSC_HUB:
+                output: {output.outfile}
+        """
+    script:
+        os.path.join(SCRIPT_PATH, 'Make_UCSC_HUB.R')
