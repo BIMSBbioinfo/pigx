@@ -22,8 +22,8 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
 
 # TODO
 ## Main
-[#]. enable sample specific parameter deposition
-[#].write tests
+[#]. enable sample specific parameter deposition - works for macs
+[#]. write tests
 []. set default app parameters in config
     - works for macs2
 []. the pipeline does not work without app params - change config check    
@@ -38,16 +38,17 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
 []. Tests:
         - for no control sample
         - for multiple chip and control samples
-        - add test if control not set in yaml file
+        - add test if control not set in yaml file - check for multiple types of input
+        - check whether IDR test works
 
 ## Additional
 [] Add peak QC
-[] add support for peak calling without control
 []. Run multiqc
 []. cofigure the pipeline for broad histone data
+[]. Configure the pipeline for differential peak calling
 []. enable trimming
 []. rewrite fastqc to go through each individual file
-[]. Enable running subsections of the pipeline
+
 []. Automatic UCSC hub setup
 []. Add test genome data (genome subset)
 []. Set default for genome name if genome specified but genome name is not
@@ -82,7 +83,13 @@ DONE
     
 170614
 [*]. extended the pipeline to accept multiple ChIP/Cont samples for peak calling
-[*]. peak calling can be run without control samples - useful for ATAC data
+[*].  add support for peak calling without control:
+    peak calling can be run without control samples - useful for ATAC data
+
+170615    
+[*]. Enable running subsections of the pipeline:
+    IDR and PEAK calling are not obligatory
+
 
 
 
@@ -168,18 +175,29 @@ print(PREFIX)
 
 # ----------------------------------------------------------------------------- #
 # RULE ALL
+COMMAND = []
 INDEX   = [PREFIX + '.1.bt2']
 BOWTIE2 = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
 FASTQC  = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name=NAMES)
 BW      = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS   = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
-MACS    = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_peaks.narrowPeak"), name=config['peak_calling'].keys())
-QSORT   = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_qsort.narrowPeak"), name=config['peak_calling'].keys())
-IDR     = expand(os.path.join(PATH_IDR,    "{name}", "{name}.narrowPeak"), name=config['idr'].keys())
+
+COMMAND = COMMAND + INDEX + BOWTIE2 + BW + LINKS + FASTQC
+
+if 'peak_calling' in set(config.keys()):
+    MACS    = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_peaks.narrowPeak"),     name=config['peak_calling'].keys())
+    QSORT   = expand(os.path.join(PATH_PEAK,    "{name}", "{name}_qsort.narrowPeak"), name=config['peak_calling'].keys())
+    COMMAND = COMMAND + MACS + QSORT
+
+if 'idr' in set(config.keys()):
+    IDR     = expand(os.path.join(PATH_IDR,    "{name}", "{name}.narrowPeak"),     name=config['idr'].keys())
+    COMMAND = COMMAND + IDR
+
+
 
 rule all:
     input:
-        INDEX + BOWTIE2 + BW + LINKS + FASTQC + MACS + IDR
+        COMMAND
 
 # ----------------------------------------------------------------------------- #
 rule bowtie2_build:
