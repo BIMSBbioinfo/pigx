@@ -468,7 +468,7 @@ rule macs2:
         samples = samples + " ".join(['-t'] + input.ChIP)
         
         if hasattr(input, 'Cont'):
-            samples = samples + " ".join(['-c'] + input.Cont)
+            samples = samples + " ".join([' -c'] + input.Cont)
             
         command = " ".join(
         [params.macs2, 'callpeak',
