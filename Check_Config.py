@@ -60,12 +60,13 @@ def check_config(config):
 
     # ---------------------------------------------------------------------------- #
     # checks whether the idr samples correspond to the peaks_calling samples
-    if(len(config['peak_calling']) > 0 and len(config['idr']) > 0):
-        peaks_calling = set(config['peak_calling'].keys())
-        for i in config['idr'].keys():
-            peaks_idr = set([config['idr'][i][j] for j in config['idr'][i].keys()])
-            if len(peaks_idr - peaks_calling) > 0:
-                message = message + "\tIDR: " + i + " Contains samples not in peak calling\n"
+    if 'idr' in set(config.keys()):
+        if(len(config['peak_calling']) > 0 and len(config['idr']) > 0):
+            peaks_calling = set(config['peak_calling'].keys())
+            for i in config['idr'].keys():
+                peaks_idr = set([config['idr'][i][j] for j in config['idr'][i].keys()])
+                if len(peaks_idr - peaks_calling) > 0:
+                    message = message + "\tIDR: " + i + " Contains samples not in peak calling\n"
 
 
     # ---------------------------------------------------------------------------- #
@@ -105,7 +106,7 @@ def check_file_exists(config, message=''):
             files = list(itertools.chain(*files))
             for file in files:
                 if not os.path.isfile(os.path.join(config['fastq'],file)):
-                    message = message + '\t'+file + "file does not exist\n"
+                    message = message + '\t'+file + ": file does not exist\n"
 
     return(message)
     
