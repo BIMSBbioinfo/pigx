@@ -6,8 +6,8 @@
 </a>
 </div>
 
-######  Copyright 2017: Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg.
-######  This work is distributed under the terms of the GNU General Public License,  and is free to use for academic purposes
+**Copyright 2017: Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg.**
+**This work is distributed under the terms of the GNU General Public License,  and is free to use for academic purposes**
 
 -----
 # Summary
