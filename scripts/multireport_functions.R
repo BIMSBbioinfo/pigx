@@ -27,6 +27,7 @@ render2multireport <- function(final_output,
                                finalreportdir,
                                index=NULL,
                                references=NULL,
+                               workdir=NULL,
                                clean=FALSE) {
   
   
@@ -49,6 +50,13 @@ render2multireport <- function(final_output,
   }
   
   if(!is.null(index)) {
+    
+    render_list = readRDS(render_args)
+    render_list$params=list(wdir = workdir)
+    saveRDS(
+      render_list,
+      render_args
+    )
   
     bookdown:::Rscript_render(file = normalizePath(index),render_args,meta.file)
   
@@ -150,6 +158,7 @@ cat(paste(
 
 render2multireport(final_output = normalizePath(snakemake@output[["finalreport"]]),
                    finalreportdir = normalizePath(snakemake@params[["finalreportdir"]]),
+                   workdir = normalizePath(snakemake@params[["workdir"]]),
                    index = snakemake@input[["index"]],
                    references = snakemake@input[["references"]])
 

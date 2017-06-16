@@ -211,10 +211,19 @@ rule methseg_annotation:
 ### right now ensured with 'rules.methseg_annotation.output' as input
 ### 
 
-rule multiqc:
-    input:
-        workdir = WORKDIR + "."
+# rule multiqc:
+#     input:
+#         workdir = WORKDIR + "."
 
+
+# def get_fastq_name(full_name):
+#     print(full_name)
+#     if "se_bt2" in full_name:
+#         return full_name[0:full_name.find("se_bt2")-1] #"Hello "+ full_name# #
+#     elif "val_1_bt2" in full_name:
+#         return [full_name[0:full_name.find("val_1_bt2")-2]+i for i in i=[1 2]] # "Hi "+ full_name#[]
+#     else:
+#         raise Exception("=== ERROR: Cannot identify fastq_name. STOP! ===")
 
 ## Final Report
 rule final_report:
@@ -222,16 +231,21 @@ rule final_report:
         rules.methseg_annotation.output,
         index       = TEMPLATEDIR + "index.Rmd",   
         references  = TEMPLATEDIR + "references.Rmd"#,
+        #fastq_name  = lambda wildcards: touch(get_fastq_name(wildcards.prefix))#,
         ## add rawqc at some point
     output: 
-        finalreport = FINALDIR + "{prefix}.sorted_{assembly}_final.nb.html"
+        finalreport = FINALDIR + "{prefix}.sorted_{assembly}_final.nb.html",
     params:
-        finalreportdir = WORKDIR + FINALDIR + "{prefix}/"
+        finalreportdir = WORKDIR + FINALDIR + "{prefix}/",
+        workdir = WORKDIR#,
+        # fastq_name = lambda wildcards: get_fastq_name(wildcards.prefix)#,
+        # rules.fastqc_raw.output
     log:
         FINALDIR + "{prefix}.sorted_{assembly}_final.log"
     message:
         "Compiling Final Report:\n"
-        "   report    : {output.finalreport}"
+        "   report    : {output.finalreport}."#\n{params.fastq_name}"
+        
     script:
         SCRIPTDIR + "multireport_functions.R"  
 
