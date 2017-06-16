@@ -7,7 +7,7 @@
 </div>
 
 **Copyright 2017: Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg.**
-**This work is distributed under the terms of the GNU General Public License,  and is free to use for academic purposes**
+**This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
 -----
 # Summary
