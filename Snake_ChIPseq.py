@@ -201,8 +201,7 @@ COMMAND = COMMAND + INDEX + BOWTIE2 + BW + LINKS + FASTQC
 if 'peak_calling' in set(config.keys()):
     MACS    = expand(os.path.join(PATH_PEAK,  "{name}", "{name}_peaks.narrowPeak"),     name=config['peak_calling'].keys())
     QSORT   = expand(os.path.join(PATH_PEAK,  "{name}", "{name}_qsort.narrowPeak"), name=config['peak_calling'].keys())
-    BB      = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
-    COMMAND = COMMAND + MACS + QSORT + BB
+    COMMAND = COMMAND + MACS + QSORT 
 
 # ----------------------------------------------------------------------------- #
 if 'idr' in set(config.keys()):
@@ -214,7 +213,8 @@ HUB_NAME = None
 if 'hub' in set(config.keys()):
     HUB_NAME = config['hub']['name']
     HUB = [os.path.join(PATH_HUB, HUB_NAME, 'done.txt')]
-    COMMAND = COMMAND + HUB
+    BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
+    COMMAND = COMMAND + BB + HUB 
 
 rule all:
     input:
@@ -386,47 +386,25 @@ rule bam2bed:
         {params.bamToBed} -i {input.file} > {output}
     """
 
-rule bam2bed_extend:
+rule bam2bigWig:
     input:
         file = rules.bam2bed.output,
         chrlen = rules.chrlen.output
     output:
-        file = os.path.join(PATH_MAPPED, "{name}/{name}.ext.bed")
+        file = os.path.join(os.getcwd(), PATH_MAPPED, "{name}/{name}.bw")
     params:
-        extend = config['params']['extend'],
-        threads = 1,
-        mem = '16G',
-    message:"""
-            Extending reads for coverage file:
-                input : {input.file}
-                extend: {params.extend}
-                output: {output.file}
-        """
-    script:
-        os.path.join(SCRIPT_PATH, 'Extend_Regions.R')
-
-#
-rule bam2bigWig:
-    input:
-        chrlen = rules.chrlen.output,
-        bedfile = rules.bam2bed_extend.output
-    output:
-        os.path.join(os.getcwd(), PATH_MAPPED, "{name}/{name}.bw")
-    params:
-        threads = 1,
-        mem = '16G',
-        bedgraph = os.path.join(PATH_MAPPED, "{name}/{name}.bedGraph"),
-        genomeCoverageBed = SOFTWARE['genomeCoverageBed'],
-        wigToBigWig = SOFTWARE['wigToBigWig']
+        threads  = 1,
+        mem      = '16G',
+        extend   = config['params']['extend'],
+        scale    = config['params']['scale_bw']
     message:"""
         Making bigWig:
-            input : {input.bedfile}
-            output: {output}
+            input : {input.file}
+            output: {output.file}
+            scale:  {params.scale}
     """
-    shell: """
-        {params.genomeCoverageBed} -i {input.bedfile} -g {input.chrlen} -bg > {params.bedgraph}
-        {params.wigToBigWig} {params.bedgraph} {input.chrlen} {output}
-    """
+    script:
+        os.path.join(SCRIPT_PATH, 'BigWigExtend.R')
 
 # ----------------------------------------------------------------------------- #
 rule makelinks:
@@ -586,24 +564,25 @@ rule idr:
         shell(command)
 
 # ----------------------------------------------------------------------------- #
-rule make_ucsc_hub:
-    input:
-        peaks  = BB,
-        tracks = BW,
-    output:
-        outfile = os.path.join(PATH_HUB, HUB_NAME, 'done.txt')
-    params:
-        threads     = 1,
-        mem         = '8G',
-        hub         = config['hub'],
-        genome_name = GENOME,
-        paths       = TRACK_PATHS,
-        path_hub    = os.path.join(PATH_HUB, HUB_NAME)
-    log:
-        log = os.path.join(PATH_LOG, 'UCSC_HUB.log')
-    message:"""
-            Running UCSC_HUB:
-                output: {output.outfile}
-        """
-    script:
-        os.path.join(SCRIPT_PATH, 'Make_UCSC_HUB.R')
+if 'hub' in set(config.keys()):
+    rule make_ucsc_hub:
+        input:
+            peaks  = BB,
+            tracks = BW,
+        output:
+            outfile = os.path.join(PATH_HUB, HUB_NAME, 'done.txt')
+        params:
+            threads     = 1,
+            mem         = '8G',
+            hub         = config['hub'],
+            genome_name = GENOME,
+            paths       = TRACK_PATHS,
+            path_hub    = os.path.join(PATH_HUB, HUB_NAME)
+        log:
+            log = os.path.join(PATH_LOG, 'UCSC_HUB.log')
+        message:"""
+                Running UCSC_HUB:
+                    output: {output.outfile}
+            """
+        script:
+            os.path.join(SCRIPT_PATH, 'Make_UCSC_HUB.R')
