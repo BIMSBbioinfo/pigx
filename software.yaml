@@ -3,16 +3,19 @@ software:
     bamToBed: bamToBed
     bowtie2: bowtie2
     bowtie2-build: bowtie2-build
-    genomeCoverageBed: genomeCoverageBed
     idr: idr
     macs2: macs2
     perl: perl
     R: R
     R_deps:
         - data.table
+        - genomation
+        - GenomicRanges
+        - RCAS
+        - readxl
+        - rtracklayer
         - stringr
     samtools: samtools
-    wigToBigWig: wigToBigWig
     python: pyton
     python_deps:
         - fnmatch

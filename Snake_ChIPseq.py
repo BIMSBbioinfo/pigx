@@ -37,6 +37,7 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
 
 []. extension for paired end data to be automatically determined from the pairs
 []. add scalling to the bedgraph construction
+[]. make BigWigExtend a streaming function
     
 []. Tests:
         - for no control sample
@@ -586,3 +587,5 @@ if 'hub' in set(config.keys()):
             """
         script:
             os.path.join(SCRIPT_PATH, 'Make_UCSC_HUB.R')
+            
+

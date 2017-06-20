@@ -4,6 +4,14 @@ genome:
     fasta: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Genome/chr19.fa'
 index: 
 
+annotation:
+    gtf:
+        path:
+    cpg_island:
+        path:
+    blacklist:
+        path:
+
 fastq: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Fastq'
 
 
@@ -117,8 +125,18 @@ hub:
                 name: ChIPpe
                 type: bigWig
 # ------------------------------------------------------------ #
+combination:
+    idr: 
+        - ChIP_IDR
+    peaks:
+        - Peaks6
+        - Peaks5 
+    
+
+
 params:
     extend: 200
+    scale_bw: 'yes'
     bowtie2:
         k: 1
     idr:
