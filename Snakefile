@@ -1,3 +1,4 @@
+configfile: "config.yaml"
 
 #rule all
 
@@ -5,7 +6,13 @@
 
 #rule trimmomatic:
 
-#rule bbmap
+#rule bbmap_indexgenome
+
+#rule bbmap_map
+#    input:
+#        expand("sample_data/{sample}.fastq.gz", sample=config["samples"])
+#    output:
+#        "mapped_reads/"
 
 #rule samtools_sam2bam
 
