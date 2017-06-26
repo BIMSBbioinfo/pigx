@@ -1,0 +1,6 @@
+samples:
+	1624C_F1_N2_S124_R1_001: sample_data/1624C_F1_N2_S124_R1_001.fastq.gz
+	16C_F2_N2_S96_R1_001: sample_data/16C_F2_N2_S96_R1_001.fastq.gz
+	16C_F3_N2_S48_R1_001: sample_data/16C_F3_N2_S48_R1_001.fastq.gz
+	16C_F4_lin-41_sg15sg16_S119_R1_001: sample_data/16C_F4_lin-41_sg15sg16_S119_R1_001.fastq.gz
+	16C_F5_N2_S107_R1_001: sample_data/16C_F5_N2_S107_R1_001.fastq.gz
