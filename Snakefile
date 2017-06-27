@@ -12,7 +12,7 @@ rule all:
     input:
         expand("fastqc/{sample}_fastqc.html", sample = config["samples"]),
         "ref",
-        expand("aln/{sample}.sam", sample = config["samples"])
+        expand("aln/{sample}.sorted.bam", sample = config["samples"])
 
 
 rule fastqc:
@@ -50,11 +50,33 @@ rule bbmap_map:
         "bbmap.sh in={input} outm={output} t={nodeN} sam=1.3"
 
 
-#rule samtools_sam2bam
+#  ## convert sam to bam
+  # samtools view -bh ${samfile} >${bamfile}
+  # echo "sorting ${bamfile}"
+  # samtools sort ${bamfile} -o ${sortedbamfile}
+  # echo "removing duplicates from ${sortedbamfile}"
+  # samtools rmdup ${sortedbamfile} ${dedupedBamFile}
+  # echo "indexing deduped bam file"
+  # samtools index ${dedupedBamFile}
+
+rule samtools_sam2bam:
+    input:
+        "aln/{sample}.sam"
+    output:
+        "aln/{sample}.bam"
+    shell:
+        "samtools view -bh {input} > {output}"
+
+rule samtools_sort:
+    input:
+        "aln/{sample}.bam"
+    output:
+        "aln/{sample}.sorted.bam"
+    shell:
+        "samtools sort {input} > {output}"
 
 #rule samtools_rmdup
 
-#rule samtools_sort
 
 #rule samtools_index
 
