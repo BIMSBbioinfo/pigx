@@ -1,9 +1,9 @@
 samples:
-  1624C_F1_N2_S124_R1_001: sample_data/raw_reads/1624C_F1_N2_S124_R1_001.fastq.gz
-  16C_F2_N2_S96_R1_001: sample_data/raw_reads/16C_F2_N2_S96_R1_001.fastq.gz
-  16C_F3_N2_S48_R1_001: sample_data/raw_reads/16C_F3_N2_S48_R1_001.fastq.gz
+  sample1: sample_data/raw_reads/sample1.fastq.gz
+  sample2: sample_data/raw_reads/sample2.fastq.gz
+  sample3: sample_data/raw_reads/sample3.fastq.gz
 
-genome: sample_data/lin-41_amplicon.fa
+genome: sample_data/amplicon.fa
 
 adapters: "/home/buyar/tools/QC/Trimmomatic-0.33/adapters/adaptors_list.all.fa"
 
