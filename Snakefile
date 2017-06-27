@@ -12,8 +12,7 @@ rule all:
     input:
         expand("fastqc/{sample}_fastqc.html", sample = config["samples"]),
         "ref",
-        expand("aln/{sample}.sorted.bam", sample = config["samples"])
-
+        expand("aln/{sample}.deduped.bam.bai", sample = config["samples"])
 
 rule fastqc:
     input:
@@ -75,10 +74,21 @@ rule samtools_sort:
     shell:
         "samtools sort {input} > {output}"
 
-#rule samtools_rmdup
+rule samtools_rmdup_SE:
+    input:
+        "aln/{sample}.sorted.bam"
+    output:
+        "aln/{sample}.deduped.bam"
+    shell:
+        "samtools rmdup -s {input} {output}"
 
-
-#rule samtools_index
+rule samtools_index:
+    input:
+        "aln/{sample}.deduped.bam"
+    output:
+        "aln/{sample}.deduped.bam.bai"
+    shell:
+        "samtools index {input}"
 
 #rule samtools_mpileup
 
