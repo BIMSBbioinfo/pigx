@@ -5,4 +5,6 @@ samples:
 
 genome: sample_data/lin-41_amplicon.fa
 
+adapters: "/home/buyar/tools/QC/Trimmomatic-0.33/adapters/adaptors_list.all.fa"
+
 nodeN: 4
