@@ -5,12 +5,13 @@ configfile: "config.yaml"
 #print(config["genome"])
 #rule all
 
+nodeN = config["nodeN"]
 
 rule all:
     input:
         expand("fastqc/{sample}_fastqc.html", sample = config["samples"]),
-        "ref"
-        #expand("aln/{sample}.sam", sample = config["samples"])
+        "ref",
+        expand("aln/{sample}.sam", sample = config["samples"])
 
 
 rule fastqc:
@@ -31,15 +32,15 @@ rule bbmap_indexgenome:
         "ref"
     shell:
         "bbmap.sh ref={input.fa}"
-#
-# rule bbmap_map:
-#     input:
-#         "sample_data/raw_reads/{sample}.fastq.gz",
-#         "ref"
-#     output:
-#         "aln/{sample}.sam"
-#     shell:
-#         "bbmap.sh in={input} outm={output} t=config['nodeN'] sam=1.3"
+
+rule bbmap_map:
+    input:
+        "sample_data/raw_reads/{sample}.fastq.gz",
+        "ref"
+    output:
+        "aln/{sample}.sam"
+    shell:
+        "bbmap.sh in={input} outm={output} t={nodeN} sam=1.3"
 
 
 
