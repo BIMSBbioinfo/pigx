@@ -1,4 +1,4 @@
 ./pipeline/*
 ./sample_data
 ./aln
-
+./.snakemake/
