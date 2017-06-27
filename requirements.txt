@@ -7,3 +7,4 @@ snakemake=3.5.5
 pyyaml=3.11
 bbmap=37.17
 trimmomatic=0.36
+fastqc=0.11.5
