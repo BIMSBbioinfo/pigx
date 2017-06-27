@@ -6,6 +6,7 @@ configfile: "config.yaml"
 #rule all
 
 nodeN = config["nodeN"]
+adapters = config["adapters"]
 
 rule all:
     input:
@@ -22,8 +23,14 @@ rule fastqc:
     shell:
         "fastqc {input} -o fastqc"
 
-#rule trimmomatic:
-
+rule trimmomatic:
+    input:
+        "sample_data/raw_reads/{sample}.fastq.gz"
+    output:
+        "sample_data/filtered_reads/{sample}.fastq.gz"
+    shell:
+       "trimmomatic SE -threads {nodeN} {input} {output} \
+       ILLUMINACLIP:{adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
 
 rule bbmap_indexgenome:
     input:
@@ -35,13 +42,12 @@ rule bbmap_indexgenome:
 
 rule bbmap_map:
     input:
-        "sample_data/raw_reads/{sample}.fastq.gz",
+        "sample_data/filtered_reads/{sample}.fastq.gz",
         "ref"
     output:
         "aln/{sample}.sam"
     shell:
         "bbmap.sh in={input} outm={output} t={nodeN} sam=1.3"
-
 
 
 #rule samtools_sam2bam
