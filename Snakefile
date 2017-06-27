@@ -9,7 +9,7 @@ configfile: "config.yaml"
 rule all:
     input:
         expand("fastqc/{sample}_fastqc.html", sample = config["samples"]),
-        #"ref",
+        "ref"
         #expand("aln/{sample}.sam", sample = config["samples"])
 
 
@@ -24,13 +24,13 @@ rule fastqc:
 #rule trimmomatic:
 
 
-# rule bbmap_indexgenome:
-#     input:
-#         fa=config["genome"]
-#     output:
-#         "ref"
-#     shell:
-#         "bbmap.sh ref={input.fa}"
+rule bbmap_indexgenome:
+    input:
+        fa=config["genome"]
+    output:
+        "ref"
+    shell:
+        "bbmap.sh ref={input.fa}"
 #
 # rule bbmap_map:
 #     input:
