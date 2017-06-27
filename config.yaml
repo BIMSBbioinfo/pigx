@@ -5,6 +5,6 @@ samples:
 
 genome: sample_data/amplicon.fa
 
-adapters: "/home/buyar/tools/QC/Trimmomatic-0.33/adapters/adaptors_list.all.fa"
+adapters: sample_data/adapters/TruSeq2-SE.fa
 
 nodeN: 4
