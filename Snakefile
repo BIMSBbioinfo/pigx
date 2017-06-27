@@ -1,18 +1,47 @@
 configfile: "config.yaml"
 
+#print(config["samples"])
+#print(expand("sample_data/raw_reads/{sample}.fastq.gz", sample = config["samples"]))
+#print(config["genome"])
 #rule all
 
-#rule fastqc
+
+rule all:
+    input:
+        expand("fastqc/{sample}_fastqc.html", sample = config["samples"]),
+        #"ref",
+        #expand("aln/{sample}.sam", sample = config["samples"])
+
+
+rule fastqc:
+    input:
+        "sample_data/raw_reads/{sample}.fastq.gz"
+    output:
+        "fastqc/{sample}_fastqc.html"
+    shell:
+        "fastqc {input} -o fastqc"
 
 #rule trimmomatic:
 
-#rule bbmap_indexgenome
 
-#rule bbmap_map
-#    input:
-#        expand("sample_data/{sample}.fastq.gz", sample=config["samples"])
-#    output:
-#        "mapped_reads/"
+# rule bbmap_indexgenome:
+#     input:
+#         fa=config["genome"]
+#     output:
+#         "ref"
+#     shell:
+#         "bbmap.sh ref={input.fa}"
+#
+# rule bbmap_map:
+#     input:
+#         "sample_data/raw_reads/{sample}.fastq.gz",
+#         "ref"
+#     output:
+#         "aln/{sample}.sam"
+#     shell:
+#         "bbmap.sh in={input} outm={output} t=config['nodeN'] sam=1.3"
+
+
 
 #rule samtools_sam2bam
 
