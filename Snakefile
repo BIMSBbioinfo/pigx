@@ -1,10 +1,5 @@
 configfile: "config.yaml"
 
-#print(config["samples"])
-#print(expand("sample_data/raw_reads/{sample}.fastq.gz", sample = config["samples"]))
-#print(config["genome"])
-#rule all
-
 nodeN = config["nodeN"]
 adapters = config["adapters"]
 
@@ -12,7 +7,7 @@ rule all:
     input:
         expand("fastqc/{sample}_fastqc.html", sample = config["samples"]),
         "ref",
-        expand("mpileup/{sample}.mpileup.tsv", sample = config["samples"]),
+        expand("mpileup/{sample}.mpileup.counts.tsv", sample = config["samples"]),
         expand("aln/{sample}.deduped.bam.bai", sample = config["samples"])
 
 rule fastqc:
@@ -89,7 +84,14 @@ rule samtools_mpileup:
     shell:
         "samtools mpileup {input} > {output}"
 
-#rule parse_mpileup #find indels
+rule parse_mpileup:
+    input:
+        "mpileup/{sample}.mpileup.tsv"
+    output:
+        "mpileup/{sample}.mpileup.counts.tsv"
+    shell:
+        "python src/parse_mpileup.py {input} > {output}"
+
 
 #rule extractPerBaseDeletionScores
 
