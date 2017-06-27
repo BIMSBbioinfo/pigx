@@ -2,13 +2,13 @@ import sys
 
 inFile = open(sys.argv[1],'r')
 
-print 'bp\tA\tG\tC\tT\tdel\tins\tinserted\tambiguous'
+print('bp\tA\tG\tC\tT\tdel\tins\tinserted\tambiguous')
 for line in inFile:
         data = line.strip().split('\t')
         bp = data[1]
         bases = data[4].upper()
         ref = data[2].upper()
-        
+
         types = {'A':0,'G':0,'C':0,'T':0,'-':0,'+':[],'X':[]}
 
         i = 0
@@ -32,7 +32,7 @@ for line in inFile:
                 elif base == '.' or base == ',':
                         types[ref] += 1
                 else:
-                        if types.has_key(base):
+                        if base in types:
                                 types[base] += 1
                         else:
                                 types['X'].append(base)
@@ -48,5 +48,4 @@ for line in inFile:
                 amb = ','.join(types['X'])
 
         out = [bp,types['A'],types['G'],types['C'],types['T'],types['-'],len(types['+']),adds,amb]
-        print '\t'.join([str(x) for x in out])
-
+        print ('\t'.join([str(x) for x in out]))
