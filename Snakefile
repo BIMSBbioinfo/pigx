@@ -12,6 +12,7 @@ rule all:
     input:
         expand("fastqc/{sample}_fastqc.html", sample = config["samples"]),
         "ref",
+        expand("mpileup/{sample}.mpileup.tsv", sample = config["samples"]),
         expand("aln/{sample}.deduped.bam.bai", sample = config["samples"])
 
 rule fastqc:
@@ -48,16 +49,6 @@ rule bbmap_map:
     shell:
         "bbmap.sh in={input} outm={output} t={nodeN} sam=1.3"
 
-
-#  ## convert sam to bam
-  # samtools view -bh ${samfile} >${bamfile}
-  # echo "sorting ${bamfile}"
-  # samtools sort ${bamfile} -o ${sortedbamfile}
-  # echo "removing duplicates from ${sortedbamfile}"
-  # samtools rmdup ${sortedbamfile} ${dedupedBamFile}
-  # echo "indexing deduped bam file"
-  # samtools index ${dedupedBamFile}
-
 rule samtools_sam2bam:
     input:
         "aln/{sample}.sam"
@@ -90,7 +81,13 @@ rule samtools_index:
     shell:
         "samtools index {input}"
 
-#rule samtools_mpileup
+rule samtools_mpileup:
+    input:
+        "aln/{sample}.deduped.bam"
+    output:
+        "mpileup/{sample}.mpileup.tsv"
+    shell:
+        "samtools mpileup {input} > {output}"
 
 #rule parse_mpileup #find indels
 
