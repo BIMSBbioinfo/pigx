@@ -4,8 +4,11 @@ source ./activate p35
 SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX/Snake_ChIPseq.py'
 WORKDIR='/data/akalin/vfranke/AAkalin_PIX/ChIP'
 CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX/config.yaml'
-
+PATH='/home/vfranke/bin/Software/miniconda3/envs/p35/bin:/usr/local/bin:/usr/bin:/bin:/home/vfranke/.guix-profile/bin:/home/vfranke/.guix-profile/sbin:/home/vfranke/bin'
 # Beast run
+
+snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
+
 snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
 
 snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
@@ -36,7 +39,7 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
     http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
 
 []. extension for paired end data to be automatically determined from the pairs
-[]. add scalling to the bedgraph construction
+
 []. make BigWigExtend a streaming function
     
 []. Tests:
@@ -46,9 +49,15 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
         - check whether IDR test works
 
 []. Tests for hub
+[]. Check yaml:
+    - hub
+    - feature combination:
+        - keys must be idr and peaks
+    - uniqueness of peak names
+    - check for annotation - gtf file existence
 
 ## Additional
-[] Add peak QC
+[]. Add peak QC
 []. Run multiqc
 []. cofigure the pipeline for broad histone data
 []. Configure the pipeline for differential peak calling
@@ -96,7 +105,8 @@ DONE
 [*]. Enable running subsections of the pipeline:
     IDR and PEAK calling are not obligatory
 
-
+170620
+[*]. add scalling to the bedgraph construction
 
 
 Integrate_Expression_Mouse_Hamster_Difference
@@ -154,14 +164,15 @@ SOFTWARE     = SOFTWARE_CONFIG['software']
 
 
 # Directory structure definition
-PATH_MAPPED = "Mapped/Bowtie"
-PATH_QC     = "FastQC"
-PATH_INDEX  = 'Bowtie2_Index'
-PATH_LOG    = 'Log'
-PATH_PEAK   = 'Peaks/MACS2'
-PATH_BW     = 'BigWig'
-PATH_IDR    = 'IDR'
-PATH_HUB    = 'UCSC_HUB'
+PATH_MAPPED  = "Mapped/Bowtie"
+PATH_QC      = "FastQC"
+PATH_INDEX   = 'Bowtie2_Index'
+PATH_LOG     = 'Log'
+PATH_PEAK    = 'Peaks/MACS2'
+PATH_BW      = 'BigWig'
+PATH_IDR     = 'IDR'
+PATH_HUB     = 'UCSC_HUB'
+PATH_FEATURE = "Analysis/Feature_Combination"
 
 # Hub variables which describe the types of files that can be used in the hub
 TRACK_PATHS = {
@@ -217,6 +228,21 @@ if 'hub' in set(config.keys()):
     BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
     COMMAND = COMMAND + BB + HUB 
 
+# ----------------------------------------------------------------------------- #
+if 'feature_combination' in set(config.keys()):
+    peak_files = []
+    if 'idr' in config['feature_combination'].keys():
+        peak_files = peak_files + [os.path.join(PATH_IDR,  x, x + '.narrowPeak') for x in config['feature_combination']['idr']]
+        
+    if 'peaks' in config['feature_combination'].keys():
+        peak_files = peak_files + [os.path.join(PATH_PEAK, x, x + '_peaks.narrowPeak') for x in config['feature_combination']['peaks']]
+    FEATURE = [os.path.join(PATH_FEATURE,'Feature_Combination.tsv')]
+    COMMAND = COMMAND + FEATURE
+        
+
+
+
+# ----------------------------------------------------------------------------- #
 rule all:
     input:
         COMMAND
@@ -582,10 +608,34 @@ if 'hub' in set(config.keys()):
         log:
             log = os.path.join(PATH_LOG, 'UCSC_HUB.log')
         message:"""
-                Running UCSC_HUB:
+                Running: UCSC_HUB:
                     output: {output.outfile}
             """
         script:
             os.path.join(SCRIPT_PATH, 'Make_UCSC_HUB.R')
             
+# ----------------------------------------------------------------------------- #
+if 'feature_combination' in set(config.keys()):
+    rule feature_combination:
+        input:
+            features = peak_files,
+            bw = BW
+        output:
+            outfile = os.path.join(PATH_FEATURE,'Feature_Combination.tsv')
+        params:
+            threads     = 1,
+            mem         = '8G',
+            annotation  = config['annotation'],
+            outpath = PATH_FEATURE,
+            scriptdir = os.path.join(workflow.basedir, SCRIPT_PATH)
+        log:
+            log = os.path.join(PATH_LOG, 'feature_combination.log')
+        message:"""
+                Running: feature_combination:
+                    output: {output.outfile}
+            """
+        script:
+            os.path.join(SCRIPT_PATH, 'Feature_Combinaton.R')
+
+
 
