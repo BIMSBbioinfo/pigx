@@ -5,12 +5,8 @@ genome:
 index: 
 
 annotation:
-    gtf:
-        path:
-    cpg_island:
-        path:
-    blacklist:
-        path:
+    gtf: "/data/akalin/Base/Annotation/mm9/EnsemblGenes/150520_Ensembl_Mus_musculus.NCBIM37.67.form.gtf"
+    cpg_island: '/data/akalin/Base/Annotation/mm9/CpGi/mm9.cpg.islands.bed'
 
 fastq: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Fastq'
 
@@ -125,7 +121,7 @@ hub:
                 name: ChIPpe
                 type: bigWig
 # ------------------------------------------------------------ #
-combination:
+feature_combination:
     idr: 
         - ChIP_IDR
     peaks:
