@@ -12,7 +12,6 @@ software:
         - genomation
         - GenomicRanges
         - RCAS
-        - readxl
         - rtracklayer
         - stringr
     samtools: samtools
