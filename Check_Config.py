@@ -37,25 +37,26 @@ def check_config(config):
     # ---------------------------------------------------------------------------- #
     # checks for ChIP and Cont specifications
     peak_calling_desciptors = ['ChIP','Cont']
-    if len(config['peak_calling'].keys()) > 0:
-        for samp in config['peak_calling'].keys():
-            if config['peak_calling'][samp]['ChIP'] == None:
-                message = message + '\t' + samp + ": " + "ChIP not specified\n"
+    if 'peak_calling' in set(config.keys()):
+        if len(config['peak_calling'].keys()) > 0:
+            for samp in config['peak_calling'].keys():
+                if config['peak_calling'][samp]['ChIP'] == None:
+                    message = message + '\t' + samp + ": " + "ChIP not specified\n"
 
             # if config['peak_calling'][samp]['Cont'] == None:
 #                 message = message + '\t' + samp + ": " + "Cont not specified\n"
 
     # checks for correspondence between peak calling and samples
-    if(len(config['samples']) > 0 and len(config['peak_calling']) > 0):
-        samples = list(config['samples'].keys())
-        keys = list(config['peak_calling'].keys())
-        peaks = [[config['peak_calling'][i]['ChIP'],
-                  config['peak_calling'][i]['Cont']]  for i in keys]
-        peaks = flatten(peaks)
-        peaks = list(filter(None, peaks))
-        samples_diff = (set(peaks) - set(samples))
-        if len(samples_diff) > 0:
-            message = message + "\tsome peak calling samples are not specified\n"
+        if(len(config['samples']) > 0 and len(config['peak_calling']) > 0):
+            samples = list(config['samples'].keys())
+            keys = list(config['peak_calling'].keys())
+            peaks = [[config['peak_calling'][i]['ChIP'],
+                      config['peak_calling'][i]['Cont']]  for i in keys]
+            peaks = flatten(peaks)
+            peaks = list(filter(None, peaks))
+            samples_diff = (set(peaks) - set(samples))
+            if len(samples_diff) > 0:
+                message = message + "\tsome peak calling samples are not specified\n"
 
 
     # ---------------------------------------------------------------------------- #
