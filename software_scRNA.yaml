@@ -1,0 +1,5 @@
+software:
+    picard: ~/bin/Software/Dropseq/Drop-seq_tools-1.12/3rdParty/picard/picard.jar
+    star: ~/bin/Software/Mapping/STAR-STAR_2.4.2a/bin/Linux_x86_64_static/STAR
+    droptools: ~/bin/Software/Dropseq/Drop-seq_tools-1.12
+params:
