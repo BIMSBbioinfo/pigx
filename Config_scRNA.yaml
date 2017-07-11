@@ -31,3 +31,5 @@ samples:
 
 # ------------------------------------------------------------ #
 params:
+    genes_per_cell: 10
+    num_core_barcodes: 10
