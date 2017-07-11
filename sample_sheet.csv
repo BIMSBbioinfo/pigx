@@ -1,0 +1,13 @@
+name,reads,reads2,donor,sample_type
+KRTS4,KR_TS_004_S1_L003_R1_001.fastq.gz,KR_TS_004_S1_L003_R2_001.fastq.gz,30,tail
+KRTS5,KR_TS_005_S2_L003_R1_001.fastq.gz,KR_TS_005_S2_L003_R2_001.fastq.gz,40,tail
+KRTS6,KR_TS_006_S3_L003_R1_001.fastq.gz,KR_TS_006_S3_L003_R2_001.fastq.gz,30,tumor
+KRTS7,KR_TS_007_S4_L003_R1_001.fastq.gz,KR_TS_007_S4_L003_R2_001.fastq.gz,30,tumor
+KRTS8,KR_TS_008_S5_L003_R1_001.fastq.gz,KR_TS_008_S5_L003_R2_001.fastq.gz,30,tumor
+KRTS10,KR_TS_010_S6_L003_R1_001.fastq.gz,KR_TS_010_S6_L003_R2_001.fastq.gz,30,tumor
+KRTS11,KR_TS_011_S7_L003_R1_001.fastq.gz,KR_TS_011_S7_L003_R2_001.fastq.gz,30,tumor
+KRTS12,KR_TS_012_S8_L003_R1_001.fastq.gz,KR_TS_012_S8_L003_R2_001.fastq.gz,40,tumor
+KRTS13,KR_TS_013_S9_L003_R1_001.fastq.gz,KR_TS_013_S9_L003_R2_001.fastq.gz,40,tumor
+KRTS14,KR_TS_014_S10_L003_R1_001.fastq.gz,KR_TS_014_S10_L003_R2_001.fastq.gz,40,tumor
+KRTS15,KR_TS_015_S11_L003_R1_001.fastq.gz,KR_TS_015_S11_L003_R2_001.fastq.gz,40,tumor
+KRTS16,KR_TS_016_S12_L003_R1_001.fastq.gz,KR_TS_016_S12_L003_R2_001.fastq.gz,40,tumor
