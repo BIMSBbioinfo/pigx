@@ -1,0 +1,38 @@
+# usage: type 'Rscript runDeseqReport.R' to get help page. 
+
+#example runs
+echo "hmg.4 versus ctrl_N2_L4\n"
+Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \
+                         --countDataFile=./sample_data/counts.tsv \
+                         --colDataFile=./sample_data/colData.tsv \
+                         --caseSampleGroups='hmg.4_N2_L4' \
+                         --controlSampleGroups='ctrl_N2_L4' \
+                         --geneSetsFolder='./sample_data/genesets' \
+                         --workdir=`pwd` \
+                         --prefix='hmg-4_vs_ctrl_N2' \
+                         --selfContained=TRUE
+
+echo "spt.16 versus ctrl_N2_L4\n"
+Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \
+                         --countDataFile=./sample_data/counts.tsv \
+                         --colDataFile=./sample_data/colData.tsv \
+                         --caseSampleGroups='spt.16_N2_L4' \
+                         --controlSampleGroups='ctrl_N2_L4' \
+                         --geneSetsFolder='./sample_data/genesets' \
+                         --workdir=`pwd` \
+                         --prefix='spt-16_vs_ctrl_N2' \
+                         --selfContained=TRUE
+
+echo "hmg.3 versus N2_L4_20\n"
+Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \
+                         --countDataFile=./sample_data/counts.tsv \
+                         --colDataFile=./sample_data/colData.tsv \
+                         --caseSampleGroups='hmg.3_tm2539_L4' \
+                         --controlSampleGroups='N2_L4_20' \
+                         --geneSetsFolder='./sample_data/genesets' \
+                         --workdir=`pwd` \
+                         --prefix='hmg-3_vs_N2_L4_20' \
+                         --selfContained=TRUE
+
+
+
