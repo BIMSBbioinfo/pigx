@@ -8,7 +8,7 @@ CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX_scRNA/Config_scRNA.yaml'
 PATH='/home/vfranke/bin/Software/miniconda3/envs/p35/bin:/usr/local/bin:/usr/bin:/bin:/home/vfranke/.guix-profile/bin:/home/vfranke/.guix-profile/sbin:/home/vfranke/bin'
 # Beast run
 
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
+snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 12 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
 
 snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
 """
@@ -271,6 +271,8 @@ rule make_star_reference:
         star    = SOFTWARE['star'],
         threads = 8,
         mem     = '40G'
+    log:
+        os.path.join(PATH_LOG, '{genome}.make_star_reference.log')
     message:"""
         Star reference:
             input:
@@ -279,7 +281,7 @@ rule make_star_reference:
         """
     shell:"""
         {params.star} --runMode genomeGenerate --genomeDir {params.outdir} --genomeFastaFiles {input.fasta} --runThreadN {params.threads} --sjdbGTFfile {input.gtf} --sjdbOverhang 99
-        touch {output.outfile}
+        touch {output.outfile} 2> {log}
 """
 
 # ----------------------------------------------------------------------------- #
@@ -319,6 +321,8 @@ rule fasta_dict:
         picard=SOFTWARE['picard'],
         threads=1,
         mem='4G'
+    log:
+        os.path.join(PATH_LOG, '{genome}.fasta_dict.log')
     message:
         """
             Fasta dict:
@@ -326,7 +330,7 @@ rule fasta_dict:
                 output : {output}
         """
     shell:"""
-        java -Xmx1200m -jar {params.picard} CreateSequenceDictionary R={input} O={output}
+        java -Xmx1200m -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -347,7 +351,7 @@ rule change_gtf_id:
                 output : {output}
         """
     shell:"""
-        cat {input} | perl -pe '/gene_id "([A-Z0-9]+?)";/; $gene_id = $1; s/gene_name "[A-Z0-9]+?"/gene_name "$gene_id"/;' > {output}
+        cat {input} | perl -pe '/gene_id "([A-Z0-9]+?)";/; $gene_id = $1; s/gene_name ".+?"/gene_name "$gene_id"/;' > {output}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -360,7 +364,9 @@ rule gtf_to_refflat:
     params:
         droptools=SOFTWARE['droptools'],
         threads=1,
-        mem='16G'
+        mem='50G'
+    log:
+        os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
     message:"""
             GTF To refFlat:
                 input
@@ -369,7 +375,7 @@ rule gtf_to_refflat:
                 output : {output}
         """
     shell:"""
-        {params.droptools}/ConvertToRefFlat O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict}
+        {params.droptools}/ConvertToRefFlat O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
     """
 
 # # ----------------------------------------------------------------------------- #
@@ -389,6 +395,9 @@ rule merge_fastq_to_bam:
         picard=SOFTWARE['picard'],
         threads=1,
         mem='16G'
+        
+    log:
+        os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
     message:"""
             Merge fastq barcode and reads:
                 input:
@@ -397,7 +406,7 @@ rule merge_fastq_to_bam:
                 output : {output}
         """
     shell: """
-    java -Xmx12000m  -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname
+    java -Xmx12000m  -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
     """
 
 
@@ -418,7 +427,7 @@ rule map_scRNA:
         droptools = SOFTWARE['droptools'],
         star      = SOFTWARE['star'],
         threads   = 8,
-        mem       = '8G'
+        mem       = '30G'
     log:
        log = os.path.join(PATH_LOG, "{name}.{genome}.STAR.log")
     message: """
@@ -430,7 +439,7 @@ rule map_scRNA:
         """
     shell:"""
         {params.droptools}/Drop-seq_alignment.sh -g {params.genome} -d {params.droptools} -o {params.outdir} -s {params.star} -r {input.reference} {input.infile}
-        touch {output.outfile}
+        touch {output.outfile} 2> {log}
     """
 
 
@@ -455,7 +464,7 @@ rule get_umi_matrix:
                 output: {output}
         """
     shell:"""
-        {params.droptools}/DigitalExpression O={output} I={input} SUMMARY={params.outdir}/{params.outname}_Summary.txt MIN_NUM_GENES_PER_CELL={params.genes_per_cell} NUM_CORE_BARCODES={params.num_core_barcodes}
+        {params.droptools}/DigitalExpression O={output} I={input.infile} SUMMARY={params.outdir}/{params.outname}_Summary.txt MIN_NUM_GENES_PER_CELL={params.genes_per_cell} NUM_CORE_BARCODES={params.num_core_barcodes}
 		"""
 
 # ----------------------------------------------------------------------------- #
