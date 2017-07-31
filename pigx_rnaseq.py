@@ -37,6 +37,12 @@ SAMPLES = SAMPLE_SHEET['name']
 rule all:
   input: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
 
+# TODO
+# 1. - add bigwig file generation
+# 2. - more counting (featureCounts, HTSeq)
+# 3. - make counts matrix
+# 4. - integrate Bora's report
+
 ## Target rule - multiqc report after everything has been mapped
 rule multiqc:
   input:

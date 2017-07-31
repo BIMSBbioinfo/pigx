@@ -4,12 +4,12 @@ locations:
   genome-folder: /data/akalin/Base/GenomeIndices/hg38/STAR/EnsemblGenes_ERCC_sjdb99/
 tools:
   fastqc:
-    executable: /homr/jronen/bin/fastqc
+    executable: /home/jronen/bin/fastqc
   multiqc:
-    executable: /home/jronen/.virtualenvs/bio352/bin/multiqc
+    executable: /home/jronen/beast-centos7-home/miniconda/envs/conda361/bin/multiqc
   star:
     executable: /home/jronen/.guix-profile/bin/STAR
     n-threads: 2
   trim-galore:
-    executable: /home/jronen//bin/trim_galore
+    executable: /home/jronen/bin/trim_galore
     args: "--paired"
