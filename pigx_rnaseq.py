@@ -16,11 +16,12 @@ READS_DIR = SETTINGS['locations']['reads-folder']
 OUTPUT_DIR = SETTINGS['locations']['output-folder']
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
-LOG_DIR = os.path.join(OUTPUT_DIR, 'logs')
-FASTQC_DIR = os.path.join(OUTPUT_DIR, 'fastqc')
-MULTIQC_DIR = os.path.join(OUTPUT_DIR, 'multiqc')
-MAPPED_READS_DIR = os.path.join(OUTPUT_DIR, 'mapped_reads')
-BIGWIG_DIR = os.path.join(OUTPUT_DIR, 'bigwig_files')
+LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
+FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
+MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
+MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
+BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
+FEATURECOUNTS_DIR = os.path.join(OUTPUT_DIR, 'featureCounts')
 
 
 FASTQC_EXEC  = SETTINGS['tools']['fastqc']['executable']
@@ -31,14 +32,16 @@ TRIM_GALORE_EXEC = SETTINGS['tools']['trim-galore']['executable']
 TRIM_GALORE_ARGS = SETTINGS['tools']['trim-galore']['args']
 BAMCOVERAGE_EXEC = SETTINGS['tools']['bamCoverage']['executable']
 SAMTOOLS_EXEC    = SETTINGS['tools']['samtools']['executable']
+FEATURECOUNTS_EXEC = SETTINGS['tools']['featureCounts']['executable']
 
 
+GTF_FILE = SETTINGS['locations']['gtf-file']
 ## Load sample sheet
 SAMPLE_SHEET = pd.read_csv("sample_sheet.csv")
 SAMPLES = SAMPLE_SHEET['name']
 
 rule all:
-  input: expand(os.path.join(BIGWIG_DIR, "{sample}.bw"), sample=SAMPLES)
+  input: expand(os.path.join(FEATURECOUNTS_DIR, "{sample}_counts.txt"), sample=SAMPLES)
 # TODO
 # 2. - more counting (featureCounts, HTSeq)
 # 3. - make counts matrix
@@ -98,3 +101,9 @@ rule multiqc:
   output: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
   log: os.path.join(LOG_DIR, 'multiqc.log')
   shell: "{MULTIQC_EXEC} -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
+
+rule featureCounts:
+  input: rules.star_map.output
+  output: os.path.join(FEATURECOUNTS_DIR, "{sample}_counts.txt")
+  log: os.path.join(LOG_DIR, "featureCounts_{sample}.log")
+  shell: "{FEATURECOUNTS_EXEC} -p -t exon -g gene_id -a {GTF_FILE} -o {output} {input} >> {log} 2>&1"

@@ -2,6 +2,7 @@ locations:
   reads-folder: /data/akalin/Projects/pigx_rnaseq/example_data
   output-folder: /data/akalin/Projects/pigx_rnaseq/example_output
   genome-folder: /data/akalin/Base/GenomeIndices/hg38/STAR/EnsemblGenes_ERCC_sjdb99/
+  gtf-file: /data/akalin/Base/GenomeIndices/hg38/STAR/EnsemblGenes_ERCC_sjdb99/ensembl82_and_ercc.gtf
 tools:
   fastqc:
     executable: /home/jronen/bin/fastqc
@@ -17,3 +18,5 @@ tools:
     executable: /home/jronen/beast-centos7-home/miniconda/envs/conda361/bin/bamCoverage
   samtools:
     executable: samtools
+  featureCounts:
+    executable: featureCounts
