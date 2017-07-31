@@ -1,6 +1,6 @@
 locations:
-  reads-folder: /data/akalin/Projects/Rajewsky_Sommermann_ExomeSeq/Data/Raw
-  output-folder: /scratch/AG_Akalin/jona/temp/tom/
+  reads-folder: /data/akalin/Projects/pigx_rnaseq/example_data
+  output-folder: /data/akalin/Projects/pigx_rnaseq/example_output
   genome-folder: /data/akalin/Base/GenomeIndices/hg38/STAR/EnsemblGenes_ERCC_sjdb99/
 tools:
   fastqc:

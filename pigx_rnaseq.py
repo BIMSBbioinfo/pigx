@@ -34,6 +34,8 @@ TRIM_GALORE_ARGS = SETTINGS['tools']['trim-galore']['args']
 SAMPLE_SHEET = pd.read_csv("sample_sheet.csv")
 SAMPLES = SAMPLE_SHEET['name']
 
+rule all:
+  input: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
 
 ## Target rule - multiqc report after everything has been mapped
 rule multiqc:
@@ -63,7 +65,8 @@ rule fastqc:
 
 def trim_galore_input(args):
   sample = args[0]
-  return [os.path.join(READS_DIR, f) for f in SAMPLE_SHEET[SAMPLE_SHEET['name']=='KRTS4'][['reads', 'reads2']].iloc[0]]
+  return [os.path.join(READS_DIR, f) for f in SAMPLE_SHEET[SAMPLE_SHEET['name']==sample][['reads', 'reads2']].iloc[0]]
+
 
 rule trim_galore:
   input: trim_galore_input
@@ -71,8 +74,8 @@ rule trim_galore:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
   params:
-    tmp1=os.path.join(TRIMMED_READS_DIR, SAMPLE_SHEET[SAMPLE_SHEET['name']=='KRTS4']['reads'].iloc[0]).replace('.fastq.gz','_val_1.fq.gz'),
-    tmp2=os.path.join(TRIMMED_READS_DIR, SAMPLE_SHEET[SAMPLE_SHEET['name']=='KRTS4']['reads2'].iloc[0]).replace('.fastq.gz','_val_2.fq.gz')
+    tmp1=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, SAMPLE_SHEET[SAMPLE_SHEET['name']==wildcards[0]]['reads'].iloc[0]).replace('.fastq.gz','_val_1.fq.gz'),
+    tmp2=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, SAMPLE_SHEET[SAMPLE_SHEET['name']==wildcards[0]]['reads2'].iloc[0]).replace('.fastq.gz','_val_2.fq.gz')
   log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
   shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {TRIM_GALORE_ARGS} {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
 
