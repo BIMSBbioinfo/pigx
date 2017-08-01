@@ -23,17 +23,54 @@ for i in `ls $WORKDIR | grep -v Fastq$ | grep -v Genome`;do rm -r $WORKDIR/$i;do
 
 rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE --summary | tail -n+2 | cut -f1)
 
+
+gp -i gcc-toolchain@5 gfortran@5 pkg-config curl cairo libxt libxml2 openssl xz zlib -p pix
+
+gp -i gcc -p pix
+
+bash
+cd /home/vfranke/bin/guix
+profile=/home/vfranke/bin/guix/pix
+source $profile/etc/profile
+
+export PATH="$profile/bin${PATH:+:}$PATH"
+export PKG_CONFIG_PATH="pix/lib/pkgconfig${PKG_CONFIG_PATH:+:}$PKG_CONFIG_PATH"
+export XDG_DATA_DIRS="pix/share${XDG_DATA_DIRS:+:}$XDG_DATA_DIRS"
+export GIO_EXTRA_MODULES="pix/lib/gio/modules${GIO_EXTRA_MODULES:+:}$GIO_EXTRA_MODULES"
+export R_LIBS_SITE="pix/site-library/${R_LIBS_SITE:+:}$R_LIBS_SITE"
+export GUIX_LOCPATH=$profile/lib/locale
+export CURL_CA_BUNDLE="/etc/ssl/certs/ca-bundle.crt"
+/home/vfranke/bin/guix/pix/bin/R
+source("https://bioconductor.org/biocLite.R")
+biocLite('S4Vectors')
+biocLite(c('data.table','genomation','GenomicRanges','RCAS','rtracklayr','stringr', 'plotly', 'DT', 'data.table', 'topGO', 'motifRG', 'biomaRt', 'AnnotationDbi', 'GenomicRanges', 'BSgenome.Hsapiens.UCSC.hg19', 'GenomeInfoDb', 'Biostrings', 'rtracklayer', 'org.Hs.eg.db', 'GenomicFeatures', 'genomation', 'rmarkdown', 'knitr', 'S4Vectors'), dependencies=TRUE)
+
+
 # TODO
 ## Main
 [#]. enable sample specific parameter deposition - works for macs
 [#]. write tests
 []. set default app parameters in config
     - works for macs2
-[]. the pipeline does not work without app params - change config check    
+[]. the pipeline does not work without app params - change config check
 []. add check for gzipped bowtie reference
 []. Add samplesheet To yaml file
 []. write markdown
-    
+        - Sample Specific
+
+        - Comprehensive
+            - basic mapping stats
+            - annotation per genomic category
+            - profiles over TSS and TTS
+            - cumulative profiles over the gene body
+            - peak co-occurence matrix
+            - sample correlation
+            - peakQC
+            - motif discovery
+
+
+
+
 []. write yaml schema
     https://github.com/Grokzen/pykwalify,
     http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
@@ -41,7 +78,7 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
 []. extension for paired end data to be automatically determined from the pairs
 
 []. make BigWigExtend a streaming function
-    
+
 []. Tests:
         - for no control sample
         - for multiple chip and control samples
@@ -56,6 +93,8 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
     - uniqueness of peak names
     - check for annotation - gtf file existence
 
+[]. bedToBigBed for broadPeak data
+
 ## Additional
 []. Add peak QC
 []. Run multiqc
@@ -64,7 +103,7 @@ rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGF
 []. enable trimming
 []. rewrite fastqc to go through each individual file
 
-[]. Automatic UCSC hub setup
+
 []. Add test genome data (genome subset)
 []. Set default for genome name if genome specified but genome name is not
 []. Delete temporary files - bed and bedGraph files
@@ -95,19 +134,21 @@ DONE
     - Testing for paired end reads
     - Mapping
     - Fastqc for paired end reads
-    
+
 170614
 [*]. extended the pipeline to accept multiple ChIP/Cont samples for peak calling
 [*].  add support for peak calling without control:
     peak calling can be run without control samples - useful for ATAC data
 
-170615    
+170615
 [*]. Enable running subsections of the pipeline:
     IDR and PEAK calling are not obligatory
 
 170620
 [*]. add scalling to the bedgraph construction
 
+170724
+[*]. Automatic UCSC hub setup
 
 Integrate_Expression_Mouse_Hamster_Difference
 1. Figure out how to prevent bombing
@@ -211,9 +252,16 @@ LINKS   = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 COMMAND = COMMAND + INDEX + BOWTIE2 + BW + LINKS + FASTQC
 # ----------------------------------------------------------------------------- #
 if 'peak_calling' in set(config.keys()):
-    MACS    = expand(os.path.join(PATH_PEAK,  "{name}", "{name}_peaks.narrowPeak"),     name=config['peak_calling'].keys())
-    QSORT   = expand(os.path.join(PATH_PEAK,  "{name}", "{name}_qsort.narrowPeak"), name=config['peak_calling'].keys())
-    COMMAND = COMMAND + MACS + QSORT 
+    MACS  = []
+    QSORT = []
+    suffix = 'narrowPeak'
+    for name in config['peak_calling'].keys():
+        suffix = get_macs2_suffix(name, config)
+
+        MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks" + suffix)]
+        QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort" + suffix)]
+
+    COMMAND = COMMAND + MACS + QSORT
 
 # ----------------------------------------------------------------------------- #
 if 'idr' in set(config.keys()):
@@ -226,19 +274,19 @@ if 'hub' in set(config.keys()):
     HUB_NAME = config['hub']['name']
     HUB = [os.path.join(PATH_HUB, HUB_NAME, 'done.txt')]
     BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
-    COMMAND = COMMAND + BB + HUB 
+    COMMAND = COMMAND + BB + HUB
 
 # ----------------------------------------------------------------------------- #
 if 'feature_combination' in set(config.keys()):
     peak_files = []
     if 'idr' in config['feature_combination'].keys():
         peak_files = peak_files + [os.path.join(PATH_IDR,  x, x + '.narrowPeak') for x in config['feature_combination']['idr']]
-        
+
     if 'peaks' in config['feature_combination'].keys():
         peak_files = peak_files + [os.path.join(PATH_PEAK, x, x + '_peaks.narrowPeak') for x in config['feature_combination']['peaks']]
     FEATURE = [os.path.join(PATH_FEATURE,'Feature_Combination.tsv')]
     COMMAND = COMMAND + FEATURE
-        
+
 
 
 
@@ -453,7 +501,7 @@ def get_files_macs(wc):
         chip = [chip]
     chips = [os.path.join('Mapped','Bowtie', i, i + '.sorted.bam') for i in chip]
     paths['ChIP'] = chips
-    
+
     cont = config['peak_calling'][wc.name]['Cont']
     if not cont == None:
         if isinstance(cont,str):
@@ -468,7 +516,7 @@ rule macs2:
     input:
         unpack(get_files_macs)
     output:
-        outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.narrowPeak")
+        outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.{class, narrow|broad}Peak")
     params:
         outpath = os.path.join(PATH_PEAK, "{name}"),
         name = "{name}",
@@ -492,10 +540,10 @@ rule macs2:
         # checks whether the control samples are specified
         samples = ''
         samples = samples + " ".join(['-t'] + input.ChIP)
-        
+
         if hasattr(input, 'Cont'):
             samples = samples + " ".join([' -c'] + input.Cont)
-            
+
         command = " ".join(
         [params.macs2, 'callpeak',
         samples,
@@ -507,11 +555,11 @@ rule macs2:
         shell(command)
 
 # ----------------------------------------------------------------------------- #
-rule sort_narrow_peak:
+rule sort_peak:
     input:
         rules.macs2.output
     output:
-        outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.narrowPeak")
+        outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.{class, narrow|broad}Peak")
     params:
         threads = 1,
         mem = '8G'
@@ -523,7 +571,7 @@ rule sort_narrow_peak:
     shell:"""
         sort -r -k9 -n {input} > {output.outfile}
     """
-    
+
 # ----------------------------------------------------------------------------- #
 def get_chrlen(wc):
     matches = []
@@ -531,10 +579,15 @@ def get_chrlen(wc):
         for filename in fnmatch.filter(filenames, 'chrlen.txt'):
             matches.append(os.path.join(root, filename))
     return(matches[0])
-    
+
+def bedToBigBed_input(wc):
+    suffix = get_macs2_suffix(wc.name, config)
+    infile = os.path.join(PATH_PEAK, wc.name, wc.name + "_peaks." + suffix)
+    return(infile)
+
 rule bedTobigBed:
     input:
-        peaks  = rules.macs2.output,
+        peaks  = bedToBigBed_input,
         chrlen = get_chrlen
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}.bb")
@@ -548,9 +601,9 @@ rule bedTobigBed:
                 output: {output}
         """
     shell:"""
-        {params.bedToBigBed} -type=bed3+7 {input.peaks} {input.chrlen} {output.outfile} 
+        {params.bedToBigBed} -type=bed3+7 {input.peaks} {input.chrlen} {output.outfile}
     """
-        
+
 
 # ----------------------------------------------------------------------------- #
 
@@ -613,7 +666,7 @@ if 'hub' in set(config.keys()):
             """
         script:
             os.path.join(SCRIPT_PATH, 'Make_UCSC_HUB.R')
-            
+
 # ----------------------------------------------------------------------------- #
 if 'feature_combination' in set(config.keys()):
     rule feature_combination:
@@ -636,6 +689,3 @@ if 'feature_combination' in set(config.keys()):
             """
         script:
             os.path.join(SCRIPT_PATH, 'Feature_Combinaton.R')
-
-
-
