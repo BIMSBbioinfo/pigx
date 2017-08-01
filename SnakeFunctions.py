@@ -43,3 +43,13 @@ def join_params(app, app_params, params_set):
     params = " ".join(params)
     return(params)
 
+# ---------------------------------------------------------------------------- #
+# given a sample name extracts whether the sample is broadPeak or narrowPeak
+def get_macs2_suffix(name, config):
+    sample = config['peak_calling'][name]
+    suffix = 'narrowPeak'
+    if 'params' in set(sample.keys()):
+        if 'macs2' in set(sample['params'].keys()):
+            if 'broad' in set(sample['params']['macs2'].keys()):
+                suffix = 'broadPeak'
+    return(suffix)
