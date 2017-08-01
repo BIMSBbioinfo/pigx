@@ -258,8 +258,8 @@ if 'peak_calling' in set(config.keys()):
     for name in config['peak_calling'].keys():
         suffix = get_macs2_suffix(name, config)
 
-        MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks" + suffix)]
-        QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort" + suffix)]
+        MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks." + suffix)]
+        QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort." + suffix)]
 
     COMMAND = COMMAND + MACS + QSORT
 
