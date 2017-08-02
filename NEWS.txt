@@ -1,5 +1,6 @@
 
 # --------------------------------------------------------------------- #
+# DONE
 170801
 [*]. cofigure the pipeline for broad histone data
 [*]. bedToBigBed for broadPeak data
@@ -30,7 +31,7 @@
     - Mapping
     - Fastqc for paired end reads
 
-DONE
+Initial commit
 [*] 0. Make test data
 [*] 1. Variables into config file:
 [*]    - genome path
