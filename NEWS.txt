@@ -1,0 +1,110 @@
+
+# --------------------------------------------------------------------- #
+170801
+[*]. cofigure the pipeline for broad histone data
+[*]. bedToBigBed for broadPeak data
+
+170724
+[*]. Automatic UCSC hub setup
+
+170620
+[*]. add scalling to the bedgraph construction
+
+170615
+[*]. Enable running subsections of the pipeline:
+    IDR and PEAK calling are not obligatory
+
+170614
+[*]. extended the pipeline to accept multiple ChIP/Cont samples for peak calling
+[*].  add support for peak calling without control:
+    peak calling can be run without control samples - useful for ATAC data
+
+172405
+[*]. write checks for the config proper formatting :
+    - ChIP and Cont parameters in peak calling
+    - idr samples
+[*]. Check for params:idr
+[*] Add paired end test data
+[*]. Extent to paired end reads
+    - Testing for paired end reads
+    - Mapping
+    - Fastqc for paired end reads
+
+DONE
+[*] 0. Make test data
+[*] 1. Variables into config file:
+[*]    - genome path
+[*]    - read extension
+[*] 2. Automatic reference generation
+[*] 3. check globbing
+[*] 4. Add peak calling
+[*]. Extract the input file for the fastqs as a config parameter
+[*]. application placeholders in config files
+[*]. Format messages
+[*] Add interactive macs parameters
+[*] Add possible pseudonims for samples
+
+# --------------------------------------------------------------------- #
+# TODO
+## Main
+[#]. enable sample specific parameter deposition - works for macs
+[#]. write tests
+[]. set default app parameters in config
+    - works for macs2
+[]. the pipeline does not work without app params - change config check
+[]. add check for gzipped bowtie reference
+[]. Add samplesheet To yaml file
+[]. write markdown
+        - Sample Specific
+
+        - Comprehensive
+            - basic mapping stats
+            - annotation per genomic category
+            - profiles over TSS and TTS
+            - cumulative profiles over the gene body
+            - peak co-occurence matrix
+            - sample correlation
+            - peakQC
+            - motif discovery
+
+
+
+
+[]. write yaml schema
+    https://github.com/Grokzen/pykwalify,
+    http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
+
+[]. extension for paired end data to be automatically determined from the pairs
+
+[]. make BigWigExtend a streaming function
+
+[]. Tests:
+        - for no control sample
+        - for multiple chip and control samples
+        - add test if control not set in yaml file - check for multiple types of input
+        - check whether IDR test works
+
+[]. Tests for hub
+[]. Check yaml:
+    - hub
+    - feature combination:
+        - keys must be idr and peaks
+    - uniqueness of peak names
+    - check for annotation - gtf file existence
+
+
+
+## Additional
+[]. Add peak QC
+[]. Run multiqc
+[]. Configure the pipeline for differential peak calling
+[]. enable trimming
+[]. rewrite fastqc to go through each individual file
+
+
+[]. Add test genome data (genome subset)
+[]. Set default for genome name if genome specified but genome name is not
+[]. Delete temporary files - bed and bedGraph files
+[]. Sample specific read extension
+
+
