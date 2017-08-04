@@ -21,7 +21,7 @@ FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
-FEATURECOUNTS_DIR = os.path.join(OUTPUT_DIR, 'featureCounts')
+HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
 
 
 FASTQC_EXEC  = SETTINGS['tools']['fastqc']['executable']
@@ -32,16 +32,17 @@ TRIM_GALORE_EXEC = SETTINGS['tools']['trim-galore']['executable']
 TRIM_GALORE_ARGS = SETTINGS['tools']['trim-galore']['args']
 BAMCOVERAGE_EXEC = SETTINGS['tools']['bamCoverage']['executable']
 SAMTOOLS_EXEC    = SETTINGS['tools']['samtools']['executable']
-FEATURECOUNTS_EXEC = SETTINGS['tools']['featureCounts']['executable']
+HTSEQ_COUNT_EXEC = SETTINGS['tools']['htseq-count']['executable']
 
 
 GTF_FILE = SETTINGS['locations']['gtf-file']
+
 ## Load sample sheet
 SAMPLE_SHEET = pd.read_csv("sample_sheet.csv")
 SAMPLES = SAMPLE_SHEET['name']
 
 rule all:
-  input: expand(os.path.join(FEATURECOUNTS_DIR, "{sample}_counts.txt"), sample=SAMPLES)
+  input: expand(os.path.join(HTSEQ_COUNTS_DIR, "{sample}_counts.txt"), sample=SAMPLES)
 # TODO
 # 2. - more counting (featureCounts, HTSeq)
 # 3. - make counts matrix
@@ -102,8 +103,8 @@ rule multiqc:
   log: os.path.join(LOG_DIR, 'multiqc.log')
   shell: "{MULTIQC_EXEC} -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
 
-rule featureCounts:
+rule htseq_count:
   input: rules.star_map.output
-  output: os.path.join(FEATURECOUNTS_DIR, "{sample}_counts.txt")
-  log: os.path.join(LOG_DIR, "featureCounts_{sample}.log")
-  shell: "{FEATURECOUNTS_EXEC} -p -t exon -g gene_id -a {GTF_FILE} -o {output} {input} >> {log} 2>&1"
+  output: os.path.join(HTSEQ_COUNTS_DIR, "{sample}_counts.txt")
+  log: os.path.join(LOG_DIR, "htseq-count_{sample}.log")
+  shell: "htseq-count -f bam -t exon -i gene_id {input} {GTF_FILE} > {output} 2> {log}"

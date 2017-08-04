@@ -18,5 +18,5 @@ tools:
     executable: /home/jronen/beast-centos7-home/miniconda/envs/conda361/bin/bamCoverage
   samtools:
     executable: samtools
-  featureCounts:
-    executable: featureCounts
+  htseq-count:
+    executable: htseq-count
