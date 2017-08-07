@@ -18,9 +18,9 @@
 
 
 # #===== DEFAULT PATHS ===== #
-tablesheet="test_dataset/TableSheet_test.csv"
+tablesheet="test_CElegans/TableSheet_test.csv"
 path2configfile="./config.json"
-path2programsJSON="test_dataset/PROGS.json"
+path2programsJSON="test_CElegans/PROGS.json"
 
 #=========== PARSE PARAMETERS ============#
 
