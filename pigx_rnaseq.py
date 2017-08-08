@@ -107,4 +107,4 @@ rule htseq_count:
   input: rules.star_map.output
   output: os.path.join(HTSEQ_COUNTS_DIR, "{sample}_counts.txt")
   log: os.path.join(LOG_DIR, "htseq-count_{sample}.log")
-  shell: "htseq-count -f bam -t exon -i gene_id {input} {GTF_FILE} > {output} 2> {log}"
+  shell: "htseq-count -f bam -t exon -i gene_id {input} {GTF_FILE} 1> {output} 2>> {log}"
