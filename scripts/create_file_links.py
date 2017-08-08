@@ -92,7 +92,6 @@ def main(argv):
 
           if ( not flist[0].endswith(".gz") ) or ( not flist[1].endswith(".gz") ) :
             print("error: input files must be gzipped. this job will fail. todo: subsequent versions will handle unzipped .fq or .bz2.")
-            linkname = config['SAMPLES'][s]['SampleID']+".fq.gz"
         
           linkname_1 = config['SAMPLES'][s]['SampleID']+"_1.fq.gz"
           linkname_2 = config['SAMPLES'][s]['SampleID']+"_2.fq.gz"
