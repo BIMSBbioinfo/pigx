@@ -200,6 +200,9 @@ def is_fastq(string):
 def fq_suffix(filename):
   return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
 
+def is_zipped(filename):
+  return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
+
 # -------------------------------------------------------------------------------
 def splitext_fqgz(string):
 
