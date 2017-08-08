@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.5
 
 import os, sys, json
-
+from helpers import *
 
 # -------------------------------------------------------------------------------
 def parse_config_args(config_args):
@@ -176,26 +176,6 @@ def createConfigfile(tablesheet, outfile, *args):
                         separators=(",",": "), ensure_ascii=True)
     outfile.write(dumps)
   return(config)
-
-# -------------------------------------------------------------------------------
-def fq_suffix(filename):
-  return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
-
-def is_zipped(filename):
-  return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
-
-# -------------------------------------------------------------------------------
-def splitext_fqgz(string):
-  if is_zipped(string):
-    string, zipext = os.path.splitext(string)
-  else:
-    zipext = ""
-
-  if fq_suffix(string):
-    base, ext = os.path.splitext(string)
-    return (base, ext + zipext)
-  else:
-    print("ERROR: Input files are not fastq files!")
 
 # -------------------------------------------------------------------------------
 # Without the main sentinel, the code would be executed even if the script were imported as a module.
