@@ -205,34 +205,16 @@ def is_zipped(filename):
 
 # -------------------------------------------------------------------------------
 def splitext_fqgz(string):
-
-  if string.endswith(".gz"):
-    ext1   = ".gz"; zipped = True
-    string = string[:-len(ext1)]
-  elif string.endswith(".bz2"):
-    ext1   = ".bz2"; zipped = True
-    string = string[:-len(ext1)]
+  if is_zipped(string):
+    string, zipext = os.path.splitext(string)
   else:
-    zipped = False
+    zipext = ""
 
-  if string.endswith(".fq"):
-    ext2   = ".fq"; fastq = True
-  elif string.endswith(".fastq"):
-    ext2   = ".fastq"; fastq = True
-  elif string.endswith(".fasta"):
-    ext2   = ".fasta"; fastq = True
+  if fq_suffix(string):
+    base, ext = os.path.splitext(string)
+    return (base, ext + zipext)
   else:
-    fastq = False; core = string; ext = ""
-    print("ERROR: Input files are not fastq files!!")
-
-  if fastq:
-    core   = string[:-len(ext2)]
-    if(zipped):
-      ext = ext2 + ext1 
-    else:
-      ext = ext2
-
-  return (core, ext)
+    print("ERROR: Input files are not fastq files!")
 
 # -------------------------------------------------------------------------------
 def uniq_inext(list_units_only_ext):
