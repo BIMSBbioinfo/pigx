@@ -38,11 +38,6 @@ GTOOLBOX        = config["GTOOLBOX"]       #--- where the programs are stored to
 
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
-NICE=config["NICE"]
-     #--- NICE gauges the computational burden, ranging from -19 to +19. 
-     #--- The more "nice" you are, the more you allow other processes to jump ahead of you 
-     #--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
-
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
 FASTQC                         =  GTOOLBOX+config["PROGS"]["FASTQC"]            #--- self-explanatory program names.
@@ -94,6 +89,12 @@ OUTPUT_FILES = [
 ]
 
 
+#--- NICE gauges the computational burden, ranging from -19 to +19.
+#--- The more "nice" you are, the more you allow other processes to jump ahead of you
+#--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
+def nice(cmd):
+    return "nice -" + str(config["NICE"]) + " " + cmd
+
 # ==============================================================================================================
 #
 #                                         BEGIN RULES    
@@ -114,7 +115,7 @@ rule sortbam_se:
     output:
         DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
     shell:
-        "nice -"+str(NICE)+" {SAMTOOLS} sort {input} -o {output}"
+        nice("{SAMTOOLS} sort {input} -o {output}")
 
 rule sortbam_pe:
     input:
@@ -122,7 +123,7 @@ rule sortbam_pe:
     output:
         DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
     shell:
-        "nice -"+str(NICE)+" {SAMTOOLS} sort {input} -o {output}"
+        nice("{SAMTOOLS} sort {input} -o {output}")
 
 # ==========================================================================================
 # deduplicate the bam file:
@@ -139,7 +140,7 @@ rule deduplication_se:
         DIR_deduped+"{sample}_deduplication.log"
     message: """-----------   Deduplicating single-end read alignments ---------------------- """
     shell:
-        "nice -"+str(NICE)+" {SAMTOOLS} rmdup {input}  {output} 2> {log}"
+        nice("{SAMTOOLS} rmdup {input}  {output} 2> {log}")
 # #--------
 rule deduplication_pe:
     input:
@@ -150,7 +151,7 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_deduplication.log"
     message: """-----------   Deduplicating paired-end read alignments ---------------------- """
     shell:
-        "nice -"+str(NICE)+" {SAMTOOLS} fixmate {input}  {output} 2> {log}"
+        nice("{SAMTOOLS} fixmate {input}  {output} 2> {log}")
 
 # ==========================================================================================
 # align and map:
@@ -176,7 +177,7 @@ rule bismark_se:
         DIR_mapped+"/{sample}_bismark_se_mapping.log"
     message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
     shell:
-        "nice -"+str(NICE)+" {BISMARK} {params} {input.fqfile} 2> {log}"
+        nice("{BISMARK} {params} {input.fqfile} 2> {log}")
 
 #--------
 rule bismark_pe:
@@ -201,7 +202,7 @@ rule bismark_pe:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
     shell:
-        "nice -"+str(NICE)+" {BISMARK} {params}  -1 {input.fin1} -2 {input.fin2} 2> {log}"
+        nice("{BISMARK} {params}  -1 {input.fin1} -2 {input.fin2} 2> {log}")
 
 
 # ==========================================================================================
@@ -222,7 +223,7 @@ rule bismark_genome_preparation:
         'bismark_genome_preparation_'+VERSION+'.log'
     message: """ --------  converting {VERSION} Genome into Bisulfite analogue ------- """
     shell:
-        "nice -"+str(NICE)+" {BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}"
+        nice("{BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}")
 
 # ==========================================================================================
 # post-trimming quality control
@@ -240,7 +241,7 @@ rule fastqc_after_trimming_se:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
     shell:
-        "nice -"+str(NICE)+" {FASTQC} {params.outdir} {input} 2> {log}"
+        nice("{FASTQC} {params.outdir} {input} 2> {log}")
 #--------
 rule fastqc_after_trimming_pe:
     input:
@@ -258,7 +259,7 @@ rule fastqc_after_trimming_pe:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
     shell:
-        "nice -"+str(NICE)+" {FASTQC} {params.outdir} {input} 2> {log}"
+        nice("{FASTQC} {params.outdir} {input} 2> {log}")
 
 # ==========================================================================================
 # trim the reads
@@ -279,7 +280,7 @@ rule trimgalore_se:
     message:
        " ---------  Trimming raw single-end read data using {TRIMGALORE} -------  "
     shell:
-       "nice -"+str(NICE)+" {TRIMGALORE} {params} {input} 2> {log}"
+       nice("{TRIMGALORE} {params} {input} 2> {log}")
 
 #-----------------------
 rule trimgalore_pe:
@@ -301,7 +302,7 @@ rule trimgalore_pe:
     message:
         " ---------  Trimming raw paired-end read data using {TRIMGALORE} -------  "
     shell:
-        "nice -"+str(NICE)+" {TRIMGALORE} {params} {input} 2> {log}"
+        nice("{TRIMGALORE} {params} {input} 2> {log}")
 
 # ==========================================================================================
 # raw quality control
@@ -320,5 +321,5 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
         DIR_rawqc+"{sample}_fastqc.log"
     message: """ ----------  Quality checking raw read data with {FASTQC}.  --------------   """
     shell:
-        "nice -"+str(NICE)+" {FASTQC} {params.outdir}  {input} 2> {log}"
+        nice("{FASTQC} {params.outdir}  {input} 2> {log}")
 
