@@ -136,8 +136,6 @@ path_OUT=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])"
 path_IN=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHIN'])" < $path2configfile)
 path_refG=$( python -c "import sys, json; print(json.load(sys.stdin)['GENOMEPATH'])" < $path2configfile)
 
-mkdir -p ${path_OUT}
-mkdir -p ${path_OUT}"path_links"
 mkdir -p ${path_OUT}"path_links/input"
 
 # create links within the output folder that point directly to the 
