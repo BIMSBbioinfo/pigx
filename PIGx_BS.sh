@@ -117,14 +117,10 @@ You can savely ignore this warning, unless changes were made to either:
 If that is the case, please remove ${path2configfile} or use the '-C/--create-config' option,
 to force the recreation of the config file.
 "
-  
-if [ ! -f $path2configfile ]
-  then
-    scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
-  elif $createConfig
-    then
-     scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
-  else    
+
+if [ $createConfig == "true" -o ! -f $path2configfile ]; then
+    python scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
+else
     echo "${warning}"
 fi
  
