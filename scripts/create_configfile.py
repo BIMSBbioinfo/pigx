@@ -197,11 +197,8 @@ def is_fastq(string):
   return result
 
 # -------------------------------------------------------------------------------
-def fq_suffix(string):
-  result = False
-  if (string.endswith(".fq") or string.endswith(".fastq")) or string.endswith(".fasta"):
-    result = True
-  return result
+def fq_suffix(filename):
+  return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
 
 # -------------------------------------------------------------------------------
 def splitext_fqgz(string):
