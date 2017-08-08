@@ -177,25 +177,6 @@ def createConfigfile(tablesheet, outfile, *args):
     outfile.write(dumps)
   return(config)
 
-
-# -------------------------------------------------------------------------------
-def is_fastq(string):
-  result = False
-  if fq_suffix(string):
-    result = True
-  else:
-    if string.endswith(".gz"):
-      suffix = ".gz"
-      zipped = True
-    elif string.endswith(".bz2"):
-      suffix = ".bz2"
-      zipped = True
-    else:
-      zipped = False
-    if zipped:
-      result = fq_suffix(string[:-len(suffix)])
-  return result
-
 # -------------------------------------------------------------------------------
 def fq_suffix(filename):
   return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
@@ -216,15 +197,6 @@ def splitext_fqgz(string):
   else:
     print("ERROR: Input files are not fastq files!")
 
-# -------------------------------------------------------------------------------
-def uniq_inext(list_units_only_ext):
-  ext = list(set(list_units_only_ext))
-  if len(ext)!=1:
-    print("ERROR: Input fastq files have different suffixes!")
-    exit()
-  return(ext)
-  
-  
 # -------------------------------------------------------------------------------
 # Without the main sentinel, the code would be executed even if the script were imported as a module.
 def main(argv):
