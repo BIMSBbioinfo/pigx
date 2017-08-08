@@ -2,39 +2,6 @@
 
 import os, sys, json
 
-
-# -------------------------------------------------------------------------------
-def splitext_fqgz(string):
-
-  if string.endswith(".gz"):
-    ext1   = ".gz"; zipped = True
-    string = string[:-len(ext1)]
-  elif string.endswith(".bz2"):
-    ext1   = ".bz2"; zipped = True
-    string = string[:-len(ext1)]
-  else:
-    zipped = False
-
-  if string.endswith(".fq"):
-    ext2   = ".fq"; fastq = True
-  elif string.endswith(".fastq"):
-    ext2   = ".fastq"; fastq = True
-  elif string.endswith(".fasta"):
-    ext2   = ".fasta"; fastq = True
-  else:
-    fastq = False; core = string; ext = ""
-    print("ERROR: Input file " +string+" is not a fastq file!!")
-
-  if fastq:
-    core   = string[:-len(ext2)]
-    if(zipped):
-      return( core, ext2, ext1)
-    else:
-      return( core, ext2)
-  else:
-    return("INVALID_FILE")
-
-# -------------------------------------------------------------------------------
 def makelink( actual_file, link_location, linkname):
   if not os.path.isfile(actual_file):
     print("ERROR: linking to non-existent file: "+actual_file ); status = -1
