@@ -142,7 +142,7 @@ mkdir -p ${path_OUT}"path_links/input"
 # N.B. Any previously existing links will be kept in place, and no warning will be issued if this is the case. 
 
 # link to reference genome:
-ln -sn ${path_refG} ${path_OUT}"/path_links/refGenome" 2>/dev/null
+ln -sfn ${path_refG} ${path_OUT}"/path_links/refGenome" 2>/dev/null
 
 # create file links:
 scripts/create_file_links.py $path2configfile 
