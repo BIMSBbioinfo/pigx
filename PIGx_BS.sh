@@ -154,7 +154,7 @@ scripts/create_file_links.py $path2configfile
 
 pathout=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])" < $path2configfile)
 
-snakemake -s BSseq_pipeline.py --configfile $path2configfile -d $pathout $snakeparams
+snakemake -s BSseq_pipeline.py --configfile $path2configfile -d $pathout ${snakeparams:-}
 
 
 
