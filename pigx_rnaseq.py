@@ -22,6 +22,7 @@ MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
 HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
+PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
 
 
 FASTQC_EXEC  = SETTINGS['tools']['fastqc']['executable']
@@ -37,17 +38,16 @@ HTSEQ_COUNT_EXEC = SETTINGS['tools']['htseq-count']['executable']
 
 GTF_FILE = SETTINGS['locations']['gtf-file']
 
+
 ## Load sample sheet
 SAMPLE_SHEET = pd.read_csv("sample_sheet.csv")
 SAMPLES = SAMPLE_SHEET['name']
 
-rule all:
-  input: expand(os.path.join(HTSEQ_COUNTS_DIR, "{sample}_counts.txt"), sample=SAMPLES)
-# TODO
-# 2. - more counting (featureCounts, HTSeq)
-# 3. - make counts matrix
-# 4. - integrate Bora's report
+rule star_counts:
+  input: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
 
+# TODO
+# 4. - integrate Bora's report
 
 def trim_galore_input(args):
   sample = args[0]
@@ -108,3 +108,9 @@ rule htseq_count:
   output: os.path.join(HTSEQ_COUNTS_DIR, "{sample}_counts.txt")
   log: os.path.join(LOG_DIR, "htseq-count_{sample}.log")
   shell: "htseq-count -f bam -t exon -i gene_id {input} {GTF_FILE} 1> {output} 2>> {log}"
+
+rule counts_from_STAR:
+  input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab"), sample=SAMPLES)
+  params: mapped_files_dir=MAPPED_READS_DIR
+  output: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
+  script: "scripts/counts_matrix_from_STAR.R"
