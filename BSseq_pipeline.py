@@ -138,7 +138,7 @@ rule deduplication_se:
         sampath="--samtools_path "+SAMTOOLS
     log:
         DIR_deduped+"{sample}_deduplication.log"
-    message: """-----------   Deduplicating single-end read alignments ---------------------- """
+    message: fmt("Deduplicating single-end read alignments")
     shell:
         nice("{SAMTOOLS} rmdup {input}  {output} 2> {log}")
 # #--------
@@ -149,7 +149,7 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
     log:
         DIR_deduped+"{sample}_deduplication.log"
-    message: """-----------   Deduplicating paired-end read alignments ---------------------- """
+    message: fmt("Deduplicating paired-end read alignments")
     shell:
         nice("{SAMTOOLS} fixmate {input}  {output} 2> {log}")
 
@@ -175,7 +175,7 @@ rule bismark_se:
         tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"/{sample}_bismark_se_mapping.log"
-    message: """-------------   Mapping single-end reads to genome {VERSION}. ------------- """
+    message: fmt("Mapping single-end reads to genome {VERSION}.")
     shell:
         nice("{BISMARK} {params} {input.fqfile} 2> {log}")
 
@@ -200,7 +200,7 @@ rule bismark_pe:
         tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
-    message: """-------------   Mapping paired-end reads to genome {VERSION}. ------------- """
+    message: fmt("Mapping paired-end reads to genome {VERSION}.")
     shell:
         nice("{BISMARK} {params}  -1 {input.fin1} -2 {input.fin2} 2> {log}")
 
@@ -221,7 +221,7 @@ rule bismark_genome_preparation:
         verbose = "--verbose "
     log:
         'bismark_genome_preparation_'+VERSION+'.log'
-    message: """ --------  converting {VERSION} Genome into Bisulfite analogue ------- """
+    message: fmt("converting {VERSION} Genome into Bisulfite analogue")
     shell:
         nice("{BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}")
 
@@ -239,7 +239,7 @@ rule fastqc_after_trimming_se:
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-    message: """ ------------  Quality checking trimmmed single-end data with Fastqc ------------- """
+    message: fmt("Quality checking trimmmed single-end data with Fastqc")
     shell:
         nice("{FASTQC} {params.outdir} {input} 2> {log}")
 #--------
@@ -257,7 +257,7 @@ rule fastqc_after_trimming_pe:
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-    message: """ ------------  Quality checking trimmmed paired-end data with Fastqc ------------- """
+    message: fmt("Quality checking trimmmed paired-end data with Fastqc")
     shell:
         nice("{FASTQC} {params.outdir} {input} 2> {log}")
 
@@ -277,8 +277,7 @@ rule trimgalore_se:
        cutadapt = "--path_to_cutadapt "+CUTADAPT,
     log:
        DIR_trimmed+"{sample}.trimgalore.log"
-    message:
-       " ---------  Trimming raw single-end read data using {TRIMGALORE} -------  "
+    message: fmt("Trimming raw single-end read data using {TRIMGALORE}")
     shell:
        nice("{TRIMGALORE} {params} {input} 2> {log}")
 
@@ -300,7 +299,7 @@ rule trimgalore_pe:
     log:
         DIR_trimmed+"{sample}.trimgalore.log"
     message:
-        " ---------  Trimming raw paired-end read data using {TRIMGALORE} -------  "
+        fmt("Trimming raw paired-end read data using {TRIMGALORE}")
     shell:
         nice("{TRIMGALORE} {params} {input} 2> {log}")
 
@@ -319,7 +318,7 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
 
     log:
         DIR_rawqc+"{sample}_fastqc.log"
-    message: """ ----------  Quality checking raw read data with {FASTQC}.  --------------   """
+    message: fmt("Quality checking raw read data with {FASTQC}.")
     shell:
         nice("{FASTQC} {params.outdir}  {input} 2> {log}")
 

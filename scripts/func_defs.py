@@ -66,7 +66,6 @@ def Annot(PATH, files, assembly):
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_annotation.nb.html"] #---- paired end
 
-        
-        
-        
-
+def fmt(message):
+    """Format the MESSAGE string."""
+    return "----------  " + message + "  ----------"
