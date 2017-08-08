@@ -78,49 +78,24 @@ def main(argv):
 
         # -------- single-end case --------------
         if len(flist) == 1: # Single-end
-          filefrags = splitext_fqgz(flist[0])
 
-          if len(filefrags)==2:
-            linkname = filefrags[0]+".fq"
-            print("ERROR: input files must be gzipped. this job will fail. TODO: subsequent versions will handle this case")
-          elif len(filefrags)==3:
-            linkname = filefrags[0]+".fq"+filefrags[2]
-          else:
-            print("ERROR: non-sensible filename fragment list"); linkname="INVALID_TARGET"
+          if not flist[0].endswith(".gz"):
+            print("error: input files must be gzipped. this job will fail. todo: subsequent versions will handle unzipped .fq or .bz2.")
+
+          linkname = config['SAMPLES'][s]['SampleID']+".fq.gz"
 
           #--- now make the single link to this one file: 
           makelink(path_SOURCE+flist[0], path_OUT+"path_links/input/", linkname )
 
         # -------- paired-end case --------------
         elif len(flist) == 2:
-          filefrags_1 = splitext_fqgz(flist[0])
-          filefrags_2 = splitext_fqgz(flist[1])
 
-          if (filefrags_1[1]!=filefrags_2[1]):
-            print("WARNING: file names of paired files are inconsistent")
-          if( len(filefrags_1)!=len(filefrags_2) ): 
-            print("ERROR: zipped status of paired files is inconsistent. This job will fail.")
+          if ( not flist[0].endswith(".gz") ) or ( not flist[1].endswith(".gz") ) :
+            print("error: input files must be gzipped. this job will fail. todo: subsequent versions will handle unzipped .fq or .bz2.")
+        
+          linkname_1 = config['SAMPLES'][s]['SampleID']+"_1.fq.gz"
+          linkname_2 = config['SAMPLES'][s]['SampleID']+"_2.fq.gz"
           
-          filefrags_1 = splitext_fqgz(flist[0])
-          filefrags_2 = splitext_fqgz(flist[1])
-           
-          linkname_1 = filefrags_1[0]
-          linkname_2 = filefrags_2[0]
-
-          linkname_1 = linkname_1.replace(".read","_"); linkname_1 = linkname_1.replace("read","_") +".fq" 
-          linkname_2 = linkname_2.replace(".read","_"); linkname_2 = linkname_2.replace("read","_") +".fq"
-          # TODO: remove any potential preceeding characters (e.g. "-", "+", etc.) directly preceeding 1 or 2 in these stringnames
-
-          #--- add the "zipped" extension, if necessary
-          if len(filefrags_1)==3:
-            linkname_1=linkname_1+filefrags_1[2]
-          else:
-            print("ERROR: input files must be gzipped. this job will fail. TODO: pending update.")
-          if len(filefrags_2)==3:
-            linkname_2=linkname_2+filefrags_2[2]
-          else:
-            print("ERROR: input files must be gzipped. this job will fail. TODO: pending update.")
- 
           makelink(path_SOURCE+flist[0], path_OUT+"/path_links/input/" , linkname_1)
           makelink(path_SOURCE+flist[1], path_OUT+"/path_links/input/" , linkname_2)
 
