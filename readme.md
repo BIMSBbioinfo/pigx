@@ -42,8 +42,16 @@
 
 	snakemake -s pigx_rnaseq.py
 
+## Example
+
+- the `sample_sheet.csv` file here points to some data on `/data/akalin/`
+  - 3 replicates of mRNA from human (UHR)
+  - 3 replicates of mRNA from human brain (HBR)
+  - only chromosome 22 and ERCC spike-ins
+
 ## To do
 
+- configure script for `settings.yaml`
 - have pipeline make reference genome
 - fix gene sets for DE report
 - add support for single end reads
