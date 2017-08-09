@@ -126,11 +126,14 @@ rule translate_sample_sheet_for_report:
         write.table(s, "colData.tsv", sep="\t")
       """)
 
+CASE_SAMPLE_GROUPS = ','.join(SAMPLE_SHEET[SAMPLE_SHEET['comparison_factor']==1]['sample_type'].unique())
+CASE_CONTROL_GROUPS = ','.join(SAMPLE_SHEET[SAMPLE_SHEET['comparison_factor']!=1]['sample_type'].unique())
 rule report:
   input:
     counts=os.path.abspath(str(rules.counts_from_STAR.output)),
     coldata=os.path.abspath(str(rules.translate_sample_sheet_for_report.output))
   params:
     outdir=os.path.join(OUTPUT_DIR, "report")
+  log: os.path.join(LOG_DIR, "report.log")
   output: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
-  shell: "{RSCRIPT_EXEC} report/runDeseqReport.R --reportFile=report/deseqReport.Rmd --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='HBR' --controlSampleGroups='UHR' --workdir={params.outdir} --geneSetsFolder=''"
+  shell: "{RSCRIPT_EXEC} report/runDeseqReport.R --reportFile=report/deseqReport.Rmd --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{CASE_SAMPLE_GROUPS}' --controlSampleGroups='{CASE_CONTROL_GROUPS}' --workdir={params.outdir} --geneSetsFolder='' >> {log} 2>&1"
