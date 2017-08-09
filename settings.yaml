@@ -20,3 +20,6 @@ tools:
     executable: samtools
   htseq-count:
     executable: htseq-count
+  R:
+    Rscript: ~/beast-centos7-home/Rs/R-current/bin/Rscript
+    executable: ~/beast-centos7-home/Rs/R-current/bin/R

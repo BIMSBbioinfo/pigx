@@ -15,4 +15,4 @@ for(i in 1:length(sample_names)){
 colnames(readsmatrix) = sample_names
 rownames(readsmatrix) = genes
 
-write.table(readsmatrix, snakemake@output[[1]])
+write.table(readsmatrix, snakemake@output[[1]], sep='\t')

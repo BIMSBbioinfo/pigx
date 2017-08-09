@@ -34,6 +34,7 @@ TRIM_GALORE_ARGS = SETTINGS['tools']['trim-galore']['args']
 BAMCOVERAGE_EXEC = SETTINGS['tools']['bamCoverage']['executable']
 SAMTOOLS_EXEC    = SETTINGS['tools']['samtools']['executable']
 HTSEQ_COUNT_EXEC = SETTINGS['tools']['htseq-count']['executable']
+RSCRIPT_EXEC     = SETTINGS['tools']['R']['Rscript']
 
 
 GTF_FILE = SETTINGS['locations']['gtf-file']
@@ -43,11 +44,8 @@ GTF_FILE = SETTINGS['locations']['gtf-file']
 SAMPLE_SHEET = pd.read_csv("sample_sheet.csv")
 SAMPLES = SAMPLE_SHEET['name']
 
-rule star_counts:
-  input: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
-
-# TODO
-# 4. - integrate Bora's report
+rule all:
+  input: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
 
 def trim_galore_input(args):
   sample = args[0]
@@ -114,3 +112,25 @@ rule counts_from_STAR:
   params: mapped_files_dir=MAPPED_READS_DIR
   output: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
   script: "scripts/counts_matrix_from_STAR.R"
+
+from snakemake.utils import R
+rule translate_sample_sheet_for_report:
+  input: "sample_sheet.csv"
+  output: "colData.tsv"
+  run:
+      R("""
+        s = read.csv("sample_sheet.csv")
+        rownames(s) = s$name
+        s$group = s$sample_type
+        s = s[colnames(s)[-grep("name|reads", colnames(s))]]
+        write.table(s, "colData.tsv", sep="\t")
+      """)
+
+rule report:
+  input:
+    counts=os.path.abspath(str(rules.counts_from_STAR.output)),
+    coldata=os.path.abspath(str(rules.translate_sample_sheet_for_report.output))
+  params:
+    outdir=os.path.join(OUTPUT_DIR, "report")
+  output: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
+  shell: "{RSCRIPT_EXEC} report/runDeseqReport.R --reportFile=report/deseqReport.Rmd --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='HBR' --controlSampleGroups='UHR' --workdir={params.outdir} --geneSetsFolder=''"

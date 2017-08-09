@@ -247,6 +247,7 @@ volcanoPlot
 
 Finding collectively up/down regulated list of genes 
 ```{r run_GAGE}
+geneSetsFolder <- NULL
 if(!is.null(geneSetsFolder)) {
   geneSetFiles = list.files(path = geneSetsFolder, pattern = '*.txt', full.names = T)
   geneSetList = sapply(geneSetFiles, function(file) scan(file, what = "character"), USE.NAMES = T)
