@@ -231,7 +231,7 @@ render2multireport <- function(final_output,
   
 
   
-  file.copy(from = paste0(finalreportdir,"/",bookdown:::with_ext(basename(final_output),".html")),
+  file.link(from = paste0(finalreportdir,"/",bookdown:::with_ext(basename(final_output),".html")),
               to = final_output)
   
   if(clean) unlink(finalreportdir,recursive = TRUE)
