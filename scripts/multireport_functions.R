@@ -90,7 +90,7 @@ render2multireport <- function(final_output,
                                index=NULL,
                                references=NULL,
                                sessioninfo=NULL,
-                               workdir=NULL,
+                               self_contained=TRUE,
                                clean=FALSE) {
   
   
@@ -217,7 +217,7 @@ render2multireport <- function(final_output,
       theme = 'lumen',
       number_sections = FALSE,
       code_folding = "hide",
-      self_contained = TRUE,
+      self_contained = self_contained,
       includes = list(in_header = "pigx_bsseq_logo.html"),
       bibliography= "reports.bib"
     ),
