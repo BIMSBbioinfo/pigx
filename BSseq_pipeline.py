@@ -155,6 +155,7 @@ rule sortbam_se:
         DIR_deduped+"{sample}_se_bt2.deduped.bam"
     output:
         DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
+    message: fmt("Sorting bam file {input}")
     shell:
         nice("{SAMTOOLS} sort {input} -o {output}")
 #-----------------------
@@ -163,6 +164,7 @@ rule sortbam_pe:
         DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
     output:
         DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
+    message: fmt("Sorting bam file {input}")
     shell:
         nice("{SAMTOOLS} sort {input} -o {output}")
 
@@ -179,7 +181,7 @@ rule deduplication_se:
         sampath="--samtools_path "+SAMTOOLS
     log:
         DIR_deduped+"{sample}_deduplication.log"
-    message: fmt("Deduplicating single-end read alignments")
+    message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
         nice("{SAMTOOLS} rmdup {input}  {output} 2> {log}")
 #-----------------------
@@ -190,7 +192,7 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
     log:
         DIR_deduped+"{sample}_deduplication.log"
-    message: fmt("Deduplicating paired-end read alignments")
+    message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
         nice("{SAMTOOLS} fixmate {input}  {output} 2> {log}")
 
@@ -281,7 +283,7 @@ rule fastqc_after_trimming_se:
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-    message: fmt("Quality checking trimmmed single-end data with Fastqc")
+    message: fmt("Quality checking trimmmed single-end data from {input}")
     shell:
         nice("{FASTQC} {params.outdir} {input} 2> {log}")
 #--------
@@ -299,7 +301,7 @@ rule fastqc_after_trimming_pe:
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-    message: fmt("Quality checking trimmmed paired-end data with Fastqc")
+    message: fmt("Quality checking trimmmed paired-end data from {input}")
     shell:
         nice("{FASTQC} {params.outdir} {input} 2> {log}")
 
@@ -319,7 +321,7 @@ rule trimgalore_se:
        cutadapt = "--path_to_cutadapt "+CUTADAPT,
     log:
        DIR_trimmed+"{sample}.trimgalore.log"
-    message: fmt("Trimming raw single-end read data using {TRIMGALORE}")
+    message: fmt("Trimming raw single-end read data from {input}")
     shell:
        nice("{TRIMGALORE} {params} {input} 2> {log}")
 
@@ -341,7 +343,7 @@ rule trimgalore_pe:
     log:
         DIR_trimmed+"{sample}.trimgalore.log"
     message:
-        fmt("Trimming raw paired-end read data using {TRIMGALORE}")
+        fmt("Trimming raw paired-end read data from {input}")
     shell:
         nice("{TRIMGALORE} {params} {input} 2> {log}")
 
@@ -359,7 +361,7 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         outdir = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
     log:
         DIR_rawqc+"{sample}_fastqc.log"
-    message: fmt("Quality checking raw read data with {FASTQC}.")
+    message: fmt("Quality checking raw read data from {input}")
     shell:
         nice("{FASTQC} {params.outdir}  {input} 2> {log}")
 
