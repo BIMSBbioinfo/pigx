@@ -115,7 +115,7 @@ render2multireport <- function(final_output,
   if(!is.null(index)) {
     
     render_list = readRDS(render_args)
-    render_list$params=list(wdir = workdir)
+    #render_list$params=list(wdir = workdir)
     saveRDS(
       render_list,
       render_args
@@ -255,7 +255,7 @@ cat(paste(
 
 render2multireport(final_output = normalizePath(snakemake@output[["finalreport"]]),
                    finalreportdir = normalizePath(snakemake@params[["finalreportdir"]]),
-                   workdir = normalizePath(snakemake@params[["workdir"]]),
+                   #workdir = normalizePath(snakemake@params[["workdir"]]),
                    index = snakemake@input[["index"]],
                    references = snakemake@input[["references"]],
                    sessioninfo = snakemake@input[["sessioninfo"]])

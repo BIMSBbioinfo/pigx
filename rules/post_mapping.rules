@@ -237,8 +237,8 @@ rule final_report:
     output: 
         finalreport = FINALDIR + "{prefix}.sorted_{assembly}_final.nb.html",
     params:
-        finalreportdir = WORKDIR + FINALDIR + "{prefix}/",
-        workdir = WORKDIR#,
+        finalreportdir = WORKDIR + FINALDIR + "{prefix}/"#,
+      #  workdir = WORKDIR#,
         # fastq_name = lambda wildcards: get_fastq_name(wildcards.prefix)#,
         # rules.fastqc_raw.output
     log:
