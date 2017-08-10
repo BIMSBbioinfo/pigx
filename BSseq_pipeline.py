@@ -61,6 +61,10 @@ SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
 
 
 OUTPUT_FILES = [
+		#               ==== one-time rule: genome-prep =======
+		# GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
+        	# GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
+ 
                 #               ==== rule 01 raw QC    =========
                 [ expand (list_files_rawQC(DIR_rawqc, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"] )  ) for sample in config["SAMPLES"]  ],
 
@@ -95,6 +99,14 @@ OUTPUT_FILES = [
 #--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
 def nice(cmd):
     return "nice -" + str(config["NICE"]) + " " + cmd
+
+#--- In case you want to debug the code with interactive commands:
+# import IPython;
+# IPython.embed()
+# print("Executing job to produce the following files: ")
+# print("OUTPUT_FILES=")
+# for x in OUTPUT_FILES: print( x)
+#-------
 
 # ==============================================================================================================
 #
