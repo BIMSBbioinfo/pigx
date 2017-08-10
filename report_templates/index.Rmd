@@ -1,7 +1,7 @@
 ---
 title: "PiGx: BS-seq"
 output: 
-  html_notebook:
+  html_notebook: 
     toc:        TRUE
     toc_float:  TRUE
     theme:      "lumen"
@@ -12,52 +12,17 @@ output:
       in_header: pigx_bsseq_logo.html
 date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
-# biblio-style: apalike
 link-citations: yes
-params:
-  wdir:       "/Users/agosdsc/Development/Snakemake/git/pigx_bsseq/tmp/"
-  fastq_name: "output2K_1"
-#  qc_path: "/Users/agosdsc/Development/Snakemake/git/pigx_bsseq/tmp/out2/01_rawqc/output2K_1_fastqc.html"
 ---
-
-<!-- ```{r eval_params, echo=FALSE} -->
-
-<!-- qc_path     <- params$qc_path -->
-<!-- ``` -->
 
 # Final Report {-}
 
 PIGx is a data processing pipeline for data of bisulfite experiments, that automates the analysis of raw single-end or paired-end fastq reads. It includes quality control, trimming and alignment, while further providing post mapping analysis, as differential methylation detection, methylation segmentation and annotation of detected regions. 
 It was first developed by the Akalin group at MDC in Berlin in 2017.
-  
-<!-- This setion needs to be updated to include links to the qc-reports or maybe to multiqc-report -->
 
-<!-- ## Quality Control {-} -->
+The FastQC reports are located here: `r paste0(getwd(),"/01_rawqc")`
 
-The FastQC reports are located here: `r paste0(params$wdir,"/01_",params$fastq_name)` 
-
-<!-- # ```{r print_params, echo=TRUE, results="asis"} -->
-<!-- #  -->
-<!-- # paramsDesc <- c("Input file", -->
-<!-- #                 "Genome Assembly", -->
-<!-- #                 "RefSeq Genes") -->
-<!-- #  -->
-<!-- # paramsValues <- c(params$inBed, -->
-<!-- #                   params$assembly, -->
-<!-- #                   params$refseqfile) -->
-<!-- #  -->
-<!-- #  -->
-<!-- #  -->
-<!-- # inputParams <- data.frame(Parameters = paramsDesc, -->
-<!-- #                           Values = paramsValues, -->
-<!-- #                           stringsAsFactors = FALSE) -->
-<!-- # #params -->
-<!-- # datatable(inputParams,options = list(dom = 't'),rownames = FALSE) -->
-<!-- # # knitr::kable(inputParams) -->
-<!-- #  -->
-<!-- #  -->
-<!-- # ``` -->
 
 
 <!-- Document final rule -->
-------------------------------------
+

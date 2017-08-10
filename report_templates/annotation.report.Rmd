@@ -1,25 +1,13 @@
 ---
 title: 'PiGx: BS-seq'
 date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
-output:
-  html_notebook:
-    code_folding: hide
-    includes:
-      in_header: pigx_bsseq_logo.html
-    number_sections: no
-    self_contained: yes
-    theme: lumen
-    toc: yes
-    toc_float: yes
-output_dir: /Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation_rule/
-output_file: sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.annotation.nb.html
-params:
-  assembly: ce10
-  inBed: /Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/test1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.bed
-  refseqfile: /Users/agosdsc/Development/Snakemake/pigx_bsseq/refseq.genes.ce10.bed
-  sessioninfo: TRUE #/Users/agosdsc/Development/Snakemake/pigx_bsseq/session.rds
-  references: TRUE
 bibliography: reports.bib
+params:
+  assembly: ''
+  inBed: '' 
+  refseqfile: '' 
+  sessioninfo: TRUE
+  references: TRUE
 ---
 
 

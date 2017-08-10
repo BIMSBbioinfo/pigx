@@ -1,29 +1,21 @@
 ---
 title: "PiGx: BS-seq"
-output: 
-  html_notebook:
-    toc:        TRUE
-    toc_float:  TRUE
-    theme:      "lumen"
-    number_sections: FALSE
-    code_folding: "hide"
-    self_contained: TRUE
-    includes:
-      in_header: pigx_bsseq_logo.html
-# output_dir: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/"
-# output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.html"
 date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 params:
-  rdata: "methylation_calls/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_methylRaw.RData"
-  grdata: "segmentation/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_meth_segments_gr.RData"
-  outBed:   "segmentation/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_meth_segments.bed"
+  rdata: ''
+  grdata: ''
+  outBed: ''
   sessioninfo: TRUE
   references: TRUE
 ---
 
-```{r eval_params, echo=FALSE}
+```{r}
+save.image(file = "my.rdata")
+```
 
+
+```{r eval_params, echo=FALSE}
 input     <- params$rdata
 output    <- params$outBed
 grFile    <- params$grdata    

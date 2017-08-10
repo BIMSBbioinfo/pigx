@@ -1,25 +1,13 @@
 ---
 title: "PiGx: BS-seq"
-output: 
-  html_notebook:
-    toc:        TRUE
-    toc_float:  TRUE
-    theme:      "lumen"
-    number_sections: FALSE
-    code_folding: "hide"
-    self_contained: TRUE
-    includes:
-      in_header: pigx_bsseq_logo.html
-output_dir: "methylation_calls/"
-output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.meth_calls.html"
 date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 params:
-  inBam:    ""#../test_dataset/sample_bam_files/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.bam"
-  assembly: "ce10"
+  inBam:    '' 
+  assembly: ''
   mincov:   10
   minqual:  20
-  rdata:    "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_methylRaw.RData"
+  rdata:    ''
   sessioninfo: TRUE
   references: TRUE
 ---
