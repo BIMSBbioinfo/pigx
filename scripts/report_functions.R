@@ -9,17 +9,15 @@ render2Markdown <- function(reportFile,
                             report.params=NULL)
 {
   
-  
-  
   output_format = rmarkdown::all_output_formats(reportFile, 'UTF-8')
   
-  dir.create(finalReportDir,recursive = FALSE)
+  if(!dir.exists(finalReportDir)) dir.create(finalReportDir,recursive = FALSE)
   
   if(is.null(report.params)) report.params <- list()
-  
+
   ## render single report
   message("render single report")
-  
+
   rmarkdown::render(
     input = reportFile,
     output_dir = outDir,
