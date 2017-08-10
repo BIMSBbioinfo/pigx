@@ -20,7 +20,7 @@ h_stack="128m"
 
 [[ SAMPLES ]]
 Read1,Read2,SampleID,ReadType,Treatment
-PEtest_strand-A.fq.gz,PEtest_strand-A.fq.gz,PEsample_test,WGBS,A
+PEtest_strand-A.fq.gz,PEtest_strand-B.fq.gz,PEsample_test,WGBS,A
 SEtest.fq.gz,,SEsample_test,WGBS,B
 
 
