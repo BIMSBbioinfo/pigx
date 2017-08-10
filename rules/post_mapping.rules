@@ -130,7 +130,7 @@ rule bam_methCall:
         "   rdata     : {output.rdatafile}" + "\n" 
         "   methCalls : {output.callFile}"
     script:
-        SCRIPTDIR + "new_report_functions.R"  
+        SCRIPTDIR + "report_functions.R"  
 
 
 
@@ -161,7 +161,7 @@ rule methseg:
         "   bedfile   : {output.bedfile}" +"\n"
 
     script:
-        SCRIPTDIR + "new_report_functions.R" 
+        SCRIPTDIR + "report_functions.R" 
 
 
 ## Aquisition of gene features
@@ -201,7 +201,7 @@ rule methseg_annotation:
         "Generating:" + "\n"
         "   report    : {output.report}"
     script:
-        SCRIPTDIR + "new_report_functions.R"   
+        SCRIPTDIR + "report_functions.R"   
 
 
 
