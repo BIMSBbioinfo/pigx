@@ -374,5 +374,4 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         DIR_rawqc+"{sample}_fastqc.log"
     message: fmt("Quality checking raw read data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir}  {input} 2> {log}")
-
+        nice("{FASTQC} {params}  {input} 2> {log}")
