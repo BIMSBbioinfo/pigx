@@ -21,6 +21,7 @@ include   : "./scripts/func_defs.py"
 
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
 
+DIR_xmethed='07_xmethed/'
 DIR_sorted='06_sorted/'
 DIR_deduped='05_deduped/'
 DIR_mapped='04_mapped/'
@@ -81,6 +82,9 @@ OUTPUT_FILES = [
                 #               ==== rule 06 sorting ======
                 [ expand ( list_files_sortbam(DIR_sorted, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
                 
+                #               ====rule 07 extract_methylation (if needed) ======
+                # [ expand ( list_files_xmeth( DIR_xmethed, config["SAMPLES"][sampleID]["fastq_name"] )  ) for sampleID in config["SAMPLES"]  ],
+
                 # ==================  FINAL REPORT =========================
                 # TODO: This needs to be editted once we determine what final reports we want to export!
 		#            [ expand ( Annot(DIR_annot, config["SAMPLES"][sample]["files"], VERSION )) for sample in config["SAMPLES"]  ]
@@ -103,6 +107,45 @@ def nice(cmd):
 rule all:
     input:
         OUTPUT_FILES
+
+# ==========================================================================================
+# extract methylation information from sorted bam file 
+
+rule  bismark_se_methex:
+    input:
+        DIR_deduped+"{sample}_se_bt2.deduped.bam"
+    output:
+        expand(DIR_xmethed+"{{sample}}_se_bt2.deduped.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
+    params:
+        se = "--single-end",
+        gz = "--gzip",
+        cReport = "--cytosine_report",
+        bg = "--bedgraph",
+        genomeFolder = "--genome_folder " + GENOMEPATH,
+        outdir = "--output "+DIR_xmethed+""
+    log: DIR_xmethed+"{sample}_bismark_methylation_extraction.log"
+    message: """--------------  Extracting  Methylation Information from {input}  --------------- \n"""
+    shell:
+        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} 2> {log}")
+#-----------------------
+rule  bismark_pe_methex:
+    input:
+        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
+    output:
+        expand(DIR_xmethed+"{{sample}}_1_val_1_bt2.deduped.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
+    params:
+        pe = "--paired-end",
+        gz = "--gzip",
+        cReport = "--cytosine_report",
+        bg = "--bedgraph",
+
+        genomeFolder = "--genome_folder " + GENOMEPATH,
+        outdir = "--output "+DIR_xmethed+""
+    log: DIR_xmethed+"{sample}_bismark_methylation_extraction.log"
+    message: """--------------  Extracting  Methylation Information from  {input}  --------------- \n"""
+    shell:
+        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} 2> {log}")
+
 
 # ==========================================================================================
 # sort the bam file:
