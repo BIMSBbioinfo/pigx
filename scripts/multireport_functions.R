@@ -118,7 +118,7 @@ render2multireport <- function(final_output,
     render_args = tempfile('render', tmpdir = finalreportdir, '.rds')
     on.exit(unlink(render_args), add = TRUE)
     saveRDS(
-      list(output_format = "rmarkdown::html_document",
+      list(output_format = "rmarkdown::html_fragment",
            intermediates_dir = finalreportdir, 
            quiet = TRUE,
            clean = FALSE),
