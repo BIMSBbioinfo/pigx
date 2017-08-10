@@ -22,8 +22,8 @@ include   : "./scripts/func_defs.py"
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
 
 DIR_sorted='06_sorted/'
-DIR_mapped='04_mapped/'
 DIR_deduped='05_deduped/'
+DIR_mapped='04_mapped/'
 DIR_posttrim_QC='03_posttrim_QC/'
 DIR_trimmed='02_trimmed/'
 DIR_rawqc='01_rawqc/'
@@ -32,9 +32,9 @@ DIR_annot = 'annotation/'
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = "path_links/input/"      #--- location of the data files to be imported
-GENOMEPATH      = "path_links/refGenome/"     #--- where the reference genome being mapped to is stored
-GTOOLBOX        = config["GTOOLBOX"]       #--- where the programs are stored to carry out the necessary operations
+PATHIN          = "path_links/input/"       #--- location of the data files to be imported --shell script creates symbolic link. 
+GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
+GTOOLBOX        = config["GTOOLBOX"]        #--- where the programs are stored to carry out the necessary operations
 
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
@@ -85,9 +85,7 @@ OUTPUT_FILES = [
                 # TODO: This needs to be editted once we determine what final reports we want to export!
 		#            [ expand ( Annot(DIR_annot, config["SAMPLES"][sample]["files"], VERSION )) for sample in config["SAMPLES"]  ]
                 
-
-]
-
+               ]
 
 #--- NICE gauges the computational burden, ranging from -19 to +19.
 #--- The more "nice" you are, the more you allow other processes to jump ahead of you
@@ -116,7 +114,7 @@ rule sortbam_se:
         DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
     shell:
         nice("{SAMTOOLS} sort {input} -o {output}")
-
+#-----------------------
 rule sortbam_pe:
     input:
         DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
@@ -141,7 +139,7 @@ rule deduplication_se:
     message: fmt("Deduplicating single-end read alignments")
     shell:
         nice("{SAMTOOLS} rmdup {input}  {output} 2> {log}")
-# #--------
+#-----------------------
 rule deduplication_pe:
     input:
         DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam"
@@ -175,11 +173,12 @@ rule bismark_se:
         tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"/{sample}_bismark_se_mapping.log"
-    message: fmt("Mapping single-end reads to genome {VERSION}.")
+    message: fmt("Mapping single-end reads to genome {VERSION}")
     shell:
         nice("{BISMARK} {params} {input.fqfile} 2> {log}")
 
-#--------
+#-----------------------
+
 rule bismark_pe:
     input:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
@@ -221,7 +220,7 @@ rule bismark_genome_preparation:
         verbose = "--verbose "
     log:
         'bismark_genome_preparation_'+VERSION+'.log'
-    message: fmt("converting {VERSION} Genome into Bisulfite analogue")
+    message: fmt("Converting {VERSION} Genome into Bisulfite analogue")
     shell:
         nice("{BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}")
 
@@ -306,7 +305,7 @@ rule trimgalore_pe:
 # ==========================================================================================
 # raw quality control
 
-rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
+rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
     input:
         PATHIN+"{sample}.fq.gz"
     output:
@@ -315,7 +314,6 @@ rule fastqc_raw: #----only need one: covers BOTH PE and SE cases.
     params:
         fastqc_args = config.get("fastqc_args", ""),
         outdir = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
-
     log:
         DIR_rawqc+"{sample}_fastqc.log"
     message: fmt("Quality checking raw read data with {FASTQC}.")

@@ -42,7 +42,6 @@ def list_files_dedupe(PATH, files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-
 def list_files_sortbam(PATH, files, sampleID):
     if len(files) == 1:
         return [PATH+sampleID+"_se_bt2.deduped.sorted.bam"] #---- single end

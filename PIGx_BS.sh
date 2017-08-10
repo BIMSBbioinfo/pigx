@@ -128,8 +128,8 @@ fi
 #======================================================================================
 #----------  NOW CREATE SYMBOLIC LINKS TO THE INPUTS AND REFERENCE GENOME -------------
 
-path_OUT=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])" < $path2configfile)
-path_IN=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHIN'])" < $path2configfile)
+path_OUT=$(  python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])" < $path2configfile)
+path_IN=$(   python -c "import sys, json; print(json.load(sys.stdin)['PATHIN'])" < $path2configfile)
 path_refG=$( python -c "import sys, json; print(json.load(sys.stdin)['GENOMEPATH'])" < $path2configfile)
 
 mkdir -p ${path_OUT}"path_links/input"
@@ -144,6 +144,7 @@ ln -sfn ${path_refG} ${path_OUT}"/path_links/refGenome" 2>/dev/null
 
 # create file links:
 python scripts/create_file_links.py $path2configfile
+
 
 
 #========================================================================================
