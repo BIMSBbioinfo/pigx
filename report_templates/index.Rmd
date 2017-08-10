@@ -26,3 +26,4 @@ The FastQC reports are located here: `r paste0(getwd(),"/01_rawqc")`
 
 <!-- Document final rule -->
 
+********

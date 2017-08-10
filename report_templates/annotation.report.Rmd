@@ -218,7 +218,7 @@ saveRDS(sess,file = session_file)
 
 `r if(params$references) {"### References"}`
 
-<!-- Document final rule -->
-------------------------------------
+<!-- Document final ruler -->
+********
 
 
