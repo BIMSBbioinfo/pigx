@@ -86,7 +86,7 @@ OUTPUT_FILES = [
 
                 # ==================  FINAL REPORT =========================
                 # TODO: This needs to be editted once we determine what final reports we want to export!
-		#            [ expand ( Annot(DIR_annot, config["SAMPLES"][sample]["files"], VERSION )) for sample in config["SAMPLES"]  ]
+		[ expand ( Annot(DIR_annot, config["SAMPLES"][sample]["files"], VERSION, config["SAMPLES"][sample]["SampleID"] ) ) for sample in config["SAMPLES"]  ]
                 
                ]
 
