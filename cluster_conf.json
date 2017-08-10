@@ -1,0 +1,37 @@
+{
+    "__default__":
+    {
+        "nthreads":1,
+        "MEM":"8G",
+        "q":"all",
+        "h_stack":"128m"
+    },
+    "bismark_se":
+    {
+        "nthreads":6,
+        "MEM":"19G",
+        "q":"all",
+        "h_stack":"128m"
+    },
+    "bismark_pe":
+    {
+        "nthreads":12,
+        "MEM":"19G",
+        "q":"all",
+        "h_stack":"128m"
+    },
+    "bismark_se_methex":
+    {
+        "nthreads":6,
+        "MEM":"8G",
+        "q":"all",
+        "h_stack":"128m"
+    },
+    "bismark_pe_methex":
+    {
+        "nthreads":12,
+        "MEM":"8G",
+        "q":"all",
+        "h_stack":"128m"
+    }
+}

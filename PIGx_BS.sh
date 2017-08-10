@@ -25,6 +25,7 @@ set -o pipefail
 tablesheet="test_CElegans/TableSheet_test.csv"
 path2configfile="./config.json"
 path2programsJSON="test_CElegans/PROGS.json"
+path2clusterconfig="cluster_conf.json"
 
 #=========== PARSE PARAMETERS ============#
 
@@ -132,6 +133,21 @@ path_OUT=$(  python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])
 path_IN=$(   python -c "import sys, json; print(json.load(sys.stdin)['PATHIN'])" < $path2configfile)
 path_refG=$( python -c "import sys, json; print(json.load(sys.stdin)['GENOMEPATH'])" < $path2configfile)
 
+cluster_run=$(    python -c "import sys, json; print(json.load(sys.stdin)['cluster_run'])"   < $path2configfile)
+contact_email=$(  python -c "import sys, json; print(json.load(sys.stdin)['contact_email'])" < $path2configfile)
+bismark_cores=$(  python -c "import sys, json; print(json.load(sys.stdin)['bismark_cores'])" < $path2configfile)
+MEM_bismark=$(    python -c "import sys, json; print(json.load(sys.stdin)['bismark_MEM'])"   < $path2configfile)
+MEM_default=$(    python -c "import sys, json; print(json.load(sys.stdin)['MEM_default'])"   < $path2configfile)
+qname=$(          python -c "import sys, json; print(json.load(sys.stdin)['qname'])"         < $path2configfile)
+h_stack=$(        python -c "import sys, json; print(json.load(sys.stdin)['h_stack'])"       < $path2configfile)
+
+
+bismark_pe_threads=$(( 4*${bismark_cores} ))
+bismark_se_threads=$(( 2*${bismark_cores} ))
+
+numjobs=$(         python -c "import sys, json; print(json.load(sys.stdin)['numjobs'])" < $path2configfile)
+
+
 mkdir -p ${path_OUT}"path_links/input"
 
 # create links within the output folder that point directly to the 
@@ -150,12 +166,38 @@ python scripts/create_file_links.py $path2configfile
 #========================================================================================
 #----------  NOW START RUNNING SNAKEMAKE:  ----------------------------------------------
 
+# I decided against using drmaa for snakemake here (qsub seems to work fine and is less complicated). 
+# Nevertheless, I'm leaving these lines commented here, in case I want to revisit this choice.
+#
+# --drmaa  "qsub -V -l h_vmem=${MEM} -l h_rt=${RUNTIME}  -pe smp ${NUMTHREADS}"
+#    export DRMAA_LIBRARY_PATH=/opt/uge/lib/lx-amd64/libdrmaa.so.1.0
+#   LD_PRELOAD=/usr/lib64/libssl.so.10:/lib64/libgssapi_krb5.so.2:/lib64/libkrb5.so.3:/lib64/libcom_err.so.2:/lib64/libk5crypto.so.3:/usr/lib64/libcrypto.so.10:/lib64/libz.so.1:/lib64/libkrb5support.so.0:/lib64/libkeyutils.so.1:/lib64/libselinux.so.1  snakemake -s BSseq_pipeline.py --configfile $path2configfile  -d ${path_OUT}  --drmaa "  -l h_rt=${RUNTIME},longrun,h_vmem=${MEM} -cwd "  --jobs ${numjobs} ${snakeparams}
 
-pathout=$( python -c "import sys, json; print(json.load(sys.stdin)['PATHOUT'])" < $path2configfile)
 
-snakemake -s BSseq_pipeline.py --configfile $path2configfile -d $pathout ${snakeparams:-}
+if [ ${cluster_run} = true ] || [ ${cluster_run} = TRUE ]
+  then
 
+    #----------  CREATE THE CLUSTER CONFIGURATION FILE  ---------------------------------
+   
+    # ---- python scripts takes parameters in the order: 
+    # rulename, nthreads, q, MEM, [comma] 
+    # The last is a boolean as to whether there are still more to come, should be 1 for all except the last.]
 
-
-
+    echo "{"  >  ${path2clusterconfig}
+    python scripts/rules_cluster.py  __default__ 1                      ${qname}  ${MEM_default} ${h_stack}  1   >>  ${path2clusterconfig}
+    python scripts/rules_cluster.py  bismark_se  ${bismark_se_threads}  ${qname}  ${MEM_bismark} ${h_stack}  1   >>  ${path2clusterconfig}
+    python scripts/rules_cluster.py  bismark_pe  ${bismark_pe_threads}  ${qname}  ${MEM_bismark} ${h_stack}  1   >>  ${path2clusterconfig}
+    
+    python scripts/rules_cluster.py  bismark_se_methex  ${bismark_se_threads}  ${qname}  ${MEM_default}  ${h_stack} 1  >>  ${path2clusterconfig}
+    python scripts/rules_cluster.py  bismark_pe_methex  ${bismark_pe_threads}  ${qname}  ${MEM_default}  ${h_stack} 0  >>  ${path2clusterconfig}
+    
+    echo " Commencing snakemake run submission to cluster "
+    snakemake -s BSseq_pipeline.py --configfile $path2configfile --cluster-config ${path2clusterconfig}  -d ${path_OUT}  --cluster " qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM}  -m abe -M  ${contact_email} -b y  -pe smp {cluster.nthreads} -cwd  "  --jobs ${numjobs} ${snakeparams:-}
+  elif [ ${cluster_run} = false ] || [ ${cluster_run} = FALSE   ]
+  then
+    echo " Commencing snakemake run submission locally "
+    snakemake -s BSseq_pipeline.py --configfile $path2configfile  -d ${path_OUT} --jobs ${numjobs}  ${snakeparams:-}
+  else
+    echo "ERROR: cluster_run string interpreted as: " ${cluster_run} "-- this is not understood to be either true or false (all characters in the word must be the same case --UPPER or lower, but not MiXEd). Exiting."
+fi
 

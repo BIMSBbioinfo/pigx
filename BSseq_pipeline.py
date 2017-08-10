@@ -6,9 +6,6 @@
 # To process bisulfite sequencing data from raw fastq files to performing integrated bioinformatics analysis.
 
 # SUBMIT THIS JOB INTERACTIVELY WITH:
-# $nohup  snakemake -s [this filename] --jobs [# of jobs to submit] > [logfilename] &
-# You can also add the following options for cluster submission: --cluster "qsub -V -l h_vmem={params.mem} -pe smp {params.threads} -l h_rt=36:00:00" &
-
 # import IPython;
 # IPython.embed()
  
