@@ -3,12 +3,13 @@ PATHIN="/home/bosberg/bs/pigx_sandbox/test_CElegans/in/"
 PATHOUT="/home/bosberg/bs/pigx_sandbox/test_CElegans/out/"
 GENOMEPATH="/home/bosberg/bs/ref_genome/ce10/"
 GENOME_VERSION="ce10"
-bismark_args=" --multicore 2 -N 1 -L 2 "
+bismark_args=" -N 0 -L 20 "
 fastqc_args=""
 trim_galore_args=""
 bam_methCall_args_mincov="0"
 bam_methCall_args_minqual="10"
 NICE="19"
+bismark_cores="3"
 
 [[ SAMPLES ]]
 Read1,Read2,SampleID,ReadType,Treatment

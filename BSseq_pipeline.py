@@ -39,6 +39,8 @@ GTOOLBOX        = config["GTOOLBOX"]        #--- where the programs are stored t
 
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
+bismark_cores=config["bismark_cores"]       #--- from config file. Gets passed to bismark multicore argument.  
+
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
 FASTQC                         =  GTOOLBOX+config["PROGS"]["FASTQC"]            #--- self-explanatory program names.
@@ -220,7 +222,7 @@ rule bismark_se:
         DIR_mapped+"/{sample}_bismark_se_mapping.log"
     message: fmt("Mapping single-end reads to genome {VERSION}")
     shell:
-        nice("{BISMARK} {params} {input.fqfile} 2> {log}")
+        nice("{BISMARK} {params} --multicore "+bismark_cores+" {input.fqfile} 2> {log}")
 
 #-----------------------
 
@@ -246,7 +248,7 @@ rule bismark_pe:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: fmt("Mapping paired-end reads to genome {VERSION}.")
     shell:
-        nice("{BISMARK} {params}  -1 {input.fin1} -2 {input.fin2} 2> {log}")
+        nice("{BISMARK} {params} --multicore "+bismark_cores+" -1 {input.fin1} -2 {input.fin2} 2> {log}")
 
 
 # ==========================================================================================
