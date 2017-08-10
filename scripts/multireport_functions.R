@@ -85,6 +85,20 @@ merge_chapters2 = function(files, to, before = NULL, after = NULL, orig = files)
 
 
 
+#' Combine multiple markdowns to one
+#'
+#' @param final_output string name of the final single file (creates *.md and *.html)
+#' @param finalreportdir string output directory 
+#' @param index path to index file prepended to final markdown  
+#' @param references path to reference file appended to final markdown
+#' @param sessioninfo path to session info file appended to final markdown
+#' @param workdir path to working 
+#' @param clean 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 render2multireport <- function(final_output,
                                finalreportdir,
                                index=NULL,
