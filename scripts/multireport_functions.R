@@ -2,6 +2,68 @@
 ## and render them as multiRmd report 
 
 
+#' Merge two sessionInfo objects
+#' 
+#' This function takes two sessionInfo objects and merges them into one.
+#'
+#' @param sessionX 
+#' @param sessionY 
+#'
+#' @return a sessionInfo object
+#'
+#'
+#' @examples
+.mergeSessionInfo <- function(sessionX,sessionY) {
+  
+  ## check which of both has more entries (minimum 8, maximum 10)
+  if( length(sessionX)>=length(sessionY ) ){
+    z <- sessionX
+  } else { z <- sessionY }
+  
+  ## iterate over entries
+  for( i in names(z)) { 
+    
+    ## merge content if entry is shared
+    if( (i %in% names(sessionX)) & (i %in% names(sessionY)) ){
+      z[[i]] <- union(sessionX[[i]],sessionY[[i]])
+      names(z[[i]]) <- union(names(sessionX[[i]]),names(sessionY[[i]]))
+    }
+  }
+  
+  ## remove attached packages from namespace
+  if(all(c("loadedOnly","otherPkgs") %in% names(z)) ) { 
+    z[["loadedOnly"]] <- z[["loadedOnly"]][! z$loadedOnly %in% z$otherPkgs] }
+  
+  class(z) <- "sessionInfo"
+  
+  return(z)
+}
+
+
+#' Merge multiple sessionInfo objects
+#' 
+#' This function takes a list of sessionInfo objects and merges them into one
+#'
+#' @param sessionX 
+#' @param sessionY 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+mergeSessionInfos <- function(sessions = list()) {
+  
+  if(! all(sapply(sessions,class)=="sessionInfo") ) stop("Not all objects of class sessionInfo")
+  
+  if(length(sessions)>2) {
+    Reduce(.mergeSessionInfo,sessions)
+  } else if( length(sessions)==2) {
+    .mergeSessionInfo(sessionX = sessions[[1]], 
+                      sessionY = sessions[[2]])
+  } else {
+    stop("Not enough sessions given")
+  }
+}
 
 
 merge_chapters2 = function(files, to, before = NULL, after = NULL, orig = files) {
@@ -27,6 +89,7 @@ render2multireport <- function(final_output,
                                finalreportdir,
                                index=NULL,
                                references=NULL,
+                               sessioninfo=NULL,
                                workdir=NULL,
                                clean=FALSE) {
   
@@ -35,7 +98,7 @@ render2multireport <- function(final_output,
                           pattern = "knitr_meta.rds",
                           full.names = TRUE)
   
-  if(!is.null(index) || !is.null(references)){
+  if(!is.null(index) || !is.null(references) || !is.null(sessioninfo)){
     
     ## save a copy of render arguments in a temp file
     render_args = tempfile('render', tmpdir = finalreportdir, '.rds')
@@ -61,6 +124,29 @@ render2multireport <- function(final_output,
     bookdown:::Rscript_render(file = normalizePath(index),render_args,meta.file)
   
   }
+  
+  if(!is.null(sessioninfo)){
+    
+    sessionfiles <- list.files(path = finalreportdir, pattern = "session", full.names = TRUE)
+    finalSessionInfo <- mergeSessionInfos(lapply(sessionfiles,readRDS))
+    saveRDS(finalSessionInfo,file = paste0(finalreportdir,"/","finalsessioninfo.rds"))
+    
+    # unlink(sessionfiles)
+    
+    render_list = readRDS(render_args)
+    # render_list$knitr_root_dir = finalreportdir
+    render_list$params=list("sessioninfo" = list.files(path = finalreportdir,
+                                                     pattern = "finalsessioninfo.rds",
+                                                     full.names = TRUE))
+    saveRDS(
+      render_list,
+      render_args
+    )
+    
+    bookdown:::Rscript_render(file = normalizePath(sessioninfo),render_args,meta.file)
+    
+  }
+  
   if(!is.null(references)){
     
     ## comment out all other reference sections
@@ -160,7 +246,8 @@ render2multireport(final_output = normalizePath(snakemake@output[["finalreport"]
                    finalreportdir = normalizePath(snakemake@params[["finalreportdir"]]),
                    workdir = normalizePath(snakemake@params[["workdir"]]),
                    index = snakemake@input[["index"]],
-                   references = snakemake@input[["references"]])
+                   references = snakemake@input[["references"]],
+                   sessioninfo = snakemake@input[["sessioninfo"]])
 
 # finalReportDir = "Final_Report/"
 # 

@@ -230,7 +230,8 @@ rule final_report:
     input:  
         rules.methseg_annotation.output,
         index       = TEMPLATEDIR + "index.Rmd",   
-        references  = TEMPLATEDIR + "references.Rmd"#,
+        references  = TEMPLATEDIR + "references.Rmd",
+        sessioninfo = TEMPLATEDIR + "sessioninfo.Rmd"
         #fastq_name  = lambda wildcards: touch(get_fastq_name(wildcards.prefix))#,
         ## add rawqc at some point
     output: 

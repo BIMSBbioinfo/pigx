@@ -15,35 +15,11 @@ render2Markdown <- function(reportFile,
   
   dir.create(finalReportDir,recursive = FALSE)
   
-  ## save a copy of render arguments in a temp file
-  render_args = tempfile('render', tmpdir = finalReportDir, '.rds')
-  on.exit(unlink(render_args), add = TRUE)
-  saveRDS(
-    list(output_format = "rmarkdown::html_notebook",# rmarkdown::html_notebook(
-         #   toc = TRUE,
-         #   toc_float = TRUE,
-         #   theme = 'lumen',
-         #   number_sections = FALSE,
-         #   code_folding = "hide",
-         #   self_contained = TRUE,
-         #   includes = list(in_header = pathToLogo)
-         # ), 
-         #knit_root_dir = outDir,
-         params=report.params,
-         output_file = outFile,
-         output_dir = finalReportDir,
-         intermediates_dir = finalReportDir, 
-         clean = FALSE, 
-         quiet = TRUE,
-         envir = parent.frame()
-    ),
-    render_args
-  )
-  ## store metadata for Final Report
-  render_meta = paste0(finalReportDir,"/knitr_meta.rds")#,bookdown:::with_ext(outFile, '.rds'))
-  # render_meta = paste0(finalReportDir,"/",bookdown:::with_ext(outFile, '.rds'))
+  if(is.null(report.params)) report.params <- list()
   
   ## render single report
+  message("render single report")
+  
   rmarkdown::render(
     input = reportFile,
     output_dir = outDir,
@@ -66,9 +42,49 @@ render2Markdown <- function(reportFile,
     envir = new.env()
   )
   
+  
+  ## save a copy of render arguments in a temp file
+  render_args = tempfile('render', tmpdir = finalReportDir, '.rds')
+  on.exit(unlink(render_args), add = TRUE)
+  saveRDS(
+    list(output_format = "rmarkdown::html_notebook",# rmarkdown::html_notebook(
+         #   toc = TRUE,
+         #   toc_float = TRUE,
+         #   theme = 'lumen',
+         #   number_sections = FALSE,
+         #   code_folding = "hide",
+         #   self_contained = TRUE,
+         #   includes = list(in_header = pathToLogo)
+         # ), 
+         #knit_root_dir = outDir,
+         params=c(report.params,
+                  list("sessioninfo"=FALSE,
+                       "references"=FALSE)),
+         output_file = outFile,
+         output_dir = finalReportDir,
+         intermediates_dir = finalReportDir, 
+         clean = FALSE, 
+         quiet = TRUE,
+         envir = parent.frame()
+    ),
+    render_args
+  )
+  ## store metadata for Final Report
+  render_meta = paste0(finalReportDir,"/knitr_meta.rds")#,bookdown:::with_ext(outFile, '.rds'))
+  # render_meta = paste0(finalReportDir,"/",bookdown:::with_ext(outFile, '.rds'))
+  
+  
   ## render for multireport
+  message("render for multireport")
+  
   bookdown:::Rscript_render(file = reportFile,render_args,render_meta)
   
+  ## move the sessioninfo to final folder
+  session_file <- list.files(path = outDir,pattern = "session",full.names = TRUE)
+  if(file.exists(session_file)) {
+    file.rename(from = session_file,
+                to = paste0(finalReportDir,"/",basename(session_file)))
+  }
 }
 
 

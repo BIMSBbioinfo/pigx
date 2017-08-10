@@ -20,6 +20,8 @@ params:
   mincov:   10
   minqual:  20
   rdata:    "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_methylRaw.RData"
+  sessioninfo: TRUE
+  references: TRUE
 ---
 
 ```{r eval_params, echo=FALSE}
@@ -123,12 +125,24 @@ Here we show some simple statistics as distribution of methylation and coverage.
     
 ```
 
-### Session Info
+<!-- ### Session Info -->
 
-```{r }
+`r if(params$sessioninfo) {"### Session Info"}`
+
+```{r ,include=params$sessioninfo}
 sessionInfo()
 ```
 
+```{r, include=!params$sessioninfo}
+#source("") 
+#session_file <- sessioninfo
+session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
+sess <- sessionInfo()
+saveRDS(sess,file = session_file)
+```
 
 
-### References
+`r if(params$references) {"### References"}`
+
+<!-- Document final rule -->
+------------------------------------

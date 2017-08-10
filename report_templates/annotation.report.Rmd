@@ -17,8 +17,11 @@ params:
   assembly: ce10
   inBed: /Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/test1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.bed
   refseqfile: /Users/agosdsc/Development/Snakemake/pigx_bsseq/refseq.genes.ce10.bed
+  sessioninfo: TRUE #/Users/agosdsc/Development/Snakemake/pigx_bsseq/session.rds
+  references: TRUE
 bibliography: reports.bib
 ---
+
 
 ```{r eval_params, echo=FALSE}
 
@@ -207,12 +210,26 @@ legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,l
 ```
 
 
-### Session Info
+<!-- ### Session Info -->
 
-```{r }
+`r if(params$sessioninfo) {"### Session Info"}`
+
+```{r ,include=params$sessioninfo}
 sessionInfo()
 ```
 
+```{r, include=!params$sessioninfo}
+#source("") 
+#session_file <- sessioninfo
+session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
+sess <- sessionInfo()
+saveRDS(sess,file = session_file)
+```
 
 
-### References
+`r if(params$references) {"### References"}`
+
+<!-- Document final rule -->
+------------------------------------
+
+

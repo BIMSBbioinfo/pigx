@@ -18,6 +18,8 @@ params:
   rdata: "methylation_calls/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_methylRaw.RData"
   grdata: "segmentation/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_meth_segments_gr.RData"
   outBed:   "segmentation/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_meth_segments.bed"
+  sessioninfo: TRUE
+  references: TRUE
 ---
 
 ```{r eval_params, echo=FALSE}
@@ -119,12 +121,24 @@ Finally we export the regions to a *BED* file, which can be loaded into any geno
 
 ```
 
-### Session Info
+<!-- ### Session Info -->
 
-```{r sessioninfo}
+`r if(params$sessioninfo) {"### Session Info"}`
+
+```{r ,include=params$sessioninfo}
 sessionInfo()
 ```
 
+```{r, include=!params$sessioninfo}
+#source("") 
+#session_file <- sessioninfo
+session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
+sess <- sessionInfo()
+saveRDS(sess,file = session_file)
+```
 
 
-### References
+`r if(params$references) {"### References"}`
+
+<!-- Document final rule -->
+------------------------------------
