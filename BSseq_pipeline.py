@@ -80,7 +80,7 @@ OUTPUT_FILES = [
                 #[ expand ( list_files_bismark(DIR_mapped, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]   )  ) for sample in config["SAMPLES"]  ],
               
                 #               ==== rule 05 deduplication ======
-                [ expand ( list_files_dedupe(DIR_deduped, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],                                
+                # [ expand ( list_files_dedupe(DIR_deduped, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
 
                 #               ==== rule 06 sorting ======
                 [ expand ( list_files_sortbam(DIR_sorted, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
@@ -228,7 +228,7 @@ rule bismark_se:
         samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
         tempdir     = "--temp_dir "+DIR_mapped
     log:
-        DIR_mapped+"/{sample}_bismark_se_mapping.log"
+        DIR_mapped+"{sample}_bismark_se_mapping.log"
     message: fmt("Mapping single-end reads to genome {VERSION}")
     shell:
         nice("{BISMARK} {params} --multicore "+bismark_cores+" {input.fqfile} 2> {log}")
