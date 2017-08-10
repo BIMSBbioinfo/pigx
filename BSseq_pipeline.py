@@ -137,7 +137,7 @@ rule  bismark_se_methex:
     log: DIR_xmethed+"{sample}_bismark_methylation_extraction.log"
     message: """--------------  Extracting  Methylation Information from {input}  --------------- \n"""
     shell:
-        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} 2> {log}")
+        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} > {log} 2>&1 ")
 #-----------------------
 rule  bismark_pe_methex:
     input:
@@ -155,7 +155,7 @@ rule  bismark_pe_methex:
     log: DIR_xmethed+"{sample}_bismark_methylation_extraction.log"
     message: """--------------  Extracting  Methylation Information from  {input}  --------------- \n"""
     shell:
-        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} 2> {log}")
+        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} > {log} 2>&1 ")
 
 
 # ==========================================================================================
@@ -194,7 +194,7 @@ rule deduplication_se:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
-        nice("{SAMTOOLS} rmdup {input}  {output} 2> {log}")
+        nice("{SAMTOOLS} rmdup {input}  {output} > {log} 2>&1 ")
 #-----------------------
 rule deduplication_pe:
     input:
@@ -205,7 +205,7 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
-        nice("{SAMTOOLS} fixmate {input}  {output} 2> {log}")
+        nice("{SAMTOOLS} fixmate {input}  {output} > {log} 2>&1 ")
 
 # ==========================================================================================
 # align and map:
@@ -231,7 +231,7 @@ rule bismark_se:
         DIR_mapped+"{sample}_bismark_se_mapping.log"
     message: fmt("Mapping single-end reads to genome {VERSION}")
     shell:
-        nice("{BISMARK} {params} --multicore "+bismark_cores+" {input.fqfile} 2> {log}")
+        nice("{BISMARK} {params} --multicore "+bismark_cores+" {input.fqfile} > {log}  2>&1 ")
 
 #-----------------------
 
@@ -257,7 +257,7 @@ rule bismark_pe:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: fmt("Mapping paired-end reads to genome {VERSION}.")
     shell:
-        nice("{BISMARK} {params} --multicore "+bismark_cores+" -1 {input.fin1} -2 {input.fin2} 2> {log}")
+        nice("{BISMARK} {params} --multicore "+bismark_cores+" -1 {input.fin1} -2 {input.fin2} > {log} 2>&1 ")
 
 
 # ==========================================================================================
@@ -278,7 +278,7 @@ rule bismark_genome_preparation:
         'bismark_genome_preparation_'+VERSION+'.log'
     message: fmt("Converting {VERSION} Genome into Bisulfite analogue")
     shell:
-        nice("{BISMARK_GENOME_PREPARATION} {params} {input} 2> {log}")
+        nice("{BISMARK_GENOME_PREPARATION} {params} {input} > {log} 2>&1 ")
 
 # ==========================================================================================
 # post-trimming quality control
@@ -296,7 +296,7 @@ rule fastqc_after_trimming_se:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed single-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} 2> {log}")
+        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
 #--------
 rule fastqc_after_trimming_pe:
     input:
@@ -314,7 +314,7 @@ rule fastqc_after_trimming_pe:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed paired-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} 2> {log}")
+        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
 
 # ==========================================================================================
 # trim the reads
@@ -334,7 +334,7 @@ rule trimgalore_se:
        DIR_trimmed+"{sample}.trimgalore.log"
     message: fmt("Trimming raw single-end read data from {input}")
     shell:
-       nice("{TRIMGALORE} {params} {input} 2> {log}")
+       nice("{TRIMGALORE} {params} {input} > {log} 2>&1 ")
 
 #-----------------------
 rule trimgalore_pe:
@@ -356,7 +356,7 @@ rule trimgalore_pe:
     message:
         fmt("Trimming raw paired-end read data from {input}")
     shell:
-        nice("{TRIMGALORE} {params} {input} 2> {log}")
+        nice("{TRIMGALORE} {params} {input} > {log} 2>&1 ")
 
 # ==========================================================================================
 # raw quality control
@@ -374,4 +374,4 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         DIR_rawqc+"{sample}_fastqc.log"
     message: fmt("Quality checking raw read data from {input}")
     shell:
-        nice("{FASTQC} {params}  {input} 2> {log}")
+        nice("{FASTQC} {params}  {input} > {log} 2>&1 ")
