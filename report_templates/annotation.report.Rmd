@@ -30,7 +30,9 @@ assembly  <- params$assembly
 refgenes.file <- params$refseqfile
 ```
 
-## Annotation Report
+## Annotation of Segments
+
+The annotation of the identified regions with genomic features allows to get a better understanding and characterization of detected regions. 
 
 The annotation with 
 

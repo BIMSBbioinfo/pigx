@@ -58,3 +58,6 @@ The FastQC reports are located here: `r paste0(params$wdir,"/01_",params$fastq_n
 <!-- #  -->
 <!-- # ``` -->
 
+
+<!-- Document final rule -->
+------------------------------------

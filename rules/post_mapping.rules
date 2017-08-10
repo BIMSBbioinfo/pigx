@@ -245,7 +245,7 @@ rule final_report:
         FINALDIR + "{prefix}.sorted_{assembly}_final.log"
     message:
         "Compiling Final Report:\n"
-        "   report    : {output.finalreport}."#\n{params.fastq_name}"
+        "   report    : {output.finalreport}"#\n{params.fastq_name}"
         
     script:
         SCRIPTDIR + "multireport_functions.R"  
