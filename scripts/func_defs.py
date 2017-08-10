@@ -60,7 +60,7 @@ def SEPEstr(files):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length for file[0]="+files[0]+". HALTING! ===")
 
-def Annot(PATH, files, assembly):
+def Annot(PATH, files, assembly, sampleID):
     if len(files) == 1:
       return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_annotation.nb.html" #---- single end
     elif len(files) == 2:
