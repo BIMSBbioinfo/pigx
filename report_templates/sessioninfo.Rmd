@@ -1,0 +1,19 @@
+---
+params:
+  sessioninfo: ''
+---
+
+
+`r if (knitr:::is_html_output()) '# Session Info {-}'`
+
+
+
+```{r , eval=FALSE}
+sessionInfo()
+```
+```{r , echo=FALSE,results=TRUE}
+readRDS(params$sessioninfo)
+```
+
+<!-- Document final rule -->
+********
