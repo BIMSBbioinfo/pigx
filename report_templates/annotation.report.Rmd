@@ -204,13 +204,12 @@ legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,l
 
 `r if(params$sessioninfo) {"### Session Info"}`
 
-```{r ,include=params$sessioninfo}
+```{r ,include=as.logical(params$sessioninfo)}
 sessionInfo()
 ```
 
-```{r, include=!params$sessioninfo}
-#source("") 
-#session_file <- sessioninfo
+
+```{r, include=FALSE, eval=!(params$sessioninfo)}
 session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
 sess <- sessionInfo()
 saveRDS(sess,file = session_file)

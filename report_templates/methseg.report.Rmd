@@ -113,17 +113,18 @@ Finally we export the regions to a *BED* file, which can be loaded into any geno
 
 ```
 
+
 <!-- ### Session Info -->
 
 `r if(params$sessioninfo) {"### Session Info"}`
 
-```{r ,include=params$sessioninfo}
+```{r ,include=as.logical(params$sessioninfo)}
 sessionInfo()
 ```
 
-```{r, include=!params$sessioninfo}
-#source("") 
-#session_file <- sessioninfo
+`r !(params$sessioninfo)` 
+
+```{r, include=FALSE, eval=!(params$sessioninfo)}
 session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
 sess <- sessionInfo()
 saveRDS(sess,file = session_file)

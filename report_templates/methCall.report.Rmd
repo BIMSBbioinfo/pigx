@@ -117,13 +117,12 @@ Here we show some simple statistics as distribution of methylation and coverage.
 
 `r if(params$sessioninfo) {"### Session Info"}`
 
-```{r ,include=params$sessioninfo}
+```{r ,include=as.logical(params$sessioninfo)}
 sessionInfo()
 ```
 
-```{r, include=!params$sessioninfo}
-#source("") 
-#session_file <- sessioninfo
+
+```{r, include=FALSE, eval=!(params$sessioninfo)}
 session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
 sess <- sessionInfo()
 saveRDS(sess,file = session_file)

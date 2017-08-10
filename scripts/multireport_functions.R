@@ -127,17 +127,23 @@ render2multireport <- function(final_output,
   
   if(!is.null(sessioninfo)){
     
-    sessionfiles <- list.files(path = finalreportdir, pattern = "session", full.names = TRUE)
-    finalSessionInfo <- mergeSessionInfos(lapply(sessionfiles,readRDS))
-    saveRDS(finalSessionInfo,file = paste0(finalreportdir,"/","finalsessioninfo.rds"))
-    
-    # unlink(sessionfiles)
+    finalSessionInfoFile <- list.files(path = finalreportdir,
+               pattern = "finalsessioninfo.rds",
+               full.names = TRUE)
+    if(!file.exists(finalSessionInfoFile)) {
+      
+      sessionfiles <- list.files(path = finalreportdir, pattern = "session", full.names = TRUE)
+      sessionfiles <- sessionfiles[endsWith(sessionfiles,".rds")]
+      finalSessionInfo <- mergeSessionInfos(lapply(sessionfiles,readRDS))
+      saveRDS(finalSessionInfo,file = paste0(finalreportdir,"/","finalsessioninfo.rds"))
+      
+      on.exit(unlink(sessionfiles),add = TRUE)
+      
+    }
     
     render_list = readRDS(render_args)
     # render_list$knitr_root_dir = finalreportdir
-    render_list$params=list("sessioninfo" = list.files(path = finalreportdir,
-                                                     pattern = "finalsessioninfo.rds",
-                                                     full.names = TRUE))
+    render_list$params=list("sessioninfo" = finalSessionInfoFile)
     saveRDS(
       render_list,
       render_args
@@ -169,8 +175,13 @@ render2multireport <- function(final_output,
   
   meta <- readRDS(meta.file)
   inputFiles <- unlist(meta)
+  ## change ordering of static files
   indexPos = match('index',bookdown:::with_ext(basename(unlist(meta)),""))
   if (!is.na(indexPos)) meta <- c(meta[indexPos], meta[-indexPos])
+  sessioninfoPos = match('sessioninfo',bookdown:::with_ext(basename(unlist(meta)),""))
+  if (!is.na(sessioninfoPos)) meta <- c(meta[-sessioninfoPos], meta[sessioninfoPos])
+  referencesPos = match('references',bookdown:::with_ext(basename(unlist(meta)),""))
+  if (!is.na(referencesPos)) meta <- c(meta[-referencesPos], meta[referencesPos])
   
   ## this part combines all meta output from all files and
   ## sorts by input files
