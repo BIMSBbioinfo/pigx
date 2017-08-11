@@ -148,7 +148,7 @@ function generateConfig {
 ## write the md5 hash of the input tables to files.
 if [ ! -f $path2configfile ]; then
     if [ -z $tablesheet ]
-    then echo "Tablesheet mising, quiting now ... "; exit; fi
+      then echo "Tablesheet mising, quiting now ... "; exit; fi
     if [ -z $path2programsJSON ] 
     then echo "Paths to Programs missing, quitting now ... "; exit; fi
     generateConfig
@@ -156,11 +156,11 @@ elif [ $createConfig == "true" ]; then
     generateConfig
 else
   ## if one or both of the tables are given, we generate the config file and 
-  ## update the md5 hash of the input tables to files if their content has changed.
+  ## update the md5 hash of the input tables if their content has changed.
   if [ ! -z $tablesheet ] 
     then 
       writemd5 $tablesheet "${tablesheet_md5}.test"
-      if [[ $(cmp --silent "${tablesheet_md5}.test" $tablesheet_md5) ]] 
+      if ! cmp --silent "${tablesheet_md5}.test" $tablesheet_md5  
         then 
           cat "${tablesheet_md5}.test"
           cat $tablesheet_md5
@@ -172,7 +172,7 @@ else
   if [ ! -z $path2programsJSON ] 
     then 
       writemd5 $path2programsJSON "${progs_md5}.test"
-      if [[ $(cmp --silent "${progs_md5}.test" $progs_md5) ]]  
+      if ! cmp --silent "${progs_md5}.test" $progs_md5  
         then 
           echo "Program paths changed, now updating config file!";  
           python scripts/create_configfile.py "$(cut -f2 -d" " $tablesheet_md5)" $path2configfile $path2programsJSON
