@@ -134,17 +134,6 @@ path_IN=$(   python -c "import sys, json; print(json.load(sys.stdin)['PATHIN'])"
 path_refG=$( python -c "import sys, json; print(json.load(sys.stdin)['GENOMEPATH'])" < $path2configfile)
 
 cluster_run=$(    python -c "import sys, json; print(json.load(sys.stdin)['cluster_run'])"   < $path2configfile)
-contact_email=$(  python -c "import sys, json; print(json.load(sys.stdin)['contact_email'])" < $path2configfile)
-bismark_cores=$(  python -c "import sys, json; print(json.load(sys.stdin)['bismark_cores'])" < $path2configfile)
-MEM_bismark=$(    python -c "import sys, json; print(json.load(sys.stdin)['bismark_MEM'])"   < $path2configfile)
-MEM_default=$(    python -c "import sys, json; print(json.load(sys.stdin)['MEM_default'])"   < $path2configfile)
-qname=$(          python -c "import sys, json; print(json.load(sys.stdin)['qname'])"         < $path2configfile)
-h_stack=$(        python -c "import sys, json; print(json.load(sys.stdin)['h_stack'])"       < $path2configfile)
-
-
-bismark_pe_threads=$(( 4*${bismark_cores} ))
-bismark_se_threads=$(( 2*${bismark_cores} ))
-
 numjobs=$(         python -c "import sys, json; print(json.load(sys.stdin)['numjobs'])" < $path2configfile)
 
 
@@ -183,7 +172,25 @@ scripts/set_path2logo.sh images/Logo_PIGx.png report_templates/_pigx_bsseq_logo.
 
 if [ ${cluster_run} = true ] || [ ${cluster_run} = TRUE ]
   then
+    
+    contact_email=$(  python -c "import sys, json; print(json.load(sys.stdin)['contact_email'])" < $path2configfile)
+    bismark_cores=$(  python -c "import sys, json; print(json.load(sys.stdin)['bismark_cores'])" < $path2configfile)
+    MEM_bismark=$(    python -c "import sys, json; print(json.load(sys.stdin)['bismark_MEM'])"   < $path2configfile)
+    MEM_default=$(    python -c "import sys, json; print(json.load(sys.stdin)['MEM_default'])"   < $path2configfile)
+    qname=$(          python -c "import sys, json; print(json.load(sys.stdin)['qname'])"         < $path2configfile)
+    h_stack=$(        python -c "import sys, json; print(json.load(sys.stdin)['h_stack'])"       < $path2configfile)
+    
+    bismark_pe_threads=$(( 4*${bismark_cores} ))
+    bismark_se_threads=$(( 2*${bismark_cores} ))
+    
+   
+    if [ ${contact_email} = NONE ] || [ ${contact_email} = NULL ]
+      then
+         contact_email_string=" "
+      else
+         contact_email_string=" -m abe -M  ${contact_email} "
 
+    fi
     #----------  CREATE THE CLUSTER CONFIGURATION FILE  ---------------------------------
    
     # ---- python scripts takes parameters in the order: 
@@ -199,7 +206,7 @@ if [ ${cluster_run} = true ] || [ ${cluster_run} = TRUE ]
     python scripts/rules_cluster.py  bismark_pe_methex  ${bismark_pe_threads}  ${qname}  ${MEM_default}  ${h_stack} 0  >>  ${path2clusterconfig}
     
     echo " Commencing snakemake run submission to cluster "
-    snakemake -s BSseq_pipeline.py --configfile $path2configfile --cluster-config ${path2clusterconfig}  -d ${path_OUT}  --cluster " qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM}  -m abe -M  ${contact_email} -b y  -pe smp {cluster.nthreads} -cwd  "  --jobs ${numjobs} ${snakeparams:-}
+    snakemake -s BSseq_pipeline.py --configfile $path2configfile --cluster-config ${path2clusterconfig}  -d ${path_OUT}  --cluster " qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM}  ${contact_email_string} -b y  -pe smp {cluster.nthreads} -cwd  "  --jobs ${numjobs} ${snakeparams:-}
   elif [ ${cluster_run} = false ] || [ ${cluster_run} = FALSE   ]
   then
     echo " Commencing snakemake run submission locally "
