@@ -6,7 +6,8 @@ render2Markdown <- function(reportFile,
                             outFile,
                             outDir,
                             finalReportDir,
-                            report.params=NULL)
+                            report.params=NULL,
+                            self.contained=FALSE)
 {
   
   output_format = rmarkdown::all_output_formats(reportFile, 'UTF-8')
@@ -17,11 +18,14 @@ render2Markdown <- function(reportFile,
 
   ## render single report
   message("render single report")
+  
+  ## make independent intermediate dirs
+  interDir <- paste0(outDir,outFile,"_tmp")
 
   rmarkdown::render(
     input = reportFile,
     output_dir = outDir,
-    #intermediates_dir = outDir,paste0(outDir,"/tmp"),
+    intermediates_dir = interDir,
     output_file = outFile,
     knit_root_dir = outDir,
     output_format = rmarkdown::html_document(
@@ -31,7 +35,7 @@ render2Markdown <- function(reportFile,
       # number_sections = FALSE,
       code_folding = "hide",
       code_download = TRUE,
-      self_contained = FALSE#,
+      self_contained = self.contained#,
       #includes = list(in_header = pathToLogo)
     ),
     params=c(report.params,
