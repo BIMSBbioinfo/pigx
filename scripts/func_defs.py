@@ -95,11 +95,10 @@ def list_files_xmeth(PATH, files, sampleID):
 
 
         
-def Final(PATH, files, assembly):
+def Final(PATH, files, assembly, sampleID):
     if len(files) == 1:
-      return  PATH+files[0]+"_se_bt2.deduped.sorted_"+assembly+"_final.nb.html" #---- single end
+      return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_final.nb.html" #---- single end
     elif len(files) == 2:
-        return [PATH+files[0]+"_val_1_bt2.deduped.sorted_"+assembly+"_final.nb.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_final.nb.html"] #---- paired end
 
-        
         
