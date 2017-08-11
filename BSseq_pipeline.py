@@ -336,7 +336,7 @@ rule trimgalore_se:
        DIR_trimmed+"{sample}.trimgalore.log"
     message: fmt("Trimming raw single-end read data from {input}")
     shell:
-       nice("{TRIMGALORE} {params} {input} > {log} 2>&1 ")
+       nice("{TRIMGALORE} {params} {input.file} > {log} 2>&1 ")
 
 #-----------------------
 rule trimgalore_pe:
@@ -360,7 +360,7 @@ rule trimgalore_pe:
     message:
         fmt("Trimming raw paired-end read data from {input}")
     shell:
-        nice("{TRIMGALORE} {params} {input} > {log} 2>&1 ")
+        nice("{TRIMGALORE} {params} {input.files} > {log} 2>&1 ")
 
 # ==========================================================================================
 # raw quality control

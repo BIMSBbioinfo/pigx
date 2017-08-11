@@ -141,20 +141,19 @@ render2multireport <- function(final_output,
   
   if(!is.null(sessioninfo)){
     
-    finalSessionInfoFile <- list.files(path = finalreportdir,
-               pattern = "finalsessioninfo.rds",
-               full.names = TRUE)
-    if(!file.exists(finalSessionInfoFile)) {
       
-      sessionfiles <- list.files(path = finalreportdir, pattern = "session", full.names = TRUE)
-      sessionfiles <- sessionfiles[endsWith(sessionfiles,".rds")]
-      finalSessionInfo <- mergeSessionInfos(lapply(sessionfiles,readRDS))
-      saveRDS(finalSessionInfo,file = paste0(finalreportdir,"/","finalsessioninfo.rds"))
-      
-      on.exit(unlink(sessionfiles),add = TRUE)
-      
-    }
+    sessionfiles <- list.files(path = finalreportdir, pattern = "session", full.names = TRUE)
+    sessionfiles <- sessionfiles[endsWith(sessionfiles,".rds")]
     
+    finalSessionInfoFile <- paste0(finalreportdir,"/","finalsessioninfo.rds")
+    if( length(sessionfiles) >= 1 ) {
+      finalSessionInfo <- mergeSessionInfos(lapply(sessionfiles,readRDS))
+      saveRDS(finalSessionInfo,file = finalSessionInfoFile)
+      on.exit(unlink(sessionfiles),add = TRUE)
+    } else stop("no session info file found")
+
+
+      
     render_list = readRDS(render_args)
     # render_list$knitr_root_dir = finalreportdir
     render_list$params=list("sessioninfo" = finalSessionInfoFile)
