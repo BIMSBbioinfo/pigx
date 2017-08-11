@@ -12,7 +12,7 @@ output:
       in_header: pigx_bsseq_logo.html
 # output_dir: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/methseg_rule/"
 # output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.bam_meth_segments.html"
-date: "`r Sys.Date()`"
+date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 params:
   rdata: "methylation_calls/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_methylRaw.RData"

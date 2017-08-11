@@ -10,7 +10,7 @@ output:
     self_contained: TRUE
     includes:
       in_header: pigx_bsseq_logo.html
-date: "`r Sys.Date()`"
+date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 # biblio-style: apalike
 link-citations: yes

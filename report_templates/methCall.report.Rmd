@@ -12,7 +12,7 @@ output:
       in_header: pigx_bsseq_logo.html
 output_dir: "methylation_calls/"
 output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.meth_calls.html"
-date: "`r Sys.Date()`"
+date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 params:
   inBam:    ""#../test_dataset/sample_bam_files/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.bam"
