@@ -22,9 +22,9 @@ set -o pipefail
 
 
 # #===== DEFAULT PATHS ===== #
-tablesheet="test_CElegans/TableSheet_test.csv"
+tablesheet='' #"test_CElegans/TableSheet_test.csv"
 path2configfile="./config.json"
-path2programsJSON="test_CElegans/PROGS.json"
+path2programsJSON='' #"test_CElegans/PROGS.json"
 path2clusterconfig="cluster_conf.json"
 
 #=========== PARSE PARAMETERS ============#
