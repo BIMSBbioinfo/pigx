@@ -37,6 +37,7 @@
      ("r-methylkit-devel" ,r-methylkit-devel)
      ("r-rtracklayer" ,r-rtracklayer)
      ("r-rmarkdown" ,r-rmarkdown)
+     ("r-bookdown" ,r-bookdown)
      ("ghc-pandoc" ,ghc-pandoc)
      ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
      ("python-wrapper" ,python-wrapper)

@@ -54,6 +54,7 @@ AX_TEST_R_PACKAGE([AnnotationHub])
 AX_TEST_R_PACKAGE([DT])
 AX_TEST_R_PACKAGE([rtracklayer])
 AX_TEST_R_PACKAGE([rmarkdown])
+AX_TEST_R_PACKAGE([bookdown])
 
 find_or_override_prog([SAMTOOLS],      [samtools])
 AC_ARG_ENABLE([samtools-version-check],
