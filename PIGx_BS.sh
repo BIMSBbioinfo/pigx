@@ -147,14 +147,17 @@ function generateConfig {
 ## If the config file does not exist, we generate it and 
 ## write the md5 hash of the input tables to files.
 if [ ! -f $path2configfile ] || [ ! -f $tablesheet_md5 ] || [ ! -f $progs_md5 ]; then
-  echo "case 1"
     if [ -z $tablesheet ]
-      then echo "Tablesheet mising, quiting now ... "; exit; fi
+      then echo -e "$(basename "$0"): Error: Tablesheet mising!"
+           echo -e "Cannot create config file, exiting now ... "; exit; fi
     if [ -z $path2programsJSON ] 
-    then echo "Paths to Programs missing, quitting now ... "; exit; fi
+      then echo -e "$(basename "$0"): Error: Paths to Programs missing!"
+           echo -e "Cannot create config file, exitin now ... "; exit; fi
     generateConfig
-elif [ $createConfig == "true" ]; then
-    generateConfig
+# else if [ $createConfig == "true" ]; then
+#     echo "case 2"
+#     generateConfig
+#     fi
 else
   ## if one or both of the tables are given, we generate the config file and 
   ## update the md5 hash of the input tables if their content has changed.
