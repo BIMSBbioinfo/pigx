@@ -10,6 +10,11 @@ params:
   references: TRUE
 ---
 
+```{r include=FALSE}
+makeSessioninfo=params$sessioninfo
+makeReferences = params$references
+```
+
 
 ```{r eval_params, echo=FALSE}
 
@@ -200,11 +205,9 @@ legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,l
 ```
 
 
-<!-- ### Session Info -->
+`r if(makeSessioninfo) {"### Session Info"}`
 
-`r if(params$sessioninfo) {"### Session Info"}`
-
-```{r ,include=as.logical(params$sessioninfo)}
+```{r ,include=makeSessioninfo  }
 sessionInfo()
 ```
 
@@ -217,9 +220,8 @@ saveRDS(sess,file = session_file)
 ```
 
 
-`r if(params$references) {"### References"}`
+`r if(makeReferences) {"### References"}`
 
-<!-- Document final ruler -->
 ********
 
 

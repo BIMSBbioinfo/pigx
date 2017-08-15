@@ -15,5 +15,4 @@ sessionInfo()
 readRDS(params$sessioninfo)
 ```
 
-<!-- Document final rule -->
 ********

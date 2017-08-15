@@ -10,10 +10,10 @@ params:
   references: TRUE
 ---
 
-```{r}
-save.image(file = "my.rdata")
+```{r include=FALSE}
+makeSessioninfo=params$sessioninfo
+makeReferences = params$references
 ```
-
 
 ```{r eval_params, echo=FALSE}
 input     <- params$rdata
@@ -114,15 +114,12 @@ Finally we export the regions to a *BED* file, which can be loaded into any geno
 ```
 
 
-<!-- ### Session Info -->
+`r if(makeSessioninfo) {"### Session Info"}`
 
-`r if(params$sessioninfo) {"### Session Info"}`
-
-```{r ,include=as.logical(params$sessioninfo)}
+```{r ,include=makeSessioninfo  }
 sessionInfo()
 ```
 
-`r !(params$sessioninfo)` 
 
 <!-- this section is used to generate a merged sessioninfo from multiple reports -->
 ```{r, include=FALSE }
@@ -132,7 +129,6 @@ saveRDS(sess,file = session_file)
 ```
 
 
-`r if(params$references) {"### References"}`
+`r if(makeReferences) {"### References"}`
 
-<!-- Document final rule -->
 ********
