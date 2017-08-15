@@ -65,7 +65,7 @@ mergeSessionInfos <- function(sessions = list()) {
   }
 }
 
-
+## http://github.com/rstudio/bookdown/blob/master/R/utils.R#L141-L156
 merge_chapters2 = function(files, to, before = NULL, after = NULL, orig = files) {
   ## in the preview mode, only use some placeholder text instead of the full Rmd
   # preview = opts$get('preview'); input = opts$get('input_rmd')
