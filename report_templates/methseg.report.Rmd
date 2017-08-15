@@ -124,7 +124,8 @@ sessionInfo()
 
 `r !(params$sessioninfo)` 
 
-```{r, include=FALSE, eval=!(params$sessioninfo)}
+<!-- this section is used to generate a merged sessioninfo from multiple reports -->
+```{r, include=FALSE }
 session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
 sess <- sessionInfo()
 saveRDS(sess,file = session_file)
