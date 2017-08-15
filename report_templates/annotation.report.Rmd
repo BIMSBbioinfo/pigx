@@ -25,7 +25,7 @@ refgenes.file <- params$refseqfile
 
 ## Annotation of Segments
 
-The annotation of the identified regions with genomic features allows to get a better understanding and characterization of detected regions. 
+The annotation of the identified regions with genomic features allows a better understanding and characterization of detected regions. 
 
 The annotation with 
 

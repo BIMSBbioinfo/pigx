@@ -100,7 +100,7 @@ We first extract the methylation calls from the sequence alignment produced by t
   
 ```
 The methylation calls are written to the text file "`r paste0(sample_id,"_CpG.txt")`", 
-but to enable direct loading of the `methylRaw` object it is saved for further analysis to "`r basename(rdatafile)`" in the methylation calls folder.
+but to enable direct loading of the `methylRaw` object it is saved for further analysis to "`r basename(rdatafile)`" in the methylation calls directory.
 ```{r}
     ## Saving object
     save(methRaw,file=normalizePath(rdatafile)) 
