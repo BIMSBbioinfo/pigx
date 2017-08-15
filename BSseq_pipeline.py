@@ -67,7 +67,7 @@ OUTPUT_FILES = [
         	# GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
  
                 #               ==== rule 01 raw QC    =========
-                [ expand (list_files_rawQC(DIR_rawqc, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"] )  ) for sample in config["SAMPLES"]  ],
+                #[ expand (list_files_rawQC(DIR_rawqc, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"] )  ) for sample in config["SAMPLES"]  ],
 
                 #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
                 #               ==== rule 02 trimgalore ======
@@ -84,7 +84,7 @@ OUTPUT_FILES = [
                 # [ expand ( list_files_dedupe(DIR_deduped, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
 
                 #               ==== rule 06 sorting ======
-                [ expand ( list_files_sortbam(DIR_sorted, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
+                #[ expand ( list_files_sortbam(DIR_sorted, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
                 
                 #               ====rule 07 extract_methylation (if needed) ======
                 # [ expand ( list_files_xmeth( DIR_xmethed, config["SAMPLES"][sampleID]["fastq_name"] )  ) for sampleID in config["SAMPLES"]  ],
