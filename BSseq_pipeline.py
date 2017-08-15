@@ -322,7 +322,7 @@ rule fastqc_after_trimming_pe:
 
 rule trimgalore_se:
     input:
-       touch(DIR_rawqc+"{sample}_fastqc.html"),
+       qc   = DIR_rawqc+"{sample}_fastqc.html",
        file = PATHIN+"{sample}.fq.gz"
     output:
        DIR_trimmed+"{sample}_trimmed.fq.gz" #---- this ALWAYS outputs .fq.qz format.
@@ -341,8 +341,8 @@ rule trimgalore_se:
 #-----------------------
 rule trimgalore_pe:
     input:
-        touch(DIR_rawqc+"{sample}_1_fastqc.html"),
-        touch(DIR_rawqc+"{sample}_2_fastqc.html"),
+        qc    = [ DIR_rawqc+"{sample}_1_fastqc.html",
+                  DIR_rawqc+"{sample}_2_fastqc.html"],
         files = [ PATHIN+"{sample}_1.fq.gz",
                   PATHIN+"{sample}_2.fq.gz"]
     output:
