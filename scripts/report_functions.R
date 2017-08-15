@@ -20,7 +20,7 @@ render2Markdown <- function(reportFile,
   message("render single report")
   
   ## make independent intermediate dirs
-  interDir <- paste0(outDir,outFile,"_tmp")
+  interDir <- paste0(outDir,"/",outFile,"_tmp")
 
   rmarkdown::render(
     input = reportFile,
