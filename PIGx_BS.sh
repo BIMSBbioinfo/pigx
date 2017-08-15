@@ -152,7 +152,7 @@ if [ ! -f $path2configfile ] || [ ! -f $tablesheet_md5 ] || [ ! -f $progs_md5 ];
            echo -e "Cannot create config file, exiting now ... "; exit; fi
     if [ -z $path2programsJSON ] 
       then echo -e "$(basename "$0"): Error: Paths to Programs missing!"
-           echo -e "Cannot create config file, exitin now ... "; exit; fi
+           echo -e "Cannot create config file, exiting now ... "; exit; fi
     generateConfig
 # else if [ $createConfig == "true" ]; then
 #     echo "case 2"
