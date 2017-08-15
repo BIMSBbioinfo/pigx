@@ -166,8 +166,8 @@ else
       writemd5 $tablesheet "${tablesheet_md5}.test"
       if ! cmp --silent "${tablesheet_md5}.test" $tablesheet_md5  
         then 
-          cat "${tablesheet_md5}.test"
-          cat $tablesheet_md5
+          #cat "${tablesheet_md5}.test"
+          #cat $tablesheet_md5
           echo "Tablesheet changed, now updating config file!"
           python scripts/create_configfile.py $tablesheet $path2configfile "$(awk '{print $2}' $progs_md5)"
           mv "${tablesheet_md5}.test" $tablesheet_md5
