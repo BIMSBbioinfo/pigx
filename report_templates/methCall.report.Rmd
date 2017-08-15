@@ -32,9 +32,6 @@ rdatafile <- params$rdata
 ## Methylation Calling Report
 
 
-<!-- this is the local dir: `r  getwd()` -->
-<!-- Here I need to write a short section why we do this -->
-
 ```{r, include=FALSE,warning=FALSE}
 
   suppressPackageStartupMessages(expr = {
@@ -135,5 +132,3 @@ saveRDS(sess,file = session_file)
 
 
 `r if(makeReferences) {"### References"}`
-
-********

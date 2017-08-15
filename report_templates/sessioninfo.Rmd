@@ -14,5 +14,3 @@ sessionInfo()
 ```{r , echo=FALSE,results=TRUE}
 readRDS(params$sessioninfo)
 ```
-
-********

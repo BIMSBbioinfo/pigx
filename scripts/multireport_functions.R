@@ -74,7 +74,7 @@ merge_chapters2 = function(files, to, before = NULL, after = NULL, orig = files)
     x = # if (preview && !(o %in% input)) create_placeholder(x) else {
       bookdown:::insert_code_chunk(x, before, after)
     #}
-    c(x, '', paste0('<!--chapter:end:', o, '-->'), '')
+    c(x, '', paste0("********"),'',paste0('<!--chapter:end:', o, '-->'), '')
   }))
   #if (preview && !(files[1] %in% input))
   #content = c(fetch_yaml(readUTF8(files[1])), content)
