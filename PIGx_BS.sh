@@ -134,14 +134,14 @@ function writemd5 {
   fi
 }
 
-tablesheet_md5="$(dirname config.json)/.pigx.ts.md5"
-progs_md5="$(dirname config.json)/.pigx.pr.md5"
+tablesheet_md5="$(dirname $path2configfile)/.pigx.ts.md5"
+progs_md5="$(dirname $path2configfile)/.pigx.pr.md5"
 
 function generateConfig {
     echo "Generating config file ... "
     python scripts/create_configfile.py $tablesheet $path2configfile $path2programsJSON
     writemd5 "$tablesheet" "$tablesheet_md5"
-    writemd5 "$path2programsJSON" "$(dirname config.json)/.pigx.pr.md5"
+    writemd5 "$path2programsJSON" "$progs_md5"
 }  
 
 ## if the config already exists but no tablesheet or progs are given
