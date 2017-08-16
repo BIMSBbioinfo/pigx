@@ -144,6 +144,15 @@ function generateConfig {
     writemd5 "$path2programsJSON" "$(dirname config.json)/.pigx.pr.md5"
 }  
 
+## if the config already exists but no tablesheet or progs are given
+## use old input and check if it changed
+if [ -f $path2configfile ] || [ -f $tablesheet_md5 ] || [ -f $progs_md5 ]; then
+  if [ -f $tablesheet_md5 ] && [ -z $tablesheet ]; then
+    tablesheet="$(awk '{print $2}' $tablesheet_md5)"; fi
+  if [ -f $progs_md5 ]  && [ -z $path2programsJSON ]; then
+    path2programsJSON="$(awk '{print $2}' $progs_md5)"; fi
+fi
+  
 ## If the config file does not exist, we generate it and 
 ## write the md5 hash of the input tables to files.
 if [ ! -f $path2configfile ] || [ ! -f $tablesheet_md5 ] || [ ! -f $progs_md5 ]; then
