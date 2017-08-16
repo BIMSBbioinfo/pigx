@@ -51,8 +51,6 @@ Options:
   -c, --configfile FILE     The config file used for calling the underlying snakemake process.
                              By default the file '${path2configfile}' is dynamically created
                              from tablesheet and programs file.
-                             
-  -C, --create-config       Force the re-creation of the config file, even if it already exists                            
 
   -s, --snakeparams PARAMS  Additional parameters to be passed down to snakemake, e.g.
                                --dryrun    do not execute anything
@@ -60,7 +58,7 @@ Options:
 
 "
 
-createConfig=false
+# createConfig=false
 
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 while [[ $# -gt 0 ]]; do
@@ -76,10 +74,10 @@ while [[ $# -gt 0 ]]; do
             path2configfile="$1"
             shift
             ;;
-        -C|--create-config)
-            createConfig=true
-            shift
-            ;;
+        # -C|--create-config)
+        #     createConfig=true
+        #     shift
+        #     ;;
         -p|--programs)
             path2programsJSON="$1"
             shift
