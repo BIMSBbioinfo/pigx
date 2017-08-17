@@ -52,6 +52,7 @@ This is how the minimal config file should look like, in order to inlcude this s
 }
 """
 
+
 ## show base dir
 # print(workflow.basedir)
 
@@ -98,7 +99,7 @@ METHCALLDIR = "methylation_calls/"
 SEGDIR      = "segmentation/"
 ANNODIR     = "annotation/"
 FINALDIR    = "final_Report/"
-
+DIFFMETHDIR = 'differential_methylation/'
 
 
 
@@ -116,8 +117,8 @@ rule bam_methCall:
         ## absolute path to bamfiles
         inBam       = WORKDIR + BAMDIR + "{prefix}.sorted.bam",
         assembly    = config["GENOME_VERSION"],
-        mincov      = int(config["bam_methCall_args_mincov"]), ##TODO
-        minqual     = int(config["bam_methCall_args_minqual"]), ##TODO
+        mincov      = int(config["bam_methCall_args_mincov"]),
+        minqual     = int(config["bam_methCall_args_minqual"]),
         ## absolute path to output folder in working dir
         rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
     log:
@@ -204,6 +205,92 @@ rule methseg_annotation:
         SCRIPTDIR + "report_functions.R"   
 
 
+#----------------------------------- START DIFF METH
+DIFFMETHDIR = 'differential_methylation/'
+
+
+SAMPLE_IDS = list(config["SAMPLES"].keys())
+SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+
+
+# For only CpG context
+def diffmeth_input_function(wc):
+
+  treatments = wc.treatment
+  treatments = treatments.split("_")
+
+  inputfiles = []
+  for t in treatments:
+    indx = SAMPLE_TREATMENTS.index(t)
+    sampleid = SAMPLE_IDS[indx]
+    
+    fqname = config["SAMPLES"][sampleid]['fastq_name']
+    if len(fqname)==1:
+      inputfile=[METHCALLDIR + sampleid+"_se_bt2.deduped.sorted_CpG.txt"]
+    elif len(fqname)==2:
+      inputfile=[METHCALLDIR + sampleid+"_1_val_1_bt2.deduped.sorted_CpG.txt"]
+
+    inputfiles.append(inputfile)
+  
+  inputfiles = list(sum(inputfiles, []))
+  return(inputfiles)
+
+
+## Differential methylation
+rule diffmeth:
+    ## paths inside input and output should be relative
+    input:  
+        template    = TEMPLATEDIR + "diffmeth.report.Rmd",
+        inputfiles  = diffmeth_input_function
+    output: 
+        report      = DIFFMETHDIR + "{treatment}.sorted_diffmeth.nb.html",
+        methylDiff_file  = DIFFMETHDIR + "{treatment}.sorted_diffmeth.RDS",
+        bedfile     = DIFFMETHDIR + "{treatment}.sorted_diffmeth.bed",
+        knitr_meta  = touch(FINALDIR + "{treatment}/knitr_meta_notuse.rds")
+    params:
+        workdir     = WORKDIR,
+        inputfiles  = diffmeth_input_function,
+        sampleids   = lambda wc: [SAMPLE_IDS[SAMPLE_TREATMENTS.index(t)] for t in wc.treatment.split("_")],
+        methylDiff_file      = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.RDS",
+        methylDiff_hyper_file  = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhyper.RDS",
+        methylDiff_hypo_file   = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhypo.RDS",
+        outBed      = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.bed",
+        assembly    = config["GENOME_VERSION"],
+        treatment   = lambda wc: wc.treatment.split("_"),
+        mincov      = int(config["bam_methCall_args_mincov"]), 
+        context     = "CpG",
+        cores       = int(config["diffmeth_cores"])
+        
+    log:
+        DIFFMETHDIR+"{treatment}.sorted_diffmeth.log"
+    script:
+        SCRIPTDIR + "report_functions.R" 
+
+
+## Annotation with gene features
+rule annotation_diffmeth:
+    input:  
+        template    = TEMPLATEDIR + "annotation.report.diff.meth.Rmd",
+        bedfile     = DIFFMETHDIR + "{treatment}.sorted_diffmeth.bed",
+        refgenes    = ANNODIR + "refseq.genes.{assembly}.bed"
+    output: 
+        report      = ANNODIR + "{treatment}.sorted_{assembly}_annotation.diff.meth.nb.html",
+        knitr_meta  = touch(FINALDIR + "{treatment}.{assembly}/knitr_meta_notuse.rds")
+    params:
+        inBed       = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.bed",
+        assembly    = config["GENOME_VERSION"],
+        refseqfile  = WORKDIR + ANNODIR + "refseq.genes.{assembly}.bed",
+        methylDiff_file  = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.RDS",
+        methylDiff_hyper_file = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhyper.RDS",
+        methylDiff_hypo_file  = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhypo.RDS",
+        ideoDMC_script = SCRIPTDIR + "ideoDMC.R"
+    log:
+        ANNODIR + "{treatment}.sorted_{assembly}_annotation.diff.meth.log"
+    script:
+        SCRIPTDIR + "report_functions.R"   
+        
+#----------------------------------- END DIFF METH
+   
 
 ### note that Final report can only be generated 
 ### if one of the intermediate has been genereted,
@@ -216,19 +303,56 @@ rule methseg_annotation:
 #         workdir = WORKDIR + "."
 
 
-# def get_fastq_name(full_name):
-#     print(full_name)
-#     if "se_bt2" in full_name:
-#         return full_name[0:full_name.find("se_bt2")-1] #"Hello "+ full_name# #
-#     elif "val_1_bt2" in full_name:
-#         return [full_name[0:full_name.find("val_1_bt2")-2]+i for i in i=[1 2]] # "Hi "+ full_name#[]
-#     else:
-#         raise Exception("=== ERROR: Cannot identify fastq_name. STOP! ===")
+def get_fastq_name(full_name):
+    # single end
+    find_se_inx=full_name.find('_se_bt2')
+    # paired-end
+    find_pe_inx=full_name.find('_1_val_1_bt2')
+    
+    if(find_se_inx>=0):
+      output=full_name[:find_se_inx]
+    elif(find_pe_inx>=0):
+     output=full_name[:find_pe_inx]
+    else:
+     print("Sth went wrong")
+    
+    return(output)
+
+
+SAMPLE_IDS = list(config["SAMPLES"].keys())
+SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
+DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
+
+def diff_meth_input(wc):
+  sample = wc.prefix
+  sampleid = get_fastq_name(sample)
+  treatment_of_sampleid = SAMPLE_TREATMENTS_DICT[ sampleid ]
+  
+  mylist = []
+  for x in DIFF_METH_TREATMENT_PAIRS:
+    if treatment_of_sampleid in x:
+      name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
+      mylist.append(ANNODIR + name_of_dir)
+  return(mylist)
+
+
+rule integrateFinalReport:
+    input:
+      diffmeth = diff_meth_input
+    output:
+       touch(FINALDIR + "{prefix}_{assembly}_integrateDiffMeth2FinalReport.txt")
+    log:
+       FINALDIR + "{prefix}_{assembly}_integrateFinalReport.log"
+    script:
+      SCRIPTDIR + "integrate2finalreport.R"
+
 
 ## Final Report
 rule final_report:
     input:  
         rules.methseg_annotation.output,
+        rules.integrateFinalReport.output,
         index       = TEMPLATEDIR + "index.Rmd",   
         references  = TEMPLATEDIR + "references.Rmd",
         sessioninfo = TEMPLATEDIR + "sessioninfo.Rmd"
