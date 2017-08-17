@@ -68,7 +68,7 @@ default the file 'config.json' is dynamically created from tablesheet
 and programs file.
 """)
 
-parser.add_argument('-s', '--snakeparams', dest='params',
+parser.add_argument('-s', '--snakeparams', dest='snakeparams', default='',
                     help="""\
 Additional parameters to be passed down to snakemake, e.g.
     --dryrun    do not execute anything
