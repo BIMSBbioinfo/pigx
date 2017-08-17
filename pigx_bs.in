@@ -378,9 +378,7 @@ def cluster_run():
     rules = [
         ('__default__', 1, config['MEM_default']),
         ('bismark_se', bismark_se_threads, config['bismark_MEM']),
-        ('bismark_pe', bismark_pe_threads, config['bismark_MEM']),
-        ('bismark_se_methex', bismark_se_threads, config['MEM_default']),
-        ('bismark_pe_methex', bismark_pe_threads, config['MEM_default'])
+        ('bismark_pe', bismark_pe_threads, config['bismark_MEM'])
     ]
 
     cluster_conf = {}

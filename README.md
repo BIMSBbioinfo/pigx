@@ -22,7 +22,7 @@ PIGx can be installed through Guix (TODO: add details here) and consists of the 
 
 | File          | Purpose       |
 | ------------- |:-------------:|
-| PIGx_BS.sh    |: (main shell script) - establishes config file, links to input, reference paths and launches. |
+| pigx_bs       |: (main script) - establishes config file, links to input, reference paths and launches. |
 | [TableSheet].csv  |: (primary input file)  spreadsheet supplying basic parameters of the process: (e.g. filenames, paths, etc.) |
 | BSseq_pipeline.py |  Defines the rules of the pipeline for data processing.     |
 | config.json   | Generated automatically by PIGx_BS.sh Defines various parameters; e.g. input/output folder paths, sample names, etc. |
