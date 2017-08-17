@@ -348,7 +348,7 @@ for sample in config['SAMPLES']:
       # FIXME: Future versions should handle unzipped .fq or .bz2.
       bail("Input files must be gzipped: %s." % f)
 
-    tag = "" if single_end else '_' + str(idx)
+    tag = "" if single_end else '_' + str(idx + 1)
     linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
     makelink(path.join(config['PATHIN'], f),
              path.join(config['PATHOUT'], "path_links/input/", linkname))
