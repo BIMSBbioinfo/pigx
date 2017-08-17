@@ -210,7 +210,7 @@ os.system('bash scripts/set_path2logo.sh images/Logo_PIGx.png report_templates/_
 # Run snakemake!
 
 def cluster_run():
-    if 'contact_email' in config:
+    if 'contact_email' in config and not config['contact_email'].lower() == 'none':
         contact_email_string = "-m abe -M %s" % config['contact_email']
     else:
         contact_email_string = ""
