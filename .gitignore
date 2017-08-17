@@ -19,7 +19,7 @@ report_templates/*.nb.html
 !test_dataset/sample_bam_files/
 
 # ignore on all machines 
-report_templates/pigx_bssseq_logo.html
+report_templates/pigx_bsseq_logo.html
 
 # ignore on my (alex) machine
 .snakemake/
