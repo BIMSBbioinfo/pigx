@@ -48,8 +48,6 @@ BISMARK_GENOME_PREPARATION     =  GTOOLBOX+config["PROGS"]["BISMARK_GENOME_PREPA
 BISMARK                        =  GTOOLBOX+config["PROGS"]["BISMARK"]
 BOWTIE2                        =  GTOOLBOX+config["PROGS"]["BOWTIE2"]
 DEDUPLICATE_BISMARK            =  GTOOLBOX+config["PROGS"]["DEDUPLICATE_BISMARK"]
-BISMARK_METHYLATION_EXTRACTOR  =  GTOOLBOX+config["PROGS"]["BISMARK_METHYLATION_EXTRACTOR"]
-BISMARK2REPORT                 =  GTOOLBOX+config["PROGS"]["BISMARK2REPORT"]
 
 SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
 
@@ -119,44 +117,6 @@ def nice(cmd):
 rule all:
     input:
         OUTPUT_FILES
-
-# ==========================================================================================
-# extract methylation information from sorted bam file 
-
-rule  bismark_se_methex:
-    input:
-        DIR_deduped+"{sample}_se_bt2.deduped.bam"
-    output:
-        expand(DIR_xmethed+"{{sample}}_se_bt2.deduped.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
-    params:
-        se = "--single-end",
-        gz = "--gzip",
-        cReport = "--cytosine_report",
-        bg = "--bedgraph",
-        genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output "+DIR_xmethed+""
-    log: DIR_xmethed+"{sample}_bismark_methylation_extraction.log"
-    message: """--------------  Extracting  Methylation Information from {input}  --------------- \n"""
-    shell:
-        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} > {log} 2>&1 ")
-#-----------------------
-rule  bismark_pe_methex:
-    input:
-        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
-    output:
-        expand(DIR_xmethed+"{{sample}}_1_val_1_bt2.deduped.{file}.gz",  file=["bedGraph","bismark.cov","CpG_report.txt"]),
-    params:
-        pe = "--paired-end",
-        gz = "--gzip",
-        cReport = "--cytosine_report",
-        bg = "--bedgraph",
-
-        genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output "+DIR_xmethed+""
-    log: DIR_xmethed+"{sample}_bismark_methylation_extraction.log"
-    message: """--------------  Extracting  Methylation Information from  {input}  --------------- \n"""
-    shell:
-        nice(" {BISMARK_METHYLATION_EXTRACTOR} {params} --multicore 6 {input} > {log} 2>&1 ")
 
 
 # ==========================================================================================

@@ -267,10 +267,7 @@ if [ ${cluster_run} = true ] || [ ${cluster_run} = TRUE ]
     echo "{"  >  ${path2clusterconfig}
     python scripts/rules_cluster.py  __default__ 1                      ${qname}  ${MEM_default} ${h_stack}  1   >>  ${path2clusterconfig}
     python scripts/rules_cluster.py  bismark_se  ${bismark_se_threads}  ${qname}  ${MEM_bismark} ${h_stack}  1   >>  ${path2clusterconfig}
-    python scripts/rules_cluster.py  bismark_pe  ${bismark_pe_threads}  ${qname}  ${MEM_bismark} ${h_stack}  1   >>  ${path2clusterconfig}
-    
-    python scripts/rules_cluster.py  bismark_se_methex  ${bismark_se_threads}  ${qname}  ${MEM_default}  ${h_stack} 1  >>  ${path2clusterconfig}
-    python scripts/rules_cluster.py  bismark_pe_methex  ${bismark_pe_threads}  ${qname}  ${MEM_default}  ${h_stack} 0  >>  ${path2clusterconfig}
+    python scripts/rules_cluster.py  bismark_pe  ${bismark_pe_threads}  ${qname}  ${MEM_bismark} ${h_stack}  0   >>  ${path2clusterconfig}
     
     echo " Commencing snakemake run submission to cluster "
     snakemake -s BSseq_pipeline.py --configfile $path2configfile --cluster-config ${path2clusterconfig}  -d ${path_OUT}  --cluster " qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM}  ${contact_email_string} -b y  -pe smp {cluster.nthreads} -cwd  "  --jobs ${numjobs} ${snakeparams:-}

@@ -36,8 +36,6 @@ The rules defined in BSseq_pipeline are dependent on the following functions:
  - BISMARK                       
  - BOWTIE2                       
  - DEDUPLICATE_BISMARK           
- - BISMARK_METHYLATION_EXTRACTOR 
- - BISMARK2REPORT                
  - SAMTOOLS 
 
 All of these dependencies must be present in folder indicated in the config.json file by  ["paths"]["GTOOLBOX"]. TODO: dependencies (talk to RW)
