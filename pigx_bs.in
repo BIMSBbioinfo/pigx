@@ -162,16 +162,41 @@ config = json.load(open(args.configfile, 'r'))
 # N.B. Any previously existing links will be kept in place, and no
 # warning will be issued if this is the case.
 
+def makelink(src, target):
+    if not path.isfile(src):
+        bail("Refusing to link non-existent file %s" % src)
+    elif not path.isdir(path.dirname(target)):
+        bail("%s or subdirectory does not exist for linking %s" % config['PATHOUT'], target)
+    else:
+        try:
+            os.symlink(src, target)
+        except FileExistsError:
+            pass
+
 os.makedirs(path.join(config['PATHOUT'], 'path_links/input'),
             exist_ok=True)
 
 # Link the reference genome
-os.symlink(config['GENOMEPATH'],
-           path.join(config['PATHOUT'], 'path_links/refGenome'))
+try:
+    os.symlink(config['GENOMEPATH'],
+               path.join(config['PATHOUT'], 'path_links/refGenome'))
+except FileExistsError:
+    pass
 
 # Create file links
-# TODO: don't use system
-os.system('python scripts/create_file_links.py ' + args.configfile)
+for sample in config['SAMPLES']:
+  flist = config['SAMPLES'][sample]['files']
+  single_end = len(flist) == 1
+
+  for idx, f in enumerate(flist):
+    if not f.endswith(".gz"):
+      # FIXME: Future versions should handle unzipped .fq or .bz2.
+      bail("Input files must be gzipped: %s." % f)
+
+    tag = "" if single_end else '_' + str(idx)
+    linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
+    makelink(path.join(config['PATHIN'], f),
+             path.join(config['PATHOUT'], "path_links/input/", linkname))
 
 
 
