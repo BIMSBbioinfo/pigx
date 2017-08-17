@@ -9,6 +9,12 @@ AM_SILENT_RULES([yes])
 dnl We need sed for version checks
 AC_PROG_SED
 
+dnl Load Python support for Automake and ensure we have a Python
+dnl interpreter for at least version 3.5.  This sets the "PYTHON"
+dnl variable.
+dnl https://www.gnu.org/software/automake/manual/html_node/Python.html
+AM_PATH_PYTHON([3.5])
+
 dnl Check for required programmes and store their full path in the
 dnl given variables.  The variables are used to substitute
 dnl placeholders in the scripts.
@@ -77,5 +83,6 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
   ])
 
 AC_CONFIG_FILES([etc/programs.json])
+AC_CONFIG_FILES([pigx_bs], [chmod +x pigx_bs])
 
 AC_OUTPUT

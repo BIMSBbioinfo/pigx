@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #============================================================================================================
 # SNAKEMAKE FILE WRITTEN BY THE AKALIN GROUP AT MDC, BERLIN, 2017
 # Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg
