@@ -38,14 +38,15 @@ bismark_cores=config["bismark_cores"]       #--- from config file. Gets passed t
 
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
-FASTQC                         =  config["PROGS"]["FASTQC"]            #--- self-explanatory program names.
-TRIMGALORE                     =  config["PROGS"]["TRIMGALORE"]
-CUTADAPT                       =  config["PROGS"]["CUTADAPT"]
-BISMARK_GENOME_PREPARATION     =  config["PROGS"]["BISMARK_GENOME_PREPARATION"]
-BISMARK                        =  config["PROGS"]["BISMARK"]
-BOWTIE2                        =  config["PROGS"]["BOWTIE2"]
-DEDUPLICATE_BISMARK            =  config["PROGS"]["DEDUPLICATE_BISMARK"]
-SAMTOOLS                       =  config["PROGS"]["SAMTOOLS"]
+programs = config['programs']
+FASTQC                         =  programs["FASTQC"]            #--- self-explanatory program names.
+TRIMGALORE                     =  programs["TRIMGALORE"]
+CUTADAPT                       =  programs["CUTADAPT"]
+BISMARK_GENOME_PREPARATION     =  programs["BISMARK_GENOME_PREPARATION"]
+BISMARK                        =  programs["BISMARK"]
+BOWTIE2                        =  programs["BOWTIE2"]
+DEDUPLICATE_BISMARK            =  programs["DEDUPLICATE_BISMARK"]
+SAMTOOLS                       =  programs["SAMTOOLS"]
 
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------

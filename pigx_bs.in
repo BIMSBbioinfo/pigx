@@ -260,7 +260,7 @@ PROGSFILE as inputs."""
     diff_meth_params = parse_diff_meth(diff_meth, sample_params)
 
     # Load programs
-    progs = dict(json.load(open(progsfile, 'r')))
+    progs = {'programs': dict(json.load(open(progsfile, 'r')))}
   
     # Create a config file
     config_dict = gen_params
