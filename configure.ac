@@ -49,6 +49,7 @@ AC_DEFUN([AX_TEST_R_PACKAGE], [
 ])
 
 find_or_override_prog([GNUBASH],         [bash])
+find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])
 find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
 find_or_override_prog([FASTQC],          [fastqc])
