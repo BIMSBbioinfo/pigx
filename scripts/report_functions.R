@@ -197,12 +197,6 @@ cat(paste(
   "into directory:",normalizePath(dirname(snakemake@output[["report"]])),"\n\n"
   ))
 
-# 
-# render2Report(reportFile = normalizePath(snakemake@input[["template"]]),
-#               outFile = basename(snakemake@output[["report"]]),
-#               outDir = normalizePath(dirname(snakemake@output[["report"]])),
-#               #report.params = snakeParams )
-#               report.params = snakemake@params[nchar(names(snakemake@params)) > 0] )
 
 render2Markdown(reportFile = normalizePath(snakemake@input[["template"]]),
                 outFile = basename(snakemake@output[["report"]]),
