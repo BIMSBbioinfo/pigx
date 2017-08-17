@@ -96,8 +96,8 @@ def file_hash(fname):
     """Return the SHA256 hash of the given file FNAME."""
     return hashlib.sha256(open(fname, 'rb').read()).hexdigest()
 
-def config_hashfile(config):
-    return path.join(path.dirname(config), '.pigx.hashes')
+def config_hashfile(configfile):
+    return path.join(path.dirname(configfile), '.pigx.hashes')
 
 def dump_hashes(target, tablesheet, programs):
     """Write the hashes of the TABLESHEET and PROGRAMS files to TARGET."""
@@ -121,11 +121,11 @@ as inputs."""
               tablesheet + ' ' + config + ' ' + progs)
     dump_hashes(config_hashfile(config), tablesheet, progs)
 
-def config_fresh(config):
+def config_fresh(configfile):
     """Return a tuple of whether the CONFIG is stale and the parsed JSON
 containing the input file names and hashes."""
-    hashfile = config_hashfile(config)
-    if not (path.isfile(hashfile) and path.isfile(config)):
+    hashfile = config_hashfile(configfile)
+    if not (path.isfile(hashfile) and path.isfile(configfile)):
         return (False, None)
     hashes = json.load(open(hashfile, 'r'))
     if ((hashes['tablesheet']['sha256'] == file_hash(hashes['tablesheet']['file'])) and
