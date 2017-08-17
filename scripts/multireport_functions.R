@@ -60,6 +60,8 @@ mergeSessionInfos <- function(sessions = list()) {
   } else if( length(sessions)==2) {
     .mergeSessionInfo(sessionX = sessions[[1]], 
                       sessionY = sessions[[2]])
+  } else if( length(sessions)==1) {
+    return(sessions[[1]])
   } else {
     stop("Not enough sessions given")
   }
