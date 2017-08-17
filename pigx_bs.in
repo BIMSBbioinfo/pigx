@@ -250,7 +250,7 @@ def cluster_run():
               config['numjobs'], args.snakeparams)
 
 
-if 'cluster_run' in config and not config['cluster_run'].lower == 'false':
+if 'cluster_run' in config and not config['cluster_run'].lower() == 'false':
     cluster_run()
 else:
     print("Commencing snakemake run submission locally")
