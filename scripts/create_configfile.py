@@ -3,25 +3,6 @@ import os, sys, json
 from helpers import *
 
 # -------------------------------------------------------------------------------
-def parse_config_args(config_args):
-  """
-  Check if user provided a tablesheet
-  """
-  if ( config_args=={} ):
-    raise Exception( """Missing argument indicating 'tablesheet'.
-                      Use argument --config and then type paths to the arguments, e.g.:
-                      snakemake -s Snakemake.py --config tablesheet=./TableSheet.csv""")
-  #      
-  tablesheet = config_args.get("tablesheet")
-  if (tablesheet is None):
-     raise Exception( """Missing argument indicating 'tablesheet'.
-                      Use argument --config and then type paths to the arguments, e.g.:
-                      snakemake -s Snakemake.py --config tablesheet=./TableSheet.csv""" )
-
-  return(tablesheet)
-
-
-# -------------------------------------------------------------------------------
 def parseTableSheet(file):
   """ Parse the tablesheet given in FILE and return its sections.
   """
