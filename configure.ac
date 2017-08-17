@@ -45,6 +45,14 @@ AC_DEFUN([AX_TEST_R_PACKAGE], [
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([PANDOC],          [pandoc])
 find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
+find_or_override_prog([FASTQC],          [fastqc])
+find_or_override_prog([TRIMGALORE],      [trim_galore])
+find_or_override_prog([BOWTIE2],         [bowtie2])
+find_or_override_prog([CUTADAPT],        [cutadapt])
+find_or_override_prog([BISMARK],         [bismark])
+find_or_override_prog([BISMARK_GENOME_PREPARATION], [bismark_genome_preparation])
+find_or_override_prog([DEDUPLICATE_BISMARK], [deduplicate_bismark])
+
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
 
@@ -68,14 +76,6 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
   ])
 
-dnl AC_CONFIG_FILES([Makefile
-dnl                  fp_from_trained_params.R
-dnl                  generate_cut_matrix.sh.in
-dnl                  get_cut_matrix.R
-dnl                  make_1bp_bam_for_fp.sh])
-
-dnl AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
-dnl AC_CONFIG_FILES([find_footprints_from_trained_parameters.sh.in],
-dnl                 [chmod +x find_footprints_from_trained_parameters.sh.in])
+AC_CONFIG_FILES([etc/programs.json])
 
 AC_OUTPUT
