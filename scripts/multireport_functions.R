@@ -212,7 +212,7 @@ render2multireport <- function(final_output,
   #                 orig = c(index,template.list,references))
   
   
-  merge_chapters2(unlist(meta),
+  merge_chapters2(unlist(lapply(meta ,function(x) attr(x,"intermediates")[2])),
                   to = paste0(finalreportdir,"/",bookdown:::with_ext(basename(final_output),".md"))#,
                   #orig = template.list
   )
