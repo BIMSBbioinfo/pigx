@@ -9,11 +9,6 @@
 # 
 #######################################
 
-# "GTOOLBOX": "~/.guix-profile/bin/",
-
-# SAMTOOLS = GTOOLBOX+config["progs"]["SAMTOOLS"] 
-
-
 rule bam_index:
 	input:
 		"{sample}.bam"

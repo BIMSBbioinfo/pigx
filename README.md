@@ -38,9 +38,9 @@ The rules defined in BSseq_pipeline are dependent on the following functions:
  - DEDUPLICATE_BISMARK           
  - SAMTOOLS 
 
-All of these dependencies must be present in folder indicated in the config.json file by  ["paths"]["GTOOLBOX"]. TODO: dependencies (talk to RW)
+All of these dependencies must be present in the environment at configuration time.
 
-There are additional dependencies that do need to be installed, but not located in ["paths"]["GTOOLBOX"]:
+There are additional dependencies that do need to be installed and available on the `PATH`:
 
  - [python-rp2](https://rpy2.bitbucket.io/)
  - [pandoc](http://pandoc.org/)
@@ -79,7 +79,6 @@ When PIGx is run, the data from this file will be used to automatically generate
 |  PATHIN       |     ---       | string: location of the experimental data files (.fastq[.gz|.bz2])   |
 |  PATHOUT      |    "./"       | string: ultimate location of the output data and report files   |
 |  GENOMEPATH   |     ---       | string: location of the reference genome data for alignment   |
-|  GTOOLBOX     | "~/.guix-profile/bin/"  | string: executable source files for the PIGx dependencies   |
 
  
 All input files (paired or single end) must be present in the foler indicated by _PATHIN_, And must have their files listed among ["SAMPLES"]. Output from the snakemake script will then be sent to the folder indicated by ["paths"]["PATHOUT"], with subdirectories corresponding to the various stages of the process.

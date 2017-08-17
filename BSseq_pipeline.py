@@ -34,23 +34,20 @@ DIR_final    = "final_Report/"
 
 PATHIN          = "path_links/input/"       #--- location of the data files to be imported --shell script creates symbolic link. 
 GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
-GTOOLBOX        = config["GTOOLBOX"]        #--- where the programs are stored to carry out the necessary operations
-
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
 bismark_cores=config["bismark_cores"]       #--- from config file. Gets passed to bismark multicore argument.  
 
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
-FASTQC                         =  GTOOLBOX+config["PROGS"]["FASTQC"]            #--- self-explanatory program names.
-TRIMGALORE                     =  GTOOLBOX+config["PROGS"]["TRIMGALORE"]
-CUTADAPT                       =  GTOOLBOX+config["PROGS"]["CUTADAPT"]
-BISMARK_GENOME_PREPARATION     =  GTOOLBOX+config["PROGS"]["BISMARK_GENOME_PREPARATION"]
-BISMARK                        =  GTOOLBOX+config["PROGS"]["BISMARK"]
-BOWTIE2                        =  GTOOLBOX+config["PROGS"]["BOWTIE2"]
-DEDUPLICATE_BISMARK            =  GTOOLBOX+config["PROGS"]["DEDUPLICATE_BISMARK"]
-
-SAMTOOLS                       =  GTOOLBOX+config["PROGS"]["SAMTOOLS"]
+FASTQC                         =  config["PROGS"]["FASTQC"]            #--- self-explanatory program names.
+TRIMGALORE                     =  config["PROGS"]["TRIMGALORE"]
+CUTADAPT                       =  config["PROGS"]["CUTADAPT"]
+BISMARK_GENOME_PREPARATION     =  config["PROGS"]["BISMARK_GENOME_PREPARATION"]
+BISMARK                        =  config["PROGS"]["BISMARK"]
+BOWTIE2                        =  config["PROGS"]["BOWTIE2"]
+DEDUPLICATE_BISMARK            =  config["PROGS"]["DEDUPLICATE_BISMARK"]
+SAMTOOLS                       =  config["PROGS"]["SAMTOOLS"]
 
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------

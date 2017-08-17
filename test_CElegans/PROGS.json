@@ -1,6 +1,4 @@
 {
-    "GTOOLBOX":"/home/bosberg/.guix-profile/bin/",
-
     "PROGS": {
         "FASTQC"          : "fastqc",
         "TRIMGALORE"      : "trim_galore",
