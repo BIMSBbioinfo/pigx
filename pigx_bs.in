@@ -85,7 +85,7 @@ args = parser.parse_args()
 # are stored and compared to determine changes.
 
 from os import path
-import os, sys, json, hashlib
+import os, sys, json, hashlib, csv
 
 def bail(msg):
     """Print the error message to stderr and exit."""
@@ -113,13 +113,168 @@ def dump_hashes(target, tablesheet, programs):
     }
     open(target, 'w').write(json.dumps(data))
 
-def generate_config(config, tablesheet, progs):
-    """Generate a new configuration file CONFIG using TABLESHEET and PROGS
-as inputs."""
-    # TODO: don't use system
-    os.system('python scripts/create_configfile.py ' +
-              tablesheet + ' ' + config + ' ' + progs)
-    dump_hashes(config_hashfile(config), tablesheet, progs)
+def parse_table_sheet(file):
+  """ Parse the tablesheet given in FILE and return its sections."""
+  sections = {}
+  section = None
+  with open(file) as f:
+      for line in f:
+          if line.startswith("["):
+              section = line.strip('[]\n ').lower()
+              sections[section] = list()
+          else:
+              line = line.strip()
+              if not section and line:
+                  print("WARNING: ignoring line outside of section.")
+              if section and line:
+                  sections[section].append(line)
+  return sections
+
+def parse_assignments(lines):
+    """Parse LINES of assignments in the form key='value'.  Return a
+    dictionary in which keys are variables (e.g. PATHIN) and values are
+    given by a user."""
+    entries = [x.rstrip().replace('"', "").split("=") for x in lines]
+    params = {}
+    for key, value in entries:
+        params[key] = value
+    return params
+
+def parse_diff_meth(lines, sample_params):
+    """
+    Parse lines with information pairs samples
+    which should be considered for differential
+    methylation. E.g. for treatments A,B,C and D
+    it could like:
+  
+    A, B
+    C, D
+    D, A, B
+  
+    It returns a dictionary required for the config file
+    with a list of treatment values, e.g:
+    [[A,B], [C,D], [D,A,B]]
+    """
+    # remove \n characters after arguments
+    text = [x.rstrip() for x in lines]
+    # remove empty lines
+    text = list(filter(None, text))
+    # list of lists (variable, value)
+    list_of_list =[[y.strip().lstrip() for y in x.split(",")] for x in text]
+    # check if treatment values are in the the column samples from
+    # the second part of the input file
+    # treatments values from the [[ SAMPLES ]] part
+    treatments_samples = set([sample_params['SAMPLES'][s]['Treatment'] 
+                              for s in sample_params['SAMPLES'].keys()])
+    # treatments values from the [[ DIFFERENTIAL METHYLATION ]] part
+    treatments_diffmeth = set(sum(list_of_list, []))
+    if treatments_diffmeth.issubset(treatments_samples)==False:
+        invalid_treatments = list(set(treatments_diffmeth) - set(treatments_samples))
+        raise Exception("Invalid treatment value(s) " + ", ".join(invalid_treatments))
+
+    d = {}
+    d["DIFF_METH"] = list_of_list
+    return(d)
+
+def get_filenames(mylist):
+    return list(map(lambda x: splitext_fqgz(x)[0], mylist))
+
+def get_extension(mylist):
+    return list(map(lambda x: splitext_fqgz(x)[1], mylist))
+
+def fq_suffix(filename):
+    return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
+
+def is_zipped(filename):
+    return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
+
+def splitext_fqgz(string):
+    if is_zipped(string):
+        string, zipext = os.path.splitext(string)
+    else:
+        zipext = ""
+    if fq_suffix(string):
+        base, ext = os.path.splitext(string)
+        return (base, ext + zipext)
+    else:
+        bail("Input files are not fastq files!")
+
+def parse_samples(lines):
+    """
+    Parse csv table with information about samples, eg:
+    
+    Read1,Read2,SampleID,ReadType,Treatment
+    sampleB.pe1.fq.gz,sampleB.pe2.fq.gz,sampleB,WGBS,B,,
+    pe1.single.fq.gz,,sampleB1,WGBS,B,,
+    
+    It returns a dictionary required for the config file.
+    """
+    sreader = csv.reader(lines, delimiter=',')
+    all_rows = [row for row in sreader]
+  
+    header = all_rows[0]
+    rows   = all_rows[1:]
+    minimal_header = ['Read1', 'Read2', 'SampleID', 'ReadType', 'Treatment']
+  
+    if header[:5] != minimal_header:
+        raise Exception("First columns of the input table have to be " +
+                        ",".join(minimal_header) + ".")
+
+    sample_ids = [x[2] for x in rows]
+    if len(set(sample_ids)) != len(sample_ids):
+        raise Exception("Column 'SampleID' has non-unique values.")
+
+    # Create a dictionary with all params, keys are samples ids
+    outputdict = {}
+    for row in rows:
+        files = list(filter(None, row[0:2]))
+        if not files:
+            raise Exception("Each sample has to have an entry in at least one of the columns 'Read1' or 'Read2'.")
+      
+        sampleid_dict = {}
+        for idx in range(len(header[2:])):
+            try:
+                sampleid_dict[header[2:][idx]] = row[2:][idx]
+            except IndexError:
+                raise Exception("Number of columns in row " + idx + " doesn't match number of elements in header.")
+
+        sampleid_dict['files']      = files
+        sampleid_dict['fastq_name'] = get_filenames(files)
+        sampleid_dict['fastq_ext']  = get_extension(files)
+        outputdict[row[2]] = sampleid_dict
+    return { 'SAMPLES': outputdict }
+
+def generate_config(configfile, tablesheet, progsfile):
+    """Generate a new configuration file CONFIG using TABLESHEET and
+PROGSFILE as inputs."""
+    sections = parse_table_sheet(tablesheet)
+  
+    # Load general parameters
+    gen_params = parse_assignments(sections['general parameters'])
+
+    # Load parameters specific to samples
+    sample_params = parse_samples(sections['samples'])
+
+    # Load pairs of treatments for differential methylation
+    diff_meth = sections['differential methylation']
+    diff_meth_params = parse_diff_meth(diff_meth, sample_params)
+
+    # Load programs
+    progs = dict(json.load(open(progsfile, 'r')))
+  
+    # Create a config file
+    config_dict = gen_params
+    config_dict.update(sample_params)
+    config_dict.update(diff_meth_params)
+    config_dict.update(progs)
+
+    # Write the config file
+    with open(configfile, 'w') as outfile:
+        dumps = json.dumps(config_dict,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+    dump_hashes(config_hashfile(configfile), tablesheet, progsfile)
 
 def config_fresh(configfile):
     """Return a tuple of whether the CONFIG is stale and the parsed JSON
