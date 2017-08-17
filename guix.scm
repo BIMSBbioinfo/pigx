@@ -24,6 +24,7 @@
              (gnu packages bioinformatics)
              (gnu packages compression)
              (gnu packages haskell)
+             (gnu packages java)
              (gnu packages perl)
              (gnu packages python))
 
@@ -49,18 +50,24 @@
        (modify-phases %standard-phases
          ;; There is no installation target
          (replace 'install
-           (lambda* (#:key outputs #:allow-other-keys)
+           (lambda* (#:key inputs outputs #:allow-other-keys)
              (let* ((out   (assoc-ref outputs "out"))
                     (bin   (string-append out "/bin"))
-                    (share (string-append out "/share/fastqc/")))
+                    (share (string-append out "/share/fastqc/"))
+                    (exe   (string-append share "/fastqc")))
                (for-each mkdir-p (list bin share))
                (copy-recursively "bin" share)
-               (chmod (string-append share "/fastqc") #o555)
-               (symlink (string-append share "/fastqc")
-                        (string-append bin "/fastqc"))
+               (substitute* exe
+                 (("my \\$java_bin = 'java';")
+                  (string-append "my $java_bin = '"
+                                 (assoc-ref inputs "java")
+                                 "/bin/java';")))
+               (chmod exe #o555)
+               (symlink exe (string-append bin "/fastqc"))
                #t))))))
     (inputs
-     `(("perl" ,perl)))  ; needed for the wrapper script
+     `(("java" ,icedtea)
+       ("perl" ,perl)))  ; needed for the wrapper script
     (native-inputs
      `(("unzip" ,unzip)))
     (home-page "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/")
