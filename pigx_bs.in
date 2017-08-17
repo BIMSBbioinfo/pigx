@@ -1,0 +1,233 @@
+#!/@PYTHON3@
+
+# PIGx BSseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import argparse
+
+description = """\
+PIGx BSseq Pipeline.
+
+PIGx is a data processing pipeline for raw fastq read data of
+bisulfite experiments.  It produces methylation and coverage
+information and can be used to produce information on differential
+methylation and segmentation.
+"""
+
+epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017.'
+
+version = """\
+PIGx BSseq Pipeline.
+Version: @VERSION@
+
+Copyright © 2017 Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+"""
+
+def formatter(prog):
+    return argparse.RawTextHelpFormatter(prog, max_help_position=80)
+
+parser = argparse.ArgumentParser(description=description,
+                                 epilog=epilog,
+                                 formatter_class=formatter)
+
+parser.add_argument('-v', '--version', action='version',
+                    version=version)
+
+parser.add_argument('-t', '--tablesheet', dest='tablesheet',
+                    help="""\
+The tablesheet containing the basic configuration information for
+running the pipeline.\
+""")
+
+parser.add_argument('-p', '--programs', dest='programs',
+                    help='A JSON file containing the absolute paths of the required tools.')
+
+parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
+                    help="""\
+The config file used for calling the underlying snakemake process.  By
+default the file 'config.json' is dynamically created from tablesheet
+and programs file.
+""")
+
+parser.add_argument('-s', '--snakeparams', dest='params',
+                    help="""\
+Additional parameters to be passed down to snakemake, e.g.
+    --dryrun    do not execute anything
+    --forceall  re-run the whole pipeline""")
+
+args = parser.parse_args()
+
+
+
+# Generate config file
+
+# Only generate the config file if it does not exist, or if the
+# tablesheet or progs files have changed.  The hashes of these files
+# are stored and compared to determine changes.
+
+from os import path
+import os, sys, json, hashlib
+
+def bail(msg):
+    """Print the error message to stderr and exit."""
+    print(msg, file=sys.stderr)
+    exit(1)
+
+def file_hash(fname):
+    """Return the SHA256 hash of the given file FNAME."""
+    return hashlib.sha256(open(fname, 'rb').read()).hexdigest()
+
+def config_hashfile(config):
+    return path.join(path.dirname(config), '.pigx.hashes')
+
+def dump_hashes(target, tablesheet, programs):
+    """Write the hashes of the TABLESHEET and PROGRAMS files to TARGET."""
+    data = {
+        'tablesheet': {
+            'sha256': file_hash(tablesheet),
+            'file'  : tablesheet
+        },
+        'programs': {
+            'sha256': file_hash(programs),
+            'file'  : programs
+        }
+    }
+    open(target, 'w').write(json.dumps(data))
+
+def generate_config(config, tablesheet, progs):
+    """Generate a new configuration file CONFIG using TABLESHEET and PROGS
+as inputs."""
+    # TODO: don't use system
+    os.system('python scripts/create_configfile.py ' +
+              tablesheet + ' ' + config + ' ' + progs)
+    dump_hashes(config_hashfile(config), tablesheet, progs)
+
+def config_fresh(config):
+    """Return a tuple of whether the CONFIG is stale and the parsed JSON
+containing the input file names and hashes."""
+    hashfile = config_hashfile(config)
+    if not (path.isfile(hashfile) and path.isfile(config)):
+        return (False, None)
+    hashes = json.load(open(hashfile, 'r'))
+    if ((hashes['tablesheet']['sha256'] == file_hash(hashes['tablesheet']['file'])) and
+        (hashes['programs']['sha256'] == file_hash(hashes['programs']['file']))):
+        return (True, hashes)
+    else:
+        return (False, hashes)
+
+
+fresh, hashes = config_fresh(args.configfile)
+if not fresh:
+    if hashes:
+        generate_config(args.configfile,
+                        hashes['tablesheet']['file'],
+                        hashes['programs']['file'])
+    else:
+        if not args.tablesheet:
+            bail('Must provide tablesheet file.')
+        if not args.programs:
+            bail('Must provide programs file.')
+        generate_config(args.configfile,
+                        args.tablesheet,
+                        args.programs)
+
+config = json.load(open(args.configfile, 'r'))
+
+
+# Create symbolic links to the inputs and reference genome
+
+# Create links within the output folder that point directly to the
+# reference genome, as well as to each sample input file so that it's
+# clear where the source data came from.
+
+# N.B. Any previously existing links will be kept in place, and no
+# warning will be issued if this is the case.
+
+os.makedirs(path.join(config['PATHOUT'], 'path_links/input'),
+            exist_ok=True)
+
+# Link the reference genome
+os.symlink(config['GENOMEPATH'],
+           path.join(config['PATHOUT'], 'path_links/refGenome'))
+
+# Create file links
+# TODO: don't use system
+os.system('python scripts/create_file_links.py ' + args.configfile)
+
+
+
+# Set absolute logo path
+# FIXME: remove this
+
+os.system('bash scripts/set_path2logo.sh images/Logo_PIGx.png report_templates/_pigx_bsseq_logo.html > report_templates/pigx_bsseq_logo.html')
+
+
+
+# Run snakemake!
+
+def cluster_run():
+    if 'contact_email' in config:
+        contact_email_string = "-m abe -M %s" % config['contact_email']
+    else:
+        contact_email_string = ""
+
+    bismark_cores = int(config['bismark_cores'])
+    bismark_pe_threads = 4 * bismark_cores
+    bismark_se_threads = 2 * bismark_cores
+
+    # Create the cluster configuration file
+    rules = [
+        ('__default__', 1, config['MEM_default']),
+        ('bismark_se', bismark_se_threads, config['bismark_MEM']),
+        ('bismark_pe', bismark_pe_threads, config['bismark_MEM']),
+        ('bismark_se_methex', bismark_se_threads, config['MEM_default']),
+        ('bismark_pe_methex', bismark_pe_threads, config['MEM_default'])
+    ]
+
+    cluster_conf = {}
+    for rule, nthreads, mem in rules:
+        cluster_conf[rule] = {
+            'nthreads': nthreads,
+            'q': config['qname'],
+            'MEM': mem,
+            'h_stack': config['h_stack']
+        }
+
+    cluster_config_file = "cluster_conf.json"
+    open(cluster_config_file, 'w').write(json.dumps(cluster_conf))
+
+    print("Commencing snakemake run submission to cluster")
+    qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    os.system('snakemake -s BSseq_pipeline.py --configfile %s --cluster-config %s -d %s --cluster "%s" --jobs %s %s' %
+              arg.configfile,
+              cluster_config_file,
+              config['PATHOUT'],
+              qsub,
+              config['numjobs'], args.snakeparams)
+
+
+if 'cluster_run' in config and not config['cluster_run'].lower == 'false':
+    cluster_run()
+else:
+    print("Commencing snakemake run submission locally")
+    os.system('snakemake -s BSseq_pipeline.py --configfile %s -d %s --jobs %s %s' %
+              arg.configfile, config['PATHOUT'], config['numjobs'], args.snakeparams)
