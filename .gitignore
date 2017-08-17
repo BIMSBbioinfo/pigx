@@ -3,7 +3,15 @@
 .RData
 .Ruserdata
 
-# ignore all logging data
+# autoconf generated files
+configure
+config.status
+pigx_bs
+Makefile.in
+etc/programs.json
+
+# pipeline generated files
+.pigx.hashes
 *.log
 snakemakeObj.RData
 report_templates/*.md
