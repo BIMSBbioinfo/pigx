@@ -49,6 +49,7 @@ find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
 
 AX_TEST_R_PACKAGE([genomation])
+AX_TEST_R_PACKAGE([GenomeInfoDb])
 AX_TEST_R_PACKAGE([methylKit])
 AX_TEST_R_PACKAGE([AnnotationHub])
 AX_TEST_R_PACKAGE([DT])

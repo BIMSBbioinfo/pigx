@@ -34,6 +34,7 @@
      ("r-annotationhub" ,r-annotationhub)
      ("r-dt" ,r-dt)
      ("r-genomation" ,r-genomation)
+     ("r-genomeinfodb" ,r-genomeinfodb)
      ("r-methylkit-devel" ,r-methylkit-devel)
      ("r-rtracklayer" ,r-rtracklayer)
      ("r-rmarkdown" ,r-rmarkdown)
