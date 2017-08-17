@@ -33,7 +33,7 @@ epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 20
 
 version = """\
 PIGx BSseq Pipeline.
-Version: @VERSION@
+Version: @PACKAGE_VERSION@
 
 Copyright © 2017 Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
