@@ -355,13 +355,6 @@ for sample in config['SAMPLES']:
 
 
 
-# Set absolute logo path
-# FIXME: remove this
-
-os.system('bash scripts/set_path2logo.sh images/Logo_PIGx.png report_templates/_pigx_bsseq_logo.html > report_templates/pigx_bsseq_logo.html')
-
-
-
 # Run snakemake!
 
 def cluster_run():

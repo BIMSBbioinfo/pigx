@@ -3,7 +3,7 @@ dnl -*- Autoconf -*-
 AC_INIT([PIGx-bsseq], [0.0.1])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-dnl AM_INIT_AUTOMAKE([gnu color-tests tar-pax -Wall -Wno-portability foreign])
+AM_INIT_AUTOMAKE([gnu color-tests tar-pax -Wall -Wno-portability foreign])
 AM_SILENT_RULES([yes])
 
 dnl We need sed for version checks
@@ -83,7 +83,8 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
   ])
 
-AC_CONFIG_FILES([etc/programs.json])
+AC_CONFIG_FILES([etc/programs.json
+                 Makefile])
 AC_CONFIG_FILES([pigx_bs], [chmod +x pigx_bs])
 
 AC_OUTPUT
