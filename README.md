@@ -112,25 +112,30 @@ If, for example, you rename an input file to a name that has already been used (
 If you absolutely must rename input files after having already run PiGx once, then go into ../PATHOUT/path_links/input/ and delete the corresponding links so that they can be generated from scratch automatically the next time PiGx is run. You have been warned.
 
 
----- 
 # Input parameters
 
-The input parameters specifying the desired behaviour of PiGx should be entered into the file Samplesheet.
-When PiGx is run, the data from this file will be used to automatically generate a configuration file with the following values:
+The input parameters specifying the desired behaviour of PiGx should
+be entered into the tablesheet file.  When PiGx is run, the data from
+this file will be used to automatically generate a configuration file
+with the following values:
  
 | Variable name | description |
 | ------------- |:-----------:|
 | NICE          | integer: from -20 to 19; higher values make the program execution less demanding on computational resources |
 | bismark_args  | string: optional arguments supplied to bismark during alignment. See the [Bismark User Guide](https://rawgit.com/FelixKrueger/Bismark/master/Docs/Bismark_User_Guide.html#appendix-ii-bismark)  |
 | SAMPLES       | struct: list of all the samples to be considered. |
-|  files        | string(s): part of SAMPLE: lists files (without extension) to read. when 2 are specified, paired-end is assumed, otherwise, single end. |
-|  PATHIN       | string: location of the experimental data files (.fastq[.gz\|.bz2])   |
-|  PATHOUT      | string: ultimate location of the output data and report files   |
-|  GENOMEPATH   | string: location of the reference genome data for alignment   |
+| files         | string(s): part of SAMPLE: lists files (without extension) to read. when 2 are specified, paired-end is assumed, otherwise, single end. |
+| PATHIN        | string: location of the experimental data files (.fastq[.gz\|.bz2])   |
+| PATHOUT       | string: ultimate location of the output data and report files   |
+| GENOMEPATH    | string: location of the reference genome data for alignment   |
 
  
-All input files (paired or single end) must be present in the foler indicated by _PATHIN_, And must have their files listed among ["SAMPLES"]. Output from the snakemake script will then be sent to the folder indicated by ["paths"]["PATHOUT"], with subdirectories corresponding to the various stages of the process.
+All input files (paired or single end) must be present in the foler
+indicated by `PATHIN`, And must have their files listed among
+`SAMPLES`. Output from the snakemake script will then be sent to the
+folder indicated by `PATHOUT`, with subdirectories corresponding to
+the various stages of the process.
 
-
-The folder indicated by ["paths"]["GENOMEPATH"] must contain the reference genome being mapped to.
+The directory indicated by `GENOMEPATH` must contain the reference
+genome being mapped to.
 
