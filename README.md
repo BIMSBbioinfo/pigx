@@ -54,10 +54,6 @@ available:
 guix environment -l guix.scm
 ```
 
-You can pass `HURRY=up` to the configure script to skip the slow
-checks for R packages if you're absolutely sure that you have all
-required R packages.
-
 By default the `configure` script expects tools to be in a directory
 listed in the `PATH` environment variable.  If the tools are installed
 in a location that is not on the `PATH` you can tell the `configure`
