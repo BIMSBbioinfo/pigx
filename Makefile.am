@@ -21,6 +21,19 @@ dist_pkglibexec_rules_SCRIPTS =		\
   rules/samtools.rules				\
   rules/SRA2fastq
 
+pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
+dist_pkgdata_report_templates_SCRIPTS = 			\
+  report_templates/annotation.report.Rmd			\
+  report_templates/annotation.report.diff.meth.Rmd	\
+  report_templates/diffmeth.report.Rmd				\
+  report_templates/index.Rmd						\
+  report_templates/methCall.report.Rmd				\
+  report_templates/methseg.report.Rmd				\
+  report_templates/pigx_bsseq_logo.html				\
+  report_templates/references.Rmd					\
+  report_templates/sessioninfo.Rmd					\
+  report_templates/reports.bib
+
 dist_pkgdata_DATA =					\
   etc/programs.json
 
