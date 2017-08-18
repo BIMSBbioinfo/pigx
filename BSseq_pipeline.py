@@ -30,7 +30,7 @@ DIR_final    = "final_Report/"
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = "path_links/input/"       #--- location of the data files to be imported --shell script creates symbolic link. 
+PATHIN          = "path_links/input/"       #--- location of the data files to be imported (script creates symbolic link) 
 GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
 VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
 
