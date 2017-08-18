@@ -274,6 +274,12 @@ PROGSFILE as inputs."""
     config_dict.update(progs)
     config_dict.update(dirs)
 
+    # Resolve relative paths in PATHIN, PATHOUT, and GENOMEPATH
+    tsroot = path.dirname(tablesheet)
+    here = os.getcwd()
+    for key in ['PATHIN', 'PATHOUT', 'GENOMEPATH']:
+        config_dict[key] = path.normpath(path.join(here, tsroot, config_dict[key]))
+
     # Write the config file
     with open(configfile, 'w') as outfile:
         dumps = json.dumps(config_dict,
