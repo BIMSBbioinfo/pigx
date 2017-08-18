@@ -51,53 +51,88 @@ SAMTOOLS                       =  programs["SAMTOOLS"]
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
 
-# --- Below is the list of expected output files. They are enumerated in sequence by the rules that produce them
-# --- the process can be terminated earlier by expressing (i.e. uncommenting) only the [expand] commands corresponding to the 
-# --- last rule that you wish to have executed.
+# Below is a mapping of rule names to the expected output files they
+# produce.  The desired output files are specified in
+# "OUTPUT_FILES".  A different set of output files can be
+# selected to run fewer rules.
 
+all_output_files = {
+    # These are expensive one-time rules to prepare the genome.
+    'genome-prep-CT': GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
+    'genome-prep-GA': GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
 
-OUTPUT_FILES = [
-		#               ==== one-time rule: genome-prep =======
-		# GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
-        	# GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
- 
-                #               ==== rule 01 raw QC    =========
-                #[ expand (list_files_rawQC(DIR_rawqc, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"] )  ) for sample in config["SAMPLES"]  ],
+    '01-raw-qc': [
+        expand (list_files_rawQC(DIR_rawqc,
+                                 config["SAMPLES"][sample]["files"],
+                                 config["SAMPLES"][sample]["SampleID"]))
+        for sample in config["SAMPLES"]],
 
-                #----RULE 2 IS ALWAYS EXECUTED, TRIMMING IS A PREREQUISITE FOR SUBSEQUENT RULES ----
-                #               ==== rule 02 trimgalore ======
-                #[ expand ( list_files_TG( DIR_trimmed, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"] ) ) for sample in config["SAMPLES"]  ],
-                
-                #               ==== rule 03 posttrim_QC_ ======
-                [ expand ( list_files_posttrim_QC(DIR_posttrim_QC, config["SAMPLES"][sample]["files"] , config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
-                #--- fastQC output files are not needed downstream and need to be called explicitly.
-                
-                #               ==== rule 04 mapping ======
-                #[ expand ( list_files_bismark(DIR_mapped, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]   )  ) for sample in config["SAMPLES"]  ],
-              
-                #               ==== rule 05 deduplication ======
-                # [ expand ( list_files_dedupe(DIR_deduped, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
+    # This rule is always executed, as trimming is a prerequisite for
+    # subsequent rules
+    '02-trimgalore': [
+        expand (list_files_TG(DIR_trimmed,
+                              config["SAMPLES"][sample]["files"],
+                              config["SAMPLES"][sample]["SampleID"]))
+        for sample in config["SAMPLES"]],
 
-                #               ==== rule 06 sorting ======
-                #[ expand ( list_files_sortbam(DIR_sorted, config["SAMPLES"][sample]["files"], config["SAMPLES"][sample]["SampleID"]  )  ) for sample in config["SAMPLES"]  ],
-                
-                #               ====rule 07 extract_methylation (if needed) ======
-                # [ expand ( list_files_xmeth( DIR_xmethed, config["SAMPLES"][sampleID]["fastq_name"] )  ) for sampleID in config["SAMPLES"]  ],
+    # fastQC output files are not needed downstream and need to be
+    # called explicitly.
+    '03-posttrim-qc': [
+        expand (list_files_posttrim_QC(DIR_posttrim_QC,
+                                       config["SAMPLES"][sample]["files"],
+                                       config["SAMPLES"][sample]["SampleID"]))
+        for sample in config["SAMPLES"]],
 
-                #               ==== rule Bam processing ======
-                #[ expand ( bam_processing(METHCALLDIR, config["SAMPLES"][sample]["files"], sample )  ) for sample in config["SAMPLES"]  ], # TODO: had to add this line to call bam_methCall for diff meth rule
+    '04-mapping': [
+        expand (list_files_bismark(DIR_mapped,
+                                   config["SAMPLES"][sample]["files"],
+                                   config["SAMPLES"][sample]["SampleID"]))
+        for sample in config["SAMPLES"]],
 
-                #               ==== rule Differential methylation calling ======
-		            #[ DIFFMETHDIR+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]  ],
+    '05-deduplication': [
+        expand (list_files_dedupe(DIR_deduped,
+                                  config["SAMPLES"][sample]["files"],
+                                  config["SAMPLES"][sample]["SampleID"]))
+        for sample in config["SAMPLES"]],
+
+    '06-sorting': [
+        expand (list_files_sortbam(DIR_sorted,
+                                   config["SAMPLES"][sample]["files"],
+                                   config["SAMPLES"][sample]["SampleID"]))
+        for sample in config["SAMPLES"]],
+
+    # extract methylation (if needed)
+    # '07-xmeth': [
+    #     expand (list_files_xmeth(DIR_xmethed,
+    #                              config["SAMPLES"][sampleID]["fastq_name"]))
+    #     for sampleID in config["SAMPLES"]],
+
+     # TODO: had to add this part to call bam_methCall for diff meth rule
+    'bam-processing': [
+        expand (bam_processing(METHCALLDIR,
+                               config["SAMPLES"][sample]["files"],
+                               sample))
+        for sample in config["SAMPLES"]],
+
+    # differential methylation calling
+    'diffmeth': [ DIFFMETHDIR+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]],
 		            
-		            #               ==== rule annotation diff meth cytosines ======
-		            #[ DIR_annot+"_".join(x)+".sorted_"+config["GENOME_VERSION"]+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]  ],
-		            
-                # ==================  FINAL REPORT =========================
-                # TODO: This needs to be editted once we determine what final reports we want to export!
-		            [ expand ( Final(DIR_final, config["SAMPLES"][sample]["files"], VERSION , config["SAMPLES"][sample]["SampleID"]  )) for sample in config["SAMPLES"]  ]
-                
-               ]
+    # annotation diff meth cytosines
+    'annotation': [ DIR_annot+"_".join(x)+".sorted_"+config["GENOME_VERSION"]+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]],
+
+    # final report
+    # TODO: This needs to be editted once we determine what final reports we want to export!
+    'final-report': [
+        expand (Final(DIR_final,
+                      config["SAMPLES"][sample]["files"],
+                      VERSION,
+                      config["SAMPLES"][sample]["SampleID"]))
+        for sample in config["SAMPLES"]]
+}
+
+# Selected output files from the above set.
+selected_rules = ['03-posttrim-qc', 'final-report']
+OUTPUT_FILES = [all_output_files[rule] for rule in selected_rules]
 
 #--- NICE gauges the computational burden, ranging from -19 to +19.
 #--- The more "nice" you are, the more you allow other processes to jump ahead of you
