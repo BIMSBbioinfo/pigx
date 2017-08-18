@@ -2,7 +2,7 @@
 
 <a name="logo"/>
 <div align="center">
-<img src="images/Logo_PIGx.png" alt="PiGx Logo"  width="30%" height="30%" ></img>
+<img src="images/Logo_PiGx.png" alt="PiGx Logo"  width="30%" height="30%" ></img>
 </a>
 </div>
 
@@ -12,7 +12,7 @@
 -----
 # Summary
 
-PIGx is a data processing pipeline for raw fastq read data of bisulfite experiments; it produces reports on aggregate methylation and  coverage and can be used to produce information on differential methylation and segmentation. It was first developed by the Akalin group at MDC in Berlin in 2017.
+PiGx is a data processing pipeline for raw fastq read data of bisulfite experiments; it produces reports on aggregate methylation and  coverage and can be used to produce information on differential methylation and segmentation. It was first developed by the Akalin group at MDC in Berlin in 2017.
 
 The figure below provides a sketch of the process.
 ![](images/pipelineIO_BSseq.png )
@@ -20,9 +20,9 @@ The figure below provides a sketch of the process.
 
 # Install
 
-You can install PIGx through Guix (TODO: add details here after release).
+You can install PiGx through Guix (TODO: add details here after release).
 
-PIGx uses the GNU build system.  If you want to install PIGx from
+PiGx uses the GNU build system.  If you want to install PiGx from
 source, follow these steps after unpacking the latest release tarball:
 
 ```sh
@@ -89,7 +89,7 @@ configuration time.
 
 
 # Getting started
-PIGx consists of the following scripts:
+PiGx consists of the following scripts:
 
 | File          | Purpose       |
 | ------------- |:-------------:|
@@ -99,7 +99,7 @@ PIGx consists of the following scripts:
 | config.json   | Generated automatically by pigx_bs. Defines various parameters; e.g. input/output folder paths, sample names, etc. |
 | func_defs.py  | Subscript that defines various functions called in the main snakemake script.                          |
 
-To run PIGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
+To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```
 $ pigx_bs [options]
@@ -115,8 +115,8 @@ If you absolutely must rename input files after having already run PiGx once, th
 ---- 
 # Input parameters
 
-The input parameters specifying the desired behaviour of PIGx should be entered into the file Samplesheet.
-When PIGx is run, the data from this file will be used to automatically generate a configuration file with the following values:
+The input parameters specifying the desired behaviour of PiGx should be entered into the file Samplesheet.
+When PiGx is run, the data from this file will be used to automatically generate a configuration file with the following values:
  
 | Variable name | default value | description |
 | ------------- |:-------------:|:-----------:|

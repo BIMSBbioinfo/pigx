@@ -1,12 +1,12 @@
-;;; PIGx_bsseq - reports pipeline for reads from bisulfite experiments.
+;;; PiGx_bsseq - reports pipeline for reads from bisulfite experiments.
 ;;; Copyright © 2017 Ricardo Wurmus <rekado@elephly.net>
 ;;;
-;;; This file is part of PIGx_bsseq.
+;;; This file is part of PiGx_bsseq.
 ;;;
-;;; PIGx_bsseq is free software; see COPYING file for details.
+;;; PiGx_bsseq is free software; see COPYING file for details.
 ;;;
 ;;; Run the following command to enter a development environment for
-;;; PIGx_bsseq:
+;;; PiGx_bsseq:
 ;;;
 ;;;  $ guix environment -l guix.scm
 ;;;
@@ -150,7 +150,7 @@ The main functions of FastQC are:
        ("samtools" ,samtools)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_bsseq/")
     (synopsis "Bisulfite sequencing pipeline from fastq to methylation reports")
-    (description "PIGx is a data processing pipeline for raw fastq
+    (description "PiGx is a data processing pipeline for raw fastq
 read data of bisulfite experiments; it produces reports on aggregate
 methylation and coverage and can be used to produce information on
 differential methylation and segmentation.")

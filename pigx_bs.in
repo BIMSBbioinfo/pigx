@@ -1,6 +1,6 @@
 #!@PYTHON@
 
-# PIGx BSseq Pipeline.
+# PiGx BSseq Pipeline.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 import argparse
 
 description = """\
-PIGx BSseq Pipeline.
+PiGx BSseq Pipeline.
 
-PIGx is a data processing pipeline for raw fastq read data of
+PiGx is a data processing pipeline for raw fastq read data of
 bisulfite experiments.  It produces methylation and coverage
 information and can be used to produce information on differential
 methylation and segmentation.
@@ -32,7 +32,7 @@ methylation and segmentation.
 epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017.'
 
 version = """\
-PIGx BSseq Pipeline.
+PiGx BSseq Pipeline.
 Version: @PACKAGE_VERSION@
 
 Copyright © 2017 Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.
