@@ -38,6 +38,9 @@ If you are a developer or want to bootstrap the tarball yourself:
 make distcheck
 ```
 
+To run the pipeline without installing it set the environment variable
+`PIGX_BSSEQ_UNINSTALLED` before running the pipeline script.
+
 
 # Dependencies
 
