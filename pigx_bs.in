@@ -80,38 +80,13 @@ args = parser.parse_args()
 
 # Generate config file
 
-# Only generate the config file if it does not exist, or if the
-# tablesheet or progs files have changed.  The hashes of these files
-# are stored and compared to determine changes.
-
 from os import path
-import os, sys, json, hashlib, csv
+import os, sys, json, csv
 
 def bail(msg):
     """Print the error message to stderr and exit."""
     print(msg, file=sys.stderr)
     exit(1)
-
-def file_hash(fname):
-    """Return the SHA256 hash of the given file FNAME."""
-    return hashlib.sha256(open(fname, 'rb').read()).hexdigest()
-
-def config_hashfile(configfile):
-    return path.join(path.dirname(configfile), '.pigx.hashes')
-
-def dump_hashes(target, tablesheet, programs):
-    """Write the hashes of the TABLESHEET and PROGRAMS files to TARGET."""
-    data = {
-        'tablesheet': {
-            'sha256': file_hash(tablesheet),
-            'file'  : tablesheet
-        },
-        'programs': {
-            'sha256': file_hash(programs),
-            'file'  : programs
-        }
-    }
-    open(target, 'w').write(json.dumps(data))
 
 def parse_table_sheet(file):
   """ Parse the tablesheet given in FILE and return its sections."""
@@ -305,45 +280,22 @@ PROGSFILE as inputs."""
                            indent=4, sort_keys=True,
                            separators=(",",": "), ensure_ascii=True)
         outfile.write(dumps)
-    dump_hashes(config_hashfile(configfile), tablesheet, progsfile)
-
-def config_fresh(configfile):
-    """Return a tuple of whether the CONFIG is stale and the parsed JSON
-containing the input file names and hashes."""
-    hashfile = config_hashfile(configfile)
-    if not (path.isfile(hashfile) and path.isfile(configfile)):
-        return (False, None)
-    hashes = json.load(open(hashfile, 'r'))
-    if ((hashes['tablesheet']['sha256'] == file_hash(hashes['tablesheet']['file'])) and
-        (hashes['programs']['sha256'] == file_hash(hashes['programs']['file']))):
-        return (True, hashes)
-    else:
-        return (False, hashes)
 
 
-fresh, hashes = config_fresh(args.configfile)
-if not fresh:
-    if hashes:
-        generate_config(args.configfile,
-                        hashes['tablesheet']['file'],
-                        hashes['programs']['file'])
+if args.programs:
+    programs = args.programs
+else:
+    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+        programs = './etc/programs.json'
     else:
-        if not args.tablesheet:
-            bail('Must provide tablesheet file.')
-        if args.programs:
-            programs = args.programs
-        else:
-            if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
-                programs = './etc/programs.json'
-            else:
-                # Expand autoconf variables
-                datarootdir = '@datarootdir@'[1:].format(prefix='@prefix@')
-                pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
-                programs = '{pkgdatadir}/programs.json'.format(pkgdatadir=pkgdatadir)
+        # Expand autoconf variables
+        datarootdir = '@datarootdir@'[1:].format(prefix='@prefix@')
+        pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+        programs = '{pkgdatadir}/programs.json'.format(pkgdatadir=pkgdatadir)
 
-        generate_config(args.configfile,
-                        args.tablesheet,
-                        programs)
+generate_config(args.configfile,
+                args.tablesheet,
+                programs)
 
 config = json.load(open(args.configfile, 'r'))
 
