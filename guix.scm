@@ -23,14 +23,17 @@
              (guix git-download)
              (guix build-system ant)
              (guix build-system gnu)
+             (guix build-system r)
              (gnu packages)
              (gnu packages statistics)
              (gnu packages bioinformatics)
              (gnu packages compression)
+             (gnu packages cran)
              (gnu packages haskell)
              (gnu packages java)
              (gnu packages perl)
-             (gnu packages python))
+             (gnu packages python)
+             (gnu packages web))
 
 ;; FIXME: This package includes pre-built Java classes.
 (define-public fastqc
@@ -112,6 +115,205 @@ The main functions of FastQC are:
                  (base32
                   "061yx5lgm5c37v9asnvbl4wxay04791cbxs52ar16x0a0gd13p53")))))))
 
+(define-public r-annotationfilter
+  (package
+    (name "r-annotationfilter")
+    (version "1.0.0")
+    (source (origin
+              (method url-fetch)
+              (uri (bioconductor-uri "AnnotationFilter" version))
+              (sha256
+               (base32
+                "0pxvswjzwibdfmrkdragxmzcl844z73pmkn82z92wahwa6gjfyi7"))))
+    (properties
+     `((upstream-name . "AnnotationFilter")))
+    (build-system r-build-system)
+    (propagated-inputs
+     `(("r-genomicranges" ,r-genomicranges)
+       ("r-lazyeval" ,r-lazyeval)))
+    (home-page "https://github.com/Bioconductor/AnnotationFilter")
+    (synopsis "Facilities for filtering Bioconductor annotation resources")
+    (description
+     "This package provides classes and other infrastructure to
+implement filters for manipulating Bioconductor annotation resources.
+The filters are used by ensembldb, Organism.dplyr, and other
+packages.")
+    (license artistic2.0)))
+
+(define-public r-ensembldb
+  (package
+    (name "r-ensembldb")
+    (version "2.0.4")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (bioconductor-uri "ensembldb" version))
+       (sha256
+        (base32
+         "1np96nry1hba8lk4bg3grf8w3k6xz9lgd2jcl3vrj6wsl184c3fr"))))
+    (build-system r-build-system)
+    (propagated-inputs
+     `(("r-annotationdbi" ,r-annotationdbi)
+       ("r-annotationfilter" ,r-annotationfilter)
+       ("r-annotationhub" ,r-annotationhub)
+       ("r-biobase" ,r-biobase)
+       ("r-biocgenerics" ,r-biocgenerics)
+       ("r-biostrings" ,r-biostrings)
+       ("r-curl" ,r-curl)
+       ("r-dbi" ,r-dbi)
+       ("r-genomeinfodb" ,r-genomeinfodb)
+       ("r-genomicfeatures" ,r-genomicfeatures)
+       ("r-genomicranges" ,r-genomicranges)
+       ("r-iranges" ,r-iranges)
+       ("r-protgenerics" ,r-protgenerics)
+       ("r-rsamtools" ,r-rsamtools)
+       ("r-rsqlite" ,r-rsqlite)
+       ("r-rtracklayer" ,r-rtracklayer)
+       ("r-s4vectors" ,r-s4vectors)))
+    (home-page "https://github.com/jotsetung/ensembldb")
+    (synopsis "Utilities to create and use Ensembl-based annotation databases")
+    (description
+     "The package provides functions to create and use transcript
+centric annotation databases/packages.  The annotation for the
+databases are directly fetched from Ensembl using their Perl API.  The
+functionality and data is similar to that of the TxDb packages from
+the GenomicFeatures package, but, in addition to retrieve all
+gene/transcript models and annotations from the database, the
+ensembldb package provides also a filter framework allowing to
+retrieve annotations for specific entries like genes encoded on a
+chromosome region or transcript models of lincRNA genes.")
+    ;; No version specified
+    (license lgpl3+)))
+
+(define-public r-organismdbi
+  (package
+    (name "r-organismdbi")
+    (version "1.18.0")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (bioconductor-uri "OrganismDbi" version))
+       (sha256
+        (base32
+         "17jamgx9hqyi8ia48whqf7jj6ibdah2641zvx1xpv2lm8mhl3qzc"))))
+    (properties `((upstream-name . "OrganismDbi")))
+    (build-system r-build-system)
+    (propagated-inputs
+     `(("r-annotationdbi" ,r-annotationdbi)
+       ("r-biobase" ,r-biobase)
+       ("r-biocgenerics" ,r-biocgenerics)
+       ("r-biocinstaller" ,r-biocinstaller)
+       ("r-genomicfeatures" ,r-genomicfeatures)
+       ("r-genomicranges" ,r-genomicranges)
+       ("r-graph" ,r-graph)
+       ("r-iranges" ,r-iranges)
+       ("r-rbgl" ,r-rbgl)
+       ("r-rsqlite" ,r-rsqlite)
+       ("r-s4vectors" ,r-s4vectors)))
+    (home-page "http://bioconductor.org/packages/OrganismDbi")
+    (synopsis "Software to enable the smooth interfacing of database packages")
+    (description "The package enables a simple unified interface to
+several annotation packages each of which has its own schema by taking
+advantage of the fact that each of these packages implements a select
+methods.")
+    (license artistic2.0)))
+
+(define-public r-biovizbase
+  (package
+    (name "r-biovizbase")
+    (version "1.24.0")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (bioconductor-uri "biovizBase" version))
+       (sha256
+        (base32
+         "1pfyhjwlxw9p2q5ip0irxpwndgakvn6z6ay5ahgz2gkkk8x8i29w"))))
+    (properties `((upstream-name . "biovizBase")))
+    (build-system r-build-system)
+    (propagated-inputs
+     `(("r-annotationdbi" ,r-annotationdbi)
+       ("r-annotationfilter" ,r-annotationfilter)
+       ("r-biocgenerics" ,r-biocgenerics)
+       ("r-biostrings" ,r-biostrings)
+       ("r-dichromat" ,r-dichromat)
+       ("r-ensembldb" ,r-ensembldb)
+       ("r-genomeinfodb" ,r-genomeinfodb)
+       ("r-genomicalignments" ,r-genomicalignments)
+       ("r-genomicfeatures" ,r-genomicfeatures)
+       ("r-genomicranges" ,r-genomicranges)
+       ("r-hmisc" ,r-hmisc)
+       ("r-iranges" ,r-iranges)
+       ("r-rcolorbrewer" ,r-rcolorbrewer)
+       ("r-rsamtools" ,r-rsamtools)
+       ("r-s4vectors" ,r-s4vectors)
+       ("r-scales" ,r-scales)
+       ("r-summarizedexperiment" ,r-summarizedexperiment)
+       ("r-variantannotation" ,r-variantannotation)))
+    (home-page "http://bioconductor.org/packages/biovizBase")
+    (synopsis "Basic graphic utilities for visualization of genomic data")
+    (description
+     "The biovizBase package is designed to provide a set of
+utilities, color schemes and conventions for genomic data.  It serves
+as the base for various high-level packages for biological data
+visualization.  This saves development effort and encourages
+consistency.")
+    (license artistic2.0)))
+
+(define-public r-ggbio
+  (package
+    (name "r-ggbio")
+    (version "1.24.1")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (bioconductor-uri "ggbio" version))
+       (sha256
+        (base32
+         "1nfqab0bvcs7rsh06qjj3i11hvz26gdrdc4yqbvs8b1x113kc0bs"))))
+    (build-system r-build-system)
+    (propagated-inputs
+     `(("r-annotationdbi" ,r-annotationdbi)
+       ("r-annotationfilter" ,r-annotationfilter)
+       ("r-biobase" ,r-biobase)
+       ("r-biocgenerics" ,r-biocgenerics)
+       ("r-biostrings" ,r-biostrings)
+       ("r-biovizbase" ,r-biovizbase)
+       ("r-bsgenome" ,r-bsgenome)
+       ("r-ensembldb" ,r-ensembldb)
+       ("r-genomeinfodb" ,r-genomeinfodb)
+       ("r-genomicalignments" ,r-genomicalignments)
+       ("r-genomicfeatures" ,r-genomicfeatures)
+       ("r-genomicranges" ,r-genomicranges)
+       ("r-ggally" ,r-ggally)
+       ("r-ggplot2" ,r-ggplot2)
+       ("r-gridextra" ,r-gridextra)
+       ("r-gtable" ,r-gtable)
+       ("r-hmisc" ,r-hmisc)
+       ("r-iranges" ,r-iranges)
+       ("r-organismdbi" ,r-organismdbi)
+       ("r-reshape2" ,r-reshape2)
+       ("r-rsamtools" ,r-rsamtools)
+       ("r-rtracklayer" ,r-rtracklayer)
+       ("r-s4vectors" ,r-s4vectors)
+       ("r-scales" ,r-scales)
+       ("r-summarizedexperiment" ,r-summarizedexperiment)
+       ("r-variantannotation" ,r-variantannotation)))
+    (home-page "http://tengfei.github.com/ggbio/")
+    (synopsis "Visualization tools for genomic data")
+    (description
+     "The ggbio package extends and specializes the grammar of
+graphics for biological data.  The graphics are designed to answer
+common scientific questions, in particular those often asked of high
+throughput genomics data.  All core Bioconductor data structures are
+supported, where appropriate.  The package supports detailed views of
+particular genomic regions, as well as genome-wide overviews.
+Supported overviews include ideograms and grand linear views.
+High-level plots include sequence fragment length, edge-linked
+interval to data view, mismatch pileup, and several splicing
+summaries.")
+    (license artistic2.0)))
+
 (define-public pigx-bsseq
   (package
     (name "pigx_bsseq")
@@ -138,6 +340,8 @@ The main functions of FastQC are:
        ("r-rtracklayer" ,r-rtracklayer)
        ("r-rmarkdown" ,r-rmarkdown)
        ("r-bookdown" ,r-bookdown)
+       ("r-ggplot2" ,r-ggplot2)
+       ("r-ggbio" ,r-ggbio)
        ("ghc-pandoc" ,ghc-pandoc)
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("python-wrapper" ,python-wrapper)
