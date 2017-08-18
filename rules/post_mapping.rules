@@ -15,11 +15,6 @@
 # - python-rp2, pandoc, methylKit(r), DT(r), genomation(r),
 #   annotationhub(r), rtracklayer(r)
 # 
-
-
-    # TODO: 
-    # - we need to define a fixed location of TEMPLATEDIR and 
-    #   SCRIPTDIR in the config file
 ####################################################################
 
 
@@ -52,18 +47,7 @@ This is how the minimal config file should look like, in order to inlcude this s
 }
 """
 
-
-## show base dir
-# print(workflow.basedir)
-
 import os
-## show working dir
-# print(os.getcwd())
-
-
-
-## show current dir
-# print(srcdir(""))
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
@@ -73,11 +57,10 @@ import os
 #--- ! if params are passed to Rmarkdown document, paths to files or folders should be absolute   
 
 
-BASEDIR = workflow.basedir + "/"                    #--- the base dir (where Snakefile is) 
 WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
 
-SCRIPTDIR   = BASEDIR + "scripts/"                  #--- scripts dir (relative to snakefile)
-TEMPLATEDIR = BASEDIR + "report_templates/"         #--- template dir (relative to snakefile)
+SCRIPTDIR   = os.path.join(config['dirs']['pkglibexecdir'], "scripts/")
+TEMPLATEDIR = os.path.join(config['dirs']['pkgdatadir'], "report_templates/")
 
 #--- pathout is ignored, since all paths are relative from either base or workdir
 ## notes:
