@@ -54,7 +54,7 @@ There are additional dependencies that do need to be installed and available on 
 To run PIGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```
-$ PIGx.x [options] 
+$ pigx_bs [options]
 ```
 
 Upon doing so, the folder specified by "PATHOUT" in the input table will be created in addition to several subdirectories.
