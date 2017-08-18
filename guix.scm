@@ -10,6 +10,10 @@
 ;;;
 ;;;  $ guix environment -l guix.scm
 ;;;
+;;; To install the package from a release tarball do this:
+;;;
+;;;  $ guix package --with-source=pigx_bsseq-0.0.1.tar.gz -f guix.scm
+;;;
 ;;; This environment file was developed for Guix version
 ;;; v0.13.0-2179-gbf3fa9965.
 
@@ -108,32 +112,48 @@ The main functions of FastQC are:
                  (base32
                   "061yx5lgm5c37v9asnvbl4wxay04791cbxs52ar16x0a0gd13p53")))))))
 
-(package
-  (name "pigx-bsseq")
-  (version "0.0.0")
-  (source #f)
-  (build-system gnu-build-system)
-  (inputs
-   `(("r-minimal" ,r-minimal)
-     ("r-annotationhub" ,r-annotationhub)
-     ("r-dt" ,r-dt)
-     ("r-genomation" ,r-genomation)
-     ("r-genomeinfodb" ,r-genomeinfodb)
-     ("r-methylkit-devel" ,r-methylkit-devel)
-     ("r-rtracklayer" ,r-rtracklayer)
-     ("r-rmarkdown" ,r-rmarkdown)
-     ("r-bookdown" ,r-bookdown)
-     ("ghc-pandoc" ,ghc-pandoc)
-     ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
-     ("python-wrapper" ,python-wrapper)
-     ("snakemake" ,snakemake)
-     ("bismark" ,bismark)
-     ("fastqc" ,fastqc)
-     ("bowtie" ,bowtie)
-     ("trim-galore" ,trim-galore)
-     ("cutadapt" ,cutadapt)
-     ("samtools" ,samtools)))
-  (home-page "TODO")
-  (synopsis "TODO")
-  (description "TODO")
-  (license gpl3+))
+(define-public pigx-bsseq
+  (package
+    (name "pigx_bsseq")
+    (version "0.0.1")
+    (source #f)
+    (build-system gnu-build-system)
+    (arguments
+     `(#:phases
+       (modify-phases %standard-phases
+         (add-after 'install 'wrap-executable
+           ;; Make sure the executable finds all R modules.
+           (lambda* (#:key inputs outputs #:allow-other-keys)
+             (let ((out (assoc-ref outputs "out")))
+               (wrap-program (string-append out "/bin/pigx_bs")
+                 `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))))
+             #t)))))
+    (inputs
+     `(("r-minimal" ,r-minimal)
+       ("r-annotationhub" ,r-annotationhub)
+       ("r-dt" ,r-dt)
+       ("r-genomation" ,r-genomation)
+       ("r-genomeinfodb" ,r-genomeinfodb)
+       ("r-methylkit-devel" ,r-methylkit-devel)
+       ("r-rtracklayer" ,r-rtracklayer)
+       ("r-rmarkdown" ,r-rmarkdown)
+       ("r-bookdown" ,r-bookdown)
+       ("ghc-pandoc" ,ghc-pandoc)
+       ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
+       ("python-wrapper" ,python-wrapper)
+       ("snakemake" ,snakemake)
+       ("bismark" ,bismark)
+       ("fastqc" ,fastqc)
+       ("bowtie" ,bowtie)
+       ("trim-galore" ,trim-galore)
+       ("cutadapt" ,cutadapt)
+       ("samtools" ,samtools)))
+    (home-page "https://github.com/BIMSBbioinfo/pigx_bsseq/")
+    (synopsis "Bisulfite sequencing pipeline from fastq to methylation reports")
+    (description "PIGx is a data processing pipeline for raw fastq
+read data of bisulfite experiments; it produces reports on aggregate
+methylation and coverage and can be used to produce information on
+differential methylation and segmentation.")
+    (license gpl3+)))
+
+pigx-bsseq
