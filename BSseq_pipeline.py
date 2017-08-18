@@ -101,12 +101,6 @@ all_output_files = {
                                    config["SAMPLES"][sample]["SampleID"]))
         for sample in config["SAMPLES"]],
 
-    # extract methylation (if needed)
-    # '07-xmeth': [
-    #     expand (list_files_xmeth(DIR_xmethed,
-    #                              config["SAMPLES"][sampleID]["fastq_name"]))
-    #     for sampleID in config["SAMPLES"]],
-
      # TODO: had to add this part to call bam_methCall for diff meth rule
     'bam-processing': [
         expand (bam_processing(METHCALLDIR,

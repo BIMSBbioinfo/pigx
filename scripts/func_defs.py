@@ -81,18 +81,6 @@ def list_files_xmeth(PATH, files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")   
 
-def list_files_xmeth(PATH, files, sampleID):
-    if len(files) == 1:
-        return [ PATH+sampleID+"_se_bt2.deduped.bedGraph.gz",
-                 PATH+sampleID+"_se_bt2.deduped.bismark.cov.gz",
-                 PATH+sampleID+"_se_bt2.deduped.CpG_report.txt.gz"] #---- single end 
-    elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.bedGraph.gz",
-                PATH+sampleID+"_1_val_1_bt2.deduped.bismark.cov.gz",
-                PATH+sampleID+"_1_val_1_bt2.deduped.CpG_report.txt.gz"] #---- paired end 
-    else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")   
-
 def bam_processing(PATH, files, sampleID):
     if len(files) == 1:
       return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
