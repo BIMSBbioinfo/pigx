@@ -1,0 +1,30 @@
+[ GENERAL PARAMETERS ]
+PATHIN="./test/in/"
+PATHOUT="./test/out/"
+GENOMEPATH="./test/genome/"
+GENOME_VERSION="hg19"
+bismark_args=" -N 0 -L 20 "
+fastqc_args=""
+trim_galore_args=""
+bam_methCall_args_mincov="0"
+bam_methCall_args_minqual="10"
+NICE="19"
+numjobs="6"
+cluster_run="FALSE"
+contact_email="NONE"
+bismark_cores="3"
+bismark_MEM="19G"
+MEM_default="8G"
+qname="all"
+h_stack="128m"
+diffmeth_cores="20"
+
+
+[ SAMPLES ]
+Read1,Read2,SampleID,ReadType,Treatment
+PE_1.fq.gz,PE_2.fq.gz,PEsample,WGBS,0
+SE_techrep1.fq.gz,,SEsample,WGBS,1
+SE_techrep2.fq.gz,,SEsample_v2,WGBS,2
+
+[ DIFFERENTIAL METHYLATION ]
+0, 1
