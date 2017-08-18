@@ -414,8 +414,9 @@ def cluster_run():
 
     print("Commencing snakemake run submission to cluster")
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
-    os.system('@SNAKEMAKE@ -s BSseq_pipeline.py --configfile {} --cluster-config {} -d {} --cluster "{}" --jobs {} {}'
-              .format(args.configfile,
+    os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} --cluster-config {} -d {} --cluster "{}" --jobs {} {}'
+              .format(config['dirs']['pkglibexecdir'],
+                      args.configfile,
                       cluster_config_file,
                       config['PATHOUT'],
                       qsub,
@@ -427,8 +428,9 @@ if 'cluster_run' in config and not config['cluster_run'].lower() == 'false':
     cluster_run()
 else:
     print("Commencing snakemake run submission locally")
-    os.system('@SNAKEMAKE@ -s BSseq_pipeline.py --configfile {} -d {} --jobs {} {}'
-              .format(args.configfile,
+    os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} -d {} --jobs {} {}'
+              .format(config['dirs']['pkglibexecdir'],
+                      args.configfile,
                       config['PATHOUT'],
                       config['numjobs'],
                       args.snakeparams))
