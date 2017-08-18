@@ -14,6 +14,9 @@ nodist_libexec_SCRIPTS =			\
   rules/samtools.rules				\
   rules/SRA2fastq
 
+dist_pkgdata_DATA =					\
+  etc/programs.json
+
 dist_doc_DATA = 					\
   README.md
 

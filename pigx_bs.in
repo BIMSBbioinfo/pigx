@@ -299,11 +299,17 @@ if not fresh:
     else:
         if not args.tablesheet:
             bail('Must provide tablesheet file.')
-        if not args.programs:
-            bail('Must provide programs file.')
+        if args.programs:
+            programs = args.programs
+        else:
+            # Expand autoconf variables
+            datarootdir = '@datarootdir@'[1:].format(prefix='@prefix@')
+            pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+            programs = '{pkgdatadir}/programs.json'.format(pkgdatadir=pkgdatadir)
+
         generate_config(args.configfile,
                         args.tablesheet,
-                        args.programs)
+                        programs)
 
 config = json.load(open(args.configfile, 'r'))
 
