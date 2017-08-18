@@ -42,8 +42,8 @@ dist_doc_DATA = 					\
 
 TESTS = test.sh
 
-CLEANFILES = $(nodist_bin_SCRIPTS)
+CLEANFILES = $(nodist_bin_SCRIPTS) report_templates/pigx_bsseq_logo.html
 
 # This is a hack to embed the full path to the logo after installation.
-report_templates/pigx_bsseq_logo.html: report_templates/pigx_bsseq_logo.html.in
-	sed -e "s|#:MAKE|$(pkgdatadir)|" $< > $@
+report_templates/pigx_bsseq_logo.html:
+	sed -e "s|#:MAKE|$(pkgdatadir)|" report_templates/pigx_bsseq_logo.html.in > $@
