@@ -11,6 +11,7 @@ Makefile.in
 Makefile
 autom4te.cache/
 etc/programs.json
+test.sh
 
 # pipeline generated files
 .pigx.hashes
