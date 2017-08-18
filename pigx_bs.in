@@ -156,25 +156,26 @@ def parse_diff_meth(lines, sample_params):
     [[A,B], [C,D], [D,A,B]]
     """
     # remove \n characters after arguments
-    text = [x.rstrip() for x in lines]
+    text = [line.rstrip() for line in lines]
     # remove empty lines
     text = list(filter(None, text))
+
     # list of lists (variable, value)
-    list_of_list =[[y.strip().lstrip() for y in x.split(",")] for x in text]
+    list_of_list =[[field.strip() for field in line.split(",")] for line in text]
+
     # check if treatment values are in the the column samples from
     # the second part of the input file
     # treatments values from the [[ SAMPLES ]] part
     treatments_samples = set([sample_params['SAMPLES'][s]['Treatment'] 
                               for s in sample_params['SAMPLES'].keys()])
+
     # treatments values from the [[ DIFFERENTIAL METHYLATION ]] part
     treatments_diffmeth = set(sum(list_of_list, []))
-    if treatments_diffmeth.issubset(treatments_samples)==False:
+    if not treatments_diffmeth.issubset(treatments_samples):
         invalid_treatments = list(set(treatments_diffmeth) - set(treatments_samples))
         raise Exception("Invalid treatment value(s) " + ", ".join(invalid_treatments))
 
-    d = {}
-    d["DIFF_METH"] = list_of_list
-    return(d)
+    return {"DIFF_METH": list_of_list}
 
 def get_filenames(mylist):
     return list(map(lambda x: splitext_fqgz(x)[0], mylist))
