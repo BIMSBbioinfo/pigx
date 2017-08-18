@@ -6,7 +6,7 @@
 </a>
 </div>
 
-**Copyright 2017: Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg.**
+**Copyright 2017: Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.**
 **This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
 -----
@@ -17,39 +17,88 @@ PIGx is a data processing pipeline for raw fastq read data of bisulfite experime
 The figure below provides a sketch of the process.
 ![](images/pipelineIO_BSseq.png )
 
+
+# Install
+
+You can install PIGx through Guix (TODO: add details here after release).
+
+PIGx uses the GNU build system.  If you want to install PIGx from
+source, follow these steps after unpacking the latest release tarball:
+
+```sh
+./configure --prefix=/some/where
+make install
+```
+
+If you are a developer or want to bootstrap the tarball yourself:
+
+```sh
+./bootstrap.sh
+./configure
+make distcheck
+```
+
+
+# Dependencies
+
+Run the `configure` script to probe your environment for tools needed
+by the pipeline.  If you cannot be bothered to install all packages
+manually, we recommend using [GNU Guix](https://gnu.org/s/guix).  The
+following command spawns a sub-shell in which all dependencies are
+available:
+
+```sh
+guix environment -l guix.scm
+```
+
+You can pass `HURRY=up` to the configure script to skip the slow
+checks for R packages if you're absolutely sure that you have all
+required R packages.
+
+By default the `configure` script expects tools to be in a directory
+listed in the `PATH` environment variable.  If the tools are installed
+in a location that is not on the `PATH` you can tell the `configure`
+script.  Run `./configure --help` for a list of all variables and
+options.
+
+The following tools must be available:
+
+ - fastqc
+ - trim_galore
+ - cutadapt
+ - bismark_genome_preparation
+ - deduplicate_bismark
+ - bismark
+ - bowtie2
+ - samtools [>=1.3]
+ - snakemake
+ - Python [>=3.5]
+ - [pandoc](http://pandoc.org/)
+ - [pandoc-citeproc](http://pandoc.org/)
+ - R
+ - [methylKit](https://github.com/al2na/methylKit)[>=1.3.1]
+ - [genomation](http://bioinformatics.mdc-berlin.de/genomation/)
+ - [GenomeInfoDb](https://www.bioconductor.org/packages/release/bioc/html/GenomeInfoDb.html)
+ - [DT](https://rstudio.github.io/DT/) 
+ - [annotationhub](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html)
+ - [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html)
+ - [rmarkdown](http://rmarkdown.rstudio.com/)[>=1.5]
+ - [bookdown](https://github.com/rstudio/bookdown/)
+
+All of these dependencies must be present in the environment at
+configuration time.
+
+
 # Getting started
-PIGx can be installed through Guix (TODO: add details here) and consists of the following scripts: 
+PIGx consists of the following scripts:
 
 | File          | Purpose       |
 | ------------- |:-------------:|
 | pigx_bs       |: (main script) - establishes config file, links to input, reference paths and launches. |
 | [TableSheet].csv  |: (primary input file)  spreadsheet supplying basic parameters of the process: (e.g. filenames, paths, etc.) |
 | BSseq_pipeline.py |  Defines the rules of the pipeline for data processing.     |
-| config.json   | Generated automatically by PIGx_BS.sh Defines various parameters; e.g. input/output folder paths, sample names, etc. |
+| config.json   | Generated automatically by pigx_bs. Defines various parameters; e.g. input/output folder paths, sample names, etc. |
 | func_defs.py  | Subscript that defines various functions called in the main snakemake script.                          |
-
-The rules defined in BSseq_pipeline are dependent on the following functions:
- - FASTQC                        
- - TRIMGALORE                   
- - CUTADAPT                      
- - BISMARK_GENOME_PREPARATION    
- - BISMARK                       
- - BOWTIE2                       
- - DEDUPLICATE_BISMARK           
- - SAMTOOLS 
-
-All of these dependencies must be present in the environment at configuration time.
-
-There are additional dependencies that do need to be installed and available on the `PATH`:
-
- - [python-rp2](https://rpy2.bitbucket.io/)
- - [pandoc](http://pandoc.org/)
- - [methylKit](https://github.com/al2na/methylKit)[>=1.3.1]
- - [genomation](http://bioinformatics.mdc-berlin.de/genomation/)
- - [DT](https://rstudio.github.io/DT/) 
- - [annotationhub](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html)
- - [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html)
- - [rmarkdown](http://rmarkdown.rstudio.com/)[>=1.5]
 
 To run PIGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
