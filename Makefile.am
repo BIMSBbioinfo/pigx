@@ -40,6 +40,8 @@ dist_pkgdata_DATA =					\
 dist_doc_DATA = 					\
   README.md
 
+TESTS = test.sh
+
 CLEANFILES = $(nodist_bin_SCRIPTS)
 
 # This is a hack to embed the full path to the logo after installation.

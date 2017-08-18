@@ -1,0 +1,7 @@
+#!@GNUBASH@
+
+export PIGX_BSSEQ_UNINSTALLED=1
+
+./pigx_bs -v
+
+

@@ -85,6 +85,7 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
 
 AC_CONFIG_FILES([etc/programs.json
                  Makefile])
+AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 AC_CONFIG_FILES([pigx_bs], [chmod +x pigx_bs])
 
 AC_OUTPUT
