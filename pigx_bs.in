@@ -261,12 +261,32 @@ PROGSFILE as inputs."""
 
     # Load programs
     progs = {'programs': dict(json.load(open(progsfile, 'r')))}
+
+    # Expand and store autoconf directory variables
+    prefix = '@prefix@'
+    exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
+    libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
+    pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
+    datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
+    pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+
+    dirs = {
+        'dirs': {
+            'prefix'       : '@prefix@',
+            'exec_prefix'  : exec_prefix,
+            'libexecdir'   : libexecdir,
+            'pkglibexecdir': pkglibexecdir,
+            'datarootdir'  : datarootdir,
+            'pkgdatadir'   : pkgdatadir
+        }
+    }
   
     # Create a config file
     config_dict = gen_params
     config_dict.update(sample_params)
     config_dict.update(diff_meth_params)
     config_dict.update(progs)
+    config_dict.update(dirs)
 
     # Write the config file
     with open(configfile, 'w') as outfile:
