@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 
-AC_INIT([PIGx-bsseq], [0.0.1])
+AC_INIT([PIGx_bsseq], [0.0.1])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([gnu color-tests tar-pax -Wall -Wno-portability foreign])
