@@ -52,7 +52,7 @@ parser = argparse.ArgumentParser(description=description,
 parser.add_argument('-v', '--version', action='version',
                     version=version)
 
-parser.add_argument('-t', '--tablesheet', dest='tablesheet',
+parser.add_argument('tablesheet',
                     help="""\
 The tablesheet containing the basic configuration information for
 running the pipeline.\
