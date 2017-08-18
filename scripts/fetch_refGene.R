@@ -1,6 +1,3 @@
-#!/usr/local/bin/Rscript
-
-
   suppressPackageStartupMessages(expr = {
     require("AnnotationHub")
     require("rtracklayer")
