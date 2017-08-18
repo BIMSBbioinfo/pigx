@@ -66,6 +66,11 @@ find_or_override_prog([DEDUPLICATE_BISMARK], [deduplicate_bismark])
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
 
+
+AC_ARG_ENABLE([r-packages-check],
+  AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
+  [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
+  [dnl
 AX_TEST_R_PACKAGE([genomation])
 AX_TEST_R_PACKAGE([GenomeInfoDb])
 AX_TEST_R_PACKAGE([methylKit], [1.3.3])
@@ -74,6 +79,8 @@ AX_TEST_R_PACKAGE([DT])
 AX_TEST_R_PACKAGE([rtracklayer])
 AX_TEST_R_PACKAGE([rmarkdown], [1.5])
 AX_TEST_R_PACKAGE([bookdown])
+  ])
+
 
 find_or_override_prog([SAMTOOLS],      [samtools])
 AC_ARG_ENABLE([samtools-version-check],
