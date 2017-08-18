@@ -1,6 +1,6 @@
 [[ GENERAL PARAMETERS ]]
-PATHIN="/home/bosberg/bs/pigx_sandbox/test_CElegans/in/"
-PATHOUT="/home/bosberg/bs/pigx_sandbox/test_CElegans/out/"
+PATHIN="in/"
+PATHOUT="out/"
 GENOMEPATH="/home/bosberg/bs/ref_genome/ce10/"
 GENOME_VERSION="ce10"
 bismark_args=" -N 0 -L 20 "
