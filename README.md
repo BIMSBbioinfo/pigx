@@ -124,7 +124,7 @@ When PiGx is run, the data from this file will be used to automatically generate
 | bismark_args  |  " --multicore 2 -N 1 -L 2 "      |  string: optional arguments supplied to bismark during alignment. See the [Bismark User Guide](https://rawgit.com/FelixKrueger/Bismark/master/Docs/Bismark_User_Guide.html#appendix-ii-bismark)  |
 | SAMPLES       |     --        | struct: list of all the samples to be considered. |
 |  files        |     --        | string(s): part of SAMPLE: lists files (without extension) to read. when 2 are specified, paired-end is assumed, otherwise, single end. |
-|  PATHIN       |     ---       | string: location of the experimental data files (.fastq[.gz|.bz2])   |
+|  PATHIN       |     ---       | string: location of the experimental data files (.fastq[.gz\|.bz2])   |
 |  PATHOUT      |    "./"       | string: ultimate location of the output data and report files   |
 |  GENOMEPATH   |     ---       | string: location of the reference genome data for alignment   |
 
