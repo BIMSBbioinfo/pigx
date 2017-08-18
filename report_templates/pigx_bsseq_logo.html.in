@@ -4,7 +4,7 @@
 
 
 <div id="logo">
-	<img src="#:MAKE/images/Logo_PIGx.png" width="125px" align="top">
+	<img src="data:image/png;base64,#:MAKE" width="125px" align="top">
 </div>
 
 
