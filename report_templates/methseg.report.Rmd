@@ -69,9 +69,19 @@ The segmentation of the methylation profile is done using the methSeg() function
 ```{r load and segment}
 
     load(input)
+    
+    ## convert to GRanges
+    methRaw.gr= as(methRaw,"GRanges")
+    ## calculate methylation score 
+    mcols(methRaw.gr)$meth=100*methRaw.gr$numCs/methRaw.gr$coverage
+    ##destrand
+    strand(methRaw.gr) <- "*"
+    ##sort 
+    methRaw.gr <- sort(methRaw.gr[,"meth"]) 
+    
 
     ## Segmentation
-    res.gr = methSeg(methRaw,diagnostic.plot=TRUE)
+    res.gr = methSeg(methRaw.gr,diagnostic.plot=TRUE)
 
     ## convert to data.frame
     res.df <- as.data.frame(res.gr)
