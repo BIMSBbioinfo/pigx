@@ -1,6 +1,6 @@
 #============================================================================================================
 # SNAKEMAKE FILE WRITTEN BY THE AKALIN GROUP AT MDC, BERLIN, 2017
-# Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg
+# Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus
 # To process bisulfite sequencing data from raw fastq files to performing integrated bioinformatics analysis.
 
 # SUBMIT THIS JOB INTERACTIVELY WITH:
@@ -16,16 +16,16 @@ include   : "./scripts/func_defs.py"
 
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
 
-DIR_xmethed='07_xmethed/'
-DIR_sorted='06_sorted/'
-DIR_deduped='05_deduped/'
-DIR_mapped='04_mapped/'
-DIR_posttrim_QC='03_posttrim_QC/'
-DIR_trimmed='02_trimmed/'
-DIR_rawqc='01_rawqc/'
-DIR_annot = 'annotation/'
-DIFFMETHDIR = 'differential_methylation/'
-DIR_final    = "final_Report/"
+DIR_xmethed     = '07_xmethed/'
+DIR_sorted      = '06_sorted/'
+DIR_deduped     = '05_deduped/'
+DIR_mapped      = '04_mapped/'
+DIR_posttrim_QC = '03_posttrim_QC/'
+DIR_trimmed     = '02_trimmed/'
+DIR_rawqc       = '01_rawqc/'
+DIR_annot       = 'annotation/'
+DIR_diffmeth    = 'differential_methylation/'
+DIR_final       = "final_Report/"
 
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
@@ -109,7 +109,7 @@ all_output_files = {
         for sample in config["SAMPLES"]],
 
     # differential methylation calling
-    'diffmeth': [ DIFFMETHDIR+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]],
+    'diffmeth': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]],
 		            
     # annotation diff meth cytosines
     'annotation': [ DIR_annot+"_".join(x)+".sorted_"+config["GENOME_VERSION"]+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]],
