@@ -125,7 +125,7 @@ all_output_files = {
 }
 
 # Selected output files from the above set.
-selected_rules = ['03-posttrim-qc', 'final-report']
+selected_rules = ['final-report']
 OUTPUT_FILES = [all_output_files[rule] for rule in selected_rules]
 
 #--- NICE gauges the computational burden, ranging from -19 to +19.
@@ -210,7 +210,8 @@ rule bismark_se:
     input:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
-        fqfile = DIR_trimmed+"{sample}_trimmed.fq.gz"
+        fqfile = DIR_trimmed+"{sample}_trimmed.fq.gz",
+        qc     = DIR_posttrim_QC+"{sample}_trimmed_fastqc.html"
     output:
         DIR_mapped+"{sample}_trimmed_bismark_bt2.bam",
         DIR_mapped+"{sample}_trimmed_bismark_bt2_SE_report.txt"
@@ -236,7 +237,9 @@ rule bismark_pe:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
         fin1 = DIR_trimmed+"{sample}_1_val_1.fq.gz",
-        fin2 = DIR_trimmed+"{sample}_2_val_2.fq.gz"
+        fin2 = DIR_trimmed+"{sample}_2_val_2.fq.gz",
+        qc   = [ DIR_posttrim_QC+"{sample}_1_val_1_fastqc.html",
+                 DIR_posttrim_QC+"{sample}_2_val_2_fastqc.html"]
     output:
         DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam",
         DIR_mapped+"{sample}_1_val_1_bismark_bt2_PE_report.txt"
