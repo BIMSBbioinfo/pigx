@@ -35,7 +35,8 @@ dist_pkgdata_report_templates_SCRIPTS = 			\
   report_templates/reports.bib
 
 dist_pkgdata_DATA =					\
-  etc/programs.json
+  etc/programs.json					\
+  etc/pretty.txt
 
 dist_doc_DATA = 					\
   README.md

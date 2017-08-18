@@ -399,6 +399,12 @@ def cluster_run():
 # Ensure that we use the configured Pandoc
 os.environ["RSTUDIO_PANDOC"] = '@PANDOC@'
 
+if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+    pretty = './etc/pretty.txt'
+else:
+    pretty = path.join(config['dirs']['pkgdatadir'], 'pretty.txt')
+
+print(open(pretty, 'r').read())
 if 'cluster_run' in config and not config['cluster_run'].lower() == 'false':
     cluster_run()
 else:
