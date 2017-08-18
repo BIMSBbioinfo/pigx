@@ -2,6 +2,10 @@
 
 export PIGX_BSSEQ_UNINSTALLED=1
 
-./pigx_bs -v
+./pigx_bs test/Tablesheet.txt
+
+for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
+    test -f "test/out/${base}.deduped.sorted_hg19_final.nb.html" || exit 1
+done
 
 

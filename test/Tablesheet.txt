@@ -1,7 +1,7 @@
 [ GENERAL PARAMETERS ]
-PATHIN="./test/in/"
-PATHOUT="./test/out/"
-GENOMEPATH="./test/genome/"
+PATHIN="in/"
+PATHOUT="out/"
+GENOMEPATH="genome/"
 GENOME_VERSION="hg19"
 bismark_args=" -N 0 -L 20 "
 fastqc_args=""
