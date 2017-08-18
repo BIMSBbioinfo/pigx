@@ -1,7 +1,7 @@
-  suppressPackageStartupMessages(expr = {
-    require("AnnotationHub")
-    require("rtracklayer")
-  })
+suppressPackageStartupMessages(expr = {
+  require("AnnotationHub")
+  require("rtracklayer")
+})
 
 
 ## this function tries to fetch the reference genes for the given assembly
