@@ -57,8 +57,8 @@ guix environment -l guix.scm
 By default the `configure` script expects tools to be in a directory
 listed in the `PATH` environment variable.  If the tools are installed
 in a location that is not on the `PATH` you can tell the `configure`
-script.  Run `./configure --help` for a list of all variables and
-options.
+script about them with variables.  Run `./configure --help` for a list
+of all variables and options.
 
 The following tools must be available:
 
@@ -75,13 +75,13 @@ The following tools must be available:
  - [pandoc](http://pandoc.org/)
  - [pandoc-citeproc](http://pandoc.org/)
  - R
- - [methylKit](https://github.com/al2na/methylKit)[>=1.3.1]
+ - [methylKit](https://github.com/al2na/methylKit) [>=1.3.1]
  - [genomation](http://bioinformatics.mdc-berlin.de/genomation/)
  - [GenomeInfoDb](https://www.bioconductor.org/packages/release/bioc/html/GenomeInfoDb.html)
  - [DT](https://rstudio.github.io/DT/) 
  - [annotationhub](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html)
  - [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html)
- - [rmarkdown](http://rmarkdown.rstudio.com/)[>=1.5]
+ - [rmarkdown](http://rmarkdown.rstudio.com/) [>=1.5]
  - [bookdown](https://github.com/rstudio/bookdown/)
 
 All of these dependencies must be present in the environment at
