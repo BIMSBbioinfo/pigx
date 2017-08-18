@@ -3,7 +3,7 @@
 ;;;
 ;;; This file is part of PiGx_bsseq.
 ;;;
-;;; PiGx_bsseq is free software; see COPYING file for details.
+;;; PiGx_bsseq is free software; see LICENSE file for details.
 ;;;
 ;;; Run the following command to enter a development environment for
 ;;; PiGx_bsseq:
