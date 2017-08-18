@@ -438,6 +438,9 @@ def cluster_run():
                       args.snakeparams))
 
 
+# Ensure that we use the configured Pandoc
+os.environ["RSTUDIO_PANDOC"] = '@PANDOC@'
+
 if 'cluster_run' in config and not config['cluster_run'].lower() == 'false':
     cluster_run()
 else:
