@@ -8,6 +8,8 @@ configure
 config.status
 pigx_bs
 Makefile.in
+Makefile
+autom4te.cache/
 etc/programs.json
 
 # pipeline generated files
