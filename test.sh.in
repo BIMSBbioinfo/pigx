@@ -1,11 +1,15 @@
 #!@GNUBASH@
 
-export PIGX_BSSEQ_UNINSTALLED=1
+set -e
+set -u
 
-./pigx_bs test/Tablesheet.txt
+export PIGX_BSSEQ_UNINSTALLED=1
+export srcdir=${srcdir:-.}
+
+./pigx_bs ${srcdir}/test/Tablesheet.txt
 
 for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
-    if ! test -f "test/out/final_Report/${base}.deduped.sorted_hg19_final.nb.html"
+    if ! test -f "${srcdir}/test/out/final_Report/${base}.deduped.sorted_hg19_final.nb.html"
     then
         echo "ERROR: could not find report for ${base}"
         exit 1
