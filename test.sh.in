@@ -6,6 +6,8 @@ set -u
 export PIGX_BSSEQ_UNINSTALLED=1
 export srcdir=${srcdir:-.}
 
+chmod +w -R ${srcdir}/test
+
 ./pigx_bs ${srcdir}/test/Tablesheet.txt
 
 for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
