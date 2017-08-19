@@ -41,6 +41,14 @@ dist_pkgdata_DATA =					\
 dist_doc_DATA = 					\
   README.md
 
+EXTRA_DIST =										\
+  test/genome/myref_hg38_chr1_7291263_7302041.fasta	\
+  test/in/PE_1.fq.gz								\
+  test/in/PE_2.fq.gz								\
+  test/in/SE_techrep1.fq.gz							\
+  test/in/SE_techrep2.fq.gz							\
+  test/Tablesheet.txt
+
 TESTS = test.sh
 
 CLEANFILES = $(nodist_bin_SCRIPTS) report_templates/pigx_bsseq_logo.html
