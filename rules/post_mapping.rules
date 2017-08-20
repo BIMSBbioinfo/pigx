@@ -59,8 +59,8 @@ import os
 
 WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
 
-SCRIPTDIR   = os.path.join(config['dirs']['pkglibexecdir'], "scripts/")
-TEMPLATEDIR = os.path.join(config['dirs']['pkgdatadir'], "report_templates/")
+SCRIPTDIR   = os.path.join(config['PATHOUT'], 'path_links/scripts/')
+TEMPLATEDIR = os.path.join(config['PATHOUT'], 'path_links/report_templates/')
 
 #--- pathout is ignored, since all paths are relative from either base or workdir
 ## notes:
@@ -81,7 +81,7 @@ BAMDIR      = '06_sorted/'  # BASEDIR + "test_dataset/sample_bam_files/"
 METHCALLDIR = "methylation_calls/"
 SEGDIR      = "segmentation/"
 ANNODIR     = "annotation/"
-FINALDIR    = "final_Report/"
+FINALDIR    = os.path.join(config['PATHOUT'], "final_Report/")
 DIFFMETHDIR = 'differential_methylation/'
 
 
@@ -325,6 +325,8 @@ rule integrateFinalReport:
       diffmeth = diff_meth_input
     output:
        touch(FINALDIR + "{prefix}_{assembly}_integrateDiffMeth2FinalReport.txt")
+    params:
+        finalreportdir = FINALDIR
     log:
        FINALDIR + "{prefix}_{assembly}_integrateFinalReport.log"
     script:
@@ -342,9 +344,9 @@ rule final_report:
         #fastq_name  = lambda wildcards: touch(get_fastq_name(wildcards.prefix))#,
         ## add rawqc at some point
     output: 
-        finalreport = FINALDIR + "{prefix}.sorted_{assembly}_final.nb.html",
+        finalreport = os.path.join(FINALDIR, "{prefix}.sorted_{assembly}_final.nb.html"),
     params:
-        finalreportdir = WORKDIR + FINALDIR + "{prefix}/"#,
+        finalreportdir = os.path.join(FINALDIR, "{prefix}/")
       #  workdir = WORKDIR#,
         # fastq_name = lambda wildcards: get_fastq_name(wildcards.prefix)#,
         # rules.fastqc_raw.output

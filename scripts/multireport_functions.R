@@ -109,7 +109,10 @@ render2multireport <- function(final_output,
                                self_contained=TRUE,
                                clean=FALSE) {
   
-  
+
+  file.copy(paste0(dirname(index), "/", "pigx_bsseq_logo.html"),
+            paste0(finalreportdir, "/", "pigx_bsseq_logo.html"))
+
   meta.file <- list.files(path = finalreportdir,
                           pattern = "knitr_meta.rds",
                           full.names = TRUE)
@@ -121,6 +124,7 @@ render2multireport <- function(final_output,
     on.exit(unlink(render_args), add = TRUE)
     saveRDS(
       list(output_format = "rmarkdown::html_fragment",
+           output_dir = finalreportdir,
            intermediates_dir = finalreportdir, 
            quiet = TRUE,
            clean = FALSE),
@@ -137,7 +141,9 @@ render2multireport <- function(final_output,
       render_args
     )
   
-    bookdown:::Rscript_render(file = normalizePath(index),render_args,meta.file)
+    index_ = paste0(finalreportdir, "/", basename(index))
+    file.copy(index, index_)
+    bookdown:::Rscript_render(file = normalizePath(index_),render_args,meta.file)
   
   }
   
@@ -164,7 +170,9 @@ render2multireport <- function(final_output,
       render_args
     )
     
-    bookdown:::Rscript_render(file = normalizePath(sessioninfo),render_args,meta.file)
+    sessioninfo_ = paste0(finalreportdir, "/", basename(sessioninfo))
+    file.copy(sessioninfo, sessioninfo_)
+    bookdown:::Rscript_render(file = normalizePath(sessioninfo_),render_args,meta.file)
     
   }
   
@@ -184,7 +192,9 @@ render2multireport <- function(final_output,
              bookdown:::writeUTF8(x,file)
            })
     
-    bookdown:::Rscript_render(file = normalizePath(references),render_args,meta.file)
+    references_ = paste0(finalreportdir, "/", basename(references))
+    file.copy(references, references_)
+    bookdown:::Rscript_render(file = normalizePath(references_),render_args,meta.file)
     
   }
   

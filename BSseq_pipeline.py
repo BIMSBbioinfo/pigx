@@ -11,8 +11,8 @@
 
 #------ set config file, include function definitions, and set os:
 import os
-include   : "./rules/post_mapping.rules"
-include   : "./scripts/func_defs.py"
+include   : os.path.join(config['dirs']['pkglibexecdir'], 'rules/post_mapping.rules')
+include   : os.path.join(config['PATHOUT'], 'path_links/scripts/func_defs.py')
 
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
 
@@ -25,7 +25,7 @@ DIR_trimmed     = '02_trimmed/'
 DIR_rawqc       = '01_rawqc/'
 DIR_annot       = 'annotation/'
 DIR_diffmeth    = 'differential_methylation/'
-DIR_final       = "final_Report/"
+DIR_final       = os.path.join(config['PATHOUT'], "final_Report/")
 
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------

@@ -4,6 +4,8 @@ assembly = snakemake@wildcards$assembly
 
 diff.meth.reports = snakemake@input[['diffmeth']]
 
+targetdir = snakemake@params[['finalreportdir']]
+
 # if a sample doesnt take part in diff. meth.
 # then dont change knitr_meta.rds for final_report rule
 if(!is.null(diff.meth.reports)){
@@ -17,16 +19,16 @@ if(!is.null(diff.meth.reports)){
   })
   
   # 1. Copy session info from diff meth to the sample-specific directory
-  diffmeth_dir = lapply(treatment_pairs, function(x) paste0("final_Report/",x,"/"))
+  diffmeth_dir = lapply(treatment_pairs, function(x) paste0(targetdir,x,"/"))
   sesion.info.diffmeth.pairs = lapply(diffmeth_dir, function(x) list.files(path =x, pattern = "session", full.names = TRUE))
   
   for(x in sesion.info.diffmeth.pairs){
-    file.copy(x, paste0("final_Report/",prefix,"/"))
+    file.copy(x, paste0(targetdir,prefix,"/"))
   }
   
   # 2. Merge knitr_meta.rds together
-  diffmeth_knitrmeta = lapply( treatment_pairs, function(x) readRDS( paste0("final_Report/",x,"/knitr_meta.rds") ) )
-  diffmeth_annot_knitrmeta = lapply( treatment_pairs, function(x) readRDS( paste0("final_Report/",x,".",assembly,"/knitr_meta.rds") ) )
+  diffmeth_knitrmeta = lapply( treatment_pairs, function(x) readRDS( paste0(targetdir,x,"/knitr_meta.rds") ) )
+  diffmeth_annot_knitrmeta = lapply( treatment_pairs, function(x) readRDS( paste0(targetdir,x,".",assembly,"/knitr_meta.rds") ) )
   
   diffmeth_knitrmeta = lapply(diffmeth_knitrmeta, function(x) x[[1]])
   names(diffmeth_knitrmeta) = paste0(tools::file_path_sans_ext(as.character(diffmeth_knitrmeta)), ".Rmd")
@@ -35,7 +37,7 @@ if(!is.null(diff.meth.reports)){
   names(diffmeth_annot_knitrmeta) = paste0(tools::file_path_sans_ext(as.character(diffmeth_annot_knitrmeta)), ".Rmd")
   
   
-  final_knitrmeta = readRDS(paste0("final_Report/",prefix,"/knitr_meta.rds"))
+  final_knitrmeta = readRDS(paste0(targetdir,prefix,"/knitr_meta.rds"))
   
   
   # # If diff meth reports are already included in th final report, then dont include it again
@@ -43,7 +45,7 @@ if(!is.null(diff.meth.reports)){
     
     merged_final_report=c(final_knitrmeta, diffmeth_knitrmeta, diffmeth_annot_knitrmeta)
     
-    saveRDS(merged_final_report, paste0("final_Report/",prefix,"/knitr_meta.rds"))
+    saveRDS(merged_final_report, paste0(targetdir,prefix,"/knitr_meta.rds"))
     
   }
 

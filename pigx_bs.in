@@ -353,6 +353,25 @@ for sample in config['SAMPLES']:
     makelink(path.join(config['PATHIN'], f),
              path.join(config['PATHOUT'], "path_links/input/", linkname))
 
+# Copy the scripts and report templates to a writable location because
+# annoyingly Snakemake will attempt to write to wherever they are
+# located.
+
+import shutil
+from glob import glob
+os.makedirs(path.join(config['PATHOUT'], 'path_links/scripts'),
+            exist_ok=True)
+os.makedirs(path.join(config['PATHOUT'], 'path_links/report_templates'),
+            exist_ok=True)
+
+try:
+    for script in glob(config['dirs']['pkglibexecdir'] + '/scripts/*'):
+        shutil.copy(script, path.join(config['PATHOUT'], 'path_links/scripts'))
+    for template in glob(config['dirs']['pkgdatadir'] + '/report_templates/*'):
+        shutil.copy(template, path.join(config['PATHOUT'], 'path_links/report_templates'))
+except FileExistsError:
+    pass
+
 
 
 # Run snakemake!
