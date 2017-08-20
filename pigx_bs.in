@@ -240,7 +240,7 @@ PROGSFILE as inputs."""
 
     dirs = {}
     if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
-        here = os.getcwd()
+        here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
         dirs['dirs'] = {
             'prefix'       : here,
             'exec_prefix'  : here,
@@ -276,7 +276,8 @@ PROGSFILE as inputs."""
 
     # Resolve relative paths in PATHIN, PATHOUT, and GENOMEPATH
     tsroot = path.dirname(tablesheet)
-    here = os.getcwd()
+    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+
     for key in ['PATHIN', 'PATHOUT', 'GENOMEPATH']:
         config_dict[key] = path.normpath(path.join(here, tsroot, config_dict[key]))
 
@@ -292,7 +293,8 @@ if args.programs:
     programs = args.programs
 else:
     if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
-        programs = './etc/programs.json'
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        programs = path.join(where, 'etc/programs.json')
     else:
         # Expand autoconf variables
         datarootdir = '@datarootdir@'[1:].format(prefix='@prefix@')
@@ -400,7 +402,8 @@ def cluster_run():
 os.environ["RSTUDIO_PANDOC"] = '@PANDOC@'
 
 if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
-    pretty = './etc/pretty.txt'
+    where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+    pretty = path.join(where, 'etc/pretty.txt')
 else:
     pretty = path.join(config['dirs']['pkgdatadir'], 'pretty.txt')
 

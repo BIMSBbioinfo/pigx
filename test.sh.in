@@ -4,7 +4,7 @@ set -e
 set -u
 
 export PIGX_BSSEQ_UNINSTALLED=1
-export srcdir=${srcdir:-.}
+export srcdir=$(readlink -f ${srcdir:-.})
 
 chmod +w -R ${srcdir}/test
 
