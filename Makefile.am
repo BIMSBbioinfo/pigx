@@ -51,7 +51,7 @@ EXTRA_DIST =										\
 
 TESTS = test.sh
 
-CLEANFILES = $(nodist_bin_SCRIPTS) report_templates/pigx_bsseq_logo.html
+CLEANFILES = $(nodist_bin_SCRIPTS) report_templates/pigx_bsseq_logo.html config.json
 
 # This is a hack to embed the logo in the html file.
 report_templates/pigx_bsseq_logo.html:
