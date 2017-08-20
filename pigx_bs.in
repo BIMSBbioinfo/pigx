@@ -420,6 +420,13 @@ def cluster_run():
 # Ensure that we use the configured Pandoc
 os.environ["RSTUDIO_PANDOC"] = '@PANDOC@'
 
+# ...and the configured Rscript
+bin = path.join(config['PATHOUT'], 'path_links/bin')
+if path.exists(bin): shutil.rmtree(bin)
+os.makedirs(bin, exist_ok=True)
+os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
+os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+
 if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
     where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
     pretty = path.join(where, 'etc/pretty.txt')
