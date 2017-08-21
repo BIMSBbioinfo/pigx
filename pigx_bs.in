@@ -417,13 +417,13 @@ def cluster_run():
                       args.snakeparams))
 
 
-# Ensure that we use the configured Pandoc
-os.environ["RSTUDIO_PANDOC"] = '@PANDOC@'
-
+# Ensure that we use the configured Pandoc, pandoc-citeproc
 # ...and the configured Rscript
 bin = path.join(config['PATHOUT'], 'path_links/bin')
 if path.exists(bin): shutil.rmtree(bin)
 os.makedirs(bin, exist_ok=True)
+os.symlink('@PANDOC@', path.join(bin, "pandoc"))
+os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
 os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
 os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
 
