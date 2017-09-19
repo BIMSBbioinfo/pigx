@@ -1,6 +1,6 @@
 ## Download
 
-First clone the directory from the GitHub repository:
+First clone the upstream repository from GitHub:
 
 ```
 git clone https://github.com/BIMSBbioinfo/pigx_bsseq.git
@@ -8,26 +8,49 @@ git clone https://github.com/BIMSBbioinfo/pigx_bsseq.git
 
 ## Configure
 
-In order to check for all dependencies, first bootstrap and configure:
+PiGx uses the GNU build system.  Developers need to bootstrap the
+build system first with the `bootstrap.sh` script.  Bootstrapping
+requires GNU Autoconf and GNU Automake.
 
 ```
-./bootstrap && ./configure
+./bootstrap
 ```
 
-IMPORTANT: The default prefix (path to where tools are installed to) for installation will be `/usr/local/`, so if you do not have permissions to write to this location (i.e. do not have sudo rights) then just use a different location like a subdirectory in your home (has to be absolute path).
+Bootstrapping creates the `configure` script, a portable shell script.
+You need to run the script to configure the package before building.
+
+**IMPORTANT**: The default prefix (path to where tools are installed
+to) for installation will be `/usr/local/`, so if you do not have
+permissions to write to this location (i.e. do not have root
+permission) then just use a different location like a subdirectory
+under `$HOME`.
+
+    ./configure --prefix=$HOME/pigx
+
+NOTE: The configure has multiple options, you can see a description using:
+
 ```
-./configure --prefix=$HOME/pigx
+./configure --help
 ```
 
-> NOTE: The configure has multiple options, you can see a description using:
-> ```
-> ./configure --help
-> ```
-> For example If you like to change the  R installation to use and skip checks for required packages:
-> ```
-> ./configure --disable-r-packages-check  R=$HOME/programs/R-3.4.1/bin/R RSCRIPT=$HOME/programs/R-3.4.1/bin/Rscript SAMTOOLS=$HOME/.guix-profile/bin/samtools --prefix=$PWD
-> ```
-> but be aware that with `--disable-r-packages-check`, you cannot be sure to have all R packages available on runtime.
+For example, the following command overrides the locations of the
+executables for `R`, `Rscript`, and `samtools`, disables checks for
+required R packages, and configures the package to be installed in the
+current directory:
+
+```
+./configure --disable-r-packages-check  \
+            R=$HOME/programs/R-3.4.1/bin/R \
+            RSCRIPT=$HOME/programs/R-3.4.1/bin/Rscript \
+            SAMTOOLS=$HOME/.guix-profile/bin/samtools \
+            --prefix=$PWD
+```
+
+Be aware that `--disable-r-packages-check` should only be used when
+you are certain that all R packages are available at runtime.  It
+should not be used when installing the pipeline to a shared location
+for all users.
+
 
 ## Install
 
