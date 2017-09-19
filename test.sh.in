@@ -8,7 +8,7 @@ export PIGX_BSSEQ_UNINSTALLED=1
 # We do not use "readlink -f" here, because macos does not support it.
 export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' ${srcdir:-.})
 
-chmod +w -R ${srcdir}/test
+chmod -R +w ${srcdir}/test
 
 ./pigx_bs ${srcdir}/test/Tablesheet.txt
 
