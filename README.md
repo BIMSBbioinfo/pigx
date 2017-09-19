@@ -93,16 +93,16 @@ PiGx consists of the following scripts:
 
 | File          | Purpose       |
 | ------------- |:-------------:|
-| pigx_bs       |: (main script) - establishes config file, links to input, reference paths and launches. |
+| pigx-bsseq    |: (main script) - establishes config file, links to input, reference paths and launches. |
 | [TableSheet].csv  |: (primary input file)  spreadsheet supplying basic parameters of the process: (e.g. filenames, paths, etc.) |
 | BSseq_pipeline.py |  Defines the rules of the pipeline for data processing.     |
-| config.json   | Generated automatically by pigx_bs. Defines various parameters; e.g. input/output folder paths, sample names, etc. |
+| config.json   | Generated automatically by pigx-bsseq. Defines various parameters; e.g. input/output folder paths, sample names, etc. |
 | func_defs.py  | Subscript that defines various functions called in the main snakemake script.                          |
 
 To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```
-$ pigx_bs [options]
+$ pigx-bsseq [options]
 ```
 
 Upon doing so, the folder specified by "PATHOUT" in the input table will be created in addition to several subdirectories.

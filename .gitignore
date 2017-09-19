@@ -6,7 +6,7 @@
 # autoconf generated files
 configure
 config.status
-pigx_bs
+pigx-bsseq
 Makefile.in
 Makefile
 autom4te.cache/
