@@ -7,7 +7,7 @@ params:
   assembly: ''
   mincov:   10
   minqual:  20
-  rdata:    ''
+  rds:    ''
   sessioninfo: TRUE
   references: TRUE
 ---
@@ -25,7 +25,7 @@ input     <- params$inBam
 assembly  <- params$assembly
 mincov    <- params$mincov
 minqual   <- params$minqual
-rdatafile <- params$rdata
+rdsfile <- params$rds
 ```
 
 
@@ -82,7 +82,7 @@ We first extract the methylation calls from the sequence alignment produced by t
     # sample_id = unlist(strsplit(basename(input),split = "_"))[1]
     sample_id <- gsub(".bam","",basename(input))
 
-    save_folder <- dirname(rdatafile)
+    save_folder <- dirname(rdsfile)
 
     ## read bam file into methylKit object
     methRaw = processBismarkAln(location = input,
@@ -97,10 +97,10 @@ We first extract the methylation calls from the sequence alignment produced by t
   
 ```
 The methylation calls are written to the text file "`r paste0(sample_id,"_CpG.txt")`", 
-but to enable direct loading of the `methylRaw` object it is saved for further analysis to "`r basename(rdatafile)`" in the methylation calls directory.
+but to enable direct loading of the `methylRaw` object it is saved for further analysis to "`r basename(rdsfile)`" in the methylation calls directory.
 ```{r}
     ## Saving object
-    save(methRaw,file=normalizePath(rdatafile)) 
+    saveRDS(methRaw,file=normalizePath(rdsfile)) 
 ```
 
 Here we show some simple statistics as distribution of methylation and coverage.

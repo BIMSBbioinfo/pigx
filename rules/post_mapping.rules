@@ -93,7 +93,7 @@ rule bam_methCall:
         bamfile     = BAMDIR  + "{prefix}.sorted.bam"
     output: 
         report      = METHCALLDIR + "{prefix}.sorted_meth_calls.nb.html",
-        rdatafile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
+        rdsfile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RDS",
         callFile    = METHCALLDIR + "{prefix}.sorted_CpG.txt",
         knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_notuse.rds")
     params:
@@ -103,7 +103,7 @@ rule bam_methCall:
         mincov      = int(config["bam_methCall_args_mincov"]),
         minqual     = int(config["bam_methCall_args_minqual"]),
         ## absolute path to output folder in working dir
-        rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
+        rds       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RDS"
     log:
         METHCALLDIR + "{prefix}.sorted_meth_calls.log"
     message:
@@ -111,7 +111,7 @@ rule bam_methCall:
         "   input     : {input.bamfile}" + "\n"
         "Generating:"+ "\n" 
         "   report    : {output.report}" + "\n" 
-        "   rdata     : {output.rdatafile}" + "\n" 
+        "   rds     : {output.rdsfile}" + "\n" 
         "   methCalls : {output.callFile}"
     script:
         SCRIPTDIR + "report_functions.R"  
@@ -124,21 +124,21 @@ rule methseg:
     ## paths inside input and output should be relative
     input:  
         template    = TEMPLATEDIR + "methseg.report.Rmd",
-        rdatafile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RData"
+        rdsfile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RDS"
     output: 
         report      = SEGDIR + "{prefix}.sorted_meth_segments.nb.html",
-        grfile      = SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
+        grfile      = SEGDIR + "{prefix}.sorted_meth_segments_gr.RDS",
         bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed",
         knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_notuse.rds")    
     params:
-        rdata       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RData",
-        grdata      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments_gr.RData",
+        rds       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RDS",
+        grds      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments_gr.RDS",
         outBed      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments.bed"
     log:
         SEGDIR + "{prefix}.sorted_meth_segments.log"
     message:
         "Segmentation of sample file:\n"
-        "   input     : {input.rdatafile}" + "\n" 
+        "   input     : {input.rdsfile}" + "\n" 
         "Generating:"+ "\n"
         "   report    : {output.report}" + "\n"  
         "   grfile    : {output.grfile} " +"\n" 

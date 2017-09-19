@@ -3,8 +3,8 @@ title: "PiGx: BS-seq"
 date: '`r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 params:
-  rdata: ''
-  grdata: ''
+  rds: ''
+  grds: ''
   outBed: ''
   sessioninfo: TRUE
   references: TRUE
@@ -16,9 +16,9 @@ makeReferences = params$references
 ```
 
 ```{r eval_params, echo=FALSE}
-input     <- params$rdata
+input     <- params$rds
 output    <- params$outBed
-grFile    <- params$grdata    
+grFile    <- params$grds    
 ```
 
 ## Segmentation
@@ -68,7 +68,7 @@ The segmentation of the methylation profile is done using the methSeg() function
 
 ```{r load and segment}
 
-    load(input)
+    methRaw <- readRDS(input)
     
     ## convert to GRanges
     methRaw.gr= as(methRaw,"GRanges")
@@ -101,7 +101,7 @@ The segmentation of the methylation profile is done using the methSeg() function
 The GRanges object is saved to enable fast loading for further analysis.
 ```{r}
     ## Saving object
-    save(res.gr,file=grFile) 
+    saveRDS(res.gr,file=grFile) 
 ```
 
 
