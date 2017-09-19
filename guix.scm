@@ -25,6 +25,7 @@
              (guix build-system gnu)
              (guix build-system r)
              (gnu packages)
+             (gnu packages autotools)
              (gnu packages statistics)
              (gnu packages bioinformatics)
              (gnu packages compression)
@@ -330,6 +331,9 @@ summaries.")
                (wrap-program (string-append out "/bin/pigx_bs")
                  `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))))
              #t)))))
+    (native-inputs
+     `(("autoconf" ,autoconf)
+       ("automake" ,automake)))
     (inputs
      `(("r-minimal" ,r-minimal)
        ("r-annotationhub" ,r-annotationhub)
