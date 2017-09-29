@@ -13,7 +13,7 @@ output:
 output_dir: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation_rule/"
 output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.annotation.nb.html"
 date: "`r Sys.Date()`"
-#bibliography: reports.bib
+bibliography: reports.bib
 params:
   inBed:    "/home/kwreczy/tmp/my_output/differential_methylation/0_1.sorted_diffmeth.bed"
   assembly: "ce10"
@@ -44,13 +44,9 @@ methylDiff_hyper_file      <- params$methylDiff_hyper_file
 methylDiff_hypo_file      <- params$methylDiff_hypo_file
 ideoDMC_script <- params$ideoDMC_script
 
-#saveRDS(params, "~/tmp/params_diffmeth.rds") 
-#params = readRDS("~/tmp/params_diffmeth.rds")
-
 ```
 
-## Annotation of differentially methylated bases
-
+## Annotation of differentially methylated cytosines
 
 ```{r, include=FALSE,warning=FALSE}
   suppressPackageStartupMessages(expr = {
@@ -186,7 +182,7 @@ fetched.cpgi = fetchTablefromUCSC("cpgIslandExt", table.loc = cpgi.file, assembl
 ```
 
 
-### Show number of differentially methylated bases per chromosome
+### Show number of differentially methylated cytosines per chromosome
 
 ```{r, message=FALSE, echo=TRUE}
 
@@ -200,33 +196,24 @@ number.of.elements.per.chr = function(gr.obj){
   el.chrs = elementNROWS(diffmeth.gr.perchr)
   
   df = data.frame(Chromosome=names(el.chrs), Number.diff.meth.bases=as.vector(el.chrs))
+  colnames(df) = c("Chromosome", "Number of diff. meth. cytosines")
   return(df)
 }
 
-show.number.of.elements.per.chr = function(gr.obj){
-  stats.df = number.of.elements.per.chr(gr.obj)
-  datatable(stats.df,
-          extensions = 'Buttons',
-          options = list(
-            dom = 'Brtip',
-            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-            scrollX = TRUE),
-          caption = "Number of differentially methylated bases per chromosome",
-          rownames = FALSE)
-}
-
-
-# Show number of differentially methylated bases per chromosome
+# Show number of differentially methylated cytosines per chromosome
 if(length(GRanges.diffmeth)!=0){
-   show.number.of.elements.per.chr(GRanges.diffmeth)
+  stats.df = number.of.elements.per.chr(GRanges.diffmeth)
+  knitr::kable(stats.df)
 }
 
 if(length(GRanges.diffmeth.hyper)!=0){
-   show.number.of.elements.per.chr(GRanges.diffmeth.hyper)
+  stats.df.hyper = number.of.elements.per.chr(GRanges.diffmeth.hyper)
+  knitr::kable(stats.df.hyper)
 }
 
 if(length(GRanges.diffmeth.hypo)!=0){
-   show.number.of.elements.per.chr(GRanges.diffmeth.hypo)
+  stats.df.hypo = number.of.elements.per.chr(GRanges.diffmeth.hypo)
+  knitr::kable(stats.df.hypo)
 }
 ```
 

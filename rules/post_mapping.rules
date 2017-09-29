@@ -88,10 +88,10 @@ DIFFMETHDIR = 'differential_methylation/'
 
 ## Bam processing
 rule bam_methCall:
-    input:  
+    input:
         template    = TEMPLATEDIR + "methCall.report.Rmd",
         bamfile     = BAMDIR  + "{prefix}.sorted.bam"
-    output: 
+    output:
         report      = METHCALLDIR + "{prefix}.sorted_meth_calls.nb.html",
         rdsfile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RDS",
         callFile    = METHCALLDIR + "{prefix}.sorted_CpG.txt",
@@ -107,14 +107,14 @@ rule bam_methCall:
     log:
         METHCALLDIR + "{prefix}.sorted_meth_calls.log"
     message:
-        "Processing of bam file:\n" 
+        "Processing of bam file:\n"
         "   input     : {input.bamfile}" + "\n"
         "Generating:"+ "\n" 
         "   report    : {output.report}" + "\n" 
         "   rds     : {output.rdsfile}" + "\n" 
         "   methCalls : {output.callFile}"
     script:
-        SCRIPTDIR + "report_functions.R"  
+        SCRIPTDIR + "report_functions.R"
 
 
 
@@ -122,14 +122,14 @@ rule bam_methCall:
 ## Segmentation
 rule methseg:
     ## paths inside input and output should be relative
-    input:  
+    input:
         template    = TEMPLATEDIR + "methseg.report.Rmd",
         rdsfile   = METHCALLDIR + "{prefix}.sorted_methylRaw.RDS"
     output: 
         report      = SEGDIR + "{prefix}.sorted_meth_segments.nb.html",
         grfile      = SEGDIR + "{prefix}.sorted_meth_segments_gr.RDS",
         bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed",
-        knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_notuse.rds")    
+        knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_notuse.rds")
     params:
         rds       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RDS",
         grds      = WORKDIR + SEGDIR + "{prefix}.sorted_meth_segments_gr.RDS",
@@ -140,34 +140,34 @@ rule methseg:
         "Segmentation of sample file:\n"
         "   input     : {input.rdsfile}" + "\n" 
         "Generating:"+ "\n"
-        "   report    : {output.report}" + "\n"  
-        "   grfile    : {output.grfile} " +"\n" 
+        "   report    : {output.report}" + "\n"
+        "   grfile    : {output.grfile} " +"\n"
         "   bedfile   : {output.bedfile}" +"\n"
 
     script:
-        SCRIPTDIR + "report_functions.R" 
+        SCRIPTDIR + "report_functions.R"
 
 
 ## Aquisition of gene features
 rule fetch_refGene:
     output: refgenes = ANNODIR + "refseq.genes.{assembly}.bed"
-    params: 
+    params:
         assembly = "{assembly}"
     log:
         ANNODIR + "fetch_refseq.genes.{assembly}.log"
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
-    script:  
-        SCRIPTDIR + "fetch_refGene.R" 
+    script:
+        SCRIPTDIR + "fetch_refGene.R"
 
 
 ## Annotation with gene features
 rule methseg_annotation:
-    input:  
+    input:
         template    = TEMPLATEDIR + "annotation.report.Rmd",
         bedfile     = SEGDIR + "{prefix}.sorted_meth_segments.bed",
         refgenes    = ANNODIR + "refseq.genes.{assembly}.bed"
-    output: 
+    output:
         ## touch this imaginary file, to get the directory
         knitr_meta  = touch(FINALDIR + "{prefix}/knitr_meta_{assembly}_notuse.rds"),
         report      = ANNODIR + "{prefix}.sorted_{assembly}_annotation.nb.html",
@@ -185,7 +185,7 @@ rule methseg_annotation:
         "Generating:" + "\n"
         "   report    : {output.report}"
     script:
-        SCRIPTDIR + "report_functions.R"   
+        SCRIPTDIR + "report_functions.R"
 
 
 #----------------------------------- START DIFF METH
@@ -196,23 +196,30 @@ SAMPLE_IDS = list(config["SAMPLES"].keys())
 SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 
 
+def get_sampleids_from_treatment(treatment):
+  treatments = treatment.split("_")
+  sampleids_list = []
+  for t in treatments:
+    sampleids = [SAMPLE_IDS[i] for i, x in enumerate(SAMPLE_TREATMENTS) if x == t]
+    sampleids_list.append(sampleids)
+  
+  sampleids_list = list(sum(sampleids_list, [])) 
+  return(sampleids_list)
+
+
 # For only CpG context
 def diffmeth_input_function(wc):
 
   treatments = wc.treatment
-  treatments = treatments.split("_")
-
+  sampleids = get_sampleids_from_treatment(treatments)
+  
   inputfiles = []
-  for t in treatments:
-    indx = SAMPLE_TREATMENTS.index(t)
-    sampleid = SAMPLE_IDS[indx]
-    
+  for sampleid in sampleids:
     fqname = config["SAMPLES"][sampleid]['fastq_name']
     if len(fqname)==1:
       inputfile=[METHCALLDIR + sampleid+"_se_bt2.deduped.sorted_CpG.txt"]
     elif len(fqname)==2:
       inputfile=[METHCALLDIR + sampleid+"_1_val_1_bt2.deduped.sorted_CpG.txt"]
-
     inputfiles.append(inputfile)
   
   inputfiles = list(sum(inputfiles, []))
@@ -233,13 +240,13 @@ rule diffmeth:
     params:
         workdir     = WORKDIR,
         inputfiles  = diffmeth_input_function,
-        sampleids   = lambda wc: [SAMPLE_IDS[SAMPLE_TREATMENTS.index(t)] for t in wc.treatment.split("_")],
+        sampleids   = lambda wc: [get_sampleids_from_treatment(t) for t in wc.treatment.split("_")],
         methylDiff_file      = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.RDS",
         methylDiff_hyper_file  = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhyper.RDS",
         methylDiff_hypo_file   = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhypo.RDS",
         outBed      = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.bed",
         assembly    = config["GENOME_VERSION"],
-        treatment   = lambda wc: wc.treatment.split("_"),
+        treatment   = lambda wc: [[config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(t)] for t in wc.treatment.split("_")],
         mincov      = int(config["bam_methCall_args_mincov"]), 
         context     = "CpG",
         cores       = int(config["diffmeth_cores"])
@@ -302,8 +309,6 @@ def get_fastq_name(full_name):
     return(output)
 
 
-SAMPLE_IDS = list(config["SAMPLES"].keys())
-SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
 DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
 

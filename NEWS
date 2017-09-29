@@ -1,6 +1,9 @@
 NEWS
 ====
 
+September 13, 2017
+add possibility to have replicates in a tablesheet. So now many samples can have the same treatment and it will be included in differential methylation calling.
+
 May 23, 2017
 add a python script that generates a config file out of a input txt file
 - created bash file PIGx_BS.sh that calls the python script (scripts/create_configfile.py) to generate config.json file and then it calls snakemake. I executed PIGx_BS.sh in the same directory as snakemake file and config file is generated in the same directory as PIGx_BS.sh. An example of a config file that the python script creates you can find here test_dataset/example_config.json. 

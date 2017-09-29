@@ -11,7 +11,7 @@ output:
     includes:
       in_header: pigx_bsseq_logo.html
 date: "`r Sys.Date()`"
-#bibliography: reports.bib
+bibliography: reports.bib
 params:
   inputfiles: ["methylation_calls/sampleA_1_val_1_bt2.deduped.sorted_CpG.txt","methylation_calls/sampleBse_se_bt2.deduped.sorted_CpG.txt"]
   methylDiff_file: "segmentation/sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted_meth_windows_gr.RDS"
@@ -21,6 +21,8 @@ params:
   sampleids: ["sampleA", "sampleB"]
   assembly: "ce10"
   treatment: [0,1]
+  treatment_samples: [0,1]
+  sampleids_replic: ["sampleA", "sampleB"]
   mincov: 0
   context: "CpG"
   workdir: "~/outputdir/"
@@ -38,10 +40,6 @@ makeReferences = params$references
   
 ```{r eval_params, echo=FALSE}
 
-#saveRDS(params, "~/params.RDS")
-#params = readRDS("~/params.RDS")
-#print(getwd())
-
 input     <- params$inputfiles
 sampleids <- params$sampleids
 output    <- params$outBed
@@ -55,13 +53,12 @@ context   <- params$context
 workdir   <- params$workdir
 cores     <- as.numeric(params$cores)
 
-
 ```
 
 
 ## Differential methylation report
 
-### Calling differentially methylated bases
+### Calling differentially methylated cytosines
 
 The logistic regression is applied to model the log odds ratio which is based on methylation proportion of a CpG using the treatment vector which denotes the sample group membership for the CpGs in the model. 
 
@@ -80,17 +77,6 @@ suppressPackageStartupMessages(expr = {
   library("methylKit",warn.conflicts = FALSE,quietly = TRUE)
   library("DT",warn.conflicts = FALSE,quietly = TRUE)
 })
-
-```
-
-```{r}
-# This code is to test if diff. meth reports will work on data that contain diff. meth. cytosines.
-# by using fake input files (takes from the methylKit library).
-#fake_input=c(  "/home/kwreczy/repositories/pigx_bsseq/test_CElegans/tmp/test1.myCpG1.txt",
-#              "/home/kwreczy/repositories/pigx_bsseq/test_CElegans/tmp/control2.myCpG1.txt"
-#              )
-#file.copy(fake_input[1], paste0(workdir, input)[1], overwrite=TRUE)
-#file.copy(fake_input[2], paste0(workdir, input)[2], overwrite=TRUE)
 
 ```
 
@@ -115,11 +101,8 @@ inputParams <- data.frame(Sample.id=sampleids,
                           Mincov=mincov,
                           Assembly=assembly,
                           stringsAsFactors = FALSE)
-inputParams.t = t(inputParams)
-colnames(inputParams.t) = c("Sample1", "Sample2")
 
-knitr::kable(inputParams.t)
-
+knitr::kable(inputParams)
 
 ```
 
@@ -139,8 +122,6 @@ knitr::kable(outputParams)
 ### Find differentially methylated cytosines
 
 ```{r load methylation, echo=TRUE, warning=FALSE}
-
-# Load methylation profiles
 
 # Read input files
 inputfiles = paste0(workdir, input)
@@ -175,7 +156,7 @@ if(nrow(meth.unite)>1){
                                    test="Chisq",
                                    mc.cores=cores) 
 
-      # Get differentially methylated regions/bases based on cutoffs  
+      # Get differentially methylated bases based on cutoffs  
       methylDiff.obj = getMethylDiff(meth.diffmeth, 
                                difference=difference,
                                type="all",
@@ -213,13 +194,13 @@ if(nrow(meth.unite)>1){
 
 # Check if there are some differentially methylated cytosines
 methylDiff.nonempty = nrow(methylDiff.obj)>1
-if(!methylDiff.nonempty) print("There are no differentially methylated bases")
+if(!methylDiff.nonempty) print("There are no differentially methylated cytosines")
 meth.unite.or.methylDiff.nonempty = meth.unite.nonempty | methylDiff.nonempty
 ```
 
 ```{r, show differential methylation, echo=TRUE, warning=FALSE, eval=methylDiff.nonempty}
 
-# Show differentially methylated regions in a table.
+# Show differentially methylated cytosines in a table.
 
 methylDiff2df_roundint = function(methylDiff.obj, roundval=4){
   df = as(methylDiff.obj, "data.frame")
@@ -234,7 +215,7 @@ datatable(methylDiff2df_roundint(methylDiff.obj),
                 dom = 'Bfrtip',
                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
                 scrollX = TRUE),
-              caption = "Differentially methylated bases",
+              caption = "Differentially methylated cytosines",
               rownames = FALSE)
 ## show hyper-methylated region
 datatable(methylDiff2df_roundint(methylDiff.obj.hyper),
@@ -243,7 +224,7 @@ datatable(methylDiff2df_roundint(methylDiff.obj.hyper),
                 dom = 'Bfrtip',
                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
                 scrollX = TRUE),
-              caption = "Hyper-methylated bases",
+              caption = "Hyper-methylated cytosines",
               rownames = FALSE)
 ## show hypo-methylated region
 datatable(methylDiff2df_roundint(methylDiff.obj.hypo),
@@ -252,7 +233,7 @@ datatable(methylDiff2df_roundint(methylDiff.obj.hypo),
                 dom = 'Bfrtip',
                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
                 scrollX = TRUE),
-              caption = "Hypo-methylated bases",
+              caption = "Hypo-methylated cytosines",
               rownames = FALSE)
 
 ```
@@ -318,8 +299,8 @@ meth2bed<-function(windows,filename,
 }
 
 
-# Export differentially methylated bases to a bed file
-trackLine = paste0("track name='differentially methylated bases ' ",
+# Export differentially methylated cytosines to a bed file
+trackLine = paste0("track name='differentially methylated cytosines ' ",
                          "description='diff. meth. between ",
                          paste(meth.diffmeth@sample.ids,collapse=","),
                          " mapped to ",
@@ -340,7 +321,6 @@ The methylDiff object from the methylKit package is saved to enable fast loading
 saveRDS(methylDiff.obj, methylDiff_file)
 saveRDS(methylDiff.obj.hypo, methylDiff_hypo_file)
 saveRDS(methylDiff.obj.hyper, methylDiff_hyper_file)
-
 
 ```
 
