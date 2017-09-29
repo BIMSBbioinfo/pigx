@@ -87,7 +87,7 @@ guix environment -l guix.scm
 To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```sh
-$ pigx_bsseq [options]
+$ pigx_bsseq [options] tablesheet
 ```
 To see all available options type the `--help` option
 ```sh
