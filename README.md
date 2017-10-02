@@ -210,6 +210,7 @@ general:
 ```
 
 | Variable name | description |
+| ------------- |:-----------:|
 | genome-version | string: an UCSC assembly release name e.g. "hg19"
 | methylation-calling:minimum-coverage | integer: minimum read coverage to be included in the methylKit objects. Defaults to 10. Any methylated base/region in the text files below the mincov value will be ignored.
 | methylation-calling:minimum-quality | integer: minimum phred quality score to call a methylation status for a base.  Defaults to 10.
@@ -231,6 +232,7 @@ execution:
 ```
 
 | Variable name         | description |
+| --------------------- |:-----------:|
 | submit-to-cluster     | string: whether the pipeline should run locally ("no") or on a cluster
 | jobs                  | string: number of jobs sent to cluster, e.g. "6"
 | nice                  | integer: from -20 to 19; higher values make the program execution less demanding on computational resources
