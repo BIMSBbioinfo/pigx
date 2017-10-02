@@ -39,7 +39,7 @@ of all variables and options.
 
 <details>
   <summary>The following tools must be available:</summary>
-  
+
  - fastqc
  - trim_galore
  - cutadapt
@@ -50,6 +50,7 @@ of all variables and options.
  - samtools [>=1.3]
  - snakemake
  - Python [>=3.5]
+ - PyYAML
  - [pandoc](http://pandoc.org/)
  - [pandoc-citeproc](http://pandoc.org/)
  - R
@@ -93,8 +94,8 @@ To see all available options type the `--help` option
 ```sh
 $ pigx_bsseq --help
 
-usage: pigx_bsseq [-h] [-v] [-p PROGRAMS] [-c CONFIGFILE] [-s SNAKEPARAMS]
-               tablesheet
+usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--snakeparams SNAKEPARAMS]
+                  samplesheet
 
 PiGx BSseq Pipeline.
 
@@ -104,99 +105,150 @@ information and can be used to produce information on differential
 methylation and segmentation.
 
 positional arguments:
-  tablesheet                                 The tablesheet containing the basic configuration information for
-                                             running the pipeline.
+  samplesheet                             The sample sheet containing sample data in CSV format.
 
 optional arguments:
-  -h, --help                                 show this help message and exit
-  -v, --version                              show program's version number and exit
-  -p PROGRAMS, --programs PROGRAMS           A JSON file containing the absolute paths of the required tools.
-  -c CONFIGFILE, --configfile CONFIGFILE     The config file used for calling the underlying snakemake process.  By
-                                             default the file 'config.json' is dynamically created from tablesheet
-                                             and programs file.
-  -s SNAKEPARAMS, --snakeparams SNAKEPARAMS  Additional parameters to be passed down to snakemake, e.g.
-                                                 --dryrun    do not execute anything
-                                                 --forceall  re-run the whole pipeline
+  -h, --help                              show this help message and exit
+  -v, --version                           show program's version number and exit
+  -s SETTINGS, --settings SETTINGS        A YAML file for settings that deviate from the defaults.
+  -c CONFIGFILE, --configfile CONFIGFILE  The config file used for calling the underlying snakemake process.  By
+                                          default the file 'config.json' is dynamically created from the sample
+                                          sheet and the settings file.
+  --snakeparams SNAKEPARAMS               Additional parameters to be passed down to snakemake, e.g.
+                                              --dryrun    do not execute anything
+                                              --forceall  re-run the whole pipeline
 ```
 
 # Input parameters
 
-The input parameters specifying the desired behaviour of PiGx should
-be entered into the tablesheet file.  When PiGx is run, the data from
-this file will be used to automatically generate a configuration file.
+The pipeline expects two kinds of input: a sample sheet in CSV format
+and a settings file specifying the desired behaviour of PiGx.  PiGx
+will automatically generate a JSON configuration file from these
+inputs.
 
-Here is an example tablesheet:
+The sample sheet is a table with sample-specific information
+containing the names of fastq files, unique sample ids, the type of
+bisulfite sequencing experiment (could be RRBS or WGBS,only WGBS is
+available right now) and treatment group for differential methylation
+detection.
+
+Here is an example sample sheet:
+
 ```
-[ GENERAL PARAMETERS ]
-PATHIN="in/"
-PATHOUT="out/"
-GENOMEPATH="genome/"
-GENOME_VERSION="hg19"
-bismark_args=" -N 0 -L 20 "
-fastqc_args=""
-trim_galore_args=""
-bam_methCall_args_mincov="0"
-bam_methCall_args_minqual="10"
-NICE="19"
-numjobs="6"
-cluster_run="FALSE"
-contact_email="NONE"
-bismark_cores="3"
-bismark_MEM="19G"
-MEM_default="8G"
-qname="all"
-h_stack="128m"
-diffmeth_cores="20"
-
-
-[ SAMPLES ]
 Read1,Read2,SampleID,ReadType,Treatment
 PE_1.fq.gz,PE_2.fq.gz,PEsample,WGBS,0
 SE_techrep1.fq.gz,,SEsample,WGBS,1
 SE_techrep2.fq.gz,,SEsample_v2,WGBS,2
-
-[ DIFFERENTIAL METHYLATION ]
-0, 1
 ```
 
-The tablesheet contains 3 paragraphs: 
-- general parameters, 
-- a table with sample specific information containing the names of fastq files, unique sample ids, the type of bisulfite sequencing experiment (could be RRBS or WGBS,only WGBS is available right now) and treatment group for differential methylation detection
-- treatment groups considered for differential methylation detection
+The default settings file can be found at `etc/settings.yaml`.
+Settings that are not specified by the user are taken from the default
+settings file.  A user's settings file to override some defaults might
+look something like this:
 
-## Details about General Parameters
+```
+general:
+  methylation-calling:
+    minimum-coverage: 1
+    minimum-quality: 3
+  differential-methylation:
+    cores: 2
+    treatment-groups:
+      - ['A', 'B']
 
-General parameters have to contain variables:
+execution:
+  submit-to-cluster: yes
+  jobs: 6
+  cluster:
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: foo@example.com
 
-<details>
-  <summary>Click to expand explanations</summary>
+tools:
+  bismark:
+    cores: 3
+```
+
+
+## Available settings
+
+PiGx recognizes four sections in the settings file:
+
+- `locations` for input, output, and genome directories
+- `general` for general settings
+- `execution` for settings affecting the pipeline execution
+- `tools` for tool-specific paths and arguments.
+
+### Locations
 
 | Variable name | description |
 | ------------- |:-----------:|
-| PATHIN        | string: location of the experimental\nall input data files (.fastq[.gz\|.bz2])   |
-| PATHOUT       | string: ultimate location of the output data and report files   |
-| GENOMEPATH    | string: location of the reference genome data for alignment   |
-| GENOME_VERSION| string: an UCSC assembly release name e.g. "hg19"
-| bismark_args  | string: optional arguments supplied to bismark during alignment. See the [Bismark User Guide], e.g. " -N 0 -L 20 "
-| fastqc_args  | string: optional arguments supplied to FastQC during alignment. See the [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/), e.g. ""
-| trim_galore_args | string: optional arguments supplied to Trim Galore! during alignment. See the [Trim Galore!](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/) e.g. "" 
-| bam_methCall_args_mincov | string: minimum read coverage to be included in the methylKit objects. defaults to 10. Any methylated base/region in the text files below the mincov value will be ignored.
-| bam_methCall_args_minqual | string: minimum phred quality score to call a methylation status for a base, e.g. "10"
-| cluster_run | string: a boolean whether the pipeline should be run on cluster, e.g. "FALSE"
-| numjobs | string: number of jobs sent to cluster, e.g. "6"
-| contact_email | string: email address to which information about cluster job is sent
-| bismark_cores | string: number of cores used by bismark, e.g. "3"
-| bismark_MEM | string: amount of memory used by bismark, e.g. "19G"
-| MEM_default | string: amount of memory used for all jobs besides bismark, e.g. "8G"
-| qname | string: queue name (used for cluster jobs), e.g. "all"
-| h_stack | string: stack size limit (used for cluster jobs), e.g. "128m"
-| diffmeth_cores | integer: denoting how many cores should be used for parallel differential methylation calculations
-| NICE          | integer: from -20 to 19; higher values make the program execution less demanding on computational resources 
+| input-dir     | string: location of the experimental\nall input data files (.fastq[.gz\|.bz2]) |
+| output-dir    | string: ultimate location of the output data and report files   |
+| genome-dir    | string: location of the reference genome data for alignment   |
 
-</details>
+Make sure that all input files (paired or single end) are present in
+the folder indicated by `input-dir`. All output produced by the
+pipeline will written to the folder indicated by `output-dir`, with
+subdirectories corresponding to the various stages of the process.
+The directory pointed to by `genome-dir` has to contain the reference
+genome being mapped to.
+
+### General
+
+```
+general:
+  genome-version: hg19
+  methylation-calling:
+    minimum-coverage: 0
+    minimum-quality: 10
+  differential-methylation:
+    cores: 20
+    treatment-groups:
+      - ['0', '1']
+```
+
+| Variable name | description |
+| genome-version | string: an UCSC assembly release name e.g. "hg19"
+| methylation-calling:minimum-coverage | integer: minimum read coverage to be included in the methylKit objects. Defaults to 10. Any methylated base/region in the text files below the mincov value will be ignored.
+| methylation-calling:minimum-quality | integer: minimum phred quality score to call a methylation status for a base.  Defaults to 10.
+| differential-methylation:cores | integer: denotes how many cores should be used for parallel differential methylation calculations
+| differential-methylation:treatment-groups | array of strings
+
+### Execution
+
+```
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: none
+```
+
+| Variable name         | description |
+| submit-to-cluster     | string: whether the pipeline should run locally ("no") or on a cluster
+| jobs                  | string: number of jobs sent to cluster, e.g. "6"
+| nice                  | integer: from -20 to 19; higher values make the program execution less demanding on computational resources
+| cluster:memory        | string: amount of memory used for all jobs besides bismark, e.g. "8G"
+| cluster:stack         | string: stack size limit (used for cluster jobs), e.g. "128m"
+| cluster:queue         | string: queue name (used for cluster jobs), e.g. "all"
+| cluster:contact-email | string: email address to which information about cluster job is sent
+
+### Tools
+
+The values for the `executable` field for each tool are determined at
+configure time and usually won't have to be changed unless you want to
+experiment with a custom variant of a particular tool.
+
+The `args` field for each tool accepts a string for additional
+arguments to be passed to the specified tool.
+
+The `bismark` tool supports additional settings, such as `cores` (the
+number of cores used by bismark) and `memory` for the amount of RAM
+that bismark may use.
  
- 
-Make sure that all input files (paired or single end) are present in the folder
-indicated by `PATHIN`. All output produced by the pipeline will written to the folder indicated by `PATHOUT`,
-with subdirectories corresponding to the various stages of the process.
-The directory pointed to by `GENOMEPATH` has to contain the reference genome being mapped to.
