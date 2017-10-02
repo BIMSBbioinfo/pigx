@@ -11,8 +11,8 @@
 
 #------ set config file, include function definitions, and set os:
 import os
-include   : os.path.join(config['dirs']['pkglibexecdir'], 'rules/post_mapping.rules')
-include   : os.path.join(config['PATHOUT'], 'path_links/scripts/func_defs.py')
+include   : os.path.join(config['locations']['pkglibexecdir'], 'rules/post_mapping.rules')
+include   : os.path.join(config['locations']['output-dir'], 'path_links/scripts/func_defs.py')
 
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
 
@@ -25,28 +25,27 @@ DIR_trimmed     = '02_trimmed/'
 DIR_rawqc       = '01_rawqc/'
 DIR_annot       = 'annotation/'
 DIR_diffmeth    = 'differential_methylation/'
-DIR_final       = os.path.join(config['PATHOUT'], "final_Report/")
+DIR_final       = os.path.join(config['locations']['output-dir'], "final_Report/")
 
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
 PATHIN          = "path_links/input/"       #--- location of the data files to be imported (script creates symbolic link) 
 GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
-VERSION         = config["GENOME_VERSION"]  #--- version of the genome being mapped to.
+VERSION         = config['general']['genome-version']  #--- version of the genome being mapped to.
 
-bismark_cores=config["bismark_cores"]       #--- from config file. Gets passed to bismark multicore argument.  
+bismark_cores   = str(config['tools']['bismark']['cores'])
 
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
-programs = config['programs']
-FASTQC                         =  programs["FASTQC"]            #--- self-explanatory program names.
-TRIMGALORE                     =  programs["TRIMGALORE"]
-CUTADAPT                       =  programs["CUTADAPT"]
-BISMARK_GENOME_PREPARATION     =  programs["BISMARK_GENOME_PREPARATION"]
-BISMARK                        =  programs["BISMARK"]
-BOWTIE2                        =  programs["BOWTIE2"]
-DEDUPLICATE_BISMARK            =  programs["DEDUPLICATE_BISMARK"]
-SAMTOOLS                       =  programs["SAMTOOLS"]
+FASTQC                         =  config['tools']['fastqc']['executable']
+TRIMGALORE                     =  config['tools']['trim-galore']['executable']
+CUTADAPT                       =  config['tools']['cutadapt']['executable']
+BISMARK_GENOME_PREPARATION     =  config['tools']['bismark-genome-preparation']['executable']
+BISMARK                        =  config['tools']['bismark']['executable']
+BOWTIE2                        =  config['tools']['bowtie2']['executable']
+DEDUPLICATE_BISMARK            =  config['tools']['deduplicate-bismark']['executable']
+SAMTOOLS                       =  config['tools']['samtools']['executable']
 
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
@@ -112,7 +111,7 @@ all_output_files = {
     'diffmeth': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]],
 		            
     # annotation diff meth cytosines
-    'annotation': [ DIR_annot+"_".join(x)+".sorted_"+config["GENOME_VERSION"]+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]],
+    'annotation': [ DIR_annot+"_".join(x)+".sorted_"+config['general']['genome-version']+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]],
 
     # final report
     # TODO: This needs to be editted once we determine what final reports we want to export!
@@ -132,7 +131,7 @@ OUTPUT_FILES = [all_output_files[rule] for rule in selected_rules]
 #--- The more "nice" you are, the more you allow other processes to jump ahead of you
 #--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
 def nice(cmd):
-    return "nice -" + str(config["NICE"]) + " " + cmd
+    return "nice -" + str(config['execution']['nice']) + " " + cmd
 
 #--- In case you want to debug the code with interactive commands:
 # import IPython;
@@ -216,7 +215,7 @@ rule bismark_se:
         DIR_mapped+"{sample}_trimmed_bismark_bt2.bam",
         DIR_mapped+"{sample}_trimmed_bismark_bt2_SE_report.txt"
     params:
-        bismark_args = config.get("bismark_args",""),
+        bismark_args = config['tools']['bismark']['args'],
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
@@ -244,7 +243,7 @@ rule bismark_pe:
         DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam",
         DIR_mapped+"{sample}_1_val_1_bismark_bt2_PE_report.txt"
     params:
-        bismark_args = config.get("bismark_args",""),
+        bismark_args = config['tools']['bismark']['args'],
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
@@ -269,7 +268,7 @@ rule bismark_genome_preparation:
         GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
         GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
     params:
-        bismark_genome_preparation_args = config.get("bismark_genome_preparation",""),
+        bismark_genome_preparation_args = config['tools']['bismark-genome-preparation']['args'],
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
         useBowtie2 = "--bowtie2 ",
         verbose = "--verbose "
@@ -289,7 +288,7 @@ rule fastqc_after_trimming_se:
     	DIR_posttrim_QC+"{sample}_trimmed_fastqc.html",
     	DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
     params:
-        fastqc_args = config.get("fastqc_args", ""),
+        fastqc_args = config['tools']['fastqc']['args'],
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
@@ -307,7 +306,7 @@ rule fastqc_after_trimming_pe:
     	DIR_posttrim_QC+"{sample}_2_val_2_fastqc.zip",
         DIR_posttrim_QC+"{sample}_2_val_2_fastqc.html"
     params:
-        fastqc_args = config.get("fastqc_args", ""),
+        fastqc_args = config['tools']['fastqc']['args'],
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
@@ -325,7 +324,7 @@ rule trimgalore_se:
     output:
        DIR_trimmed+"{sample}_trimmed.fq.gz" #---- this ALWAYS outputs .fq.qz format.
     params:
-       extra          = config.get("trim_galore_args", ""),
+       extra          = config['tools']['trim-galore']['args'],
        outdir = "--output_dir "+DIR_trimmed,
        phred = "--phred33",
        gz = "--gzip",
@@ -347,7 +346,7 @@ rule trimgalore_pe:
         DIR_trimmed+"{sample}_1_val_1.fq.gz", #---- this ALWAYS outputs .fq.qz format.
         DIR_trimmed+"{sample}_2_val_2.fq.gz",
     params:
-        extra          = config.get("trim_galore_args", ""),
+        extra          = config['tools']['trim-galore']['args'],
         outdir         = "--output_dir "+DIR_trimmed,
         phred          = "--phred33",
         gz             = "--gzip",
@@ -370,7 +369,7 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         DIR_rawqc+"{sample}_fastqc.html",
         DIR_rawqc+"{sample}_fastqc.zip"
     params:
-        fastqc_args = config.get("fastqc_args", ""),
+        fastqc_args = config['tools']['fastqc']['args'],
         outdir = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
     log:
         DIR_rawqc+"{sample}_fastqc.log"

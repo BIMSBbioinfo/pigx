@@ -10,8 +10,12 @@ pigx-bsseq
 Makefile.in
 Makefile
 autom4te.cache/
-etc/programs.json
+etc/settings.yaml
 test.sh
+
+# test generated files
+test.sh.trs
+test/out/
 
 # pipeline generated files
 .pigx.hashes

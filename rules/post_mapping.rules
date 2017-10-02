@@ -18,35 +18,6 @@
 ####################################################################
 
 
-"""
-This is how the minimal config file should look like, in order to inlcude this snakefile
-
-
-{
-    "reference": {
-        "ce10": ["/home/agosdsc/Base/Genomes/ce10/"]
-    },
-    "samples": {
-        "A":["A"],
-        "B":["B"]
-    },
-    "units": {
-        "A":
-            ["path/to/A_R1.fastq.gz", "path/to/A_R2.fastq.gz"],
-        "B":
-            ["path/to/B.fastq.gz"]
-    },
-    "treatment": {
-        "A": 1,
-        "B": 0
-    },
-    "params_bam_methCall": {
-        "mincov": 10,
-        "minqual": 20
-    }     
-}
-"""
-
 import os
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
@@ -59,13 +30,13 @@ import os
 
 WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
 
-SCRIPTDIR   = os.path.join(config['PATHOUT'], 'path_links/scripts/')
-TEMPLATEDIR = os.path.join(config['PATHOUT'], 'path_links/report_templates/')
+SCRIPTDIR   = os.path.join(config['locations']['output-dir'], 'path_links/scripts/')
+TEMPLATEDIR = os.path.join(config['locations']['output-dir'], 'path_links/report_templates/')
 
 #--- pathout is ignored, since all paths are relative from either base or workdir
 ## notes:
 ## maybe set pathout by setting working dir in snakemake call
-# PATHOUT      = config["PATHOUT"]
+# PATHOUT      = config['locations']['output-dir']
 # LOGS        = config["LOG"] 
 
 
@@ -81,7 +52,7 @@ BAMDIR      = '06_sorted/'  # BASEDIR + "test_dataset/sample_bam_files/"
 METHCALLDIR = "methylation_calls/"
 SEGDIR      = "segmentation/"
 ANNODIR     = "annotation/"
-FINALDIR    = os.path.join(config['PATHOUT'], "final_Report/")
+FINALDIR    = os.path.join(config['locations']['output-dir'], "final_Report/")
 DIFFMETHDIR = 'differential_methylation/'
 
 
@@ -99,9 +70,9 @@ rule bam_methCall:
     params:
         ## absolute path to bamfiles
         inBam       = WORKDIR + BAMDIR + "{prefix}.sorted.bam",
-        assembly    = config["GENOME_VERSION"],
-        mincov      = int(config["bam_methCall_args_mincov"]),
-        minqual     = int(config["bam_methCall_args_minqual"]),
+        assembly    = config['general']['genome-version'],
+        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual     = int(config['general']['methylation-calling']['minimum-quality']),
         ## absolute path to output folder in working dir
         rds       = WORKDIR + METHCALLDIR + "{prefix}.sorted_methylRaw.RDS"
     log:
@@ -245,11 +216,11 @@ rule diffmeth:
         methylDiff_hyper_file  = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhyper.RDS",
         methylDiff_hypo_file   = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhypo.RDS",
         outBed      = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.bed",
-        assembly    = config["GENOME_VERSION"],
+        assembly    = config['general']['genome-version'],
         treatment   = lambda wc: [[config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(t)] for t in wc.treatment.split("_")],
-        mincov      = int(config["bam_methCall_args_mincov"]), 
+        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         context     = "CpG",
-        cores       = int(config["diffmeth_cores"])
+        cores       = int(config['general']['differential-methylation']['cores'])
         
     log:
         DIFFMETHDIR+"{treatment}.sorted_diffmeth.log"
@@ -268,7 +239,7 @@ rule annotation_diffmeth:
         knitr_meta  = touch(FINALDIR + "{treatment}.{assembly}/knitr_meta_notuse.rds")
     params:
         inBed       = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.bed",
-        assembly    = config["GENOME_VERSION"],
+        assembly    = config['general']['genome-version'],
         refseqfile  = WORKDIR + ANNODIR + "refseq.genes.{assembly}.bed",
         methylDiff_file  = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmeth.RDS",
         methylDiff_hyper_file = WORKDIR + DIFFMETHDIR + "{treatment}.sorted_diffmethhyper.RDS",

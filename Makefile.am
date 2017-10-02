@@ -35,7 +35,7 @@ dist_pkgdata_report_templates_SCRIPTS = 			\
   report_templates/reports.bib
 
 dist_pkgdata_DATA =					\
-  etc/programs.json					\
+  etc/settings.yaml					\
   etc/pretty.txt
 
 dist_doc_DATA = 					\
@@ -47,7 +47,8 @@ EXTRA_DIST =										\
   test/in/PE_2.fq.gz								\
   test/in/SE_techrep1.fq.gz							\
   test/in/SE_techrep2.fq.gz							\
-  test/Tablesheet.txt
+  test/samplesheet.csv								\
+  test/settings.yaml
 
 TESTS = test.sh
 

@@ -10,7 +10,7 @@ export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))
 
 chmod -R +w ${srcdir}/test
 
-./pigx-bsseq ${srcdir}/test/Tablesheet.txt
+./pigx-bsseq -s ${srcdir}/test/settings.yaml ${srcdir}/test/samplesheet.csv
 
 for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
     if ! test -f "${srcdir}/test/out/final_Report/${base}.deduped.sorted_hg19_final.nb.html"

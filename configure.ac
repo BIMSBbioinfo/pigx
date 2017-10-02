@@ -15,6 +15,8 @@ dnl variable.
 dnl https://www.gnu.org/software/automake/manual/html_node/Python.html
 AM_PATH_PYTHON([3.5])
 
+dnl TODO: check for PyYAML
+
 dnl Check for required programmes and store their full path in the
 dnl given variables.  The variables are used to substitute
 dnl placeholders in the scripts.
@@ -95,7 +97,7 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
   ])
 
-AC_CONFIG_FILES([etc/programs.json
+AC_CONFIG_FILES([etc/settings.yaml
                  Makefile])
 AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 AC_CONFIG_FILES([pigx-bsseq], [chmod +x pigx-bsseq])

@@ -52,23 +52,22 @@ parser = argparse.ArgumentParser(description=description,
 parser.add_argument('-v', '--version', action='version',
                     version=version)
 
-parser.add_argument('tablesheet',
+parser.add_argument('samplesheet',
                     help="""\
-The tablesheet containing the basic configuration information for
-running the pipeline.\
+The sample sheet containing sample data in CSV format.\
 """)
 
-parser.add_argument('-p', '--programs', dest='programs',
-                    help='A JSON file containing the absolute paths of the required tools.')
+parser.add_argument('-s', '--settings', dest='settings',
+                    help='A YAML file for settings that deviate from the defaults.')
 
 parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
                     help="""\
 The config file used for calling the underlying snakemake process.  By
-default the file 'config.json' is dynamically created from tablesheet
-and programs file.
+default the file 'config.json' is dynamically created from the sample
+sheet and the settings file.
 """)
 
-parser.add_argument('-s', '--snakeparams', dest='snakeparams', default='',
+parser.add_argument('--snakeparams', dest='snakeparams', default='',
                     help="""\
 Additional parameters to be passed down to snakemake, e.g.
     --dryrun    do not execute anything
@@ -81,41 +80,14 @@ args = parser.parse_args()
 # Generate config file
 
 from os import path
-import os, sys, json, csv
+import os, sys, json, csv, yaml
 
 def bail(msg):
     """Print the error message to stderr and exit."""
     print(msg, file=sys.stderr)
     exit(1)
 
-def parse_table_sheet(file):
-  """ Parse the tablesheet given in FILE and return its sections."""
-  sections = {}
-  section = None
-  with open(file) as f:
-      for line in f:
-          if line.startswith("["):
-              section = line.strip('[]\n ').lower()
-              sections[section] = list()
-          else:
-              line = line.strip()
-              if not section and line:
-                  print("WARNING: ignoring line outside of section.")
-              if section and line:
-                  sections[section].append(line)
-  return sections
-
-def parse_assignments(lines):
-    """Parse LINES of assignments in the form key='value'.  Return a
-    dictionary in which keys are variables (e.g. PATHIN) and values are
-    given by a user."""
-    entries = [x.rstrip().replace('"', "").split("=") for x in lines]
-    params = {}
-    for key, value in entries:
-        params[key] = value
-    return params
-
-def parse_diff_meth(lines, sample_params):
+def parse_diff_meth(list_of_list, sample_params):
     """
     Parse lines with information pairs samples
     which should be considered for differential
@@ -130,13 +102,6 @@ def parse_diff_meth(lines, sample_params):
     with a list of treatment values, e.g:
     [[A,B], [C,D], [D,A,B]]
     """
-    # remove \n characters after arguments
-    text = [line.rstrip() for line in lines]
-    # remove empty lines
-    text = list(filter(None, text))
-
-    # list of lists (variable, value)
-    list_of_list =[[field.strip() for field in line.split(",")] for line in text]
 
     # check if treatment values are in the the column samples from
     # the second part of the input file
@@ -220,28 +185,13 @@ def parse_samples(lines):
         outputdict[row[2]] = sampleid_dict
     return { 'SAMPLES': outputdict }
 
-def generate_config(configfile, tablesheet, progsfile):
-    """Generate a new configuration file CONFIG using TABLESHEET and
-PROGSFILE as inputs."""
-    sections = parse_table_sheet(tablesheet)
-  
-    # Load general parameters
-    gen_params = parse_assignments(sections['general parameters'])
-
-    # Load parameters specific to samples
-    sample_params = parse_samples(sections['samples'])
-
-    # Load pairs of treatments for differential methylation
-    diff_meth = sections['differential methylation']
-    diff_meth_params = parse_diff_meth(diff_meth, sample_params)
-
-    # Load programs
-    progs = {'programs': dict(json.load(open(progsfile, 'r')))}
-
+def generate_config(configfile, samplesheet, settingsfile):
+    """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
+SETTINGSFILE as inputs."""
     dirs = {}
     if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
         here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
-        dirs['dirs'] = {
+        dirs['locations'] = {
             'prefix'       : here,
             'exec_prefix'  : here,
             'libexecdir'   : here,
@@ -258,7 +208,7 @@ PROGSFILE as inputs."""
         datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
         pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
 
-        dirs['dirs'] = {
+        dirs['locations'] = {
             'prefix'       : '@prefix@',
             'exec_prefix'  : exec_prefix,
             'libexecdir'   : libexecdir,
@@ -266,44 +216,51 @@ PROGSFILE as inputs."""
             'datarootdir'  : datarootdir,
             'pkgdatadir'   : pkgdatadir
         }
-  
-    # Create a config file
-    config_dict = gen_params
-    config_dict.update(sample_params)
-    config_dict.update(diff_meth_params)
-    config_dict.update(progs)
-    config_dict.update(dirs)
 
-    # Resolve relative paths in PATHIN, PATHOUT, and GENOMEPATH
-    tsroot = path.dirname(tablesheet)
+    # Load defaults
+    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        defaults = path.join(where, 'etc/settings.yaml')
+    else:
+        defaults = path.join(dirs['locations']['pkgdatadir'], 'settings.yaml')
+    settings = yaml.safe_load(open(defaults, 'r'))
+
+    # Load user overrides
+    if settingsfile:
+        settings.update(yaml.safe_load(open(settingsfile, 'r')))
+
+    # Load parameters specific to samples
+    with open(samplesheet, 'r') as f:
+        lines = f.read().splitlines()
+    sample_params = parse_samples(lines)
+
+    # Load pairs of treatments for differential methylation
+    diff_meth = settings['general']['differential-methylation']['treatment-groups']
+    diff_meth_params = parse_diff_meth(diff_meth, sample_params)
+
+    # Create a config file
+    settings.update(sample_params)
+    settings.update(diff_meth_params)
+    settings['locations'].update(dirs['locations'])
+
+    # Resolve relative paths in the locations section
+    root = path.dirname(samplesheet)
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
-    for key in ['PATHIN', 'PATHOUT', 'GENOMEPATH']:
-        config_dict[key] = path.normpath(path.join(here, tsroot, config_dict[key]))
+    for key in ['input-dir', 'output-dir', 'genome-dir']:
+        settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
 
     # Write the config file
     with open(configfile, 'w') as outfile:
-        dumps = json.dumps(config_dict,
+        dumps = json.dumps(settings,
                            indent=4, sort_keys=True,
                            separators=(",",": "), ensure_ascii=True)
         outfile.write(dumps)
 
 
-if args.programs:
-    programs = args.programs
-else:
-    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
-        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
-        programs = path.join(where, 'etc/programs.json')
-    else:
-        # Expand autoconf variables
-        datarootdir = '@datarootdir@'[1:].format(prefix='@prefix@')
-        pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
-        programs = '{pkgdatadir}/programs.json'.format(pkgdatadir=pkgdatadir)
-
 generate_config(args.configfile,
-                args.tablesheet,
-                programs)
+                args.samplesheet,
+                args.settings)
 
 config = json.load(open(args.configfile, 'r'))
 
@@ -321,20 +278,20 @@ def makelink(src, target):
     if not path.isfile(src):
         bail("Refusing to link non-existent file %s" % src)
     elif not path.isdir(path.dirname(target)):
-        bail("%s or subdirectory does not exist for linking %s" % config['PATHOUT'], target)
+        bail("%s or subdirectory does not exist for linking %s" % config['locations']['output-dir'], target)
     else:
         try:
             os.symlink(src, target)
         except FileExistsError:
             pass
 
-os.makedirs(path.join(config['PATHOUT'], 'path_links/input'),
+os.makedirs(path.join(config['locations']['output-dir'], 'path_links/input'),
             exist_ok=True)
 
 # Link the reference genome
 try:
-    os.symlink(config['GENOMEPATH'],
-               path.join(config['PATHOUT'], 'path_links/refGenome'))
+    os.symlink(config['locations']['genome-dir'],
+               path.join(config['locations']['output-dir'], 'path_links/refGenome'))
 except FileExistsError:
     pass
 
@@ -350,8 +307,8 @@ for sample in config['SAMPLES']:
 
     tag = "" if single_end else '_' + str(idx + 1)
     linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
-    makelink(path.join(config['PATHIN'], f),
-             path.join(config['PATHOUT'], "path_links/input/", linkname))
+    makelink(path.join(config['locations']['input-dir'], f),
+             path.join(config['locations']['output-dir'], "path_links/input/", linkname))
 
 # Copy the scripts and report templates to a writable location because
 # annoyingly Snakemake will attempt to write to wherever they are
@@ -359,16 +316,16 @@ for sample in config['SAMPLES']:
 
 import shutil
 from glob import glob
-os.makedirs(path.join(config['PATHOUT'], 'path_links/scripts'),
+os.makedirs(path.join(config['locations']['output-dir'], 'path_links/scripts'),
             exist_ok=True)
-os.makedirs(path.join(config['PATHOUT'], 'path_links/report_templates'),
+os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
             exist_ok=True)
 
 try:
-    for script in glob(config['dirs']['pkglibexecdir'] + '/scripts/*'):
-        shutil.copy(script, path.join(config['PATHOUT'], 'path_links/scripts'))
-    for template in glob(config['dirs']['pkgdatadir'] + '/report_templates/*'):
-        shutil.copy(template, path.join(config['PATHOUT'], 'path_links/report_templates'))
+    for script in glob(config['locations']['pkglibexecdir'] + '/scripts/*'):
+        shutil.copy(script, path.join(config['locations']['output-dir'], 'path_links/scripts'))
+    for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
+        shutil.copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
 except FileExistsError:
     pass
 
@@ -377,29 +334,29 @@ except FileExistsError:
 # Run snakemake!
 
 def cluster_run():
-    if 'contact_email' in config and not config['contact_email'].lower() == 'none':
-        contact_email_string = "-m abe -M %s" % config['contact_email']
-    else:
+    if config['execution']['cluster']['contact-email'].lower() == 'none':
         contact_email_string = ""
+    else:
+        contact_email_string = "-m abe -M %s" % config['execution']['cluster']['contact-email']
 
-    bismark_cores = int(config['bismark_cores'])
+    bismark_cores = int(config['tools']['bismark']['cores'])
     bismark_pe_threads = 4 * bismark_cores
     bismark_se_threads = 2 * bismark_cores
 
     # Create the cluster configuration file
     rules = [
-        ('__default__', 1, config['MEM_default']),
-        ('bismark_se', bismark_se_threads, config['bismark_MEM']),
-        ('bismark_pe', bismark_pe_threads, config['bismark_MEM'])
+        ('__default__', 1, config['execution']['cluster']['memory']),
+        ('bismark_se', bismark_se_threads, config['tools']['bismark']['memory']),
+        ('bismark_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
     ]
 
     cluster_conf = {}
     for rule, nthreads, mem in rules:
         cluster_conf[rule] = {
             'nthreads': nthreads,
-            'q': config['qname'],
+            'q': config['execution']['cluster']['queue'],
             'MEM': mem,
-            'h_stack': config['h_stack']
+            'h_stack': config['execution']['cluster']['stack']
         }
 
     cluster_config_file = "cluster_conf.json"
@@ -408,18 +365,18 @@ def cluster_run():
     print("Commencing snakemake run submission to cluster")
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
     os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} --cluster-config {} -d {} --cluster "{}" --jobs {} {}'
-              .format(config['dirs']['pkglibexecdir'],
+              .format(config['locations']['pkglibexecdir'],
                       args.configfile,
                       cluster_config_file,
-                      config['PATHOUT'],
+                      config['locations']['output-dir'],
                       qsub,
-                      config['numjobs'],
+                      config['execution']['jobs'],
                       args.snakeparams))
 
 
 # Ensure that we use the configured Pandoc, pandoc-citeproc
 # ...and the configured Rscript
-bin = path.join(config['PATHOUT'], 'path_links/bin')
+bin = path.join(config['locations']['output-dir'], 'path_links/bin')
 if path.exists(bin): shutil.rmtree(bin)
 os.makedirs(bin, exist_ok=True)
 os.symlink('@PANDOC@', path.join(bin, "pandoc"))
@@ -431,16 +388,16 @@ if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
     where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
     pretty = path.join(where, 'etc/pretty.txt')
 else:
-    pretty = path.join(config['dirs']['pkgdatadir'], 'pretty.txt')
+    pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
 
 print(open(pretty, 'r').read())
-if 'cluster_run' in config and not config['cluster_run'].lower() == 'false':
+if config['execution']['submit-to-cluster']:
     cluster_run()
 else:
     print("Commencing snakemake run submission locally")
     os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} -d {} --jobs {} {}'
-              .format(config['dirs']['pkglibexecdir'],
+              .format(config['locations']['pkglibexecdir'],
                       args.configfile,
-                      config['PATHOUT'],
-                      config['numjobs'],
+                      config['locations']['output-dir'],
+                      config['execution']['jobs'],
                       args.snakeparams))
