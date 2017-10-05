@@ -315,11 +315,14 @@ interval to data view, mismatch pileup, and several splicing
 summaries.")
     (license artistic2.0)))
 
+(define %pigx-bsseq-version
+  (symbol->string (with-input-from-file "VERSION" read)))
+
 (define-public pigx-bsseq
   (package
     (name "pigx_bsseq")
-    (version "0.0.1")
-    (source #f)
+    (version %pigx-bsseq-version)
+    (source (string-append (getcwd) "/pigx_bsseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
      `(#:phases
