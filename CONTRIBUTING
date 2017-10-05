@@ -13,7 +13,7 @@ build system first with the `bootstrap.sh` script.  Bootstrapping
 requires GNU Autoconf and GNU Automake.
 
 ```
-./bootstrap
+./bootstrap.sh
 ```
 
 Bootstrapping creates the `configure` script, a portable shell script.
