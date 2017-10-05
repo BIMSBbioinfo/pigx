@@ -325,13 +325,14 @@ summaries.")
     (source (string-append (getcwd) "/pigx_bsseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
-     `(#:phases
+     `(#:tests? #f ; requires network access
+       #:phases
        (modify-phases %standard-phases
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
            (lambda* (#:key inputs outputs #:allow-other-keys)
              (let ((out (assoc-ref outputs "out")))
-               (wrap-program (string-append out "/bin/pigx_bs")
+               (wrap-program (string-append out "/bin/pigx-bsseq")
                  `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))))
              #t)))))
     (native-inputs
