@@ -73,16 +73,23 @@ before running the executable from the current working directory.
 
 ## Releases
 
-Before releasing anything make sure that our test works fine:
-```
-make check
-```
+Releases are made by the core developers only.  This section describes
+the release process.
 
-> NOTE: You will find the output of the check in the installation directory ($PREFIX ) under `pigx_bsseq-0.0.1/_build/test-suite.log` .
+- Any new release tarball should have a unique version number.  This
+  is achieved by updating the version string in the `VERSION` file.
 
-If this passes without any complains feel free to create a tarball for releasing our package:
-```
-make dist
-```
+- Run the tests and build a new tarball.  Since we are using
+  Autotools, we can run the test suite and generate a new release
+  tarball with  `make distcheck`.
 
+> NOTE: You will find the output of the check in the installation
+> directory ($PREFIX ) under `pigx_bsseq-0.0.1/_build/test-suite.log`.
 
+- Once the tests pass and you are sure to make the release, create a
+  new signed tag with `git tag --sign v$(cat VERSION)`.
+
+- Sign the release tarball with GPG to create a detached signature.
+
+- Push the tag to Github, and then upload the tarball and the detached
+  signature to https://github.com/BIMSBbioinfo/pigx_bsseq/releases
