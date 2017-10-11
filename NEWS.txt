@@ -107,5 +107,6 @@ Initial commit
 []. Set default for genome name if genome specified but genome name is not
 []. Delete temporary files - bed and bedGraph files
 []. Sample specific read extension
+[]. Motif Discovery
 
 
