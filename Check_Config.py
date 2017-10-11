@@ -90,7 +90,6 @@ def check_config(config):
 def check_file_exists(config, message=''):
     import os
     from itertools import chain
-    import IPython
 #     IPython.embed()
 
     # checks whether the genome fasta file exists if the file is specified
