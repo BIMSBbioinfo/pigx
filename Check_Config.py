@@ -19,6 +19,7 @@ def check_config(config):
     # checks for index or genome specification
     if (config['genome']['fasta'] == None) and (config['index'] == None):
         message = message + "\t" + "neither genome nor index are specified\n"
+    
 
     # ---------------------------------------------------------------------------- #
     # checks for sample specification
