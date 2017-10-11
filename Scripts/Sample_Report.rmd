@@ -1,0 +1,35 @@
+---
+title: "ChIP-seq Sample Report"
+output:
+  html_document:
+    highlight: kate
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+always_allow_html: yes
+
+output:
+  pdf_document: default
+  html_document: default
+  
+params:
+    
+---
+
+```{r setup, include=FALSE, cache=FALSE, fig.height=10, fig.width=10}
+knitr::opts_chunk$set(echo     = FALSE, 
+                      cache    = FALSE, 
+                      messages = FALSE, 
+                      warning  = FALSE,
+                      autodep  = TRUE, 
+                      error    = FALSE)
+
+```
+
+
+```{r libraries, include=FALSE}
+library(GenomicRanges)
+library(data.table)
+library(rtracklayer)
+library(genomation)
+```
