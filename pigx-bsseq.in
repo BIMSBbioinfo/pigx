@@ -185,6 +185,8 @@ def parse_samples(lines):
         outputdict[row[2]] = sampleid_dict
     return { 'SAMPLES': outputdict }
 
+from snakemake.utils import update_config
+
 def generate_config(configfile, samplesheet, settingsfile):
     """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
 SETTINGSFILE as inputs."""
@@ -227,7 +229,7 @@ SETTINGSFILE as inputs."""
 
     # Load user overrides
     if settingsfile:
-        settings.update(yaml.safe_load(open(settingsfile, 'r')))
+        update_config(settings,yaml.safe_load(open(settingsfile, 'r')))
 
     # Load parameters specific to samples
     with open(samplesheet, 'r') as f:
