@@ -316,20 +316,22 @@ for sample in config['SAMPLES']:
 # annoyingly Snakemake will attempt to write to wherever they are
 # located.
 
-import shutil
+import shutil, filecmp
 from glob import glob
 os.makedirs(path.join(config['locations']['output-dir'], 'path_links/scripts'),
             exist_ok=True)
 os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
             exist_ok=True)
 
-try:
-    for script in glob(config['locations']['pkglibexecdir'] + '/scripts/*'):
-        shutil.copy(script, path.join(config['locations']['output-dir'], 'path_links/scripts'))
-    for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
-        shutil.copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
-except FileExistsError:
-    pass
+def maybe_copy(source, target_dir):
+    target = path.join(target_dir, path.basename(source))
+    if not path.exists(target) or not filecmp.cmp(source, target):
+        shutil.copy(source, target_dir)
+
+for script in glob(config['locations']['pkglibexecdir'] + '/scripts/*'):
+    maybe_copy(script, path.join(config['locations']['output-dir'], 'path_links/scripts'))
+for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
+    maybe_copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
 
 
 
