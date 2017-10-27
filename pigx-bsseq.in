@@ -392,7 +392,9 @@ if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
 else:
     pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
 
-print(open(pretty, 'r').read())
+if not os.getenv('PIGX_BSSEQ_UGLY'):
+    print(open(pretty, 'r').read())
+
 if config['execution']['submit-to-cluster']:
     cluster_run()
 else:
