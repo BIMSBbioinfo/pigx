@@ -115,27 +115,23 @@ rule counts_from_STAR:
   output: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
   script: "scripts/counts_matrix_from_STAR.R"
 
-from snakemake.utils import R
 rule translate_sample_sheet_for_report:
   input: "sample_sheet.csv"
-  output: "colData.tsv"
-  run:
-      R("""
-        s = read.csv("sample_sheet.csv")
-        rownames(s) = s$name
-        s$group = s$sample_type
-        s = s[colnames(s)[-grep("name|reads", colnames(s))]]
-        write.table(s, "colData.tsv", sep="\t")
-      """)
+  output: os.path.join(os.getcwd(), "colData.tsv")
+  script: "scripts/translate_sample_sheet_for_report.R"
 
+  
 CASE_SAMPLE_GROUPS = ','.join(SAMPLE_SHEET[SAMPLE_SHEET['comparison_factor']==1]['sample_type'].unique())
 CASE_CONTROL_GROUPS = ','.join(SAMPLE_SHEET[SAMPLE_SHEET['comparison_factor']!=1]['sample_type'].unique())
 rule report:
   input:
-    counts=os.path.abspath(str(rules.counts_from_STAR.output)),
-    coldata=os.path.abspath(str(rules.translate_sample_sheet_for_report.output))
+    counts=str(rules.counts_from_STAR.output),
+    coldata=str(rules.translate_sample_sheet_for_report.output)
   params:
-    outdir=os.path.join(OUTPUT_DIR, "report")
+    outdir=os.path.join(OUTPUT_DIR, "report"),
+    reportR=os.path.join(workflow.basedir, "scripts/runDeseqReport.R"),
+    reportRmd=os.path.join(workflow.basedir, "scripts/deseqReport.Rmd")
   log: os.path.join(LOG_DIR, "report.log")
   output: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
-  shell: "{RSCRIPT_EXEC} report/runDeseqReport.R --reportFile=report/deseqReport.Rmd --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{CASE_SAMPLE_GROUPS}' --controlSampleGroups='{CASE_CONTROL_GROUPS}' --workdir={params.outdir} --geneSetsFolder='' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{CASE_SAMPLE_GROUPS}' --controlSampleGroups='{CASE_CONTROL_GROUPS}' --workdir={params.outdir} --geneSetsFolder='' >> {log} 2>&1"
+      
