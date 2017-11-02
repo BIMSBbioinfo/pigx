@@ -73,7 +73,9 @@ rule star_map:
   input:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
-  output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
+  output:
+      os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
+      os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab")            
   params:
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_')
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
