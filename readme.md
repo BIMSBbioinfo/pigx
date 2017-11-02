@@ -15,6 +15,20 @@
 - reads matrix
 - DE report
 
+## How to install 
+
+### via conda
+
+- Download pigx_rnaseq source code 
+    - run: 
+    > git clone https://github.com/BIMSBbioinfo/pigx_rnaseq.git
+- Download and install Anaconda from https://www.anaconda.com/download
+- Locate the 'environment.yml' file in the source code. 
+    - run:
+    > conda env create -f environment.yml #provide path to the environment.yml file
+    - activate the environment:
+    > source activate pigx_rnaseq 
+
 ## How to configure
 
 ### `settings.yaml`
