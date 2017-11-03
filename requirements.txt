@@ -26,7 +26,6 @@ r-ggrepel
 bioconductor-deseq2
 r-dt
 r-pheatmap
-#dendsort
 r-corrplot
 r-reshape2
 r-plotly

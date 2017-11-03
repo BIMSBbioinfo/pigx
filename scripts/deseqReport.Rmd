@@ -20,7 +20,6 @@ library(ggrepel)
 library(DESeq2)
 library(DT)
 library(pheatmap)
-library(dendsort)
 library(corrplot)
 library(reshape2)
 library(plotly)
@@ -174,13 +173,11 @@ corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
 ```{r plot_heatmap}
 select <- names(sort(apply(X = vsd.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100]
 df <- as.data.frame(colData[,c("group","AnalysisGroup")])
-callback = function(hc, ...){dendsort::dendsort(hc)}
 pheatmap::pheatmap(vsd.counts[select,], 
          cluster_rows=TRUE, 
          show_rownames=FALSE, 
          cluster_cols=TRUE, 
          annotation_col=df, 
-         clustering_callback = callback,
          main = 'Heatmap of the Normalized Expression Values (VST) of \n Top 100 Genes with highest variance across samples')
 ```
 
