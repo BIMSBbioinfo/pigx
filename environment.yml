@@ -188,7 +188,9 @@ dependencies:
 - r-reshape2=1.4.2=r3.3.2_0
 - r-rjson=0.2.15=r3.3.2_0
 - r-rlang=0.1.2=r342h6f7de11_0
+- r-rmarkdown=1.6=r342hccf1f8e_2
 - r-rpart=4.1_11=r342h056d3ea_0
+- r-rprojroot=1.2=r342h961df13_0
 - r-rsqlite=1.1_1=r3.3.2_0
 - r-scales=0.4.1=r3.3.2_0
 - r-shiny=0.14.2=r3.3.2_0
