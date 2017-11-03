@@ -20,6 +20,7 @@ deeptools=2.5.3
 python=3.5.4
 
 #additional requirements for R libraries:
+r-rlang
 r-rmarkdown
 r-ggplot2
 r-ggrepel
