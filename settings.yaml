@@ -1,25 +1,25 @@
 locations:
-  reads-folder: /data/akalin/Projects/pigx_rnaseq/example_data
-  output-folder: /data/akalin/Projects/pigx_rnaseq/example_output
-  genome-folder: /data/akalin/Base/GenomeIndices/hg38/STAR/EnsemblGenes_ERCC_sjdb99/
-  gtf-file: /data/akalin/Base/GenomeIndices/hg38/STAR/EnsemblGenes_ERCC_sjdb99/ensembl82_and_ercc.gtf
+  reads-folder: /data/local/buyar/test_pigx_pipelines/rnaseq/example_data/reads/
+  output-folder: /data/local/buyar/test_pigx_pipelines/rnaseq/example_output/
+  genome-fasta: /data/local/buyar/test_pigx_pipelines/rnaseq/example_data/fasta/chr22.fa
+  gtf-file: /data/local/buyar/test_pigx_pipelines/rnaseq/example_data/gff/hg38/ensembl82_and_ercc.chr22.gtf
 tools:
   fastqc:
-    executable: /home/jronen/bin/fastqc
+    executable: fastqc
   multiqc:
-    executable: /home/jronen/beast-centos7-home/miniconda/envs/conda361/bin/multiqc
+    executable: multiqc
   star:
-    executable: /home/jronen/.guix-profile/bin/STAR
-    n-threads: 2
+    executable: STAR
+    n-threads: 8
   trim-galore:
-    executable: /home/jronen/bin/trim_galore
+    executable: trim_galore
     args: "--paired"
   bamCoverage:
-    executable: /home/jronen/beast-centos7-home/miniconda/envs/conda361/bin/bamCoverage
+    executable: bamCoverage
   samtools:
     executable: samtools
   htseq-count:
     executable: htseq-count
   R:
-    Rscript: ~/beast-centos7-home/Rs/R-current/bin/Rscript
-    executable: ~/beast-centos7-home/Rs/R-current/bin/R
+    Rscript: Rscript 
+    executable: R
