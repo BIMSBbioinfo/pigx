@@ -11,7 +11,7 @@ import pandas as pd
 with open("settings.yaml") as f:
   SETTINGS = yaml.load(f)
 
-GENOME_DIR = SETTINGS['locations']['genome-folder']
+GENOME_FASTA = SETTINGS['locations']['genome-fasta']
 READS_DIR = SETTINGS['locations']['reads-folder']
 OUTPUT_DIR = SETTINGS['locations']['output-folder']
 
@@ -23,7 +23,6 @@ MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
 HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
 PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
-
 
 FASTQC_EXEC  = SETTINGS['tools']['fastqc']['executable']
 MULTIQC_EXEC = SETTINGS['tools']['multiqc']['executable']
@@ -39,18 +38,19 @@ RSCRIPT_EXEC     = SETTINGS['tools']['R']['Rscript']
 
 GTF_FILE = SETTINGS['locations']['gtf-file']
 
-
 ## Load sample sheet
 SAMPLE_SHEET = pd.read_csv("sample_sheet.csv")
 SAMPLES = SAMPLE_SHEET['name']
 
 rule all:
-  input: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
-
+  input: 
+      report = os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html"),
+      star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
+      multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html')
+      
 def trim_galore_input(args):
   sample = args[0]
   return [os.path.join(READS_DIR, f) for f in SAMPLE_SHEET[SAMPLE_SHEET['name']==sample][['reads', 'reads2']].iloc[0]]
-
 
 rule trim_galore:
   input: trim_galore_input
@@ -69,17 +69,26 @@ rule fastqc:
   log: os.path.join(LOG_DIR, 'fastqc_{sample}.log')
   shell: "{FASTQC_EXEC} -o {FASTQC_DIR} -f bam {input} >> {log} 2>&1"
 
+rule star_index:
+    input: GENOME_FASTA
+    output: 
+        star_index_dir = os.path.join(OUTPUT_DIR, 'star_index'),
+        star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex")
+    log: os.path.join(LOG_DIR, 'star_index.log')
+    shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --runMode genomeGenerate --genomeDir {output.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
+
 rule star_map:
   input:
+    index_dir = rules.star_index.output.star_index_dir,
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
   output:
-      os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
-      os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab")            
+    os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
+    os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab")            
   params:
-    output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_')
+    output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_'),
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --genomeDir {GENOME_DIR} --readFilesIn {input} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
+  shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.r1} {input.r2} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
 
 rule index_bam:
   input: rules.star_map.output
