@@ -66,7 +66,6 @@
 ## To do
 
 - configure script for `settings.yaml`
-- have pipeline make reference genome
 - fix gene sets for DE report
 - add support for single end reads
 
