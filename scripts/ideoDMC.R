@@ -37,11 +37,11 @@ ideoDMC <- function(methylDiff.obj, chrom.length, difference = 25,
                          type = "hyper")
   
   g.per = as(hyper, "GRanges")
-  seqlevels(g.per, force=TRUE) = seqlevels(myIdeo)
+  seqlevels(g.per) = seqlevels(myIdeo)
   seqlengths(g.per)=(chrom.length)
   
   g.po = as(hypo, "GRanges")
-  seqlevels(g.po, force=TRUE) = seqlevels(myIdeo)
+  seqlevels(g.po) = seqlevels(myIdeo)
   seqlengths(g.po)=(chrom.length)
   
   values(g.po)$id = "hypo"
@@ -93,11 +93,11 @@ ideoDMC_hyper_hypo <- function(methylDiff.hyper, methylDiff.hypo, chrom.length,
   hyper = methylDiff.hyper
   
   g.per = as(hyper, "GRanges")
-  seqlevels(g.per, force=TRUE) = seqlevels(myIdeo)
+  seqlevels(g.per) = seqlevels(myIdeo)
   seqlengths(g.per)=(chrom.length)
   
   g.po = as(hypo, "GRanges")
-  seqlevels(g.po, force=TRUE) = seqlevels(myIdeo)
+  seqlevels(g.po) = seqlevels(myIdeo)
   seqlengths(g.po)=(chrom.length)
   
   values(g.po)$id = "hypo"
