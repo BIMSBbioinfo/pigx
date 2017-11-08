@@ -60,7 +60,7 @@ find_or_override_prog([TRIMGALORE],      [trim_galore])
 find_or_override_prog([STAR],            [STAR])
 find_or_override_prog([MULTIQC],         [multiqc])
 find_or_override_prog([HTSEQ_COUNT],     [htseq-count])
-find_or_override_prog([DEEPTOOLS],       [deeptools])
+find_or_override_prog([BAMCOVERAGE],     [bamCoverage]) dnl deeptools
 
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
@@ -97,9 +97,9 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
   ])
 
-dnl AC_CONFIG_FILES([etc/settings.yaml
-dnl                 Makefile])
+AC_CONFIG_FILES([settings.yaml
+                 Makefile])
 dnl AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 dnl AC_CONFIG_FILES([pigx-rnaseq], [chmod +x pigx-rnaseq])
 
-dnl AC_OUTPUT
+AC_OUTPUT

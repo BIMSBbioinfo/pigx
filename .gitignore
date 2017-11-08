@@ -9,5 +9,5 @@ pigx-rnaseq
 Makefile.in
 Makefile
 autom4te.cache/
-etc/settings.yaml
+settings.yaml
 test.sh

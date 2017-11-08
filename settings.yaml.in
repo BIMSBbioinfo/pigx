@@ -5,21 +5,21 @@ locations:
   gtf-file: /data/local/buyar/test_pigx_pipelines/rnaseq/sample_data/sample.gtf
 tools:
   fastqc:
-    executable: fastqc
+    executable: @FASTQC@
   multiqc:
-    executable: multiqc
+    executable: @MULTIQC@
   star:
-    executable: STAR
+    executable: @STAR@
     n-threads: 8
   trim-galore:
-    executable: trim_galore
+    executable: @TRIMGALORE@
     args: "--paired"
   bamCoverage:
-    executable: bamCoverage
+    executable: @BAMCOVERAGE@
   samtools:
-    executable: samtools
+    executable: @SAMTOOLS@
   htseq-count:
-    executable: htseq-count
+    executable: @HTSEQ_COUNT@
   R:
-    Rscript: Rscript 
-    executable: R
+    Rscript: @RSCRIPT@
+    executable: @R@
