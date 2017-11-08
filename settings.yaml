@@ -1,8 +1,8 @@
 locations:
-  reads-folder: /data/local/buyar/test_pigx_pipelines/rnaseq/example_data/reads/
-  output-folder: /data/local/buyar/test_pigx_pipelines/rnaseq/example_output/
-  genome-fasta: /data/local/buyar/test_pigx_pipelines/rnaseq/example_data/fasta/chr22.fa
-  gtf-file: /data/local/buyar/test_pigx_pipelines/rnaseq/example_data/gff/hg38/ensembl82_and_ercc.chr22.gtf
+  reads-folder: /data/local/buyar/test_pigx_pipelines/rnaseq/sample_data/reads/
+  output-folder: /data/local/buyar/test_pigx_pipelines/rnaseq/sample_output
+  genome-fasta: /data/local/buyar/test_pigx_pipelines/rnaseq/sample_data/sample.fasta
+  gtf-file: /data/local/buyar/test_pigx_pipelines/rnaseq/sample_data/sample.gtf
 tools:
   fastqc:
     executable: fastqc
