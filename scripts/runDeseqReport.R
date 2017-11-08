@@ -173,7 +173,7 @@ if(!("geneSetsFolder") %in% argsDF$V1) {
 if(!("prefix" %in% argsDF$V1)) {
   cat(help_command, "\n")
   prefix <- 'comparison1'
-  warning("No prefix provided. Will use",prefix,"as the prefix to output files\n")
+  warning("No prefix provided. Will use '",prefix,"' as the prefix to output files\n")
 } else {
   prefix <- argsL$prefix
 }
