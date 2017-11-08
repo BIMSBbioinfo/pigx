@@ -366,7 +366,7 @@ def cluster_run():
     cluster_config_file = "cluster_conf.json"
     open(cluster_config_file, 'w').write(json.dumps(cluster_conf))
 
-    print("Commencing snakemake run submission to cluster")
+    print("Commencing snakemake run submission to cluster", flush=True)
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
     os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} --cluster-config {} -d {} --cluster "{}" --jobs {} {}'
               .format(config['locations']['pkglibexecdir'],
@@ -400,7 +400,7 @@ if not os.getenv('PIGX_BSSEQ_UGLY'):
 if config['execution']['submit-to-cluster']:
     cluster_run()
 else:
-    print("Commencing snakemake run submission locally")
+    print("Commencing snakemake run submission locally", flush=True)
     os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} -d {} --jobs {} {}'
               .format(config['locations']['pkglibexecdir'],
                       args.configfile,
