@@ -3,6 +3,7 @@
 set -e
 set -u
 
+export PIGX_BSSEQ_UGLY=1
 export PIGX_BSSEQ_UNINSTALLED=1
 
 # We do not use "readlink -f" here, because macos does not support it.
