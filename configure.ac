@@ -97,7 +97,7 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
   ])
 
-AC_CONFIG_FILES([settings.yaml
+AC_CONFIG_FILES([etc/settings.yaml
                  Makefile])
 dnl AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 dnl AC_CONFIG_FILES([pigx-rnaseq], [chmod +x pigx-rnaseq])

@@ -8,7 +8,7 @@ import pandas as pd
 
 
 ## Load Settings
-with open("settings.yaml") as f:
+with open("etc/settings.yaml") as f:
   SETTINGS = yaml.load(f)
 
 GENOME_FASTA = SETTINGS['locations']['genome-fasta']
