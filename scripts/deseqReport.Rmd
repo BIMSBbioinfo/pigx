@@ -171,7 +171,7 @@ corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
 
 ### Top 100 most highly variable genes 
 ```{r plot_heatmap}
-select <- names(sort(apply(X = vsd.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100]
+select <- na.omit(names(sort(apply(X = vsd.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100])
 df <- as.data.frame(colData[,c("group","AnalysisGroup")])
 pheatmap::pheatmap(vsd.counts[select,], 
          cluster_rows=TRUE, 
@@ -214,30 +214,35 @@ plotly::ggplotly(p)
 ## Interactive box plots of genes with significant differential expression (padj < 0.1 & abs(log2foldchange) > 1) 
 ```{r plot_interactive_boxplots}
 select <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & abs(DE$log2FoldChange) > 1,])
-expressionLevels <- reshape2::melt(vsd.counts[select,])
-colnames(expressionLevels) <- c('geneId', 'sampleName', 'expressionLevel')
+if(length(select) > 1) {
+  expressionLevels <- reshape2::melt(vsd.counts[select,])
+  colnames(expressionLevels) <- c('geneId', 'sampleName', 'expressionLevel')
+  
+  expressionLevels$group <- colData[expressionLevels$sampleName,]$group
+  expressionLevels$AnalysisGroup <- colData[expressionLevels$sampleName,]$AnalysisGroup
+  
+  matchIds <- match(expressionLevels$geneId, rownames(DE))
+  expressionLevels$padj <- DE[matchIds,]$padj
+  expressionLevels$log2FoldChange <- DE[matchIds,]$log2FoldChange
+  
+  sd <- SharedData$new(expressionLevels, ~geneId)
+  
+  lineplot <- plot_ly(sd, x = ~sampleName, y = ~expressionLevel) %>%
+    group_by(geneId) %>% 
+    add_lines(text = ~geneId, hoverinfo = "text", color = ~AnalysisGroup)
+  
+  volcanoPlot <- plot_ly(sd, x = ~log2FoldChange, y = ~-log10(padj)) %>% 
+      add_markers(text = ~geneId, hoverinfo = "text")
+  
+  subplot(
+  plot_ly(sd, y = ~expressionLevel, color = ~AnalysisGroup) %>% 
+      add_boxplot(),  
+  volcanoPlot
+  ) %>% highlight(on =  'plotly_click', off = 'plotly_doubleclick', selectize = TRUE)
+} else {
+  cat("Couldn't detect at least two genes satisfying the p-value and fold change thresholds\n")
+}
 
-expressionLevels$group <- colData[expressionLevels$sampleName,]$group
-expressionLevels$AnalysisGroup <- colData[expressionLevels$sampleName,]$AnalysisGroup
-
-matchIds <- match(expressionLevels$geneId, rownames(DE))
-expressionLevels$padj <- DE[matchIds,]$padj
-expressionLevels$log2FoldChange <- DE[matchIds,]$log2FoldChange
-
-sd <- SharedData$new(expressionLevels, ~geneId)
-
-lineplot <- plot_ly(sd, x = ~sampleName, y = ~expressionLevel) %>%
-  group_by(geneId) %>% 
-  add_lines(text = ~geneId, hoverinfo = "text", color = ~AnalysisGroup)
-
-volcanoPlot <- plot_ly(sd, x = ~log2FoldChange, y = ~-log10(padj)) %>% 
-    add_markers(text = ~geneId, hoverinfo = "text")
-
-subplot(
-plot_ly(sd, y = ~expressionLevel, color = ~AnalysisGroup) %>% 
-    add_boxplot(),  
-volcanoPlot
-) %>% highlight(on =  'plotly_click', off = 'plotly_doubleclick', selectize = TRUE)
 ```
 
 # Gene Set Enrichment Analysis 
