@@ -4,7 +4,8 @@ Snakefile for pigx rnaseq pipeline
 
 import os
 import yaml
-import pandas as pd
+import csv
+import inspect
 
 
 ## Load Settings
@@ -39,8 +40,21 @@ RSCRIPT_EXEC     = SETTINGS['tools']['R']['Rscript']
 GTF_FILE = SETTINGS['locations']['gtf-file']
 
 ## Load sample sheet
-SAMPLE_SHEET = pd.read_csv("sample_sheet.csv")
-SAMPLES = SAMPLE_SHEET['name']
+with open('sample_sheet.csv', 'r') as fp:
+  rows =  [row for row in csv.reader(fp, delimiter=',')]
+  header = rows[0]; rows = rows[1:]
+  SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
+
+# Convenience function to access fields of sample sheet columns that
+# match the predicate.  The predicate may be a string.
+def lookup(column, predicate, fields=[]):
+  if inspect.isfunction(predicate):
+    records = [line for line in SAMPLE_SHEET if predicate(line[column])]
+  else:
+    records = [line for line in SAMPLE_SHEET if line[column]==predicate]
+  return [record[field] for record in records for field in fields]
+
+SAMPLES = [line['name'] for line in SAMPLE_SHEET]
 
 rule all:
   input: 
@@ -50,7 +64,7 @@ rule all:
       
 def trim_galore_input(args):
   sample = args[0]
-  return [os.path.join(READS_DIR, f) for f in SAMPLE_SHEET[SAMPLE_SHEET['name']==sample][['reads', 'reads2']].iloc[0]]
+  return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2'])]
 
 rule trim_galore:
   input: trim_galore_input
@@ -58,8 +72,8 @@ rule trim_galore:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
   params:
-    tmp1=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, SAMPLE_SHEET[SAMPLE_SHEET['name']==wildcards[0]]['reads'].iloc[0]).replace('.fastq.gz','_val_1.fq.gz'),
-    tmp2=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, SAMPLE_SHEET[SAMPLE_SHEET['name']==wildcards[0]]['reads2'].iloc[0]).replace('.fastq.gz','_val_2.fq.gz')
+    tmp1=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_val_1.fq.gz'),
+    tmp2=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads2'])[0]).replace('.fastq.gz','_val_2.fq.gz')
   log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
   shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {TRIM_GALORE_ARGS} {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
 
@@ -130,8 +144,8 @@ rule translate_sample_sheet_for_report:
   script: "scripts/translate_sample_sheet_for_report.R"
 
   
-CASE_SAMPLE_GROUPS = ','.join(SAMPLE_SHEET[SAMPLE_SHEET['comparison_factor']==1]['sample_type'].unique())
-CASE_CONTROL_GROUPS = ','.join(SAMPLE_SHEET[SAMPLE_SHEET['comparison_factor']!=1]['sample_type'].unique())
+CASE_SAMPLE_GROUPS = ','.join(set(lookup('comparison_factor', lambda x: x=='1', ['sample_type'])))
+CASE_CONTROL_GROUPS = ','.join(set(lookup('comparison_factor', lambda x: x!='1', ['sample_type'])))
 rule report:
   input:
     counts=str(rules.counts_from_STAR.output),
