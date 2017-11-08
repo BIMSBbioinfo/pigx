@@ -41,7 +41,7 @@ caseSampleGroups <- params$caseSampleGroups
 controlSampleGroups <- params$controlSampleGroups
 prefix <- params$prefix
 workdir <- params$workdir
-geneSetsFolder <- ifelse(params$geneSetsFolder == '', NULL, params$geneSetsFolder) 
+geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
 
 inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
@@ -66,7 +66,7 @@ DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 5,
+                         pageLength = 7,
                          dom = 't'))
 ```
 
