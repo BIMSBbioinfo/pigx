@@ -52,6 +52,9 @@ EXTRA_DIST =										\
 
 TESTS = test.sh
 
+clean-local:
+	-rm -rf .snakemake
+
 CLEANFILES = $(nodist_bin_SCRIPTS) report_templates/pigx_bsseq_logo.html config.json
 
 # This is a hack to embed the logo in the html file.
