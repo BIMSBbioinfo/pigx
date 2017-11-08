@@ -1,2 +1,13 @@
 .snakemake
+*~
 
+# autotools generated files
+configure
+config.log
+config.status
+pigx-rnaseq
+Makefile.in
+Makefile
+autom4te.cache/
+etc/settings.yaml
+test.sh
