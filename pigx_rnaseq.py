@@ -7,16 +7,11 @@ import yaml
 import csv
 import inspect
 
+GENOME_FASTA = config['locations']['genome-fasta']
+READS_DIR = config['locations']['reads-folder']
+OUTPUT_DIR = config['locations']['output-folder']
 
-## Load Settings
-with open("etc/settings.yaml") as f:
-  SETTINGS = yaml.load(f)
-
-GENOME_FASTA = SETTINGS['locations']['genome-fasta']
-READS_DIR = SETTINGS['locations']['reads-folder']
-OUTPUT_DIR = SETTINGS['locations']['output-folder']
-
-SCRIPTS_DIR = os.path.join(SETTINGS['locations']['pkglibexecdir'], 'scripts/')
+SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
@@ -27,20 +22,20 @@ BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
 HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
 PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
 
-FASTQC_EXEC  = SETTINGS['tools']['fastqc']['executable']
-MULTIQC_EXEC = SETTINGS['tools']['multiqc']['executable']
-STAR_EXEC    = SETTINGS['tools']['star']['executable']
-STAR_THREADS = SETTINGS['tools']['star']['n-threads']
-TRIM_GALORE_EXEC = SETTINGS['tools']['trim-galore']['executable']
-TRIM_GALORE_ARGS = SETTINGS['tools']['trim-galore']['args']
-BAMCOVERAGE_EXEC = SETTINGS['tools']['bamCoverage']['executable']
-SAMTOOLS_EXEC    = SETTINGS['tools']['samtools']['executable']
-HTSEQ_COUNT_EXEC = SETTINGS['tools']['htseq-count']['executable']
-RSCRIPT_EXEC     = SETTINGS['tools']['R']['Rscript']
+FASTQC_EXEC  = config['tools']['fastqc']['executable']
+MULTIQC_EXEC = config['tools']['multiqc']['executable']
+STAR_EXEC    = config['tools']['star']['executable']
+STAR_THREADS = config['tools']['star']['n-threads']
+TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
+TRIM_GALORE_ARGS = config['tools']['trim-galore']['args']
+BAMCOVERAGE_EXEC = config['tools']['bamCoverage']['executable']
+SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
+HTSEQ_COUNT_EXEC = config['tools']['htseq-count']['executable']
+RSCRIPT_EXEC     = config['tools']['R']['Rscript']
 
 
-GTF_FILE = SETTINGS['locations']['gtf-file']
-SAMPLE_SHEET_FILE = SETTINGS['locations']['sample-sheet']
+GTF_FILE = config['locations']['gtf-file']
+SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
