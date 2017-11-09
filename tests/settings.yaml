@@ -1,0 +1,5 @@
+locations:
+  reads-folder: sample_data/reads/
+  output-folder: output/
+  genome-fasta: sample_data/sample.fasta
+  gtf-file: sample_data/sample.gtf
