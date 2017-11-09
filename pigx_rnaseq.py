@@ -16,6 +16,8 @@ GENOME_FASTA = SETTINGS['locations']['genome-fasta']
 READS_DIR = SETTINGS['locations']['reads-folder']
 OUTPUT_DIR = SETTINGS['locations']['output-folder']
 
+SCRIPTS_DIR = os.path.join(SETTINGS['locations']['pkglibexecdir'], 'scripts/')
+
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
@@ -141,7 +143,7 @@ rule counts_from_STAR:
 rule translate_sample_sheet_for_report:
   input: SAMPLE_SHEET_FILE
   output: os.path.join(os.getcwd(), "colData.tsv")
-  shell: "{RSCRIPT_EXEC} scripts/translate_sample_sheet_for_report.R {input}"
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/translate_sample_sheet_for_report.R {input}"
 
   
 CASE_SAMPLE_GROUPS = ','.join(set(lookup('comparison_factor', lambda x: x=='1', ['sample_type'])))
@@ -152,8 +154,8 @@ rule report:
     coldata=str(rules.translate_sample_sheet_for_report.output)
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
-    reportR=os.path.join(workflow.basedir, "scripts/runDeseqReport.R"),
-    reportRmd=os.path.join(workflow.basedir, "scripts/deseqReport.Rmd")
+    reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
+    reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd")
   log: os.path.join(LOG_DIR, "report.log")
   output: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
   shell: "{RSCRIPT_EXEC} {params.reportR} --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{CASE_SAMPLE_GROUPS}' --controlSampleGroups='{CASE_CONTROL_GROUPS}' --workdir={params.outdir} --geneSetsFolder='' >> {log} 2>&1"
