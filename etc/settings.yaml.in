@@ -3,6 +3,17 @@ locations:
   output-folder: /path/to/output/
   genome-fasta: /path/to/genome.fasta
   gtf-file: /path/to/sample.gtf
+
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: none
+
 tools:
   fastqc:
     executable: @FASTQC@
