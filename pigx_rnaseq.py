@@ -38,9 +38,10 @@ RSCRIPT_EXEC     = SETTINGS['tools']['R']['Rscript']
 
 
 GTF_FILE = SETTINGS['locations']['gtf-file']
+SAMPLE_SHEET_FILE = SETTINGS['locations']['sample-sheet']
 
 ## Load sample sheet
-with open('sample_sheet.csv', 'r') as fp:
+with open(SAMPLE_SHEET_FILE, 'r') as fp:
   rows =  [row for row in csv.reader(fp, delimiter=',')]
   header = rows[0]; rows = rows[1:]
   SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
@@ -138,7 +139,7 @@ rule counts_from_STAR:
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_STAR.R {MAPPED_READS_DIR} {output}"
 
 rule translate_sample_sheet_for_report:
-  input: "sample_sheet.csv"
+  input: SAMPLE_SHEET_FILE
   output: os.path.join(os.getcwd(), "colData.tsv")
   shell: "{RSCRIPT_EXEC} scripts/translate_sample_sheet_for_report.R {input}"
 
