@@ -1,7 +1,9 @@
 # R script takes outputs from STAR when counting readsPerGene and creates a reads matrix
 # that is genes x samples
 
-mapped_files_dir = snakemake@params[["mapped_files_dir"]]
+args <- commandArgs(trailingOnly = TRUE)
+
+mapped_files_dir = args[1]
 reads_per_gene_files = list.files(mapped_files_dir, 'ReadsPerGene')
 sample_names = unlist(lapply(strsplit(reads_per_gene_files, "_Reads"), function(x) x[1]))
 
@@ -15,4 +17,4 @@ for(i in 1:length(sample_names)){
 colnames(readsmatrix) = sample_names
 rownames(readsmatrix) = genes
 
-write.table(readsmatrix, snakemake@output[[1]], sep='\t')
+write.table(readsmatrix, args[2], sep='\t')

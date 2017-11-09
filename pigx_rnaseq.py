@@ -134,14 +134,13 @@ rule htseq_count:
 
 rule counts_from_STAR:
   input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab"), sample=SAMPLES)
-  params: mapped_files_dir=MAPPED_READS_DIR
   output: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
-  script: "scripts/counts_matrix_from_STAR.R"
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_STAR.R {MAPPED_READS_DIR} {output}"
 
 rule translate_sample_sheet_for_report:
   input: "sample_sheet.csv"
   output: os.path.join(os.getcwd(), "colData.tsv")
-  script: "scripts/translate_sample_sheet_for_report.R"
+  shell: "{RSCRIPT_EXEC} scripts/translate_sample_sheet_for_report.R {input}"
 
   
 CASE_SAMPLE_GROUPS = ','.join(set(lookup('comparison_factor', lambda x: x=='1', ['sample_type'])))

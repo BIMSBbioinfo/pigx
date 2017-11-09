@@ -1,5 +1,8 @@
 # R script takes sample_sheet.csv as input and creates a colData.tsv file
-sample_sheet = snakemake@input[[1]]
+
+args <- commandArgs(trailingOnly = TRUE)
+
+sample_sheet = args[1]
 s = read.csv(file = sample_sheet)
 rownames(s) = s$name
 s$group = s$sample_type
