@@ -1,7 +1,7 @@
 .snakemake
 *~
 
-# autotools generated files
+# generated files
 configure
 config.log
 config.status
@@ -11,3 +11,4 @@ Makefile
 autom4te.cache/
 etc/settings.yaml
 test.sh
+config.json
