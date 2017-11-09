@@ -15,6 +15,8 @@ dnl variable.
 dnl https://www.gnu.org/software/automake/manual/html_node/Python.html
 AM_PATH_PYTHON([3.5])
 
+dnl TODO: check for PyYAML
+
 dnl Check for required programmes and store their full path in the
 dnl given variables.  The variables are used to substitute
 dnl placeholders in the scripts.
