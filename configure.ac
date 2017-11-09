@@ -3,7 +3,7 @@ dnl -*- Autoconf -*-
 AC_INIT([PiGx_rnaseq], [m4_translit(m4_esyscmd([cat VERSION]),m4_newline)])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-dnl AM_INIT_AUTOMAKE([gnu color-tests tar-pax -Wall -Wno-portability foreign])
+AM_INIT_AUTOMAKE([gnu color-tests tar-pax -Wall -Wno-portability foreign])
 AM_SILENT_RULES([yes])
 
 dnl We need sed for version checks
