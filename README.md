@@ -15,9 +15,61 @@
 - reads matrix
 - DE report
 
-## How to install 
+# Install
 
-### via conda
+At this time there are no ready-made packages for this pipeline, so
+you need to install PiGx from source.
+
+You can find the [latest
+release](https://github.com/BIMSBbioinfo/pigx_rnaseq/releases/latest)
+here.  PiGx uses the GNU build system.  Please make sure that all
+required dependencies are installed and then follow these steps after
+unpacking the latest release tarball:
+
+```sh
+./configure --prefix=/some/where
+make install
+```
+
+# Dependencies
+
+By default the `configure` script expects tools to be in a directory
+listed in the `PATH` environment variable.  If the tools are installed
+in a location that is not on the `PATH` you can tell the `configure`
+script about them with variables.  Run `./configure --help` for a list
+of all variables and options.
+
+You can prepare a suitable environment with Conda or with [GNU
+Guix](https://gnu.org/s/guix).  If you do not use one of these package
+managers, you will need to ensure that the following software is
+installed:
+
+- R
+	- ggplot2
+	- ggrepel
+	- DESeq2
+	- DT
+	- pheatmap
+	- dendsort
+	- corrplot
+	- reshape2
+	- plotly
+	- scales
+	- crosstalk
+	- gage
+- python
+	- snakemake
+	- pyyaml
+- fastqc
+- multiqc
+- star
+- trim-galore
+- bamCoverage
+- samtools
+- htseq-count
+
+
+## Via Conda
 
 - Download pigx_rnaseq source code 
     - run: 
@@ -28,6 +80,50 @@
     > conda env create -f environment.yml #provide path to the environment.yml file
     - activate the environment:
     > source activate pigx_rnaseq 
+
+## Via Guix
+
+Assuming you have Guix installed, the following command spawns a
+sub-shell in which all dependencies are available:
+
+```sh
+guix environment -l guix.scm
+```
+
+
+# Getting started
+
+To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
+
+```sh
+$ pigx-rnaseq [options] sample_sheet.csv
+```
+To see all available options type the `--help` option
+```sh
+$ pigx-rnaseq --help
+
+usage: pigx-rnaseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--snakeparams SNAKEPARAMS]
+                   samplesheet
+
+PiGx RNAseq Pipeline.
+
+PiGx is a data processing pipeline for RNA seq read data.
+
+positional arguments:
+  samplesheet                             The sample sheet containing sample data in CSV format.
+
+optional arguments:
+  -h, --help                              show this help message and exit
+  -v, --version                           show program's version number and exit
+  -s SETTINGS, --settings SETTINGS        A YAML file for settings that deviate from the defaults.
+  -c CONFIGFILE, --configfile CONFIGFILE  The config file used for calling the underlying snakemake process.  By
+                                          default the file 'config.json' is dynamically created from the sample
+                                          sheet and the settings file.
+  --snakeparams SNAKEPARAMS               Additional parameters to be passed down to snakemake, e.g.
+                                              --dryrun    do not execute anything
+                                              --forceall  re-run the whole pipeline
+```
+
 
 ## How to configure
 
@@ -50,12 +146,6 @@
 - comparison_factor should say which samples to compare together for DE analysis
   - so samples that are to be compared together should have the same factor
 
-## How to run
-
-- once `settings.yaml` and `sample_sheet.csv` have been modified,
-
-	snakemake -s pigx_rnaseq.py
-
 ## Example
 
 - the `sample_sheet.csv` file here points to some data on `/data/akalin/`
@@ -65,36 +155,8 @@
 
 ## To do
 
-- configure script for `settings.yaml`
 - fix gene sets for DE report
 - add support for single end reads
-
-## Software requirements
-
-- R
-	- ggplot2
-	- ggrepel
-	- DESeq2
-	- DT
-	- pheatmap
-	- dendsort
-	- corrplot
-	- reshape2
-	- plotly
-	- scales
-	- crosstalk
-	- gage
-- python
-	- snakemake
-	- pyyaml
-	- pandas
-- fastqc
-- multiqc
-- star
-- trim-galore
-- bamCoverage
-- samtools
-- htseq-count
 
 ----------------------------------------
 2017
