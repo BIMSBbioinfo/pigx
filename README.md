@@ -1,5 +1,17 @@
 # pigx pipeline for RNAseq
 
+
+
+<a name="logo"/>
+<div align="center">
+<img src="images/Logo_PiGx.png" alt="PiGx Logo"  width="30%" height="30%" ></img>
+</a>
+</div>
+
+**Copyright 2017: Bora Uyar, Jona Ronen, Ricardo Wurmus.**
+**This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
+
+
 ## What does it do
 
 - trim reads
