@@ -33,26 +33,6 @@ AS_IF([test -z "$$1"],dnl
       ],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
 
-dnl Ensure that the given R package is avaliable.  Optionally, check
-dnl the version number.
-AC_DEFUN([AX_TEST_R_PACKAGE], [
-    pushdef([PKG],$1)
-    pushdef([VERSION],$2)
-    AC_MSG_CHECKING([for R package PKG VERSION])
-
-    if test -z "$VERSION"
-    then
-      TEST=$( R --silent --vanilla -e 'if(is.na(packageDescription("PKG"))) stop("not found")' 2>/dev/null )
-    else
-      TEST=$( R --silent --vanilla -e 'if(!(packageDescription("PKG")$Version >= "VERSION")) stop("not found")' 2>/dev/null )
-    fi
-    AS_IF([test $? != 0],
-      [AC_MSG_ERROR([R package PKG VERSION could not be found])],
-      [AC_MSG_RESULT([OK])])
-    popdef([PKG])
-    popdef([VERSION])
-])
-
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])
@@ -73,16 +53,16 @@ AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
-AX_TEST_R_PACKAGE([genomation])
-AX_TEST_R_PACKAGE([GenomeInfoDb])
-AX_TEST_R_PACKAGE([methylKit], [1.3.3])
-AX_TEST_R_PACKAGE([AnnotationHub])
-AX_TEST_R_PACKAGE([DT])
-AX_TEST_R_PACKAGE([rtracklayer])
-AX_TEST_R_PACKAGE([ggplot2])
-AX_TEST_R_PACKAGE([ggbio])
-AX_TEST_R_PACKAGE([rmarkdown], [1.5])
-AX_TEST_R_PACKAGE([bookdown])
+AX_R_PACKAGE([genomation])
+AX_R_PACKAGE([GenomeInfoDb])
+AX_R_PACKAGE([methylKit], [1.3.3])
+AX_R_PACKAGE([AnnotationHub])
+AX_R_PACKAGE([DT])
+AX_R_PACKAGE([rtracklayer])
+AX_R_PACKAGE([ggplot2])
+AX_R_PACKAGE([ggbio])
+AX_R_PACKAGE([rmarkdown], [1.5])
+AX_R_PACKAGE([bookdown])
   ])
 
 
