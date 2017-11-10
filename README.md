@@ -160,7 +160,9 @@ optional arguments:
 
 ## Example
 
-- the `sample_sheet.csv` file here points to some data on `/data/akalin/`
+An example can be found in the `tests` directory.  The
+`sample_sheet.csv` file here specifies the following sample data:
+
   - 3 replicates of mRNA from human (UHR)
   - 3 replicates of mRNA from human brain (HBR)
   - only chromosome 22 and ERCC spike-ins
