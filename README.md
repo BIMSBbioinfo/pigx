@@ -68,7 +68,7 @@ configuration time.
 </details>
 
 
-## Installation of dependecies via Guix
+## Installation of dependencies via Guix
 
 
 You can install PiGx through Guix (TODO: add details here after release).
