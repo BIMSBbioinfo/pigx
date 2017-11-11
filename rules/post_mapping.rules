@@ -1,49 +1,6 @@
-####################################################################
-#
 # Rules to be applied after mapping reads with Bismark
-# ====================================================
-
-# These rules generate a report, such that the user can 
-# see wich commands generated the output and 
-# can recreate data with modified parameters if not happy with the results.
-# 
-# 
-
-#
-#
-# Dependencies:
-# - python-rp2, pandoc, methylKit(r), DT(r), genomation(r),
-#   annotationhub(r), rtracklayer(r)
-# 
-####################################################################
-
 
 import os
-
-#---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
-
-#--- we need to define some directory variables to use rmarkdown from snakemake
-#---                !!!! IMPORTANT !!!!
-#--- ! paths inside input and output should be relative
-#--- ! if params are passed to Rmarkdown document, paths to files or folders should be absolute   
-
-
-#--- pathout is ignored, since all paths are relative from either base or workdir
-## notes:
-## maybe set pathout by setting working dir in snakemake call
-# PATHOUT      = config['locations']['output-dir']
-# LOGS        = config["LOG"] 
-
-
-
-#--- the in/output directories can be renamed easily
-#--- path to bam files is absolute, such that I can run workflow in any other directory
-
-
-#--- output paths have to be relative to working directory, 
-#--- such that I can run workflow in any other directory and
-#--- it always sets up the same structure
-
 
 ## Bam processing
 rule bam_methCall:
