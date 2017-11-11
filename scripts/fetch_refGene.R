@@ -60,18 +60,14 @@ fetchRefGene <- function(refgenes.loc = NULL,
   }
 }
 
-
-# ## debugging
-# save.image(file = "snakemakeObj.RData")
+args <- commandArgs(trailingOnly = TRUE)
+logFile     <- args[1]
+refgenesLoc <- args[2]
+assembly    <- args[3]
 
 ## catch output and messages into log file
-out <- file(snakemake@log[[1]], open = "wt")
-sink(out,type = "output")
+out <- file(logFile, open = "wt")
+sink(out, type = "output")
 sink(out, type = "message")
 
-
-## call with snakemake 
-fetchRefGene(refgenes.loc      = snakemake@output[["refgenes"]],
-             assembly = snakemake@params[["assembly"]])
-
-
+fetchRefGene(refgenes.loc = refgenesLoc, assembly = assembly)

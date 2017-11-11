@@ -73,8 +73,8 @@ rule fetch_refGene:
         DIR_annot + "fetch_refseq.genes.{assembly}.log"
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
-    script:
-        DIR_scripts + "fetch_refGene.R"
+    shell:
+        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly}"
 
 
 ## Annotation with gene features

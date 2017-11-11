@@ -50,6 +50,7 @@ BISMARK                        =  config['tools']['bismark']['executable']
 BOWTIE2                        =  config['tools']['bowtie2']['executable']
 DEDUPLICATE_BISMARK            =  config['tools']['deduplicate-bismark']['executable']
 SAMTOOLS                       =  config['tools']['samtools']['executable']
+RSCRIPT                        =  config['tools']['R']['Rscript']
 
 
 # include function definitions and extra rules
