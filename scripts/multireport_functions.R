@@ -208,20 +208,6 @@ render2multireport <- function(final_output,
   referencesPos = match('references',bookdown:::with_ext(basename(unlist(meta)),""))
   if (!is.na(referencesPos)) meta <- c(meta[-referencesPos], meta[referencesPos])
   
-  ## this part combines all meta output from all files and
-  ## sorts by input files
-  # meta <- bookdown:::clean_meta(meta_file = list.files(path = finalreportdir,
-  #                                                      pattern = "knitr_meta.rds",
-  #                                                      full.names = TRUE),
-  #                               files = inputFiles)
-  
-  
-  
-  # merge_chapters2(c(index,unlist(meta),references), 
-  #                 to = paste0(finalreportdir,"/","finalreport",".Rmd"),  
-  #                 orig = c(index,template.list,references))
-  
-  
   merge_chapters2(unlist(lapply(meta ,function(x) attr(x,"intermediates")[2])),
                   to = paste0(finalreportdir,"/",bookdown:::with_ext(basename(final_output),".md"))#,
                   #orig = template.list
@@ -280,15 +266,6 @@ cat(paste(
 
 render2multireport(final_output = normalizePath(snakemake@output[["finalreport"]]),
                    finalreportdir = normalizePath(snakemake@params[["finalreportdir"]]),
-                   #workdir = normalizePath(snakemake@params[["workdir"]]),
                    index = snakemake@input[["index"]],
                    references = snakemake@input[["references"]],
                    sessioninfo = snakemake@input[["sessioninfo"]])
-
-# finalReportDir = "Final_Report/"
-# 
-# render2Markdown(reportFile = normalizePath(snakemake@input[["template"]]),
-#                 outFile = basename(snakemake@output[["report"]]),
-#                 outDir = normalizePath(dirname(snakemake@output[["report"]])),
-#                 finalReportDir = finalReportDir,
-#                 report.params = snakemake@params[nchar(names(snakemake@params)) > 0] )
