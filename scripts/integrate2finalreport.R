@@ -1,14 +1,13 @@
+args <- commandArgs(trailingOnly = TRUE)
+prefix            <- args[1]
+assembly          <- args[2]
+targetdir         <- args[3]
+diff.meth.reports <- tail(args, n=-3)
 
-prefix = snakemake@wildcards$prefix
-assembly = snakemake@wildcards$assembly
-
-diff.meth.reports = snakemake@input[['diffmeth']]
-
-targetdir = snakemake@params[['finalreportdir']]
 
 # if a sample doesnt take part in diff. meth.
 # then dont change knitr_meta.rds for final_report rule
-if(!is.null(diff.meth.reports)){
+if(!is.null(diff.meth.reports) && (length(diff.meth.reports) > 0)){
   
   # there can be more than 1 diff meth report per sample
   # because the sample can be compared with more than

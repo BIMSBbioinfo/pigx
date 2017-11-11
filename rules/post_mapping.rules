@@ -241,15 +241,15 @@ def diff_meth_input(wc):
 
 rule integrateFinalReport:
     input:
-      diffmeth = diff_meth_input
+       diffmeth = diff_meth_input
     output:
        touch(DIR_final + "{prefix}_{assembly}_integrateDiffMeth2FinalReport.txt")
-    params:
-        finalreportdir = DIR_final
     log:
        DIR_final + "{prefix}_{assembly}_integrateFinalReport.log"
-    script:
-      DIR_scripts + "integrate2finalreport.R"
+    params:
+       diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
+    shell:
+      "{RSCRIPT} {DIR_scripts}/integrate2finalreport.R {wildcards.prefix} {wildcards.assembly} {DIR_final} {params.diffmeth}"
 
 
 ## Final Report
