@@ -31,10 +31,6 @@ DIR_rawqc       = '01_raw_QC/'
 
 DIR_final       = os.path.join(config['locations']['output-dir'], "Final_Report/")
 
-#------ set config file, include function definitions, and set os:
-include   : os.path.join(config['locations']['pkglibexecdir'], 'rules/post_mapping.rules')
-include   : os.path.join(config['locations']['output-dir'], 'path_links/scripts/func_defs.py')
-
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
@@ -54,6 +50,11 @@ BISMARK                        =  config['tools']['bismark']['executable']
 BOWTIE2                        =  config['tools']['bowtie2']['executable']
 DEDUPLICATE_BISMARK            =  config['tools']['deduplicate-bismark']['executable']
 SAMTOOLS                       =  config['tools']['samtools']['executable']
+
+
+# include function definitions and extra rules
+include   : os.path.join(config['locations']['pkglibexecdir'], 'rules/post_mapping.rules')
+include   : os.path.join(config['locations']['output-dir'], 'path_links/scripts/func_defs.py')
 
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
