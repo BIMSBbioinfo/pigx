@@ -12,7 +12,7 @@
 -----
 # Summary
 
-PiGx is a data processing pipeline for raw fastq read data of bisulfite experiments; it produces reports on aggregate methylation and  coverage and can be used to produce information on differential methylation and segmentation. It was first developed by the Akalin group at MDC in Berlin in 2017.
+PiGx BSseq is a data processing pipeline for raw fastq read data of bisulfite experiments; it produces reports on aggregate methylation and  coverage and can be used to produce information on differential methylation and segmentation. It was first developed by the Akalin group at MDC in Berlin in 2017.
 
 The figure below provides a sketch of the process.
 ![](images/pipelineIO_BSseq.png )
@@ -20,7 +20,7 @@ The figure below provides a sketch of the process.
 
 # Install
 
-PiGx uses the GNU build system.  If you want to install PiGx from
+PiGx BSseq uses the GNU build system.  If you want to install PiGx BSseq from
 source (here you can find the [latest release](https://github.com/BIMSBbioinfo/pigx_bsseq/releases/latest)), please make sure that all required dependencies are installed and 
 then follow these steps after unpacking the latest release tarball:
 
@@ -71,7 +71,7 @@ configuration time.
 ## Installation of dependencies via Guix
 
 
-You can install PiGx through Guix (TODO: add details here after release).
+You can install PiGx BSseq through Guix (TODO: add details here after release).
 
 Run the `configure` script to probe your environment for tools needed
 by the pipeline.  If you cannot be bothered to install all packages
@@ -85,7 +85,7 @@ guix environment -l guix.scm
 
 # Getting started
 
-To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
+To run PiGx BSseq on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```sh
 $ pigx-bsseq [options] samplesheet.csv
@@ -99,7 +99,7 @@ usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--snakeparams SNAKEPA
 
 PiGx BSseq Pipeline.
 
-PiGx is a data processing pipeline for raw fastq read data of
+PiGx BSseq is a data processing pipeline for raw fastq read data of
 bisulfite experiments.  It produces methylation and coverage
 information and can be used to produce information on differential
 methylation and segmentation.
@@ -122,9 +122,9 @@ optional arguments:
 # Input parameters
 
 The pipeline expects two kinds of input: a sample sheet in CSV format
-and a settings file specifying the desired behaviour of PiGx.  PiGx
-will automatically generate a JSON configuration file from these
-inputs.
+and a settings file specifying the desired behaviour of PiGx BSseq.
+PiGx BSseq will automatically generate a JSON configuration file from
+these inputs.
 
 The sample sheet is a table with sample-specific information
 containing the names of fastq files, unique sample ids, the type of
@@ -173,7 +173,7 @@ tools:
 
 ## Available settings
 
-PiGx recognizes four sections in the settings file:
+PiGx BSseq recognizes four sections in the settings file:
 
 - `locations` for input, output, and genome directories
 - `general` for general settings

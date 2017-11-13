@@ -147,7 +147,7 @@ The main functions of FastQC are:
        ("samtools" ,samtools)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_bsseq/")
     (synopsis "Bisulfite sequencing pipeline from fastq to methylation reports")
-    (description "PiGx is a data processing pipeline for raw fastq
+    (description "PiGx BSseq is a data processing pipeline for raw fastq
 read data of bisulfite experiments; it produces reports on aggregate
 methylation and coverage and can be used to produce information on
 differential methylation and segmentation.")

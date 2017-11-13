@@ -23,7 +23,7 @@ import argparse
 description = """\
 PiGx BSseq Pipeline.
 
-PiGx is a data processing pipeline for raw fastq read data of
+PiGx BSseq is a data processing pipeline for raw fastq read data of
 bisulfite experiments.  It produces methylation and coverage
 information and can be used to produce information on differential
 methylation and segmentation.
