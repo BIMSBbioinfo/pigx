@@ -45,16 +45,24 @@ names(argsL) <- argsDF$V1
 ## get deeper list elements 
 if(!is.null(argsL$report.params)) {
   
-  as.data.frame(do.call("rbind",parseListArgs(parseList(argsL$report.params))))
-  
+  ## construct the list of report params 
   argsDF2 <- as.data.frame(do.call("rbind",(parseListArgs(parseList(argsL$report.params)))))
   argsL2 <- as.list(as.character(argsDF2$V2))
   names(argsL2) <- argsDF2$V1
+  
+  ## convert numbers from string to integer
+  argsL2 <- lapply(argsL2,
+                   FUN = function(x){
+                     ai <- suppressWarnings(as.integer(x))
+                     ifelse(is.na(ai),x,ai)
+                     }
+                   )
   
   argsL$report.params <- argsL2
   
 }
 
+# print(argsL)
 
 # Function Definitions ----------------------------------------------------
 
@@ -194,10 +202,10 @@ render2Markdown <- function(reportFile,
 #   )
 #   #unlink(paste0(outDir,"/tmp"),recursive = TRUE)
 #   #unlink(list.files(path = outDir,pattern = "knit|utf8|nb_files"),recursive = TRUE)
-#   
-#   
-#   
-#   
+#
+#
+#
+#
 # }
 
 
@@ -211,7 +219,7 @@ out <- file(argsL$logFile, open = "wt")
 sink(out,type = "output")
 sink(out, type = "message")
 
-# 
+#
 # Rscript = function(args, ...) {
 #   system2(file.path(R.home('bin'), 'Rscript'), args, ...,stdout = out, stderr = out)
 # }
@@ -226,14 +234,14 @@ sink(out, type = "message")
 #   if(class(x) == "character") return(normalizePath(x))
 #   else return(x) })
 
-# cat(paste(  
+# cat(paste(
 #   Sys.time(),"\n\n",
 #   "Rendering report:",basename(snakemake@output[["report"]]),"\n",
 #   "from template:",basename(snakemake@input[["template"]]),"\n",
 #   "into directory:",normalizePath(dirname(snakemake@output[["report"]])),"\n\n"
 #   ))
 
-cat(paste(  
+cat(paste(
   Sys.time(),"\n\n",
   "Rendering report:",basename(argsL$reportFile),"\n",
   "from template:",basename(argsL$outFile),"\n",
@@ -256,4 +264,7 @@ render2Markdown(reportFile = normalizePath(argsL$reportFile),
                 logFile = argsL$logFile)
 
 ## remove empty intermediate file
-on.exit(unlink(snakemake@output[["knitr_meta"]]))
+# on.exit(unlink(snakemake@output[["knitr_meta"]]))
+
+
+#load("snakemakeObj.RData")
