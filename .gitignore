@@ -12,6 +12,7 @@ Makefile
 autom4te.cache/
 etc/settings.yaml
 test.sh
+report_templates/index.Rmd
 
 # test generated files
 test.sh.trs

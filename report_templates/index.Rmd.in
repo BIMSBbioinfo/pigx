@@ -20,4 +20,6 @@ link-citations: yes
 PiGx is a data processing pipeline for data from bisulfite experiments. It automates the analysis of raw single-end or paired-end fastq reads. It includes quality control, trimming and alignment, while further providing post mapping analysis, as differential methylation detection, methylation segmentation and annotation of detected regions. 
 It was first developed by the Akalin group at MDC in Berlin in 2017.
 
+This report was generated with PiGx bsseq version @VERSION@.
+
 <!-- The FastQC reports are located here: `r paste0(getwd(),"/01_rawqc")` -->
