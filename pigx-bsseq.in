@@ -2,6 +2,9 @@
 
 # PiGx BSseq Pipeline.
 #
+# Copyright © 2017 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
