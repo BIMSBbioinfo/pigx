@@ -29,8 +29,14 @@ rule bam_methCall:
         "   report    : {output.report}" + "\n" 
         "   rds     : {output.rdsfile}" + "\n" 
         "   methCalls : {output.callFile}"
-    script:
-        DIR_scripts + "report_functions.R"
+    shell:
+        "{RSCRIPT} {DIR_scripts}/report_functions.R" +
+                  " --reportFile={input.template}" +
+                  " --outFile={output.report}" +
+                  " --outDir="+ DIR_methcall  +
+                  " --finalReportDir="+DIR_final+"{wildcards.prefix}" + 
+                  " --report.params='inBam:{params.inBam};assembly:{params.assembly};mincov:{params.mincov};minqual:{params.minqual};rds:{params.rds}'" +
+                  " --logFile={log}" 
 
 
 
