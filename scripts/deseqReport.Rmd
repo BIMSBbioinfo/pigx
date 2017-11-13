@@ -13,7 +13,7 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = params$workdir)
 library(ggplot2)
 library(ggrepel)
@@ -35,6 +35,7 @@ This report script runs DESeq2 differential expression analysis tool and produce
 
 # Input Settings
 ```{r printInputSettings}
+
 countDataFile <- params$countDataFile
 colDataFile <- params$colDataFile
 caseSampleGroups <- params$caseSampleGroups
