@@ -3,6 +3,9 @@
 .RData
 .Ruserdata
 
+# Emacs backup files
+*~
+
 # autoconf generated files
 configure
 config.status
