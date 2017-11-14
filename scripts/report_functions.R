@@ -134,58 +134,6 @@ render2Markdown <- function(reportFile,
 
 
 
-# render2Report <- function(reportFile,
-#                           outFile,
-#                           outDir,
-#                           report.params)
-# {
-#   
-#   #print(getwd())
-#   
-#   
-#   ## write stdout to log file
-#   # sink(snakemake@log[[1]])
-#   
-#  
-#   ## the logo is stored in the template directory
-#   pathToLogo <- paste0(normalizePath(dirname(reportFile)),"/pigx_bsseq_logo.html")
-#   
-#   ## we set the knitr root dir to be the base directory,
-#   ## such that all paths are relative from there
-#   rootDir <- dirname(dirname(reportFile))
-# 
-#   interDir <- paste0(outDir,"/inter")
-# 
-#   
-#   rmarkdown::render(
-#     input = reportFile,
-#     output_file = outFile,
-#     output_dir = outDir,
-#     # intermediates_dir = paste0(outDir,"/tmp"),
-#     intermediates_dir = interDir,
-#     knit_root_dir =  outDir,#rootDir
-#     output_format = rmarkdown::html_notebook(
-#       toc = TRUE,
-#       toc_float = TRUE,
-#       theme = 'lumen',
-#       number_sections = FALSE,
-#       code_folding = "hide",
-#       self_contained = TRUE,
-#       includes = list(in_header = pathToLogo)
-#     ),
-#     params = report.params,
-#     quiet = FALSE,
-#     clean = TRUE,
-#     envir = new.env()
-#   )
-#   #unlink(paste0(outDir,"/tmp"),recursive = TRUE)
-#   #unlink(list.files(path = outDir,pattern = "knit|utf8|nb_files"),recursive = TRUE)
-#
-#
-#
-#
-# }
-
 
 # Call Functions ----------------------------------------------------------
 
