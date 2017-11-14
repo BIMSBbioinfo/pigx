@@ -1,5 +1,10 @@
 #+TITLE: NEWS
 
+* November 14, 2017
+
+Change the way R scripts are called from script to run directive. 
+Bump the version number to 0.0.3.
+
 * October 2, 2017
 
 Split the tablesheet into a sample sheet (CSV) and a settings file
