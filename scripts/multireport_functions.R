@@ -1,3 +1,52 @@
+# Parse Command Line Arguments --------------------------------------------
+
+## Collect arguments
+args <- commandArgs(TRUE)
+
+print(args)
+
+## Default setting when no arguments passed
+if(length(args) < 1) {
+  args <- c("--help")
+}
+
+## Help section
+if("--help" %in% args) {
+  cat("
+      Render multiple reports to one
+
+      Arguments:
+        --index index template
+        --finalOutput output file
+        --finalReportDir final report location
+        --references references template
+        --sessioninfo sessioninfo template
+        --logFile file to print the logs to
+      --help              - print this text
+ 
+      Example:
+      ./test.R --arg1=1 --arg2='output.txt' --arg3=TRUE \n\n")
+  
+  q(save="no")
+}
+
+## Parse arguments (we expect the form --arg=value)
+parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
+
+argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
+argsL <- as.list(as.character(argsDF$V2))
+names(argsL) <- argsDF$V1
+
+## get deeper list elements 
+if(!is.null(argsL$report.params)) {
+  argsL$report.params <- jsonlite::fromJSON(argsL$report.params)
+}
+
+# print(argsL)
+
+
+# Function Definitions ----------------------------------------------------
+
 ## Wrapper function to combine a set of precompiled Rmd scripts
 ## and render them as multiRmd report 
 
@@ -251,21 +300,29 @@ render2multireport <- function(final_output,
 
 
 ## catch output and messages into log file
-out <- file(snakemake@log[[1]], open = "wt")
+out <- file(argsL$logFile, open = "wt")
 sink(out,type = "output")
 sink(out, type = "message")
 
-cat(paste(  
+
+cat(paste(
   Sys.time(),"\n\n",
-  "Rendering final report: ",basename(snakemake@output[["finalreport"]]),"\n",
-  "into directory:",normalizePath(dirname(snakemake@output[["finalreport"]])),"\n",
-  "\n"
+  "Rendering report:",basename(argsL$finalOutput),"\n",
+  "into directory:",normalizePath(dirname(argsL$finalReportDir)),"\n\n"
 ))
 
 
 
-render2multireport(final_output = normalizePath(snakemake@output[["finalreport"]]),
-                   finalreportdir = normalizePath(snakemake@params[["finalreportdir"]]),
-                   index = snakemake@input[["index"]],
-                   references = snakemake@input[["references"]],
-                   sessioninfo = snakemake@input[["sessioninfo"]])
+render2multireport(final_output = normalizePath(argsL$finalOutput),
+                   finalreportdir = normalizePath(argsL$finalReportDir),
+                   index = argsL$index,
+                   references = argsL$references,
+                   sessioninfo = argsL$sessioninfo)
+
+# finalReportDir = "Final_Report/"
+# 
+# render2Markdown(reportFile = normalizePath(snakemake@input[["template"]]),
+#                 outFile = basename(snakemake@output[["report"]]),
+#                 outDir = normalizePath(dirname(snakemake@output[["report"]])),
+#                 finalReportDir = finalReportDir,
+#                 report.params = snakemake@params[nchar(names(snakemake@params)) > 0] )
