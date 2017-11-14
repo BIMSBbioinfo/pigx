@@ -22,7 +22,6 @@ test.sh.trs
 test/out/
 
 # pipeline generated files
-.pigx.hashes
 *.log
 snakemakeObj.RData
 report_templates/*.md
