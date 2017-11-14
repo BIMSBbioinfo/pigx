@@ -29,14 +29,19 @@ rule bam_methCall:
         "   report    : {output.report}" + "\n" 
         "   rds     : {output.rdsfile}" + "\n" 
         "   methCalls : {output.callFile}"
-    shell:
-        "{RSCRIPT} {DIR_scripts}/report_functions.R" +
-                  " --reportFile={input.template}" +
-                  " --outFile={output.report}" +
-                  " --outDir="+ DIR_methcall  +
-                  " --finalReportDir="+DIR_final+"{wildcards.prefix}" + 
-                  " --report.params='inBam:{params.inBam};assembly:{params.assembly};mincov:{params.mincov};minqual:{params.minqual};rds:{params.rds}'" +
-                  " --logFile={log}" 
+    run:
+        dumps = json.dumps(dict(params.items()),sort_keys=True,
+                           separators=(",",":"), ensure_ascii=True)
+                           
+        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+        cmd +=  " --reportFile={input.template}"
+        cmd +=  " --outFile={output.report}"
+        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.prefix)
+        # special formatting instruction :q (e.g. "{input:q}")) escapes quotes
+        cmd +=  " --report.params={dumps:q}"
+        cmd +=  " --logFile={log}" 
+        
+        shell(cmd)
 
 
 
@@ -65,9 +70,18 @@ rule methseg:
         "   report    : {output.report}" + "\n"
         "   grfile    : {output.grfile} " +"\n"
         "   bedfile   : {output.bedfile}" +"\n"
-
-    script:
-        DIR_scripts + "report_functions.R"
+    run:
+        dumps = json.dumps(dict(params.items()),sort_keys=True,
+                           separators=(",",":"), ensure_ascii=True)
+                           
+        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+        cmd +=  " --reportFile={input.template}"
+        cmd +=  " --outFile={output.report}"
+        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.prefix)
+        cmd +=  " --report.params={dumps:q}"
+        cmd +=  " --logFile={log}" 
+        
+        shell(cmd)
 
 
 ## Aquisition of gene features
@@ -106,8 +120,18 @@ rule methseg_annotation:
         "   input     : {input.bedfile}" + "\n"
         "Generating:" + "\n"
         "   report    : {output.report}"
-    script:
-        DIR_scripts + "report_functions.R"
+    run:
+        dumps = json.dumps(dict(params.items()),sort_keys=True,
+                           separators=(",",":"), ensure_ascii=True)
+                           
+        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+        cmd +=  " --reportFile={input.template}"
+        cmd +=  " --outFile={output.report}"
+        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.prefix)
+        cmd +=  " --report.params={dumps:q}"
+        cmd +=  " --logFile={log}" 
+        
+        shell(cmd)
 
 
 #----------------------------------- START DIFF METH
@@ -124,6 +148,7 @@ def get_sampleids_from_treatment(treatment):
     sampleids_list.append(sampleids)
   
   sampleids_list = list(sum(sampleids_list, [])) 
+  
   return(sampleids_list)
 
 
@@ -173,8 +198,19 @@ rule diffmeth:
         
     log:
         DIR_diffmeth+"{treatment}.sorted_diffmeth.log"
-    script:
-        DIR_scripts + "report_functions.R" 
+    run:
+        dumps = json.dumps(dict(params.items()),sort_keys=True,
+                           separators=(",",":"), ensure_ascii=True)
+                           
+        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+        cmd +=  " --reportFile={input.template}"
+        cmd +=  " --outFile={output.report}"
+        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.treatment)
+        # special formatting instruction :q (e.g. "{input:q}")) escapes quotes
+        cmd +=  " --report.params={dumps:q}"
+        cmd +=  " --logFile={log}" 
+        
+        shell(cmd)
 
 
 ## Annotation with gene features
@@ -196,8 +232,19 @@ rule annotation_diffmeth:
         ideoDMC_script = DIR_scripts + "ideoDMC.R"
     log:
         DIR_annot + "{treatment}.sorted_{assembly}_annotation.diff.meth.log"
-    script:
-        DIR_scripts + "report_functions.R"   
+    run:
+        dumps = json.dumps(dict(params.items()),sort_keys=True,
+                           separators=(",",":"), ensure_ascii=True)
+                           
+        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+        cmd +=  " --reportFile={input.template}"
+        cmd +=  " --outFile={output.report}"
+        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.treatment+"."+wildcards.assembly)
+        # special formatting instruction :q (e.g. "{input:q}")) escapes quotes
+        cmd +=  " --report.params={dumps:q}"
+        cmd +=  " --logFile={log}" 
+        
+        shell(cmd)
         
 #----------------------------------- END DIFF METH
    
@@ -281,6 +328,14 @@ rule final_report:
         "Compiling Final Report:\n"
         "   report    : {output.finalreport}"#\n{params.fastq_name}"
         
-    script:
-        DIR_scripts + "multireport_functions.R"  
+    run:
+        cmd  =  "{RSCRIPT} {DIR_scripts}/multireport_functions.R"  
+        cmd +=  " --index={input.index}"
+        cmd +=  " --finalOutput={output.finalreport}"
+        cmd +=  " --finalReportDir={params.finalreportdir}"
+        cmd +=  " --references={input.references}"
+        cmd +=  " --sessioninfo={input.sessioninfo}"
+        cmd +=  " --logFile={log}"
+        
+        shell(cmd)
 
