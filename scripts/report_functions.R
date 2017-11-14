@@ -1,9 +1,5 @@
-#!/usr/bin/env Rscript
-
-
 
 # Parse Command Line Arguments --------------------------------------------
-
 
 ## Collect arguments
 args <- commandArgs(TRUE)
@@ -21,7 +17,6 @@ if("--help" %in% args) {
       Arguments:
         --reportFile report template
         --outFile output file
-        --outDir output directory
         --finalReportDir final report location
         --report.params parameters to report, write in 
                         the form of 'p1:v1;p2:v2' 
@@ -36,36 +31,19 @@ if("--help" %in% args) {
 
 ## Parse arguments (we expect the form --arg=value)
 parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
-parseList <- function(x) unlist(strsplit(x,split = ";"))
-parseListArgs <- function(x) strsplit(x,split = ":")
+
 argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 
 ## get deeper list elements 
 if(!is.null(argsL$report.params)) {
-  
-  ## construct the list of report params 
-  argsDF2 <- as.data.frame(do.call("rbind",(parseListArgs(parseList(argsL$report.params)))))
-  argsL2 <- as.list(as.character(argsDF2$V2))
-  names(argsL2) <- argsDF2$V1
-  
-  ## convert numbers from string to integer
-  argsL2 <- lapply(argsL2,
-                   FUN = function(x){
-                     ai <- suppressWarnings(as.integer(x))
-                     ifelse(is.na(ai),x,ai)
-                     }
-                   )
-  
-  argsL$report.params <- argsL2
-  
+  argsL$report.params <- jsonlite::fromJSON(argsL$report.params)
 }
 
 # print(argsL)
 
 # Function Definitions ----------------------------------------------------
-
 
 
 ## modified from https://github.com/rstudio/bookdown/blob/master/R/utils.R#L205-L208
@@ -214,32 +192,12 @@ render2Markdown <- function(reportFile,
 
 
 ## catch output and messages into log file
-# out <- file(snakemake@log[[1]], open = "wt")
 out <- file(argsL$logFile, open = "wt")
 sink(out,type = "output")
 sink(out, type = "message")
 
-#
-# Rscript = function(args, ...) {
-#   system2(file.path(R.home('bin'), 'Rscript'), args, ...,stdout = out, stderr = out)
-# }
-
-
 ## debugging
 # save.image(file = "snakemakeObj.RData")
-
-## check for filepaths to be normalized
-# snakeParams <- snakemake@params[nchar(names(snakemake@params)) > 0]
-# snakeParams <- lapply(snakeParams, function(x) {
-#   if(class(x) == "character") return(normalizePath(x))
-#   else return(x) })
-
-# cat(paste(
-#   Sys.time(),"\n\n",
-#   "Rendering report:",basename(snakemake@output[["report"]]),"\n",
-#   "from template:",basename(snakemake@input[["template"]]),"\n",
-#   "into directory:",normalizePath(dirname(snakemake@output[["report"]])),"\n\n"
-#   ))
 
 cat(paste(
   Sys.time(),"\n\n",
@@ -248,23 +206,9 @@ cat(paste(
   "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"
 ))
 
-
-# render2Markdown(reportFile = normalizePath(snakemake@input[["template"]]),
-#                 outFile = basename(snakemake@output[["report"]]),
-#                 outDir = normalizePath(dirname(snakemake@output[["report"]])),
-#                 finalReportDir = normalizePath(dirname(snakemake@output[["knitr_meta"]])),
-#                 report.params = snakemake@params[nchar(names(snakemake@params)) > 0],
-#                 logFile = snakemake@log[[1]])
-
 render2Markdown(reportFile = normalizePath(argsL$reportFile),
                 outFile = basename(argsL$outFile),
-                outDir = normalizePath(argsL$outDir),
+                outDir = normalizePath(dirname(argsL$outFile)),
                 finalReportDir = normalizePath(argsL$finalReportDir),
                 report.params = argsL$report.params,
                 logFile = argsL$logFile)
-
-## remove empty intermediate file
-# on.exit(unlink(snakemake@output[["knitr_meta"]]))
-
-
-#load("snakemakeObj.RData")
