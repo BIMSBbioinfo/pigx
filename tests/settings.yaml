@@ -3,3 +3,4 @@ locations:
   output-folder: output/
   genome-fasta: sample_data/sample.fasta
   gtf-file: sample_data/sample.gtf
+organism: human
