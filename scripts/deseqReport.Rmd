@@ -10,6 +10,7 @@ params:
   geneSetsFolder: ''
   prefix: ''
   workdir: '.'
+  species: 'human'
 ---
 
 ```{r setup, include=FALSE}
@@ -26,6 +27,7 @@ library(plotly)
 library(scales)
 library(crosstalk)
 library(gage)
+library(RCAS)
 ```
 
 # Description
@@ -43,6 +45,7 @@ controlSampleGroups <- params$controlSampleGroups
 prefix <- params$prefix
 workdir <- params$workdir
 geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
+species <- params$species
 
 inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
@@ -50,7 +53,8 @@ inputParameterDesc <- c('Count Data File',
                      'Control sample groups', 
                      'Gene Sets Folder',
                      'Prefix for output files',
-                     'Working directory'
+                     'Working directory',
+                     'Analyzed Species'
                      )
 inputParameterValues <- c(countDataFile,
                           colDataFile,
@@ -58,7 +62,8 @@ inputParameterValues <- c(countDataFile,
                           controlSampleGroups, 
                           geneSetsFolder,
                           prefix,
-                          workdir)
+                          workdir,
+                          species)
 inputSettings <- data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
                             stringsAsFactors = FALSE)
@@ -67,7 +72,7 @@ DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 7,
+                         pageLength = 8,
                          dom = 't'))
 ```
 
@@ -107,7 +112,7 @@ DT::datatable(DE[!is.na(DE$padj) & DE$padj <= 0.1,],
           options = list(fixedColumns = TRUE, 
                          scrollX = TRUE,
                          dom = 'Bfrtip',
-                         buttons = c('copy', 'print', 'csv','excel', 'pdf')),
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
           filter = 'bottom'
           )
 ```
@@ -119,7 +124,7 @@ DT::datatable(vsd.counts,
           options = list(fixedColumns = TRUE, 
                          scrollX = TRUE,
                          dom = 'Bfrtip',
-                         buttons = c('copy', 'print', 'csv','excel', 'pdf')),
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
           filter = 'bottom'
           )
 ```
@@ -280,7 +285,7 @@ if(!is.null(geneSetsFolder)) {
           options = list(fixedColumns = TRUE, 
                          scrollX = TRUE,
                          dom = 'Bfrtip',
-                         buttons = c('copy', 'print', 'csv','excel', 'pdf')),
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
           filter = 'bottom'
           )
   
@@ -325,8 +330,64 @@ if(!is.null(geneSetsFolder)) {
 }
 ```
 
-## TO-DO
-- GO analysis (species info needed)
+# GO Term Enrichment Analysis
+```{r goAnalysis}
+runGOanalysis <- function(targetedGenes, backgroundGenes, species, writeToFile = NULL) {
+  goBP <- RCAS::runTopGO(ontology = 'BP', species = species, backgroundGenes = backgroundGenes, targetedGenes = targetedGenes)
+  goMF <- RCAS::runTopGO(ontology = 'MF', species = species, backgroundGenes = backgroundGenes, targetedGenes = targetedGenes)
+  goCC <- RCAS::runTopGO(ontology = 'CC', species = species, backgroundGenes = backgroundGenes, targetedGenes = targetedGenes)
+  goBP$ontology <- 'Biological_Process'
+  goMF$ontology <- 'Molecular_Function'
+  goCC$ontology <- 'Cellular_Compartment'
+  
+  goAll <- rbind(goBP, goMF, goCC)
+  goAll <- goAll[goAll$bh < 0.1,]
+  goAll <- goAll[order(goAll$foldEnrichment, decreasing = T),]
+  
+  if(!is.null(writeToFile)) {
+    write.table(x = goAll, file = writeToFile, quote = F, sep = '\t', row.names = F)
+  }
+  return(goAll)
+}
+
+genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 1,])
+genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -1,])
+allGenes <- rownames(DE)
+```
+
+## GO Terms for Up-regulated Genes
+```{r}
+if(length(genesUp) > 5){
+  goUp <- runGOanalysis(targetedGenes = genesUp, backgroundGenes = allGenes, species = species)
+  DT::datatable(goUp, 
+          extensions = c('Buttons', 'FixedColumns'), 
+          options = list(fixedColumns = TRUE, 
+                         scrollX = TRUE,
+                         dom = 'Bfrtip',
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
+          filter = 'bottom'
+  )
+} else {
+  cat("Couldn't find at least 5 up-regulated genes for GO analysis\n")
+}
+```
+
+## GO Terms for Down-regulated Genes
+```{r}
+if(length(genesDown) > 5) {
+  goDown <- runGOanalysis(targetedGenes = genesDown, backgroundGenes = allGenes, species = species)
+  DT::datatable(goDown, 
+          extensions = c('Buttons', 'FixedColumns'), 
+          options = list(fixedColumns = TRUE, 
+                         scrollX = TRUE,
+                         dom = 'Bfrtip',
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
+          filter = 'bottom'
+          )
+} else {
+  cat("Couldn't find at least 5 down-regulated genes for GO analysis\n")
+}
+```
 
 # Session Information
 ```{r sessionInfo}
