@@ -41,7 +41,6 @@ if(!is.null(argsL$report.params)) {
   argsL$report.params <- jsonlite::fromJSON(argsL$report.params)
 }
 
-# print(argsL)
 
 # Function Definitions ----------------------------------------------------
 
@@ -138,14 +137,10 @@ render2Markdown <- function(reportFile,
 # Call Functions ----------------------------------------------------------
 
 
-
 ## catch output and messages into log file
 out <- file(argsL$logFile, open = "wt")
 sink(out,type = "output")
 sink(out, type = "message")
-
-## debugging
-# save.image(file = "snakemakeObj.RData")
 
 cat(paste(
   Sys.time(),"\n\n",

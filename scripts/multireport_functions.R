@@ -3,8 +3,6 @@
 ## Collect arguments
 args <- commandArgs(TRUE)
 
-print(args)
-
 ## Default setting when no arguments passed
 if(length(args) < 1) {
   args <- c("--help")
@@ -36,13 +34,6 @@ parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
 argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
-
-## get deeper list elements 
-if(!is.null(argsL$report.params)) {
-  argsL$report.params <- jsonlite::fromJSON(argsL$report.params)
-}
-
-# print(argsL)
 
 
 # Function Definitions ----------------------------------------------------
@@ -319,10 +310,3 @@ render2multireport(final_output = normalizePath(argsL$finalOutput),
                    references = argsL$references,
                    sessioninfo = argsL$sessioninfo)
 
-# finalReportDir = "Final_Report/"
-# 
-# render2Markdown(reportFile = normalizePath(snakemake@input[["template"]]),
-#                 outFile = basename(snakemake@output[["report"]]),
-#                 outDir = normalizePath(dirname(snakemake@output[["report"]])),
-#                 finalReportDir = finalReportDir,
-#                 report.params = snakemake@params[nchar(names(snakemake@params)) > 0] )

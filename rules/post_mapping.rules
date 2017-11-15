@@ -3,8 +3,8 @@
 ## Bam processing
 rule bam_methCall:
     input:
-        template    = DIR_templates + "methCall.report.Rmd",
-        bamfile     = DIR_sorted  + "{prefix}.sorted.bam"
+        template    = os.path.join(DIR_templates,"methCall.report.Rmd"),
+        bamfile     = os.path.join(DIR_sorted,"{prefix}.sorted.bam")
     output:
         report      = os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.nb.html"),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
@@ -40,7 +40,7 @@ rule bam_methCall:
         
         shell(cmd)
 
-
+#----------------------------------- START METH SEGMENTATION
 
 
 ## Segmentation
@@ -125,7 +125,7 @@ rule methseg_annotation:
         
         shell(cmd)
 
-
+#----------------------------------- END METH SEGMENTATION
 #----------------------------------- START DIFF METH
 
 SAMPLE_IDS = list(config["SAMPLES"].keys())
@@ -196,7 +196,6 @@ rule diffmeth:
         cmd +=  " --reportFile={input.template}"
         cmd +=  " --outFile={output.report}"
         cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.treatment)
-        # special formatting instruction :q (e.g. "{input:q}")) escapes quotes
         cmd +=  " --report.params={dumps:q}"
         cmd +=  " --logFile={log}" 
         
@@ -229,7 +228,6 @@ rule annotation_diffmeth:
         cmd +=  " --reportFile={input.template}"
         cmd +=  " --outFile={output.report}"
         cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.treatment+"."+wildcards.assembly)
-        # special formatting instruction :q (e.g. "{input:q}")) escapes quotes
         cmd +=  " --report.params={dumps:q}"
         cmd +=  " --logFile={log}" 
         
@@ -243,10 +241,6 @@ rule annotation_diffmeth:
 ### so make sure that at least one has been run already
 ### right now ensured with 'rules.methseg_annotation.output' as input
 ### 
-
-# rule multiqc:
-#     input:
-#         workdir = WORKDIR + "."
 
 
 def get_fastq_name(full_name):
@@ -302,20 +296,15 @@ rule final_report:
         index       = os.path.join(DIR_templates,"index.Rmd"),   
         references  = os.path.join(DIR_templates,"references.Rmd"),
         sessioninfo = os.path.join(DIR_templates,"sessioninfo.Rmd")
-        #fastq_name  = lambda wildcards: touch(get_fastq_name(wildcards.prefix))#,
-        ## add rawqc at some point
     output: 
         finalreport = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.nb.html"),
     params:
         finalreportdir = os.path.join(DIR_final, "{prefix}/")
-      #  workdir = WORKDIR#,
-        # fastq_name = lambda wildcards: get_fastq_name(wildcards.prefix)#,
-        # rules.fastqc_raw.output
     log:
         os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
     message:
         "Compiling Final Report:\n"
-        "   report    : {output.finalreport}"#\n{params.fastq_name}"
+        "   report    : {output.finalreport}"
         
     run:
         cmd  =  "{RSCRIPT} {DIR_scripts}/multireport_functions.R"  
