@@ -14,6 +14,8 @@ execution:
     queue: all
     contact-email: none
 
+organism: human 
+
 tools:
   fastqc:
     executable: @FASTQC@
