@@ -10,7 +10,7 @@ params:
   geneSetsFolder: ''
   prefix: ''
   workdir: '.'
-  species: 'human'
+  species: ''
 ---
 
 ```{r setup, include=FALSE}
@@ -46,6 +46,9 @@ prefix <- params$prefix
 workdir <- params$workdir
 geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
 species <- params$species
+
+#switch to control whether GO analysis module should be run
+runGO <- ifelse(species %in% c('human', 'mouse', 'worm', 'fly'), TRUE, FALSE)
 
 inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
@@ -330,8 +333,15 @@ if(!is.null(geneSetsFolder)) {
 }
 ```
 
-# GO Term Enrichment Analysis
-```{r goAnalysis}
+```{r results='asis'}
+if(runGO == FALSE) {cat("Warning:Skipping GO analysis as species:",species,"is not supported\n")}
+```
+
+```{r goAnalysisTitle, eval = runGO, results='asis'}
+cat("# GO Term Enrichment Analysis\n")
+```
+
+```{r goAnalysis, eval = runGO}
 runGOanalysis <- function(targetedGenes, backgroundGenes, species, writeToFile = NULL) {
   goBP <- RCAS::runTopGO(ontology = 'BP', species = species, backgroundGenes = backgroundGenes, targetedGenes = targetedGenes)
   goMF <- RCAS::runTopGO(ontology = 'MF', species = species, backgroundGenes = backgroundGenes, targetedGenes = targetedGenes)
@@ -355,8 +365,11 @@ genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -
 allGenes <- rownames(DE)
 ```
 
-## GO Terms for Up-regulated Genes
-```{r}
+```{r goAnalysisTitleUp, eval = runGO, results='asis'}
+cat("## GO Terms for Up-regulated Genes\n")
+```
+
+```{r, eval = runGO}
 if(length(genesUp) > 5){
   goUp <- runGOanalysis(targetedGenes = genesUp, backgroundGenes = allGenes, species = species)
   DT::datatable(goUp, 
@@ -372,8 +385,11 @@ if(length(genesUp) > 5){
 }
 ```
 
-## GO Terms for Down-regulated Genes
-```{r}
+```{r goAnalysisTitleDown, eval = runGO, results='asis'}
+cat("## GO Terms for Down-regulated Genes\n")
+```
+
+```{r, eval = runGO}
 if(length(genesDown) > 5) {
   goDown <- runGOanalysis(targetedGenes = genesDown, backgroundGenes = allGenes, species = species)
   DT::datatable(goDown, 

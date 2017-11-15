@@ -10,6 +10,9 @@ import inspect
 GENOME_FASTA = config['locations']['genome-fasta']
 READS_DIR = config['locations']['reads-folder']
 OUTPUT_DIR = config['locations']['output-folder']
+ORGANISM = config['organism']
+
+print("ORGANISM:",ORGANISM)
 
 SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
@@ -153,5 +156,5 @@ rule report:
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd")
   log: os.path.join(LOG_DIR, "report.log")
   output: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
-  shell: "{RSCRIPT_EXEC} {params.reportR} --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{CASE_SAMPLE_GROUPS}' --controlSampleGroups='{CASE_CONTROL_GROUPS}' --workdir={params.outdir} --geneSetsFolder='' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{CASE_SAMPLE_GROUPS}' --controlSampleGroups='{CASE_CONTROL_GROUPS}' --workdir={params.outdir} --species='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
       

@@ -24,6 +24,10 @@
 #'   samples compared to the control samples.
 #' @param workdir Path to working directory where the output files will be
 #'   written
+#' @param species The organism for which the analysis is done. Supported
+#'   organisms are 'human', 'mouse', 'worm', and 'fly'. This argument only
+#'   affects GO term analysis results. If the species is not supported, GO
+#'   results will not be displayed.
 #' @param prefix Prefix to be attached to the beginning of output files
 #' @param quiet boolean value (default: FALSE). If set to TRUE, progress bars 
 #'   and chunk labels will be suppressed while knitting the Rmd file.
@@ -41,6 +45,7 @@ runReport <- function(reportFile,
                       controlSampleGroups,
                       geneSetsFolder,
                       workdir = getwd(),
+                      species, 
                       prefix, 
                       selfContained = TRUE, 
                       quiet = FALSE) {
@@ -68,7 +73,8 @@ runReport <- function(reportFile,
                   controlSampleGroups = controlSampleGroups,
                   geneSetsFolder = geneSetsFolder, 
                   prefix = prefix,
-                  workdir = workdir),
+                  workdir = workdir, 
+                  species = species),
     quiet = quiet
   )
 }
@@ -107,6 +113,10 @@ Arguments:
    samples compared to the control samples.
 --workdir (Optional, default: current working directory) Path to working directory 
    where the output files will be written
+--species (Optional) The organism for which the analysis is done. Supported
+  organisms are 'human', 'mouse', 'worm', and 'fly'. This argument only
+  affects GO term analysis results. If the species is not supported, GO
+  results will not be displayed.
 --prefix (Optional, default: 'comparison1') Prefix to be attached to the beginning 
    of output files
 --selfContained boolean value (default: TRUE). By default, the generated
@@ -122,6 +132,7 @@ Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \\\
                          --controlSampleGroups='ctrl_N2_L4' \\\
                          --geneSetsFolder='./sample_data/genesets' \\\
                          --workdir=`pwd` \\\
+                         --species='human' \\\
                          --prefix='spt-16_hmg-4_vs_ctrl' \\\
                          --selfContained=TRUE"
 
@@ -170,6 +181,14 @@ if(!("geneSetsFolder") %in% argsDF$V1) {
   geneSetsFolder <- argsL$geneSetsFolder
 }
 
+if(!("species") %in% argsDF$V1) {
+  cat(help_command, "\n")
+  warning("Missing argument: species Will skip GO term analysis\n")
+  species <- ''
+} else {
+  species <- argsL$species
+}
+
 if(!("prefix" %in% argsDF$V1)) {
   cat(help_command, "\n")
   prefix <- 'comparison1'
@@ -205,5 +224,6 @@ runReport(reportFile = reportFile,
           controlSampleGroups = controlSampleGroups, 
           geneSetsFolder = geneSetsFolder,
           workdir = workdir, 
+          species = species,
           prefix = prefix, 
           selfContained = selfContained)
