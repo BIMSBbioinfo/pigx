@@ -15,10 +15,6 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/multireport_functions.R	\
   scripts/report_functions.R
 
-pkglibexec_rulesdir = $(pkglibexecdir)/rules
-dist_pkglibexec_rules_SCRIPTS =		\
-  rules/SRA2fastq
-
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\
   report_templates/annotation.report.Rmd			\
