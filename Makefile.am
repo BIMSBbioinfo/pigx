@@ -17,7 +17,6 @@ dist_pkglibexec_scripts_SCRIPTS =	\
 
 pkglibexec_rulesdir = $(pkglibexecdir)/rules
 dist_pkglibexec_rules_SCRIPTS =		\
-  rules/post_mapping.rules			\
   rules/SRA2fastq
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
