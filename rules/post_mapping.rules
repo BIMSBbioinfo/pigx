@@ -1,5 +1,17 @@
 # Rules to be applied after mapping reads with Bismark
 
+def generateReport(input, output, params, log, reportSubDir):
+    dumps = json.dumps(dict(params.items()),sort_keys=True,
+                       separators=(",",":"), ensure_ascii=True)
+
+    cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+    cmd +=  " --reportFile={input.template}"
+    cmd +=  " --outFile={output.report}"
+    cmd +=  " --finalReportDir=" + os.path.join(DIR_final,reportSubDir)
+    cmd +=  " --report.params={dumps:q}"
+    cmd +=  " --logFile={log}"
+    shell(cmd, dumps)
+
 ## Bam processing
 rule bam_methCall:
     input:
@@ -27,18 +39,7 @@ rule bam_methCall:
         "   rds       : {output.rdsfile}" + "\n" 
         "   methCalls : {output.callFile}"
     run:
-        dumps = json.dumps(dict(params.items()),sort_keys=True,
-                           separators=(",",":"), ensure_ascii=True)
-                           
-        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
-        cmd +=  " --reportFile={input.template}"
-        cmd +=  " --outFile={output.report}"
-        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.prefix)
-        # special formatting instruction :q (e.g. "{input:q}")) escapes quotes
-        cmd +=  " --report.params={dumps:q}"
-        cmd +=  " --logFile={log}" 
-        
-        shell(cmd)
+        generateReport(input, output, params, log, wildcards.prefix)
 
 #----------------------------------- START METH SEGMENTATION
 
@@ -67,17 +68,7 @@ rule methseg:
         "   grfile    : {output.grfile} " +"\n"
         "   bedfile   : {output.bedfile}" +"\n"
     run:
-        dumps = json.dumps(dict(params.items()),sort_keys=True,
-                           separators=(",",":"), ensure_ascii=True)
-                           
-        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
-        cmd +=  " --reportFile={input.template}"
-        cmd +=  " --outFile={output.report}"
-        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.prefix)
-        cmd +=  " --report.params={dumps:q}"
-        cmd +=  " --logFile={log}" 
-        
-        shell(cmd)
+        generateReport(input, output, params, log, wildcards.prefix)
 
 
 ## Aquisition of gene features
@@ -113,17 +104,7 @@ rule methseg_annotation:
         "Generating:" + "\n"
         "   report    : {output.report}"
     run:
-        dumps = json.dumps(dict(params.items()),sort_keys=True,
-                           separators=(",",":"), ensure_ascii=True)
-                           
-        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
-        cmd +=  " --reportFile={input.template}"
-        cmd +=  " --outFile={output.report}"
-        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.prefix)
-        cmd +=  " --report.params={dumps:q}"
-        cmd +=  " --logFile={log}" 
-        
-        shell(cmd)
+        generateReport(input, output, params, log, wildcards.prefix)
 
 #----------------------------------- END METH SEGMENTATION
 #----------------------------------- START DIFF METH
@@ -189,17 +170,7 @@ rule diffmeth:
     log:
         os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
     run:
-        dumps = json.dumps(dict(params.items()),sort_keys=True,
-                           separators=(",",":"), ensure_ascii=True)
-                           
-        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
-        cmd +=  " --reportFile={input.template}"
-        cmd +=  " --outFile={output.report}"
-        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.treatment)
-        cmd +=  " --report.params={dumps:q}"
-        cmd +=  " --logFile={log}" 
-        
-        shell(cmd)
+        generateReport(input, output, params, log, wildcards.treatment)
 
 
 ## Annotation with gene features
@@ -221,17 +192,7 @@ rule annotation_diffmeth:
     log:
         os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
     run:
-        dumps = json.dumps(dict(params.items()),sort_keys=True,
-                           separators=(",",":"), ensure_ascii=True)
-                           
-        cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
-        cmd +=  " --reportFile={input.template}"
-        cmd +=  " --outFile={output.report}"
-        cmd +=  " --finalReportDir=" + os.path.join(DIR_final,wildcards.treatment+"."+wildcards.assembly)
-        cmd +=  " --report.params={dumps:q}"
-        cmd +=  " --logFile={log}" 
-        
-        shell(cmd)
+        generateReport(input, output, params, log, wildcards.treatment+"."+wildcards.assembly)
         
 #----------------------------------- END DIFF METH
    
