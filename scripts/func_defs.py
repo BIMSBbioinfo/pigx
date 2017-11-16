@@ -1,3 +1,25 @@
+# PiGx BSseq Pipeline.
+#
+# Copyright © 2017 Bren Osberg <b.osberg@tum.de>
+# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
+# Copyright © 2017 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx BSseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 def list_files_rawQC(PATH, files, sampleID):
     if len(files) == 1:
         return [PATH+sampleID+"_fastqc.html"] #---- single end

@@ -1,13 +1,22 @@
-#============================================================================================================
-# SNAKEMAKE FILE WRITTEN BY THE AKALIN GROUP AT MDC, BERLIN, 2017
-# Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus
-# To process bisulfite sequencing data from raw fastq files to performing integrated bioinformatics analysis.
-
-# SUBMIT THIS JOB INTERACTIVELY WITH:
-# import IPython;
-# IPython.embed()
- 
-#============================================================================================================
+# PiGx BSseq Pipeline.
+#
+# Copyright © 2017 Bren Osberg <b.osberg@tum.de>
+# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
+# Copyright © 2017 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
