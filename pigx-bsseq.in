@@ -315,14 +315,12 @@ for sample in config['SAMPLES']:
     makelink(path.join(config['locations']['input-dir'], f),
              path.join(config['locations']['output-dir'], "path_links/input/", linkname))
 
-# Copy the scripts and report templates to a writable location because
-# annoyingly Snakemake will attempt to write to wherever they are
-# located.
+# Copy the report templates to a writable location because bookmark insists on placing
+# the generated ".md" files where the ".Rmd" source files are located.  This will not be
+# necessary once we generate only a single report.
 
 import shutil, filecmp
 from glob import glob
-os.makedirs(path.join(config['locations']['output-dir'], 'path_links/scripts'),
-            exist_ok=True)
 os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
             exist_ok=True)
 
@@ -331,8 +329,6 @@ def maybe_copy(source, target_dir):
     if not path.exists(target) or not filecmp.cmp(source, target):
         shutil.copy(source, target_dir)
 
-for script in glob(config['locations']['pkglibexecdir'] + '/scripts/*'):
-    maybe_copy(script, path.join(config['locations']['output-dir'], 'path_links/scripts'))
 for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
     maybe_copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
 

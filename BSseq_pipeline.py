@@ -14,7 +14,7 @@ import os
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
 WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
 
-DIR_scripts   = os.path.join(config['locations']['output-dir'], 'path_links/scripts/')
+DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 DIR_templates = os.path.join(config['locations']['output-dir'], 'path_links/report_templates/')
 # DIR_xmethed     = 'xx_xmethed/' #--- no longer used
 
@@ -55,7 +55,7 @@ RSCRIPT                        =  config['tools']['R']['Rscript']
 
 # include function definitions and extra rules
 include   : os.path.join(config['locations']['pkglibexecdir'], 'rules/post_mapping.rules')
-include   : os.path.join(config['locations']['output-dir'], 'path_links/scripts/func_defs.py')
+include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
 
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
