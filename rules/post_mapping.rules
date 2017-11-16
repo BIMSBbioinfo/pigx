@@ -1,57 +1,65 @@
 # Rules to be applied after mapping reads with Bismark
 
-import os
+def generateReport(input, output, params, log, reportSubDir):
+    dumps = json.dumps(dict(params.items()),sort_keys=True,
+                       separators=(",",":"), ensure_ascii=True)
+
+    cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+    cmd +=  " --reportFile={input.template}"
+    cmd +=  " --outFile={output.report}"
+    cmd +=  " --finalReportDir=" + os.path.join(DIR_final,reportSubDir)
+    cmd +=  " --report.params={dumps:q}"
+    cmd +=  " --logFile={log}"
+    shell(cmd, dumps)
 
 ## Bam processing
 rule bam_methCall:
     input:
-        template    = DIR_templates + "methCall.report.Rmd",
-        bamfile     = DIR_sorted  + "{prefix}.sorted.bam"
+        template    = os.path.join(DIR_templates,"methCall.report.Rmd"),
+        bamfile     = os.path.join(DIR_sorted,"{prefix}.sorted.bam")
     output:
-        report      = DIR_methcall + "{prefix}.sorted_meth_calls.nb.html",
-        rdsfile     = DIR_methcall + "{prefix}.sorted_methylRaw.RDS",
-        callFile    = DIR_methcall + "{prefix}.sorted_CpG.txt",
-        knitr_meta  = touch(DIR_final + "{prefix}/knitr_meta_notuse.rds")
+        report      = os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.nb.html"),
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        callFile    = os.path.join(DIR_methcall,"{prefix}.sorted_CpG.txt")
     params:
         ## absolute path to bamfiles
-        inBam       = WORKDIR + DIR_sorted + "{prefix}.sorted.bam",
+        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
         assembly    = config['general']['genome-version'],
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
         ## absolute path to output folder in working dir
-        rds       = WORKDIR + DIR_methcall + "{prefix}.sorted_methylRaw.RDS"
+        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
     log:
-        DIR_methcall + "{prefix}.sorted_meth_calls.log"
+        os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
     message:
         "Processing bam file:\n"
         "   input     : {input.bamfile}" + "\n"
         "Generating:"+ "\n" 
         "   report    : {output.report}" + "\n" 
-        "   rds     : {output.rdsfile}" + "\n" 
+        "   rds       : {output.rdsfile}" + "\n" 
         "   methCalls : {output.callFile}"
-    script:
-        DIR_scripts + "report_functions.R"
+    run:
+        generateReport(input, output, params, log, wildcards.prefix)
 
-
+#----------------------------------- START METH SEGMENTATION
 
 
 ## Segmentation
 rule methseg:
     ## paths inside input and output should be relative
     input:
-        template    = DIR_templates + "methseg.report.Rmd",
-        rdsfile     = DIR_methcall + "{prefix}.sorted_methylRaw.RDS"
+        template    = os.path.join(DIR_templates,"methseg.report.Rmd"),
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
     output: 
-        report      = DIR_seg + "{prefix}.sorted_meth_segments.nb.html",
-        grfile      = DIR_seg + "{prefix}.sorted_meth_segments_gr.RDS",
-        bedfile     = DIR_seg + "{prefix}.sorted_meth_segments.bed",
-        knitr_meta  = touch(DIR_final + "{prefix}/knitr_meta_notuse.rds")
+        report      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.nb.html"),
+        grfile      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
     params:
-        rds       = WORKDIR + DIR_methcall + "{prefix}.sorted_methylRaw.RDS",
-        grds      = WORKDIR + DIR_seg + "{prefix}.sorted_meth_segments_gr.RDS",
-        outBed      = WORKDIR + DIR_seg + "{prefix}.sorted_meth_segments.bed"
+        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        grds        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        outBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed")
     log:
-        DIR_seg + "{prefix}.sorted_meth_segments.log"
+        os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.log")
     message:
         "Segmentation of sample file:\n"
         "   input     : {input.rdsfile}" + "\n" 
@@ -59,18 +67,17 @@ rule methseg:
         "   report    : {output.report}" + "\n"
         "   grfile    : {output.grfile} " +"\n"
         "   bedfile   : {output.bedfile}" +"\n"
-
-    script:
-        DIR_scripts + "report_functions.R"
+    run:
+        generateReport(input, output, params, log, wildcards.prefix)
 
 
 ## Aquisition of gene features
 rule fetch_refGene:
-    output: refgenes = DIR_annot + "refseq.genes.{assembly}.bed"
+    output: refgenes = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
     params:
         assembly = "{assembly}"
     log:
-        DIR_annot + "fetch_refseq.genes.{assembly}.log"
+        os.path.join(DIR_annot,"fetch_refseq.genes.{assembly}.log")
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
     shell:
@@ -80,30 +87,26 @@ rule fetch_refGene:
 ## Annotation with gene features
 rule methseg_annotation:
     input:
-        template    = DIR_templates + "annotation.report.Rmd",
-        bedfile     = DIR_seg + "{prefix}.sorted_meth_segments.bed",
-        refgenes    = DIR_annot + "refseq.genes.{assembly}.bed"
+        template    = os.path.join(DIR_templates,"annotation.report.Rmd"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
     output:
-        ## touch this imaginary file, to get the directory
-        knitr_meta  = touch(DIR_final + "{prefix}/knitr_meta_{assembly}_notuse.rds"),
-        report      = DIR_annot + "{prefix}.sorted_{assembly}_annotation.nb.html",
-        # knitr_meta  = DIR_final + "{prefix}/knitr_meta_{assembly}.rds"
-        #knitr_meta  = lambda wildcards: pass_knitr_meta(DIR_final,wildcards.prefix)
+        report      = os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.nb.html"),
     params:
-        inBed       = WORKDIR + DIR_seg + "{prefix}.sorted_meth_segments.bed",
+        inBed       = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
         assembly    = "{assembly}",# expand(config["reference"]),
-        refseqfile  = WORKDIR + DIR_annot + "refseq.genes.{assembly}.bed"
+        refseqfile  = os.path.join(WORKDIR,DIR_annot,"refseq.genes.{assembly}.bed")
     log:
-        DIR_annot + "{prefix}.sorted_{assembly}_annotation.log"
+        os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.log")
     message:
         "Annotation of Segments:\n"
         "   input     : {input.bedfile}" + "\n"
         "Generating:" + "\n"
         "   report    : {output.report}"
-    script:
-        DIR_scripts + "report_functions.R"
+    run:
+        generateReport(input, output, params, log, wildcards.prefix)
 
-
+#----------------------------------- END METH SEGMENTATION
 #----------------------------------- START DIFF METH
 
 SAMPLE_IDS = list(config["SAMPLES"].keys())
@@ -118,6 +121,7 @@ def get_sampleids_from_treatment(treatment):
     sampleids_list.append(sampleids)
   
   sampleids_list = list(sum(sampleids_list, [])) 
+  
   return(sampleids_list)
 
 
@@ -131,9 +135,9 @@ def diffmeth_input_function(wc):
   for sampleid in sampleids:
     fqname = config["SAMPLES"][sampleid]['fastq_name']
     if len(fqname)==1:
-      inputfile=[DIR_methcall + sampleid+"_se_bt2.deduped.sorted_CpG.txt"]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.deduped.sorted_CpG.txt")]
     elif len(fqname)==2:
-      inputfile=[DIR_methcall + sampleid+"_1_val_1_bt2.deduped.sorted_CpG.txt"]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.deduped.sorted_CpG.txt")]
     inputfiles.append(inputfile)
   
   inputfiles = list(sum(inputfiles, []))
@@ -144,54 +148,51 @@ def diffmeth_input_function(wc):
 rule diffmeth:
     ## paths inside input and output should be relative
     input:  
-        template    = DIR_templates + "diffmeth.report.Rmd",
+        template    = os.path.join(DIR_templates,"diffmeth.report.Rmd"),
         inputfiles  = diffmeth_input_function
     output: 
-        report      = DIR_diffmeth + "{treatment}.sorted_diffmeth.nb.html",
-        methylDiff_file  = DIR_diffmeth + "{treatment}.sorted_diffmeth.RDS",
-        bedfile     = DIR_diffmeth + "{treatment}.sorted_diffmeth.bed",
-        knitr_meta  = touch(DIR_final + "{treatment}/knitr_meta_notuse.rds")
+        report      = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.nb.html"),
+        methylDiff_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
+        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
     params:
         workdir     = WORKDIR,
         inputfiles  = diffmeth_input_function,
-        sampleids   = lambda wc: [get_sampleids_from_treatment(t) for t in wc.treatment.split("_")],
-        methylDiff_file      = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmeth.RDS",
-        methylDiff_hyper_file  = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmethhyper.RDS",
-        methylDiff_hypo_file   = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmethhypo.RDS",
-        outBed      = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmeth.bed",
+        sampleids   = lambda wc: get_sampleids_from_treatment(wc.treatment),
+        methylDiff_file      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
+        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
         assembly    = config['general']['genome-version'],
-        treatment   = lambda wc: [[config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(t)] for t in wc.treatment.split("_")],
+        treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         context     = "CpG",
         cores       = int(config['general']['differential-methylation']['cores'])
-        
     log:
-        DIR_diffmeth+"{treatment}.sorted_diffmeth.log"
-    script:
-        DIR_scripts + "report_functions.R" 
+        os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
+    run:
+        generateReport(input, output, params, log, wildcards.treatment)
 
 
 ## Annotation with gene features
 rule annotation_diffmeth:
     input:  
-        template    = DIR_templates + "annotation.report.diff.meth.Rmd",
-        bedfile     = DIR_diffmeth + "{treatment}.sorted_diffmeth.bed",
-        refgenes    = DIR_annot + "refseq.genes.{assembly}.bed"
+        template    = os.path.join(DIR_templates,"annotation.report.diff.meth.Rmd"),
+        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
+        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
     output: 
-        report      = DIR_annot + "{treatment}.sorted_{assembly}_annotation.diff.meth.nb.html",
-        knitr_meta  = touch(DIR_final + "{treatment}.{assembly}/knitr_meta_notuse.rds")
+        report      = os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.nb.html"),
     params:
-        inBed       = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmeth.bed",
+        inBed       = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
         assembly    = config['general']['genome-version'],
-        refseqfile  = WORKDIR + DIR_annot + "refseq.genes.{assembly}.bed",
-        methylDiff_file  = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmeth.RDS",
-        methylDiff_hyper_file = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmethhyper.RDS",
-        methylDiff_hypo_file  = WORKDIR + DIR_diffmeth + "{treatment}.sorted_diffmethhypo.RDS",
-        ideoDMC_script = DIR_scripts + "ideoDMC.R"
+        refseqfile  = os.path.join(WORKDIR,DIR_annot,"refseq.genes.{assembly}.bed"),
+        methylDiff_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
+        methylDiff_hyper_file = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
+        ideoDMC_script = os.path.join(DIR_scripts,"ideoDMC.R")
     log:
-        DIR_annot + "{treatment}.sorted_{assembly}_annotation.diff.meth.log"
-    script:
-        DIR_scripts + "report_functions.R"   
+        os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
+    run:
+        generateReport(input, output, params, log, wildcards.treatment+"."+wildcards.assembly)
         
 #----------------------------------- END DIFF METH
    
@@ -201,10 +202,6 @@ rule annotation_diffmeth:
 ### so make sure that at least one has been run already
 ### right now ensured with 'rules.methseg_annotation.output' as input
 ### 
-
-# rule multiqc:
-#     input:
-#         workdir = WORKDIR + "."
 
 
 def get_fastq_name(full_name):
@@ -257,24 +254,27 @@ rule final_report:
     input:  
         rules.methseg_annotation.output,
         rules.integrateFinalReport.output,
-        index       = DIR_templates + "index.Rmd",   
-        references  = DIR_templates + "references.Rmd",
-        sessioninfo = DIR_templates + "sessioninfo.Rmd"
-        #fastq_name  = lambda wildcards: touch(get_fastq_name(wildcards.prefix))#,
-        ## add rawqc at some point
+        index       = os.path.join(DIR_templates,"index.Rmd"),   
+        references  = os.path.join(DIR_templates,"references.Rmd"),
+        sessioninfo = os.path.join(DIR_templates,"sessioninfo.Rmd")
     output: 
         finalreport = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.nb.html"),
     params:
         finalreportdir = os.path.join(DIR_final, "{prefix}/")
-      #  workdir = WORKDIR#,
-        # fastq_name = lambda wildcards: get_fastq_name(wildcards.prefix)#,
-        # rules.fastqc_raw.output
     log:
-        DIR_final + "{prefix}.sorted_{assembly}_final.log"
+        os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
     message:
         "Compiling Final Report:\n"
-        "   report    : {output.finalreport}"#\n{params.fastq_name}"
+        "   report    : {output.finalreport}"
         
-    script:
-        DIR_scripts + "multireport_functions.R"  
+    run:
+        cmd  =  "{RSCRIPT} {DIR_scripts}/multireport_functions.R"  
+        cmd +=  " --index={input.index}"
+        cmd +=  " --finalOutput={output.finalreport}"
+        cmd +=  " --finalReportDir={params.finalreportdir}"
+        cmd +=  " --references={input.references}"
+        cmd +=  " --sessioninfo={input.sessioninfo}"
+        cmd +=  " --logFile={log}"
+        
+        shell(cmd)
 

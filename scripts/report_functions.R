@@ -1,4 +1,50 @@
 
+# Parse Command Line Arguments --------------------------------------------
+
+## Collect arguments
+args <- commandArgs(TRUE)
+
+## Default setting when no arguments passed
+if(length(args) < 1) {
+  args <- c("--help")
+}
+
+## Help section
+if("--help" %in% args) {
+  cat("
+      Render to report
+ 
+      Arguments:
+        --reportFile report template
+        --outFile output file
+        --finalReportDir final report location
+        --report.params parameters to report, write in 
+                        the form of 'p1:v1;p2:v2' 
+        --logFile file to print the logs to
+      --help              - print this text
+ 
+      Example:
+      ./test.R --arg1=1 --arg2='output.txt' --arg3=TRUE \n\n")
+  
+  q(save="no")
+}
+
+## Parse arguments (we expect the form --arg=value)
+parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
+
+argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
+argsL <- as.list(as.character(argsDF$V2))
+names(argsL) <- argsDF$V1
+
+## get deeper list elements 
+if(!is.null(argsL$report.params)) {
+  argsL$report.params <- jsonlite::fromJSON(argsL$report.params)
+}
+
+
+# Function Definitions ----------------------------------------------------
+
+
 ## modified from https://github.com/rstudio/bookdown/blob/master/R/utils.R#L205-L208
 Rscript_render2 = function(file, ..., log.file=NULL) {
   args = shQuote(c(bookdown:::bookdown_file('scripts', 'render_one.R'), file, ...))
@@ -85,25 +131,27 @@ render2Markdown <- function(reportFile,
   }
 }
 
+
+
+
+# Call Functions ----------------------------------------------------------
+
+
 ## catch output and messages into log file
-out <- file(snakemake@log[[1]], open = "wt")
+out <- file(argsL$logFile, open = "wt")
 sink(out,type = "output")
 sink(out, type = "message")
 
-cat(paste(  
+cat(paste(
   Sys.time(),"\n\n",
-  "Rendering report:",basename(snakemake@output[["report"]]),"\n",
-  "from template:",basename(snakemake@input[["template"]]),"\n",
-  "into directory:",normalizePath(dirname(snakemake@output[["report"]])),"\n\n"
-  ))
+  "Rendering report:",basename(argsL$reportFile),"\n",
+  "from template:",basename(argsL$outFile),"\n",
+  "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"
+))
 
-
-render2Markdown(reportFile = normalizePath(snakemake@input[["template"]]),
-                outFile = basename(snakemake@output[["report"]]),
-                outDir = normalizePath(dirname(snakemake@output[["report"]])),
-                finalReportDir = normalizePath(dirname(snakemake@output[["knitr_meta"]])),
-                report.params = snakemake@params[nchar(names(snakemake@params)) > 0],
-                logFile = snakemake@log[[1]])
-
-## remove empty intermediate file
-on.exit(unlink(snakemake@output[["knitr_meta"]]))
+render2Markdown(reportFile = normalizePath(argsL$reportFile),
+                outFile = basename(argsL$outFile),
+                outDir = normalizePath(dirname(argsL$outFile)),
+                finalReportDir = normalizePath(argsL$finalReportDir),
+                report.params = argsL$report.params,
+                logFile = argsL$logFile)
