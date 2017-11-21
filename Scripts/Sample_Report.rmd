@@ -9,10 +9,12 @@ output:
 always_allow_html: yes
 
 output:
-  pdf_document: default
   html_document: default
   
 params:
+    annotation: '../Data/Annotation.rds'
+    path_peaks: '../Data/Peaks1_qsort.narrowPeak'
+    path_bw:    '../Data/ChIP1.bw'
     
 ---
 
@@ -33,3 +35,27 @@ library(data.table)
 library(rtracklayer)
 library(genomation)
 ```
+
+```{r input, include=FALSE}
+source('../Scripts/Prepare_Annotation.R')
+annotation = list(
+        gtf = '../Data/mm9.chr19.gtf.gz',
+        cpg_island = '../Data/mm9.chr19.cpg.bed')
+prepare_Annotation(annotation, outpath='../Data/Annotation.rds', scriptdir = '../Scripts/')
+annot = readRDS('../Data/Annotation.rds')
+```
+
+
+# Genomic Distribution
+
+
+# Signal Distribution Around Genomic Features
+
+
+# Peak Comparison
+
+
+# Peak Combination Statistics
+
+# 
+
