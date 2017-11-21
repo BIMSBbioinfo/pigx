@@ -33,6 +33,10 @@ r-plotly
 r-scales
 r-crosstalk
 bioconductor-gage
-
+bioconductor-org.dm.eg.db
+bioconductor-org.mm.eg.db
+bioconductor-org.hs.eg.db
+bioconductor-org.ce.eg.db
+bioconductor-rcas
 
 
