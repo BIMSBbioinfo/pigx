@@ -1,0 +1,15 @@
+name: "ChIP-seq Analysis Report"
+date: 
+navbar:
+  title: "ChIP-seq Analysis Report"
+  left:
+    - text: "Index"
+      href: index.html
+      
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate
+    include:
+      after_body: footer.html
+      

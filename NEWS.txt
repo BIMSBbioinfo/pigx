@@ -48,6 +48,29 @@ Initial commit
 # --------------------------------------------------------------------- #
 # TODO
 ## Main
+[]. extract signal:
+    - Comprehensive
+            [x] basic mapping stats
+            [x] peakQC
+            - annotation per genomic category
+            [*] profiles over TSS and TTS
+            [*] cumulative profiles over the gene body
+            - peak co-occurence matrix
+            - sample correlation
+            
+            - motif discovery
+
+[]. Update snakemake rules for:
+    []. Annotation
+    []. Signal extraction from wig files - per sample
+
+[]. Website for reports
+    []. Main website
+    []. Per sample reports
+    
+    []. Joint report
+    
+    
 [#]. enable sample specific parameter deposition - works for macs
 [#]. write tests
 []. set default app parameters in config
@@ -58,15 +81,7 @@ Initial commit
 []. write markdown
         - Sample Specific
 
-        - Comprehensive
-            - basic mapping stats
-            - annotation per genomic category
-            - profiles over TSS and TTS
-            - cumulative profiles over the gene body
-            - peak co-occurence matrix
-            - sample correlation
-            - peakQC
-            - motif discovery
+       
 
 
 
