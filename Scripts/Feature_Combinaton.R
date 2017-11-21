@@ -98,16 +98,16 @@ feature_Combination(
     outpath     = snakemake@params[['outpath']],
     scriptdir   = snakemake@params[['scriptdir']]
 )
-
-scriptdir = '/home/vfranke/Projects/AAkalin_PIX/Scripts'
-annotation = list(gtf = '/data/akalin/Base/Annotation/mm9/EnsemblGenes/150520_Ensembl_Mus_musculus.NCBIM37.67.form.gtf',
-             cpg = '/data/akalin/Base/Annotation/mm9/CpGi/mm9.cpg.islands.bed')
-
-path = '/data/akalin/vfranke/AAkalin_PIX/ChIP'
-features = list()
-features$ChIP_IDR = file.path(path, 'IDR', 'ChIP_IDR/ChIP_IDR.narrowPeak')
-features$Peaks5 = file.path(path, 'Peaks/MACS2/Peaks5/Peaks5_qsort.narrowPeak')
-features$Peaks6 = file.path(path, 'Peaks/MACS2/Peaks6/Peaks6_qsort.narrowPeak')
-bw = list.files('/data/akalin/vfranke/AAkalin_PIX/ChIP/BigWig', full.names=TRUE)
+# 
+# scriptdir = '/home/vfranke/Projects/AAkalin_PIX/Scripts'
+# annotation = list(gtf = '/data/akalin/Base/Annotation/mm9/EnsemblGenes/150520_Ensembl_Mus_musculus.NCBIM37.67.form.gtf',
+#              cpg = '/data/akalin/Base/Annotation/mm9/CpGi/mm9.cpg.islands.bed')
+# 
+# path = '/data/akalin/vfranke/AAkalin_PIX/ChIP'
+# features = list()
+# features$ChIP_IDR = file.path(path, 'IDR', 'ChIP_IDR/ChIP_IDR.narrowPeak')
+# features$Peaks5 = file.path(path, 'Peaks/MACS2/Peaks5/Peaks5_qsort.narrowPeak')
+# features$Peaks6 = file.path(path, 'Peaks/MACS2/Peaks6/Peaks6_qsort.narrowPeak')
+# bw = list.files('/data/akalin/vfranke/AAkalin_PIX/ChIP/BigWig', full.names=TRUE)
 
 
