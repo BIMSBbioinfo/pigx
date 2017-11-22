@@ -61,7 +61,7 @@ Q:
 
 """
 
-SCRIPT_PATH = 'Scripts'
+SCRIPT_PATH = os.path.join(workflow.basedir,'Scripts')
 PARAMS_PATH = '.'
 
 # ---------------------------------------------------------------------------- #
@@ -90,6 +90,9 @@ with open(os.path.join(workflow.basedir, 'software.yaml'), 'r') as stream:
 
 # Function parameter
 APP_PARAMS = SOFTWARE_CONFIG['params']
+
+# Software executables
+SOFTWARE     = SOFTWARE_CONFIG['software']
 # ---------------------------------------------------------------------------- #
 # Variable definition
 GENOME       = config['genome']['name']
@@ -97,21 +100,20 @@ GENOME_FASTA = config['genome']['fasta']
 NAMES        = config['samples'].keys()
 PATH_FASTQ   = config['fastq']
 PARAMS       = config['params']
-
-
-SOFTWARE     = SOFTWARE_CONFIG['software']
+ANNOTATION   = config['annotation']
 
 
 # Directory structure definition
-PATH_MAPPED  = "Mapped/Bowtie"
-PATH_QC      = "FastQC"
-PATH_INDEX   = 'Bowtie2_Index'
-PATH_LOG     = 'Log'
-PATH_PEAK    = 'Peaks/MACS2'
-PATH_BW      = 'BigWig'
-PATH_IDR     = 'IDR'
-PATH_HUB     = 'UCSC_HUB'
-PATH_FEATURE = "Analysis/Feature_Combination"
+PATH_ANNOTATION = "Annotation"
+PATH_MAPPED     = "Mapped/Bowtie"
+PATH_QC         = "FastQC"
+PATH_INDEX      = 'Bowtie2_Index'
+PATH_LOG        = 'Log'
+PATH_PEAK       = 'Peaks/MACS2'
+PATH_BW         = 'BigWig'
+PATH_IDR        = 'IDR'
+PATH_HUB        = 'UCSC_HUB'
+PATH_FEATURE    = "Analysis/Feature_Combination"
 
 # Hub variables which describe the types of files that can be used in the hub
 TRACK_PATHS = {
@@ -140,14 +142,15 @@ print(PREFIX)
 
 # ----------------------------------------------------------------------------- #
 # RULE ALL
-COMMAND = []
-INDEX   = [PREFIX + '.1.bt2']
-BOWTIE2 = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
-FASTQC  = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name=NAMES)
-BW      = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
-LINKS   = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
+COMMAND    = []
+INDEX      = [PREFIX + '.1.bt2']
+BOWTIE2    = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
+FASTQC     = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name=NAMES)
+BW         = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
+LINKS      = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
-COMMAND = COMMAND + INDEX + BOWTIE2 + BW + LINKS + FASTQC
+
+COMMAND = COMMAND + INDEX + BOWTIE2 + BW + LINKS + FASTQC 
 # ----------------------------------------------------------------------------- #
 if 'peak_calling' in set(config.keys()):
     MACS  = []
@@ -185,8 +188,12 @@ if 'feature_combination' in set(config.keys()):
     FEATURE = [os.path.join(PATH_FEATURE,'Feature_Combination.tsv')]
     COMMAND = COMMAND + FEATURE
 
-
-
+if 'gtf' in set(config['annotation'].keys)
+    PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION,'Processed_Annotation.rds')]
+    EXTRACT_SIGNAL     = expand(os.path.join(PATH_PEAK,'{name}','{name}.Extract_Signal.rds'), name=NAMES)
+    ANNOTATE_PEAKS     = expand(os.path.join(PATH_PEAK,'{name}','{name}.Annotate_Peaks.rds'), name=NAMES)
+        
+    COMMAND = COMMAND + PREPARE_ANNOTATION + EXTRACT_SIGNAL + ANNOTATE_PEAKS
 
 # ----------------------------------------------------------------------------- #
 rule all:
@@ -238,7 +245,7 @@ rule bowtie2:
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}/{name}.bam")
     params:
-        threads  = 8,
+        threads  = 2,
         mem      ='16G',
         bowtie2  = SOFTWARE['bowtie2'],
         samtools = SOFTWARE['samtools'],
@@ -576,9 +583,9 @@ if 'feature_combination' in set(config.keys()):
         params:
             threads     = 1,
             mem         = '8G',
-            annotation  = config['annotation'],
-            outpath = PATH_FEATURE,
-            scriptdir = os.path.join(workflow.basedir, SCRIPT_PATH)
+            annotation  = ANNOTATION,
+            outpath     = PATH_FEATURE,
+            scriptdir   = SCRIPT_PATH
         log:
             log = os.path.join(PATH_LOG, 'feature_combination.log')
         message:"""
@@ -587,3 +594,76 @@ if 'feature_combination' in set(config.keys()):
             """
         script:
             os.path.join(SCRIPT_PATH, 'Feature_Combinaton.R')
+
+
+#----------------------------------------------------------------------------- #
+# Signal processing for the downstream analysis
+rule prepare_annotation:
+        input:
+            annotation = ANNOTATION,
+        output:
+            outfile = os.path.join(PATH_ANNOTATION,'Processed_Annotation.rds')
+        params:
+            threads     = 1,
+            mem         = '16G',
+            scriptdir = SCRIPT_PATH
+        log:
+            log = os.path.join(PATH_LOG, 'prepare_annotation.log')
+        message:"""
+                Running: prepare_annotation:
+                    output: {output.outfile}
+            """
+        script:
+            os.path.join(SCRIPT_PATH, 'Prepare_Annotation.R')
+            
+            
+#----------------------------------------------------------------------------- #
+rule extract_signal:
+        input:
+            annotation = ANNOTATION,
+            bed        = rules.sort_peak.outfile,
+            wig        = rules.bam2bigWig
+        output:
+            outfile    = os.path.join(PATH_PEAK,'{name}','{name}.Extract_Signal.rds')
+        params:
+            threads     = 1,
+            mem         = '16G',
+            expand_peak = config['params']['rule extract_signal']['expand_peak']
+            bin_num     = config['params']['rule extract_signal']['bin_num']
+            scriptdir   = SCRIPT_PATH
+        log:
+            log = os.path.join(PATH_LOG, 'prepare_annotation.log')
+        message:"""
+                Running: extract_signal:
+                    bed: {input:bed}
+                    wig: {input:wig}
+                    output: {output.outfile}
+            """
+        script:
+            os.path.join(SCRIPT_PATH, 'Extract_Signal.R') 
+            
+#----------------------------------------------------------------------------- #
+# Annotate Peaks
+rule annotate_peaks:
+        input:
+            annotation = ANNOTATION,
+            peaks      = rules.sort_peak.outfile,
+        output:
+            outfile    = os.path.join(PATH_PEAK,'{name}','{name}.Annotate_Peaks.rds')
+        params:
+            threads     = 1,
+            mem         = '16G',
+            expand_peak = config['params']['rule extract_signal']['expand_peak'],
+            bin_num     = config['params']['rule extract_signal']['bin_num'],
+            peakname    = '{name}',
+            scriptdir   = SCRIPT_PATH
+        log:
+            log = os.path.join(PATH_LOG, 'prepare_annotation.log')
+        message:"""
+                Running: annotate_peaks:
+                    bed: {input:bed}
+                    wig: {input:wig}
+                    output: {output.outfile}
+            """
+        script:
+            os.path.join(SCRIPT_PATH, 'Annotate_Peaks.R')
