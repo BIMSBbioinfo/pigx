@@ -2,9 +2,11 @@
 Annotate_Peaks = function(
     annotation = NULL,
     peaks      = NULL,
-    outfile    = NULL
+    outfile    = NULL,
+    peakname   = 'Peak',
 ){
     
+    # --------------------------------------------------------------- #
     if(is.null(annotation))
         stop('Annotation is not defined')
     
@@ -14,6 +16,9 @@ Annotate_Peaks = function(
     if(is.null(outfile))
         stop('output file path is not defined')
     
+    library(data.table)
+    library(stringr)
+    
     # --------------------------------------------------------------- #
     message('Annotation ...')
         annot = readRDS(annotation)
@@ -22,16 +27,20 @@ Annotate_Peaks = function(
         peaktype = ifelse(grepl('narrow', basename(bed)),'readNarrowPeak','readBroadPeak')
         bed      = match.fun(peaktype)(bed)
     
-        
-    ### FINISH THIS STUFF WITH PROPER FUNCTIONS
-        # - add the function
-        # - add conversion to data table
+
     message('Annotating peaks ...')
-       peaks_annot = Annotate_Ranges(bed, annot$genomic_annotation)
+        peaks$annot = Annotate_Ranges(bed, annot$genomic_annotation)
     
+    message('CpGi ...')
+        if(!is.null(annot$cpg)){
+           
+            peaks$cpgi = countOverlaps(peaks, annot$cpgi) > 0
+        }else{
+            peaks$cpgi = NA
+        }
     
     message('Saving annotated peaks ...')
-        saveRDS(peaks_annot, outfile)
+        saveRDS(peaks, outfile)
     
 }
 
@@ -41,5 +50,6 @@ Annotate_Peaks = function(
 Annotate_Peaks(
     annotation  = snakemake@input[['annotation']],
     peaks       = snakemake@input[['peaks']],
-    outfile     = snakemake@input[['outfile']]
+    outfile     = snakemake@input[['outfile']],
+    peakname    = snakemake@params[['name']]
 )
