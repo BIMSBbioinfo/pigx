@@ -148,6 +148,9 @@ params:
         g: hs
         keep-dup: auto
         q: 0.05
+    extract_signal:
+        expand.peak: 2000
+        bin_num: 100
 
 
 
