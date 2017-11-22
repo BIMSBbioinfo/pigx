@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------- #
-prepare_Annotation = function(
+Prepare_Annotation = function(
     annotation=NULL, 
     scriptdir, 
-    outpath
+    outfile
 ){
     
     suppressPackageStartupMessages(library('genomation'))
@@ -14,22 +14,20 @@ prepare_Annotation = function(
     if(is.null(annotation))
         stop('Annotation is not specified')
     
-    annotation         = read_Annotation(annotation)
+    annotation = read_Annotation(annotation)
     
-    genomic_annotation = GTFGetAnnotation(annotation$gtf$gtf)
+    annotation$genomic_annotation = GTFGetAnnotation(annotation$gtf$gtf)
    
     # --------------------------------------------------------------- #
     message('RDS ...')
-    ldat = list(annotation         = annotation, 
-                genomic_annotation = genomic_annotation)
-    saveRDS(ldat, outpath)
+    saveRDS(annotation, outfile)
 }
 
 
 # ---------------------------------------------------------------------------- #
 # function call
-# prepare_Annotation(
-#     annotation  = snakemake@params[['annotation']],
-#     outpath     = snakemake@params[['outpath']],
-#     scriptdir   = snakemake@params[['scriptdir']]
-# )
+prepare_Annotation(
+    annotation  = snakemake@input[['annotation']],
+    outfile     = snakemake@output[['outfile']],
+    scriptdir   = snakemake@params[['scriptdir']]
+)
