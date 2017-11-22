@@ -1,6 +1,11 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+171122
+[*]. Annotation Processing
+[*]. Signal extraction
+[*]. Peak Annotation
+
 170801
 [*]. cofigure the pipeline for broad histone data
 [*]. bedToBigBed for broadPeak data
@@ -48,6 +53,12 @@ Initial commit
 # --------------------------------------------------------------------- #
 # TODO
 ## Main
+[]. QC for Peaks - ask alex for Peak QC rule
+[]. Report with figures
+[]. Configure the pipeline for differential peak calling - ask Alex
+
+
+
 []. extract signal:
     - Comprehensive
             [x] basic mapping stats
@@ -60,16 +71,7 @@ Initial commit
             
             - motif discovery
 
-[]. Update snakemake rules for:
-    []. Annotation
-    []. Signal extraction from wig files - per sample
-
-[]. Website for reports
-    []. Main website
-    []. Per sample reports
-    
-    []. Joint report
-    
+   
     
 [#]. enable sample specific parameter deposition - works for macs
 [#]. write tests
@@ -113,7 +115,7 @@ Initial commit
 ## Additional
 []. Add peak QC
 []. Run multiqc
-[]. Configure the pipeline for differential peak calling
+
 []. enable trimming
 []. rewrite fastqc to go through each individual file
 
