@@ -1,13 +1,16 @@
 # ---------------------------------------------------------------------------- #
-extract_Signal = function(
+Extract_Signal = function(
     annotation  = NULL, 
     bed         = NULL,
     wig         = NULL,
     outfile     = './',
     expand.peak = 2000,
     bin.num     = 50,
-    scriptdir
+    scriptdir   = NULL
 ){
+    
+    if(is.null(scriptdir))
+        stop('Please specify the script directory')
     
     suppressPackageStartupMessages(library('genomation'))
     suppressPackageStartupMessages(library('GenomicRanges'))
@@ -44,12 +47,12 @@ extract_Signal = function(
 
 
 # ---------------------------------------------------------------------------- #
-# extract_Signal(
-#     annotation  = snakemake@input[['annotation']], 
-#     bed         = snakemake@input[['peaks']],
-#     wig         = snakemake@input[['wig']],
-#     outfile     = snakemake@output[['outfile']],
-#     expand.peak = snakemake@params[['peaks_width']],
-#     bin.num     = snakemake@params[['bin_width']],
-#     scriptdir   = snakemake@params[['scriptdir']]
-# )
+extract_Signal(
+    annotation  = snakemake@input[['annotation']],
+    bed         = snakemake@input[['peaks']],
+    wig         = snakemake@input[['wig']],
+    outfile     = snakemake@output[['outfile']],
+    expand.peak = snakemake@params[['expand_peak']],
+    bin.num     = snakemake@params[['bin_num']],
+    scriptdir   = snakemake@params[['scriptdir']]
+)
