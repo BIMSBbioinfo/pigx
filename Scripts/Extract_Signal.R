@@ -1,4 +1,16 @@
 # ---------------------------------------------------------------------------- #
+#' Extract_Signal - given a bigWig file and a set of regions, extracts
+#' the signal for downstream analysis
+#'
+#' @param annotation  - list - processed annotation as given by Prepare_Annotation.R
+#' @param bed         - GRanges of peak regions
+#' @param wig         - bigWig signal profile
+#' @param outfile     - rds output file
+#' @param expand.peak - regions extensions for the peaks
+#' @param bin.num     - number of beans for binning
+#' @param scriptdir   -  location of the R scripts and functions
+#'
+#' @return saves RDS object with a list of ScoreMatrix and summarized profiles
 Extract_Signal = function(
     annotation  = NULL, 
     bed         = NULL,
@@ -29,20 +41,31 @@ Extract_Signal = function(
     # --------------------------------------------------------------- #
     message('Annotation ...')
         annot = readRDS(annotation)
-    
+        annot$genomic_annotation$gene = subset(annot$gtf$gtf, type='gene')
+        
     message('Data ...')
         peaktype = ifelse(grepl('narrow', basename(bed)),'readNarrowPeak','readBroadPeak')
         bed      = match.fun(peaktype)(bed)
         
-    message('Profiles ...')
+    message('Extract Profiles ...')
         nams = names(annot$genomic_annotation)
         lsml = lapply(setNames(nams, nams), function(x)
-            ScoreMatrixBin(wig, x[[x]], bin.num = bin.num))
+            ScoreMatrixBin(wig, x[[x]], bin.num = bin.num, strand.aware=TRUE))
     
         bed_expand = resize(bed, width = expand.peak, fix='center')
         lsml$peak   = ScoreMatrixBin(wig, bed_expand, bin.num = bin.num)
    
-    saveRDS(lsml, outfile)
+    message('Sumarize Profiles ...')    
+        profiles = lapply(lsml, function(x){
+            d = data.table(sample = peakname, 
+                           signal = rowMeans(x))
+        })
+    
+    lout = list(
+        sml      = lsml,
+        profiles = profiles
+    )
+    saveRDS(lout, outfile)
 }
 
 
@@ -54,5 +77,6 @@ extract_Signal(
     outfile     = snakemake@output[['outfile']],
     expand.peak = snakemake@params[['expand_peak']],
     bin.num     = snakemake@params[['bin_num']],
-    scriptdir   = snakemake@params[['scriptdir']]
+    scriptdir   = snakemake@params[['scriptdir']],
+    peakname    = snakemake@params[['peakname']]
 )

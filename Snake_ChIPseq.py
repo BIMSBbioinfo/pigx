@@ -628,8 +628,9 @@ rule extract_signal:
         params:
             threads     = 1,
             mem         = '16G',
-            expand_peak = config['params']['rule extract_signal']['expand_peak']
-            bin_num     = config['params']['rule extract_signal']['bin_num']
+            expand_peak = config['params']['rule extract_signal']['expand_peak'],
+            bin_num     = config['params']['rule extract_signal']['bin_num'], 
+            peakname    = '{name}',
             scriptdir   = SCRIPT_PATH
         log:
             log = os.path.join(PATH_LOG, 'prepare_annotation.log')
@@ -653,8 +654,6 @@ rule annotate_peaks:
         params:
             threads     = 1,
             mem         = '16G',
-            expand_peak = config['params']['rule extract_signal']['expand_peak'],
-            bin_num     = config['params']['rule extract_signal']['bin_num'],
             peakname    = '{name}',
             scriptdir   = SCRIPT_PATH
         log:
