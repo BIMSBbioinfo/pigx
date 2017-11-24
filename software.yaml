@@ -3,6 +3,7 @@ software:
     bamToBed: bamToBed
     bowtie2: bowtie2
     bowtie2-build: bowtie2-build
+    bowtie2-inspect: bowtie2-inspect
     idr: idr
     macs2: macs2
     perl: perl
@@ -23,7 +24,7 @@ software:
         - yaml
         - pytest
         - itertools
-    bedToBigBed: bedToBigBed
+    bedToBigBed: '~/bin/Software/UCSC/bedToBigBed'
 
 params:
     macs2:
