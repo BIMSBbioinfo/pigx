@@ -1,6 +1,10 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+171124
+[*]. Refactored code - rules separated into multiple files
+[*]. sorted out the bigWig/bigBed/UCSC tracks issue
+
 171122
 [*]. Annotation Processing
 [*]. Signal extraction
@@ -53,6 +57,7 @@ Initial commit
 # --------------------------------------------------------------------- #
 # TODO
 ## Main
+[]. Feature combination singnal extraction 200
 []. QC for Peaks - ask alex for Peak QC rule
 []. Report with figures
 []. Configure the pipeline for differential peak calling - ask Alex
@@ -68,11 +73,11 @@ Initial commit
             [*] cumulative profiles over the gene body
             - peak co-occurence matrix
             - sample correlation
-            
+
             - motif discovery
 
-   
-    
+
+
 [#]. enable sample specific parameter deposition - works for macs
 [#]. write tests
 []. set default app parameters in config
@@ -83,7 +88,7 @@ Initial commit
 []. write markdown
         - Sample Specific
 
-       
+
 
 
 
@@ -125,5 +130,3 @@ Initial commit
 []. Delete temporary files - bed and bedGraph files
 []. Sample specific read extension
 []. Motif Discovery
-
-
