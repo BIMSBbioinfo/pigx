@@ -1,18 +1,23 @@
 # ---------------------------------------------------------------------------- #
-#' Extract_Signal_Annotation - given a bigWig file and a set of regions, extracts
-#' the signal for downstream analysis
+#' Extract_Signal_Peaks - given a bigWig file and a set of regions, extracts
+#' the signal around the peak regions
 #'
-#' @param annotation  - list - processed annotation as given by Prepare_Annotation.R
+#' @param bed         - GRanges of peak regions
 #' @param wig         - bigWig signal profile
 #' @param outfile     - rds output file
+#' @param expand.peak - regions extensions for the peaks
+#' @param bin.num     - number of beans for binning
 #' @param scriptdir   -  location of the R scripts and functions
 #'
 #' @return saves RDS object with a list of ScoreMatrix and summarized profiles
-Extract_Signal_Annotation = function(
-    annotation  = NULL, 
+Extract_Signal_Peaks = function(
+    bed         = NULL,
     wig         = NULL,
-    outfile     = './PEAKS.rds',
-    scriptdir   = NULL
+    outfile     = './',
+    expand.peak = 2000,
+    bin.num     = 50,
+    scriptdir   = NULL,
+    peakname    = 'Peak'
 ){
     
     if(is.null(scriptdir))
@@ -26,7 +31,9 @@ Extract_Signal_Annotation = function(
     if(is.null(annotation))
         stop('Annotation is not specified')
     
-   
+    if(is.null(bed))
+        stop('bed file is not specified')
+    
     if(is.null(wig))
         stop('wig file is not specified')
     
@@ -35,19 +42,22 @@ Extract_Signal_Annotation = function(
         annot = readRDS(annotation)
         annot$genomic_annotation$gene = subset(annot$gtf$gtf, type='gene')
         
+    message('Data ...')
+        peaktype = ifelse(grepl('narrow', basename(bed)),'readNarrowPeak','readBroadPeak')
+        bed      = match.fun(peaktype)(bed)
+        
     message('Extract Profiles ...')
-        nams = names(annot$genomic_annotation)
-        lsml = lapply(setNames(nams, nams), function(x)
-            ScoreMatrixBin(wig, x[[x]], bin.num = bin.num, strand.aware=TRUE))
-    
+        bed_expand = resize(bed, width = expand.peak, fix='center')
+        sml  = ScoreMatrixBin(wig, bed_expand, bin.num = bin.num)
+   
     message('Sumarize Profiles ...')    
-        profiles = lapply(lsml, function(x){
-            d = data.table(sample = peakname, 
-                           signal = rowMeans(x))
-        })
+        profiles = data.table(
+            sample  = peakname, 
+            signal = rowMeans(x))
+        
     
     lout = list(
-        sml      = lsml,
+        sml      = ssml,
         profiles = profiles
     )
     saveRDS(lout, outfile)
@@ -55,10 +65,12 @@ Extract_Signal_Annotation = function(
 
 
 # ---------------------------------------------------------------------------- #
-Extract_Signal_Annotation(
-    annotation  = snakemake@input[['annotation']],
+Extract_Signal_Peaks(
+    bed         = snakemake@input[['peaks']],
     wig         = snakemake@input[['wig']],
     outfile     = snakemake@output[['outfile']],
+    expand.peak = snakemake@params[['expand_peak']],
+    bin.num     = snakemake@params[['bin_num']],
     scriptdir   = snakemake@params[['scriptdir']],
     peakname    = snakemake@params[['peakname']]
 )

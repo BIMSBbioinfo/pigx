@@ -1,4 +1,12 @@
 # ---------------------------------------------------------------------------- #
+#' Annotate_Peaks
+#'
+#' @param annotation - list - processed annotation as given by Prepare_Annotation.R
+#' @param peaks      - narrowPeaks/broadPeaks in macs2 output
+#' @param outfile    - location of the output file
+#' @param peakname   - Name of the peak file
+#'
+#' @return saves RDS object with an annotated GRanges object
 Annotate_Peaks = function(
     annotation = NULL,
     peaks      = NULL,
@@ -16,6 +24,7 @@ Annotate_Peaks = function(
     if(is.null(outfile))
         stop('output file path is not defined')
     
+    # --------------------------------------------------------------- #
     library(data.table)
     library(stringr)
     
