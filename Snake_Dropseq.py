@@ -1,14 +1,12 @@
 """
 # ---------------------------------------------------------------------------------- #
-jump conda3
-source ./activate p35
 SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX_scRNA/Snake_Dropseq.py'
 WORKDIR='/data/local/vfranke/AAkalin_PIX/scRNA'
 CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX_scRNA/Config_scRNA.yaml'
 PATH='/home/vfranke/bin/Software/miniconda3/envs/p35/bin:/usr/local/bin:/usr/bin:/bin:/home/vfranke/.guix-profile/bin:/home/vfranke/.guix-profile/sbin:/home/vfranke/bin'
 # Beast run
 
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 12 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
+snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 12 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
 
 snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
 """
@@ -25,7 +23,7 @@ TODO:
 []. Downstream analysis:
     - normalization
     - imputation
-    - clustering 
+    - clustering
     - cell types
     - visualization
     - tsne
@@ -36,9 +34,9 @@ TODO:
 []. Add fastqc
 
 Variables to extract in the config file:
-DROPTOOLS 
-PICARD 
-STAR 
+DROPTOOLS
+PICARD
+STAR
 PROJECT PATH
 MARKDOWN PATH
 
@@ -82,6 +80,8 @@ import yaml
 
 localrules: report_links, mk_outdir
 
+PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
+PATH_RULES  = os.path.join(workflow.basedir,'Rules')
 
 # ----------------------------------------------------------------------------- #
 # Software parameters
@@ -138,7 +138,7 @@ LINK_GTF_PRIMARY         = os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRI
 
 
 # ----------------------------------------------------------------------------- #
-# Combine primary and secondary reference genomes 
+# Combine primary and secondary reference genomes
 COMBINE_REFERENCE = []
 GENOME_SECONDARY_IND = not GENOME_NAME_MIX == None
 if GENOME_SECONDARY_IND:
@@ -146,7 +146,7 @@ if GENOME_SECONDARY_IND:
     PATH_GTF_MIX = os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.gtf')
     COMBINE_REFERENCE = COMBINE_REFERENCE + [PATH_REFERENCE_MIX, PATH_GTF_MIX]
 
-    
+
 # ----------------------------------------------------------------------------- #
 # REFFLAT and DICT
 REFFLAT = [os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.refFlat')]
@@ -177,13 +177,21 @@ MAP_scRNA = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}", "star_gene_ex
 UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # ----------------------------------------------------------------------------- #
+# Number of reads per cell calculation
+BAM_HISTOGRAM = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
+
+# ----------------------------------------------------------------------------- #
+# Number of reads per cell calculation
+FIND_READ_CUTOFF = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
+
+# ----------------------------------------------------------------------------- #
 RULE_ALL = []
 RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + MERGE_FASTQ_TO_BAM + MAP_scRNA + UMI
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + MERGE_FASTQ_TO_BAM + MAP_scRNA + UMI + BAM_HISTOGRAM + FIND_READ_CUTOFF
 print(RULE_ALL)
 
 
@@ -191,9 +199,9 @@ print(RULE_ALL)
 # UMI     = expand(os.path.join(MAPPED_DIR, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'),
 # name=NAMES, genome=GENOMES.keys())
 # READ    = expand(os.path.join(MAPPED_DIR, "{name}", "{genome}",'{name}_{genome}_Read.Matrix.txt'), name=NAMES, genome=GENOMES.keys())
-# 
+#
 # REPORT  = expand(os.path.join(MAPPED_DIR, "{name}", "Report",  BATCH + "_" + "{name}.scRNA_Report.html"), name=NAMES)
-# 
+#
 # LINKS   = expand(os.path.join(PROJECT_PATH, "Reports",  BATCH + "_" + "{name}.scRNA_Report.html"), name=NAMES)
 # 		REFFLAT + DICT + FASTQC + UMI + READ + REPORT + LINKS
 
@@ -219,10 +227,10 @@ rule link_primary_annotation:
     message:
         """
             Linking primary reference files:
-                gtf: 
+                gtf:
                     file: {input.gtf}
                     link: {output.gtf}
-                fasta: 
+                fasta:
                     file: {input.fasta}
                     link: {output.fasta}
         """
@@ -338,9 +346,9 @@ rule fasta_dict:
 # this is required for droptools counting
 rule change_gtf_id:
     input:
-        os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf')
+        infile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf')
     output:
-        os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
+        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
     params:
         threads=1,
         mem='4G'
@@ -350,9 +358,14 @@ rule change_gtf_id:
                 input  : {input}
                 output : {output}
         """
-    shell:"""
-        cat {input} | perl -pe '/gene_id "([A-Z0-9]+?)";/; $gene_id = $1; s/gene_name ".+?"/gene_name "$gene_id"/;' > {output}
-    """
+    script:
+        os.path.join(PATH_SCRIPT, 'change_gtf_id.R')
+
+
+
+    # shell:"""
+    #     cat {input} | perl -pe '/gene_id "([A-Z0-9]+?)";/; $gene_id = $1; s/gene_name ".+?"/gene_name "$gene_id"/;' > {output}
+    # """
 
 # ----------------------------------------------------------------------------- #
 rule gtf_to_refflat:
@@ -380,11 +393,11 @@ rule gtf_to_refflat:
 
 # # ----------------------------------------------------------------------------- #
 def get_fastq_files(wc):
-    
-    h = {'barcode' : os.path.join(PATH_FASTQ, config['samples'][wc.name]['barcode']), 
+
+    h = {'barcode' : os.path.join(PATH_FASTQ, config['samples'][wc.name]['barcode']),
          'reads'   : os.path.join(PATH_FASTQ, config['samples'][wc.name]['reads'])}
     return h
-    
+
 rule merge_fastq_to_bam:
     input:
         unpack(get_fastq_files)
@@ -395,7 +408,7 @@ rule merge_fastq_to_bam:
         picard=SOFTWARE['picard'],
         threads=1,
         mem='16G'
-        
+
     log:
         os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
     message:"""
@@ -444,12 +457,54 @@ rule map_scRNA:
 
 
 # ----------------------------------------------------------------------------- #
-# calculates the UMI matrix
-rule get_umi_matrix:
+# calculates the number of reads per cell
+rule bam_tag_histogram:
     input:
         infile = rules.map_scRNA.output
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt')
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt')
+    params:
+        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname           = "{name}_{genome}",
+        droptools         = SOFTWARE['droptools'],
+        threads           = 1,
+        mem               = '8G'
+    message: """
+            BamTagHistogram:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    shell:"""
+        {params.droptools}/BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
+		"""
+
+# ----------------------------------------------------------------------------- #
+# calculates the UMI matrix
+rule find_absolute_read_cutoff:
+    input:
+        infile = rules.bam_tag_histogram.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml')
+    params:
+        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname           = "{name}_{genome}",
+        threads           = 1,
+        mem               = '8G'
+    message: """
+            find_absolute_read_cutoff:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    script:
+        os.path.join(PATH_SCRIPT,'Find_Absolute_Read_Cutoff.R')
+# ----------------------------------------------------------------------------- #
+# calculates the UMI matrix
+rule get_umi_matrix:
+    input:
+        infile        = rules.map_scRNA.output,
+        reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt')
     params:
         outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         outname           = "{name}_{genome}",
@@ -461,11 +516,33 @@ rule get_umi_matrix:
     message: """
             Count UMI:
                 input:  {input.infile}
-                output: {output}
+                reads:  {input.reads_cutoff}
+                output: {output.outfile}
         """
-    shell:"""
-        {params.droptools}/DigitalExpression O={output} I={input.infile} SUMMARY={params.outdir}/{params.outname}_Summary.txt MIN_NUM_GENES_PER_CELL={params.genes_per_cell} NUM_CORE_BARCODES={params.num_core_barcodes}
-		"""
+    run:
+        with open(input.reads_cutoff) as stream:
+            reads_cutoff = yaml.load(stream)['reads_cutoff']
+
+        tool = os.path.join(params.droptools,'DigitalExpression')
+        command = ' '.join([
+        tool,
+        'O=' + output.outfile,
+        'I=' + str(input.infile),
+        'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
+        'MIN_NUM_GENES_PER_CELL=' + str(params.genes_per_cell),
+        'NUM_CORE_BARCODES=' + str(reads_cutoff)
+        ])
+        shell(command)
+
+
+
+
+
+
+
+# ----------------------------------------------------------------------------- #
+
+
 
 # ----------------------------------------------------------------------------- #
 # rule fastqc:
@@ -484,17 +561,17 @@ rule get_umi_matrix:
 # 		mkdir {params.outdir}
 # 		fastqc -t 1 -o {params.outdir} {input.R2}
 # 	"""
-# 
-# 
+#
+#
 
-# 
-# 
-# 
+#
+#
+#
 
-# 
+#
 
 # 	"""
-# 
+#
 # # ----------------------------------------------------------------------------- #
 # rule get_read_matrix:
 # 	input:
@@ -513,8 +590,8 @@ rule get_umi_matrix:
 # 	shell:"""
 # 		{params.droptools}/DigitalExpression O={output} I={input} SUMMARY={params.outdir}/{params.outname}_Summary.txt MIN_NUM_GENES_PER_CELL=10 NUM_CORE_BARCODES=10 OUTPUT_READS_INSTEAD=true
 # 	"""
-# 
-# 
+#
+#
 # # ----------------------------------------------------------------------------- #
 # rule scRNA_report:
 # 	input:
@@ -534,8 +611,8 @@ rule get_umi_matrix:
 # 		"""
 # 		Rscript -e 'rmarkdown::render(input = "{params.report}", output_file = "{output.outfile}", knit_root_dir="{input.inpath}", params=list(dropseq="{params.dropseq}"))'
 #  		"""
-# 
-# 
+#
+#
 # # ----------------------------------------------------------------------------- #
 # rule report_links:
 #     input:
