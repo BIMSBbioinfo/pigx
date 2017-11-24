@@ -5,6 +5,21 @@ import os
 import sys
 
 # ---------------------------------------------------------------------------- #
+def get_fastq_input(wc):
+    samps = config['samples'][wc.name]['fastq']
+
+    if type(samps) is str:
+        samps = [samps]
+
+    infiles = [os.path.join(PATH_FASTQ, i) for i in samps]
+    return(infiles)
+
+# ---------------------------------------------------------------------------- #
+def get_library_type(wc):
+    lib = config['samples'][wc.name]['library']
+    return(lib)
+
+# ---------------------------------------------------------------------------- #
 # given a config dictionary sets the default value
 def set_default(param, default, config):
 	VALUE = ''
