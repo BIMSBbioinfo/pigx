@@ -45,7 +45,7 @@ rule bedTobigBed:
         """
     run:
         suffix = get_macs2_suffix(params.name, config)
-        if suffix == 'narrowPeaks':
+        if suffix == 'narrowPeak':
             ncol = 7
         else:
             ncol = 6
