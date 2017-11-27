@@ -30,7 +30,6 @@ MULTIQC_EXEC = config['tools']['multiqc']['executable']
 STAR_EXEC    = config['tools']['star']['executable']
 STAR_THREADS = config['tools']['star']['n-threads']
 TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
-TRIM_GALORE_ARGS = config['tools']['trim-galore']['args']
 BAMCOVERAGE_EXEC = config['tools']['bamCoverage']['executable']
 SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
 HTSEQ_COUNT_EXEC = config['tools']['htseq-count']['executable']
@@ -65,9 +64,9 @@ rule all:
       
 def trim_galore_input(args):
   sample = args[0]
-  return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2'])]
+  return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
-rule trim_galore:
+rule trim_galore_pe:
   input: trim_galore_input
   output:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
@@ -76,7 +75,14 @@ rule trim_galore:
     tmp1=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_val_1.fq.gz'),
     tmp2=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads2'])[0]).replace('.fastq.gz','_val_2.fq.gz')
   log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
-  shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {TRIM_GALORE_ARGS} {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
+  shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} --paired {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
+
+rule trim_galore_se:
+  input: trim_galore_input
+  output: os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz"),
+  params: tmp=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_trimmed.fq.gz'),
+  log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
+  shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
 
 rule fastqc:
   input: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
@@ -92,18 +98,25 @@ rule star_index:
     log: os.path.join(LOG_DIR, 'star_index.log')
     shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --runMode genomeGenerate --genomeDir {output.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
 
+def star_map_input(args):
+  sample = args[0]
+  reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
+  if len(reads_files) > 1:
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz".format(sample=sample))]
+  elif len(reads_files) == 1:
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz".format(sample=sample))]
+
 rule star_map:
   input:
     index_dir = rules.star_index.output.star_index_dir,
-    r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
-    r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
+    reads = star_map_input
   output:
     os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
     os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab")            
   params:
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_'),
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.r1} {input.r2} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
+  shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
 
 rule index_bam:
   input: rules.star_map.output

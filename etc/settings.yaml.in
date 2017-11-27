@@ -26,7 +26,6 @@ tools:
     n-threads: 8
   trim-galore:
     executable: @TRIMGALORE@
-    args: "--paired"
   bamCoverage:
     executable: @BAMCOVERAGE@
   samtools:

@@ -154,6 +154,7 @@ optional arguments:
 - name is the name for the sample
 - reads1/2 are the fastq file names of paired end reads
   - the location of these files is specified in `settings.yaml`
+  - for single-end data, leave the reads2 column in place, but have it empty
 - sample_type can be anything
 - comparison_factor should say which samples to compare together for DE analysis
   - so samples that are to be compared together should have the same factor
@@ -170,7 +171,6 @@ An example can be found in the `tests` directory.  The
 ## To do
 
 - fix gene sets for DE report
-- add support for single end reads
 
 ----------------------------------------
 2017
