@@ -8,19 +8,12 @@ feature_Combination = function(
   tss.up = 1000
 ){
 
-    # modules::import_package('modules',       attach=TRUE)
-    # modules::import_package('genomation',    attach=TRUE)
-    # modules::import_package('GenomicRanges', attach=TRUE)
-    # modules::import_package('readxl',        attach=TRUE)
-    # modules::import_package('data.table',    attach=TRUE)
-    # helper = modules::import('Functions_Helper')
-
     suppressPackageStartupMessages(library('genomation'))
     suppressPackageStartupMessages(library('GenomicRanges'))
     suppressPackageStartupMessages(library('data.table'))
     source(file.path(scriptdir,'Functions_Helper.R'), local=TRUE)
 
-    print('Annotation...')
+    message('Reading Annotation ...')
     if(is.null(annotation))
         stop('Annotation is not specified')
 
@@ -29,6 +22,7 @@ feature_Combination = function(
     if(is.null(annotation$gtf))
         stop('GTF file is not specified')
 
+    message('Collapsing and Annotating Peaks ...')
     feat.list = GRangesList(lapply(features, readNarrowPeak))
     lnames = unique(str_replace(basename(unlist(features)),'.narrowPeak',''))
     if(length(lnames) != length(feat.list))
