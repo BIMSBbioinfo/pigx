@@ -24,7 +24,7 @@ software:
         - yaml
         - pytest
         - itertools
-    bedToBigBed: '~/bin/Software/UCSC/bedToBigBed'
+    bedToBigBed: '/home/vfranke/bin/Software/UCSC/bedToBigBed'
 
 params:
     macs2:
