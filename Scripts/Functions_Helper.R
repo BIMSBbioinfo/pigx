@@ -1,29 +1,23 @@
 # ---------------------------------------------------------------------------- #
 dtfindOverlaps = function(reg1, reg2, ignore.strand=FALSE){
 
-    library(data.table)
-    library(GenomicRanges)
+    suppressPackageStartupMessages(library(data.table))
+    suppressPackageStartupMessages(library(GenomicRanges))
     as.data.table(findOverlaps(reg1,reg2, ignore.strand=ignore.strand))
 }
 
 # ---------------------------------------------------------------------------- #
 GtfSelectTranscript = function(gtf){
 
-    library(data.table)
-    library(GenomicRanges)
-    library(stringr)
-
+    suppressPackageStartupMessages(library(data.table))
+    suppressPackageStartupMessages(library(GenomicRanges))
+    suppressPackageStartupMessages(library(stringr))
     if(!is.null(gtf$exon_id)){
         gtf = gtf[gtf$exon_id != 'CCDS']
         gtf = gtf[!str_detect(gtf$exon_id, 'mRNA')]
         gtf = gtf[!str_detect(gtf$exon_id, 'cdna')]
     }
-    sl = seqlevels(gtf)
-   seqlevels(gtf, pruning.mode="coarse") = sl[!(str_detect(sl,'HG') |
-                                         str_detect(sl,'GL')  |
-                                         str_detect(sl,'MHC') |
-                                         str_detect(sl,'HS')  |
-                                         str_detect(sl,'MT'))]
+   # gtf = keepStandardChromosomes(gtf, pruning.mode='coarse')
 
     d = data.table(as.data.frame(values(gtf)))
     d$strand = as.character(strand(gtf))
@@ -41,21 +35,22 @@ GtfSelectTranscript = function(gtf){
 
 
 # ---------------------------------------------------------------------------- #
-ReadGTFAnnotation = function(gtf.path, which.regions='exon', ensembl=FALSE){
+ReadGTFAnnotation = function(
+  gtf.path
+){
 
-    library(data.table)
-    library(GenomicRanges)
-    library(genomation)
-    library(stringr)
+    suppressPackageStartupMessages(library(data.table))
+    suppressPackageStartupMessages(library(GenomicRanges))
+    suppressPackageStartupMessages(library(genomation))
+    suppressPackageStartupMessages(library(stringr))
+    suppressPackageStartupMessages(library(rtracklayer))
 
 
     if(!file.exists(gtf.path))
         stop('the gtf file does not exist')
 
-    rds.path = str_replace(gtf.path, 'gtf$','rds')
-
     message('Importing gtf...')
-    gtf = RCAS::importGtf(gtf.path)
+    gtf          = import.gff(gtf.path)
     gtf.exon     = subset(gtf, type == 'exon')
     gtf.exon.ge  = split(gtf.exon, gtf.exon$gene_id)
     gtf.range.ge = unlist(range(gtf.exon.ge))
@@ -108,8 +103,8 @@ setMethod("AnnotateRanges",signature("GRanges","GRangesList"),
               if(!type %in% c('precedence','all'))
                   stop('type may only be precedence and all')
 
-              library(data.table)
-              library(GenomicRanges)
+              suppressPackageStartupMessages(library(data.table))
+              suppressPackageStartupMessages(library(GenomicRanges))
               cat('Overlapping...\n')
               if(any(names(is.null(annotation))))
                   stop('All annotations need to have names')
@@ -138,24 +133,6 @@ setMethod("AnnotateRanges",signature("GRanges","GRangesList"),
               return(annot)
 
 })
-
-
-# ---------------------------------------------------------------------------- #
-read_Annotation = function(annot){
-
-    library(genomation)
-    annotation = list()
-    if(!is.null(annot$cpg))
-        annotation$cpg  = readGeneric(annot$cpg, header=FALSE, skip=1)
-
-    if(!is.null(annot$gtf))
-        annotation$gtf  = ReadGTFAnnotation(annot$gtf)
-
-    if(!is.null(annot$repeats))
-        annotation$reps = readRDS(annot$reps)
-
-    return(annotation)
-}
 
 # ---------------------------------------------------------------------------- #
 GTFGetAnnotation = function(g, downstream=500, upstream=1000){
@@ -186,7 +163,7 @@ Annotate_Reads = function(
     ignore.strand = FALSE
 ){
 
-    library(GenomicAlignments)
+    suppressPackageStartupMessages(library(GenomicAlignments))
     reads = readGAlignments(infile, use.names=TRUE, param=ScanBamParam(which=w, tag='NH'))
     g = granges(reads, use.names=TRUE, use.mcols=TRUE)
     if(length(g) == 0)
