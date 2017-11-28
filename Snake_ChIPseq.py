@@ -112,6 +112,7 @@ PATH_BW         = 'BigWig'
 PATH_IDR        = 'IDR'
 PATH_HUB        = 'UCSC_HUB'
 PATH_ANALYSIS   = "Analysis"
+PATH_ANNOTATION = 'Annotation'
 
 # Analisys path
 PATH_FEATURE    = os.path.join(PATH_ANALYSIS, 'Feature_Combination')
@@ -182,7 +183,7 @@ if 'peak_calling' in set(config.keys()):
     COMMAND = COMMAND + MACS + QSORT
 
 # # ----------------------------------------------------------------------------- #
-# if 'idr' in set(config.keys()):
+if 'idr' in set(config.keys()):
     IDR     = expand(os.path.join(PATH_IDR,    "{name}", "{name}.narrowPeak"),     name=config['idr'].keys())
 
     include: os.path.join(RULES_PATH, 'IDR.py')
@@ -199,8 +200,17 @@ if 'hub' in set(config.keys()):
     COMMAND = COMMAND + BB + HUB
 
 
-# # ----------------------------------------------------------------------------- #
-if 'feature_combination' in set(config.keys()):
+# ---------------------------------------------------------------------------- #
+gtf_index = 'gtf' in set(config['annotation'].keys())
+if gtf_index:
+    LINK_ANNOTATION    = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
+    PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
+
+    include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
+    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION
+
+# ---------------------------------------------------------------------------- #
+if 'feature_combination' in set(config.keys()) and gtf_index:
     peak_files = []
     if 'idr' in config['feature_combination'].keys():
         peak_files = peak_files + [os.path.join(PATH_IDR,  x, x + '.narrowPeak') for x in config['feature_combination']['idr']]
@@ -209,31 +219,25 @@ if 'feature_combination' in set(config.keys()):
         peak_files = peak_files + [os.path.join(PATH_PEAK, x, x + '_peaks.narrowPeak') for x in config['feature_combination']['peaks']]
     FEATURE = [os.path.join(PATH_FEATURE,'Feature_Combination.tsv')]
 
-
     include: os.path.join(RULES_PATH, 'Feature_Combination.py')
     COMMAND = COMMAND + FEATURE
 #
 #
 # # ----------------------------------------------------------------------------- #
-if 'gtf' in set(config['annotation'].keys()):
-    PREPARE_ANNOTATION = [os.path.join(PATH_RDS_ANNOTATION,'Processed_Annotation.rds')]
-
-    ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Annotate_Peaks.rds'), name=NAMES)
-
-    EXTRACT_SIGNAL_PEAKS = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Extract_Signal_Peaks.rds'), name=NAMES)
-
-    EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
+# if 'gtf' in set(config['annotation'].keys()):
+#     ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Annotate_Peaks.rds'), name=NAMES)
+#
+#     EXTRACT_SIGNAL_PEAKS = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Extract_Signal_Peaks.rds'), name=NAMES)
+#
+#     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
 
 
-    # include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
+
     # include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
     # COMMAND = COMMAND + PREPARE_ANNOTATION + ANNOTATE_PEAKS + EXTRACT_SIGNAL_PEAKS + EXTRACT_SIGNAL_ANNOTATION
 
 # ----------------------------------------------------------------------------- #
 # if 'feature_combination' in set(config.keys()) and 'gtf' in set(config['annotation'].keys()
-
-
-
 
 
 # ----------------------------------------------------------------------------- #

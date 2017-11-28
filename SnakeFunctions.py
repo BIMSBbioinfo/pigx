@@ -68,3 +68,14 @@ def get_macs2_suffix(name, config):
             if 'broad' in set(sample['params']['macs2'].keys()):
                 suffix = 'broadPeak'
     return(suffix)
+
+# ---------------------------------------------------------------------------- #
+# given a list of lists, returns a flattened version
+def flatten(l):
+    out = []
+    for item in l:
+        if isinstance(item, (list, tuple)):
+            out.extend(flatten(item))
+        else:
+            out.append(item)
+    return out
