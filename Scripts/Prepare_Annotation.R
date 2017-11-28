@@ -1,23 +1,23 @@
 # ---------------------------------------------------------------------------- #
 Prepare_Annotation = function(
-    annotation=NULL, 
-    scriptdir, 
-    outfile
+    gtf_path=NULL,
+    outfile,
+    scriptdir
 ){
-    
+
     suppressPackageStartupMessages(library('genomation'))
     suppressPackageStartupMessages(library('GenomicRanges'))
     suppressPackageStartupMessages(library('data.table'))
     source(file.path(scriptdir,'Functions_Helper.R'), local=TRUE)
-    
-    print('Annotation...')
-    if(is.null(annotation))
+
+    message('Annotation...')
+    if(is.null(gtf_path))
         stop('Annotation is not specified')
-    
-    annotation = read_Annotation(annotation)
-    
-    annotation$genomic_annotation = GTFGetAnnotation(annotation$gtf$gtf)
-   
+
+    annotation = ReadGTFAnnotation(gtf_path)
+
+    annotation$genomic_annotation = GTFGetAnnotation(annotation$gtf)
+
     # --------------------------------------------------------------- #
     message('RDS ...')
     saveRDS(annotation, outfile)
@@ -26,8 +26,8 @@ Prepare_Annotation = function(
 
 # ---------------------------------------------------------------------------- #
 # function call
-prepare_Annotation(
-    annotation  = snakemake@input[['annotation']],
+Prepare_Annotation(
+    gtf_path  = snakemake@input[['gtf_path']],
     outfile     = snakemake@output[['outfile']],
     scriptdir   = snakemake@params[['scriptdir']]
 )
