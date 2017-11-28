@@ -7,7 +7,7 @@ software:
     idr: idr
     macs2: macs2
     perl: perl
-    R: R
+    R: /usr/bin/Rscript
     R_deps:
         - data.table
         - genomation
