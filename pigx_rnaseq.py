@@ -8,6 +8,7 @@ import csv
 import inspect
 
 GENOME_FASTA = config['locations']['genome-fasta']
+CDNA_FASTA = config['locations']['cdna-fasta']
 READS_DIR = config['locations']['reads-folder']
 OUTPUT_DIR = config['locations']['output-folder']
 ORGANISM = config['organism']
@@ -23,12 +24,15 @@ MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
 HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
+SALMON_DIR        = os.path.join(OUTPUT_DIR, 'salmon_output')
 PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
 
 FASTQC_EXEC  = config['tools']['fastqc']['executable']
 MULTIQC_EXEC = config['tools']['multiqc']['executable']
 STAR_EXEC    = config['tools']['star']['executable']
 STAR_THREADS = config['tools']['star']['n-threads']
+SALMON_EXEC  = config['tools']['salmon']['executable']
+SALMON_THREADS = config['tools']['salmon']['n-threads']
 TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
 BAMCOVERAGE_EXEC = config['tools']['bamCoverage']['executable']
 SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
@@ -40,8 +44,6 @@ GTF_FILE = config['locations']['gtf-file']
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 DE_ANALYSIS_LIST = config['DEanalyses']
-print(DE_ANALYSIS_LIST)
-print(expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()))
 
 
 ## Load sample sheet
@@ -63,8 +65,8 @@ SAMPLES = [line['name'] for line in SAMPLE_SHEET]
 
 rule all:
   input: 
-      #report = os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html"),
       star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
+      salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
       #multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
       reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
       
@@ -124,6 +126,15 @@ rule star_map:
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
   shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
 
+rule salmon_index: 
+  input:
+      CDNA_FASTA
+  output: 
+      salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index'),
+      salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")
+  log: os.path.join(LOG_DIR, 'salmon_index.log')
+  shell: "{SALMON_EXEC} index -t {input} -i {output.salmon_index_dir} -p {SALMON_THREADS} >> {log} 2>&1"                   
+    
 rule index_bam:
   input: rules.star_map.output
   output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bai')
