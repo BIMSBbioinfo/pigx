@@ -13,8 +13,6 @@ READS_DIR = config['locations']['reads-folder']
 OUTPUT_DIR = config['locations']['output-folder']
 ORGANISM = config['organism']
 
-print("ORGANISM:",ORGANISM)
-
 SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
@@ -68,8 +66,15 @@ rule all:
       star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
       #multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-      reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
-      
+      reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
+      reports_salmon = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+
+rule translate_sample_sheet_for_report:
+  input: SAMPLE_SHEET_FILE
+  output: os.path.join(os.getcwd(), "colData.tsv")
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/translate_sample_sheet_for_report.R {input}"
+
+
 def trim_galore_input(args):
   sample = args[0]
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
@@ -106,7 +111,7 @@ rule star_index:
     log: os.path.join(LOG_DIR, 'star_index.log')
     shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --runMode genomeGenerate --genomeDir {output.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
 
-def star_map_input(args):
+def map_input(args):
   sample = args[0]
   reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
   if len(reads_files) > 1:
@@ -117,7 +122,7 @@ def star_map_input(args):
 rule star_map:
   input:
     index_dir = rules.star_index.output.star_index_dir,
-    reads = star_map_input
+    reads = map_input
   output:
     os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
     os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab")            
@@ -134,7 +139,31 @@ rule salmon_index:
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")
   log: os.path.join(LOG_DIR, 'salmon_index.log')
   shell: "{SALMON_EXEC} index -t {input} -i {output.salmon_index_dir} -p {SALMON_THREADS} >> {log} 2>&1"                   
-    
+
+rule salmon_quant: 
+  input: 
+      index_dir = rules.salmon_index.output.salmon_index_dir,
+      reads = map_input
+  output:
+      os.path.join(SALMON_DIR, "{sample}", "quant.sf")
+  params:
+      outfolder = os.path.join(SALMON_DIR, "{sample}")
+  log: os.path.join(LOG_DIR, 'salmon_quant.log')
+  run:
+    if(len(input.reads) == 1):
+        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+    elif(len(input.reads) == 2):
+        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_THREADS} -1 {input.reads[0]} -2 {input.reads[1]} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+    shell(COMMAND)
+
+rule counts_from_SALMON:
+  input: 
+      quantFiles = expand(os.path.join(SALMON_DIR, "{sample}", "quant.sf"), sample=SAMPLES),
+      colDataFile = rules.translate_sample_sheet_for_report.output                  
+  output: os.path.join(SALMON_DIR, "counts_from_SALMON.tsv")
+  log: os.path.join(LOG_DIR, 'salmon_import_counts.log')
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {input.colDataFile} >> {log} 2>&1"
+
 rule index_bam:
   input: rules.star_map.output
   output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bai')
@@ -168,11 +197,6 @@ rule counts_from_STAR:
   output: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_STAR.R {MAPPED_READS_DIR} {output}"
 
-rule translate_sample_sheet_for_report:
-  input: SAMPLE_SHEET_FILE
-  output: os.path.join(os.getcwd(), "colData.tsv")
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/translate_sample_sheet_for_report.R {input}"
-
 
 rule report1:
   input: 
@@ -188,3 +212,18 @@ rule report1:
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
   shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
+
+rule report2:
+  input:
+    counts=os.path.join(SALMON_DIR, "counts_from_SALMON.tsv"),
+    coldata=str(rules.translate_sample_sheet_for_report.output)
+  params:
+    outdir=os.path.join(OUTPUT_DIR, "report"),
+    reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
+    reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
+    case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
+    control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups']
+  log: os.path.join(LOG_DIR, "report.salmon.log")
+  output: 
+    os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html')
+  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.salmon' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
