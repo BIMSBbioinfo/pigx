@@ -32,6 +32,9 @@ tools:
     executable: @SAMTOOLS@
   htseq-count:
     executable: @HTSEQ_COUNT@
+  salmon:
+    executable: @SALMON@
+    n-threads: 8
   R:
     Rscript: @RSCRIPT@
     executable: @R@

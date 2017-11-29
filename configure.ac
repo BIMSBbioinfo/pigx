@@ -44,6 +44,8 @@ find_or_override_prog([MULTIQC],         [multiqc])
 find_or_override_prog([HTSEQ_COUNT],     [htseq-count])
 find_or_override_prog([BAMCOVERAGE],     [bamCoverage]) dnl deeptools
 
+find_or_override_prog([SALMON],     [salmon])
+
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
 
