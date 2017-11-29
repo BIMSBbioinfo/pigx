@@ -20,7 +20,8 @@ deeptools=2.5.3
 python=3.5.4
 
 #additional requirements for R libraries:
-r-rlang=0.1.1=r3.4.1_0
+#r-essentials
+r-rlang
 r-rmarkdown
 r-ggplot2
 r-ggrepel
@@ -32,11 +33,8 @@ r-reshape2
 r-plotly
 r-scales
 r-crosstalk
-bioconductor-gage
-bioconductor-org.dm.eg.db
-bioconductor-org.mm.eg.db
-bioconductor-org.hs.eg.db
-bioconductor-org.ce.eg.db
-bioconductor-rcas
+r-gprofiler
+#bioconductor-gage
+
 
 
