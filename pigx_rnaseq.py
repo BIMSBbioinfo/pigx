@@ -39,6 +39,11 @@ RSCRIPT_EXEC     = config['tools']['R']['Rscript']
 GTF_FILE = config['locations']['gtf-file']
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
+DE_ANALYSIS_LIST = config['DEanalyses']
+print(DE_ANALYSIS_LIST)
+print(expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()))
+
+
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
   rows =  [row for row in csv.reader(fp, delimiter=',')]
@@ -58,9 +63,10 @@ SAMPLES = [line['name'] for line in SAMPLE_SHEET]
 
 rule all:
   input: 
-      report = os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html"),
+      #report = os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html"),
       star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
-      multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html')
+      #multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+      reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
       
 def trim_galore_input(args):
   sample = args[0]
@@ -156,18 +162,18 @@ rule translate_sample_sheet_for_report:
   output: os.path.join(os.getcwd(), "colData.tsv")
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/translate_sample_sheet_for_report.R {input}"
 
-  
-CASE_SAMPLE_GROUPS = ','.join(set(lookup('comparison_factor', lambda x: x=='1', ['sample_type'])))
-CASE_CONTROL_GROUPS = ','.join(set(lookup('comparison_factor', lambda x: x!='1', ['sample_type'])))
-rule report:
-  input:
-    counts=str(rules.counts_from_STAR.output),
-    coldata=str(rules.translate_sample_sheet_for_report.output)
+
+rule report1:
+  input: 
+    counts=os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv"),
+    coldata=str(rules.translate_sample_sheet_for_report.output),
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
     reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
-    reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd")
-  log: os.path.join(LOG_DIR, "report.log")
-  output: os.path.join(OUTPUT_DIR, "report", "comparison1.deseq.report.html")
-  shell: "{RSCRIPT_EXEC} {params.reportR} --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{CASE_SAMPLE_GROUPS}' --controlSampleGroups='{CASE_CONTROL_GROUPS}' --workdir={params.outdir} --species='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
-      
+    reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
+    case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
+    control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups']
+  log: os.path.join(LOG_DIR, "report.star.log")
+  output: 
+    os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
+  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"

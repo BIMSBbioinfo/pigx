@@ -24,10 +24,10 @@
 #'   samples compared to the control samples.
 #' @param workdir Path to working directory where the output files will be
 #'   written
-#' @param species The organism for which the analysis is done. Supported
-#'   organisms are 'human', 'mouse', 'worm', and 'fly'. This argument only
-#'   affects GO term analysis results. If the species is not supported, GO
-#'   results will not be displayed.
+#' @param organism The organism for which the analysis is done (e.g. hsapiens, 
+#'   mmusculus, celegans) via g:Profiler. This argument only affects GO term
+#'   analysis results. If the organism is not supported or there is no internet
+#'   connection, GO results will not be displayed.
 #' @param prefix Prefix to be attached to the beginning of output files
 #' @param quiet boolean value (default: FALSE). If set to TRUE, progress bars 
 #'   and chunk labels will be suppressed while knitting the Rmd file.
@@ -45,7 +45,7 @@ runReport <- function(reportFile,
                       controlSampleGroups,
                       geneSetsFolder,
                       workdir = getwd(),
-                      species, 
+                      organism, 
                       prefix, 
                       selfContained = TRUE, 
                       quiet = FALSE) {
@@ -55,7 +55,8 @@ runReport <- function(reportFile,
   rmarkdown::render(
     input = reportFile, 
     output_dir = workdir,
-    intermediates_dir = workdir,
+    intermediates_dir = file.path(workdir, prefix),
+    clean = TRUE,
     output_file = outFile,
     output_format = rmarkdown::html_document(
       code_folding = 'hide', 
@@ -74,9 +75,13 @@ runReport <- function(reportFile,
                   geneSetsFolder = geneSetsFolder, 
                   prefix = prefix,
                   workdir = workdir, 
-                  species = species),
+                  organism = organism),
     quiet = quiet
   )
+  
+  if(dir.exists(file.path(workdir, prefix))) {
+    unlink(file.path(workdir, prefix), recursive = TRUE)
+  }
 }
 
 #1. Collect arguments
@@ -95,46 +100,46 @@ runDeseqReport.R: Generate an HTML report based on the analysis of raw count dat
 Arguments:
 --reportFile Path to .Rmd script to generate a HTML report
 --countDataFile Path to count data file which contains raw read counts 
-   per gene/transcript for each sample replicate
+per gene/transcript for each sample replicate
 --colDataFile Path to a tab-separated file with the experimental set-up 
-   description. The row-names are the sample names, and the columns consist of
-   meta-data such as sample group, batch, sequencing run, condition, treatment
-   etc.
+description. The row-names are the sample names, and the columns consist of
+meta-data such as sample group, batch, sequencing run, condition, treatment
+etc.
 --caseSampleGroups Comma separated list of sample group names (not 
-   sample replicate names) that should be treated as 'case' groups (e.g. 
-   mutant or treated samples)
+sample replicate names) that should be treated as 'case' groups (e.g. 
+mutant or treated samples)
 --controlSampleGroups Comma separated list of sample group names (not 
-   sample replicate names) that should be treated as 'control' groups (e.g. 
-   wild-type or untreated samples)
+sample replicate names) that should be treated as 'control' groups (e.g. 
+wild-type or untreated samples)
 --geneSetsFolder (Optional) A folder with one or more .txt files, where each txt
-   file contains a list of gene ids (subset of the gene ids used as row names
-   in the count data table), one id per line. GAGE package is utilized to find
-   out if the given gene set is collectively up/down regulated in the case
-   samples compared to the control samples.
+file contains a list of gene ids (subset of the gene ids used as row names
+in the count data table), one id per line. GAGE package is utilized to find
+out if the given gene set is collectively up/down regulated in the case
+samples compared to the control samples.
 --workdir (Optional, default: current working directory) Path to working directory 
-   where the output files will be written
---species (Optional) The organism for which the analysis is done. Supported
-  organisms are 'human', 'mouse', 'worm', and 'fly'. This argument only
-  affects GO term analysis results. If the species is not supported, GO
-  results will not be displayed.
+where the output files will be written
+--organism (Optional) The organism for which the analysis is done. Supported
+organisms are 'human', 'mouse', 'worm', and 'fly'. This argument only
+affects GO term analysis results. If the organism is not supported, GO
+results will not be displayed.
 --prefix (Optional, default: 'comparison1') Prefix to be attached to the beginning 
-   of output files
+of output files
 --selfContained boolean value (default: TRUE). By default, the generated
-   html file will be self-contained, which means that all figures and tables 
-   will be embedded in a single html file with no external dependencies (See 
-   markdown::html_document)
+html file will be self-contained, which means that all figures and tables 
+will be embedded in a single html file with no external dependencies (See 
+markdown::html_document)
 
 Example:
 Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \\\
-                         --countDataFile=./sample_data/counts.tsv \\\
-                         --colDataFile=./sample_data/colData.tsv \\\
-                         --caseSampleGroups='spt.16_N2_L4, hmg.4_N2_L4' \\\
-                         --controlSampleGroups='ctrl_N2_L4' \\\
-                         --geneSetsFolder='./sample_data/genesets' \\\
-                         --workdir=`pwd` \\\
-                         --species='human' \\\
-                         --prefix='spt-16_hmg-4_vs_ctrl' \\\
-                         --selfContained=TRUE"
+--countDataFile=./sample_data/counts.tsv \\\
+--colDataFile=./sample_data/colData.tsv \\\
+--caseSampleGroups='spt.16_N2_L4, hmg.4_N2_L4' \\\
+--controlSampleGroups='ctrl_N2_L4' \\\
+--geneSetsFolder='./sample_data/genesets' \\\
+--workdir=`pwd` \\\
+--organism='hsapiens' \\\
+--prefix='spt-16_hmg-4_vs_ctrl' \\\
+--selfContained=TRUE"
 
 ## Help section
 if("--help" %in% args) {
@@ -181,12 +186,12 @@ if(!("geneSetsFolder") %in% argsDF$V1) {
   geneSetsFolder <- argsL$geneSetsFolder
 }
 
-if(!("species") %in% argsDF$V1) {
+if(!("organism") %in% argsDF$V1) {
   cat(help_command, "\n")
-  warning("Missing argument: species Will skip GO term analysis\n")
-  species <- ''
+  warning("Missing argument: organism Will skip GO term analysis\n")
+  organism <- ''
 } else {
-  species <- argsL$species
+  organism <- argsL$organism
 }
 
 if(!("prefix" %in% argsDF$V1)) {
@@ -224,6 +229,6 @@ runReport(reportFile = reportFile,
           controlSampleGroups = controlSampleGroups, 
           geneSetsFolder = geneSetsFolder,
           workdir = workdir, 
-          species = species,
+          organism = organism,
           prefix = prefix, 
           selfContained = selfContained)

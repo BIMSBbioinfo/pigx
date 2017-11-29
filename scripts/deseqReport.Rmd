@@ -10,7 +10,7 @@ params:
   geneSetsFolder: ''
   prefix: ''
   workdir: '.'
-  species: ''
+  organism: ''
 ---
 
 ```{r setup, include=FALSE}
@@ -45,10 +45,10 @@ controlSampleGroups <- params$controlSampleGroups
 prefix <- params$prefix
 workdir <- params$workdir
 geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
-species <- params$species
+organism <- params$organism
 
 #switch to control whether GO analysis module should be run
-runGO <- ifelse(species %in% c('human', 'mouse', 'worm', 'fly'), TRUE, FALSE)
+runGO <- ifelse(organism %in% c('human', 'mouse', 'worm', 'fly'), TRUE, FALSE)
 
 inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
@@ -57,7 +57,7 @@ inputParameterDesc <- c('Count Data File',
                      'Gene Sets Folder',
                      'Prefix for output files',
                      'Working directory',
-                     'Analyzed Species'
+                     'Analyzed organism'
                      )
 inputParameterValues <- c(countDataFile,
                           colDataFile,
@@ -66,7 +66,7 @@ inputParameterValues <- c(countDataFile,
                           geneSetsFolder,
                           prefix,
                           workdir,
-                          species)
+                          organism)
 inputSettings <- data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
                             stringsAsFactors = FALSE)
@@ -84,8 +84,8 @@ caseSamples <- gsub(' ', '', unlist(strsplit(x = caseSampleGroups, split = ','))
 controlSamples <- gsub(' ', '', unlist(strsplit(x = controlSampleGroups, split = ',')))
 
 #read colData and countData files
-colData = read.table(colDataFile, header=T, row.names = 1, sep='\t', stringsAsFactors = T)
-countData = read.table(countDataFile, header=TRUE, row.names=1, sep='\t', stringsAsFactors = T)
+colData = read.table(colDataFile, header=T, row.names = 1, sep='\t', stringsAsFactors = T, check.names = FALSE)
+countData = read.table(countDataFile, header=TRUE, row.names=1, sep='\t', stringsAsFactors = T, check.names = FALSE)
 
 #subset colData and countData - only keep case and control samples
 colData <- colData[colData$group %in% c(caseSamples, controlSamples),]
@@ -334,7 +334,7 @@ if(!is.null(geneSetsFolder)) {
 ```
 
 ```{r results='asis'}
-if(runGO == FALSE) {cat("Warning:Skipping GO analysis as species:",species,"is not supported\n")}
+if(runGO == FALSE) {cat("Warning:Skipping GO analysis as organism:",organism,"is not supported\n")}
 ```
 
 ```{r goAnalysisTitle, eval = runGO, results='asis'}
@@ -371,7 +371,7 @@ cat("## GO Terms for Up-regulated Genes\n")
 
 ```{r, eval = runGO}
 if(length(genesUp) > 5){
-  goUp <- runGOanalysis(targetedGenes = genesUp, backgroundGenes = allGenes, species = species)
+  goUp <- runGOanalysis(targetedGenes = genesUp, backgroundGenes = allGenes, species = organism)
   DT::datatable(goUp, 
           extensions = c('Buttons', 'FixedColumns'), 
           options = list(fixedColumns = TRUE, 
@@ -391,7 +391,7 @@ cat("## GO Terms for Down-regulated Genes\n")
 
 ```{r, eval = runGO}
 if(length(genesDown) > 5) {
-  goDown <- runGOanalysis(targetedGenes = genesDown, backgroundGenes = allGenes, species = species)
+  goDown <- runGOanalysis(targetedGenes = genesDown, backgroundGenes = allGenes, species = organism)
   DT::datatable(goDown, 
           extensions = c('Buttons', 'FixedColumns'), 
           options = list(fixedColumns = TRUE, 
