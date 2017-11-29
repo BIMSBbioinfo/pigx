@@ -52,8 +52,8 @@ AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
-AX_R_PACKAGE([rlang])
 AX_R_PACKAGE([rmarkdown])
+AX_R_PACKAGE([knitr])
 AX_R_PACKAGE([ggplot2])
 AX_R_PACKAGE([ggrepel])
 AX_R_PACKAGE([DESeq2])
@@ -65,6 +65,7 @@ AX_R_PACKAGE([plotly])
 AX_R_PACKAGE([scales])
 AX_R_PACKAGE([crosstalk])
 AX_R_PACKAGE([gage])
+AX_R_PACKAGE([gProfileR])
   ])
 
 
