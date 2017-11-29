@@ -27,7 +27,6 @@ library(plotly)
 library(scales)
 library(crosstalk)
 library(gage)
-library(RCAS)
 library(gProfileR)
 ```
 
