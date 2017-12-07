@@ -113,6 +113,10 @@ if GENOME_SECONDARY_IND:
     REFFLAT = REFFLAT + [os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.refFlat')]
     DICT    = DICT    + [os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.dict')]
 
+
+# ----------------------------------------------------------------------------- # FastQC
+FASTQC = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.fastqc.done"), name=SAMPLE_NAMES)
+
 # ----------------------------------------------------------------------------- #
 # Change reference gene_name to gene_id
 PATH_GTF_PRIMARY_ID = expand(os.path.join(PATH_ANNOTATION_PRIMARY, "{name}" + "gene_id.gtf"), name=REFERENCE_NAMES)
@@ -157,7 +161,7 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG
 print(RULE_ALL)
 
 
@@ -462,6 +466,8 @@ rule bam_tag_histogram:
 		"""
 
 # ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
 rule find_absolute_read_cutoff:
     input:
@@ -537,9 +543,32 @@ rule bam_to_BigWig:
             """
     script:
         os.path.join(PATH_SCRIPT, 'BamToBigWig.R')
-        
-        
+
+
 # ----------------------------------------------------------------------------- #
+rule fastqc:
+    input:
+        unpack(get_fastq_files)
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}","{name}.fastqc.done")
+    params:
+        outpath = os.path.join(PATH_MAPPED, "{name}"),
+        threads = 1,
+        mem     = '16G',
+        java    = SOFTWARE['java']
+    log:
+        log = os.path.join(PATH_LOG, "{name}.fastqc.log")
+    message: """
+            fastqc:
+                input_R1: {input.barcode}
+                input_R2: {input.reads}
+                output: {output.outfile}
+            """
+    shell:"""
+        fastqc -j {params.java} -t {params.threads} -o {params.outpath} {input.barcode} {input.reads} 2> {log.log}
+        touch {output.outfile}
+    """
+
 
 
 

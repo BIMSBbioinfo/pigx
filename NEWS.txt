@@ -2,6 +2,10 @@ NEWS:
 
 
 
+171207:
+   [*]. bigWig files for selected cells
+   [*]. Add fastqc
+
 171206:
     - working pipeline
 
@@ -10,10 +14,8 @@ NEWS:
 
 To Do:
 
-[]. Add fastqc
 []. Gene count matrix
 []. Read statistics with dropbeat
-[]. bigWig files for selected cells
 []. manual parameters
 
 
