@@ -15,23 +15,7 @@ snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomp
 """
 
 TODO:
-[]. map_scRNA rule
 
-[]. Make test data
-[]. indrop parser
-[]. File order for read_dropseq is hardcoded - change this
-[]. Downstream analysis:
-    - normalization
-    - imputation
-    - clustering
-    - cell types
-    - visualization
-    - tsne
-    - pseudotime inference
-    - diffusion maps
-[]. export software to the software config file
-[]. set report to relative path
-[]. Add fastqc
 
 Variables to extract in the config file:
 DROPTOOLS
@@ -41,33 +25,6 @@ PROJECT PATH
 MARKDOWN PATH
 
 
-Tests:
-    - gtf tests:
-        - check for gene_id and gene_name columns in gtf
-
-indrop UMI description:
-sequence W1 adapter: AAGGCGTCACAAGCAATCACTC
-
-B1 anatomy: BBBBBBBB[BBB]WWWWWWWWWWWWWWWWWWWWWWCCCCCCCCUUUUUUTTTTTTTTTT______________
-B = Barcode1, can be 8, 9, 10 or 11 bases long.
-W = 'W1' sequence, specified below
-C = Barcode2, always 8 bases
-U = UMI, always 6 bases
-T = Beginning of polyT tail.
-_ = Either sequencing survives across the polyT tail, or signal starts dropping off
-(and start being anything, likely with poor quality)
-minimal_polyT_len_on_R1 = 7
-hamming_threshold_for_W1_matching = 3
-w1 = "GAGTGATTGCTTGTGACGCCTT"
-rev_w1 = "AAGGCGTCACAAGCAATCACTC" #Hard-code so we don't recompute on every one of millions of calls
-
-ADDITIONAL WORK:
-
-* scRNA_report - dependency on the get_umi_matrix must be set
-* Create rules for making all of the annotation
-* The rmarkdown document needs to be updated for the experiment selection
-* sort out the getfiles function to be unambiguous
-* write checks for data structures
 """
 
 # ----------------------------------------------------------------------------- #
@@ -173,9 +130,8 @@ MERGE_FASTQ_TO_BAM = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + '.fas
 MAP_scRNA = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}", "star_gene_exon_tagged.bam"), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # ----------------------------------------------------------------------------- #
-# UMI matrix
-UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
-
+# READ statistics
+READ_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadStatistics.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 # ----------------------------------------------------------------------------- #
 # Number of reads per cell calculation
 BAM_HISTOGRAM = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
@@ -185,13 +141,23 @@ BAM_HISTOGRAM = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{g
 FIND_READ_CUTOFF = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # ----------------------------------------------------------------------------- #
+# UMI matrix
+UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
+
+
+# ----------------------------------------------------------------------------- #
+# Bam To BigWig
+BIGWIG = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
+
+
+# ----------------------------------------------------------------------------- #
 RULE_ALL = []
 RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + MERGE_FASTQ_TO_BAM + MAP_scRNA + UMI + BAM_HISTOGRAM + FIND_READ_CUTOFF
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG
 print(RULE_ALL)
 
 
@@ -440,7 +406,7 @@ rule map_scRNA:
         droptools = SOFTWARE['droptools'],
         star      = SOFTWARE['star'],
         threads   = 8,
-        mem       = '30G'
+        mem       = '35G'
     log:
        log = os.path.join(PATH_LOG, "{name}.{genome}.STAR.log")
     message: """
@@ -451,16 +417,33 @@ rule map_scRNA:
                     genome : {params.genome}
         """
     shell:"""
-        {params.droptools}/Drop-seq_alignment.sh -g {params.genome} -d {params.droptools} -o {params.outdir} -s {params.star} -r {input.reference} {input.infile}
-        touch {output.outfile} 2> {log}
+        {params.droptools}/Drop-seq_alignment.sh -g {params.genome} -d {params.droptools} -o {params.outdir} -s {params.star} -r {input.reference} {input.infile} 2> {log}
+        touch {output.outfile}
     """
 
+# ----------------------------------------------------------------------------- #
+rule extract_read_statistics:
+    input:
+        bamfile = rules.map_scRNA.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadStatistics.txt')
+    params:
+        outname  = "{name}_{genome}",
+        threads  = 1,
+        mem      = '8G'
+    message: """
+            extract_read_statistics:
+                input:  {input.bamfile}
+                output: {output.outfile}
+        """
+    script:
+        os.path.join(PATH_SCRIPT, 'Extract_Read_Statistics.R')
 
 # ----------------------------------------------------------------------------- #
 # calculates the number of reads per cell
 rule bam_tag_histogram:
     input:
-        infile = rules.map_scRNA.output
+        infile = rules.map_scRNA.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt')
     params:
@@ -468,7 +451,7 @@ rule bam_tag_histogram:
         outname           = "{name}_{genome}",
         droptools         = SOFTWARE['droptools'],
         threads           = 1,
-        mem               = '8G'
+        mem               = '64G'
     message: """
             BamTagHistogram:
                 input:  {input.infile}
@@ -486,17 +469,18 @@ rule find_absolute_read_cutoff:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml')
     params:
-        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname           = "{name}_{genome}",
-        threads           = 1,
-        mem               = '8G'
+        outdir   = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname  = "{name}_{genome}",
+        threads  = 1,
+        mem      = '8G',
+        cutoff   = 50000
     message: """
             find_absolute_read_cutoff:
                 input:  {input.infile}
                 output: {output.outfile}
         """
     script:
-        os.path.join(PATH_SCRIPT,'Find_Absolute_Read_Cutoff.R')
+        os.path.join(PATH_SCRIPT, 'Find_Absolute_Read_Cutoff.R')
 # ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
 rule get_umi_matrix:
@@ -535,11 +519,26 @@ rule get_umi_matrix:
         shell(command)
 
 
-
-
-
-
-
+# ----------------------------------------------------------------------------- #
+rule bam_to_BigWig:
+    input:
+        bamfile            = rules.map_scRNA.output,
+        cell_cutoff_file   = rules.find_absolute_read_cutoff.output.outfile,
+        reads_by_cell_file = rules.bam_tag_histogram.output.outfile
+    output:
+        bwfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw')
+    params:
+        threads = 1,
+        mem     = '16G'
+    message: """
+            bam_to_BigWig:
+                input:  {input.bamfile}
+                output: {output.bwfile}
+            """
+    script:
+        os.path.join(PATH_SCRIPT, 'BamToBigWig.R')
+        
+        
 # ----------------------------------------------------------------------------- #
 
 
