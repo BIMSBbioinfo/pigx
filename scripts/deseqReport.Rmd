@@ -106,6 +106,16 @@ vsd.counts = SummarizedExperiment::assay(vsd)
 DEtable = DESeq2::results(dds, contrast = c("AnalysisGroup", 'Case', 'Control'))
 DEtable <- DEtable[order(DEtable$padj),]
 DE <- as.data.frame(DEtable)
+
+
+write.table(x = vsd.counts, 
+            file = file.path(workdir, paste0(prefix, '.normalized_counts.tsv')), 
+            quote = FALSE, sep = '\t')
+
+write.table(x = DE, 
+            file = file.path(workdir, paste0(prefix, '.deseq_results.tsv')), 
+            quote = FALSE, sep = '\t')
+
 ```
 
 ## Differential Expression Results Table (filtered for pAdj <= 0.1)
