@@ -67,7 +67,8 @@ rule all:
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
       #multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
       reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-      reports_salmon = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+      reports_salmon = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
+      bamCoverageBigWig =  expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample=SAMPLES)
 
 rule translate_sample_sheet_for_report:
   input: SAMPLE_SHEET_FILE
@@ -165,14 +166,14 @@ rule counts_from_SALMON:
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {input.colDataFile} >> {log} 2>&1"
 
 rule index_bam:
-  input: rules.star_map.output
+  input: rules.star_map.output[0]
   output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bai')
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
 rule bamCoverage:
   input:
-    bam=rules.star_map.output,
+    bam=rules.star_map.output[0],
     bai=rules.index_bam.output
   output: os.path.join(BIGWIG_DIR, '{sample}.bw')
   log: os.path.join(LOG_DIR, 'bamCoverage_{sample}.log')
