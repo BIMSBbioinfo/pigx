@@ -35,6 +35,7 @@ r-scales
 r-crosstalk
 r-gprofiler
 #bioconductor-gage
-
+bioconductor-summarizedexperiment
+bioconductor-rtracklayer
 
 
