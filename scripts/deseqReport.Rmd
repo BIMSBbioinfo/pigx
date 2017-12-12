@@ -78,7 +78,6 @@ inputParameterValues <- c(countDataFile,
 inputSettings <- data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
                             stringsAsFactors = FALSE)
-message("covariates:",params$covariates,' vs ',covariates)
 DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
@@ -200,16 +199,20 @@ ggplot(data = DE, aes(x = pvalue)) + geom_histogram(bins = 100)
 DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
 ```
 
-## PCA plots
-
-### Case vs Control
-```{r plot_PCA1}
-DESeq2::plotPCA(object = vsd, intgroup = "AnalysisGroup")
+```{r computePCAplots} 
+plotGroups <- c(covariates, 'AnalysisGroup', 'group')
+pcaPlots <- lapply(plotGroups, function(g) {
+  DESeq2::plotPCA(object = vsd, intgroup = g)
+})
 ```
 
-### Comparing Sample Groups
-```{r plot_PCA2}
-plotly::ggplotly(DESeq2::plotPCA(object = vsd, intgroup = "group"))
+## PCA plots  {.tabset}
+```{r plotPCA, results='asis', echo = FALSE}
+for (i in 1:length(pcaPlots)) {
+  cat("### ",plotGroups[i],"\n")
+  print(pcaPlots[[i]])
+  cat('\n\n')
+}
 ```
 
 ## Correlation Plot
