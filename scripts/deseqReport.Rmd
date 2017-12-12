@@ -149,6 +149,8 @@ write.table(x = DE,
 
 ```
 
+# Differential Expression Analysis
+
 ## Differential Expression Results Table (filtered for pAdj <= 0.1)
 ```{r write_DEtable}
 DT::datatable(DE[!is.na(DE$padj) & DE$padj <= 0.1,], 
