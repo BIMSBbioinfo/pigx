@@ -43,7 +43,6 @@ SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 DE_ANALYSIS_LIST = config['DEanalyses']
 
-
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
   rows =  [row for row in csv.reader(fp, delimiter=',')]
@@ -68,7 +67,7 @@ rule all:
       #multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
       reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
       reports_salmon = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-      bamCoverageBigWig =  expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample=SAMPLES)
+      #bamCoverageBigWig =  expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample=SAMPLES)
 
 rule translate_sample_sheet_for_report:
   input: SAMPLE_SHEET_FILE
@@ -208,11 +207,12 @@ rule report1:
     reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
-    control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups']
+    control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
+    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates']
   log: os.path.join(LOG_DIR, "report.star.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
-  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
 
 rule report2:
   input:
@@ -223,8 +223,9 @@ rule report2:
     reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
-    control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups']
+    control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
+    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates']
   log: os.path.join(LOG_DIR, "report.salmon.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html')
-  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.salmon' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.salmon' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder=' ' >> {log} 2>&1"
