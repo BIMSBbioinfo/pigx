@@ -151,9 +151,9 @@ write.table(x = DE,
 
 # Differential Expression Analysis
 
-## Differential Expression Results Table (filtered for pAdj <= 0.1)
+## Differential Expression Results Table (unfiltered)
 ```{r write_DEtable}
-DT::datatable(DE[!is.na(DE$padj) & DE$padj <= 0.1,], 
+DT::datatable(DE, 
           extensions = c('Buttons', 'FixedColumns'), 
           options = list(fixedColumns = TRUE, 
                          scrollX = TRUE,
@@ -163,17 +163,6 @@ DT::datatable(DE[!is.na(DE$padj) & DE$padj <= 0.1,],
           )
 ```
 
-## Normalized counts table (using Variance Stabilizing Transformation)
-```{r write_normalized_counts_table}
-DT::datatable(vsd.counts, 
-          extensions = c('Buttons', 'FixedColumns'), 
-          options = list(fixedColumns = TRUE, 
-                         scrollX = TRUE,
-                         dom = 'Bfrtip',
-                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
-          filter = 'bottom'
-          )
-```
 
 # Diagnostic Plots 
 
