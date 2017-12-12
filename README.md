@@ -69,6 +69,9 @@ installed:
 	- scales
 	- crosstalk
 	- gage
+	- rtracklayer
+	- SummarizedExperiment
+	- gProfileR
 - python
 	- snakemake
 	- pyyaml
