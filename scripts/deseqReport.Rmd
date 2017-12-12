@@ -7,6 +7,7 @@ params:
   colDataFile: ''
   caseSampleGroups: ''
   controlSampleGroups: '' 
+  covariates: ''
   geneSetsFolder: ''
   prefix: ''
   workdir: '.'
@@ -42,6 +43,7 @@ countDataFile <- params$countDataFile
 colDataFile <- params$colDataFile
 caseSampleGroups <- params$caseSampleGroups
 controlSampleGroups <- params$controlSampleGroups
+covariates <- params$covariates
 prefix <- params$prefix
 workdir <- params$workdir
 geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
@@ -54,6 +56,7 @@ inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
                      'Case sample groups',
                      'Control sample groups', 
+                     'Covariates to control for',
                      'Gene Sets Folder',
                      'Prefix for output files',
                      'Working directory',
@@ -63,6 +66,7 @@ inputParameterValues <- c(countDataFile,
                           colDataFile,
                           caseSampleGroups,
                           controlSampleGroups, 
+                          covariates,
                           geneSetsFolder,
                           prefix,
                           workdir,
@@ -70,19 +74,19 @@ inputParameterValues <- c(countDataFile,
 inputSettings <- data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
                             stringsAsFactors = FALSE)
-
+message("covariates:",params$covariates,' vs ',covariates)
 DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 8,
+                         pageLength = 9,
                          dom = 't'))
 ```
 
 ```{r prepare_inputs}
 caseSamples <- gsub(' ', '', unlist(strsplit(x = caseSampleGroups, split = ',')))
 controlSamples <- gsub(' ', '', unlist(strsplit(x = controlSampleGroups, split = ',')))
-
+covariates <- gsub(' ', '', unlist(strsplit(x = covariates, split = ',')))
 #read colData and countData files
 colData = read.table(colDataFile, header=T, row.names = 1, sep='\t', stringsAsFactors = T, check.names = FALSE)
 countData = read.table(countDataFile, header=TRUE, row.names=1, sep='\t', stringsAsFactors = T, check.names = FALSE)
@@ -97,7 +101,16 @@ colData[colData$group %in% caseSamples,]$AnalysisGroup <- 'Case'
 ```
 
 ```{r run_deseq2}
-dds <- DESeq2::DESeqDataSetFromMatrix(countData = countData, colData = colData, design = ~ AnalysisGroup)
+if(length(covariates) > 0){
+  message(paste("something wrong with design length:", length(covariates),"=>",covariates))
+  designFormula <- paste("~", paste(covariates, collapse = ' + '), "+ AnalysisGroup")
+} else {
+  designFormula <- "~ AnalysisGroup"
+}
+
+message("coldata columns:",colnames(colData))
+message("design formula:", designFormula)
+dds <- DESeq2::DESeqDataSetFromMatrix(countData = countData, colData = colData, design = stats::as.formula(designFormula))
 dds <- dds[ rowSums(counts(dds)) > 1, ]
 dds <- DESeq2::DESeq(dds)
 vsd <- DESeq2::varianceStabilizingTransformation(dds)
@@ -168,7 +181,7 @@ ggplot(data = DE, aes(x = pvalue)) + geom_histogram(bins = 100)
 DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
 ```
 
-## PCA plot
+## PCA plots
 
 ### Case vs Control
 ```{r plot_PCA1}
@@ -360,11 +373,11 @@ genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -
 cat("## GO Terms for Up-regulated Genes\n")
 ```
 
-```{r, eval = runGO}
+```{r goAnalysisUp, eval = runGO}
 goUp <- gProfileR::gprofiler(query = genesUp, 
                              organism = organism, 
                              hier_filtering = "moderate",
-                             significant = FALSE)
+                             significant = TRUE)
 DT::datatable(goUp, 
         extensions = c('Buttons', 'FixedColumns'), 
         options = list(fixedColumns = TRUE, 
@@ -383,11 +396,11 @@ DT::datatable(goUp,
 cat("## GO Terms for Down-regulated Genes\n")
 ```
 
-```{r, eval = runGO}
+```{r goAnalysisDown, eval = runGO}
 goDown <- gProfileR::gprofiler(query = genesDown, 
                                organism = organism, 
                                hier_filtering = "moderate", 
-                               significant = FALSE)
+                               significant = TRUE)
 DT::datatable(goDown, 
         extensions = c('Buttons', 'FixedColumns'), 
         options = list(fixedColumns = TRUE, 

@@ -17,6 +17,10 @@
 #' @param controlSampleGroups Comma separated list of sample group names (not 
 #'   sample replicate names) that should be treated as 'control' groups (e.g. 
 #'   wild-type or untreated samples)
+#' @param covariates Comma separated list of co-variates to control for in
+#'   differential expression analysis (e.g. batch, age, temperature,
+#'   sequencing_technology etc.). Must correspond to a column field in the
+#'   colDataFile file).
 #' @param geneSetsFolder A folder with one or more .txt files, where each txt
 #'   file contains a list of gene ids (subset of the gene ids used as row names
 #'   in the count data table), one id per line. GAGE package is utilized to find
@@ -43,6 +47,7 @@ runReport <- function(reportFile,
                       colDataFile,
                       caseSampleGroups,
                       controlSampleGroups,
+                      covariates,
                       geneSetsFolder,
                       workdir = getwd(),
                       organism, 
@@ -72,6 +77,7 @@ runReport <- function(reportFile,
                   colDataFile = colDataFile,
                   caseSampleGroups = caseSampleGroups,
                   controlSampleGroups = controlSampleGroups,
+                  covariates = covariates,
                   geneSetsFolder = geneSetsFolder, 
                   prefix = prefix,
                   workdir = workdir, 
@@ -111,6 +117,10 @@ mutant or treated samples)
 --controlSampleGroups Comma separated list of sample group names (not 
 sample replicate names) that should be treated as 'control' groups (e.g. 
 wild-type or untreated samples)
+--covariates Comma separated list of co-variates to control for in
+differential expression analysis (e.g. batch, age, temperature,
+sequencing_technology etc.). Must correspond to a column field in the 
+colDataFile file).
 --geneSetsFolder (Optional) A folder with one or more .txt files, where each txt
 file contains a list of gene ids (subset of the gene ids used as row names
 in the count data table), one id per line. GAGE package is utilized to find
@@ -135,6 +145,7 @@ Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \\\
 --colDataFile=./sample_data/colData.tsv \\\
 --caseSampleGroups='spt.16_N2_L4, hmg.4_N2_L4' \\\
 --controlSampleGroups='ctrl_N2_L4' \\\
+--covariates='batch, temp' \\\
 --geneSetsFolder='./sample_data/genesets' \\\
 --workdir=`pwd` \\\
 --organism='hsapiens' \\\
@@ -148,8 +159,18 @@ if("--help" %in% args) {
 }
 
 ## Parse arguments (we expect the form --arg=value)
-parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
-argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
+#parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
+parseArgs <- function(x) {
+  myArgs <- unlist(strsplit(x, "--"))
+  myArgs <- myArgs[myArgs != '']
+  #when no values are provided for the argument
+  myArgs <- gsub(pattern = "=$", replacement = "= ", x = myArgs)
+  myArgs <- as.data.frame(do.call(rbind, strsplit(myArgs, "=")))
+  myArgs$V2 <- gsub(' ', '', myArgs$V2)
+  return(myArgs)
+}
+  
+argsDF <- parseArgs(args)
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 
@@ -176,6 +197,12 @@ if(!("caseSampleGroups") %in% argsDF$V1) {
 if(!("controlSampleGroups") %in% argsDF$V1) {
   cat(help_command, "\n")
   stop("Missing argument: controlSampleGroups Provide a comma separated list of sample group names that will be treated as 'case' samples")
+}
+
+if(!("covariates") %in% argsDF$V1) {
+  covariates <- ''
+} else {
+  covariates <- argsL$covariates
 }
 
 if(!("geneSetsFolder") %in% argsDF$V1) {
@@ -227,8 +254,14 @@ runReport(reportFile = reportFile,
           colDataFile = colDataFile, 
           caseSampleGroups = caseSampleGroups, 
           controlSampleGroups = controlSampleGroups, 
+          covariates = covariates,
           geneSetsFolder = geneSetsFolder,
           workdir = workdir, 
           organism = organism,
           prefix = prefix, 
           selfContained = selfContained)
+
+t <- proc.time()
+ids <- rownames(DE[1:10000,])
+gProfileR::gconvert(query = ids, organism = 'celegans', target = 'ENSG')
+proc.time() - t 
