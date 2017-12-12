@@ -5,6 +5,7 @@ date: "`r Sys.time()`"
 params: 
   countDataFile: ''
   colDataFile: ''
+  gtfFile: ''
   caseSampleGroups: ''
   controlSampleGroups: '' 
   covariates: ''
@@ -29,6 +30,8 @@ library(scales)
 library(crosstalk)
 library(gage)
 library(gProfileR)
+library(rtracklayer)
+library(SummarizedExperiment)
 ```
 
 # Description
@@ -41,6 +44,7 @@ This report script runs DESeq2 differential expression analysis tool and produce
 
 countDataFile <- params$countDataFile
 colDataFile <- params$colDataFile
+gtfFile <- params$gtfFile
 caseSampleGroups <- params$caseSampleGroups
 controlSampleGroups <- params$controlSampleGroups
 covariates <- params$covariates
@@ -84,6 +88,7 @@ DT::datatable(data = inputSettings,
 ```
 
 ```{r prepare_inputs}
+gtfData <- rtracklayer::import.gff(con = gtfFile, format = 'gtf')
 caseSamples <- gsub(' ', '', unlist(strsplit(x = caseSampleGroups, split = ',')))
 controlSamples <- gsub(' ', '', unlist(strsplit(x = controlSampleGroups, split = ',')))
 covariates <- gsub(' ', '', unlist(strsplit(x = covariates, split = ',')))
@@ -101,6 +106,22 @@ colData[colData$group %in% caseSamples,]$AnalysisGroup <- 'Case'
 ```
 
 ```{r run_deseq2}
+
+mapIdsToNames <- function(ids, gtfData) {
+  #first figure out if the given ids are transcript or gene ids
+  transcripts <- gtfData[gtfData$type == 'transcript']
+  dt <- unique(data.table('transcript_id' = transcripts$transcript_id, 
+                   'gene_id' = transcripts$gene_id, 
+                   'gene_name' = transcripts$gene_name, stringsAsFactors = FALSE))
+  m <- apply(head(dt[,1:2], 1000), 2, function(x) sum(x %in% ids))
+  #then map the ids to gene names
+  if(m['transcript_id'] > m['gene_id']){
+    return(dt[match(ids, dt$transcript_id),]$gene_name)
+  } else {
+    return(dt[match(ids, dt$gene_id),]$gene_name)
+  }
+}
+
 if(length(covariates) > 0){
   message(paste("something wrong with design length:", length(covariates),"=>",covariates))
   designFormula <- paste("~", paste(covariates, collapse = ' + '), "+ AnalysisGroup")
@@ -120,6 +141,7 @@ DEtable = DESeq2::results(dds, contrast = c("AnalysisGroup", 'Case', 'Control'))
 DEtable <- DEtable[order(DEtable$padj),]
 DE <- as.data.frame(DEtable)
 
+DE$geneName <- mapIdsToNames(rownames(DE), gtfData)
 
 write.table(x = vsd.counts, 
             file = file.path(workdir, paste0(prefix, '.normalized_counts.tsv')), 

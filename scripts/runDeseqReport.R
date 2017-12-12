@@ -11,6 +11,8 @@
 #'   description. The row-names are the sample names, and the columns consist of
 #'   meta-data such as sample group, batch, sequencing run, condition, treatment
 #'   etc.
+#' @param gtfFile Path to the GTF file that was used as reference to calculate
+#' countDataFile
 #' @param caseSampleGroups Comma separated list of sample group names (not 
 #'   sample replicate names) that should be treated as 'case' groups (e.g. 
 #'   mutant or treated samples)
@@ -45,6 +47,7 @@
 runReport <- function(reportFile, 
                       countDataFile,
                       colDataFile,
+                      gtfFile,
                       caseSampleGroups,
                       controlSampleGroups,
                       covariates,
@@ -75,6 +78,7 @@ runReport <- function(reportFile,
     output_options = list(self_contained = selfContained),
     params = list(countDataFile = countDataFile,
                   colDataFile = colDataFile,
+                  gtfFile = gtfFile, 
                   caseSampleGroups = caseSampleGroups,
                   controlSampleGroups = controlSampleGroups,
                   covariates = covariates,
@@ -111,6 +115,8 @@ per gene/transcript for each sample replicate
 description. The row-names are the sample names, and the columns consist of
 meta-data such as sample group, batch, sequencing run, condition, treatment
 etc.
+--gtfFile Path to the GTF file that was used as reference to calculate
+countDataFile
 --caseSampleGroups Comma separated list of sample group names (not 
 sample replicate names) that should be treated as 'case' groups (e.g. 
 mutant or treated samples)
@@ -143,6 +149,7 @@ Example:
 Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \\\
 --countDataFile=./sample_data/counts.tsv \\\
 --colDataFile=./sample_data/colData.tsv \\\
+--gtfFile=./Ensembl.Celegans.90.gtf \\\
 --caseSampleGroups='spt.16_N2_L4, hmg.4_N2_L4' \\\
 --controlSampleGroups='ctrl_N2_L4' \\\
 --covariates='batch, temp' \\\
@@ -187,6 +194,11 @@ if(!("countDataFile" %in% argsDF$V1)) {
 if(!("colDataFile" %in% argsDF$V1)) {
   cat(help_command, "\n")
   stop("Missing argument: colDataFile. Provide the path to colData file which defines the experimental design\n")
+}
+
+if(!("gtfFile" %in% argsDF$V1)) {
+  cat(help_command, "\n")
+  stop("Missing argument: gtfFile Provide the path to GTF file\n")
 }
 
 if(!("caseSampleGroups") %in% argsDF$V1) {
@@ -246,12 +258,14 @@ if(!("selfContained" %in% argsDF$V1)) {
 reportFile = argsL$reportFile
 countDataFile = argsL$countDataFile
 colDataFile = argsL$colDataFile
+gtfFile = argsL$gtfFile
 caseSampleGroups = argsL$caseSampleGroups
 controlSampleGroups = argsL$controlSampleGroups
 
 runReport(reportFile = reportFile, 
           countDataFile = countDataFile, 
           colDataFile = colDataFile, 
+          gtfFile = gtfFile,
           caseSampleGroups = caseSampleGroups, 
           controlSampleGroups = controlSampleGroups, 
           covariates = covariates,
@@ -260,8 +274,3 @@ runReport(reportFile = reportFile,
           organism = organism,
           prefix = prefix, 
           selfContained = selfContained)
-
-t <- proc.time()
-ids <- rownames(DE[1:10000,])
-gProfileR::gconvert(query = ids, organism = 'celegans', target = 'ENSG')
-proc.time() - t 
