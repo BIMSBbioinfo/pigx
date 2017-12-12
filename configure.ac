@@ -68,6 +68,8 @@ AX_R_PACKAGE([scales])
 AX_R_PACKAGE([crosstalk])
 AX_R_PACKAGE([gage])
 AX_R_PACKAGE([gProfileR])
+AX_R_PACKAGE([rtracklayer])
+AX_R_PACKAGE([SummarizedExperiment])
   ])
 
 
