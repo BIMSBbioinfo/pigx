@@ -64,7 +64,7 @@ rule all:
   input: 
       star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-      #multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+      multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
       reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
       reports_salmon = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
       #bamCoverageBigWig =  expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample=SAMPLES)
