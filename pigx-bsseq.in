@@ -367,7 +367,11 @@ def cluster_run():
         }
 
     cluster_config_file = "cluster_conf.json"
-    open(cluster_config_file, 'w').write(json.dumps(cluster_conf))
+    with open(cluster_config_file, 'w') as outfile:
+        dumps = json.dumps(settings,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
 
     print("Commencing snakemake run submission to cluster", flush=True)
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
