@@ -20,95 +20,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-suppressPackageStartupMessages(expr = {
-  require("AnnotationHub")
-  require("rtracklayer")
-})
-
-
-#' Fetch a table from the UCSC browser and save it as a BED file
-#'
-#' The windows are color coded based on their score (methylation or differential
-#' methylation value).
-#'
-#' @param table.name a character indicating name of a UCSC table
-#' @param table.loc a character indicating path to the output BED file
-#' @param assembly a character indicating a genome version, e.g. "ce10""
-#'
-#' @return location of a output BED file which can be visualized in the UCSC browser
-#'
-#'
-#' @export
-#' @docType methods
-#' @rdname fetchTablefromUCSC
-fetchTableFromUCSC <- function (table.name, table.loc=NULL, assembly) {
-    if (is.null(table.loc))
-        table.loc <- paste0(table.name, assembly,".bed")
-
-    ## import local bed file if available
-    if (file.exists(table.loc)) {
-        message(paste0("Found ", table.name, " track at:\n", table.loc))
-        return table.loc
-    }
-
-    ## Otherwise: fetch it.
-    mySession = browserSession("UCSC")
-    genome(mySession) <- assembly
-    track.names <- trackNames(ucscTableQuery(mySession))
-
-    if (table.name %in% track.names) {
-        message(paste("Downloading ", table.name, "..."))
-
-        targetTrack <- track(mySession, table.name)
-        ## and write it to BED file
-        export.bed(object = targetTrack,
-                   con = table.loc,
-                   trackLine = FALSE)
-        message(paste("Wrote track to ", table.loc))
-        return table.loc
-    } else {
-        stop(paste("Could not find ", table.name, " for the given assembly <'",assembly,"'>."))
-    }
-}
-
-## this function tries to fetch the reference genes for the given assembly
-fetchRefGene <- function(refgenes.loc = NULL, assembly) {
-  if(is.null(refgenes.loc)) refgenes.loc <- paste0("refseq.genes.",assembly,".bed")
-  
-  ## import local bed file if available
-  if( file.exists(refgenes.loc) ) {
-    ## parse it 
-    message("Found RefSeq track at:")
-    return(refgenes.loc)
-    
-  } else {
-    message("Trying to fetch from AnnotationHub.\n")
-    ## else query it from AnnotationHub 
-    ah = AnnotationHub()
-    ## query refseq genes for assembly
-    refseq.q <- query(ah,c("refseq","genes",assembly))
-    ## either there is exactly one record, so fetch it
-    if(length(refseq.q) == 1) {
-      message("Found single RefSeq track, downloading...\n")
-      refGenes <- ah[[names(refseq.q)]]
-      ## and write it to BED file
-      export.bed(object = refGenes,
-                 con = refgenes.loc,
-                 trackLine=FALSE)
-      message("Written the RefSeq track to:")
-      return(refgenes.loc)
-    } else if ( length(refseq.q) == 0 ) { 
-        return fetchTableFromUCSC("refGene", refgenes.loc, assembly)
-    } else {
-      stop(paste("Could not find reference gene set for the given assembly <'",assembly,"'>." ))
-    }
-  }
-}
-
 args <- commandArgs(trailingOnly = TRUE)
 logFile     <- args[1]
 refgenesLoc <- args[2]
 assembly    <- args[3]
+scripts_dir <- args[4]
+
+source(paste0(scripts_dir, "fetch_procedures.R"))
 
 ## catch output and messages into log file
 out <- file(logFile, open = "wt")

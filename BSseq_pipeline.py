@@ -481,7 +481,7 @@ rule fetch_refGene:
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
     shell:
-        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly}"
+        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly} {DIR_scripts}"
 
 
 ## Annotation with gene features
@@ -553,7 +553,7 @@ rule annotation_diffmeth:
         methylDiff_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
         methylDiff_hyper_file = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
         methylDiff_hypo_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
-        ideoDMC_script = os.path.join(DIR_scripts,"ideoDMC.R")
+        scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
     run:
