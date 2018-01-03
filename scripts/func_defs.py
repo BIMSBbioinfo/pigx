@@ -20,6 +20,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+def files_for_sample(directory, proc, samples):
+    return [ expand(proc(directory, samples[sample]['files'], samples[sample]['SampleID'])) for sample in samples ]
+
 def list_files_rawQC(PATH, files, sampleID):
     if len(files) == 1:
         return [PATH+sampleID+"_fastqc.html"] #---- single end

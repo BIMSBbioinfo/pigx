@@ -104,66 +104,36 @@ targets = {
 
     '01-raw-qc': {
         'description': "Perform raw quality control.",
-        'files': [
-            expand (list_files_rawQC(DIR_rawqc,
-                                     config["SAMPLES"][sample]["files"],
-                                     config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(DIR_rawqc, list_files_rawQC, config['SAMPLES'])
     },
 
     # This rule is always executed, as trimming is a prerequisite for
     # subsequent rules
     '02-trimgalore': {
         'description': "Trim the reads.",
-        'files': [
-            expand (list_files_TG(DIR_trimmed,
-                                  config["SAMPLES"][sample]["files"],
-                                  config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(DIR_trimmed, list_files_TG, config['SAMPLES'])
     },
 
     # fastQC output files are not needed downstream and need to be
     # called explicitly.
     '03-posttrim-qc': {
         'description': "Perform quality control after trimming.",
-        'files': [
-            expand (list_files_posttrim_QC(DIR_posttrim_QC,
-                                           config["SAMPLES"][sample]["files"],
-                                           config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(DIR_posttrim_QC, list_files_posttrim_QC, config['SAMPLES'])
     },
 
     '04-mapping': {
         'description': "Align and map reads with Bismark.",
-        'files': [
-            expand (list_files_bismark(DIR_mapped,
-                                       config["SAMPLES"][sample]["files"],
-                                       config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(DIR_mapped, list_files_bismark, config['SAMPLES'])
     },
 
     '05-deduplication': {
         'description': "Deduplicate bam files.",
-        'files': [
-            expand (list_files_dedupe(DIR_deduped,
-                                      config["SAMPLES"][sample]["files"],
-                                      config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(DIR_deduped, list_files_dedupe, config['SAMPLES'])
     },
 
     '06-sorting': {
         'description': "Sort bam files.",
-        'files': [
-            expand (list_files_sortbam(DIR_sorted,
-                                       config["SAMPLES"][sample]["files"],
-                                       config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(DIR_sorted, list_files_sortbam, config['SAMPLES'])
     },
 
      # TODO: had to add this part to call bam_methCall for diff meth rule
