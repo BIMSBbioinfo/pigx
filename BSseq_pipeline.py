@@ -84,77 +84,124 @@ include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_def
 # "OUTPUT_FILES".  A different set of output files can be
 # selected to run fewer rules.
 
-all_output_files = {
-    # These are expensive one-time rules to prepare the genome.
-    'genome-prep-CT': GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
-    'genome-prep-GA': GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
+targets = {
+    # rule to print all rule descriptions
+    'help': {
+        'description': "Print all rules and their descriptions.",
+        'files': []
+    },
 
-    '01-raw-qc': [
-        expand (list_files_rawQC(DIR_rawqc,
-                                 config["SAMPLES"][sample]["files"],
-                                 config["SAMPLES"][sample]["SampleID"]))
-        for sample in config["SAMPLES"]],
+    # These are expensive one-time rules to prepare the genome.
+    'genome-prep-CT': {
+        'description': "C-to-T convert reference genome into Bisulfite analogue.",
+        'files': GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa"
+    },
+
+    'genome-prep-GA': {
+        'description': "G-to-A convert reference genome into Bisulfite analogue.",
+        'files': GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
+    },
+
+    '01-raw-qc': {
+        'description': "Perform raw quality control.",
+        'files': [
+            expand (list_files_rawQC(DIR_rawqc,
+                                     config["SAMPLES"][sample]["files"],
+                                     config["SAMPLES"][sample]["SampleID"]))
+            for sample in config["SAMPLES"]
+        ]
+    },
 
     # This rule is always executed, as trimming is a prerequisite for
     # subsequent rules
-    '02-trimgalore': [
-        expand (list_files_TG(DIR_trimmed,
-                              config["SAMPLES"][sample]["files"],
-                              config["SAMPLES"][sample]["SampleID"]))
-        for sample in config["SAMPLES"]],
+    '02-trimgalore': {
+        'description': "Trim the reads.",
+        'files': [
+            expand (list_files_TG(DIR_trimmed,
+                                  config["SAMPLES"][sample]["files"],
+                                  config["SAMPLES"][sample]["SampleID"]))
+            for sample in config["SAMPLES"]
+        ]
+    },
 
     # fastQC output files are not needed downstream and need to be
     # called explicitly.
-    '03-posttrim-qc': [
-        expand (list_files_posttrim_QC(DIR_posttrim_QC,
+    '03-posttrim-qc': {
+        'description': "Perform quality control after trimming.",
+        'files': [
+            expand (list_files_posttrim_QC(DIR_posttrim_QC,
+                                           config["SAMPLES"][sample]["files"],
+                                           config["SAMPLES"][sample]["SampleID"]))
+            for sample in config["SAMPLES"]
+        ]
+    },
+
+    '04-mapping': {
+        'description': "Align and map reads with Bismark.",
+        'files': [
+            expand (list_files_bismark(DIR_mapped,
                                        config["SAMPLES"][sample]["files"],
                                        config["SAMPLES"][sample]["SampleID"]))
-        for sample in config["SAMPLES"]],
+            for sample in config["SAMPLES"]
+        ]
+    },
 
-    '04-mapping': [
-        expand (list_files_bismark(DIR_mapped,
-                                   config["SAMPLES"][sample]["files"],
-                                   config["SAMPLES"][sample]["SampleID"]))
-        for sample in config["SAMPLES"]],
+    '05-deduplication': {
+        'description': "Deduplicate bam files.",
+        'files': [
+            expand (list_files_dedupe(DIR_deduped,
+                                      config["SAMPLES"][sample]["files"],
+                                      config["SAMPLES"][sample]["SampleID"]))
+            for sample in config["SAMPLES"]
+        ]
+    },
 
-    '05-deduplication': [
-        expand (list_files_dedupe(DIR_deduped,
-                                  config["SAMPLES"][sample]["files"],
-                                  config["SAMPLES"][sample]["SampleID"]))
-        for sample in config["SAMPLES"]],
-
-    '06-sorting': [
-        expand (list_files_sortbam(DIR_sorted,
-                                   config["SAMPLES"][sample]["files"],
-                                   config["SAMPLES"][sample]["SampleID"]))
-        for sample in config["SAMPLES"]],
+    '06-sorting': {
+        'description': "Sort bam files.",
+        'files': [
+            expand (list_files_sortbam(DIR_sorted,
+                                       config["SAMPLES"][sample]["files"],
+                                       config["SAMPLES"][sample]["SampleID"]))
+            for sample in config["SAMPLES"]
+        ]
+    },
 
      # TODO: had to add this part to call bam_methCall for diff meth rule
-    'bam-processing': [
-        expand (bam_processing(DIR_methcall,
-                               config["SAMPLES"][sample]["files"],
-                               sample))
-        for sample in config["SAMPLES"]],
+    'bam-processing': {
+        'description': "Process bam files.",
+        'files': [
+            expand (bam_processing(DIR_methcall,
+                                   config["SAMPLES"][sample]["files"],
+                                   sample))
+            for sample in config["SAMPLES"]
+        ]
+    },
 
-    # differential methylation calling
-    'diffmeth': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]],
+    'diffmeth': {
+        'description': "Perform differential methylation calling.",
+        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]]
+    },
 		            
-    # annotation diff meth cytosines
-    'annotation': [ DIR_annot+"_".join(x)+".sorted_"+config['general']['genome-version']+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]],
+    'annotation': {
+        'description': "Annotate differential methylation cytosines.",
+        'files': [ DIR_annot+"_".join(x)+".sorted_"+config['general']['genome-version']+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]]
+    },
 
-    # final report
-    # TODO: This needs to be editted once we determine what final reports we want to export!
-    'final-report': [
-        expand (Final(DIR_final,
-                      config["SAMPLES"][sample]["files"],
-                      VERSION,
-                      config["SAMPLES"][sample]["SampleID"]))
-        for sample in config["SAMPLES"]]
+    'final-report': {
+        'description': "Produce a comprehensive report.  This is the default target.",
+        'files': [
+            expand (Final(DIR_final,
+                          config["SAMPLES"][sample]["files"],
+                          VERSION,
+                          config["SAMPLES"][sample]["SampleID"]))
+            for sample in config["SAMPLES"]
+        ]
+    }
 }
 
 # Selected output files from the above set.
-selected_rules = ['final-report']
-OUTPUT_FILES = [all_output_files[rule] for rule in selected_rules]
+selected_targets = [ config['execution']['target'] ]
+OUTPUT_FILES = [targets[name]['files'] for name in selected_targets]
 
 #--- NICE gauges the computational burden, ranging from -19 to +19.
 #--- The more "nice" you are, the more you allow other processes to jump ahead of you
@@ -180,7 +227,11 @@ def nice(cmd):
 rule all:
     input:
         OUTPUT_FILES
-
+    run:
+        # Describe all targets if "help" was requested.
+        if config['execution']['target'] == 'help':
+            for key in sorted(targets.keys()):
+                print('{}:\n  {}'.format(key, targets[key]['description']))
 
 # ==========================================================================================
 # sort the bam file:

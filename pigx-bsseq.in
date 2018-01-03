@@ -80,8 +80,13 @@ Additional parameters to be passed down to snakemake, e.g.
     --dryrun    do not execute anything
     --forceall  re-run the whole pipeline""")
 
-args = parser.parse_args()
+parser.add_argument('--target', dest='target', default='final-report',
+                    help="""\
+Stop when the named target is completed instead of running the whole
+pipeline.  The default target is "final-report".  Pass "--target=help"
+to describe all available targets.""")
 
+args = parser.parse_args()
 
 
 # Generate config file
@@ -237,6 +242,8 @@ SETTINGSFILE as inputs."""
     # Load user overrides
     if settingsfile:
         update_config(settings,yaml.safe_load(open(settingsfile, 'r')))
+
+    settings['execution']['target'] = args.target
 
     # Load parameters specific to samples
     with open(samplesheet, 'r') as f:

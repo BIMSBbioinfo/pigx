@@ -94,8 +94,7 @@ To see all available options type the `--help` option
 ```sh
 $ pigx-bsseq --help
 
-usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--snakeparams SNAKEPARAMS]
-                  samplesheet
+usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--snakeparams SNAKEPARAMS] [--target TARGET] samplesheet
 
 PiGx BSseq Pipeline.
 
@@ -117,6 +116,11 @@ optional arguments:
   --snakeparams SNAKEPARAMS               Additional parameters to be passed down to snakemake, e.g.
                                               --dryrun    do not execute anything
                                               --forceall  re-run the whole pipeline
+  --target TARGET                         Stop when the named target is completed instead of running the whole
+                                          pipeline.  The default target is "final-report".  Pass "--target=help"
+                                          to describe all available targets.
+
+This pipeline was developed by the Akalin group at MDC in Berlin in 2017.
 ```
 
 # Input parameters
