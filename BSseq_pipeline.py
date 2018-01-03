@@ -96,42 +96,42 @@ targets = {
         'files': GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
     },
 
-    '01-raw-qc': {
+    'raw-qc': {
         'description': "Perform raw quality control.",
         'files': files_for_sample(list_files_rawQC)
     },
 
     # This rule is always executed, as trimming is a prerequisite for
     # subsequent rules
-    '02-trimgalore': {
+    'trimgalore': {
         'description': "Trim the reads.",
         'files': files_for_sample(list_files_TG)
     },
 
     # fastQC output files are not needed downstream and need to be
     # called explicitly.
-    '03-posttrim-qc': {
+    'posttrim-qc': {
         'description': "Perform quality control after trimming.",
         'files': files_for_sample(list_files_posttrim_QC)
     },
 
-    '04-mapping': {
+    'mapping': {
         'description': "Align and map reads with Bismark.",
         'files': files_for_sample(list_files_bismark)
     },
 
-    '05-deduplication': {
+    'deduplication': {
         'description': "Deduplicate bam files.",
         'files': files_for_sample(list_files_dedupe)
     },
 
-    '06-sorting': {
+    'sorting': {
         'description': "Sort bam files.",
         'files': files_for_sample(list_files_sortbam)
     },
 
      # TODO: had to add this part to call bam_methCall for diff meth rule
-    'bam-processing': {
+    'methyl-calling': {
         'description': "Process bam files.",
         'files': [
             expand (bam_processing(DIR_methcall,
