@@ -49,6 +49,12 @@ VERSION         = config['general']['genome-version']  #--- version of the genom
 
 bismark_cores   = str(config['tools']['bismark']['cores'])
 
+
+SAMPLE_IDS = list(config["SAMPLES"].keys())
+SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
+DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
+
 #-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
 
 FASTQC                         =  config['tools']['fastqc']['executable']
@@ -528,8 +534,6 @@ rule methseg_annotation:
 #----------------------------------- END METH SEGMENTATION
 #----------------------------------- START DIFF METH
 
-SAMPLE_IDS = list(config["SAMPLES"].keys())
-SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 
 
 def get_sampleids_from_treatment(treatment):
@@ -637,10 +641,6 @@ def get_fastq_name(full_name):
      print("Sth went wrong")
     
     return(output)
-
-
-SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
-DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
 
 def diff_meth_input(wc):
   sample = wc.prefix
