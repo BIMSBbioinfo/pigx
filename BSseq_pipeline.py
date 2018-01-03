@@ -185,14 +185,6 @@ OUTPUT_FILES = [targets[name]['files'] for name in selected_targets]
 def nice(cmd):
     return "nice -" + str(config['execution']['nice']) + " " + cmd
 
-#--- In case you want to debug the code with interactive commands:
-# import IPython;
-# IPython.embed()
-# print("Executing job to produce the following files: ")
-# print("OUTPUT_FILES=")
-# for x in OUTPUT_FILES: print( x)
-#-------
-
 # ==============================================================================================================
 #
 #                                         BEGIN RULES    
