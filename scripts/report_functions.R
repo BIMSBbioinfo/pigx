@@ -169,7 +169,7 @@ sink(out,type = "output")
 sink(out, type = "message")
 
 cat(paste(
-  Sys.time(),"\n\n",
+  format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { Sys.getenv("SOURCE_DATE_EPOCH") } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S"),"\n\n",
   "Rendering report:",basename(argsL$reportFile),"\n",
   "from template:",basename(argsL$outFile),"\n",
   "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"

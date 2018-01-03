@@ -10,7 +10,7 @@ output:
     self_contained: TRUE
     includes:
       in_header: pigx_bsseq_logo.html
-date: "`r Sys.Date()`"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { Sys.getenv("SOURCE_DATE_EPOCH") } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 params:
   inputfiles: ["methylation_calls/sampleA_1_val_1_bt2.deduped.sorted_CpG.txt","methylation_calls/sampleBse_se_bt2.deduped.sorted_CpG.txt"]
