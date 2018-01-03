@@ -402,7 +402,10 @@ else:
     pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
 
 if not os.getenv('PIGX_BSSEQ_UGLY'):
-    print(open(pretty, 'r').read())
+    # Ensure that this is printed without errors, even if the user's
+    # locale is not a UTF-8 locale.
+    p = open(pretty, 'r', encoding='utf-8').read()
+    sys.stdout.buffer.write(p.encode('utf-8'))
 
 if config['execution']['submit-to-cluster']:
     cluster_run()
