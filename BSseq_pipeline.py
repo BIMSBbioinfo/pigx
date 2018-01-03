@@ -49,24 +49,14 @@ VERSION         = config['general']['genome-version']  #--- version of the genom
 
 bismark_cores   = str(config['tools']['bismark']['cores'])
 
-#-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
-
-FASTQC                         =  config['tools']['fastqc']['executable']
-TRIMGALORE                     =  config['tools']['trim-galore']['executable']
-CUTADAPT                       =  config['tools']['cutadapt']['executable']
-BISMARK_GENOME_PREPARATION     =  config['tools']['bismark-genome-preparation']['executable']
-BISMARK                        =  config['tools']['bismark']['executable']
-BOWTIE2                        =  config['tools']['bowtie2']['executable']
-DEDUPLICATE_BISMARK            =  config['tools']['deduplicate-bismark']['executable']
-SAMTOOLS                       =  config['tools']['samtools']['executable']
-RSCRIPT                        =  config['tools']['R']['Rscript']
-
+def prog(name):
+    config['tools'][name]['executable']
 
 def generateReport(input, output, params, log, reportSubDir):
     dumps = json.dumps(dict(params.items()),sort_keys=True,
                        separators=(",",":"), ensure_ascii=True)
 
-    cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+    cmd =   "{prog('Rscript')} {DIR_scripts}/report_functions.R"
     cmd +=  " --reportFile={input.template}"
     cmd +=  " --outFile={output.report}"
     cmd +=  " --finalReportDir=" + os.path.join(DIR_final,reportSubDir)
@@ -213,7 +203,7 @@ rule sortbam_se:
         DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice("{SAMTOOLS} sort {input} -o {output}")
+        nice("{prog('samtools')} sort {input} -o {output}")
 #-----------------------
 rule sortbam_pe:
     input:
@@ -222,7 +212,7 @@ rule sortbam_pe:
         DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice("{SAMTOOLS} sort {input} -o {output}")
+        nice("{prog('samtools')} sort {input} -o {output}")
 
 # ==========================================================================================
 # deduplicate the bam file:
@@ -234,12 +224,12 @@ rule deduplication_se:
         DIR_deduped+"{sample}_se_bt2.deduped.bam"
     params:
         bam="--bam ",
-        sampath="--samtools_path "+SAMTOOLS
+        sampath="--samtools_path "+prog('samtools')
     log:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
-        nice("{SAMTOOLS} rmdup {input}  {output} > {log} 2>&1 ")
+        nice("{prog('samtools')} rmdup {input}  {output} > {log} 2>&1 ")
 #-----------------------
 rule deduplication_pe:
     input:
@@ -250,7 +240,7 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
-        nice("{SAMTOOLS} fixmate {input}  {output} > {log} 2>&1 ")
+        nice("{prog('samtools')} fixmate {input}  {output} > {log} 2>&1 ")
 
 # ==========================================================================================
 # align and map:
@@ -269,15 +259,15 @@ rule bismark_se:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(prog('bowtie2')) ,
         useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
+        samtools    = "--samtools_path "+ os.path.dirname(prog('samtools')),
         tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"{sample}_bismark_se_mapping.log"
     message: fmt("Mapping single-end reads to genome {VERSION}")
     shell:
-        nice("{BISMARK} {params} --multicore "+bismark_cores+" {input.fqfile} > {log}  2>&1 ")
+        nice("{prog('bismark')} {params} --multicore "+bismark_cores+" {input.fqfile} > {log}  2>&1 ")
 
 #-----------------------
 
@@ -297,15 +287,15 @@ rule bismark_pe:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(prog('bowtie2')) ,
         useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
+        samtools    = "--samtools_path "+ os.path.dirname(prog('samtools')),
         tempdir     = "--temp_dir "+DIR_mapped
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: fmt("Mapping paired-end reads to genome {VERSION}.")
     shell:
-        nice("{BISMARK} {params} --multicore "+bismark_cores+" -1 {input.fin1} -2 {input.fin2} > {log} 2>&1 ")
+        nice("{prog('bismark')} {params} --multicore "+bismark_cores+" -1 {input.fin1} -2 {input.fin2} > {log} 2>&1 ")
 
 
 # ==========================================================================================
@@ -319,14 +309,14 @@ rule bismark_genome_preparation:
         GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
     params:
         bismark_genome_preparation_args = config['tools']['bismark-genome-preparation']['args'],
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(prog('bowtie2')) ,
         useBowtie2 = "--bowtie2 ",
         verbose = "--verbose "
     log:
         'bismark_genome_preparation_'+VERSION+'.log'
     message: fmt("Converting {VERSION} Genome into Bisulfite analogue")
     shell:
-        nice("{BISMARK_GENOME_PREPARATION} {params} {input} > {log} 2>&1 ")
+        nice("{prog('bismark-genome-preparation')} {params} {input} > {log} 2>&1 ")
 
 # ==========================================================================================
 # post-trimming quality control
@@ -344,7 +334,7 @@ rule fastqc_after_trimming_se:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed single-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
+        nice("{prog('fastqc')} {params.outdir} {input} > {log} 2>&1 ")
 #--------
 rule fastqc_after_trimming_pe:
     input:
@@ -362,7 +352,7 @@ rule fastqc_after_trimming_pe:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed paired-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
+        nice("{prog('fastqc')} {params.outdir} {input} > {log} 2>&1 ")
 
 # ==========================================================================================
 # trim the reads
@@ -378,12 +368,12 @@ rule trimgalore_se:
        outdir = "--output_dir "+DIR_trimmed,
        phred = "--phred33",
        gz = "--gzip",
-       cutadapt = "--path_to_cutadapt "+CUTADAPT,
+       cutadapt = "--path_to_cutadapt "+prog('cutadapt'),
     log:
        DIR_trimmed+"{sample}.trimgalore.log"
     message: fmt("Trimming raw single-end read data from {input}")
     shell:
-       nice("{TRIMGALORE} {params} {input.file} > {log} 2>&1 ")
+       nice("{prog('trim-galore')} {params} {input.file} > {log} 2>&1 ")
 
 #-----------------------
 rule trimgalore_pe:
@@ -400,14 +390,14 @@ rule trimgalore_pe:
         outdir         = "--output_dir "+DIR_trimmed,
         phred          = "--phred33",
         gz             = "--gzip",
-        cutadapt       = "--path_to_cutadapt "+CUTADAPT,
+        cutadapt       = "--path_to_cutadapt "+prog('cutadapt'),
         paired         = "--paired"
     log:
         DIR_trimmed+"{sample}.trimgalore.log"
     message:
         fmt("Trimming raw paired-end read data from {input}")
     shell:
-        nice("{TRIMGALORE} {params} {input.files} > {log} 2>&1 ")
+        nice("{prog('trim-galore')} {params} {input.files} > {log} 2>&1 ")
 
 # ==========================================================================================
 # raw quality control
@@ -425,7 +415,7 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         DIR_rawqc+"{sample}_fastqc.log"
     message: fmt("Quality checking raw read data from {input}")
     shell:
-        nice("{FASTQC} {params}  {input} > {log} 2>&1 ")
+        nice("{prog('fastqc')} {params}  {input} > {log} 2>&1 ")
 
 
 
@@ -500,7 +490,7 @@ rule fetch_refGene:
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
     shell:
-        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly}"
+        "{prog('Rscript')} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly}"
 
 
 ## Annotation with gene features
@@ -665,7 +655,7 @@ rule integrateFinalReport:
     params:
        diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
     shell:
-      "{RSCRIPT} {DIR_scripts}/integrate2finalreport.R {wildcards.prefix} {wildcards.assembly} {DIR_final} {params.diffmeth}"
+      "{prog('Rscript')} {DIR_scripts}/integrate2finalreport.R {wildcards.prefix} {wildcards.assembly} {DIR_final} {params.diffmeth}"
 
 
 ## Final Report
@@ -687,7 +677,7 @@ rule final_report:
         "   report    : {output.finalreport}"
         
     run:
-        cmd  =  "{RSCRIPT} {DIR_scripts}/multireport_functions.R"  
+        cmd  =  "{prog('Rscript')} {DIR_scripts}/multireport_functions.R"
         cmd +=  " --index={input.index}"
         cmd +=  " --finalOutput={output.finalreport}"
         cmd +=  " --finalReportDir={params.finalreportdir}"
