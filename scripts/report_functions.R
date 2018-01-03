@@ -92,7 +92,7 @@ render2Markdown <- function(reportFile,
   
   output_format = rmarkdown::all_output_formats(reportFile, 'UTF-8')
   
-  if(!dir.exists(finalReportDir)) dir.create(finalReportDir,recursive = FALSE)
+  if(!dir.exists(finalReportDir)) dir.create(finalReportDir, recursive = TRUE)
   
   if(is.null(report.params)) report.params <- list()
 

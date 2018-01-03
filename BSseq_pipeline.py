@@ -569,8 +569,10 @@ rule annotation_diffmeth:
 
 rule integrateFinalReport:
     input:
-       diffmeth = diff_meth_input
+       diffmeth = diff_meth_input,
+       methseg_annotation_outputs = rules.methseg_annotation.output
     output:
+       # TODO: generate a final_knitr_meta.rds instead
        touch(DIR_final + "{prefix}_{assembly}_integrateDiffMeth2FinalReport.txt")
     log:
        DIR_final + "{prefix}_{assembly}_integrateFinalReport.log"
@@ -583,7 +585,6 @@ rule integrateFinalReport:
 ## Final Report
 rule final_report:
     input:  
-        rules.methseg_annotation.output,
         rules.integrateFinalReport.output,
         index       = os.path.join(DIR_templates,"index.Rmd"),   
         references  = os.path.join(DIR_templates,"references.Rmd"),
