@@ -20,10 +20,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-def files_for_sample(directory, proc, samples):
-    return [ expand(proc(directory, samples[sample]['files'], samples[sample]['SampleID'])) for sample in samples ]
+def files_for_sample(proc):
+    return [ expand(proc(config['SAMPLES'][sample]['files'], config['SAMPLES'][sample]['SampleID'])) for sample in config['SAMPLES'] ]
 
-def list_files_rawQC(PATH, files, sampleID):
+def list_files_rawQC(files, sampleID):
+    PATH = DIR_rawqc
     if len(files) == 1:
         return [PATH+sampleID+"_fastqc.html"] #---- single end
     elif len(files) == 2:
@@ -32,7 +33,8 @@ def list_files_rawQC(PATH, files, sampleID):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_TG(PATH, files, sampleID):
+def list_files_TG(files, sampleID):
+    PATH = DIR_trimmed
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed.fq.gz"] #---- single end
     elif len(files) == 2:
@@ -41,7 +43,8 @@ def list_files_TG(PATH, files, sampleID):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_posttrim_QC(PATH, files, sampleID):
+def list_files_posttrim_QC(files, sampleID):
+    PATH = DIR_posttrim_QC
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed_fastqc.html" ] #---- single end
     elif len(files) == 2:
@@ -49,7 +52,8 @@ def list_files_posttrim_QC(PATH, files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_bismark(PATH, files, sampleID):
+def list_files_bismark(files, sampleID):
+    PATH = DIR_mapped
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed_bismark_bt2_SE_report.txt",
                 PATH+sampleID+"_trimmed_bismark_bt2.bam"] #---- single end
@@ -59,7 +63,8 @@ def list_files_bismark(PATH, files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_dedupe(PATH, files, sampleID):
+def list_files_dedupe(files, sampleID):
+    PATH = DIR_deduped
     if len(files) == 1:
         return [PATH+sampleID+"_se_bt2.deduped.bam"] #---- single end
     elif len(files) == 2:
@@ -67,7 +72,8 @@ def list_files_dedupe(PATH, files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_sortbam(PATH, files, sampleID):
+def list_files_sortbam(files, sampleID):
+    PATH = DIR_sorted
     if len(files) == 1:
         return [PATH+sampleID+"_se_bt2.deduped.sorted.bam"] #---- single end
     elif len(files) == 2:
