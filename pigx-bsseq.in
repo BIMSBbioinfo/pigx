@@ -375,7 +375,7 @@ def cluster_run():
 
     cluster_config_file = "cluster_conf.json"
     with open(cluster_config_file, 'w') as outfile:
-        dumps = json.dumps(settings,
+        dumps = json.dumps(cluster_conf,
                            indent=4, sort_keys=True,
                            separators=(",",": "), ensure_ascii=True)
         outfile.write(dumps)
