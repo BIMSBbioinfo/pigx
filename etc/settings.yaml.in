@@ -50,6 +50,7 @@ tools:
   samtools:
     executable: @SAMTOOLS@
     args: ""
-  Rscript:
-    executable: @RSCRIPT@
+  R:
+    Rscript: @RSCRIPT@
+    executable: @R@
     args: ""
