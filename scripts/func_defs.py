@@ -128,3 +128,75 @@ def Final(PATH, files, assembly, sampleID):
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_final.nb.html"] #---- paired end
 
         
+def get_fastq_name(full_name):
+    # single end
+    find_se_inx=full_name.find('_se_bt2')
+    # paired-end
+    find_pe_inx=full_name.find('_1_val_1_bt2')
+
+    if(find_se_inx>=0):
+      output=full_name[:find_se_inx]
+    elif(find_pe_inx>=0):
+     output=full_name[:find_pe_inx]
+    else:
+     print("Sth went wrong")
+
+    return(output)
+
+def diff_meth_input(wc):
+  sample = wc.prefix
+  sampleid = get_fastq_name(sample)
+  treatment_of_sampleid = SAMPLE_TREATMENTS_DICT[ sampleid ]
+
+  mylist = []
+  for x in DIFF_METH_TREATMENT_PAIRS:
+    if treatment_of_sampleid in x:
+      name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
+      mylist.append(DIR_annot + name_of_dir)
+  return(mylist)
+
+def get_sampleids_from_treatment(treatment):
+  treatments = treatment.split("_")
+  sampleids_list = []
+  for t in treatments:
+    sampleids = [SAMPLE_IDS[i] for i, x in enumerate(SAMPLE_TREATMENTS) if x == t]
+    sampleids_list.append(sampleids)
+
+  sampleids_list = list(sum(sampleids_list, []))
+  return(sampleids_list)
+
+# For only CpG context
+def diffmeth_input_function(wc):
+  treatments = wc.treatment
+  sampleids = get_sampleids_from_treatment(treatments)
+
+  inputfiles = []
+  for sampleid in sampleids:
+    fqname = config["SAMPLES"][sampleid]['fastq_name']
+    if len(fqname)==1:
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.deduped.sorted_CpG.txt")]
+    elif len(fqname)==2:
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.deduped.sorted_CpG.txt")]
+    inputfiles.append(inputfile)
+
+  inputfiles = list(sum(inputfiles, []))
+  return(inputfiles)
+
+
+def generateReport(input, output, params, log, reportSubDir):
+    dumps = json.dumps(dict(params.items()),sort_keys=True,
+                       separators=(",",":"), ensure_ascii=True)
+
+    cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+    cmd +=  " --reportFile={input.template}"
+    cmd +=  " --outFile={output.report}"
+    cmd +=  " --finalReportDir=" + os.path.join(DIR_final,reportSubDir)
+    cmd +=  " --report.params={dumps:q}"
+    cmd +=  " --logFile={log}"
+    shell(cmd, dumps)
+
+#--- NICE gauges the computational burden, ranging from -19 to +19.
+#--- The more "nice" you are, the more you allow other processes to jump ahead of you
+#--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
+def nice(cmd):
+    return "nice -" + str(config['execution']['nice']) + " " + cmd
