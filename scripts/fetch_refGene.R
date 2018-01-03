@@ -26,10 +26,53 @@ suppressPackageStartupMessages(expr = {
 })
 
 
+#' Fetch a table from the UCSC browser and save it as a BED file
+#'
+#' The windows are color coded based on their score (methylation or differential
+#' methylation value).
+#'
+#' @param table.name a character indicating name of a UCSC table
+#' @param table.loc a character indicating path to the output BED file
+#' @param assembly a character indicating a genome version, e.g. "ce10""
+#'
+#' @return location of a output BED file which can be visualized in the UCSC browser
+#'
+#'
+#' @export
+#' @docType methods
+#' @rdname fetchTablefromUCSC
+fetchTableFromUCSC <- function (table.name, table.loc=NULL, assembly) {
+    if (is.null(table.loc))
+        table.loc <- paste0(table.name, assembly,".bed")
+
+    ## import local bed file if available
+    if (file.exists(table.loc)) {
+        message(paste0("Found ", table.name, " track at:\n", table.loc))
+        return table.loc
+    }
+
+    ## Otherwise: fetch it.
+    mySession = browserSession("UCSC")
+    genome(mySession) <- assembly
+    track.names <- trackNames(ucscTableQuery(mySession))
+
+    if (table.name %in% track.names) {
+        message(paste("Downloading ", table.name, "..."))
+
+        targetTrack <- track(mySession, table.name)
+        ## and write it to BED file
+        export.bed(object = targetTrack,
+                   con = table.loc,
+                   trackLine = FALSE)
+        message(paste("Wrote track to ", table.loc))
+        return table.loc
+    } else {
+        stop(paste("Could not find ", table.name, " for the given assembly <'",assembly,"'>."))
+    }
+}
+
 ## this function tries to fetch the reference genes for the given assembly
-fetchRefGene <- function(refgenes.loc = NULL,
-                         assembly) {
-  
+fetchRefGene <- function(refgenes.loc = NULL, assembly) {
   if(is.null(refgenes.loc)) refgenes.loc <- paste0("refseq.genes.",assembly,".bed")
   
   ## import local bed file if available
@@ -54,31 +97,11 @@ fetchRefGene <- function(refgenes.loc = NULL,
                  trackLine=FALSE)
       message("Written the RefSeq track to:")
       return(refgenes.loc)
-      
     } else if ( length(refseq.q) == 0 ) { 
-      message("Trying to fetch from UCSC table browser.\n")
-      ## or there is none, 
-      ## so we check with rtracklayer for the latest ucsc data
-      mySession = browserSession("UCSC")
-      genome(mySession) <- assembly
-      track.names <- trackNames(ucscTableQuery(mySession))
-      # I am interested in the refGene track 
-      if("refGene" %in% track.names) {
-        message("Found single RefSeq track, downloading...\n")
-        # fetch it as a GRanges object 
-        targetTrack <- track(mySession,"refGene")
-        ## and write it to BED file
-        export.bed(object = targetTrack,
-                   con = refgenes.loc,
-                   trackLine=FALSE)
-        
-        message("Written the RefSeq track to:")
-        return(refgenes.loc)
-      } 
+        return fetchTableFromUCSC("refGene", refgenes.loc, assembly)
     } else {
       stop(paste("Could not find reference gene set for the given assembly <'",assembly,"'>." ))
     }
-    
   }
 }
 

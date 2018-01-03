@@ -120,60 +120,6 @@ for CpG islands and shores.
 
 ```{r annotate with refseq genes}
 
-#' Fetch a table from the UCSC browser and save it as a BED file
-#' 
-#' The windows are color coded based on their score (methylation or differential
-#' methylation value).
-#' 
-#' @param table.name a character indicating name of a UCSC table
-#' @param table.loc a character indicating path to the output BED file
-#' @param assembly a character indicating a genome version, e.g. "ce10""
-#' 
-#' @return location of a output BED file which can be visualized in the UCSC browser 
-#' 
-#' 
-#' @export
-#' @docType methods
-#' @rdname fetchTablefromUCSC
-fetchTablefromUCSC <- function(table.name,
-                       table.loc = NULL,
-                       assembly){
-  
-      if(is.null(table.loc)) table.loc <- paste0(table.name, assembly,".bed")
-  
-      ## import local bed file if available
-      if( file.exists(table.loc) ) {
-          ## parse it 
-          message(paste0("Found ",table.name," track at:\n", table.loc))
-          return(table.loc)
-    
-      } else {
-        message("Trying to fetch from UCSC table browser.\n")
-        ## so we check with rtracklayer for the latest ucsc data
-        require(rtracklayer)
-        mySession = browserSession("UCSC")
-        genome(mySession) <- assembly
-        track.names <- trackNames(ucscTableQuery(mySession))
-        
-        if(table.name %in% track.names) {
-          message(paste0("Found single ",table.name," track, downloading...\n"))
-          # fetch it as a GRanges object 
-          targetTrack <- track(mySession,table.name)
-          ## and write it to BED file
-          export.bed(object = targetTrack,
-                     con = table.loc,
-                     trackLine=FALSE)
-          
-          message(paste0("Written the RefSeq track to:\n",table.loc))
-          return(table.loc)
-        } else {
-          print(paste("Could not find ",table.name," for the given assembly <'",assembly,"'>." ))
-          return(NA)
-        }
-      }
-}
-
-
 fetched.refgenes = fetchTablefromUCSC("refGene", table.loc = refgenes.file, assembly)
 
 cpgi.file <- paste0("cpgi.",assembly,".bed")
