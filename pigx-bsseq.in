@@ -384,6 +384,7 @@ for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
 
 
 # Run snakemake!
+import subprocess
 
 # Ensure that we use the configured Pandoc, pandoc-citeproc
 # ...and the configured Rscript
@@ -423,6 +424,14 @@ if config['execution']['submit-to-cluster']:
     else:
         contact_email_string = "-m abe -M %s" % config['execution']['cluster']['contact-email']
 
+    try:
+        subprocess.call(["qsub", "-help"])
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            print("Error: Your system does not seem to support cluster submission.\nReason: Could not find qsub executable.", file=sys.stderr)
+            exit(1)
+        else:
+            raise
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
     command += [
         "--cluster-config={}".format(cluster_config_file),
@@ -438,5 +447,4 @@ if args.dry_run:
 if args.graph:
     command.append("--dag")
 
-import subprocess
 subprocess.run(command)
