@@ -120,10 +120,10 @@ for CpG islands and shores.
 
 ```{r annotate with refseq genes}
 source(paste0(params$scripts_dir, "fetch_procedures.R"))
-fetched.refgenes = fetchTablefromUCSC("refGene", table.loc = refgenes.file, assembly)
+fetched.refgenes = fetchTableFromUCSC("refGene", table.loc = refgenes.file, assembly)
 
 cpgi.file <- paste0("cpgi.",assembly,".bed")
-fetched.cpgi = fetchTablefromUCSC("cpgIslandExt", table.loc = cpgi.file, assembly)
+fetched.cpgi = fetchTableFromUCSC("cpgIslandExt", table.loc = cpgi.file, assembly)
 
 ```
 
