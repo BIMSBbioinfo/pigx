@@ -1,0 +1,10 @@
+* Subtrees
+
+This repository includes the pipeline repositories as git subtrees.  The following commands were used to add them:
+
+#+BEGIN_SRC sh
+for pipeline in bsseq rnaseq chipseq crispr; do
+  git remote add $pipeline git@github.com:BIMSBbioinfo/pigx_$pipeline.git
+  git subtree add --prefix=pipelines/$pipeline/ $pipeline master
+done
+#+END_SRC
