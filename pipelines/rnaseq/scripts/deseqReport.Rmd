@@ -1,0 +1,436 @@
+---
+title: "PiGx-RNAseq - DESeq2 Report"
+author: "BIMSB Bioinformatics Platform"
+date: "`r Sys.time()`"
+params: 
+  countDataFile: ''
+  colDataFile: ''
+  gtfFile: ''
+  caseSampleGroups: ''
+  controlSampleGroups: '' 
+  covariates: ''
+  geneSetsFolder: ''
+  prefix: ''
+  workdir: '.'
+  organism: ''
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+library(ggplot2)
+library(ggrepel)
+library(DESeq2)
+library(DT)
+library(pheatmap)
+library(corrplot)
+library(reshape2)
+library(plotly)
+library(scales)
+library(crosstalk)
+library(gage)
+library(gProfileR)
+library(rtracklayer)
+library(SummarizedExperiment)
+```
+
+# Description
+
+This report script runs DESeq2 differential expression analysis tool and produces tables and figures that summarize the similarities and differences
+ between given groups of case-control samples at a global scale. Along with the results, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.  
+
+# Input Settings
+```{r printInputSettings}
+
+countDataFile <- params$countDataFile
+colDataFile <- params$colDataFile
+gtfFile <- params$gtfFile
+caseSampleGroups <- params$caseSampleGroups
+controlSampleGroups <- params$controlSampleGroups
+covariates <- params$covariates
+prefix <- params$prefix
+workdir <- params$workdir
+geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
+organism <- params$organism
+
+#gProfiler tool needs internet access to work. So, go analysis module is conditional
+runGO <- curl::has_internet() 
+
+inputParameterDesc <- c('Count Data File',
+                     'Experiment Data File',
+                     'Case sample groups',
+                     'Control sample groups', 
+                     'Covariates to control for',
+                     'Gene Sets Folder',
+                     'Prefix for output files',
+                     'Working directory',
+                     'Analyzed organism'
+                     )
+inputParameterValues <- c(countDataFile,
+                          colDataFile,
+                          caseSampleGroups,
+                          controlSampleGroups, 
+                          covariates,
+                          geneSetsFolder,
+                          prefix,
+                          workdir,
+                          organism)
+inputSettings <- data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = 9,
+                         dom = 't'))
+```
+
+```{r prepare_inputs_import_GTF}
+gtfData <- rtracklayer::import.gff(con = gtfFile, format = 'gtf')
+caseSamples <- gsub(' ', '', unlist(strsplit(x = caseSampleGroups, split = ',')))
+controlSamples <- gsub(' ', '', unlist(strsplit(x = controlSampleGroups, split = ',')))
+covariates <- gsub(' ', '', unlist(strsplit(x = covariates, split = ',')))
+#read colData and countData files
+colData = read.table(colDataFile, header=T, row.names = 1, sep='\t', stringsAsFactors = T, check.names = FALSE)
+countData = read.table(countDataFile, header=TRUE, row.names=1, sep='\t', stringsAsFactors = T, check.names = FALSE)
+
+#subset colData and countData - only keep case and control samples
+colData <- colData[colData$group %in% c(caseSamples, controlSamples),]
+countData <- subset(countData, select = rownames(colData))
+
+#split samples as case/control for deseq
+colData$AnalysisGroup <- 'Control'
+colData[colData$group %in% caseSamples,]$AnalysisGroup <- 'Case'
+```
+
+```{r run_deseq2}
+
+mapIdsToNames <- function(ids, gtfData) {
+  #first figure out if the given ids are transcript or gene ids
+  transcripts <- gtfData[gtfData$type == 'transcript']
+  df <- unique(data.frame('transcript_id' = transcripts$transcript_id, 
+                   'gene_id' = transcripts$gene_id, 
+                   'gene_name' = transcripts$gene_name, stringsAsFactors = FALSE))
+  m <- apply(head(df[,1:2], 1000), 2, function(x) sum(x %in% ids))
+  #then map the ids to gene names
+  if(m['transcript_id'] > m['gene_id']){
+    return(df[match(ids, df$transcript_id),]$gene_name)
+  } else {
+    return(df[match(ids, df$gene_id),]$gene_name)
+  }
+}
+
+if(length(covariates) > 0){
+  designFormula <- paste("~", paste(covariates, collapse = ' + '), "+ AnalysisGroup")
+} else {
+  designFormula <- "~ AnalysisGroup"
+}
+
+message("design formula:", designFormula)
+dds <- DESeq2::DESeqDataSetFromMatrix(countData = countData, colData = colData, design = stats::as.formula(designFormula))
+dds <- dds[ rowSums(counts(dds)) > 1, ]
+dds <- DESeq2::DESeq(dds)
+vsd <- DESeq2::varianceStabilizingTransformation(dds)
+vsd.counts = SummarizedExperiment::assay(vsd)
+
+DEtable = DESeq2::results(dds, contrast = c("AnalysisGroup", 'Case', 'Control'))
+DEtable <- DEtable[order(DEtable$padj),]
+DE <- as.data.frame(DEtable)
+
+DE$geneName <- mapIdsToNames(rownames(DE), gtfData)
+
+write.table(x = vsd.counts, 
+            file = file.path(workdir, paste0(prefix, '.normalized_counts.tsv')), 
+            quote = FALSE, sep = '\t')
+write.table(x = DE, 
+            file = file.path(workdir, paste0(prefix, '.deseq_results.tsv')), 
+            quote = FALSE, sep = '\t')
+
+```
+
+# Differential Expression Analysis
+
+## Differential Expression Results Table (unfiltered)
+```{r write_DEtable}
+DT::datatable(DE, 
+          extensions = c('Buttons', 'FixedColumns'), 
+          options = list(fixedColumns = TRUE, 
+                         scrollX = TRUE,
+                         dom = 'Bfrtip',
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
+          filter = 'bottom'
+          )
+```
+
+
+# Diagnostic Plots 
+
+## Number of reads assigned to genes 
+```{r plot_readcounts}
+readCounts <- as.data.frame(colSums(countData))
+readCounts$group <- colData[rownames(readCounts),]$group
+readCounts$sample <- rownames(readCounts)
+colnames(readCounts)[1] <- 'readCounts'
+
+quantiles <- quantile(readCounts$readCounts, c(1:20)/20)[c(1,5,15,19)]
+
+ggplot(readCounts, aes(x = sample, y = readCounts)) + geom_bar(aes(fill = group), stat = 'identity') + 
+  geom_hline(yintercept = as.numeric(quantiles), color = 'red') +
+  geom_label_repel(data = data.frame(x = 0, y = as.numeric(quantiles)), aes(x = x, y = y, label = names(quantiles))) + theme(legend.position = 'bottom') + scale_y_continuous(labels = scales::comma) +  coord_flip()
+```
+
+## p-value histogram
+```{r plot_pvalhistogram}
+ggplot(data = DE, aes(x = pvalue)) + geom_histogram(bins = 100)
+```
+
+## MA plot
+```{r plot_MA}
+DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
+```
+
+```{r computePCAplots} 
+plotGroups <- c(covariates, 'AnalysisGroup', 'group')
+pcaPlots <- lapply(plotGroups, function(g) {
+  DESeq2::plotPCA(object = vsd, intgroup = g)
+})
+```
+
+## PCA plots  {.tabset}
+```{r plotPCA, results='asis', echo = FALSE}
+for (i in 1:length(pcaPlots)) {
+  cat("### ",plotGroups[i],"\n")
+  print(pcaPlots[[i]])
+  cat('\n\n')
+}
+```
+
+## Correlation Plot
+```{r plot_corr}
+M <- stats::cor(vsd.counts)
+corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
+```
+
+## Heatmaps 
+
+### Top 100 most highly variable genes 
+```{r plot_heatmap}
+select <- na.omit(names(sort(apply(X = vsd.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100])
+df <- as.data.frame(colData[,c("group","AnalysisGroup")])
+pheatmap::pheatmap(vsd.counts[select,], 
+         cluster_rows=TRUE, 
+         show_rownames=FALSE, 
+         cluster_cols=TRUE, 
+         annotation_col=df, 
+         main = 'Heatmap of the Normalized Expression Values (VST) of \n Top 100 Genes with highest variance across samples')
+```
+
+# Exploratory Plots and Tables
+
+## Summary of up/down regulated genes 
+```{r plot_summary}
+#Idea: use linked views and plotly?
+ggplot(DE, aes(x = log2FoldChange, y = -log10(padj))) + geom_point(aes(color = padj < 0.1))
+
+
+filterUP <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange >= log2fc & df$padj <= p,])}
+filterDOWN <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange < -log2fc & df$padj <= p,])}
+
+pVals <- c(0.001, 0.01, 0.05, 0.1)
+fcVals <- c(0:(max(DE$log2FoldChange)+1))
+
+summary <- do.call(rbind, lapply(pVals, function(p) {
+  do.call(rbind, lapply(fcVals, function(f){
+    up <- filterUP(DE, f, p)
+    down <- filterDOWN(DE, f, p)
+    return(data.frame("log2FoldChange" = f, "padj" = p, 
+                      "upRegulated" = up, "downRegulated" = down))
+  }))
+}))
+
+mdata <- melt(summary, id.vars = c('log2FoldChange', 'padj'))
+
+p <- ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = variable), stat = 'identity', position = 'dodge') + facet_grid(~ padj) + theme(legend.position = 'bottom', legend.title = element_blank()) + labs(title = 'Number of differentially up/down regulated genes', subtitle = 'based on different p-value and log2foldChange cut-off values')
+
+plotly::ggplotly(p)
+```
+
+## Interactive box plots of genes with significant differential expression (padj < 0.1 & abs(log2foldchange) > 1) 
+```{r plot_interactive_boxplots}
+select <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & abs(DE$log2FoldChange) > 1,])
+if(length(select) > 1) {
+  expressionLevels <- reshape2::melt(vsd.counts[select,])
+  colnames(expressionLevels) <- c('geneId', 'sampleName', 'expressionLevel')
+  
+  expressionLevels$group <- colData[expressionLevels$sampleName,]$group
+  expressionLevels$AnalysisGroup <- colData[expressionLevels$sampleName,]$AnalysisGroup
+  
+  matchIds <- match(expressionLevels$geneId, rownames(DE))
+  expressionLevels$padj <- DE[matchIds,]$padj
+  expressionLevels$log2FoldChange <- DE[matchIds,]$log2FoldChange
+  
+  sd <- SharedData$new(expressionLevels, ~geneId)
+  
+  lineplot <- plot_ly(sd, x = ~sampleName, y = ~expressionLevel) %>%
+    group_by(geneId) %>% 
+    add_lines(text = ~geneId, hoverinfo = "text", color = ~AnalysisGroup)
+  
+  volcanoPlot <- plot_ly(sd, x = ~log2FoldChange, y = ~-log10(padj)) %>% 
+      add_markers(text = ~geneId, hoverinfo = "text")
+  
+  subplot(
+  plot_ly(sd, y = ~expressionLevel, color = ~AnalysisGroup) %>% 
+      add_boxplot(),  
+  volcanoPlot
+  ) %>% highlight(on =  'plotly_click', off = 'plotly_doubleclick', selectize = TRUE)
+} else {
+  cat("Couldn't detect at least two genes satisfying the p-value and fold change thresholds\n")
+}
+
+```
+
+# Gene Set Enrichment Analysis 
+
+Finding collectively up/down regulated list of genes 
+```{r run_GAGE}
+geneSetsFolder <- NULL
+if(!is.null(geneSetsFolder)) {
+  geneSetFiles = list.files(path = geneSetsFolder, pattern = '*.txt', full.names = T)
+  geneSetList = sapply(geneSetFiles, function(file) scan(file, what = "character"), USE.NAMES = T)
+  names(geneSetList) <- gsub('.txt', '', basename(names(geneSetList)))
+  
+  caseSampleIndices <- which(colnames(vsd.counts) %in% rownames(colData[colData$group %in% caseSamples,]))
+  controlSampleIndices <- which(colnames(vsd.counts) %in% rownames(colData[colData$group %in% controlSamples,]))
+  
+  #run gage analysis
+  mygage = gage::gage(exprs = vsd.counts, 
+                      gsets = geneSetList, 
+                      ref = controlSampleIndices, 
+                      samp = caseSampleIndices, 
+                      compare = 'unpaired', rank.test = TRUE, set.size = c(10,1000)) 
+  
+  greater <- data.frame(subset(mygage$greater, select = c('q.val')))
+  colnames(greater) <- 'FDR-upregulated'
+  greater$GeneSet <- rownames(greater)
+  less <- data.frame(subset(mygage$less, select = c('q.val')))
+  colnames(less) <- 'FDR-downregulated'
+  less$GeneSet <- rownames(less)
+  
+  results <- merge(x = greater, y = less, by = 'GeneSet')
+  
+  DT::datatable(results, 
+          extensions = c('Buttons', 'FixedColumns'), 
+          options = list(fixedColumns = TRUE, 
+                         scrollX = TRUE,
+                         dom = 'Bfrtip',
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
+          filter = 'bottom'
+          )
+  
+  write.table(x = results,  file = file.path(workdir, 
+                                        paste0(prefix,'.GSEA.results.tsv')), 
+                quote = F, sep = '\t')
+  
+  plotGageHeatmap <- function(geneSetName, geneIds, normCounts, colData) {
+    df <- as.data.frame(colData[,c("group","AnalysisGroup")])
+    M <- normCounts[rownames(normCounts) %in% geneIds,]
+    write.table(x = M, file = file.path(workdir, 
+                                        paste0(prefix,'.geneSets.normCounts.', geneSetName,'.tsv')), 
+                quote = F, sep = '\t')
+    callback = function(hc, ...){dendsort::dendsort(hc)}
+    pheatmap::pheatmap(M, 
+             cluster_rows=TRUE, 
+             show_rownames=FALSE, 
+             cluster_cols=TRUE, 
+             scale = 'row',
+             annotation_col=df, 
+             clustering_callback = callback,
+             main = paste0('Gene Set: ',geneSetName))
+  }
+  
+  pdf(file = file.path(workdir, paste0(prefix, '.geneSet.heatmaps.pdf')))
+  mdata <- reshape2::melt(results)
+  colnames(mdata) <- c('GeneSet', 'DeregulationType', 'FDR')
+  
+  p <- ggplot(mdata, aes(x = GeneSet, y = -log10(FDR))) + 
+    geom_bar(aes(fill = FDR < 0.1), stat = 'identity') +
+    facet_grid(~DeregulationType) + coord_flip() 
+  print(p)
+
+  for(geneSetName in names(geneSetList)) {
+    geneIds <- geneSetList[[geneSetName]]
+    plotGageHeatmap(geneSetName = geneSetName, 
+                         geneIds = geneIds, 
+                         normCounts = vsd.counts, 
+                         colData = colData)
+  }
+  dev.off()
+}
+```
+
+```{r results='asis'}
+if(runGO == FALSE) {cat("Warning:Skipping GO analysis as there is no internet connection\n")}
+```
+
+```{r goAnalysisTitle, eval = runGO, results='asis'}
+cat("# GO Term Enrichment Analysis\n")
+```
+
+```{r goAnalysis, eval = runGO}
+genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 1,]) # change this to 0.1 and +1
+genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -1,]) #change this to 0.1 and -1
+```
+
+```{r goAnalysisTitleUp, eval = runGO, results='asis'}
+cat("## GO Terms for Up-regulated Genes\n")
+```
+
+```{r goAnalysisUp, eval = runGO}
+goUp <- gProfileR::gprofiler(query = genesUp, 
+                             organism = organism, 
+                             hier_filtering = "moderate",
+                             significant = TRUE)
+DT::datatable(goUp, 
+        extensions = c('Buttons', 'FixedColumns'), 
+        options = list(fixedColumns = TRUE, 
+                       scrollX = TRUE,
+                       dom = 'Bfrtip',
+                       buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
+                       columnDefs = list(
+                         list(targets = c(0,1,7,8,11,13,14), visible = FALSE)
+                       )
+                       ),
+        filter = 'bottom'
+        )
+```
+
+```{r goAnalysisTitleDown, eval = runGO, results='asis'}
+cat("## GO Terms for Down-regulated Genes\n")
+```
+
+```{r goAnalysisDown, eval = runGO}
+goDown <- gProfileR::gprofiler(query = genesDown, 
+                               organism = organism, 
+                               hier_filtering = "moderate", 
+                               significant = TRUE)
+DT::datatable(goDown, 
+        extensions = c('Buttons', 'FixedColumns'), 
+        options = list(fixedColumns = TRUE, 
+                       scrollX = TRUE,
+                       dom = 'Bfrtip',
+                       buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
+                       columnDefs = list(
+                         list(targets = c(0,1,7,8,11,13,14), visible = FALSE)
+                       )
+                       ),
+        filter = 'bottom'
+        )
+```
+
+# Session Information
+```{r sessionInfo}
+sessionInfo()
+```
+
+

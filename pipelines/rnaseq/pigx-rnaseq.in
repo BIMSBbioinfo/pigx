@@ -1,0 +1,248 @@
+#!@PYTHON@
+
+# PiGx RNAseq Pipeline.
+#
+# Copyright © 2017 Bora Uyar <bora.uyar@mdc-berlin.de>
+# Copyright © 2017 Jonathan Ronen <yablee@gmail.com>
+# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx RNAseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import argparse
+
+description = """\
+PiGx RNAseq Pipeline.
+
+PiGx RNAseq is a data processing pipeline for RNAseq read data.
+"""
+
+epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.'
+
+version = """\
+PiGx RNAseq Pipeline.
+Version: @PACKAGE_VERSION@
+
+Copyright © 2017, 2018 Bora Uyar, Jona Ronen, Ricardo Wurmus.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+"""
+
+def formatter(prog):
+    return argparse.RawTextHelpFormatter(prog, max_help_position=80)
+
+parser = argparse.ArgumentParser(description=description,
+                                 epilog=epilog,
+                                 formatter_class=formatter)
+
+parser.add_argument('-v', '--version', action='version',
+                    version=version)
+
+parser.add_argument('samplesheet',
+                    help="""\
+The sample sheet containing sample data in CSV format.\
+""")
+
+parser.add_argument('-s', '--settings', dest='settings',
+                    help='A YAML file for settings that deviate from the defaults.')
+
+parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
+                    help="""\
+The config file used for calling the underlying snakemake process.  By
+default the file 'config.json' is dynamically created from the sample
+sheet and the settings file.
+""")
+
+parser.add_argument('--snakeparams', dest='snakeparams', default='',
+                    help="""\
+Additional parameters to be passed down to snakemake, e.g.
+    --dryrun    do not execute anything
+    --forceall  re-run the whole pipeline""")
+
+args = parser.parse_args()
+
+
+
+# Generate config file
+
+from os import path
+import os, sys, json, csv, yaml
+
+def bail(msg):
+    """Print the error message to stderr and exit."""
+    print(msg, file=sys.stderr)
+    exit(1)
+
+from snakemake.utils import update_config
+
+def generate_config(configfile, samplesheet, settingsfile):
+    """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
+SETTINGSFILE as inputs."""
+    dirs = {}
+    if os.getenv('PIGX_RNASEQ_UNINSTALLED'):
+        here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+        dirs['locations'] = {
+            'prefix'       : here,
+            'exec_prefix'  : here,
+            'libexecdir'   : here,
+            'pkglibexecdir': here,
+            'datarootdir'  : here,
+            'pkgdatadir'   : here
+        }
+    else:
+        # Expand and store autoconf directory variables
+        prefix = '@prefix@'
+        exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
+        libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
+        pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
+        datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
+        pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+
+        dirs['locations'] = {
+            'prefix'       : '@prefix@',
+            'exec_prefix'  : exec_prefix,
+            'libexecdir'   : libexecdir,
+            'pkglibexecdir': pkglibexecdir,
+            'datarootdir'  : datarootdir,
+            'pkgdatadir'   : pkgdatadir
+        }
+
+    # Load defaults
+    if os.getenv('PIGX_RNASEQ_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        defaults = path.join(where, 'etc/settings.yaml')
+    else:
+        defaults = path.join(dirs['locations']['pkgdatadir'], 'settings.yaml')
+    settings = yaml.safe_load(open(defaults, 'r'))
+
+    # Load user overrides
+    if settingsfile:
+        update_config(settings,yaml.safe_load(open(settingsfile, 'r')))
+
+    settings['locations'].update(dirs['locations'])
+
+    # Resolve relative paths in the locations section
+    root = path.dirname(samplesheet)
+    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+
+    for key in ['reads-folder', 'output-folder', 'genome-fasta', 'gtf-file']:
+        settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
+
+    # Record the location of the sample sheet.
+    settings['locations']['sample-sheet'] = path.abspath(samplesheet)
+
+    # Write the config file
+    with open(configfile, 'w') as outfile:
+        dumps = json.dumps(settings,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+
+
+generate_config(args.configfile,
+                args.samplesheet,
+                args.settings)
+
+config = json.load(open(args.configfile, 'r'))
+
+
+# Copy the report templates to a writable location because annoyingly
+# Snakemake will attempt to write to wherever they are located.
+
+import shutil, filecmp
+from glob import glob
+os.makedirs(path.join(config['locations']['output-folder'], '.pigx-temp'),
+            exist_ok=True)
+
+def maybe_copy(source, target_dir):
+    target = path.join(target_dir, path.basename(source))
+    if not path.exists(target) or not filecmp.cmp(source, target):
+        shutil.copy(source, target_dir)
+
+maybe_copy(config['locations']['pkglibexecdir'] + '/scripts/deseqReport.Rmd',
+           path.join(config['locations']['output-folder'], '.pigx-temp'))
+
+
+# Run snakemake!
+
+def cluster_run():
+    if config['execution']['cluster']['contact-email'].lower() == 'none':
+        contact_email_string = ""
+    else:
+        contact_email_string = "-m abe -M %s" % config['execution']['cluster']['contact-email']
+
+    # Create the cluster configuration file
+    rules = [
+        ('__default__', 1, config['execution']['cluster']['memory']),
+    ]
+
+    cluster_conf = {}
+    for rule, nthreads, mem in rules:
+        cluster_conf[rule] = {
+            'nthreads': nthreads,
+            'q': config['execution']['cluster']['queue'],
+            'MEM': mem,
+            'h_stack': config['execution']['cluster']['stack']
+        }
+
+    cluster_config_file = "cluster_conf.json"
+    open(cluster_config_file, 'w').write(json.dumps(cluster_conf))
+
+    print("Commencing snakemake run submission to cluster")
+    qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    os.system('@SNAKEMAKE@ -s {}/pigx_rnaseq.py --configfile {} --cluster-config {} -d {} --cluster "{}" --jobs {} {}'
+              .format(config['locations']['pkglibexecdir'],
+                      args.configfile,
+                      cluster_config_file,
+                      config['locations']['output-folder'],
+                      qsub,
+                      config['execution']['jobs'],
+                      args.snakeparams))
+
+
+# Ensure that we use the configured Pandoc, pandoc-citeproc
+# ...and the configured Rscript
+bin = path.join(config['locations']['output-folder'], '.pigx-temp/bin')
+if path.exists(bin): shutil.rmtree(bin)
+os.makedirs(bin, exist_ok=True)
+os.symlink('@PANDOC@', path.join(bin, "pandoc"))
+os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
+os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
+os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+
+if os.getenv('PIGX_RNASEQ_UNINSTALLED'):
+    where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+    pretty = path.join(where, 'etc/pretty.txt')
+else:
+    pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
+
+if not os.getenv('PIGX_RNASEQ_UGLY'):
+    print(open(pretty, 'r').read())
+
+if config['execution']['submit-to-cluster']:
+    cluster_run()
+else:
+    print("Commencing snakemake run submission locally")
+    os.system('@SNAKEMAKE@ -s {}/pigx_rnaseq.py --configfile {} -d {} --jobs {} {}'
+              .format(config['locations']['pkglibexecdir'],
+                      args.configfile,
+                      config['locations']['output-folder'],
+                      config['execution']['jobs'],
+                      args.snakeparams))

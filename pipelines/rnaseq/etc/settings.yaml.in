@@ -1,0 +1,54 @@
+locations:
+  reads-folder: /path/to/reads/
+  output-folder: /path/to/output/
+  genome-fasta: /path/to/genome.fasta
+  gtf-file: /path/to/sample.gtf
+
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: none
+
+organism: hsapiens
+
+DEanalyses:
+  #names of analyses can be anything but they have to be unique for each combination of case control group comparisons.
+  analysis1:   
+    #if multiple sample names is provided, they must be separated by comma
+    case_sample_groups: "HBR" 
+    control_sample_groups: "UHR"
+    # comma separated list of additional co-variates to control for in differential expression analysis (e.g. batch, age, temperature, sequencing_technology etc.). Must correspond to a column field in the sample_sheet.csv file.)
+    covariates: '' 
+  analysis2:
+    case_sample_groups: "UHR"
+    control_sample_groups: "HBR"
+    # comma separated list of additional co-variates to control for in differential expression analysis (e.g. batch, age, temperature, sequencing_technology etc.). Must correspond to a column field in the sample_sheet.csv file.)
+    covariates: '' 
+
+tools:
+  fastqc:
+    executable: @FASTQC@
+  multiqc:
+    executable: @MULTIQC@
+  star:
+    executable: @STAR@
+    n-threads: 8
+  trim-galore:
+    executable: @TRIMGALORE@
+  bamCoverage:
+    executable: @BAMCOVERAGE@
+  samtools:
+    executable: @SAMTOOLS@
+  htseq-count:
+    executable: @HTSEQ_COUNT@
+  salmon:
+    executable: @SALMON@
+    n-threads: 8
+  R:
+    Rscript: @RSCRIPT@
+    executable: @R@
