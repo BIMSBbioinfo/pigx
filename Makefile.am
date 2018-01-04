@@ -9,12 +9,12 @@ dist_pkglibexec_SCRIPTS =			\
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/generate_report.R			\
+  scripts/generate_multireport.R	\
   scripts/fetch_procedures.R		\
   scripts/fetch_refGene.R			\
   scripts/func_defs.py				\
   scripts/ideoDMC.R					\
   scripts/integrate2finalreport.R	\
-  scripts/multireport_functions.R	\
   scripts/report_functions.R
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates

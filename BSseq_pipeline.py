@@ -590,7 +590,7 @@ rule final_report:
         "   report    : {output.finalreport}"
         
     run:
-        cmd  =  "{RSCRIPT} {DIR_scripts}/multireport_functions.R"
+        cmd  =  "{RSCRIPT} {DIR_scripts}/generate_multireport.R"
         cmd +=  " --scriptsDir={DIR_scripts}"
         cmd +=  " --index={input.index}"
         cmd +=  " --finalOutput={output.finalreport}"
