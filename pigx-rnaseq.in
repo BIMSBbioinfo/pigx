@@ -2,6 +2,12 @@
 
 # PiGx RNAseq Pipeline.
 #
+# Copyright © 2017 Bora Uyar <bora.uyar@mdc-berlin.de>
+# Copyright © 2017 Jonathan Ronen <yablee@gmail.com>
+# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx RNAseq Pipeline.
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -26,13 +32,13 @@ PiGx RNAseq Pipeline.
 PiGx RNAseq is a data processing pipeline for RNAseq read data.
 """
 
-epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017.'
+epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.'
 
 version = """\
 PiGx RNAseq Pipeline.
 Version: @PACKAGE_VERSION@
 
-Copyright © 2017 Bora Uyar, Jona Ronen, Ricardo Wurmus.
+Copyright © 2017, 2018 Bora Uyar, Jona Ronen, Ricardo Wurmus.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
 This is free software: you are free to change and redistribute it.
