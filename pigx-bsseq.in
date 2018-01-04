@@ -347,12 +347,7 @@ for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
 
 # Run snakemake!
 
-def cluster_run():
-    if config['execution']['cluster']['contact-email'].lower() == 'none':
-        contact_email_string = ""
-    else:
-        contact_email_string = "-m abe -M %s" % config['execution']['cluster']['contact-email']
-
+def generate_cluster_configuration():
     bismark_cores = int(config['tools']['bismark']['cores'])
     bismark_pe_threads = 4 * bismark_cores
     bismark_se_threads = 2 * bismark_cores
@@ -380,18 +375,6 @@ def cluster_run():
                            separators=(",",": "), ensure_ascii=True)
         outfile.write(dumps)
 
-    print("Commencing snakemake run submission to cluster", flush=True)
-    qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
-    os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} --cluster-config {} -d {} --cluster "{}" --jobs {} {}'
-              .format(config['locations']['pkglibexecdir'],
-                      args.configfile,
-                      cluster_config_file,
-                      config['locations']['output-dir'],
-                      qsub,
-                      config['execution']['jobs'],
-                      args.snakeparams))
-
-
 # Ensure that we use the configured Pandoc, pandoc-citeproc
 # ...and the configured Rscript
 bin = path.join(config['locations']['output-dir'], 'path_links/bin')
@@ -415,7 +398,23 @@ if not os.getenv('PIGX_BSSEQ_UGLY'):
     sys.stdout.buffer.write(p.encode('utf-8'))
 
 if config['execution']['submit-to-cluster']:
-    cluster_run()
+    generate_cluster_configuration()
+    print("Commencing snakemake run submission to cluster", flush=True)
+    if config['execution']['cluster']['contact-email'].lower() == 'none':
+        contact_email_string = ""
+    else:
+        contact_email_string = "-m abe -M %s" % config['execution']['cluster']['contact-email']
+
+    qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} --cluster-config {} -d {} --cluster "{}" --jobs {} {}'
+              .format(config['locations']['pkglibexecdir'],
+                      args.configfile,
+                      cluster_config_file,
+                      config['locations']['output-dir'],
+                      qsub,
+                      config['execution']['jobs'],
+                      args.snakeparams))
+
 else:
     print("Commencing snakemake run submission locally", flush=True)
     os.system('@SNAKEMAKE@ -s {}/BSseq_pipeline.py --configfile {} -d {} --jobs {} {}'
