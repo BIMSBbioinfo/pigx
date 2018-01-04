@@ -8,3 +8,9 @@ for pipeline in bsseq rnaseq chipseq crispr; do
   git subtree add --prefix=pipelines/$pipeline/ $pipeline master
 done
 #+END_SRC
+
+To update, say, the copy of the bsseq pipeline, run:
+
+#+BEGIN_SRC sh
+git subtree pull --prefix=pipelines/bsseq/ bsseq master
+#+END_SRC
