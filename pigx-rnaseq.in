@@ -1,6 +1,6 @@
 #!@PYTHON@
 
-# PiGx rnaseq Pipeline.
+# PiGx RNAseq Pipeline.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,15 +21,15 @@
 import argparse
 
 description = """\
-PiGx rnaseq Pipeline.
+PiGx RNAseq Pipeline.
 
-PiGx rnaseq is a data processing pipeline for RNAseq read data.
+PiGx RNAseq is a data processing pipeline for RNAseq read data.
 """
 
 epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017.'
 
 version = """\
-PiGx rnaseq Pipeline.
+PiGx RNAseq Pipeline.
 Version: @PACKAGE_VERSION@
 
 Copyright © 2017 Bora Uyar, Jona Ronen, Ricardo Wurmus.
