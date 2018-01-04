@@ -94,7 +94,7 @@ To see all available options type the `--help` option
 ```sh
 $ pigx-bsseq --help
 
-usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--snakeparams SNAKEPARAMS] [--target TARGET] samplesheet
+usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--target TARGET] [-n] [--graph] [--force] samplesheet
 
 PiGx BSseq Pipeline.
 
@@ -113,12 +113,15 @@ optional arguments:
   -c CONFIGFILE, --configfile CONFIGFILE  The config file used for calling the underlying snakemake process.  By
                                           default the file 'config.json' is dynamically created from the sample
                                           sheet and the settings file.
-  --snakeparams SNAKEPARAMS               Additional parameters to be passed down to snakemake, e.g.
-                                              --dryrun    do not execute anything
-                                              --forceall  re-run the whole pipeline
   --target TARGET                         Stop when the named target is completed instead of running the whole
                                           pipeline.  The default target is "final-report".  Pass "--target=help"
                                           to describe all available targets.
+  -n, --dry-run                           Only show what work would be performed.  Do not actually run the
+                                          pipeline.
+  --graph                                 Output a graph in Graphviz dot format showing the relations between
+                                          rules of this pipeline.
+  --force                                 Force the execution of rules, even though the outputs are considered
+                                          fresh.
 
 This pipeline was developed by the Akalin group at MDC in Berlin in 2017.
 ```
