@@ -36,13 +36,13 @@ information and can be used to produce information on differential
 methylation and segmentation.
 """
 
-epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017.'
+epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.'
 
 version = """\
 PiGx BSseq Pipeline.
 Version: @PACKAGE_VERSION@
 
-Copyright © 2017 Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.
+Copyright © 2017, 2018 Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
 This is free software: you are free to change and redistribute it.
