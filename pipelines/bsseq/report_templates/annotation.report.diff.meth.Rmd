@@ -1,0 +1,280 @@
+---
+title: "PiGx: BS-seq"
+output: 
+  html_notebook:
+    toc:        TRUE
+    toc_float:  TRUE
+    theme:      "lumen"
+    number_sections: FALSE
+    code_folding: "hide"
+    self_contained: TRUE
+    includes:
+      in_header: pigx_bsseq_logo.html
+output_dir: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation_rule/"
+output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.annotation.nb.html"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { Sys.getenv("SOURCE_DATE_EPOCH") } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+bibliography: reports.bib
+params:
+  inBed:    "/home/kwreczy/tmp/my_output/differential_methylation/0_1.sorted_diffmeth.bed"
+  assembly: "ce10"
+  refseqfile: "/blabla/annotation/refseq.genes.ce10.bed"
+  methylDiff_file: "ablabla.RDS"
+  methylDiff_hyper_file:    "/blala.RDS"
+  methylDiff_hypo_file:    "/blabla.RDS"
+  scripts_dir: "/blabla/scripts/"
+  sessioninfo: TRUE
+  references: TRUE
+---
+
+
+```{r include=FALSE}
+makeSessioninfo=params$sessioninfo
+makeReferences = params$references
+```
+  
+
+
+```{r eval_params, echo=FALSE}
+
+inBed      <- params$inBed
+assembly      <- params$assembly
+refgenes.file <- params$refseqfile
+methylDiff_file      <- params$methylDiff_file
+methylDiff_hyper_file      <- params$methylDiff_hyper_file
+methylDiff_hypo_file      <- params$methylDiff_hypo_file
+ideoDMC_script <- params$ideoDMC_script
+
+```
+
+## Annotation of differentially methylated cytosines
+
+```{r, include=FALSE,warning=FALSE}
+  suppressPackageStartupMessages(expr = {
+    library("genomation")
+    library("rtracklayer")
+    library("DT")
+    library("ggplot2")
+    library("GenomeInfoDb")
+
+  })
+```
+
+### Libraries
+```{r, eval=FALSE, include=TRUE}
+
+    library("genomation")
+    library("rtracklayer")
+    library("DT")
+    library("ggplot2")
+    library("GenomeInfoDb")
+
+```
+
+### Parameters
+```{r print_params, echo=TRUE, results="asis"}
+
+paramsDesc <- c("Input Data (diff. methyl.)",
+                "Input RDS Data (diff. methyl. Cs)",
+                "Input RDS Data (hyper-methyl. Cs)",
+                "Input RDS Data (hypo-methyl. Cs)",
+                "Assembly",
+                "RefSeq genes file")
+
+paramsValues <- c( inBed ,
+                   methylDiff_file,
+                   methylDiff_hyper_file,
+                   methylDiff_hypo_file,
+                   assembly,
+                   refgenes.file )
+
+inputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+
+knitr::kable(inputParams)
+
+```
+
+
+### Preprocessing
+
+```{r, message=FALSE, echo=TRUE}
+
+# Load differentially methylated, hypo- and hyper-methylated
+# bases from RDS files.
+methylDiff.obj <- readRDS(methylDiff_file)
+methylDiff.obj_hyper = readRDS(methylDiff_hyper_file)
+methylDiff.obj_hypo = readRDS(methylDiff_hypo_file)
+
+# Convert a methylDiff object to a GRanges object
+GRanges.diffmeth = as(methylDiff.obj, "GRanges")
+GRanges.diffmeth.hypo = as(methylDiff.obj_hypo, "GRanges")
+GRanges.diffmeth.hyper = as(methylDiff.obj_hyper, "GRanges")
+
+```
+
+
+We query the UCSC table browser directly to fetch the reference gene set and CpG islads locations for the given genome assembly using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009]. After we have aquired the reference genes, we can determine different features intrinsic to each gene, such as promoter, exon or intron using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014] and appropriately
+for CpG islands and shores.
+
+
+```{r annotate with refseq genes}
+source(paste0(params$scripts_dir, "fetch_procedures.R"))
+fetched.refgenes = fetchTablefromUCSC("refGene", table.loc = refgenes.file, assembly)
+
+cpgi.file <- paste0("cpgi.",assembly,".bed")
+fetched.cpgi = fetchTablefromUCSC("cpgIslandExt", table.loc = cpgi.file, assembly)
+
+```
+
+
+### Show number of differentially methylated cytosines per chromosome
+
+```{r, message=FALSE, echo=TRUE}
+
+number.of.elements.per.chr = function(gr.obj){
+  
+  # Optional, if you want a genomic order of the chromosomes
+  diffmeth.gr = sortSeqlevels(gr.obj)
+  # Split into a GRangesList
+  # where each element has all ranges for one chromosome
+  diffmeth.gr.perchr = split(diffmeth.gr, seqnames(diffmeth.gr))
+  el.chrs = elementNROWS(diffmeth.gr.perchr)
+  
+  df = data.frame(Chromosome=names(el.chrs), Number.diff.meth.bases=as.vector(el.chrs))
+  colnames(df) = c("Chromosome", "Number of diff. meth. cytosines")
+  return(df)
+}
+
+# Show number of differentially methylated cytosines per chromosome
+if(length(GRanges.diffmeth)!=0){
+  stats.df = number.of.elements.per.chr(GRanges.diffmeth)
+  knitr::kable(stats.df)
+}
+
+if(length(GRanges.diffmeth.hyper)!=0){
+  stats.df.hyper = number.of.elements.per.chr(GRanges.diffmeth.hyper)
+  knitr::kable(stats.df.hyper)
+}
+
+if(length(GRanges.diffmeth.hypo)!=0){
+  stats.df.hypo = number.of.elements.per.chr(GRanges.diffmeth.hypo)
+  knitr::kable(stats.df.hypo)
+}
+```
+
+
+### Annotation
+
+Show overlap percentage of differentially methylated bases with gene features, CpG islands and shores.
+
+
+```{r, message=FALSE,fig.show="hold"}
+
+if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
+  ## now we parse the gene features
+  refgenes.grl <- readTranscriptFeatures(refgenes.file)
+
+  annot.gene <- annotateWithGeneParts(target = GRanges.diffmeth,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+
+  # plot the target overlap for each
+  genomation::plotTargetAnnotation(annot.gene,
+                       main="Differential methylation annotation")
+}
+
+if(!is.na(fetched.cpgi) & length(GRanges.diffmeth)!=0){
+  
+  # read the shores and flanking regions and name the flanks as shores 
+  # and CpG islands as CpGi
+  cpg.obj=readFeatureFlank(cpgi.file,
+                           feature.flank.name=c("CpGi","shores"))
+  #
+  # convert methylDiff object to GRanges and annotate
+  diffCpGann=annotateWithFeatureFlank(GRanges.diffmeth,
+                                      cpg.obj$CpGi, cpg.obj$shores,
+                                      feature.name="CpGi",flank.name="shores")
+
+  # plot the target overlap for each
+  genomation::plotTargetAnnotation(diffCpGann, 
+                       col=c("green","gray","white"),
+                       main="Differential methylation annotation")
+}
+
+
+```
+
+
+### Plot the distance to the nearest TSSs
+
+Show the distance of differentially methylated cytosines to TSSs of the nearest genes.
+
+
+```{r, message=FALSE, echo=TRUE}
+
+if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
+
+# Get distance to nearest TSS and gene id from AnnotationByGeneParts
+# target.row is the row number in diffmeth.gr
+assoTSS = getAssociationWithTSS(annot.gene)
+
+datatable(as.data.frame(assoTSS),
+          extensions = 'Buttons',
+          options = list(
+            dom = 'Bfrtip',
+            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+            scrollX = TRUE),
+          caption = "Distance to nearest TSS",
+          rownames = FALSE)
+
+
+hist(assoTSS[,2], main="Distance to the nearest TSS", xlab="bp", ylab="Frequency", col="cornflowerblue")
+
+}
+
+
+```
+
+
+### Plot overview of hyper and hypo-methylated CpGs over the genome
+
+```{r, message=FALSE,fig.show="hold"}
+
+if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
+
+require(GenomeInfoDb)
+chr.len.df=fetchExtendedChromInfoFromUCSC(assembly,
+        goldenPath_url="http://hgdownload.cse.ucsc.edu/goldenPath",
+        quiet=FALSE)
+chr.len=chr.len.df[,2]
+names(chr.len)=chr.len.df[,1]
+
+myseqinfo = Seqinfo(chr.len.df[,1], seqlengths=chr.len.df[,2], genome=assembly)
+myseqinfo.st = keepStandardChromosomes(myseqinfo)
+
+source(paste0(params$scripts_dir, "ideoDMC.R"))
+ideoDMC_hyper_hypo(methylDiff.obj_hyper, methylDiff.obj_hypo, chrom.length = seqlengths( myseqinfo.st ),
+       circos = FALSE, title = "Differential methylation", hyper.col = "magenta", hypo.col = "green") 
+
+}
+
+```
+
+
+`r if(makeSessioninfo) {"### Session Info"}`
+
+```{r ,include=makeSessioninfo  }
+sessionInfo()
+```
+
+
+<!-- this section is used to generate a merged sessioninfo from multiple reports -->
+```{r, include=FALSE }
+session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
+sess <- sessionInfo()
+saveRDS(sess,file = session_file)
+```
+
+
+`r if(makeReferences) {"### References"}`

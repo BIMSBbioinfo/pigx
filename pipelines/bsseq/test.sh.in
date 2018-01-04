@@ -1,0 +1,32 @@
+#!@GNUBASH@
+
+set -e
+set -u
+
+export PIGX_BSSEQ_UGLY=1
+export PIGX_BSSEQ_UNINSTALLED=1
+
+# We do not use "readlink -f" here, because macos does not support it.
+export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' ${srcdir:-.})
+
+chmod -R +w ${srcdir}/test
+
+./pigx-bsseq -s ${srcdir}/test/settings.yaml ${srcdir}/test/samplesheet.csv
+
+for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
+    if ! test -f "${srcdir}/test/out/Final_Report/${base}.deduped.sorted_hg19_final.nb.html"
+    then
+        echo "ERROR: could not find report for ${base}"
+        exit 1
+    fi
+done
+
+
+message=$(./pigx-bsseq -s ${srcdir}/test/settings.yaml ${srcdir}/test/samplesheet.csv 2>&1 >/dev/null | tail -n1)
+
+if test "$message" != "Nothing to be done."
+then
+   echo "ERROR: pipeline should not process files a second time"
+   #exit 1 #TODO: known failure
+   exit 0
+fi

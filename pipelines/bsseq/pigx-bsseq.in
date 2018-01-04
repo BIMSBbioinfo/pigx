@@ -1,0 +1,442 @@
+#!@PYTHON@
+
+# PiGx BSseq Pipeline.
+#
+# Copyright © 2017 Bren Osberg <b.osberg@tum.de>
+# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
+# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx BSseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import argparse
+
+description = """\
+PiGx BSseq Pipeline.
+
+PiGx BSseq is a data processing pipeline for raw fastq read data of
+bisulfite experiments.  It produces methylation and coverage
+information and can be used to produce information on differential
+methylation and segmentation.
+"""
+
+epilog = 'This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.'
+
+version = """\
+PiGx BSseq Pipeline.
+Version: @PACKAGE_VERSION@
+
+Copyright © 2017, 2018 Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+"""
+
+def formatter(prog):
+    return argparse.RawTextHelpFormatter(prog, max_help_position=80)
+
+parser = argparse.ArgumentParser(description=description,
+                                 epilog=epilog,
+                                 formatter_class=formatter)
+
+parser.add_argument('-v', '--version', action='version',
+                    version=version)
+
+parser.add_argument('samplesheet',
+                    help="""\
+The sample sheet containing sample data in CSV format.\
+""")
+
+parser.add_argument('-s', '--settings', dest='settings',
+                    help='A YAML file for settings that deviate from the defaults.')
+
+parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
+                    help="""\
+The config file used for calling the underlying snakemake process.  By
+default the file 'config.json' is dynamically created from the sample
+sheet and the settings file.
+""")
+
+parser.add_argument('--target', dest='target', default='final-report',
+                    help="""\
+Stop when the named target is completed instead of running the whole
+pipeline.  The default target is "final-report".  Pass "--target=help"
+to describe all available targets.""")
+
+parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
+                    help="""\
+Only show what work would be performed.  Do not actually run the
+pipeline.""")
+
+parser.add_argument('--graph', dest='graph', action='store_true',
+                    help="""\
+Output a graph in Graphviz dot format showing the relations between
+rules of this pipeline.""")
+
+parser.add_argument('--force', dest='force', action='store_true',
+                    help="""\
+Force the execution of rules, even though the outputs are considered
+fresh.""")
+
+args = parser.parse_args()
+
+
+# Generate config file
+
+from os import path
+import os, sys, json, csv, yaml
+
+def bail(msg):
+    """Print the error message to stderr and exit."""
+    print(msg, file=sys.stderr)
+    exit(1)
+
+def parse_diff_meth(list_of_list, sample_params):
+    """
+    Parse lines with information pairs samples
+    which should be considered for differential
+    methylation. E.g. for treatments A,B,C and D
+    it could like:
+  
+    A, B
+    C, D
+    D, A, B
+  
+    It returns a dictionary required for the config file
+    with a list of treatment values, e.g:
+    [[A,B], [C,D], [D,A,B]]
+    """
+
+    # check if treatment values are in the the column samples from
+    # the second part of the input file
+    # treatments values from the [[ SAMPLES ]] part
+    treatments_samples = set([sample_params['SAMPLES'][s]['Treatment'] 
+                              for s in sample_params['SAMPLES'].keys()])
+
+    # treatments values from the [[ DIFFERENTIAL METHYLATION ]] part
+    treatments_diffmeth = set(sum(list_of_list, []))
+    if not treatments_diffmeth.issubset(treatments_samples):
+        invalid_treatments = list(set(treatments_diffmeth) - set(treatments_samples))
+        raise Exception("Invalid treatment value(s) " + ", ".join(invalid_treatments))
+
+    return {"DIFF_METH": list_of_list}
+
+def get_filenames(mylist):
+    return list(map(lambda x: splitext_fqgz(x)[0], mylist))
+
+def get_extension(mylist):
+    return list(map(lambda x: splitext_fqgz(x)[1], mylist))
+
+def fq_suffix(filename):
+    return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
+
+def is_zipped(filename):
+    return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
+
+def splitext_fqgz(string):
+    if is_zipped(string):
+        string, zipext = os.path.splitext(string)
+    else:
+        zipext = ""
+    if fq_suffix(string):
+        base, ext = os.path.splitext(string)
+        return (base, ext + zipext)
+    else:
+        bail("Input files are not fastq files!")
+
+def parse_samples(lines):
+    """
+    Parse csv table with information about samples, eg:
+    
+    Read1,Read2,SampleID,ReadType,Treatment
+    sampleB.pe1.fq.gz,sampleB.pe2.fq.gz,sampleB,WGBS,B,,
+    pe1.single.fq.gz,,sampleB1,WGBS,B,,
+    
+    It returns a dictionary required for the config file.
+    """
+    sreader = csv.reader(lines, delimiter=',')
+    all_rows = [row for row in sreader]
+  
+    header = all_rows[0]
+    rows   = all_rows[1:]
+    minimal_header = ['Read1', 'Read2', 'SampleID', 'ReadType', 'Treatment']
+  
+    if header[:5] != minimal_header:
+        raise Exception("First columns of the input table have to be " +
+                        ",".join(minimal_header) + ".")
+
+    sample_ids = [x[2] for x in rows]
+    if len(set(sample_ids)) != len(sample_ids):
+        raise Exception("Column 'SampleID' has non-unique values.")
+
+    # Create a dictionary with all params, keys are samples ids
+    outputdict = {}
+    for row in rows:
+        files = list(filter(None, row[0:2]))
+        if not files:
+            raise Exception("Each sample has to have an entry in at least one of the columns 'Read1' or 'Read2'.")
+      
+        sampleid_dict = {}
+        for idx in range(len(header[2:])):
+            try:
+                sampleid_dict[header[2:][idx]] = row[2:][idx]
+            except IndexError:
+                raise Exception("Number of columns in row " + idx + " doesn't match number of elements in header.")
+
+        sampleid_dict['files']      = files
+        sampleid_dict['fastq_name'] = get_filenames(files)
+        sampleid_dict['fastq_ext']  = get_extension(files)
+        outputdict[row[2]] = sampleid_dict
+    return { 'SAMPLES': outputdict }
+
+from snakemake.utils import update_config
+
+def generate_config(configfile, samplesheet, settingsfile):
+    """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
+SETTINGSFILE as inputs."""
+    dirs = {}
+    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+        here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+        dirs['locations'] = {
+            'prefix'       : here,
+            'exec_prefix'  : here,
+            'libexecdir'   : here,
+            'pkglibexecdir': here,
+            'datarootdir'  : here,
+            'pkgdatadir'   : here
+        }
+    else:
+        # Expand and store autoconf directory variables
+        prefix = '@prefix@'
+        exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
+        libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
+        pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
+        datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
+        pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+
+        dirs['locations'] = {
+            'prefix'       : '@prefix@',
+            'exec_prefix'  : exec_prefix,
+            'libexecdir'   : libexecdir,
+            'pkglibexecdir': pkglibexecdir,
+            'datarootdir'  : datarootdir,
+            'pkgdatadir'   : pkgdatadir
+        }
+
+    # Load defaults
+    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        defaults = path.join(where, 'etc/settings.yaml')
+    else:
+        defaults = path.join(dirs['locations']['pkgdatadir'], 'settings.yaml')
+    settings = yaml.safe_load(open(defaults, 'r'))
+
+    # Load user overrides
+    if settingsfile:
+        update_config(settings,yaml.safe_load(open(settingsfile, 'r')))
+
+    settings['execution']['target'] = args.target
+
+    # Load parameters specific to samples
+    with open(samplesheet, 'r') as f:
+        lines = f.read().splitlines()
+    sample_params = parse_samples(lines)
+
+    # Load pairs of treatments for differential methylation
+    diff_meth = settings['general']['differential-methylation']['treatment-groups']
+    diff_meth_params = parse_diff_meth(diff_meth, sample_params)
+
+    # Create a config file
+    settings.update(sample_params)
+    settings.update(diff_meth_params)
+    settings['locations'].update(dirs['locations'])
+
+    # Resolve relative paths in the locations section
+    root = path.dirname(samplesheet)
+    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+
+    for key in ['input-dir', 'output-dir', 'genome-dir']:
+        settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
+
+    # Write the config file
+    with open(configfile, 'w') as outfile:
+        dumps = json.dumps(settings,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+
+def generate_cluster_configuration():
+    bismark_cores = int(config['tools']['bismark']['cores'])
+    bismark_pe_threads = 4 * bismark_cores
+    bismark_se_threads = 2 * bismark_cores
+
+    # Create the cluster configuration file
+    rules = [
+        ('__default__', 1, config['execution']['cluster']['memory']),
+        ('bismark_se', bismark_se_threads, config['tools']['bismark']['memory']),
+        ('bismark_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
+    ]
+
+    cluster_conf = {}
+    for rule, nthreads, mem in rules:
+        cluster_conf[rule] = {
+            'nthreads': nthreads,
+            'q': config['execution']['cluster']['queue'],
+            'MEM': mem,
+            'h_stack': config['execution']['cluster']['stack']
+        }
+
+    cluster_config_file = "cluster_conf.json"
+    with open(cluster_config_file, 'w') as outfile:
+        dumps = json.dumps(cluster_conf,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+    return cluster_config_file
+
+
+generate_config(args.configfile,
+                args.samplesheet,
+                args.settings)
+
+config = json.load(open(args.configfile, 'r'))
+
+
+# Create symbolic links to the inputs and reference genome
+
+# Create links within the output folder that point directly to the
+# reference genome, as well as to each sample input file so that it's
+# clear where the source data came from.
+
+# N.B. Any previously existing links will be kept in place, and no
+# warning will be issued if this is the case.
+
+def makelink(src, target):
+    if not path.isfile(src):
+        bail("Refusing to link non-existent file %s" % src)
+    elif not path.isdir(path.dirname(target)):
+        bail("%s or subdirectory does not exist for linking %s" % config['locations']['output-dir'], target)
+    else:
+        try:
+            os.symlink(src, target)
+        except FileExistsError:
+            pass
+
+os.makedirs(path.join(config['locations']['output-dir'], 'path_links/input'),
+            exist_ok=True)
+
+# Link the reference genome
+try:
+    os.symlink(config['locations']['genome-dir'],
+               path.join(config['locations']['output-dir'], 'path_links/refGenome'))
+except FileExistsError:
+    pass
+
+# Create file links
+for sample in config['SAMPLES']:
+  flist = config['SAMPLES'][sample]['files']
+  single_end = len(flist) == 1
+
+  for idx, f in enumerate(flist):
+    if not f.endswith(".gz"):
+      # FIXME: Future versions should handle unzipped .fq or .bz2.
+      bail("Input files must be gzipped: %s." % f)
+
+    tag = "" if single_end else '_' + str(idx + 1)
+    linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
+    makelink(path.join(config['locations']['input-dir'], f),
+             path.join(config['locations']['output-dir'], "path_links/input/", linkname))
+
+# Copy the report templates to a writable location because bookmark insists on placing
+# the generated ".md" files where the ".Rmd" source files are located.  This will not be
+# necessary once we generate only a single report.
+
+import shutil, filecmp
+from glob import glob
+os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
+            exist_ok=True)
+
+def maybe_copy(source, target_dir):
+    target = path.join(target_dir, path.basename(source))
+    if not path.exists(target) or not filecmp.cmp(source, target):
+        shutil.copy(source, target_dir)
+
+for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
+    maybe_copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
+
+
+
+# Run snakemake!
+
+# Ensure that we use the configured Pandoc, pandoc-citeproc
+# ...and the configured Rscript
+bin = path.join(config['locations']['output-dir'], 'path_links/bin')
+if path.exists(bin): shutil.rmtree(bin)
+os.makedirs(bin, exist_ok=True)
+os.symlink('@PANDOC@', path.join(bin, "pandoc"))
+os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
+os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
+os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+
+if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+    where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+    pretty = path.join(where, 'etc/pretty.txt')
+else:
+    pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
+
+if not os.getenv('PIGX_BSSEQ_UGLY'):
+    # Ensure that this is printed without errors, even if the user's
+    # locale is not a UTF-8 locale.
+    p = open(pretty, 'r', encoding='utf-8').read()
+    sys.stdout.buffer.write(p.encode('utf-8'))
+
+command = [
+    "@SNAKEMAKE@",
+    "--snakefile={}/BSseq_pipeline.py".format(config['locations']['pkglibexecdir']),
+    "--configfile={}".format(args.configfile),
+    "--directory={}".format(config['locations']['output-dir']),
+    "--jobs={}".format(config['execution']['jobs']),
+]
+
+if config['execution']['submit-to-cluster']:
+    cluster_config_file = generate_cluster_configuration()
+    print("Commencing snakemake run submission to cluster", flush=True)
+    if config['execution']['cluster']['contact-email'].lower() == 'none':
+        contact_email_string = ""
+    else:
+        contact_email_string = "-m abe -M %s" % config['execution']['cluster']['contact-email']
+
+    qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    command += [
+        "--cluster-config={}".format(cluster_config_file),
+        "--cluster={}".format(qsub)
+    ]
+else:
+    print("Commencing snakemake run submission locally", flush=True)
+
+if args.force:
+    command.append("--forceall")
+if args.dry_run:
+    command.append("--dryrun")
+if args.graph:
+    command.append("--dag")
+
+import subprocess
+subprocess.run(command)

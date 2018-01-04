@@ -1,0 +1,157 @@
+---
+title: 'PiGx: BS-seq'
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { Sys.getenv("SOURCE_DATE_EPOCH") } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+bibliography: reports.bib
+params:
+  assembly: ''
+  inBed: '' 
+  refseqfile: '' 
+  sessioninfo: TRUE
+  references: TRUE
+---
+
+```{r include=FALSE}
+makeSessioninfo=params$sessioninfo
+makeReferences = params$references
+```
+
+
+```{r eval_params, echo=FALSE}
+
+inBed     <- params$inBed
+assembly  <- params$assembly
+refgenes.file <- params$refseqfile
+```
+
+## Annotation of Segments
+
+The annotation of the identified regions with genomic features allows a better understanding and characterization of detected regions. 
+
+The annotation with 
+
+```{r, include=FALSE,warning=FALSE}
+
+  suppressPackageStartupMessages(expr = {
+    library("genomation")
+    library("GenomicRanges")
+    require("AnnotationHub")
+    require("rtracklayer")
+
+  })
+```
+
+### Libraries
+```{r, eval=FALSE, include=TRUE}
+
+    library("genomation")
+    library("GenomicRanges")
+
+```
+
+### Parameters
+```{r print_params, echo=TRUE, results="asis"}
+
+paramsDesc <- c("Input file",
+                "Genome Assembly",
+                "RefSeq Genes")
+
+paramsValues <- c(params$inBed,
+                  params$assembly,
+                  params$refseqfile)
+
+
+
+inputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
+
+
+
+### Preprocessing
+
+We first need to fetch the reference gene set for the given genome assembly. To do this we check the data from the [AnnotationHub](http://bioconductor.org/packages/release/bioc/html/AnnotationHub.html) Package [@ah2017] wich provides fast access to tracks and datasets available at BroadInstitute, UCSC, Ensembl and others. Whilst this package allows us to query a current snapshot of those databases, there is the possibility that a certain track might be newer than the current snapshot. This is why we query the UCSC table browser directly using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009].
+
+After we have aquired the reference genes, we can determine different features intrinsic to each gene, such as promoter, exon or intron using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014]. 
+
+
+```{r, message=FALSE, include=TRUE, eval=FALSE}
+
+## filename can either be passed as argument or be this generic pasted one
+refgenes.file <- paste0("refseq.genes.",assembly,".bed")
+
+fetchRefGene(refgenes.loc = refgenes.file,refgenes.assembly = assembly)
+
+## now we parse the gene features
+refgenes.grl <- readTranscriptFeatures(refgenes.file)
+```
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+
+## now we parse the gene features
+refgenes.grl <- readTranscriptFeatures(refgenes.file)
+```
+
+### Annotation
+
+Now we can load the segments to detect to overlap percentage with gene features.
+
+```{r, message=FALSE,warning=FALSE}
+
+# now load segments 
+segments.gr <- readBed(file = inBed,
+                      track.line = "auto")
+
+# split according
+segments.grl <- GenomicRanges::split(x = segments.gr,f = segments.gr$name)
+
+# and detect overlaps 
+
+annot.gene.list <- annotateWithGeneParts(target = segments.grl,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+
+```
+
+
+Finally we plot the average methylation per segment group and the overlap with gene features.
+```{r fig.show="hold"}
+## percentage of target features overlapping with annotation:
+## (with promoter > exon > intron precedence)
+annot.gene.mat <- as.matrix(sapply(annot.gene.list, function(x) x@precedence))
+
+  par(mfrow=c(1,2))
+boxplot(sapply(split(x = segments.gr,f = segments.gr$name),FUN = function(x) x$score),
+        ylab = "Methylation (%)",
+        xlab = "Segment")
+
+# plot the target overlap for each segemnt type
+# barplot(annot.gene.mat,legend.text = TRUE)
+barplot(annot.gene.mat,
+        ylab = "Overlap (%)",
+        xlab = "Segment")
+legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,length.out = ncol(annot.gene.mat))))
+
+```
+
+
+`r if(makeSessioninfo) {"### Session Info"}`
+
+```{r ,include=makeSessioninfo  }
+sessionInfo()
+```
+
+
+<!-- this section is used to generate a merged sessioninfo from multiple reports -->
+```{r, include=FALSE }
+session_file <- tempfile(pattern = 'session',tmpdir = ".",fileext = '.rds')
+sess <- sessionInfo()
+saveRDS(sess,file = session_file)
+```
+
+
+`r if(makeReferences) {"### References"}`

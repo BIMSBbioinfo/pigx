@@ -1,0 +1,25 @@
+---
+title: "PiGx: BS-seq"
+output: 
+  html_notebook: 
+    toc:        TRUE
+    toc_float:  TRUE
+    theme:      "lumen"
+    number_sections: FALSE
+    code_folding: "hide"
+    self_contained: TRUE
+    includes:
+      in_header: pigx_bsseq_logo.html
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { Sys.getenv("SOURCE_DATE_EPOCH") } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+bibliography: reports.bib
+link-citations: yes
+---
+
+# Final Report {-}
+
+PiGx BSseq is a data processing pipeline for data from bisulfite experiments. It automates the analysis of raw single-end or paired-end fastq reads. It includes quality control, trimming and alignment, while further providing post mapping analysis, as differential methylation detection, methylation segmentation and annotation of detected regions. 
+It was first developed by the Akalin group at MDC in Berlin in 2017.
+
+This report was generated with PiGx BSseq version @VERSION@.
+
+<!-- The FastQC reports are located here: `r paste0(getwd(),"/01_rawqc")` -->

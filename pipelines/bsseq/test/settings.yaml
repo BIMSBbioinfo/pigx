@@ -1,0 +1,24 @@
+locations:
+  input-dir: in/
+  output-dir: out/
+  genome-dir: genome/
+
+general:
+  genome-version: hg19
+  methylation-calling:
+    minimum-coverage: 0
+    minimum-quality: 10
+  differential-methylation:
+    cores: 20
+    treatment-groups:
+      - ['0', '1']
+
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: none
