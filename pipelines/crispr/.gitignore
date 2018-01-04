@@ -1,0 +1,6 @@
+.DS_Store
+./pipeline/*
+./sample_data
+./aln
+./.snakemake/
+./fastqc 
