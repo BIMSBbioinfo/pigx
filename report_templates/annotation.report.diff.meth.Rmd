@@ -119,7 +119,7 @@ for CpG islands and shores.
 
 
 ```{r annotate with refseq genes}
-source(paste0(scripts_dir, "fetch_procedures.R"))
+source(paste0(params$scripts_dir, "fetch_procedures.R"))
 fetched.refgenes = fetchTablefromUCSC("refGene", table.loc = refgenes.file, assembly)
 
 cpgi.file <- paste0("cpgi.",assembly,".bed")
@@ -253,7 +253,7 @@ names(chr.len)=chr.len.df[,1]
 myseqinfo = Seqinfo(chr.len.df[,1], seqlengths=chr.len.df[,2], genome=assembly)
 myseqinfo.st = keepStandardChromosomes(myseqinfo)
 
-source(paste0(scripts_dir, "ideoDMC.R"))
+source(paste0(params$scripts_dir, "ideoDMC.R"))
 ideoDMC_hyper_hypo(methylDiff.obj_hyper, methylDiff.obj_hypo, chrom.length = seqlengths( myseqinfo.st ),
        circos = FALSE, title = "Differential methylation", hyper.col = "magenta", hypo.col = "green") 
 
