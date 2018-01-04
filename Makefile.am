@@ -60,3 +60,16 @@ report_templates/pigx_bsseq_logo.html:
 # Build docker image with Guix
 docker: dist
 	guix pack -e '(load "guix.scm")' --with-source=pigx_bsseq-$(VERSION).tar.gz -f docker -S /bin=bin -S /lib=lib -S /share=share glibc-utf8-locales tzdata coreutils
+
+# For developers: fetch and convert bed files for hg19 assembly.  Requires bedops.
+fetch-cpg:
+	wget -qO- http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/cpgIslandExt.txt.gz \
+	   | gunzip -c \
+	   | awk 'BEGIN{ OFS="\t"; }{ print $$2, $$3, $$4, $$5$$6, substr($$0, index($$0, $$7)); }' \
+	   | sort-bed - | gzip > cpgIslandExt.hg19.bed.gz
+
+fetch-ref:
+	wget -qO- http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/refGene.txt.gz \
+	   | gunzip -c \
+	   | awk 'BEGIN{ OFS="\t"; }{ print $$3, $$5, $$6, $$2, $$12, $$4, $$7, $$8; }' \
+	   | sort-bed - | gzip > refGene.hg19.bed.gz
