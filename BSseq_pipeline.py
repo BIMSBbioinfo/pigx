@@ -25,7 +25,6 @@ WORKDIR = os.getcwd() + "/"                         #--- current work dir (impor
 
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 DIR_templates = os.path.join(config['locations']['output-dir'], 'path_links/report_templates/')
-# DIR_xmethed     = 'xx_xmethed/' #--- no longer used
 
 DIR_diffmeth    = '10_differential_methylation/'
 DIR_annot       = '09_annotation/'
@@ -441,9 +440,6 @@ rule bam_methCall:
     run:
         generateReport(input, output, params, log, wildcards.prefix)
 
-#----------------------------------- START METH SEGMENTATION
-
-
 ## Segmentation
 rule methseg:
     ## paths inside input and output should be relative
@@ -506,9 +502,6 @@ rule methseg_annotation:
     run:
         generateReport(input, output, params, log, wildcards.prefix)
 
-#----------------------------------- END METH SEGMENTATION
-#----------------------------------- START DIFF METH
-
 ## Differential methylation
 rule diffmeth:
     ## paths inside input and output should be relative
@@ -558,9 +551,6 @@ rule annotation_diffmeth:
         os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
     run:
         generateReport(input, output, params, log, wildcards.treatment+"."+wildcards.assembly)
-
-#----------------------------------- END DIFF METH
-   
 
 ### note that Final report can only be generated 
 ### if one of the intermediate has been genereted,
