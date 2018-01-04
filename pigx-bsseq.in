@@ -273,6 +273,34 @@ SETTINGSFILE as inputs."""
                            separators=(",",": "), ensure_ascii=True)
         outfile.write(dumps)
 
+def generate_cluster_configuration():
+    bismark_cores = int(config['tools']['bismark']['cores'])
+    bismark_pe_threads = 4 * bismark_cores
+    bismark_se_threads = 2 * bismark_cores
+
+    # Create the cluster configuration file
+    rules = [
+        ('__default__', 1, config['execution']['cluster']['memory']),
+        ('bismark_se', bismark_se_threads, config['tools']['bismark']['memory']),
+        ('bismark_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
+    ]
+
+    cluster_conf = {}
+    for rule, nthreads, mem in rules:
+        cluster_conf[rule] = {
+            'nthreads': nthreads,
+            'q': config['execution']['cluster']['queue'],
+            'MEM': mem,
+            'h_stack': config['execution']['cluster']['stack']
+        }
+
+    cluster_config_file = "cluster_conf.json"
+    with open(cluster_config_file, 'w') as outfile:
+        dumps = json.dumps(cluster_conf,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+
 
 generate_config(args.configfile,
                 args.samplesheet,
@@ -346,34 +374,6 @@ for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
 
 
 # Run snakemake!
-
-def generate_cluster_configuration():
-    bismark_cores = int(config['tools']['bismark']['cores'])
-    bismark_pe_threads = 4 * bismark_cores
-    bismark_se_threads = 2 * bismark_cores
-
-    # Create the cluster configuration file
-    rules = [
-        ('__default__', 1, config['execution']['cluster']['memory']),
-        ('bismark_se', bismark_se_threads, config['tools']['bismark']['memory']),
-        ('bismark_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
-    ]
-
-    cluster_conf = {}
-    for rule, nthreads, mem in rules:
-        cluster_conf[rule] = {
-            'nthreads': nthreads,
-            'q': config['execution']['cluster']['queue'],
-            'MEM': mem,
-            'h_stack': config['execution']['cluster']['stack']
-        }
-
-    cluster_config_file = "cluster_conf.json"
-    with open(cluster_config_file, 'w') as outfile:
-        dumps = json.dumps(cluster_conf,
-                           indent=4, sort_keys=True,
-                           separators=(",",": "), ensure_ascii=True)
-        outfile.write(dumps)
 
 # Ensure that we use the configured Pandoc, pandoc-citeproc
 # ...and the configured Rscript
