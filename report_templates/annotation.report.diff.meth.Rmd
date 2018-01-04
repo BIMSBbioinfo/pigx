@@ -17,11 +17,11 @@ bibliography: reports.bib
 params:
   inBed:    "/home/kwreczy/tmp/my_output/differential_methylation/0_1.sorted_diffmeth.bed"
   assembly: "ce10"
-  refseqfile: "/blabla/annotation/refseq.genes.ce10.bed"
   methylDiff_file: "ablabla.RDS"
   methylDiff_hyper_file:    "/blala.RDS"
   methylDiff_hypo_file:    "/blabla.RDS"
   scripts_dir: "/blabla/scripts/"
+  genome_dir: ""
   sessioninfo: TRUE
   references: TRUE
 ---
@@ -38,7 +38,6 @@ makeReferences = params$references
 
 inBed      <- params$inBed
 assembly      <- params$assembly
-refgenes.file <- params$refseqfile
 methylDiff_file      <- params$methylDiff_file
 methylDiff_hyper_file      <- params$methylDiff_hyper_file
 methylDiff_hypo_file      <- params$methylDiff_hypo_file
@@ -77,15 +76,13 @@ paramsDesc <- c("Input Data (diff. methyl.)",
                 "Input RDS Data (diff. methyl. Cs)",
                 "Input RDS Data (hyper-methyl. Cs)",
                 "Input RDS Data (hypo-methyl. Cs)",
-                "Assembly",
-                "RefSeq genes file")
+                "Assembly")
 
 paramsValues <- c( inBed ,
                    methylDiff_file,
                    methylDiff_hyper_file,
                    methylDiff_hypo_file,
-                   assembly,
-                   refgenes.file )
+                   assembly )
 
 inputParams <- data.frame(Parameters = paramsDesc,
                           Values = paramsValues,
@@ -120,10 +117,16 @@ for CpG islands and shores.
 
 ```{r annotate with refseq genes}
 source(paste0(params$scripts_dir, "fetch_procedures.R"))
-fetched.refgenes = fetchTableFromUCSC("refGene", table.loc = refgenes.file, assembly)
+fetched.refgenes <- lookupBedFile(type="refGene",
+                                  filename = paste0("refGene.", assembly, ".bed"),
+                                  dir = params$genome_dir,
+                                  assembly = assembly)
 
-cpgi.file <- paste0("cpgi.",assembly,".bed")
-fetched.cpgi = fetchTableFromUCSC("cpgIslandExt", table.loc = cpgi.file, assembly)
+cpgi.file <- paste0("cpgIslandExt.", assembly, ".bed")
+fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
+                              filename = cpgi.file,
+                              dir = params$genome_dir,
+                              assembly = assembly)
 
 ```
 
@@ -173,7 +176,7 @@ Show overlap percentage of differentially methylated bases with gene features, C
 
 if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
   ## now we parse the gene features
-  refgenes.grl <- readTranscriptFeatures(refgenes.file)
+  refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
 
   annot.gene <- annotateWithGeneParts(target = GRanges.diffmeth,
                                          feature = refgenes.grl,
@@ -188,7 +191,7 @@ if(!is.na(fetched.cpgi) & length(GRanges.diffmeth)!=0){
   
   # read the shores and flanking regions and name the flanks as shores 
   # and CpG islands as CpGi
-  cpg.obj=readFeatureFlank(cpgi.file,
+  cpg.obj=readFeatureFlank(fetched.cpgi,
                            feature.flank.name=c("CpGi","shores"))
   #
   # convert methylDiff object to GRanges and annotate

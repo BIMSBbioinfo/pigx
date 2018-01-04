@@ -26,6 +26,7 @@ params:
   mincov: 0
   context: "CpG"
   workdir: "~/outputdir/"
+  scripts_dir: ""
   cores: 2
   sessioninfo: TRUE
   references: TRUE

@@ -5,7 +5,8 @@ bibliography: reports.bib
 params:
   assembly: ''
   inBed: '' 
-  refseqfile: '' 
+  genome_dir: ''
+  scripts_dir: ''
   sessioninfo: TRUE
   references: TRUE
 ---
@@ -20,7 +21,6 @@ makeReferences = params$references
 
 inBed     <- params$inBed
 assembly  <- params$assembly
-refgenes.file <- params$refseqfile
 ```
 
 ## Annotation of Segments
@@ -52,12 +52,10 @@ The annotation with
 ```{r print_params, echo=TRUE, results="asis"}
 
 paramsDesc <- c("Input file",
-                "Genome Assembly",
-                "RefSeq Genes")
+                "Genome Assembly")
 
 paramsValues <- c(params$inBed,
-                  params$assembly,
-                  params$refseqfile)
+                  params$assembly)
 
 
 
@@ -79,15 +77,12 @@ We first need to fetch the reference gene set for the given genome assembly. To 
 After we have aquired the reference genes, we can determine different features intrinsic to each gene, such as promoter, exon or intron using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014]. 
 
 
-```{r, message=FALSE, include=TRUE, eval=FALSE}
-
-## filename can either be passed as argument or be this generic pasted one
-refgenes.file <- paste0("refseq.genes.",assembly,".bed")
-
-fetchRefGene(refgenes.loc = refgenes.file,refgenes.assembly = assembly)
-
-## now we parse the gene features
-refgenes.grl <- readTranscriptFeatures(refgenes.file)
+```{r, message=FALSE, include=TRUE}
+source(paste0(params$scripts_dir, "fetch_procedures.R"))
+refgenes.file <- lookupBedFile(type = "refGene",
+                               filename = paste0("refGene.", assembly, ".bed"),
+                               dir = params$genome_dir,
+                               assembly = assembly)
 ```
 
 ```{r, echo=FALSE, message=FALSE,warning=FALSE}

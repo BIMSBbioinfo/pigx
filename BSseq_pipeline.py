@@ -477,7 +477,7 @@ rule fetch_refGene:
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
     shell:
-        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly} {DIR_scripts}"
+        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly} {DIR_scripts} " + config['locations']['genome-dir']
 
 
 ## Annotation with gene features
@@ -490,8 +490,9 @@ rule methseg_annotation:
         report      = os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.nb.html"),
     params:
         inBed       = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        genome_dir  = config['locations']['genome-dir'],
+        scripts_dir = DIR_scripts,
         assembly    = "{assembly}",# expand(config["reference"]),
-        refseqfile  = os.path.join(WORKDIR,DIR_annot,"refseq.genes.{assembly}.bed")
     log:
         os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.log")
     message:
@@ -524,7 +525,8 @@ rule diffmeth:
         treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         context     = "CpG",
-        cores       = int(config['general']['differential-methylation']['cores'])
+        cores       = int(config['general']['differential-methylation']['cores']),
+        scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
     run:
@@ -542,10 +544,10 @@ rule annotation_diffmeth:
     params:
         inBed       = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
         assembly    = config['general']['genome-version'],
-        refseqfile  = os.path.join(WORKDIR,DIR_annot,"refseq.genes.{assembly}.bed"),
         methylDiff_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
         methylDiff_hyper_file = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
         methylDiff_hypo_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
+        genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
