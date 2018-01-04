@@ -309,6 +309,7 @@ def generate_cluster_configuration():
                            indent=4, sort_keys=True,
                            separators=(",",": "), ensure_ascii=True)
         outfile.write(dumps)
+    return cluster_config_file
 
 
 generate_config(args.configfile,
@@ -415,7 +416,7 @@ command = [
 ]
 
 if config['execution']['submit-to-cluster']:
-    generate_cluster_configuration()
+    cluster_config_file = generate_cluster_configuration()
     print("Commencing snakemake run submission to cluster", flush=True)
     if config['execution']['cluster']['contact-email'].lower() == 'none':
         contact_email_string = ""
