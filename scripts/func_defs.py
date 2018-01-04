@@ -187,7 +187,8 @@ def generateReport(input, output, params, log, reportSubDir):
     dumps = json.dumps(dict(params.items()),sort_keys=True,
                        separators=(",",":"), ensure_ascii=True)
 
-    cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
+    cmd =   "{RSCRIPT} {DIR_scripts}/generate_report.R"
+    cmd +=  " --scriptsDir=" + DIR_scripts
     cmd +=  " --reportFile={input.template}"
     cmd +=  " --outFile={output.report}"
     cmd +=  " --finalReportDir=" + os.path.join(DIR_final,reportSubDir)
