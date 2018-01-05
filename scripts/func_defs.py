@@ -182,20 +182,6 @@ def diffmeth_input_function(wc):
   inputfiles = list(sum(inputfiles, []))
   return(inputfiles)
 
-
-def generateReport(input, output, params, log, reportSubDir):
-    dumps = json.dumps(dict(params.items()),sort_keys=True,
-                       separators=(",",":"), ensure_ascii=True)
-
-    cmd =   "{RSCRIPT} {DIR_scripts}/generate_report.R"
-    cmd +=  " --scriptsDir=" + DIR_scripts
-    cmd +=  " --reportFile={input.template}"
-    cmd +=  " --outFile={output.report}"
-    cmd +=  " --finalReportDir=" + os.path.join(DIR_final,reportSubDir)
-    cmd +=  " --report.params={dumps:q}"
-    cmd +=  " --logFile={log}"
-    shell(cmd, dumps)
-
 def tool(name):
     return config['tools'][name]['executable']
 
@@ -207,3 +193,16 @@ def nice(cmd, args, log=None):
     if log:
         line.append("> {} 2>&1".format(log))
     return " ".join(line)
+
+def generateReport(input, output, params, log, reportSubDir):
+    dumps = json.dumps(dict(params.items()),sort_keys=True,
+                       separators=(",",":"), ensure_ascii=True)
+
+    cmd = nice('Rscript', ["{DIR_scripts}/generate_report.R",
+                           "--scriptsDir=" + DIR_scripts,
+                           "--reportFile={input.template}",
+                           "--outFile={output.report}",
+                           "--finalReportDir=" + os.path.join(DIR_final,reportSubDir),
+                           "--report.params={dumps:q}",
+                           "--logFile={log}"])
+    shell(cmd, dumps)

@@ -54,9 +54,6 @@ SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
 DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
 
-RSCRIPT =  config['tools']['R']['Rscript']
-
-
 # include function definitions and extra rules
 include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
 
@@ -464,7 +461,12 @@ rule fetch_refGene:
     message:
         "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
     shell:
-        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly} {DIR_scripts} " + config['locations']['genome-dir']
+        nice('Rscript', ["{DIR_scripts}/fetch_refGene.R",
+                         "{log}",
+                         "{output.refgenes}",
+                         "{params.assembly}",
+                         "{DIR_scripts}",
+                         config['locations']['genome-dir']])
 
 
 ## Annotation with gene features
@@ -558,7 +560,11 @@ rule merge_diffmeth_report:
     params:
        diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
     shell:
-      "{RSCRIPT} {DIR_scripts}/integrate2finalreport.R {wildcards.prefix} {wildcards.assembly} {DIR_final} {params.diffmeth}"
+       nice('Rscript', ["{DIR_scripts}/integrate2finalreport.R",
+                        "{wildcards.prefix}",
+                        "{wildcards.assembly}",
+                        "{DIR_final}",
+                        "{params.diffmeth}"])
 
 
 ## Final Report
@@ -579,14 +585,13 @@ rule final_report:
         "   report    : {output.finalreport}"
         
     run:
-        cmd  =  "{RSCRIPT} {DIR_scripts}/generate_multireport.R"
-        cmd +=  " --scriptsDir={DIR_scripts}"
-        cmd +=  " --index={input.index}"
-        cmd +=  " --finalOutput={output.finalreport}"
-        cmd +=  " --finalReportDir={params.finalreportdir}"
-        cmd +=  " --references={input.references}"
-        cmd +=  " --sessioninfo={input.sessioninfo}"
-        cmd +=  " --logFile={log}"
-        
+        cmd = nice('Rscript', ["{DIR_scripts}/generate_multireport.R",
+                               "--scriptsDir={DIR_scripts}",
+                               "--index={input.index}",
+                               "--finalOutput={output.finalreport}",
+                               "--finalReportDir={params.finalreportdir}",
+                               "--references={input.references}",
+                               "--sessioninfo={input.sessioninfo}",
+                               "--logFile={log}"])
         shell(cmd)
 
