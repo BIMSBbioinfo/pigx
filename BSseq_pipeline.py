@@ -187,6 +187,21 @@ onsuccess:
                 print("  - {}".format(name))
 
 # ==========================================================================================
+# export a bigwig file
+ 
+rule export_bigwig:
+    input:
+        seqlengths = DIR_mapped+"Refgen_{ASSEMBLY}_chromlengths.csv",
+        rdsfile    = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
+    output:
+        bw         = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS") 
+    shell:
+        nice('Rscript', ["{DIR_scripts}/export_bw.R",
+                         "{input.rdsfile}",
+                         "{input.seqlengths}",
+                         ASSEMBLY,
+                         "{output}"])
+
 # sort the bam file:
 
 rule sortbam_se:
@@ -291,6 +306,21 @@ rule bismark_align_and_map_pe:
     shell:
         nice('bismark', ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
 
+
+# ==========================================================================================
+# create a csv file tabulating the lengths of the chromosomes in the reference genome:
+
+rule tabulate_seqlengths:
+    input:
+        BS_CT_path = ancient( GENOMEPATH+"Bisulfite_Genome/CT_conversion/BS_CT" )
+    output:
+        seqlengths = DIR_mapped+"Refgen_{ASSEMBLY}_chromlengths.csv",
+    params:
+        chromlines = " | grep Sequence "
+        chromcols  = " | cut -f2,3     "
+        seqnames   = " | sed \"s/_CT_converted//g\" "
+    shell:
+        nice('bowtie2-inspect', ['-s  {input}', '{params}', ' > {output}'])
 
 # ==========================================================================================
 # generate reference genome:
