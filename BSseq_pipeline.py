@@ -129,7 +129,7 @@ targets = {
 		            
     'annotation': {
         'description': "Annotate differential methylation cytosines.",
-        'files': [ DIR_annot+"_".join(x)+".sorted_"+config['general']['genome-version']+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]]
+        'files': [ DIR_annot+"_".join(x)+".sorted_"+ASSEMBLY+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]]
     },
 
     'final-report': {
@@ -405,7 +405,7 @@ rule bam_methCall:
     params:
         ## absolute path to bamfiles
         inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
-        assembly    = config['general']['genome-version'],
+        assembly    = ASSEMBLY,
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
         ## absolute path to output folder in working dir
@@ -508,7 +508,7 @@ rule diffmeth:
         methylDiff_hyper_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
         methylDiff_hypo_file   = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
         outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = config['general']['genome-version'],
+        assembly    = ASSEMBLY,
         treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         context     = "CpG",
@@ -530,7 +530,7 @@ rule annotation_diffmeth:
         report      = os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.nb.html"),
     params:
         inBed       = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = config['general']['genome-version'],
+        assembly    = ASSEMBLY,
         methylDiff_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
         methylDiff_hyper_file = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
         methylDiff_hypo_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
