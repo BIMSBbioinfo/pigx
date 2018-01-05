@@ -54,17 +54,7 @@ SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
 DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
 
-#-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
-
-FASTQC                         =  config['tools']['fastqc']['executable']
-TRIMGALORE                     =  config['tools']['trim-galore']['executable']
-CUTADAPT                       =  config['tools']['cutadapt']['executable']
-BISMARK_GENOME_PREPARATION     =  config['tools']['bismark-genome-preparation']['executable']
-BISMARK                        =  config['tools']['bismark']['executable']
-BOWTIE2                        =  config['tools']['bowtie2']['executable']
-DEDUPLICATE_BISMARK            =  config['tools']['deduplicate-bismark']['executable']
-SAMTOOLS                       =  config['tools']['samtools']['executable']
-RSCRIPT                        =  config['tools']['R']['Rscript']
+RSCRIPT =  config['tools']['R']['Rscript']
 
 
 # include function definitions and extra rules
@@ -191,7 +181,7 @@ rule sortbam_se:
         DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice(SAMTOOLS, ["sort", "{input}", "-o {output}"])
+        nice('samtools', ["sort", "{input}", "-o {output}"])
 #-----------------------
 rule sortbam_pe:
     input:
@@ -200,7 +190,7 @@ rule sortbam_pe:
         DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice(SAMTOOLS, ["sort", "{input}", "-o {output}"])
+        nice('samtools', ["sort", "{input}", "-o {output}"])
 
 # ==========================================================================================
 # deduplicate the bam file:
@@ -212,12 +202,12 @@ rule deduplication_se:
         DIR_deduped+"{sample}_se_bt2.deduped.bam"
     params:
         bam="--bam ",
-        sampath="--samtools_path "+SAMTOOLS
+        sampath="--samtools_path " + tool('samtools')
     log:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
-        nice(SAMTOOLS, ["rmdup", "{input}", "{output}"], "{log}")
+        nice('samtools', ["rmdup", "{input}", "{output}"], "{log}")
 #-----------------------
 rule deduplication_pe:
     input:
@@ -228,7 +218,7 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
-        nice(SAMTOOLS, ["fixmate", "{input}", "{output}"], "{log}")
+        nice('samtools', ["fixmate", "{input}", "{output}"], "{log}")
 
 # ==========================================================================================
 # align and map:
@@ -247,16 +237,16 @@ rule bismark_align_and_map_se:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
         useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+DIR_mapped
-        cores = "--multicore "+bismark_cores
+        samtools    = "--samtools_path "+ os.path.dirname(tool('samtools')),
+        tempdir     = "--temp_dir " + DIR_mapped,
+        cores = "--multicore " + bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_se_mapping.log"
     message: fmt("Mapping single-end reads to genome {VERSION}")
     shell:
-        nice(BISMARK, ["{params}", "{input.fqfile}"], "{log}")
+        nice('bismark', ["{params}", "{input.fqfile}"], "{log}")
 
 rule bismark_align_and_map_pe:
     input:
@@ -274,16 +264,16 @@ rule bismark_align_and_map_pe:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
         useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
+        samtools    = "--samtools_path "+ os.path.dirname(tool('samtools')),
         tempdir     = "--temp_dir "+DIR_mapped,
         cores = "--multicore "+bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: fmt("Mapping paired-end reads to genome {VERSION}.")
     shell:
-        nice(BISMARK, ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
+        nice('bismark', ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
 
 
 # ==========================================================================================
@@ -297,14 +287,14 @@ rule bismark_genome_preparation:
         GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
     params:
         bismark_genome_preparation_args = config['tools']['bismark-genome-preparation']['args'],
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
         useBowtie2 = "--bowtie2 ",
         verbose = "--verbose "
     log:
         'bismark_genome_preparation_'+VERSION+'.log'
     message: fmt("Converting {VERSION} Genome into Bisulfite analogue")
     shell:
-        nice(BISMARK_GENOME_PREPARATION, ["{params}", "{input}"], "{log}")
+        nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
 
 # ==========================================================================================
 # post-trimming quality control
@@ -322,7 +312,7 @@ rule fastqc_after_trimming_se:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed single-end data from {input}")
     shell:
-        nice(FASTQC, ["{params}", "{input}"], "{log}")
+        nice('fastqc', ["{params}", "{input}"], "{log}")
 
 rule fastqc_after_trimming_pe:
     input:
@@ -340,7 +330,7 @@ rule fastqc_after_trimming_pe:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed paired-end data from {input}")
     shell:
-        nice(FASTQC, ["{params}", "{input}"], "{log}")
+        nice('fastqc', ["{params}", "{input}"], "{log}")
 
 # ==========================================================================================
 # trim the reads
@@ -356,12 +346,12 @@ rule trim_reads_se:
        outdir = "--output_dir "+DIR_trimmed,
        phred = "--phred33",
        gz = "--gzip",
-       cutadapt = "--path_to_cutadapt "+CUTADAPT,
+       cutadapt = "--path_to_cutadapt " + tool('cutadapt'),
     log:
        DIR_trimmed+"{sample}.trimgalore.log"
     message: fmt("Trimming raw single-end read data from {input}")
     shell:
-       nice(TRIMGALORE, ["{params}", "{input.file}"], "{log}")
+       nice('trim-galore', ["{params}", "{input.file}"], "{log}")
 
 rule trim_reads_pe:
     input:
@@ -377,14 +367,14 @@ rule trim_reads_pe:
         outdir         = "--output_dir "+DIR_trimmed,
         phred          = "--phred33",
         gz             = "--gzip",
-        cutadapt       = "--path_to_cutadapt "+CUTADAPT,
+        cutadapt       = "--path_to_cutadapt " + tool('cutadapt'),
         paired         = "--paired"
     log:
         DIR_trimmed+"{sample}.trimgalore.log"
     message:
         fmt("Trimming raw paired-end read data from {input}")
     shell:
-        nice(TRIMGALORE, ["{params}", "{input.files}"], "{log}")
+        nice('trim-galore', ["{params}", "{input.files}"], "{log}")
 
 # ==========================================================================================
 # raw quality control
@@ -402,7 +392,7 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         DIR_rawqc+"{sample}_fastqc.log"
     message: fmt("Quality checking raw read data from {input}")
     shell:
-        nice(FASTQC, ["{params}", "{input}"], "{log}")
+        nice('fastqc', ["{params}", "{input}"], "{log}")
 
 
 

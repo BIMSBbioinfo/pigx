@@ -196,10 +196,14 @@ def generateReport(input, output, params, log, reportSubDir):
     cmd +=  " --logFile={log}"
     shell(cmd, dumps)
 
+def tool(name):
+    return config['tools'][name]['executable']
+
 # Generate a command line string that can be passed to snakemake's
 # "shell".  The string is prefixed with an invocation of "nice".
 def nice(cmd, args, log=None):
-    line = ["nice -" + str(config['execution']['nice']), cmd] + args
+    executable = tool(cmd)
+    line = ["nice -" + str(config['execution']['nice']), executable] + args
     if log:
         line.append("> {} 2>&1".format(log))
     return " ".join(line)
