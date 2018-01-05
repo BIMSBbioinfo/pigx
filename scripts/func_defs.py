@@ -81,10 +81,6 @@ def list_files_sortbam(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def fmt(message):
-    """Format the MESSAGE string."""
-    return "----------  " + message + "  ----------"
-
 def bam_processing(files, sampleID):
     PATH = DIR_methcall
     if len(files) == 1:
@@ -113,7 +109,12 @@ def list_final_reports(files, sampleID):
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.nb.html"] #---- paired end
 
-        
+
+
+def fmt(message):
+    """Format the MESSAGE string."""
+    return "----------  " + message + "  ----------"
+
 def get_fastq_name(full_name):
     # single end
     find_se_inx=full_name.find('_se_bt2')
