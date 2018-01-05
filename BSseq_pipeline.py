@@ -84,15 +84,13 @@ targets = {
         'files': []
     },
 
-    # These are expensive one-time rules to prepare the genome.
-    'genome-prep-CT': {
-        'description': "C-to-T convert reference genome into Bisulfite analogue.",
-        'files': GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa"
-    },
-
-    'genome-prep-GA': {
-        'description': "G-to-A convert reference genome into Bisulfite analogue.",
-        'files': GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
+    # This is an expensive one-time rule to prepare the genome.
+    'genome-prep': {
+        'description': "Convert reference genome into Bisulfite analogue.",
+        'files': [
+            GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
+            GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
+        ]
     },
 
     'raw-qc': {
