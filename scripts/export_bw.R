@@ -3,10 +3,12 @@
 
 #-------------------------------------------------------------------------
 
-library(GenomicRanges)
-library(stringr)
-library(methylKit)
-library(rtracklayer)
+suppressPackageStartupMessages(expr = {
+  library(GenomicRanges)
+  library(stringr)
+  library(methylKit)
+  library(rtracklayer)
+})
 
 args <- commandArgs(trailingOnly = TRUE)
 

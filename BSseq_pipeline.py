@@ -115,12 +115,7 @@ targets = {
 
     'bigwig': {
         'description': "export bigwig files to separate folder for visualization",
-        'files': [
-             expand (bam_processing(DIR_bigwig,
-                                   config["SAMPLES"][sample]["files"],
-                                   sample))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(bigwig_exporting) 
     },
  
     'segmentation': {
@@ -200,12 +195,29 @@ onsuccess:
 # ==========================================================================================
 # export a bigwig file
  
-rule export_bigwig:
+rule export_bigwig_pe:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}.sorted_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_1_val_1_bt2.deduped.sorted_methylRaw.RDS")
     output:
-        bw         = os.path.join(DIR_bigwig,   "{prefix}.sorted_methylRaw.RDS") 
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_pe.bw") 
+    message: fmt("exporting bigwig files from paired-end stream.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/export_bw.R",
+                         "{input.rdsfile}",
+                         "{input.seqlengths}",
+                         ASSEMBLY,
+                         "{output}"])
+
+#-----------------------
+
+rule export_bigwig_se:
+    input:
+        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.deduped.sorted_methylRaw.RDS")
+    output:
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw") 
+    message: fmt("exporting bigwig files from single-end stream.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_bw.R",
                          "{input.rdsfile}",
@@ -320,21 +332,6 @@ rule bismark_align_and_map_pe:
 
 
 # ==========================================================================================
-# create a csv file tabulating the lengths of the chromosomes in the reference genome:
-
-rule tabulate_seqlengths:
-    input:
-        BS_CT_path = ancient( GENOMEPATH+"Bisulfite_Genome/CT_conversion/BS_CT" )
-    output:
-        seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
-    params:
-        chromlines = " | grep Sequence ",
-        chromcols  = " | cut -f2,3     ",
-        seqnames   = " | sed \"s/_CT_converted//g\" "
-    shell:
-        nice('bowtie2-inspect', ['-s  {input}', '{params}', ' > {output}'])
-
-# ==========================================================================================
 # generate reference genome:
 
 rule bismark_genome_preparation:
@@ -353,6 +350,23 @@ rule bismark_genome_preparation:
     message: fmt("Converting {ASSEMBLY} Genome into Bisulfite analogue")
     shell:
         nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
+
+# ==========================================================================================
+# create a csv file tabulating the lengths of the chromosomes in the reference genome:
+
+rule tabulate_seqlengths:
+    input:
+        rules.bismark_genome_preparation.output
+    output:
+        seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
+    params:
+        chromlines = " | grep Sequence ",
+        chromcols  = " | cut -f2,3     ",
+        seqnames   = " | sed \"s/_CT_converted//g\" "
+    message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
+    shell:
+        nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params}', ' > {output}'])
+
 
 # ==========================================================================================
 # post-trimming quality control

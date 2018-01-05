@@ -87,6 +87,13 @@ def bam_processing(files, sampleID):
         return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_calls.nb.html"] #---- paired end
+
+def bigwig_exporting(files, sampleID):
+    PATH = DIR_bigwig
+    if len(files) == 1:
+        return  PATH+sampleID+"_se.bw" #---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+"_pe.bw"] #---- paired end
         
 def methSeg(files, sampleID):
     PATH = DIR_seg
