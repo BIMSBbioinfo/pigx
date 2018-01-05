@@ -94,7 +94,7 @@ To see all available options type the `--help` option
 ```sh
 $ pigx-bsseq --help
 
-usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--target TARGET] [-n] [--graph] [--force] samplesheet
+usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--target TARGET] [-n] [--graph] [--force] [--reason] samplesheet
 
 PiGx BSseq Pipeline.
 
@@ -122,6 +122,8 @@ optional arguments:
                                           rules of this pipeline.
   --force                                 Force the execution of rules, even though the outputs are considered
                                           fresh.
+  --reason                                Print the reason why a rule is executed.
+
 
 This pipeline was developed by the Akalin group at MDC in Berlin in 2017.
 ```

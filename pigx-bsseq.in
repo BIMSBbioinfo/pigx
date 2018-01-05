@@ -95,6 +95,10 @@ parser.add_argument('--force', dest='force', action='store_true',
 Force the execution of rules, even though the outputs are considered
 fresh.""")
 
+parser.add_argument('--reason', dest='reason', action='store_true',
+                    help="""\
+Print the reason why a rule is executed.""")
+
 args = parser.parse_args()
 
 
@@ -446,6 +450,9 @@ if args.dry_run:
     command.append("--dryrun")
 if args.graph:
     command.append("--dag")
+if args.reason:
+    command.append("--reason")
+
 if args.target == 'help':
     command.append("help")
 
