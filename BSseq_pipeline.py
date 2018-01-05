@@ -109,35 +109,18 @@ targets = {
      # TODO: had to add this part to call bam_methCall for diff meth rule
     'methyl-calling': {
         'description': "Process bam files.",
-        'files': [
-            expand (bam_processing(DIR_methcall,
-                                   config["SAMPLES"][sample]["files"],
-                                   sample))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(bam_processing)
     },
     
     'segmentation': {
         'description': "Segmentation of the methylation signal.",
-        'files': [
-            expand (methSeg(DIR_seg,
-                                   config["SAMPLES"][sample]["files"],
-                                   sample))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(methSeg)
     },
     
     'segmentation-annotation': {
         'description': "Annotation of the Segments.",
-        'files': [
-            expand (methSegAnnot(DIR_seg,
-                                   config["SAMPLES"][sample]["files"],
-                                   ASSEMBLY,
-                                   sample))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(methSegAnnot)
     },
-    
 
     'diffmeth': {
         'description': "Perform differential methylation calling.",
@@ -151,13 +134,7 @@ targets = {
 
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
-        'files': [
-            expand (Final(DIR_final,
-                          config["SAMPLES"][sample]["files"],
-                          ASSEMBLY,
-                          config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(list_final_reports)
     }
 }
 

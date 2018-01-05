@@ -85,29 +85,33 @@ def fmt(message):
     """Format the MESSAGE string."""
     return "----------  " + message + "  ----------"
 
-def bam_processing(PATH, files, sampleID):
+def bam_processing(files, sampleID):
+    PATH = DIR_methcall
     if len(files) == 1:
-      return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_calls.nb.html"] #---- paired end
         
-def methSeg(PATH, files, sampleID):
+def methSeg(files, sampleID):
+    PATH = DIR_seg
     if len(files) == 1:
-      return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_segments_gr.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_segments_gr.RDS"] #---- paired end
         
-def methSegAnnot(PATH, files, assembly, sampleID):
+def methSegAnnot(files, sampleID):
+    PATH = DIR_seg
     if len(files) == 1:
-      return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_annotation.nb.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_annotation.nb.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_annotation.nb.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_annotation.nb.html"] #---- paired end
 
-def Final(PATH, files, assembly, sampleID):
+def list_final_reports(files, sampleID):
+    PATH = DIR_final
     if len(files) == 1:
-      return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_final.nb.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.nb.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_final.nb.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.nb.html"] #---- paired end
 
         
 def get_fastq_name(full_name):
