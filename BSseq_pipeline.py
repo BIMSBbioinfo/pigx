@@ -291,7 +291,7 @@ rule bismark_pe:
 
 rule bismark_genome_preparation:
     input:
-        GENOMEPATH
+        ancient(GENOMEPATH)
     output:
         GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
         GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
