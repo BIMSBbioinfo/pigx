@@ -216,13 +216,13 @@ merge_chapters2 = function(files, to, before = NULL, after = NULL, orig = files)
 #' @export
 #'
 #' @examples
-render2multireport <- function(final_output,
+render2multireport <- function (final_output,
                                finalreportdir,
                                index=NULL,
                                references=NULL,
                                sessioninfo=NULL,
                                self_contained=TRUE,
-                               clean=FALSE) {
+                               clean=TRUE) {
   
 
   file.copy(paste0(dirname(index), "/", "pigx_bsseq_logo.html"),
@@ -359,8 +359,5 @@ render2multireport <- function(final_output,
   
   file.link(from = paste0(finalreportdir,"/",bookdown:::with_ext(basename(final_output),".html")),
               to = final_output)
-  
-  if(clean) unlink(finalreportdir,recursive = TRUE)
-  
 }
 
