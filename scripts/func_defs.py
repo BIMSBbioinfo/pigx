@@ -196,8 +196,10 @@ def generateReport(input, output, params, log, reportSubDir):
     cmd +=  " --logFile={log}"
     shell(cmd, dumps)
 
-#--- NICE gauges the computational burden, ranging from -19 to +19.
-#--- The more "nice" you are, the more you allow other processes to jump ahead of you
-#--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
-def nice(cmd):
-    return "nice -" + str(config['execution']['nice']) + " " + cmd
+# Generate a command line string that can be passed to snakemake's
+# "shell".  The string is prefixed with an invocation of "nice".
+def nice(cmd, args, log=None):
+    line = ["nice -" + str(config['execution']['nice']), cmd] + args
+    if log:
+        line.append("> {} 2>&1".format(log))
+    return " ".join(line)
