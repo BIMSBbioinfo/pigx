@@ -439,7 +439,8 @@ if config['execution']['submit-to-cluster']:
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
     command += [
         "--cluster-config={}".format(cluster_config_file),
-        "--cluster={}".format(qsub)
+        "--cluster={}".format(qsub),
+        "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
     print("Commencing snakemake run submission locally", flush=True)
