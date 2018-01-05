@@ -26,9 +26,10 @@ WORKDIR = os.getcwd() + "/"                         #--- current work dir (impor
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 DIR_templates = os.path.join(config['locations']['output-dir'], 'path_links/report_templates/')
 
-DIR_diffmeth    = '10_differential_methylation/'
-DIR_annot       = '09_annotation/'
-DIR_seg         = '08_segmentation/'
+DIR_diffmeth    = '11_differential_methylation/'
+DIR_annot       = '10_annotation/'
+DIR_seg         = '09_segmentation/'
+DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
 DIR_sorted      = '06_sorting/'
 DIR_deduped     = '05_deduplication/'
@@ -111,7 +112,17 @@ targets = {
         'description': "Process bam files.",
         'files': files_for_sample(bam_processing)
     },
-    
+
+    'bigwig': {
+        'description': "export bigwig files to separate folder for visualization",
+        'files': [
+             expand (bam_processing(DIR_bigwig,
+                                   config["SAMPLES"][sample]["files"],
+                                   sample))
+            for sample in config["SAMPLES"]
+        ]
+    },
+ 
     'segmentation': {
         'description': "Segmentation of the methylation signal.",
         'files': files_for_sample(methSeg)
@@ -191,10 +202,10 @@ onsuccess:
  
 rule export_bigwig:
     input:
-        seqlengths = DIR_mapped+"Refgen_{ASSEMBLY}_chromlengths.csv",
-        rdsfile    = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
+        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}.sorted_methylRaw.RDS")
     output:
-        bw         = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS") 
+        bw         = os.path.join(DIR_bigwig,   "{prefix}.sorted_methylRaw.RDS") 
     shell:
         nice('Rscript', ["{DIR_scripts}/export_bw.R",
                          "{input.rdsfile}",
@@ -202,6 +213,7 @@ rule export_bigwig:
                          ASSEMBLY,
                          "{output}"])
 
+# ==========================================================================================
 # sort the bam file:
 
 rule sortbam_se:
@@ -314,7 +326,7 @@ rule tabulate_seqlengths:
     input:
         BS_CT_path = ancient( GENOMEPATH+"Bisulfite_Genome/CT_conversion/BS_CT" )
     output:
-        seqlengths = DIR_mapped+"Refgen_{ASSEMBLY}_chromlengths.csv",
+        seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
     params:
         chromlines = " | grep Sequence ",
         chromcols  = " | cut -f2,3     ",
