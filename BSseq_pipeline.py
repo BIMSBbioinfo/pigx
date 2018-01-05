@@ -489,13 +489,13 @@ rule bam_methCall:
         os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
     message: fmt("Extract methylation calls from bam file.")
     shell:
-        nice(" ".join("{RSCRIPT},"{DIR_scripts}/methCall.R",
-        "--inBam {params.inBam}",
-        "--assembly {params.assembly}",
-        "--mincov {params.mincov}",
-        "--minqual {params.minqual}",
-        "--rds {params.rds}",
-        "--logFile {log}"))
+        nice(" ".join(["{RSCRIPT}","{DIR_scripts}/methCall.R",
+        "--inBam={params.inBam}",
+        "--assembly={params.assembly}",
+        "--mincov={params.mincov}",
+        "--minqual={params.minqual}",
+        "--rds={params.rds}",
+        "--logFile={log}"]))
 
 
 ## Segmentation
