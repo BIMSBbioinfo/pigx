@@ -99,6 +99,10 @@ parser.add_argument('--reason', dest='reason', action='store_true',
                     help="""\
 Print the reason why a rule is executed.""")
 
+parser.add_argument('--unlock', dest='unlock', action='store_true',
+                    help="""\
+Recover after a snakemake crash.""")
+
 args = parser.parse_args()
 
 
@@ -453,6 +457,8 @@ if args.graph:
     command.append("--dag")
 if args.reason:
     command.append("--reason")
+if args.unlock:
+    command.append("--unlock")
 
 if args.target == 'help':
     command.append("help")
