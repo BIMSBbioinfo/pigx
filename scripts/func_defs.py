@@ -84,9 +84,9 @@ def list_files_sortbam(files, sampleID):
 def bam_processing(files, sampleID):
     PATH = DIR_methcall
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_methylRaw.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_calls.nb.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS"] #---- paired end
 
 def bigwig_exporting(files, sampleID):
     PATH = DIR_bigwig
