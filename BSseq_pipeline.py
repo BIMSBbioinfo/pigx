@@ -322,8 +322,8 @@ rule fastqc_after_trimming_se:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed single-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
-#--------
+        nice("{FASTQC} {params.outdir} {params.fastqc_args} {input} > {log} 2>&1")
+
 rule fastqc_after_trimming_pe:
     input:
         DIR_trimmed+"{sample}_1_val_1.fq.gz",
@@ -340,7 +340,7 @@ rule fastqc_after_trimming_pe:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed paired-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
+        nice("{FASTQC} {params.outdir} {params.fastqc_args} {input} > {log} 2>&1")
 
 # ==========================================================================================
 # trim the reads
