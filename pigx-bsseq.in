@@ -446,5 +446,7 @@ if args.dry_run:
     command.append("--dryrun")
 if args.graph:
     command.append("--dag")
+if args.target == 'help':
+    command.append("help")
 
 subprocess.run(command)

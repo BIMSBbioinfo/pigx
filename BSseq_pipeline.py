@@ -175,11 +175,11 @@ OUTPUT_FILES = [targets[name]['files'] for name in selected_targets]
 rule all:
     input:
         OUTPUT_FILES
+
+rule help:
     run:
-        # Describe all targets if "help" was requested.
-        if config['execution']['target'] == 'help':
-            for key in sorted(targets.keys()):
-                print('{}:\n  {}'.format(key, targets[key]['description']))
+        for key in sorted(targets.keys()):
+            print('{}:\n  {}'.format(key, targets[key]['description']))
 
 # ==========================================================================================
 # sort the bam file:
