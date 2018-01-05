@@ -53,6 +53,7 @@ parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
 
 argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
+
 names(argsL) <- argsDF$V1
 
 
@@ -74,8 +75,8 @@ library("methylKit")
 
 input     <- argsL$inBam
 assembly  <- argsL$assembly
-mincov    <- argsL$mincov
-minqual   <- argsL$minqual
+mincov    <- as.numeric(argsL$mincov)
+minqual   <- as.numeric(argsL$minqual)
 rdsfile   <- argsL$rds
 
 ### Extract Methylation Calls
