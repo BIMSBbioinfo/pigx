@@ -232,8 +232,8 @@ rule deduplication_pe:
 
 # ==========================================================================================
 # align and map:
- 
-rule bismark_se:
+
+rule bismark_align_and_map_se:
     input:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
@@ -258,7 +258,7 @@ rule bismark_se:
     shell:
         nice(BISMARK, ["{params}", "{input.fqfile}"], "{log}")
 
-rule bismark_pe:
+rule bismark_align_and_map_pe:
     input:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
@@ -556,15 +556,15 @@ rule annotation_diffmeth:
 ### so make sure that at least one has been run already
 ### right now ensured with 'rules.methseg_annotation.output' as input
 
-rule integrateFinalReport:
+rule merge_diffmeth_report:
     input:
        diffmeth = diff_meth_input,
        methseg_annotation_outputs = rules.methseg_annotation.output
     output:
        # TODO: generate a final_knitr_meta.rds instead
-       touch(DIR_final + "{prefix}_{assembly}_integrateDiffMeth2FinalReport.txt")
+       touch(DIR_final + "{prefix}_{assembly}_merge_diffmeth_report.txt")
     log:
-       DIR_final + "{prefix}_{assembly}_integrateFinalReport.log"
+       DIR_final + "{prefix}_{assembly}_merge_diffmeth_report.log"
     params:
        diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
     shell:
@@ -574,7 +574,7 @@ rule integrateFinalReport:
 ## Final Report
 rule final_report:
     input:  
-        rules.integrateFinalReport.output,
+        rules.merge_diffmeth_report.output,
         index       = os.path.join(DIR_templates,"index.Rmd"),   
         references  = os.path.join(DIR_templates,"references.Rmd"),
         sessioninfo = os.path.join(DIR_templates,"sessioninfo.Rmd")
