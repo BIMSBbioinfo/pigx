@@ -460,6 +460,8 @@ if args.reason:
 if args.unlock:
     command.append("--unlock")
 
+command.append("--rerun-incomplete")
+
 if args.target == 'help':
     command.append("help")
 
