@@ -12,7 +12,7 @@ output:
       in_header: pigx_bsseq_logo.html
 output_dir: "/Users/agosdsc/Development/Snakemake/pigx_bsseq/annotation_rule/"
 output_file: "sampleA.pe1_trimmed_bismark_bt2.deduplicated.sorted.annotation.nb.html"
-date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { Sys.getenv("SOURCE_DATE_EPOCH") } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 params:
   inBed:    "/home/kwreczy/tmp/my_output/differential_methylation/0_1.sorted_diffmeth.bed"
