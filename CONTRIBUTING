@@ -93,3 +93,21 @@ the release process.
 
 - Push the tag to Github, and then upload the tarball and the detached
   signature to https://github.com/BIMSBbioinfo/pigx_bsseq/releases
+
+
+## Conventions
+
+- use the `shell` block to execute scripts.  We cannot use Snakemake's
+  `script` block, because that assumes that the directory containing
+  the scripts is writable.
+
+- use `nice` to run tools inside a `shell` block.  `nice` expects a
+  tool name and a list of tool arguments.  Optionally, you can provide
+  a third argument to specify a log file to which all output is
+  redirected.
+
+- to reference a tool outside of a `shell` block, do not access
+  `config` directly, but use the helper `tool`.
+
+- to print messages use the `fmt` helper, which ensures that messages
+  all have the same style.
