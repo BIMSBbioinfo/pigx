@@ -46,11 +46,6 @@ PATHIN     = "path_links/input/"           # location of the data files to be im
 GENOMEPATH = "path_links/refGenome/"       # where the reference genome being mapped to is stored
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
-SAMPLE_IDS = list(config["SAMPLES"].keys())
-SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
-SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
-DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
-
 # include function definitions and extra rules
 include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
 

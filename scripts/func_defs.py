@@ -125,13 +125,17 @@ def get_fastq_name(full_name):
 
     return(output)
 
+SAMPLE_IDS = list(config["SAMPLES"].keys())
+SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+
 def diff_meth_input(wc):
   sample = wc.prefix
   sampleid = get_fastq_name(sample)
-  treatment_of_sampleid = SAMPLE_TREATMENTS_DICT[ sampleid ]
+  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
+  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
 
   mylist = []
-  for x in DIFF_METH_TREATMENT_PAIRS:
+  for x in config['DIFF_METH']:
     if treatment_of_sampleid in x:
       name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
       mylist.append(DIR_annot + name_of_dir)
