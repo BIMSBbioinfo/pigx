@@ -3,6 +3,7 @@
 set -e
 set -u
 
+export SOURCE_DATE_EPOCH=1
 export PIGX_BSSEQ_UGLY=1
 export PIGX_BSSEQ_UNINSTALLED=1
 
