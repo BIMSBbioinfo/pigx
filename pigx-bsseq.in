@@ -298,8 +298,8 @@ def generate_cluster_configuration():
     # Create the cluster configuration file
     rules = [
         ('__default__', 1, config['execution']['cluster']['memory']),
-        ('bismark_se', bismark_se_threads, config['tools']['bismark']['memory']),
-        ('bismark_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
+        ('bismark_align_and_map_se', bismark_se_threads, config['tools']['bismark']['memory']),
+        ('bismark_align_and_map_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
     ]
 
     cluster_conf = {}
