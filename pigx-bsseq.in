@@ -254,6 +254,10 @@ SETTINGSFILE as inputs."""
         defaults = path.join(where, 'etc/settings.yaml')
     else:
         defaults = path.join(dirs['locations']['pkgdatadir'], 'settings.yaml')
+
+    if not path.exists(defaults):
+        bail("Could not find default settings.  Did you forget to set PIGX_BSSEQ_UNINSTALLED?")
+
     settings = yaml.safe_load(open(defaults, 'r'))
 
     # Load user overrides
