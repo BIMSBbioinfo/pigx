@@ -537,6 +537,7 @@ rule diffmeth:
         scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
+    message: fmt("Calculating differential methylation.")
     run:
         generateReport(input, output, params, log, wildcards.treatment)
 
@@ -559,6 +560,7 @@ rule annotation_diffmeth:
         scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
+    message: fmt("Annotating differential methylation.")
     run:
         generateReport(input, output, params, log, wildcards.treatment+"."+wildcards.assembly)
 
@@ -578,6 +580,7 @@ rule merge_diffmeth_report:
        DIR_final + "{prefix}_{assembly}_merge_diffmeth_report.log"
     params:
        diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
+    message: fmt("Merging differential methylation report.")
     shell:
        nice('Rscript', ["{DIR_scripts}/integrate2finalreport.R",
                         "{wildcards.prefix}",
