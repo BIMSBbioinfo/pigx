@@ -121,13 +121,35 @@ targets = {
             for sample in config["SAMPLES"]
         ]
     },
+    
+    'segmentation': {
+        'description': "Segmentation of the methylation signal.",
+        'files': [
+            expand (methSeg(DIR_seg,
+                                   config["SAMPLES"][sample]["files"],
+                                   sample))
+            for sample in config["SAMPLES"]
+        ]
+    },
+    
+    'segmentation-annotation': {
+        'description': "Annotation of the Segments.",
+        'files': [
+            expand (methSegAnnot(DIR_seg,
+                                   config["SAMPLES"][sample]["files"],
+                                   ASSEMBLY,
+                                   sample))
+            for sample in config["SAMPLES"]
+        ]
+    },
+    
 
     'diffmeth': {
         'description': "Perform differential methylation calling.",
         'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]]
     },
 		            
-    'annotation': {
+    'diffmeth-annotation': {
         'description': "Annotate differential methylation cytosines.",
         'files': [ DIR_annot+"_".join(x)+".sorted_"+ASSEMBLY+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]]
     },

@@ -90,6 +90,18 @@ def bam_processing(PATH, files, sampleID):
       return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_calls.nb.html"] #---- paired end
+        
+def methSeg(PATH, files, sampleID):
+    if len(files) == 1:
+      return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_segments_gr.RDS" #---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_segments_gr.RDS"] #---- paired end
+        
+def methSegAnnot(PATH, files, assembly, sampleID):
+    if len(files) == 1:
+      return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_annotation.nb.html" #---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_annotation.nb.html"] #---- paired end
 
 def Final(PATH, files, assembly, sampleID):
     if len(files) == 1:
