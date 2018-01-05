@@ -489,25 +489,23 @@ rule bam_methCall:
         os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
     message: fmt("Extract methylation calls from bam file.")
     shell:
-        nice(" ".join(["{RSCRIPT}","{DIR_scripts}/methCall.R",
-        "--inBam={params.inBam}",
-        "--assembly={params.assembly}",
-        "--mincov={params.mincov}",
-        "--minqual={params.minqual}",
-        "--rds={params.rds}",
-        "--logFile={log}"]))
+        nice('Rscript', ["{DIR_scripts}/methCall.R",
+                         "--inBam={params.inBam}",
+                         "--assembly={params.assembly}",
+                         "--mincov={params.mincov}",
+                         "--minqual={params.minqual}",
+                         "--rds={params.rds}",
+                         "--logFile={log}"])
 
 
 ## Segmentation
 rule methseg:
     ## paths inside input and output should be relative
     input:
-        template    = os.path.join(DIR_templates,"methseg.report.Rmd"),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
     output: 
-        report      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.nb.html"),
         grfile      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed")
     params:
         rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
         grds        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
@@ -515,9 +513,13 @@ rule methseg:
     log:
         os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.log")
     message: fmt("Segmenting methylation profile for {input.rdsfile}.")
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
-
+    shell:
+        nice('Rscript', ["{DIR_scripts}/methSeg.R",
+                         "--rds={params.rds}",
+                         "--grds={params.grds}",
+                         "--outBed={params.outBed}",
+                         "--logFile={log}"])
+                
 
 ## Aquisition of gene features
 rule fetch_refGene:
