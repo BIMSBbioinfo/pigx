@@ -316,8 +316,8 @@ rule tabulate_seqlengths:
     output:
         seqlengths = DIR_mapped+"Refgen_{ASSEMBLY}_chromlengths.csv",
     params:
-        chromlines = " | grep Sequence "
-        chromcols  = " | cut -f2,3     "
+        chromlines = " | grep Sequence ",
+        chromcols  = " | cut -f2,3     ",
         seqnames   = " | sed \"s/_CT_converted//g\" "
     shell:
         nice('bowtie2-inspect', ['-s  {input}', '{params}', ' > {output}'])
