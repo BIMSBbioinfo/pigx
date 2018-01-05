@@ -42,11 +42,11 @@ DIR_final       = os.path.join(config['locations']['output-dir'], "Final_Report/
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = "path_links/input/"       #--- location of the data files to be imported (script creates symbolic link) 
-GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
-ASSEMBLY        = config['general']['assembly']  #--- version of the genome being mapped to.
+PATHIN     = "path_links/input/"           # location of the data files to be imported (script creates symbolic link)
+GENOMEPATH = "path_links/refGenome/"       # where the reference genome being mapped to is stored
+ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
-bismark_cores   = str(config['tools']['bismark']['cores'])
+bismark_cores = str(config['tools']['bismark']['cores'])
 
 
 SAMPLE_IDS = list(config["SAMPLES"].keys())
