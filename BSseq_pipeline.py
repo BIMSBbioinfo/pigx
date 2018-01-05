@@ -46,9 +46,6 @@ PATHIN     = "path_links/input/"           # location of the data files to be im
 GENOMEPATH = "path_links/refGenome/"       # where the reference genome being mapped to is stored
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
-bismark_cores = str(config['tools']['bismark']['cores'])
-
-
 SAMPLE_IDS = list(config["SAMPLES"].keys())
 SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
@@ -219,6 +216,7 @@ rule deduplication_pe:
 
 # ==========================================================================================
 # align and map:
+bismark_cores = str(config['tools']['bismark']['cores'])
 
 rule bismark_align_and_map_se:
     input:
