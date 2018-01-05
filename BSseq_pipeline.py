@@ -345,7 +345,7 @@ rule fastqc_after_trimming_pe:
 # ==========================================================================================
 # trim the reads
 
-rule trimgalore_se:
+rule trim_reads_se:
     input:
        qc   = DIR_rawqc+"{sample}_fastqc.html",
        file = PATHIN+"{sample}.fq.gz"
@@ -363,7 +363,7 @@ rule trimgalore_se:
     shell:
        nice(TRIMGALORE, ["{params}", "{input.file}"], "{log}")
 
-rule trimgalore_pe:
+rule trim_reads_pe:
     input:
         qc    = [ DIR_rawqc+"{sample}_1_fastqc.html",
                   DIR_rawqc+"{sample}_2_fastqc.html"],
