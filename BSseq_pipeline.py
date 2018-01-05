@@ -433,13 +433,7 @@ rule bam_methCall:
         rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
     log:
         os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
-    message:
-        "Processing bam file:\n"
-        "   input     : {input.bamfile}" + "\n"
-        "Generating:"+ "\n" 
-        "   report    : {output.report}" + "\n" 
-        "   rds       : {output.rdsfile}" + "\n" 
-        "   methCalls : {output.callFile}"
+    message: fmt("Extract methylation calls from bam file.")
     run:
         generateReport(input, output, params, log, wildcards.prefix)
 
@@ -459,13 +453,7 @@ rule methseg:
         outBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed")
     log:
         os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.log")
-    message:
-        "Segmentation of sample file:\n"
-        "   input     : {input.rdsfile}" + "\n" 
-        "Generating:"+ "\n"
-        "   report    : {output.report}" + "\n"
-        "   grfile    : {output.grfile} " +"\n"
-        "   bedfile   : {output.bedfile}" +"\n"
+    message: fmt("Segmenting methylation profile for {input.rdsfile}.")
     run:
         generateReport(input, output, params, log, wildcards.prefix)
 
@@ -478,7 +466,7 @@ rule fetch_refGene:
     log:
         os.path.join(DIR_annot,"fetch_refseq.genes.{assembly}.log")
     message:
-        "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
+        fmt("Fetching RefSeq genes for Genome assembly: {wildcards.assembly}")
     shell:
         nice('Rscript', ["{DIR_scripts}/fetch_refGene.R",
                          "{log}",
@@ -503,11 +491,7 @@ rule methseg_annotation:
         assembly    = "{assembly}",# expand(config["reference"]),
     log:
         os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.log")
-    message:
-        "Annotation of Segments:\n"
-        "   input     : {input.bedfile}" + "\n"
-        "Generating:" + "\n"
-        "   report    : {output.report}"
+    message: fmt("Generating annotation of segments for {input.bedfile}.")
     run:
         generateReport(input, output, params, log, wildcards.prefix)
 
