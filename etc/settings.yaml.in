@@ -4,7 +4,7 @@ locations:
   genome-dir: genome/
 
 general:
-  genome-version: hg19
+  assembly: hg19
   methylation-calling:
     minimum-coverage: 0
     minimum-quality: 10

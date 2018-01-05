@@ -210,7 +210,7 @@ genome being mapped to.
 
 ```
 general:
-  genome-version: hg19
+  assembly: hg19
   methylation-calling:
     minimum-coverage: 0
     minimum-quality: 10
@@ -222,7 +222,7 @@ general:
 
 | Variable name | description |
 | ------------- |:-----------:|
-| genome-version | string: an UCSC assembly release name e.g. "hg19"
+| assembly      | string: an UCSC assembly release name e.g. "hg19"
 | methylation-calling:minimum-coverage | integer: minimum read coverage to be included in the methylKit objects. Defaults to 10. Any methylated base/region in the text files below the mincov value will be ignored.
 | methylation-calling:minimum-quality | integer: minimum phred quality score to call a methylation status for a base.  Defaults to 10.
 | differential-methylation:cores | integer: denotes how many cores should be used for parallel differential methylation calculations

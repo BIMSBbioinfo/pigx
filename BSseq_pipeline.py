@@ -44,7 +44,7 @@ DIR_final       = os.path.join(config['locations']['output-dir'], "Final_Report/
 
 PATHIN          = "path_links/input/"       #--- location of the data files to be imported (script creates symbolic link) 
 GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
-VERSION         = config['general']['genome-version']  #--- version of the genome being mapped to.
+ASSEMBLY        = config['general']['assembly']  #--- version of the genome being mapped to.
 
 bismark_cores   = str(config['tools']['bismark']['cores'])
 
@@ -140,7 +140,7 @@ targets = {
         'files': [
             expand (Final(DIR_final,
                           config["SAMPLES"][sample]["files"],
-                          VERSION,
+                          ASSEMBLY,
                           config["SAMPLES"][sample]["SampleID"]))
             for sample in config["SAMPLES"]
         ]
@@ -241,7 +241,7 @@ rule bismark_align_and_map_se:
         cores = "--multicore " + bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_se_mapping.log"
-    message: fmt("Mapping single-end reads to genome {VERSION}")
+    message: fmt("Mapping single-end reads to genome {ASSEMBLY}")
     shell:
         nice('bismark', ["{params}", "{input.fqfile}"], "{log}")
 
@@ -268,7 +268,7 @@ rule bismark_align_and_map_pe:
         cores = "--multicore "+bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
-    message: fmt("Mapping paired-end reads to genome {VERSION}.")
+    message: fmt("Mapping paired-end reads to genome {ASSEMBLY}.")
     shell:
         nice('bismark', ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
 
@@ -288,8 +288,8 @@ rule bismark_genome_preparation:
         useBowtie2 = "--bowtie2 ",
         verbose = "--verbose "
     log:
-        'bismark_genome_preparation_'+VERSION+'.log'
-    message: fmt("Converting {VERSION} Genome into Bisulfite analogue")
+        'bismark_genome_preparation_'+ASSEMBLY+'.log'
+    message: fmt("Converting {ASSEMBLY} Genome into Bisulfite analogue")
     shell:
         nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
 
