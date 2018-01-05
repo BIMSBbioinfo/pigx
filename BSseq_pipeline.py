@@ -473,10 +473,8 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
 ## Bam processing
 rule bam_methCall:
     input:
-        template    = os.path.join(DIR_templates,"methCall.report.Rmd"),
         bamfile     = os.path.join(DIR_sorted,"{prefix}.sorted.bam")
     output:
-        report      = os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.nb.html"),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
         callFile    = os.path.join(DIR_methcall,"{prefix}.sorted_CpG.txt")
     params:
@@ -490,8 +488,15 @@ rule bam_methCall:
     log:
         os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
     message: fmt("Extract methylation calls from bam file.")
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
+    shell:
+        nice(" ".join("{RSCRIPT},"{DIR_scripts}/methCall.R",
+        "--inBam {params.inBam}",
+        "--assembly {params.assembly}",
+        "--mincov {params.mincov}",
+        "--minqual {params.minqual}",
+        "--rds {params.rds}",
+        "--logFile {log}"))
+
 
 ## Segmentation
 rule methseg:
