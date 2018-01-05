@@ -140,7 +140,12 @@ targets = {
 
 # Selected output files from the above set.
 selected_targets = [ config['execution']['target'] ]
-OUTPUT_FILES = [targets[name]['files'] for name in selected_targets]
+
+# FIXME: the list of files must be flattened twice(!).  We should make
+# sure that the targets really just return simple lists.
+from itertools import chain
+OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
+
 
 # ==============================================================================================================
 #
@@ -158,6 +163,28 @@ rule help:
     run:
         for key in sorted(targets.keys()):
             print('{}:\n  {}'.format(key, targets[key]['description']))
+
+# Record any existing output files, so that we can detect if they have
+# changed.
+expected_files = {}
+onstart:
+    if OUTPUT_FILES:
+        for name in OUTPUT_FILES:
+            if os.path.exists(name):
+                expected_files[name] = os.path.getmtime(name)
+
+# Print generated target files.
+onsuccess:
+    if OUTPUT_FILES:
+        # check if any existing files have been modified
+        generated = []
+        for name in OUTPUT_FILES:
+            if name not in expected_files or os.path.getmtime(name) != expected_files[name]:
+                generated.append(name)
+        if generated:
+            print("The following files have been generated:")
+            for name in generated:
+                print("  - {}".format(name))
 
 # ==========================================================================================
 # sort the bam file:
