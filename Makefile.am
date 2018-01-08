@@ -15,7 +15,8 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/func_defs.py				\
   scripts/ideoDMC.R					\
   scripts/integrate2finalreport.R	\
-  scripts/report_functions.R
+  scripts/report_functions.R		\
+  scripts/export_bw.R
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\

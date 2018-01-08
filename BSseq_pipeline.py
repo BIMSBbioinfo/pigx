@@ -26,9 +26,10 @@ WORKDIR = os.getcwd() + "/"                         #--- current work dir (impor
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 DIR_templates = os.path.join(config['locations']['output-dir'], 'path_links/report_templates/')
 
-DIR_diffmeth    = '10_differential_methylation/'
-DIR_annot       = '09_annotation/'
-DIR_seg         = '08_segmentation/'
+DIR_diffmeth    = '11_differential_methylation/'
+DIR_annot       = '10_annotation/'
+DIR_seg         = '09_segmentation/'
+DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
 DIR_sorted      = '06_sorting/'
 DIR_deduped     = '05_deduplication/'
@@ -111,7 +112,12 @@ targets = {
         'description': "Process bam files.",
         'files': files_for_sample(bam_processing)
     },
-    
+
+    'bigwig': {
+        'description': "export bigwig files to separate folder for visualization",
+        'files': files_for_sample(bigwig_exporting) 
+    },
+ 
     'segmentation': {
         'description': "Segmentation of the methylation signal.",
         'files': files_for_sample(methSeg)
@@ -139,7 +145,7 @@ targets = {
 }
 
 # Selected output files from the above set.
-selected_targets = config['execution']['target'] or ['final-report']
+selected_targets = config['execution']['target'] or ['final-report','bigwig']
 
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
@@ -185,6 +191,39 @@ onsuccess:
             print("The following files have been generated:")
             for name in generated:
                 print("  - {}".format(name))
+
+# ==========================================================================================
+# export a bigwig file
+ 
+rule export_bigwig_pe:
+    input:
+        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_1_val_1_bt2.deduped.sorted_methylRaw.RDS")
+    output:
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_pe.bw") 
+    message: fmt("exporting bigwig files from paired-end stream.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/export_bw.R",
+                         "{input.rdsfile}",
+                         "{input.seqlengths}",
+                         ASSEMBLY,
+                         "{output}"])
+
+#-----------------------
+
+rule export_bigwig_se:
+    input:
+        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.deduped.sorted_methylRaw.RDS")
+    output:
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw") 
+    message: fmt("exporting bigwig files from single-end stream.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/export_bw.R",
+                         "{input.rdsfile}",
+                         "{input.seqlengths}",
+                         ASSEMBLY,
+                         "{output}"])
 
 # ==========================================================================================
 # sort the bam file:
@@ -311,6 +350,23 @@ rule bismark_genome_preparation:
     message: fmt("Converting {ASSEMBLY} Genome into Bisulfite analogue")
     shell:
         nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
+
+# ==========================================================================================
+# create a csv file tabulating the lengths of the chromosomes in the reference genome:
+
+rule tabulate_seqlengths:
+    input:
+        rules.bismark_genome_preparation.output
+    output:
+        seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
+    params:
+        chromlines = " | grep Sequence ",
+        chromcols  = " | cut -f2,3     ",
+        seqnames   = " | sed \"s/_CT_converted//g\" "
+    message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
+    shell:
+        nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])
+
 
 # ==========================================================================================
 # post-trimming quality control

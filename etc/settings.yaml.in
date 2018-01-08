@@ -51,6 +51,9 @@ tools:
   samtools:
     executable: @SAMTOOLS@
     args: ""
+  bowtie2-inspect:
+    executable: @BOWTIE2_INSPECT@
+    args: ""
   Rscript:
     executable: @RSCRIPT@
     args: ""
