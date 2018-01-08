@@ -427,7 +427,7 @@ command = [
 
 if config['execution']['submit-to-cluster']:
     cluster_config_file = generate_cluster_configuration()
-    print("Commencing snakemake run submission to cluster", flush=True)
+    print("Commencing snakemake run submission to cluster", flush=True, file=sys.stderr)
     if config['execution']['cluster']['contact-email'].lower() == 'none':
         contact_email_string = ""
     else:
@@ -448,7 +448,7 @@ if config['execution']['submit-to-cluster']:
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
-    print("Commencing snakemake run submission locally", flush=True)
+    print("Commencing snakemake run submission locally", flush=True, file=sys.stderr)
 
 command.append("--rerun-incomplete")
 if args.graph:
