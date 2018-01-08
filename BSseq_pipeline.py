@@ -365,7 +365,7 @@ rule tabulate_seqlengths:
         seqnames   = " | sed \"s/_CT_converted//g\" "
     message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
     shell:
-        nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params}', ' > {output}'])
+        nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])
 
 
 # ==========================================================================================
