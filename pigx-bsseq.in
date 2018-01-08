@@ -80,7 +80,7 @@ default the file 'config.json' is dynamically created from the sample
 sheet and the settings file.
 """)
 
-parser.add_argument('--target', dest='target', default='final-report',
+parser.add_argument('--target', dest='target', action='append',
                     help="""\
 Stop when the named target is completed instead of running the whole
 pipeline.  The default target is "final-report".  Pass "--target=help"

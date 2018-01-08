@@ -139,7 +139,7 @@ targets = {
 }
 
 # Selected output files from the above set.
-selected_targets = [ config['execution']['target'] ]
+selected_targets = config['execution']['target'] or ['final-report']
 
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
