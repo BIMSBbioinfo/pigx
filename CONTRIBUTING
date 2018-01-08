@@ -51,6 +51,10 @@ you are certain that all R packages are available at runtime.  It
 should not be used when installing the pipeline to a shared location
 for all users.
 
+## Building
+
+Even if you don't choose to install the pipeline, you will still need
+to build a couple of files.  Do that by running `make`.
 
 ## Install
 
