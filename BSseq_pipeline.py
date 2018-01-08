@@ -130,7 +130,7 @@ targets = {
 
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]]
+        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["DIFF_METH"]]
     },
 		            
     'diffmeth-annotation': {
@@ -562,12 +562,10 @@ rule methseg_annotation:
 rule diffmeth:
     ## paths inside input and output should be relative
     input:  
-        template    = os.path.join(DIR_templates,"diffmeth.report.Rmd"),
         inputfiles  = diffmeth_input_function
     output: 
-        report      = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.nb.html"),
-        methylDiff_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
+        methylDiff_file  = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.RDS'),
+        bedfile     = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.bed')
     params:
         workdir     = WORKDIR,
         inputfiles  = diffmeth_input_function,
@@ -579,14 +577,25 @@ rule diffmeth:
         assembly    = ASSEMBLY,
         treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
-        context     = "CpG",
         cores       = int(config['general']['differential-methylation']['cores']),
         scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
     message: fmt("Calculating differential methylation.")
-    run:
-        generateReport(input, output, params, log, wildcards.treatment)
+    shell:
+        nice('Rscript', ['{DIR_scripts}/methDiff.R',
+                         '--inputfiles="{params.inputfiles}"',
+                         '--sampleids="{params.sampleids}"',
+                         '--methylDiff_file={params.methylDiff_file}',
+                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
+                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
+                         '--assembly={params.assembly}',
+                         '--treatment="{params.treatment}"',
+                         '--mincov={params.mincov}',
+                         '--cores={params.cores}',
+                         '--outBed={params.outBed}',
+                         '--logFile={log}'])
+
 
 
 ## Annotation with gene features
