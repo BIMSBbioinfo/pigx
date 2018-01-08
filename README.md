@@ -114,15 +114,17 @@ To run PiGx on your experimental data, first enter the necessary parameters in t
 $ pigx-rnaseq [options] sample_sheet.csv
 ```
 To see all available options type the `--help` option
+
 ```sh
 $ pigx-rnaseq --help
 
-usage: pigx-rnaseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--snakeparams SNAKEPARAMS]
+usage: pigx-rnaseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET]
+                   [-n] [--graph GRAPH] [--force] [--reason] [--unlock]
                    samplesheet
 
 PiGx RNAseq Pipeline.
 
-PiGx is a data processing pipeline for RNA seq read data.
+PiGx RNAseq is a data processing pipeline for RNAseq read data.
 
 positional arguments:
   samplesheet                             The sample sheet containing sample data in CSV format.
@@ -134,9 +136,20 @@ optional arguments:
   -c CONFIGFILE, --configfile CONFIGFILE  The config file used for calling the underlying snakemake process.  By
                                           default the file 'config.json' is dynamically created from the sample
                                           sheet and the settings file.
-  --snakeparams SNAKEPARAMS               Additional parameters to be passed down to snakemake, e.g.
-                                              --dryrun    do not execute anything
-                                              --forceall  re-run the whole pipeline
+  --target TARGET                         Stop when the named target is completed instead of running the whole
+                                          pipeline.  The default target is "final-report".  Pass "--target=help"
+                                          to describe all available targets.
+  -n, --dry-run                           Only show what work would be performed.  Do not actually run the
+                                          pipeline.
+  --graph GRAPH                           Output a graph in Graphviz dot format showing the relations between
+                                          rules of this pipeline.  You must specify a graph file name such as
+                                          "graph.pdf".
+  --force                                 Force the execution of rules, even though the outputs are considered
+                                          fresh.
+  --reason                                Print the reason why a rule is executed.
+  --unlock                                Recover after a snakemake crash.
+
+This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 ```
 
 
