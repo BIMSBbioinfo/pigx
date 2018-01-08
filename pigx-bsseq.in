@@ -26,6 +26,12 @@
 
 
 import argparse
+from os import path
+import os, sys, json, csv, yaml
+from snakemake.utils import update_config
+import shutil, filecmp
+from glob import glob
+import subprocess
 
 description = """\
 PiGx BSseq Pipeline.
@@ -109,8 +115,6 @@ args = parser.parse_args()
 
 # Generate config file
 
-from os import path
-import os, sys, json, csv, yaml
 
 def bail(msg):
     """Print the error message to stderr and exit."""
@@ -214,8 +218,6 @@ def parse_samples(lines):
         sampleid_dict['fastq_ext']  = get_extension(files)
         outputdict[row[2]] = sampleid_dict
     return { 'SAMPLES': outputdict }
-
-from snakemake.utils import update_config
 
 def generate_config(configfile, samplesheet, settingsfile):
     """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
@@ -381,8 +383,6 @@ for sample in config['SAMPLES']:
 # the generated ".md" files where the ".Rmd" source files are located.  This will not be
 # necessary once we generate only a single report.
 
-import shutil, filecmp
-from glob import glob
 os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
             exist_ok=True)
 
@@ -397,7 +397,6 @@ for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
 
 
 # Run snakemake!
-import subprocess
 
 # Ensure that we use the configured Pandoc, pandoc-citeproc
 # ...and the configured Rscript
