@@ -70,7 +70,7 @@ parser.add_argument('samplesheet',
 The sample sheet containing sample data in CSV format.\
 """)
 
-parser.add_argument('-s', '--settings', dest='settings',
+parser.add_argument('-s', '--settings', dest='settings', required=True,
                     help='A YAML file for settings that deviate from the defaults.')
 
 parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
