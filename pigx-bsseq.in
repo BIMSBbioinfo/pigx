@@ -114,8 +114,6 @@ args = parser.parse_args()
 
 
 # Generate config file
-
-
 def bail(msg):
     """Print the error message to stderr and exit."""
     print(msg, file=sys.stderr)
@@ -327,13 +325,6 @@ def generate_cluster_configuration():
     return cluster_config_file
 
 
-generate_config(args.configfile,
-                args.samplesheet,
-                args.settings)
-
-config = json.load(open(args.configfile, 'r'))
-
-
 # Create symbolic links to the inputs and reference genome
 
 # Create links within the output folder that point directly to the
@@ -354,71 +345,77 @@ def makelink(src, target):
         except FileExistsError:
             pass
 
-os.makedirs(path.join(config['locations']['output-dir'], 'path_links/input'),
-            exist_ok=True)
+def maybe_copy(source, target_dir):
+    target = path.join(target_dir, path.basename(source))
+    if not path.exists(target) or not filecmp.cmp(source, target):
+        shutil.copy(source, target_dir)
 
-# Link the reference genome
-try:
-    os.symlink(config['locations']['genome-dir'],
-               path.join(config['locations']['output-dir'], 'path_links/refGenome'))
-except FileExistsError:
-    pass
+def prepare_links():
+    os.makedirs(path.join(config['locations']['output-dir'], 'path_links/input'),
+                exist_ok=True)
 
-# Create file links
-for sample in config['SAMPLES']:
-  flist = config['SAMPLES'][sample]['files']
-  single_end = len(flist) == 1
+    # Link the reference genome
+    try:
+        os.symlink(config['locations']['genome-dir'],
+                   path.join(config['locations']['output-dir'], 'path_links/refGenome'))
+    except FileExistsError:
+        pass
 
-  for idx, f in enumerate(flist):
-    if not f.endswith(".gz"):
-      # FIXME: Future versions should handle unzipped .fq or .bz2.
-      bail("Input files must be gzipped: %s." % f)
+    # Create file links
+    for sample in config['SAMPLES']:
+        flist = config['SAMPLES'][sample]['files']
+        single_end = len(flist) == 1
+
+    for idx, f in enumerate(flist):
+        if not f.endswith(".gz"):
+            # FIXME: Future versions should handle unzipped .fq or .bz2.
+            bail("Input files must be gzipped: %s." % f)
 
     tag = "" if single_end else '_' + str(idx + 1)
     linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
     makelink(path.join(config['locations']['input-dir'], f),
              path.join(config['locations']['output-dir'], "path_links/input/", linkname))
 
-# Copy the report templates to a writable location because bookmark insists on placing
-# the generated ".md" files where the ".Rmd" source files are located.  This will not be
-# necessary once we generate only a single report.
+    # Copy the report templates to a writable location because bookmark insists on placing
+    # the generated ".md" files where the ".Rmd" source files are located.  This will not be
+    # necessary once we generate only a single report.
+    os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
+                exist_ok=True)
 
-os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
-            exist_ok=True)
+    for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
+        maybe_copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
 
-def maybe_copy(source, target_dir):
-    target = path.join(target_dir, path.basename(source))
-    if not path.exists(target) or not filecmp.cmp(source, target):
-        shutil.copy(source, target_dir)
+    # Ensure that we use the configured Pandoc, pandoc-citeproc
+    # ...and the configured Rscript
+    bin = path.join(config['locations']['output-dir'], 'path_links/bin')
+    if path.exists(bin): shutil.rmtree(bin)
+    os.makedirs(bin, exist_ok=True)
+    os.symlink('@PANDOC@', path.join(bin, "pandoc"))
+    os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
+    os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
+    os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
 
-for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
-    maybe_copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
+def display_logo():
+    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        pretty = path.join(where, 'etc/pretty.txt')
+    else:
+        pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
+
+    if not os.getenv('PIGX_BSSEQ_UGLY'):
+        # Ensure that this is printed without errors, even if the user's
+        # locale is not a UTF-8 locale.
+        p = open(pretty, 'r', encoding='utf-8').read()
+        sys.stdout.buffer.write(p.encode('utf-8'))
 
 
 
 # Run snakemake!
+generate_config(args.configfile,
+                args.samplesheet,
+                args.settings)
 
-# Ensure that we use the configured Pandoc, pandoc-citeproc
-# ...and the configured Rscript
-bin = path.join(config['locations']['output-dir'], 'path_links/bin')
-if path.exists(bin): shutil.rmtree(bin)
-os.makedirs(bin, exist_ok=True)
-os.symlink('@PANDOC@', path.join(bin, "pandoc"))
-os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
-os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
-os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
-
-if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
-    where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
-    pretty = path.join(where, 'etc/pretty.txt')
-else:
-    pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
-
-if not os.getenv('PIGX_BSSEQ_UGLY'):
-    # Ensure that this is printed without errors, even if the user's
-    # locale is not a UTF-8 locale.
-    p = open(pretty, 'r', encoding='utf-8').read()
-    sys.stdout.buffer.write(p.encode('utf-8'))
+config = json.load(open(args.configfile, 'r'))
 
 command = [
     "@SNAKEMAKE@",
@@ -461,6 +458,8 @@ if args.graph:
         p2 = subprocess.Popen(['dot','-Tpdf'], stdin=p1.stdout, stdout=outfile)
         p2.communicate()
 else:
+    prepare_links()
+    display_logo()
     if args.force:
         command.append("--forceall")
     if args.dry_run:
