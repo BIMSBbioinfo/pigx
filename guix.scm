@@ -1,5 +1,5 @@
 ;;; PiGx_rnaseq - reports pipeline for RNAseq experiments.
-;;; Copyright © 2017 Ricardo Wurmus <rekado@elephly.net>
+;;; Copyright © 2017, 2018 Ricardo Wurmus <rekado@elephly.net>
 ;;;
 ;;; This file is part of PiGx_rnaseq.
 ;;;
@@ -24,6 +24,7 @@
              (guix build-system ant)
              (guix build-system gnu)
              (guix build-system r)
+             (bimsb packages staging)
              (gnu packages)
              (gnu packages autotools)
              (gnu packages statistics)
@@ -147,6 +148,7 @@ The main functions of FastQC are:
        ("r-scales" ,r-scales)
        ("r-crosstalk" ,r-crosstalk)
        ("r-gage" ,r-gage)
+       ("salmon" ,salmon)
        ("ghc-pandoc" ,ghc-pandoc)
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("python-wrapper" ,python-wrapper)
