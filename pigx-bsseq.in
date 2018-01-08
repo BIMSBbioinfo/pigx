@@ -371,10 +371,10 @@ def prepare_links():
             # FIXME: Future versions should handle unzipped .fq or .bz2.
             bail("Input files must be gzipped: %s." % f)
 
-    tag = "" if single_end else '_' + str(idx + 1)
-    linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
-    makelink(path.join(config['locations']['input-dir'], f),
-             path.join(config['locations']['output-dir'], "path_links/input/", linkname))
+        tag = "" if single_end else '_' + str(idx + 1)
+        linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
+        makelink(path.join(config['locations']['input-dir'], f),
+                 path.join(config['locations']['output-dir'], "path_links/input/", linkname))
 
     # Copy the report templates to a writable location because bookmark insists on placing
     # the generated ".md" files where the ".Rmd" source files are located.  This will not be
