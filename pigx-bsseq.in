@@ -1,5 +1,5 @@
 #!@PYTHON@
-
+# -*- python -*-
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2017 Bren Osberg <b.osberg@tum.de>
