@@ -324,6 +324,18 @@ def generate_cluster_configuration():
         outfile.write(dumps)
     return cluster_config_file
 
+# TODO: this should be external
+def validate_config():
+    # Check that all locations exist
+    for loc in config['locations']:
+        if not path.isdir(config['locations'][loc]):
+            bail("This directory does not exist: {} ({})".format(config['locations'][loc], loc))
+
+    # Check for a genome fasta file
+    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
+    if not fasta:
+        bail("There is no fasta file in {}".format(config['locations']['genome-dir']))
+
 
 # Create symbolic links to the inputs and reference genome
 
@@ -416,6 +428,7 @@ generate_config(args.configfile,
                 args.settings)
 
 config = json.load(open(args.configfile, 'r'))
+validate_config()
 
 command = [
     "@SNAKEMAKE@",
