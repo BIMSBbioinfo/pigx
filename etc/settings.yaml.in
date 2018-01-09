@@ -37,7 +37,7 @@ tools:
     executable: @MULTIQC@
   star:
     executable: @STAR@
-    n-threads: 8
+    cores: 8
   trim-galore:
     executable: @TRIMGALORE@
   bamCoverage:
@@ -48,7 +48,7 @@ tools:
     executable: @HTSEQ_COUNT@
   salmon:
     executable: @SALMON@
-    n-threads: 8
+    cores: 8
   R:
     Rscript: @RSCRIPT@
     executable: @R@
