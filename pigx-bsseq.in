@@ -221,7 +221,7 @@ def generate_config(configfile, samplesheet, settingsfile):
     """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
 SETTINGSFILE as inputs."""
     dirs = {}
-    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+    if os.getenv('PIGX_UNINSTALLED'):
         here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
         dirs['locations'] = {
             'prefix'       : here,
@@ -250,14 +250,14 @@ SETTINGSFILE as inputs."""
         }
 
     # Load defaults
-    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+    if os.getenv('PIGX_UNINSTALLED'):
         where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
         defaults = path.join(where, 'etc/settings.yaml')
     else:
         defaults = path.join(dirs['locations']['pkgdatadir'], 'settings.yaml')
 
     if not path.exists(defaults):
-        bail("Could not find default settings.  Did you forget to set PIGX_BSSEQ_UNINSTALLED?")
+        bail("Could not find default settings.  Did you forget to set PIGX_UNINSTALLED?")
 
     settings = yaml.safe_load(open(defaults, 'r'))
 
@@ -408,13 +408,13 @@ def prepare_links():
     os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
 
 def display_logo():
-    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+    if os.getenv('PIGX_UNINSTALLED'):
         where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
         pretty = path.join(where, 'etc/pretty.txt')
     else:
         pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
 
-    if not os.getenv('PIGX_BSSEQ_UGLY'):
+    if not os.getenv('PIGX_UGLY'):
         # Ensure that this is printed without errors, even if the user's
         # locale is not a UTF-8 locale.
         p = open(pretty, 'r', encoding='utf-8').read()
