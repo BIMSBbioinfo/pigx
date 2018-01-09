@@ -38,6 +38,7 @@ tools:
   star:
     executable: @STAR@
     cores: 8
+    memory: 32G
   trim-galore:
     executable: @TRIMGALORE@
   bamCoverage:
@@ -49,6 +50,7 @@ tools:
   salmon:
     executable: @SALMON@
     cores: 8
+    memory: 32G
   R:
     Rscript: @RSCRIPT@
     executable: @R@

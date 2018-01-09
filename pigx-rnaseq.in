@@ -188,6 +188,9 @@ def generate_cluster_configuration():
     # Create the cluster configuration file
     rules = [
         ('__default__', 1, config['execution']['cluster']['memory']),
+        ('star_index', config['tools']['star']['cores'], config['tools']['star']['memory']),
+        ('salmon_index', config['tools']['salmon']['cores'], config['tools']['salmon']['memory']),
+        ('salmon_quant', config['tools']['salmon']['cores'], config['tools']['salmon']['memory']),
     ]
 
     cluster_conf = {}
