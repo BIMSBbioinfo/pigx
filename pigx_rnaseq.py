@@ -9,8 +9,8 @@ import inspect
 
 GENOME_FASTA = config['locations']['genome-fasta']
 CDNA_FASTA = config['locations']['cdna-fasta']
-READS_DIR = config['locations']['reads-folder']
-OUTPUT_DIR = config['locations']['output-folder']
+READS_DIR = config['locations']['reads-dir']
+OUTPUT_DIR = config['locations']['output-dir']
 ORGANISM = config['organism']
 
 SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')

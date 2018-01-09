@@ -1,6 +1,6 @@
 locations:
-  reads-folder: /path/to/reads/
-  output-folder: /path/to/output/
+  reads-dir: /path/to/reads/
+  output-dir: /path/to/output/
   genome-fasta: /path/to/genome.fasta
   gtf-file: /path/to/sample.gtf
 
