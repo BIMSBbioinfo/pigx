@@ -171,7 +171,7 @@ SETTINGSFILE as inputs."""
     root = path.dirname(samplesheet)
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
-    for key in ['reads-folder', 'output-folder', 'genome-fasta', 'gtf-file']:
+    for key in ['reads-dir', 'output-dir', 'genome-fasta', 'gtf-file']:
         settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
 
     # Record the location of the sample sheet.
@@ -224,7 +224,7 @@ def makelink(src, target):
     if not path.isfile(src):
         bail("Refusing to link non-existent file %s" % src)
     elif not path.isdir(path.dirname(target)):
-        bail("%s or subdirectory does not exist for linking %s" % config['locations']['output-folder'], target)
+        bail("%s or subdirectory does not exist for linking %s" % config['locations']['output-dir'], target)
     else:
         try:
             os.symlink(src, target)
@@ -237,14 +237,14 @@ def maybe_copy(source, target_dir):
         shutil.copy(source, target_dir)
 
 def prepare_links():
-    os.makedirs(path.join(config['locations']['output-folder'], '.pigx-temp'),
+    os.makedirs(path.join(config['locations']['output-dir'], '.pigx-temp'),
                 exist_ok=True)
     maybe_copy(config['locations']['pkglibexecdir'] + '/scripts/deseqReport.Rmd',
-           path.join(config['locations']['output-folder'], '.pigx-temp'))
+           path.join(config['locations']['output-dir'], '.pigx-temp'))
 
     # Ensure that we use the configured Pandoc, pandoc-citeproc
     # ...and the configured Rscript
-    bin = path.join(config['locations']['output-folder'], '.pigx_temp/bin')
+    bin = path.join(config['locations']['output-dir'], '.pigx_temp/bin')
     if path.exists(bin): shutil.rmtree(bin)
     os.makedirs(bin, exist_ok=True)
     os.symlink('@PANDOC@', path.join(bin, "pandoc"))
@@ -278,7 +278,7 @@ command = [
     "@SNAKEMAKE@",
     "--snakefile={}/pigx_rnaseq.py".format(config['locations']['pkglibexecdir']),
     "--configfile={}".format(args.configfile),
-    "--directory={}".format(config['locations']['output-folder']),
+    "--directory={}".format(config['locations']['output-dir']),
     "--jobs={}".format(config['execution']['jobs']),
 ]
 
