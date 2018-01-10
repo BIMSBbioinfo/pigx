@@ -149,7 +149,6 @@ The main functions of FastQC are:
        ("r-scales" ,r-scales)
        ("r-summarizedexperiment" ,r-summarizedexperiment)
        ("r-crosstalk" ,r-crosstalk)
-       ("r-gage" ,r-gage)
        ("r-rtracklayer" ,r-rtracklayer)
        ("salmon" ,salmon)
        ("ghc-pandoc" ,ghc-pandoc)

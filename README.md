@@ -68,7 +68,6 @@ installed:
 	- plotly
 	- scales
 	- crosstalk
-	- gage
 	- rtracklayer
 	- SummarizedExperiment
 	- gProfileR
