@@ -296,23 +296,14 @@ SETTINGSFILE as inputs."""
         outfile.write(dumps)
 
 def generate_cluster_configuration():
-    bismark_cores = int(config['tools']['bismark']['cores'])
-    bismark_pe_threads = 4 * bismark_cores
-    bismark_se_threads = 2 * bismark_cores
-
-    # Create the cluster configuration file
-    rules = [
-        ('__default__', 1, config['execution']['cluster']['memory']),
-        ('bismark_align_and_map_se', bismark_se_threads, config['tools']['bismark']['memory']),
-        ('bismark_align_and_map_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
-    ]
+    rules = config['execution']['rules']
 
     cluster_conf = {}
-    for rule, nthreads, mem in rules:
+    for rule in rules:
         cluster_conf[rule] = {
-            'nthreads': nthreads,
+            'nthreads': rules[rule]['threads'],
             'q': config['execution']['cluster']['queue'],
-            'MEM': mem,
+            'MEM': rules[rule]['memory'],
             'h_stack': config['execution']['cluster']['stack']
         }
 
