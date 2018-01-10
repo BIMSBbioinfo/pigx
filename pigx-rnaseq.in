@@ -185,20 +185,14 @@ SETTINGSFILE as inputs."""
         outfile.write(dumps)
 
 def generate_cluster_configuration():
-    # Create the cluster configuration file
-    rules = [
-        ('__default__', 1, config['execution']['cluster']['memory']),
-        ('star_index', config['tools']['star']['cores'], config['tools']['star']['memory']),
-        ('salmon_index', config['tools']['salmon']['cores'], config['tools']['salmon']['memory']),
-        ('salmon_quant', config['tools']['salmon']['cores'], config['tools']['salmon']['memory']),
-    ]
+    rules = config['execution']['rules']
 
     cluster_conf = {}
-    for rule, nthreads, mem in rules:
+    for rule in rules:
         cluster_conf[rule] = {
-            'nthreads': nthreads,
+            'nthreads': rules[rule]['threads'],
             'q': config['execution']['cluster']['queue'],
-            'MEM': mem,
+            'MEM': rules[rule]['memory'],
             'h_stack': config['execution']['cluster']['stack']
         }
 

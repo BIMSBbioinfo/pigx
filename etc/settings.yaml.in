@@ -13,6 +13,19 @@ execution:
     stack: 128M
     queue: all
     contact-email: none
+  rules:
+    __default__:
+      threads: 1
+      memory: 8G
+    star_index:
+      threads: 8
+      memory: 32G
+    salmon_index:
+      threads: 8
+      memory: 32G
+    salmon_quant:
+      threads: 8
+      memory: 32G
 
 organism: hsapiens
 
