@@ -285,7 +285,7 @@ SETTINGSFILE as inputs."""
     root = path.dirname(samplesheet)
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
-    for key in ['input-dir', 'output-dir', 'genome-dir']:
+    for key in settings['locations']:
         settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
 
     # Write the config file
