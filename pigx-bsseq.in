@@ -319,13 +319,15 @@ def generate_cluster_configuration():
 def validate_config():
     # Check that all locations exist
     for loc in config['locations']:
-        if not path.isdir(config['locations'][loc]):
-            bail("This directory does not exist: {} ({})".format(config['locations'][loc], loc))
+        if (not loc == 'output-dir') and (not path.isdir(config['locations'][loc]) ) :
+            bail("ERROR: The following necessary directory does not exist: {} ({})".format(config['locations'][loc], loc))
 
     # Check for a genome fasta file
     fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
-    if not fasta:
-        bail("There is no fasta file in {}".format(config['locations']['genome-dir']))
+    fa    = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
+
+    if not len(fasta) + len(fa) == 1 :
+        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))
 
 
 # Create symbolic links to the inputs and reference genome
