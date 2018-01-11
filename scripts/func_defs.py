@@ -112,9 +112,9 @@ def methSegAnnot(files, sampleID):
 def list_final_reports(files, sampleID):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.nb.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_final.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.nb.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_final.html"] #---- paired end
 
 
 
