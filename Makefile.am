@@ -41,7 +41,16 @@ EXTRA_DIST =										\
   test/samplesheet.csv								\
   test/settings.yaml
 
-TESTS = test.sh
+AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)"
+
+# TODO: these tests still need to be fixed
+XFAIL_TESTS = \
+  tests/test-write-access-to-out.sh
+
+TESTS = \
+  test.sh											\
+  tests/test-check-samplesheet-header.sh			\
+  tests/test-write-access-to-out.sh
 
 clean-local:
 	-rm -rf .snakemake
