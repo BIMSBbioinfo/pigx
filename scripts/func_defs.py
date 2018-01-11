@@ -112,9 +112,9 @@ def methSegAnnot(files, sampleID):
 def list_final_reports(files, sampleID):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_final.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_final.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.html"] #---- paired end
 
 
 
@@ -155,8 +155,9 @@ def diff_meth_input(wc):
   
 def finalReportDiffMeth_input(prefix):
   sampleid = get_fastq_name(prefix)
-  treatment_of_sampleid = SAMPLE_TREATMENTS_DICT[ sampleid ]
-  treatments = ["_".join(pair) for pair in DIFF_METH_TREATMENT_PAIRS if treatment_of_sampleid in pair]
+  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
+  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
+  treatments = ["_".join(pair) for pair in config['DIFF_METH'] if treatment_of_sampleid in pair]
   outList = []
   if treatments: 
       outList  = [ "{}{}.sorted_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
