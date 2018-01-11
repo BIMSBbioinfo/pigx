@@ -567,6 +567,8 @@ rule diffmeth:
         inputfiles  = diffmeth_input_function
     output: 
         methylDiff_file  = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.RDS'),
+        methylDiff_hyper_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
         bedfile     = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.bed')
     params:
         workdir     = WORKDIR,
