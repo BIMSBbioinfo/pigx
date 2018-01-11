@@ -13,7 +13,6 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/fetch_refGene.R			\
   scripts/func_defs.py				\
   scripts/ideoDMC.R					\
-  scripts/integrate2finalreport.R	\
   scripts/report_functions.R		\
   scripts/export_bw.R         \
   scripts/methCall.R          \
