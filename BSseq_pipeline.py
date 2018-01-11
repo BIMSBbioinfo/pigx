@@ -507,17 +507,19 @@ rule methseg:
         grfile      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
         bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed")
     params:
-        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
-        grds        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed")
+        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png")
     log:
         os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.log")
     message: fmt("Segmenting methylation profile for {input.rdsfile}.")
     shell:
         nice('Rscript', ["{DIR_scripts}/methSeg.R",
-                         "--rds={params.rds}",
-                         "--grds={params.grds}",
-                         "--outBed={params.outBed}",
+                         "--rds={params.methCallRDS}",
+                         "--grds={params.methSegGR}",
+                         "--outBed={params.methSegBed}",
+                         "--png={params.methSegPng}",
                          "--logFile={log}"])
                 
 
