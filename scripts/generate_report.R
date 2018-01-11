@@ -80,7 +80,7 @@ cat(paste(
     "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"
 ))
 
-render2Markdown(reportFile = normalizePath(argsL$reportFile),
+render2HTML(reportFile = normalizePath(argsL$reportFile),
                 outFile = basename(argsL$outFile),
                 outDir = normalizePath(dirname(argsL$outFile)),
                 finalReportDir = normalizePath(argsL$finalReportDir),
