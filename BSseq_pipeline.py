@@ -26,8 +26,7 @@ WORKDIR = os.getcwd() + "/"                         #--- current work dir (impor
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 DIR_templates = os.path.join(config['locations']['output-dir'], 'pigx_work/report_templates/')
 
-DIR_diffmeth    = '11_differential_methylation/'
-DIR_annot       = '10_annotation/'
+DIR_diffmeth    = '10_differential_methylation/'
 DIR_seg         = '09_segmentation/'
 DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
@@ -123,19 +122,9 @@ targets = {
         'files': files_for_sample(methSeg)
     },
     
-    'segmentation-annotation': {
-        'description': "Annotation of the Segments.",
-        'files': files_for_sample(methSegAnnot)
-    },
-
     'diffmeth': {
         'description': "Perform differential methylation calling.",
         'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["DIFF_METH"]]
-    },
-		            
-    'diffmeth-annotation': {
-        'description': "Annotate differential methylation cytosines.",
-        'files': [ DIR_annot+"_".join(x)+".sorted_"+ASSEMBLY+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]]
     },
 
     'final-report': {
@@ -523,43 +512,6 @@ rule methseg:
                          "--logFile={log}"])
                 
 
-## Aquisition of gene features
-rule fetch_refGene:
-    output: refgenes = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    params:
-        assembly = "{assembly}"
-    log:
-        os.path.join(DIR_annot,"fetch_refseq.genes.{assembly}.log")
-    message:
-        fmt("Fetching RefSeq genes for Genome assembly: {wildcards.assembly}")
-    shell:
-        nice('Rscript', ["{DIR_scripts}/fetch_refGene.R",
-                         "{log}",
-                         "{output.refgenes}",
-                         "{params.assembly}",
-                         "{DIR_scripts}",
-                         config['locations']['genome-dir']])
-
-
-## Annotation with gene features
-rule methseg_annotation:
-    input:
-        template    = os.path.join(DIR_templates,"annotation.report.Rmd"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    output:
-        report      = os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.nb.html"),
-    params:
-        inBed       = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        genome_dir  = config['locations']['genome-dir'],
-        scripts_dir = DIR_scripts,
-        assembly    = "{assembly}",# expand(config["reference"]),
-    log:
-        os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.log")
-    message: fmt("Generating annotation of segments for {input.bedfile}.")
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
-
 ## Differential methylation
 rule diffmeth:
     ## paths inside input and output should be relative
@@ -601,52 +553,10 @@ rule diffmeth:
                          '--logFile={log}'])
 
 
-
-## Annotation with gene features
-rule annotation_diffmeth:
-    input:  
-        template    = os.path.join(DIR_templates,"annotation.report.diff.meth.Rmd"),
-        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    output: 
-        report      = os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.nb.html"),
-    params:
-        inBed       = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = ASSEMBLY,
-        methylDiff_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        methylDiff_hyper_file = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
-        genome_dir  = config['locations']['genome-dir'],
-        scripts_dir = DIR_scripts
-    log:
-        os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
-    message: fmt("Annotating differential methylation.")
-    run:
-        generateReport(input, output, params, log, wildcards.treatment+"."+wildcards.assembly)
-
 ### note that Final report can only be generated 
 ### if one of the intermediate has been genereted,
 ### so make sure that at least one has been run already
 ### right now ensured with 'rules.methseg_annotation.output' as input
-
-rule merge_diffmeth_report:
-    input:
-       diffmeth = diff_meth_input,
-       methseg_annotation_outputs = rules.methseg_annotation.output
-    output:
-       # TODO: generate a final_knitr_meta.rds instead
-       touch(DIR_final + "{prefix}_{assembly}_merge_diffmeth_report.txt")
-    log:
-       DIR_final + "{prefix}_{assembly}_merge_diffmeth_report.log"
-    params:
-       diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
-    message: fmt("Merging differential methylation report.")
-    shell:
-       nice('Rscript', ["{DIR_scripts}/integrate2finalreport.R",
-                        "{wildcards.prefix}",
-                        "{wildcards.assembly}",
-                        "{DIR_final}",
-                        "{params.diffmeth}"])
 
 
 ## Final Report

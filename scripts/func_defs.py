@@ -102,13 +102,6 @@ def methSeg(files, sampleID):
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_segments_gr.RDS"] #---- paired end
         
-def methSegAnnot(files, sampleID):
-    PATH = DIR_seg
-    if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_annotation.nb.html" #---- single end
-    elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_annotation.nb.html"] #---- paired end
-
 def list_final_reports(files, sampleID):
     PATH = DIR_final
     if len(files) == 1:
