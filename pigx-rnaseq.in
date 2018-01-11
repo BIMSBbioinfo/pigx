@@ -1,5 +1,5 @@
 #!@PYTHON@
-
+# -*- python -*-
 # PiGx RNAseq Pipeline.
 #
 # Copyright © 2017 Bora Uyar <bora.uyar@mdc-berlin.de>
