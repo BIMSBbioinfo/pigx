@@ -88,7 +88,7 @@ guix environment -l guix.scm
 To run PiGx BSseq on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```sh
-$ pigx-bsseq [options] samplesheet.csv
+$ pigx-bsseq [options] samplesheet.csv -s settings.yaml
 ```
 To see all available options type the `--help` option
 ```sh
