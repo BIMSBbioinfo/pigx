@@ -21,12 +21,3 @@ for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
         exit 1
     fi
 done
-
-
-message=$(./pigx-bsseq -s ${srcdir}/test/settings.yaml ${srcdir}/test/samplesheet.csv 2>&1 >/dev/null | tail -n1)
-
-if test "$message" != "Nothing to be done."
-then
-   echo "ERROR: pipeline should not process files a second time"
-   exit 1
-fi
