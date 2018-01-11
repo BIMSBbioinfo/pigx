@@ -1,7 +1,7 @@
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2017, 2018 Bren Osberg <b.osberg@tum.de>
-# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017, 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
@@ -26,8 +26,7 @@ WORKDIR = os.getcwd() + "/"                         #--- current work dir (impor
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 DIR_templates = os.path.join(config['locations']['output-dir'], 'pigx_work/report_templates/')
 
-DIR_diffmeth    = '11_differential_methylation/'
-DIR_annot       = '10_annotation/'
+DIR_diffmeth    = '10_differential_methylation/'
 DIR_seg         = '09_segmentation/'
 DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
@@ -123,19 +122,9 @@ targets = {
         'files': files_for_sample(methSeg)
     },
     
-    'segmentation-annotation': {
-        'description': "Annotation of the Segments.",
-        'files': files_for_sample(methSegAnnot)
-    },
-
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]]
-    },
-		            
-    'diffmeth-annotation': {
-        'description': "Annotate differential methylation cytosines.",
-        'files': [ DIR_annot+"_".join(x)+".sorted_"+ASSEMBLY+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]]
+        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["DIFF_METH"]]
     },
 
     'final-report': {
@@ -473,10 +462,8 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
 ## Bam processing
 rule bam_methCall:
     input:
-        template    = os.path.join(DIR_templates,"methCall.report.Rmd"),
         bamfile     = os.path.join(DIR_sorted,"{prefix}.sorted.bam")
     output:
-        report      = os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.nb.html"),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
         callFile    = os.path.join(DIR_methcall,"{prefix}.sorted_CpG.txt")
     params:
@@ -490,77 +477,51 @@ rule bam_methCall:
     log:
         os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
     message: fmt("Extract methylation calls from bam file.")
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
+    shell:
+        nice('Rscript', ["{DIR_scripts}/methCall.R",
+                         "--inBam={params.inBam}",
+                         "--assembly={params.assembly}",
+                         "--mincov={params.mincov}",
+                         "--minqual={params.minqual}",
+                         "--rds={params.rds}",
+                         "--logFile={log}"])
+
 
 ## Segmentation
 rule methseg:
     ## paths inside input and output should be relative
     input:
-        template    = os.path.join(DIR_templates,"methseg.report.Rmd"),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
     output: 
-        report      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.nb.html"),
         grfile      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed")
     params:
-        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
-        grds        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed")
+        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png")
     log:
         os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.log")
     message: fmt("Segmenting methylation profile for {input.rdsfile}.")
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
-
-
-## Aquisition of gene features
-rule fetch_refGene:
-    output: refgenes = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    params:
-        assembly = "{assembly}"
-    log:
-        os.path.join(DIR_annot,"fetch_refseq.genes.{assembly}.log")
-    message:
-        fmt("Fetching RefSeq genes for Genome assembly: {wildcards.assembly}")
     shell:
-        nice('Rscript', ["{DIR_scripts}/fetch_refGene.R",
-                         "{log}",
-                         "{output.refgenes}",
-                         "{params.assembly}",
-                         "{DIR_scripts}",
-                         config['locations']['genome-dir']])
-
-
-## Annotation with gene features
-rule methseg_annotation:
-    input:
-        template    = os.path.join(DIR_templates,"annotation.report.Rmd"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    output:
-        report      = os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.nb.html"),
-    params:
-        inBed       = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        genome_dir  = config['locations']['genome-dir'],
-        scripts_dir = DIR_scripts,
-        assembly    = "{assembly}",# expand(config["reference"]),
-    log:
-        os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.log")
-    message: fmt("Generating annotation of segments for {input.bedfile}.")
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
+        nice('Rscript', ["{DIR_scripts}/methSeg.R",
+                         "--rds={params.methCallRDS}",
+                         "--grds={params.methSegGR}",
+                         "--outBed={params.methSegBed}",
+                         "--png={params.methSegPng}",
+                         "--logFile={log}"])
+                
 
 ## Differential methylation
 rule diffmeth:
     ## paths inside input and output should be relative
     input:  
-        template    = os.path.join(DIR_templates,"diffmeth.report.Rmd"),
         inputfiles  = diffmeth_input_function
     output: 
-        report      = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.nb.html"),
-        methylDiff_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
+        methylDiff_file  = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.RDS'),
+        methylDiff_hyper_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
+        bedfile     = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.bed')
     params:
         workdir     = WORKDIR,
         inputfiles  = diffmeth_input_function,
@@ -572,88 +533,56 @@ rule diffmeth:
         assembly    = ASSEMBLY,
         treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
-        context     = "CpG",
         cores       = int(config['general']['differential-methylation']['cores']),
         scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
     message: fmt("Calculating differential methylation.")
-    run:
-        generateReport(input, output, params, log, wildcards.treatment)
+    shell:
+        nice('Rscript', ['{DIR_scripts}/methDiff.R',
+                         '--inputfiles="{params.inputfiles}"',
+                         '--sampleids="{params.sampleids}"',
+                         '--methylDiff_file={params.methylDiff_file}',
+                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
+                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
+                         '--assembly={params.assembly}',
+                         '--treatment="{params.treatment}"',
+                         '--mincov={params.mincov}',
+                         '--cores={params.cores}',
+                         '--outBed={params.outBed}',
+                         '--logFile={log}'])
 
-
-## Annotation with gene features
-rule annotation_diffmeth:
-    input:  
-        template    = os.path.join(DIR_templates,"annotation.report.diff.meth.Rmd"),
-        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    output: 
-        report      = os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.nb.html"),
-    params:
-        inBed       = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = ASSEMBLY,
-        methylDiff_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        methylDiff_hyper_file = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
-        genome_dir  = config['locations']['genome-dir'],
-        scripts_dir = DIR_scripts
-    log:
-        os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
-    message: fmt("Annotating differential methylation.")
-    run:
-        generateReport(input, output, params, log, wildcards.treatment+"."+wildcards.assembly)
 
 ### note that Final report can only be generated 
 ### if one of the intermediate has been genereted,
 ### so make sure that at least one has been run already
 ### right now ensured with 'rules.methseg_annotation.output' as input
 
-rule merge_diffmeth_report:
-    input:
-       diffmeth = diff_meth_input,
-       methseg_annotation_outputs = rules.methseg_annotation.output
-    output:
-       # TODO: generate a final_knitr_meta.rds instead
-       touch(DIR_final + "{prefix}_{assembly}_merge_diffmeth_report.txt")
-    log:
-       DIR_final + "{prefix}_{assembly}_merge_diffmeth_report.log"
-    params:
-       diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
-    message: fmt("Merging differential methylation report.")
-    shell:
-       nice('Rscript', ["{DIR_scripts}/integrate2finalreport.R",
-                        "{wildcards.prefix}",
-                        "{wildcards.assembly}",
-                        "{DIR_final}",
-                        "{params.diffmeth}"])
-
 
 ## Final Report
 rule final_report:
     input:  
-        rules.merge_diffmeth_report.output,
-        index       = os.path.join(DIR_templates,"index.Rmd"),   
-        references  = os.path.join(DIR_templates,"references.Rmd"),
-        sessioninfo = os.path.join(DIR_templates,"sessioninfo.Rmd")
+        rules.bam_methCall.output,
+        rules.methseg.output,
+        lambda wc: finalReportDiffMeth_input(wc.prefix),
+        template      = os.path.join(DIR_templates,"index.Rmd")
     output: 
-        finalreport = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.nb.html"),
+        report        = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.html")
     params:
-        finalreportdir = os.path.join(DIR_final, "{prefix}/")
+        ## absolute path to bamfiles
+        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
+        assembly    = ASSEMBLY,
+        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual     = int(config['general']['methylation-calling']['minimum-quality']),
+        ## absolute path to output folder in working dir
+        methCallRDS         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png"),
+        methylDiff_files      = lambda wc: [ os.path.join(WORKDIR,rds) for rds in finalReportDiffMeth_input(wc.prefix)],
+        genome_dir  = config['locations']['genome-dir'],
+        scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
-    message:
-        "Compiling Final Report:\n"
-        "   report    : {output.finalreport}"
-        
     run:
-        cmd = nice('Rscript', ["{DIR_scripts}/generate_multireport.R",
-                               "--scriptsDir={DIR_scripts}",
-                               "--index={input.index}",
-                               "--finalOutput={output.finalreport}",
-                               "--finalReportDir={params.finalreportdir}",
-                               "--references={input.references}",
-                               "--sessioninfo={input.sessioninfo}",
-                               "--logFile={log}"])
-        shell(cmd)
-
+        generateReport(input, output, params, log, "")

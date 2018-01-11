@@ -9,26 +9,20 @@ dist_pkglibexec_SCRIPTS =			\
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/generate_report.R			\
-  scripts/generate_multireport.R	\
   scripts/fetch_procedures.R		\
   scripts/fetch_refGene.R			\
   scripts/func_defs.py				\
   scripts/ideoDMC.R					\
-  scripts/integrate2finalreport.R	\
   scripts/report_functions.R		\
-  scripts/export_bw.R
+  scripts/export_bw.R         \
+  scripts/methCall.R          \
+  scripts/methSeg.R           \
+  scripts/methDiff.R
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\
-  report_templates/annotation.report.Rmd			\
-  report_templates/annotation.report.diff.meth.Rmd	\
-  report_templates/diffmeth.report.Rmd				\
   report_templates/index.Rmd						\
-  report_templates/methCall.report.Rmd				\
-  report_templates/methseg.report.Rmd				\
   report_templates/pigx_bsseq_logo.html				\
-  report_templates/references.Rmd					\
-  report_templates/sessioninfo.Rmd					\
   report_templates/reports.bib
 
 dist_pkgdata_DATA =					\

@@ -1,7 +1,7 @@
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2017 Bren Osberg <b.osberg@tum.de>
-# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017, 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
@@ -80,7 +80,7 @@ cat(paste(
     "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"
 ))
 
-render2Markdown(reportFile = normalizePath(argsL$reportFile),
+render2HTML(reportFile = normalizePath(argsL$reportFile),
                 outFile = basename(argsL$outFile),
                 outDir = normalizePath(dirname(argsL$outFile)),
                 finalReportDir = normalizePath(argsL$finalReportDir),

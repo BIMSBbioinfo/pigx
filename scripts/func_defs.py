@@ -1,7 +1,7 @@
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2017 Bren Osberg <b.osberg@tum.de>
-# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017, 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
@@ -84,9 +84,9 @@ def list_files_sortbam(files, sampleID):
 def bam_processing(files, sampleID):
     PATH = DIR_methcall
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_methylRaw.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_calls.nb.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS"] #---- paired end
 
 def bigwig_exporting(files, sampleID):
     PATH = DIR_bigwig
@@ -102,19 +102,12 @@ def methSeg(files, sampleID):
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_segments_gr.RDS"] #---- paired end
         
-def methSegAnnot(files, sampleID):
-    PATH = DIR_seg
-    if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_annotation.nb.html" #---- single end
-    elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_annotation.nb.html"] #---- paired end
-
 def list_final_reports(files, sampleID):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.nb.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.nb.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.html"] #---- paired end
 
 
 
@@ -152,6 +145,18 @@ def diff_meth_input(wc):
       name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
       mylist.append(DIR_annot + name_of_dir)
   return(mylist)
+  
+def finalReportDiffMeth_input(prefix):
+  sampleid = get_fastq_name(prefix)
+  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
+  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
+  treatments = ["_".join(pair) for pair in config['DIFF_METH'] if treatment_of_sampleid in pair]
+  outList = []
+  if treatments: 
+      outList  = [ "{}{}.sorted_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
+      outList += [ "{}{}.sorted_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
+  
+  return  outList
 
 def get_sampleids_from_treatment(treatment):
   treatments = treatment.split("_")
