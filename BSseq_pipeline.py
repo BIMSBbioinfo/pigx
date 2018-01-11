@@ -652,28 +652,27 @@ rule merge_diffmeth_report:
 ## Final Report
 rule final_report:
     input:  
-        rules.merge_diffmeth_report.output,
-        index       = os.path.join(DIR_templates,"index.Rmd"),   
-        references  = os.path.join(DIR_templates,"references.Rmd"),
-        sessioninfo = os.path.join(DIR_templates,"sessioninfo.Rmd")
+        rules.bam_methCall.output,
+        rules.methseg.output,
+        lambda wc: finalReportDiffMeth_input(wc.prefix),
+        template      = os.path.join(DIR_templates,"index.Rmd")
     output: 
-        finalreport = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.nb.html"),
+        report        = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.html")
     params:
-        finalreportdir = os.path.join(DIR_final, "{prefix}/")
+        ## absolute path to bamfiles
+        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
+        assembly    = ASSEMBLY,
+        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual     = int(config['general']['methylation-calling']['minimum-quality']),
+        ## absolute path to output folder in working dir
+        methCallRDS         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png"),
+        methylDiff_files      = lambda wc: [ os.path.join(WORKDIR,rds) for rds in finalReportDiffMeth_input(wc.prefix)],
+        genome_dir  = config['locations']['genome-dir'],
+        scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
-    message:
-        "Compiling Final Report:\n"
-        "   report    : {output.finalreport}"
-        
     run:
-        cmd = nice('Rscript', ["{DIR_scripts}/generate_multireport.R",
-                               "--scriptsDir={DIR_scripts}",
-                               "--index={input.index}",
-                               "--finalOutput={output.finalreport}",
-                               "--finalReportDir={params.finalreportdir}",
-                               "--references={input.references}",
-                               "--sessioninfo={input.sessioninfo}",
-                               "--logFile={log}"])
-        shell(cmd)
-
+        generateReport(input, output, params, log, "")
