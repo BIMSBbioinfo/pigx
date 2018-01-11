@@ -356,13 +356,13 @@ def maybe_copy(source, target_dir):
         shutil.copy(source, target_dir)
 
 def prepare_links():
-    os.makedirs(path.join(config['locations']['output-dir'], 'path_links/input'),
+    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/input'),
                 exist_ok=True)
 
     # Link the reference genome
     try:
         os.symlink(config['locations']['genome-dir'],
-                   path.join(config['locations']['output-dir'], 'path_links/refGenome'))
+                   path.join(config['locations']['output-dir'], 'pigx_work/refGenome'))
     except FileExistsError:
         pass
 
@@ -379,20 +379,20 @@ def prepare_links():
             tag = "" if single_end else '_' + str(idx + 1)
             linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
             makelink(path.join(config['locations']['input-dir'], f),
-                     path.join(config['locations']['output-dir'], "path_links/input/", linkname))
+                     path.join(config['locations']['output-dir'], "pigx_work/input/", linkname))
 
     # Copy the report templates to a writable location because bookmark insists on placing
     # the generated ".md" files where the ".Rmd" source files are located.  This will not be
     # necessary once we generate only a single report.
-    os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
+    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/report_templates'),
                 exist_ok=True)
 
     for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
-        maybe_copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
+        maybe_copy(template, path.join(config['locations']['output-dir'], 'pigx_work/report_templates'))
 
     # Ensure that we use the configured Pandoc, pandoc-citeproc
     # ...and the configured Rscript
-    bin = path.join(config['locations']['output-dir'], 'path_links/bin')
+    bin = path.join(config['locations']['output-dir'], 'pigx_work/bin')
     if path.exists(bin): shutil.rmtree(bin)
     os.makedirs(bin, exist_ok=True)
     os.symlink('@PANDOC@', path.join(bin, "pandoc"))

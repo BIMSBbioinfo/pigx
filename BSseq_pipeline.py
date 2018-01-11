@@ -24,7 +24,7 @@ import os
 WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
 
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
-DIR_templates = os.path.join(config['locations']['output-dir'], 'path_links/report_templates/')
+DIR_templates = os.path.join(config['locations']['output-dir'], 'pigx_work/report_templates/')
 
 DIR_diffmeth    = '11_differential_methylation/'
 DIR_annot       = '10_annotation/'
@@ -43,8 +43,8 @@ DIR_final       = os.path.join(config['locations']['output-dir'], "Final_Report/
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN     = "path_links/input/"           # location of the data files to be imported (script creates symbolic link)
-GENOMEPATH = "path_links/refGenome/"       # where the reference genome being mapped to is stored
+PATHIN     = "pigx_work/input/"           # location of the data files to be imported (script creates symbolic link)
+GENOMEPATH = "pigx_work/refGenome/"       # where the reference genome being mapped to is stored
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
 # include function definitions and extra rules
