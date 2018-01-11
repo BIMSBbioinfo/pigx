@@ -119,7 +119,7 @@ cat('**Output parameters:**\n')
 ```{r MethCall.print_params_out2, eval=MethCall}
 
 inputParams <- data.frame(Parameters = "MethylRaw Object",
-                          Vaues      = params$methCallRDS,
+                          Values      = params$methCallRDS,
                           stringsAsFactors = FALSE)
 #params
 #datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
@@ -441,7 +441,7 @@ knitr::kable(outputParams)
 # Check if there are some differentially methylated cytosines
 methylDiff.nonempty = nrow(methylDiff.obj)>1
 if(!methylDiff.nonempty) {
-  cat('**There are no differentially methylated cytosines**\n')
+  cat('**There are no differentially methylated cytosines.!**\n')
   DiffMeth <- FALSE
   AnnotateDiffMeth <- FALSE
 }
