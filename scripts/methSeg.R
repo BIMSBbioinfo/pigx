@@ -37,6 +37,7 @@ if("--help" %in% args) {
       --rds name of the input RDS file containting the methylRaw object
       --grds name of output RDS file containing Segments as GRanges object
       --outBed name of output BED file containing Segments
+      --png name of file to save diagnostic plots to   
       --logFile file to print the logs to
       --help              - print this text
       
@@ -70,7 +71,8 @@ library("methylKit")
 
 input     <- argsL$rds
 output    <- argsL$outBed
-grFile    <- argsL$grds   
+grFile    <- argsL$grds
+pngFile   <- argsL$png
 
 ## read input methylRaw
 methRaw <- readRDS(input)
@@ -87,7 +89,9 @@ methRaw.gr <- sort(methRaw.gr[,"meth"])
 
 ### Segmentation of methylation profile
 
+png(filename = pngFile,units = "in",width = 8,height = 4.5,res=300)
 res.gr = methSeg(methRaw.gr,diagnostic.plot=TRUE)
+dev.off()
 
 ## Saving object
 saveRDS(res.gr,file=grFile) 
