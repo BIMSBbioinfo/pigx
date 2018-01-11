@@ -152,6 +152,17 @@ def diff_meth_input(wc):
       name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
       mylist.append(DIR_annot + name_of_dir)
   return(mylist)
+  
+def finalReportDiffMeth_input(prefix):
+  sampleid = get_fastq_name(prefix)
+  treatment_of_sampleid = SAMPLE_TREATMENTS_DICT[ sampleid ]
+  treatments = ["_".join(pair) for pair in DIFF_METH_TREATMENT_PAIRS if treatment_of_sampleid in pair]
+  outList = []
+  if treatments: 
+      outList  = [ "{}{}.sorted_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
+      outList += [ "{}{}.sorted_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
+  
+  return  outList
 
 def get_sampleids_from_treatment(treatment):
   treatments = treatment.split("_")
