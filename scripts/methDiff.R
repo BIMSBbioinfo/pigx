@@ -42,7 +42,7 @@ if("--help" %in% args) {
       --methylDiff_hypo_file name of RDS file containing hypomethylated subset of methylDiff object
       --outBed name of BED file containing differentially methylated CpGs
       --assembly assembly to be used in methlyDiff object
-      --treatment samples with treatment to be to be compared
+      --treatment list of treatment values in same order as input files
       --mincov minimum coverage (default: 10)
       --workdir current working directory 
       --cores number of cores to use for calculateDiffMeth
