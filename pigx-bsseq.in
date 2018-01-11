@@ -119,36 +119,6 @@ def bail(msg):
     print(msg, file=sys.stderr)
     exit(1)
 
-def parse_diff_meth(list_of_list, sample_params):
-    """
-    Parse lines with information pairs samples
-    which should be considered for differential
-    methylation. E.g. for treatments A,B,C and D
-    it could like:
-  
-    A, B
-    C, D
-    D, A, B
-  
-    It returns a dictionary required for the config file
-    with a list of treatment values, e.g:
-    [[A,B], [C,D], [D,A,B]]
-    """
-
-    # check if treatment values are in the the column samples from
-    # the second part of the input file
-    # treatments values from the [[ SAMPLES ]] part
-    treatments_samples = set([sample_params['SAMPLES'][s]['Treatment'] 
-                              for s in sample_params['SAMPLES'].keys()])
-
-    # treatments values from the [[ DIFFERENTIAL METHYLATION ]] part
-    treatments_diffmeth = set(sum(list_of_list, []))
-    if not treatments_diffmeth.issubset(treatments_samples):
-        invalid_treatments = list(set(treatments_diffmeth) - set(treatments_samples))
-        raise Exception("Invalid treatment value(s) " + ", ".join(invalid_treatments))
-
-    return {"DIFF_METH": list_of_list}
-
 def get_filenames(mylist):
     return list(map(lambda x: splitext_fqgz(x)[0], mylist))
 
@@ -272,13 +242,8 @@ SETTINGSFILE as inputs."""
         lines = f.read().splitlines()
     sample_params = parse_samples(lines)
 
-    # Load pairs of treatments for differential methylation
-    diff_meth = settings['general']['differential-methylation']['treatment-groups']
-    diff_meth_params = parse_diff_meth(diff_meth, sample_params)
-
     # Create a config file
     settings.update(sample_params)
-    settings.update(diff_meth_params)
     settings['locations'].update(dirs['locations'])
 
     # Resolve relative paths in the locations section
@@ -321,6 +286,14 @@ def validate_config():
     for loc in config['locations']:
         if (not loc == 'output-dir') and (not path.isdir(config['locations'][loc]) ) :
             bail("ERROR: The following necessary directory does not exist: {} ({})".format(config['locations'][loc], loc))
+
+    # Check that all of the requested differential methylation
+    # treatment values are found in the sample sheet.
+    treatments = set([ config["SAMPLES"][sample]["Treatment"] for sample in config["SAMPLES"] ])
+    for pair in config['general']['differential-methylation']['treatment-groups']:
+        for group in pair:
+            if group not in treatments:
+                bail("ERROR: Invalid treatment group '{}' in pair '{}'".format(group, pair))
 
     # Check for a genome fasta file
     fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))

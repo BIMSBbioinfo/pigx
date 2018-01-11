@@ -124,7 +124,7 @@ targets = {
     
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["DIFF_METH"]]
+        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["general"]["differential-methylation"]["treatment-groups"]]
     },
 
     'final-report': {

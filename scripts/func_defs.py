@@ -140,7 +140,7 @@ def diff_meth_input(wc):
   treatment_of_sampleid = sample_treatments_dict[ sampleid ]
 
   mylist = []
-  for x in config['DIFF_METH']:
+  for x in config["general"]["differential-methylation"]["treatment-groups"]:
     if treatment_of_sampleid in x:
       name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
       mylist.append(DIR_annot + name_of_dir)
@@ -150,7 +150,7 @@ def finalReportDiffMeth_input(prefix):
   sampleid = get_fastq_name(prefix)
   sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
   treatment_of_sampleid = sample_treatments_dict[ sampleid ]
-  treatments = ["_".join(pair) for pair in config['DIFF_METH'] if treatment_of_sampleid in pair]
+  treatments = ["_".join(pair) for pair in config["general"]["differential-methylation"]["treatment-groups"] if treatment_of_sampleid in pair]
   outList = []
   if treatments: 
       outList  = [ "{}{}.sorted_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
