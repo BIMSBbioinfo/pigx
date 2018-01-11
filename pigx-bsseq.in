@@ -93,8 +93,8 @@ pipeline.""")
 
 parser.add_argument('--graph', dest='graph',
                     help="""\
-Output a graph in Graphviz dot format showing the relations between
-rules of this pipeline.  You must specify a graph file name such as
+Output a graph in PDF format showing the relations between rules of
+this pipeline.  You must specify a graph file name such as
 "graph.pdf".""")
 
 parser.add_argument('--force', dest='force', action='store_true',

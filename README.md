@@ -90,11 +90,15 @@ To run PiGx BSseq on your experimental data, first enter the necessary parameter
 ```sh
 $ pigx-bsseq [options] samplesheet.csv -s settings.yaml
 ```
+
 To see all available options type the `--help` option
+
 ```sh
 $ pigx-bsseq --help
 
-usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--target TARGET] [-n] [--graph GRAPH] [--force] [--reason] [--unlock] samplesheet
+usage: pigx-bsseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET] [-n] [--graph GRAPH] [--force] [--reason]
+                  [--unlock]
+                  samplesheet
 
 PiGx BSseq Pipeline.
 
@@ -118,8 +122,8 @@ optional arguments:
                                           to describe all available targets.
   -n, --dry-run                           Only show what work would be performed.  Do not actually run the
                                           pipeline.
-  --graph GRAPH                           Output a graph in Graphviz dot format showing the relations between
-                                          rules of this pipeline.  You must specify a graph file name such as
+  --graph GRAPH                           Output a graph in PDF format showing the relations between rules of
+                                          this pipeline.  You must specify a graph file name such as
                                           "graph.pdf".
   --force                                 Force the execution of rules, even though the outputs are considered
                                           fresh.
