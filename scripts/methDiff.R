@@ -1,9 +1,6 @@
 # PiGx BSseq Pipeline.
 #
-# Copyright © 2017 Bren Osberg <b.osberg@tum.de>
-# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
-# Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
-# Copyright © 2017 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+# Copyright © 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 #
 # This file is part of the PiGx BSseq Pipeline.
 #
