@@ -1,7 +1,7 @@
 #!/bin/sh
 
 test_folder="${srcdir}/tests/test_trim_galore"
-EXEC="@TRIMGALORE"
+EXEC="@TRIMGALORE@"
 
 #the single-end read file provided as input to trim galore
 input1="${test_folder}/input_files/sample.read1.fastq.gz"
