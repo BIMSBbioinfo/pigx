@@ -244,7 +244,7 @@ rule report1:
   log: os.path.join(LOG_DIR, "report.star.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
-  shell: "{RSCRIPT_EXEC} {params.reportR} --pkgdatadir={config['locations']['pkgdatadir']} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --pkgdatadir="+ config['locations']['pkgdatadir'] + " --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
 
 rule report2:
   input:

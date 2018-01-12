@@ -55,7 +55,8 @@ runReport <- function(reportFile,
                       geneSetsFolder,
                       workdir = getwd(),
                       organism, 
-                      prefix, 
+                      prefix,
+                      pkgdatadir,
                       selfContained = TRUE, 
                       quiet = FALSE) {
   
