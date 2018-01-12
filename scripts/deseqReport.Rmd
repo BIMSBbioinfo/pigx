@@ -15,6 +15,32 @@ params:
   organism: ''
 ---
 
+<style>
+#logo
+{
+    position: relative;
+}
+#logo img {
+    /*position: relative;*/
+    top: 25px;
+    /*right: 0px;*/
+    left: 50px;
+    position: fixed;
+    width: 125px;
+    }
+body
+{
+    position: absolute;
+    top: 150px;
+}
+</style>
+
+<!-- TODO: magic -->
+<div id="logo" align="top">
+  ![](../images/Logo_PiGx.png)
+</div>
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = params$workdir)
