@@ -74,7 +74,12 @@ targets = {
           os.path.join(MULTIQC_DIR, 'multiqc_report.html')] + 
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
-    }
+    }, 
+    'star_map' : {
+        'description': "Produce a STAR mapping results in BAM file format.",
+        'files': 
+          expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
+    }   
 }
 
 # Selected output files from the above set.
