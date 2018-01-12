@@ -1,0 +1,19 @@
+This directory contains working data used by the pigx pipeline
+(primarily file links). It is normally not necessary for users to look
+in this directory, however it can be used to provide traceability (in
+case the user has run the pipeline and forgotten e.g., which input
+files were used, etc.).
+
+For example: the directory "input/" contains a set of links that point
+to the locations of the original data that are fed into the
+pipeline. The pipeline itself operates on these 'links' and by
+checking this directory, one can identify the names and locations of
+the source files that were used to produce the output. Note that the
+file extensions are standardized to always terminate in ".fq.gz", even
+if the original data used the extension ".fastq.gz".
+
+Likewise, the link "refGenome" points to the directory in which the
+reference genome is stored.
+
+The directory "bin" stores links to various programs used in the
+pipeline's execution.
