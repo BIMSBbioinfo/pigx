@@ -332,6 +332,14 @@ def prepare_links():
     os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/input'),
                 exist_ok=True)
 
+    # copy documentation file to the output work directory.
+    if os.getenv('PIGX_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        contents = path.join(where, 'etc/CONTENTS.txt')
+    else:
+        contents = path.join(config['locations']['pkgdatadir'], 'CONTENTS.txt')
+    shutil.copy(contents, path.join(config['locations']['output-dir'], 'pigx_work/'))
+
     # Link the reference genome
     try:
         os.symlink(config['locations']['genome-dir'],
