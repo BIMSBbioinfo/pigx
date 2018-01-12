@@ -35,6 +35,7 @@
 #'   analysis results. If the organism is not supported or there is no internet
 #'   connection, GO results will not be displayed.
 #' @param prefix Prefix to be attached to the beginning of output files
+#' @param pkgdatadir Location of package data
 #' @param quiet boolean value (default: FALSE). If set to TRUE, progress bars 
 #'   and chunk labels will be suppressed while knitting the Rmd file.
 #' @param selfContained boolean value (default: TRUE). By default, the generated
@@ -157,6 +158,7 @@ Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \\\
 --workdir=`pwd` \\\
 --organism='hsapiens' \\\
 --prefix='spt-16_hmg-4_vs_ctrl' \\\
+--pkgdatadir='/usr/local/share/pigx_rnaseq/' \\\
 --selfContained=TRUE"
 
 ## Help section
@@ -272,5 +274,6 @@ runReport(reportFile = reportFile,
           geneSetsFolder = geneSetsFolder,
           workdir = workdir, 
           organism = organism,
-          prefix = prefix, 
+          prefix = prefix,
+          pkgdatadir = args$pkgdatadir,
           selfContained = selfContained)
