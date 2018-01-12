@@ -221,6 +221,10 @@ general:
     cores: 20
     treatment-groups:
       - ['0', '1']
+    annotation:
+      CpGfile:    genome/cpgIslandExt.hg19.bed.gz
+      refGenfile: genome/refGene.hg19.bed.gz
+      webfetch:   no
 ```
 
 | Variable name | description |
@@ -230,6 +234,8 @@ general:
 | methylation-calling:minimum-quality | integer: minimum phred quality score to call a methylation status for a base.  Defaults to 10.
 | differential-methylation:cores | integer: denotes how many cores should be used for parallel differential methylation calculations
 | differential-methylation:treatment-groups | array of strings
+| differential-methylation:annotation | annotation files for differential methylation based on CpG islands and reference genes respectively.  
+| webfetch   | Boolean: should pigx download these files from the internet if they are unavailable? (if not, then these sections are simply ommitted.)
 
 ### Execution
 

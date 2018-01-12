@@ -582,6 +582,9 @@ rule final_report:
         methylDiff_files      = lambda wc: [ os.path.join(WORKDIR,rds) for rds in finalReportDiffMeth_input(wc.prefix)],
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts
+        CpGfile     = config['general']['differential-methylation']['annotation']['CpGfile']
+        refGenfile  = config['general']['differential-methylation']['annotation']['refGenfile']
+        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
         os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
     run:
