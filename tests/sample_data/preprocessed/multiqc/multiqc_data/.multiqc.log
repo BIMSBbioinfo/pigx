@@ -1,0 +1,163 @@
+[2018-01-12 14:53:12,411] multiqc                                            [DEBUG  ]  No MultiQC config found: /home/buyar/.conda/envs/pigx_rnaseq/lib/python3.5/site-packages/multiqc-0.9-py3.5.egg/multiqc_config.yaml
+[2018-01-12 14:53:12,411] multiqc                                            [DEBUG  ]  No MultiQC config found: /home/buyar/.multiqc_config.yaml
+[2018-01-12 14:53:12,411] multiqc                                            [DEBUG  ]  No MultiQC config found: multiqc_config.yaml
+[2018-01-12 14:53:12,411] multiqc                                            [DEBUG  ]  Command used: /home/buyar/.conda/envs/pigx_rnaseq/bin/multiqc -o /data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc /data/local/buyar/pigx/pigx_rnaseq/tests/output
+[2018-01-12 14:53:13,053] multiqc                                            [WARNING]  MultiQC Version v1.4
+ now available!
+[2018-01-12 14:53:13,053] multiqc                                            [INFO   ]  This is MultiQC v0.9
+[2018-01-12 14:53:13,053] multiqc                                            [DEBUG  ]  Command     : /home/buyar/.conda/envs/pigx_rnaseq/bin/multiqc -o /data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc /data/local/buyar/pigx/pigx_rnaseq/tests/output
+[2018-01-12 14:53:13,053] multiqc                                            [DEBUG  ]  Working dir : /data/local/buyar/pigx/pigx_rnaseq/tests/output
+[2018-01-12 14:53:13,053] multiqc                                            [INFO   ]  Template    : default
+[2018-01-12 14:53:13,053] multiqc                                            [INFO   ]  Searching '/data/local/buyar/pigx/pigx_rnaseq/tests/output'
+[2018-01-12 14:53:13,054] multiqc                                            [DEBUG  ]  Analysing modules: gatk, htseq, custom_content, peddy, quast, snpeff, qualimap, bcftools, featureCounts, methylQA, rseqc, picard, preseq, prokka, samblaster, samtools, bamtools, bismark, hicup, salmon, kallisto, slamdunk, star, tophat, bowtie2, bowtie1, cutadapt, trimmomatic, skewer, fastq_screen, fastqc
+[2018-01-12 14:53:13,054] multiqc                                            [DEBUG  ]  Using temporary directory for creating report: /data/local/buyar/tmp/tmpm_i0009s
+[2018-01-12 14:53:13,066] multiqc                                            [DEBUG  ]  Ignoring file as too large: pandoc
+[2018-01-12 14:53:13,067] multiqc                                            [DEBUG  ]  Ignoring file as too large: pandoc-citeproc
+[2018-01-12 14:53:13,067] multiqc                                            [DEBUG  ]  Ignoring file as too large: hash.bin
+[2018-01-12 14:53:13,068] multiqc                                            [DEBUG  ]  Ignoring file as too large: sa.bin
+[2018-01-12 14:53:13,068] multiqc                                            [DEBUG  ]  Ignoring file as too large: SAindex
+[2018-01-12 14:53:13,069] multiqc                                            [DEBUG  ]  Ignoring file as too large: SA
+[2018-01-12 14:53:13,075] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs3_seq.gz
+[2018-01-12 14:53:13,075] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: fld.gz
+[2018-01-12 14:53:13,075] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp5_seq.gz
+[2018-01-12 14:53:13,075] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: expected_bias.gz
+[2018-01-12 14:53:13,075] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias_3p.gz
+[2018-01-12 14:53:13,075] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias.gz
+[2018-01-12 14:53:13,076] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp3_seq.gz
+[2018-01-12 14:53:13,076] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp_gc.gz
+[2018-01-12 14:53:13,076] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs_gc.gz
+[2018-01-12 14:53:13,076] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs5_seq.gz
+[2018-01-12 14:53:13,077] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs3_seq.gz
+[2018-01-12 14:53:13,077] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: fld.gz
+[2018-01-12 14:53:13,077] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp5_seq.gz
+[2018-01-12 14:53:13,077] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: expected_bias.gz
+[2018-01-12 14:53:13,078] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias_3p.gz
+[2018-01-12 14:53:13,078] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias.gz
+[2018-01-12 14:53:13,078] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp3_seq.gz
+[2018-01-12 14:53:13,078] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp_gc.gz
+[2018-01-12 14:53:13,078] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs_gc.gz
+[2018-01-12 14:53:13,078] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs5_seq.gz
+[2018-01-12 14:53:13,079] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs3_seq.gz
+[2018-01-12 14:53:13,079] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: fld.gz
+[2018-01-12 14:53:13,079] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp5_seq.gz
+[2018-01-12 14:53:13,080] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: expected_bias.gz
+[2018-01-12 14:53:13,080] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias_3p.gz
+[2018-01-12 14:53:13,080] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias.gz
+[2018-01-12 14:53:13,080] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp3_seq.gz
+[2018-01-12 14:53:13,080] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp_gc.gz
+[2018-01-12 14:53:13,080] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs_gc.gz
+[2018-01-12 14:53:13,081] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs5_seq.gz
+[2018-01-12 14:53:13,081] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs3_seq.gz
+[2018-01-12 14:53:13,082] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: fld.gz
+[2018-01-12 14:53:13,082] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp5_seq.gz
+[2018-01-12 14:53:13,082] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: expected_bias.gz
+[2018-01-12 14:53:13,082] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias_3p.gz
+[2018-01-12 14:53:13,082] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias.gz
+[2018-01-12 14:53:13,082] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp3_seq.gz
+[2018-01-12 14:53:13,083] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp_gc.gz
+[2018-01-12 14:53:13,083] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs_gc.gz
+[2018-01-12 14:53:13,083] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs5_seq.gz
+[2018-01-12 14:53:13,084] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs3_seq.gz
+[2018-01-12 14:53:13,084] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: fld.gz
+[2018-01-12 14:53:13,084] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp5_seq.gz
+[2018-01-12 14:53:13,084] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: expected_bias.gz
+[2018-01-12 14:53:13,084] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias_3p.gz
+[2018-01-12 14:53:13,084] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias.gz
+[2018-01-12 14:53:13,085] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp3_seq.gz
+[2018-01-12 14:53:13,085] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp_gc.gz
+[2018-01-12 14:53:13,085] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs_gc.gz
+[2018-01-12 14:53:13,085] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs5_seq.gz
+[2018-01-12 14:53:13,086] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs3_seq.gz
+[2018-01-12 14:53:13,086] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: fld.gz
+[2018-01-12 14:53:13,086] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp5_seq.gz
+[2018-01-12 14:53:13,086] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: expected_bias.gz
+[2018-01-12 14:53:13,086] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias_3p.gz
+[2018-01-12 14:53:13,087] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: observed_bias.gz
+[2018-01-12 14:53:13,087] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp3_seq.gz
+[2018-01-12 14:53:13,087] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: exp_gc.gz
+[2018-01-12 14:53:13,087] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs_gc.gz
+[2018-01-12 14:53:13,087] multiqc                                            [DEBUG  ]  Ignoring file as is encoded: obs5_seq.gz
+[2018-01-12 14:53:13,088] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep1_R2.fastq.gz
+[2018-01-12 14:53:13,088] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep3_R1.fastq.gz
+[2018-01-12 14:53:13,088] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep1_R1.fastq.gz
+[2018-01-12 14:53:13,088] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep1_R2.fastq.gz
+[2018-01-12 14:53:13,088] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep2_R2.fastq.gz
+[2018-01-12 14:53:13,088] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep3_R2.fastq.gz
+[2018-01-12 14:53:13,089] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep2_R1.fastq.gz
+[2018-01-12 14:53:13,089] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep2_R2.fastq.gz
+[2018-01-12 14:53:13,089] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep1_R1.fastq.gz
+[2018-01-12 14:53:13,089] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep3_R1.fastq.gz
+[2018-01-12 14:53:13,090] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep3_R2.fastq.gz
+[2018-01-12 14:53:13,090] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep2_R1.fastq.gz
+[2018-01-12 14:53:13,091] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep3_Aligned.sortedByCoord.out.bam
+[2018-01-12 14:53:13,091] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep2_Aligned.toTranscriptome.out.bam
+[2018-01-12 14:53:13,091] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep3_Aligned.toTranscriptome.out.bam
+[2018-01-12 14:53:13,091] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep1_Aligned.sortedByCoord.out.bam
+[2018-01-12 14:53:13,092] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep2_Aligned.sortedByCoord.out.bam
+[2018-01-12 14:53:13,092] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep3_Aligned.sortedByCoord.out.bam
+[2018-01-12 14:53:13,093] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep1_Aligned.toTranscriptome.out.bam
+[2018-01-12 14:53:13,093] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep2_Aligned.toTranscriptome.out.bam
+[2018-01-12 14:53:13,093] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep3_Aligned.toTranscriptome.out.bam
+[2018-01-12 14:53:13,094] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep2_Aligned.sortedByCoord.out.bam
+[2018-01-12 14:53:13,094] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: UHR_Rep1_Aligned.sortedByCoord.out.bam
+[2018-01-12 14:53:13,094] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: HBR_Rep1_Aligned.toTranscriptome.out.bam
+[2018-01-12 14:53:13,210] multiqc.modules.gatk.gatk                          [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,317] multiqc.modules.htseq.htseq                        [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,349] multiqc.modules.custom_content.custom_content      [DEBUG  ]  No custom content found
+[2018-01-12 14:53:13,447] multiqc.modules.peddy.peddy                        [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,474] multiqc.modules.quast.quast                        [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,583] multiqc.modules.snpeff.snpeff                      [DEBUG  ]  Could not find any data in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,590] multiqc.modules.qualimap.QM_BamQC                  [DEBUG  ]  Using default Qualimap thresholds: 1, 5, 10, 30, 50
+[2018-01-12 14:53:13,728] multiqc.modules.qualimap.qualimap                  [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,841] multiqc.modules.bcftools.bcftools                  [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,874] multiqc.modules.featureCounts.feature_counts       [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:13,901] multiqc.modules.methylQA.methylQA                  [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:14,420] multiqc.modules.rseqc.rseqc                        [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:15,227] multiqc.modules.picard.picard                      [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:15,335] multiqc.modules.preseq.preseq                      [DEBUG  ]  Could not find any preseq data in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:15,443] multiqc.modules.prokka.prokka                      [DEBUG  ]  Could not find any Prokka data in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:15,553] multiqc.modules.samblaster.samblaster              [DEBUG  ]  Could not find any data in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:15,898] multiqc.modules.samtools.samtools                  [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:16,008] multiqc.modules.bamtools.bamtools                  [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:16,128] multiqc.modules.bismark.bismark                    [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:16,154] multiqc.modules.hicup.hicup                        [DEBUG  ]  Could not find any HiCUP data in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:16,207] multiqc.modules.salmon.salmon                      [INFO   ]  Found 6 meta reports
+[2018-01-12 14:53:16,208] multiqc.modules.salmon.salmon                      [INFO   ]  Found 6 fragment length distributions
+[2018-01-12 14:53:16,320] multiqc.modules.kallisto.kallisto                  [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:16,898] multiqc.modules.slamdunk.slamdunk                  [DEBUG  ]  No slamdunk reports found.
+[2018-01-12 14:53:16,953] multiqc.modules.star.star                          [DEBUG  ]  Duplicate ReadsPerGene sample name found! Overwriting: UHR_Rep3
+[2018-01-12 14:53:16,954] multiqc.modules.star.star                          [DEBUG  ]  Duplicate ReadsPerGene sample name found! Overwriting: UHR_Rep2
+[2018-01-12 14:53:16,955] multiqc.modules.star.star                          [DEBUG  ]  Duplicate ReadsPerGene sample name found! Overwriting: HBR_Rep2
+[2018-01-12 14:53:16,956] multiqc.modules.star.star                          [DEBUG  ]  Duplicate ReadsPerGene sample name found! Overwriting: HBR_Rep1
+[2018-01-12 14:53:16,957] multiqc.modules.star.star                          [DEBUG  ]  Duplicate ReadsPerGene sample name found! Overwriting: HBR_Rep3
+[2018-01-12 14:53:16,957] multiqc.modules.star.star                          [DEBUG  ]  Duplicate ReadsPerGene sample name found! Overwriting: UHR_Rep1
+[2018-01-12 14:53:16,958] multiqc.modules.star.star                          [INFO   ]  Found 6 reports and 6 gene count files
+[2018-01-12 14:53:16,987] multiqc.modules.tophat.tophat                      [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:17,086] multiqc.modules.bowtie2.bowtie2                    [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:17,184] multiqc.modules.bowtie1.bowtie1                    [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:17,293] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: UHR_Rep3.read2
+[2018-01-12 14:53:17,295] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: HBR_Rep1.read1
+[2018-01-12 14:53:17,296] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: HBR_Rep3.read2
+[2018-01-12 14:53:17,297] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: HBR_Rep2.read1
+[2018-01-12 14:53:17,299] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: UHR_Rep2.read2
+[2018-01-12 14:53:17,300] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: HBR_Rep1.read2
+[2018-01-12 14:53:17,301] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: UHR_Rep1.read1
+[2018-01-12 14:53:17,303] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: UHR_Rep1.read2
+[2018-01-12 14:53:17,304] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: UHR_Rep2.read1
+[2018-01-12 14:53:17,306] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: HBR_Rep3.read1
+[2018-01-12 14:53:17,307] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: HBR_Rep2.read2
+[2018-01-12 14:53:17,308] multiqc.modules.cutadapt.cutadapt                  [DEBUG  ]  Duplicate sample name found! Overwriting: UHR_Rep3.read1
+[2018-01-12 14:53:17,324] multiqc.modules.cutadapt.cutadapt                  [INFO   ]  Found 12 reports
+[2018-01-12 14:53:17,425] multiqc.modules.trimmomatic.trimmomatic            [DEBUG  ]  Could not find any Trimmomatic data in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:17,522] multiqc.modules.skewer.skewer                      [DEBUG  ]  Could not find any data in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:17,548] multiqc.modules.fastq_screen.fastq_screen          [DEBUG  ]  Could not find any reports in ('/data/local/buyar/pigx/pigx_rnaseq/tests/output',)
+[2018-01-12 14:53:17,858] multiqc.modules.fastqc.fastqc                      [INFO   ]  Found 6 reports
+[2018-01-12 14:53:18,050] multiqc                                            [INFO   ]  Report      : multiqc/multiqc_report.html
+[2018-01-12 14:53:18,051] multiqc                                            [INFO   ]  Data        : multiqc/multiqc_data
+[2018-01-12 14:53:18,051] multiqc                                            [DEBUG  ]  Moving data file from '/data/local/buyar/tmp/tmpm_i0009s/multiqc_data/multiqc_salmon.txt' to '/data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc/multiqc_data'
+[2018-01-12 14:53:18,051] multiqc                                            [DEBUG  ]  Moving data file from '/data/local/buyar/tmp/tmpm_i0009s/multiqc_data/multiqc_general_stats.txt' to '/data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc/multiqc_data'
+[2018-01-12 14:53:18,051] multiqc                                            [DEBUG  ]  Moving data file from '/data/local/buyar/tmp/tmpm_i0009s/multiqc_data/multiqc_sources.txt' to '/data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc/multiqc_data'
+[2018-01-12 14:53:18,051] multiqc                                            [DEBUG  ]  Moving data file from '/data/local/buyar/tmp/tmpm_i0009s/multiqc_data/multiqc_cutadapt.txt' to '/data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc/multiqc_data'
+[2018-01-12 14:53:18,052] multiqc                                            [DEBUG  ]  Moving data file from '/data/local/buyar/tmp/tmpm_i0009s/multiqc_data/multiqc_fastqc.txt' to '/data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc/multiqc_data'
+[2018-01-12 14:53:18,052] multiqc                                            [DEBUG  ]  Moving data file from '/data/local/buyar/tmp/tmpm_i0009s/multiqc_data/multiqc_star.txt' to '/data/local/buyar/pigx/pigx_rnaseq/tests/output/multiqc/multiqc_data'
+[2018-01-12 14:53:18,216] multiqc                                            [INFO   ]  MultiQC complete
