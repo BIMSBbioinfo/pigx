@@ -1,4 +1,4 @@
-#!@GNUBASH@
+#!/usr/bin/bash
 
 set -e
 set -u
@@ -7,13 +7,13 @@ export PIGX_UGLY=1
 export PIGX_UNINSTALLED=1
 
 # We do not use "readlink -f" here, because macos does not support it.
-export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' ${srcdir:-.})
+export srcdir=$(/home/buyar/.conda/envs/pigx_rnaseq/bin/python -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' ${srcdir:-.})
 
 chmod -R +w ${srcdir}/tests
 
 ./pigx-rnaseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
 
-if ! test -f "${srcdir}/tests/output/report/analysis1.salmon.deseq.report.html"
+if ! test -f "${srcdir}/tests/output/report/analysis1.salmon.deseq.report.html" 
 then
   echo "ERROR: could not find report"
   exit 1
