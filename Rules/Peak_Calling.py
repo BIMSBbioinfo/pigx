@@ -61,19 +61,24 @@ rule macs2:
         shell(command)
 
 # ----------------------------------------------------------------------------- #
+def get_macs_output(name, PATH):
+    suffix = get_macs2_suffix(name, config)
+    peak_name = os.path.join(PATH, name, name + '_peaks.' + suffix)
+    return(peak_name)
+
 rule sort_peak:
     input:
-        rules.macs2.output
+        get_macs_output(name, PATH_PEAK)
     output:
-        outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.{class, narrow|broad}Peak")
+        outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.bed")
     params:
         threads = 1,
         mem = '8G'
     message:"""
-            Sorting narrow peak:
+            Sorting peak:
                 input : {input}
                 output: {output}
         """
     shell:"""
-        sort -r -k9 -n {input} > {output.outfile}
+        sort -r -k9 -n {input} | cut -f1-9 > {output.outfile}
     """

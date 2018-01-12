@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------- #
 def get_sample_idr(wc):
     name = config['idr'][wc.name]
-    samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_qsort.narrowPeak') for i in name.values()]))
+    samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_qsort.bed') for i in name.values()]))
     return(samps)
 
 
@@ -9,7 +9,7 @@ rule idr:
     input:
         unpack(get_sample_idr)
     output:
-        outfile = os.path.join(PATH_IDR, "{name}", "{name}.narrowPeak")
+        outfile = os.path.join(PATH_IDR, "{name}", "{name}.bed")
     params:
         threads = 1,
         mem = '8G',
@@ -26,8 +26,9 @@ rule idr:
         command = " ".join(
         [params.idr,
         '--samples', input.ChIP1, input.ChIP2,
-        '--input-file-type', 'narrowPeak',
-        '--rank', 'q.value',
+        '--input-file-type',  'bed',
+        '--output-file-type', 'bed',
+        '--rank', '9',
         '--output-file', output.outfile,
         '-l', log.log,
         '--plot',
