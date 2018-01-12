@@ -68,13 +68,12 @@ targets = {
     },
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
-        'files': [
-          os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
+        'files': 
+          [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
           os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-          os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-        ]
+          os.path.join(MULTIQC_DIR, 'multiqc_report.html')] + 
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     }
 }
 
@@ -84,10 +83,11 @@ selected_targets = config['execution']['target'] or ['final-report']
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
 from itertools import chain
-OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
+OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
+
+print(OUTPUT_FILES)
 
 
-
 rule all:
   input: OUTPUT_FILES
 
