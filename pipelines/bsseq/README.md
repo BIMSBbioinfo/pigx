@@ -88,13 +88,17 @@ guix environment -l guix.scm
 To run PiGx BSseq on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```sh
-$ pigx-bsseq [options] samplesheet.csv
+$ pigx-bsseq [options] samplesheet.csv -s settings.yaml
 ```
+
 To see all available options type the `--help` option
+
 ```sh
 $ pigx-bsseq --help
 
-usage: pigx-bsseq [-h] [-v] [-s SETTINGS] [-c CONFIGFILE] [--target TARGET] [-n] [--graph] [--force] samplesheet
+usage: pigx-bsseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET] [-n] [--graph GRAPH] [--force] [--reason]
+                  [--unlock]
+                  samplesheet
 
 PiGx BSseq Pipeline.
 
@@ -118,12 +122,15 @@ optional arguments:
                                           to describe all available targets.
   -n, --dry-run                           Only show what work would be performed.  Do not actually run the
                                           pipeline.
-  --graph                                 Output a graph in Graphviz dot format showing the relations between
-                                          rules of this pipeline.
+  --graph GRAPH                           Output a graph in PDF format showing the relations between rules of
+                                          this pipeline.  You must specify a graph file name such as
+                                          "graph.pdf".
   --force                                 Force the execution of rules, even though the outputs are considered
                                           fresh.
+  --reason                                Print the reason why a rule is executed.
+  --unlock                                Recover after a snakemake crash.
 
-This pipeline was developed by the Akalin group at MDC in Berlin in 2017.
+This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 ```
 
 # Input parameters
@@ -206,7 +213,7 @@ genome being mapped to.
 
 ```
 general:
-  genome-version: hg19
+  assembly: hg19
   methylation-calling:
     minimum-coverage: 0
     minimum-quality: 10
@@ -218,7 +225,7 @@ general:
 
 | Variable name | description |
 | ------------- |:-----------:|
-| genome-version | string: an UCSC assembly release name e.g. "hg19"
+| assembly      | string: an UCSC assembly release name e.g. "hg19"
 | methylation-calling:minimum-coverage | integer: minimum read coverage to be included in the methylKit objects. Defaults to 10. Any methylated base/region in the text files below the mincov value will be ignored.
 | methylation-calling:minimum-quality | integer: minimum phred quality score to call a methylation status for a base.  Defaults to 10.
 | differential-methylation:cores | integer: denotes how many cores should be used for parallel differential methylation calculations

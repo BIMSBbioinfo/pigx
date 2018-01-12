@@ -25,6 +25,7 @@ logFile     <- args[1]
 refgenesLoc <- args[2]
 assembly    <- args[3]
 scripts_dir <- args[4]
+genome_dir  <- args[5]
 
 source(paste0(scripts_dir, "fetch_procedures.R"))
 
@@ -33,4 +34,4 @@ out <- file(logFile, open = "wt")
 sink(out, type = "output")
 sink(out, type = "message")
 
-fetchRefGene(refgenes.loc = refgenesLoc, assembly = assembly)
+lookupBedFile(type = "refGene", filename = refgenesLoc, dir = genome_dir, assembly = assembly)

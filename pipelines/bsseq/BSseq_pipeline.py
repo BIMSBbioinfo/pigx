@@ -1,6 +1,6 @@
 # PiGx BSseq Pipeline.
 #
-# Copyright © 2017, 2018 Bren Osberg <b.osberg@tum.de>
+# Copyright © 2017, 2018 Bren Osberg <Brendan.Osberg@mdc-berlin.de>
 # Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
@@ -24,12 +24,11 @@ import os
 WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
 
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
-DIR_templates = os.path.join(config['locations']['output-dir'], 'path_links/report_templates/')
-# DIR_xmethed     = 'xx_xmethed/' #--- no longer used
+DIR_templates = os.path.join(config['locations']['output-dir'], 'pigx_work/report_templates/')
 
 DIR_diffmeth    = '10_differential_methylation/'
-DIR_annot       = '09_annotation/'
-DIR_seg         = '08_segmentation/'
+DIR_seg         = '09_segmentation/'
+DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
 DIR_sorted      = '06_sorting/'
 DIR_deduped     = '05_deduplication/'
@@ -43,30 +42,9 @@ DIR_final       = os.path.join(config['locations']['output-dir'], "Final_Report/
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
 
-PATHIN          = "path_links/input/"       #--- location of the data files to be imported (script creates symbolic link) 
-GENOMEPATH      = "path_links/refGenome/"   #--- where the reference genome being mapped to is stored
-VERSION         = config['general']['genome-version']  #--- version of the genome being mapped to.
-
-bismark_cores   = str(config['tools']['bismark']['cores'])
-
-
-SAMPLE_IDS = list(config["SAMPLES"].keys())
-SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
-SAMPLE_TREATMENTS_DICT = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
-DIFF_METH_TREATMENT_PAIRS = config['DIFF_METH']
-
-#-------------------------------      DEFINE PROGRAMS TO BE EXECUTED: ---------------------------------
-
-FASTQC                         =  config['tools']['fastqc']['executable']
-TRIMGALORE                     =  config['tools']['trim-galore']['executable']
-CUTADAPT                       =  config['tools']['cutadapt']['executable']
-BISMARK_GENOME_PREPARATION     =  config['tools']['bismark-genome-preparation']['executable']
-BISMARK                        =  config['tools']['bismark']['executable']
-BOWTIE2                        =  config['tools']['bowtie2']['executable']
-DEDUPLICATE_BISMARK            =  config['tools']['deduplicate-bismark']['executable']
-SAMTOOLS                       =  config['tools']['samtools']['executable']
-RSCRIPT                        =  config['tools']['R']['Rscript']
-
+PATHIN     = "pigx_work/input/"           # location of the data files to be imported (script creates symbolic link)
+GENOMEPATH = "pigx_work/refGenome/"       # where the reference genome being mapped to is stored
+ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
 # include function definitions and extra rules
 include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
@@ -85,15 +63,13 @@ targets = {
         'files': []
     },
 
-    # These are expensive one-time rules to prepare the genome.
-    'genome-prep-CT': {
-        'description': "C-to-T convert reference genome into Bisulfite analogue.",
-        'files': GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa"
-    },
-
-    'genome-prep-GA': {
-        'description': "G-to-A convert reference genome into Bisulfite analogue.",
-        'files': GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
+    # This is an expensive one-time rule to prepare the genome.
+    'genome-prep': {
+        'description': "Convert reference genome into Bisulfite analogue.",
+        'files': [
+            GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
+            GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
+        ]
     },
 
     'raw-qc': {
@@ -133,39 +109,38 @@ targets = {
      # TODO: had to add this part to call bam_methCall for diff meth rule
     'methyl-calling': {
         'description': "Process bam files.",
-        'files': [
-            expand (bam_processing(DIR_methcall,
-                                   config["SAMPLES"][sample]["files"],
-                                   sample))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(bam_processing)
     },
 
+    'bigwig': {
+        'description': "export bigwig files to separate folder for visualization",
+        'files': files_for_sample(bigwig_exporting) 
+    },
+ 
+    'segmentation': {
+        'description': "Segmentation of the methylation signal.",
+        'files': files_for_sample(methSeg)
+    },
+    
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.nb.html" for x in config["DIFF_METH"]]
-    },
-		            
-    'annotation': {
-        'description': "Annotate differential methylation cytosines.",
-        'files': [ DIR_annot+"_".join(x)+".sorted_"+config['general']['genome-version']+"_annotation.diff.meth.nb.html" for x in config["DIFF_METH"]]
+        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["general"]["differential-methylation"]["treatment-groups"]]
     },
 
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
-        'files': [
-            expand (Final(DIR_final,
-                          config["SAMPLES"][sample]["files"],
-                          VERSION,
-                          config["SAMPLES"][sample]["SampleID"]))
-            for sample in config["SAMPLES"]
-        ]
+        'files': files_for_sample(list_final_reports)
     }
 }
 
 # Selected output files from the above set.
-selected_targets = [ config['execution']['target'] ]
-OUTPUT_FILES = [targets[name]['files'] for name in selected_targets]
+selected_targets = config['execution']['target'] or ['final-report','bigwig']
+
+# FIXME: the list of files must be flattened twice(!).  We should make
+# sure that the targets really just return simple lists.
+from itertools import chain
+OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
+
 
 # ==============================================================================================================
 #
@@ -178,11 +153,66 @@ OUTPUT_FILES = [targets[name]['files'] for name in selected_targets]
 rule all:
     input:
         OUTPUT_FILES
+
+rule help:
     run:
-        # Describe all targets if "help" was requested.
-        if config['execution']['target'] == 'help':
-            for key in sorted(targets.keys()):
-                print('{}:\n  {}'.format(key, targets[key]['description']))
+        for key in sorted(targets.keys()):
+            print('{}:\n  {}'.format(key, targets[key]['description']))
+
+# Record any existing output files, so that we can detect if they have
+# changed.
+expected_files = {}
+onstart:
+    if OUTPUT_FILES:
+        for name in OUTPUT_FILES:
+            if os.path.exists(name):
+                expected_files[name] = os.path.getmtime(name)
+
+# Print generated target files.
+onsuccess:
+    if OUTPUT_FILES:
+        # check if any existing files have been modified
+        generated = []
+        for name in OUTPUT_FILES:
+            if name not in expected_files or os.path.getmtime(name) != expected_files[name]:
+                generated.append(name)
+        if generated:
+            print("The following files have been generated:")
+            for name in generated:
+                print("  - {}".format(name))
+
+# ==========================================================================================
+# export a bigwig file
+ 
+rule export_bigwig_pe:
+    input:
+        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_1_val_1_bt2.deduped.sorted_methylRaw.RDS")
+    output:
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_pe.bw") 
+    message: fmt("exporting bigwig files from paired-end stream.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/export_bw.R",
+                         "{input.rdsfile}",
+                         "{input.seqlengths}",
+                         ASSEMBLY,
+                         "{output}"])
+
+#-----------------------
+
+rule export_bigwig_se:
+    input:
+        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.deduped.sorted_methylRaw.RDS")
+    output:
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw") 
+    message: fmt("exporting bigwig files from single-end stream.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/export_bw.R",
+                         "{input.rdsfile}",
+                         "{input.seqlengths}",
+                         ASSEMBLY,
+                         "{output}"])
 
 # ==========================================================================================
 # sort the bam file:
@@ -194,7 +224,7 @@ rule sortbam_se:
         DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice("{SAMTOOLS} sort {input} -o {output}")
+        nice('samtools', ["sort", "{input}", "-o {output}"])
 #-----------------------
 rule sortbam_pe:
     input:
@@ -203,7 +233,7 @@ rule sortbam_pe:
         DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice("{SAMTOOLS} sort {input} -o {output}")
+        nice('samtools', ["sort", "{input}", "-o {output}"])
 
 # ==========================================================================================
 # deduplicate the bam file:
@@ -215,12 +245,12 @@ rule deduplication_se:
         DIR_deduped+"{sample}_se_bt2.deduped.bam"
     params:
         bam="--bam ",
-        sampath="--samtools_path "+SAMTOOLS
+        sampath="--samtools_path " + tool('samtools')
     log:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
-        nice("{SAMTOOLS} rmdup {input}  {output} > {log} 2>&1 ")
+        nice('samtools', ["rmdup", "{input}", "{output}"], "{log}")
 #-----------------------
 rule deduplication_pe:
     input:
@@ -231,12 +261,13 @@ rule deduplication_pe:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
-        nice("{SAMTOOLS} fixmate {input}  {output} > {log} 2>&1 ")
+        nice('samtools', ["fixmate", "{input}", "{output}"], "{log}")
 
 # ==========================================================================================
 # align and map:
- 
-rule bismark_se:
+bismark_cores = str(config['tools']['bismark']['cores'])
+
+rule bismark_align_and_map_se:
     input:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
@@ -250,19 +281,18 @@ rule bismark_se:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
         useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+DIR_mapped
+        samtools    = "--samtools_path "+ os.path.dirname(tool('samtools')),
+        tempdir     = "--temp_dir " + DIR_mapped,
+        cores = "--multicore " + bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_se_mapping.log"
-    message: fmt("Mapping single-end reads to genome {VERSION}")
+    message: fmt("Mapping single-end reads to genome {ASSEMBLY}")
     shell:
-        nice("{BISMARK} {params} --multicore "+bismark_cores+" {input.fqfile} > {log}  2>&1 ")
+        nice('bismark', ["{params}", "{input.fqfile}"], "{log}")
 
-#-----------------------
-
-rule bismark_pe:
+rule bismark_align_and_map_pe:
     input:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
@@ -278,15 +308,16 @@ rule bismark_pe:
         genomeFolder = "--genome_folder " + GENOMEPATH,
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
         useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(SAMTOOLS),
-        tempdir     = "--temp_dir "+DIR_mapped
+        samtools    = "--samtools_path "+ os.path.dirname(tool('samtools')),
+        tempdir     = "--temp_dir "+DIR_mapped,
+        cores = "--multicore "+bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
-    message: fmt("Mapping paired-end reads to genome {VERSION}.")
+    message: fmt("Mapping paired-end reads to genome {ASSEMBLY}.")
     shell:
-        nice("{BISMARK} {params} --multicore "+bismark_cores+" -1 {input.fin1} -2 {input.fin2} > {log} 2>&1 ")
+        nice('bismark', ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
 
 
 # ==========================================================================================
@@ -294,20 +325,37 @@ rule bismark_pe:
 
 rule bismark_genome_preparation:
     input:
-        GENOMEPATH
+        ancient(GENOMEPATH)
     output:
         GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
         GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
     params:
         bismark_genome_preparation_args = config['tools']['bismark-genome-preparation']['args'],
-        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(BOWTIE2) ,
+        pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
         useBowtie2 = "--bowtie2 ",
         verbose = "--verbose "
     log:
-        'bismark_genome_preparation_'+VERSION+'.log'
-    message: fmt("Converting {VERSION} Genome into Bisulfite analogue")
+        'bismark_genome_preparation_'+ASSEMBLY+'.log'
+    message: fmt("Converting {ASSEMBLY} Genome into Bisulfite analogue")
     shell:
-        nice("{BISMARK_GENOME_PREPARATION} {params} {input} > {log} 2>&1 ")
+        nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
+
+# ==========================================================================================
+# create a csv file tabulating the lengths of the chromosomes in the reference genome:
+
+rule tabulate_seqlengths:
+    input:
+        rules.bismark_genome_preparation.output
+    output:
+        seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
+    params:
+        chromlines = " | grep Sequence ",
+        chromcols  = " | cut -f2,3     ",
+        seqnames   = " | sed \"s/_CT_converted//g\" "
+    message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
+    shell:
+        nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])
+
 
 # ==========================================================================================
 # post-trimming quality control
@@ -325,8 +373,8 @@ rule fastqc_after_trimming_se:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed single-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
-#--------
+        nice('fastqc', ["{params}", "{input}"], "{log}")
+
 rule fastqc_after_trimming_pe:
     input:
         DIR_trimmed+"{sample}_1_val_1.fq.gz",
@@ -343,12 +391,12 @@ rule fastqc_after_trimming_pe:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
     message: fmt("Quality checking trimmmed paired-end data from {input}")
     shell:
-        nice("{FASTQC} {params.outdir} {input} > {log} 2>&1 ")
+        nice('fastqc', ["{params}", "{input}"], "{log}")
 
 # ==========================================================================================
 # trim the reads
 
-rule trimgalore_se:
+rule trim_reads_se:
     input:
        qc   = DIR_rawqc+"{sample}_fastqc.html",
        file = PATHIN+"{sample}.fq.gz"
@@ -359,15 +407,14 @@ rule trimgalore_se:
        outdir = "--output_dir "+DIR_trimmed,
        phred = "--phred33",
        gz = "--gzip",
-       cutadapt = "--path_to_cutadapt "+CUTADAPT,
+       cutadapt = "--path_to_cutadapt " + tool('cutadapt'),
     log:
        DIR_trimmed+"{sample}.trimgalore.log"
     message: fmt("Trimming raw single-end read data from {input}")
     shell:
-       nice("{TRIMGALORE} {params} {input.file} > {log} 2>&1 ")
+       nice('trim-galore', ["{params}", "{input.file}"], "{log}")
 
-#-----------------------
-rule trimgalore_pe:
+rule trim_reads_pe:
     input:
         qc    = [ DIR_rawqc+"{sample}_1_fastqc.html",
                   DIR_rawqc+"{sample}_2_fastqc.html"],
@@ -381,14 +428,14 @@ rule trimgalore_pe:
         outdir         = "--output_dir "+DIR_trimmed,
         phred          = "--phred33",
         gz             = "--gzip",
-        cutadapt       = "--path_to_cutadapt "+CUTADAPT,
+        cutadapt       = "--path_to_cutadapt " + tool('cutadapt'),
         paired         = "--paired"
     log:
         DIR_trimmed+"{sample}.trimgalore.log"
     message:
         fmt("Trimming raw paired-end read data from {input}")
     shell:
-        nice("{TRIMGALORE} {params} {input.files} > {log} 2>&1 ")
+        nice('trim-galore', ["{params}", "{input.files}"], "{log}")
 
 # ==========================================================================================
 # raw quality control
@@ -406,7 +453,7 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         DIR_rawqc+"{sample}_fastqc.log"
     message: fmt("Quality checking raw read data from {input}")
     shell:
-        nice("{FASTQC} {params}  {input} > {log} 2>&1 ")
+        nice('fastqc', ["{params}", "{input}"], "{log}")
 
 
 
@@ -415,110 +462,66 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
 ## Bam processing
 rule bam_methCall:
     input:
-        template    = os.path.join(DIR_templates,"methCall.report.Rmd"),
         bamfile     = os.path.join(DIR_sorted,"{prefix}.sorted.bam")
     output:
-        report      = os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.nb.html"),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
         callFile    = os.path.join(DIR_methcall,"{prefix}.sorted_CpG.txt")
     params:
         ## absolute path to bamfiles
         inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
-        assembly    = config['general']['genome-version'],
+        assembly    = ASSEMBLY,
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
         ## absolute path to output folder in working dir
         rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
     log:
         os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
-    message:
-        "Processing bam file:\n"
-        "   input     : {input.bamfile}" + "\n"
-        "Generating:"+ "\n" 
-        "   report    : {output.report}" + "\n" 
-        "   rds       : {output.rdsfile}" + "\n" 
-        "   methCalls : {output.callFile}"
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
-
-#----------------------------------- START METH SEGMENTATION
+    message: fmt("Extract methylation calls from bam file.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/methCall.R",
+                         "--inBam={params.inBam}",
+                         "--assembly={params.assembly}",
+                         "--mincov={params.mincov}",
+                         "--minqual={params.minqual}",
+                         "--rds={params.rds}",
+                         "--logFile={log}"])
 
 
 ## Segmentation
 rule methseg:
     ## paths inside input and output should be relative
     input:
-        template    = os.path.join(DIR_templates,"methseg.report.Rmd"),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
     output: 
-        report      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.nb.html"),
         grfile      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed")
     params:
-        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
-        grds        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed")
+        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png")
     log:
         os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.log")
-    message:
-        "Segmentation of sample file:\n"
-        "   input     : {input.rdsfile}" + "\n" 
-        "Generating:"+ "\n"
-        "   report    : {output.report}" + "\n"
-        "   grfile    : {output.grfile} " +"\n"
-        "   bedfile   : {output.bedfile}" +"\n"
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
-
-
-## Aquisition of gene features
-rule fetch_refGene:
-    output: refgenes = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    params:
-        assembly = "{assembly}"
-    log:
-        os.path.join(DIR_annot,"fetch_refseq.genes.{assembly}.log")
-    message:
-        "Fetching RefSeq genes for Genome assembly: {wildcards.assembly}"
+    message: fmt("Segmenting methylation profile for {input.rdsfile}.")
     shell:
-        "{RSCRIPT} {DIR_scripts}/fetch_refGene.R {log} {output.refgenes} {params.assembly} {DIR_scripts}"
+        nice('Rscript', ["{DIR_scripts}/methSeg.R",
+                         "--rds={params.methCallRDS}",
+                         "--grds={params.methSegGR}",
+                         "--outBed={params.methSegBed}",
+                         "--png={params.methSegPng}",
+                         "--logFile={log}"])
 
-
-## Annotation with gene features
-rule methseg_annotation:
-    input:
-        template    = os.path.join(DIR_templates,"annotation.report.Rmd"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    output:
-        report      = os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.nb.html"),
-    params:
-        inBed       = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        assembly    = "{assembly}",# expand(config["reference"]),
-        refseqfile  = os.path.join(WORKDIR,DIR_annot,"refseq.genes.{assembly}.bed")
-    log:
-        os.path.join(DIR_annot,"{prefix}.sorted_{assembly}_annotation.log")
-    message:
-        "Annotation of Segments:\n"
-        "   input     : {input.bedfile}" + "\n"
-        "Generating:" + "\n"
-        "   report    : {output.report}"
-    run:
-        generateReport(input, output, params, log, wildcards.prefix)
-
-#----------------------------------- END METH SEGMENTATION
-#----------------------------------- START DIFF METH
 
 ## Differential methylation
 rule diffmeth:
     ## paths inside input and output should be relative
     input:  
-        template    = os.path.join(DIR_templates,"diffmeth.report.Rmd"),
         inputfiles  = diffmeth_input_function
     output: 
-        report      = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.nb.html"),
-        methylDiff_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
+        methylDiff_file  = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.RDS'),
+        methylDiff_hyper_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
+        bedfile     = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.bed')
     params:
         workdir     = WORKDIR,
         inputfiles  = diffmeth_input_function,
@@ -527,86 +530,59 @@ rule diffmeth:
         methylDiff_hyper_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
         methylDiff_hypo_file   = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
         outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = config['general']['genome-version'],
+        assembly    = ASSEMBLY,
         treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
-        context     = "CpG",
-        cores       = int(config['general']['differential-methylation']['cores'])
-    log:
-        os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
-    run:
-        generateReport(input, output, params, log, wildcards.treatment)
-
-
-## Annotation with gene features
-rule annotation_diffmeth:
-    input:  
-        template    = os.path.join(DIR_templates,"annotation.report.diff.meth.Rmd"),
-        bedfile     = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        refgenes    = os.path.join(DIR_annot,"refseq.genes.{assembly}.bed")
-    output: 
-        report      = os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.nb.html"),
-    params:
-        inBed       = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = config['general']['genome-version'],
-        refseqfile  = os.path.join(WORKDIR,DIR_annot,"refseq.genes.{assembly}.bed"),
-        methylDiff_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        methylDiff_hyper_file = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
+        cores       = int(config['general']['differential-methylation']['cores']),
         scripts_dir = DIR_scripts
     log:
-        os.path.join(DIR_annot,"{treatment}.sorted_{assembly}_annotation.diff.meth.log")
-    run:
-        generateReport(input, output, params, log, wildcards.treatment+"."+wildcards.assembly)
+        os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
+    message: fmt("Calculating differential methylation.")
+    shell:
+        nice('Rscript', ['{DIR_scripts}/methDiff.R',
+                         '--inputfiles="{params.inputfiles}"',
+                         '--sampleids="{params.sampleids}"',
+                         '--methylDiff_file={params.methylDiff_file}',
+                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
+                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
+                         '--assembly={params.assembly}',
+                         '--treatment="{params.treatment}"',
+                         '--mincov={params.mincov}',
+                         '--cores={params.cores}',
+                         '--outBed={params.outBed}',
+                         '--logFile={log}'])
 
-#----------------------------------- END DIFF METH
-   
 
 ### note that Final report can only be generated 
 ### if one of the intermediate has been genereted,
 ### so make sure that at least one has been run already
 ### right now ensured with 'rules.methseg_annotation.output' as input
 
-rule integrateFinalReport:
-    input:
-       diffmeth = diff_meth_input,
-       methseg_annotation_outputs = rules.methseg_annotation.output
-    output:
-       # TODO: generate a final_knitr_meta.rds instead
-       touch(DIR_final + "{prefix}_{assembly}_integrateDiffMeth2FinalReport.txt")
-    log:
-       DIR_final + "{prefix}_{assembly}_integrateFinalReport.log"
-    params:
-       diffmeth = lambda wildcards: ' '.join(map('{}'.format, diff_meth_input(wildcards)))
-    shell:
-      "{RSCRIPT} {DIR_scripts}/integrate2finalreport.R {wildcards.prefix} {wildcards.assembly} {DIR_final} {params.diffmeth}"
-
 
 ## Final Report
 rule final_report:
     input:  
-        rules.integrateFinalReport.output,
-        index       = os.path.join(DIR_templates,"index.Rmd"),   
-        references  = os.path.join(DIR_templates,"references.Rmd"),
-        sessioninfo = os.path.join(DIR_templates,"sessioninfo.Rmd")
+        rules.bam_methCall.output,
+        rules.methseg.output,
+        lambda wc: finalReportDiffMeth_input(wc.prefix),
+        template      = os.path.join(DIR_templates,"index.Rmd")
     output: 
-        finalreport = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.nb.html"),
+        report        = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.html")
     params:
-        finalreportdir = os.path.join(DIR_final, "{prefix}/")
+        ## absolute path to bamfiles
+        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
+        assembly    = ASSEMBLY,
+        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual     = int(config['general']['methylation-calling']['minimum-quality']),
+        ## absolute path to output folder in working dir
+        methCallRDS         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+        methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+        methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png"),
+        methylDiff_files      = lambda wc: [ os.path.join(WORKDIR,rds) for rds in finalReportDiffMeth_input(wc.prefix)],
+        genome_dir  = config['locations']['genome-dir'],
+        scripts_dir = DIR_scripts
     log:
         os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
-    message:
-        "Compiling Final Report:\n"
-        "   report    : {output.finalreport}"
-        
     run:
-        cmd  =  "{RSCRIPT} {DIR_scripts}/multireport_functions.R"  
-        cmd +=  " --index={input.index}"
-        cmd +=  " --finalOutput={output.finalreport}"
-        cmd +=  " --finalReportDir={params.finalreportdir}"
-        cmd +=  " --references={input.references}"
-        cmd +=  " --sessioninfo={input.sessioninfo}"
-        cmd +=  " --logFile={log}"
-        
-        shell(cmd)
-
+        generateReport(input, output, params, log, "")

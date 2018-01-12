@@ -10,16 +10,709 @@ output:
     self_contained: TRUE
     includes:
       in_header: pigx_bsseq_logo.html
-date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { Sys.getenv("SOURCE_DATE_EPOCH") } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 bibliography: reports.bib
 link-citations: yes
+params:
+  MethCall: TRUE
+  inBam:    ''
+  assembly: ''
+  mincov:   10
+  minqual:  20
+  methCallRDS: ''
+  Segmentation: TRUE
+  methSegBed: ''
+  methSegGR: ''
+  methSegPng: ''
+  AnnotateSegments: TRUE
+  DiffMeth: TRUE
+  methylDiff_files: list()
+  genome_dir: ''
+  scripts_dir: ''
+  AnnotateDiffMeth: TRUE
 ---
 
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.height = 4.5, fig.width = 8,fig.show="hold")
+knitr::opts_knit$set(progress = FALSE)
+```
+
+```{r chunk_eval_options}
+MethCall          <- params$MethCall
+Segmentation      <- params$Segmentation
+AnnotateSegments  <- params$AnnotateSegments
+DiffMeth          <- params$DiffMeth
+AnnotateDiffMeth  <- params$AnnotateDiffMeth
+
+genome_dir   <- params$genome_dir
+scripts_dir  <- params$scripts_dir
+
+if(!MethCall) {
+  Segmentation <- 
+  AnnotateSegments <- 
+  DiffMeth <- 
+  AnnotateDiffMeth <- 
+    FALSE
+}
+
+if(!Segmentation) AnnotateSegments <- FALSE
+if(!DiffMeth) AnnotateDiffMeth <- FALSE
+
+```
+
 # Final Report {-}
+
 
 PiGx BSseq is a data processing pipeline for data from bisulfite experiments. It automates the analysis of raw single-end or paired-end fastq reads. It includes quality control, trimming and alignment, while further providing post mapping analysis, as differential methylation detection, methylation segmentation and annotation of detected regions. 
 It was first developed by the Akalin group at MDC in Berlin in 2017.
 
 This report was generated with PiGx BSseq version @VERSION@.
 
-<!-- The FastQC reports are located here: `r paste0(getwd(),"/01_rawqc")` -->
+
+```{r MethCallHeader, results='asis', eval=MethCall} 
+cat('## Methylation Calling\n')
+```
+
+```{r MethCall.load_libraries, results='hide', include=FALSE, eval=MethCall}
+
+  library("methylKit")
+```
+
+```{r MethCall.eval_params, eval=MethCall}
+
+assembly  <- params$assembly
+mincov    <- params$mincov
+minqual   <- params$minqual
+methCallRDS   <- params$methCallRDS
+```
+
+```{r MethCall.print_params_in, results='asis',eval=MethCall}
+cat('### Parameters\n')
+
+cat('**Input parameters:**\n')
+```
+
+```{r MethCall.print_params_in2, eval=MethCall}
+
+paramsDesc <- c("Input Bam file",
+            "Genome Assembly",
+            "Minimum Coverage",
+            "Minimim Mapping Quality")
+
+paramsValues <- c( params$inBam,
+             params$assembly,
+             params$mincov,
+             params$minqual)
+
+inputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
+```{r MethCall.print_params_out, results='asis',eval=MethCall}
+cat('**Output parameters:**\n')
+```
+
+```{r MethCall.print_params_out2, eval=MethCall}
+
+inputParams <- data.frame(Parameters = "MethylRaw Object",
+                          Values      = params$methCallRDS,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
+```{r MethCallDescription, results='asis', eval=MethCall} 
+cat('### Extract Methylation Calls \n')
+
+cat('We first extract the methylation calls from the sequence alignment produced by the bisulfite mapper [Bismark](https://www.bioinformatics.babraham.ac.uk/projects/bismark/) [@krueger_bismark:_2011] using the `processBismarkAln()` function of [methylKit](https://bioconductor.org/packages/release/bioc/html/methylKit.html) [@methylKit2012]  a package for the the analysis of DNA methylation profiles. 
+In order to ensure data quality we require a minimum coverage of ',mincov,'and a mapping quality of at least ',minqual,', as can be found in the parameters table.\n')
+
+cat('Here we show some simple statistics as distribution of methylation and coverage.\n')
+```
+
+```{r MethCallPlots,  eval=MethCall}
+  
+    methRaw <- readRDS(methCallRDS)
+    
+    ## show some statistics of the data  
+    par(mfrow = c(1,2))
+    getMethylationStats(methRaw,plot = TRUE)
+    getCoverageStats(methRaw,plot = TRUE)
+    par(mfrow = c(1,1))
+    
+```
+
+
+
+```{r Segmentation, results='asis', eval=Segmentation} 
+cat('## Segmentation \n')
+```
+
+```{r Segmentation.eval_params, eval=Segmentation}
+methCallRDS     <- params$methCallRDS
+methSegBed    <- params$methSegBed
+methSegGR    <- params$methSegGR
+pngFile   <- params$methSegPng
+```
+
+```{r SegmentationIntro, results='asis', eval=Segmentation} 
+cat('The segmentation based on methylation provides a way to compress the information from base-pair into regional resolution, allowing the detection of regions with similar methylation values, that might be interesting for further investigations.\n')
+```
+
+```{r Segmentation.load_libraries, results='hide', include=FALSE, eval=Segmentation}
+
+  ## load methylKit
+  library("methylKit")
+  library("DT")
+```
+
+```{r Segmentation.print_params_in, results='asis', eval=Segmentation}
+cat('### Parameters\n')
+
+cat('**Input parameters:**\n')
+```
+
+```{r Segmentation.print_params_in2, eval=Segmentation}
+
+inputParams <- data.frame(Parameters = "MethylRaw Object",
+                          Values     = methCallRDS,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
+```{r Segmentation.print_params_out, results='asis', eval=Segmentation}
+cat('**Output parameters:**\n')
+```
+
+```{r Segmentation.print_params_out2, eval=Segmentation}
+
+paramsDesc <- c("Segments (BED)",
+                "Segments (GRanges)")
+
+paramsValues <- c(methSegBed,
+                  methSegGR)
+
+inputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
+```{r SegmentationDescription, results='asis', eval=Segmentation} 
+cat('### Segmentation of methylation profile\n')
+
+cat('The segmentation of the methylation profile is done using the methSeg() function, where change-points in the genome wide  signal are recorded and the genome is partitioned into regions between consecutive change points. This approach is typically used in the context of copy number variation detection [@klambauer2012] but can be applied to methylome segmentation as well [@Wreczycka2017]. Here the identified segments are further clustered based on their average methylation signal using a mixture modeling approach allowing the detection of distinct regions inside the genome  [@Wreczycka2017].\n')
+```
+
+```{r SegmentationDiagnostics, results='asis',eval=Segmentation}
+
+cat('![Diagnostic Plot of the Segmentation](',pngFile,')')
+
+```
+
+```{r Segmentation.load_and_segment, eval=Segmentation}
+
+    res.gr = readRDS(methSegGR)
+
+    ## convert to data.frame
+    res.df <- as.data.frame(res.gr)
+    res.df$seg.mean <- round(res.df$seg.mean,digits = 3)
+
+    ## show the regions
+    datatable(res.df,
+              extensions = 'Buttons', 
+              options = list(
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                scrollX = TRUE),
+              caption = "Resulting Segments",
+              rownames = FALSE)
+```
+
+```{r SegmentationExport, results='asis', eval=Segmentation}
+cat('### Export to BED\n')
+
+cat('Finally we export the regions to a *BED* file, which can be loaded into any genome browser like [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
+```
+
+
+
+```{r AnnotateSegmentsHeader, results='asis', eval=AnnotateSegments}
+cat('## Annotation of Segments\n')
+
+cat('The annotation of the identified regions with genomic features allows a better understanding and characterization of detected regions.\n')
+```
+
+```{r AnnotateSegments.load_libraries, results='hide', include=FALSE, eval=AnnotateSegments}
+
+    library("genomation")
+    library("GenomicRanges")
+
+```
+
+```{r AnnotateSegments.print_params_in, results="asis", eval=AnnotateSegments}
+cat('### Parameters\n')
+
+cat('**Input parameters:**\n')
+```
+
+```{r AnnotateSegments.print_params_in2, eval=AnnotateSegments}
+
+paramsDesc <- c("Segments (GRanges)",
+                "Genome Assembly")
+
+paramsValues <- c(params$methSegGR,
+                  params$assembly)
+
+inputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
+```{r AnnotateSegmentsDescription, results='asis',eval=AnnotateSegments}
+
+
+
+cat('### Preprocessing\n')
+
+cat('We first need to fetch the reference gene set for the given genome assembly. To do this we check the data from the [AnnotationHub](http://bioconductor.org/packages/release/bioc/html/AnnotationHub.html) Package [@ah2017] wich provides fast access to tracks and datasets available at BroadInstitute, UCSC, Ensembl and others. Whilst this package allows us to query a current snapshot of those databases, there is the possibility that a certain track might be newer than the current snapshot. This is why we query the UCSC table browser directly using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009].\n')
+
+cat('After we have aquired the reference genes, we can determine different features intrinsic to each gene, such as promoter, exon or intron using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014].\n')
+
+```
+
+```{r AnnotateSegments.fetchRefgene, eval=AnnotateSegments}
+source(paste0(scripts_dir, "fetch_procedures.R"))
+refgenes.file <- lookupBedFile(type = "refGene",
+                               filename = paste0("refGene.", assembly, ".bed"),
+                               dir = genome_dir,
+                               assembly = assembly)
+```
+
+```{r AnnotateSegments.readRefGene, eval=AnnotateSegments}
+
+## now we parse the gene features
+refgenes.grl <- readTranscriptFeatures(refgenes.file)
+```
+
+```{r AnnotateSegments.annotation, results='asis', eval=AnnotateSegments}
+cat('### Annotation\n')
+
+cat('Now we can load the segments to detect to overlap percentage with gene features.\n')
+```
+
+```{r AnnotateSegments.loadSegments, eval=AnnotateSegments}
+
+# now load segments 
+segments.gr <- readBed(file = methSegBed,
+                      track.line = "auto")
+
+# split according
+segments.grl <- GenomicRanges::split(x = segments.gr,f = segments.gr$name)
+
+# and detect overlaps 
+
+annot.gene.list <- annotateWithGeneParts(target = segments.grl,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+
+```
+
+```{r AnnotateSegments.text2, results='asis', eval=AnnotateSegments}
+cat('Finally we plot the average methylation per segment group and the overlap with gene features.\n')
+```
+
+```{r AnnotateSegments.plot,  eval=AnnotateSegments}
+## percentage of target features overlapping with annotation:
+## (with promoter > exon > intron precedence)
+annot.gene.mat <- as.matrix(sapply(annot.gene.list, function(x) x@precedence))
+
+  par(mfrow=c(1,2))
+boxplot(sapply(split(x = segments.gr,f = segments.gr$name),FUN = function(x) x$score),
+        ylab = "Methylation (%)",
+        xlab = "Segment")
+
+# plot the target overlap for each segemnt type
+# barplot(annot.gene.mat,legend.text = TRUE)
+barplot(annot.gene.mat,
+        ylab = "Overlap (%)",
+        xlab = "Segment")
+legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,length.out = ncol(annot.gene.mat))))
+
+```
+
+
+
+```{r DiffMeth.load_libraries, results='hide', include=FALSE, eval=DiffMeth}
+
+## load libraries
+library("methylKit")
+library("DT")
+library("jsonlite")
+
+```
+
+```{r DiffMeth.check_params, eval=DiffMeth}
+if(!length(params$methylDiff_files) == 0 ) { 
+    methylDiff_files   <- params$methylDiff_files
+} else {
+    DiffMeth = FALSE
+    AnnotateDiffMeth = FALSE
+}
+```
+
+```{r DiffMethHeader, results='asis', eval=DiffMeth}
+cat('## Differential methylation report\n')
+
+cat('### Calling differentially methylated cytosines\n')
+
+cat('The logistic regression is applied to model the log odds ratio which is based on methylation proportion of a CpG using the treatment vector which denotes the sample group membership for the CpGs in the model.\n')
+
+cat('After q-value calculation, differentially methylated bases are extracted based on q-value and percent methylation difference cutoffs. Here we select bases that have q-value < 0.01 and percent methylation difference larger than 25%. Futhermore, we calculate hyper-methylated or hypo-methylated bases.\n')
+
+cat('Overdispersion occurs when there is more variability in the data than assumed by the distribution and is here included in the differentially methylatation calculation.\n')
+
+cat('For more details about `calculateDiffMeth()` and `getMethylDiff()` functions see [@methylKit2012] and for details about
+the logistic regression and overdispersion see [@Wreczycka2017].\n')
+```
+
+```{r DiffMeth.eval_params, eval=DiffMeth}
+methylDiff_file    <- methylDiff_files[1]
+methylDiff_hyper_file    <- methylDiff_files[2]
+methylDiff_hypo_file   <- methylDiff_files[3]
+methylDiffBed    <- methylDiff_files[4]
+```
+
+```{r DiffMeth.load, eval=DiffMeth}
+
+methylDiff.obj <- readRDS(methylDiff_file)
+methylDiff.obj.hypo <- readRDS(methylDiff_hypo_file)
+methylDiff.obj.hyper <- readRDS(methylDiff_hyper_file)
+
+sampleids <- methylDiff.obj@sample.ids
+treatment <- getTreatment(methylDiff.obj)
+```
+
+```{r DiffMeth.print_params_in, results='asis', eval=DiffMeth}
+cat('### Parameters\n')
+
+cat('**Input parameters:**\n')
+```
+
+```{r DiffMeth.print_params_in2, eval=DiffMeth}
+
+inputParams <- data.frame(Sample.id=sampleids,
+                          Treatment=treatment,
+                          Assembly=assembly,
+                          stringsAsFactors = FALSE)
+
+knitr::kable(inputParams)
+
+```
+
+```{r DiffMeth.print_params_out, results='asis', eval=DiffMeth}
+cat('**Output parameters:**\n')
+```
+  
+```{r DiffMeth.print_params_out2, eval=DiffMeth}
+
+paramsDesc <- c("BEDfile", "RDSfile (diff. methyl. Cs)","RDSfile_hyper (hyper-methyl. Cs)","RDSfile_hypo (hypo-methyl. Cs)")
+paramsValues <- c(methylDiffBed, methylDiff_file, methylDiff_hyper_file, methylDiff_hypo_file)
+outputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+knitr::kable(outputParams)
+
+```
+
+```{r DiffMeth.check_content, results='asis' ,eval=DiffMeth}
+# Check if there are some differentially methylated cytosines
+methylDiff.nonempty = nrow(methylDiff.obj)>1
+if(!methylDiff.nonempty) {
+  cat('**There are no differentially methylated cytosines.!**\n')
+  DiffMeth <- FALSE
+  AnnotateDiffMeth <- FALSE
+}
+```
+
+```{r DiffMeth.calcDiffResults, results='asis', eval=DiffMeth}
+cat('Here we show the results of the differential methylation Analysis.\n')
+```
+
+```{r DiffMeth.show_differential_methylation, eval=DiffMeth}
+
+# Show differentially methylated cytosines in a table.
+
+methylDiff2df_roundint = function(methylDiff.obj, roundval=4){
+  df = as(methylDiff.obj, "data.frame")
+  df[,5:7] = round(df[,5:7], roundval)
+  return(df)
+}
+
+## show all differentially methylated regions
+datatable(methylDiff2df_roundint(methylDiff.obj),
+              extensions = 'Buttons',
+              options = list(
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                scrollX = TRUE),
+              caption = "Differentially methylated cytosines",
+              rownames = FALSE)
+## show hyper-methylated region
+datatable(methylDiff2df_roundint(methylDiff.obj.hyper),
+              extensions = 'Buttons',
+              options = list(
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                scrollX = TRUE),
+              caption = "Hyper-methylated cytosines",
+              rownames = FALSE)
+## show hypo-methylated region
+datatable(methylDiff2df_roundint(methylDiff.obj.hypo),
+              extensions = 'Buttons',
+              options = list(
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                scrollX = TRUE),
+              caption = "Hypo-methylated cytosines",
+              rownames = FALSE)
+
+```
+
+```{r DiffMeth.export, results='asis', eval=DiffMeth}
+
+cat('### Export differentially methylated cytosines\n')
+
+cat('Finally we export the regions to a *BED* file, which can be loaded into any genome browser like [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
+```
+
+
+
+```{r AnnotateDiffMethHeader,results='asis', eval=AnnotateDiffMeth}
+cat('## Annotation of differentially methylated cytosines\n')
+```
+
+```{r AnnotateDiffMeth.load_libraries, eval=AnnotateDiffMeth}
+
+    library("genomation")
+    library("rtracklayer")
+    library("DT")
+    library("ggplot2")
+    library("GenomeInfoDb")
+
+```
+
+```{r AnnotateDiffMeth.print_params_in, results='asis', eval=AnnotateDiffMeth}
+cat('### Parameters\n')
+
+cat('**Input parameters:**\n')
+```
+
+```{r AnnotateDiffMeth.print_params_in2, eval=AnnotateDiffMeth}
+
+paramsDesc <- c("Input RDS Data (diff. methyl. Cs)",
+                "Input RDS Data (hyper-methyl. Cs)",
+                "Input RDS Data (hypo-methyl. Cs)",
+                "Assembly")
+
+paramsValues <- c( methylDiff_file,
+                   methylDiff_hyper_file,
+                   methylDiff_hypo_file,
+                   assembly )
+
+inputParams <- data.frame(Parameters = paramsDesc,
+                          Values = paramsValues,
+                          stringsAsFactors = FALSE)
+
+knitr::kable(inputParams)
+
+```
+
+```{r AnnotateDiffMeth.prepr, results='asis', eval=AnnotateDiffMeth}
+cat('### Preprocessing\n')
+```
+
+```{r AnnotateDiffMeth.convert, eval=AnnotateDiffMeth}
+# Convert a methylDiff object to a GRanges object
+GRanges.diffmeth = as(methylDiff.obj, "GRanges")
+GRanges.diffmeth.hypo = as(methylDiff.obj.hypo, "GRanges")
+GRanges.diffmeth.hyper = as(methylDiff.obj.hyper, "GRanges")
+
+```
+
+```{r AnnotateDiffMethDescription, results='asis', eval=AnnotateDiffMeth}
+cat('We query the UCSC table browser directly to fetch the reference gene set and CpG islads locations for the given genome assembly using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009]. After we have aquired the reference genes, we can determine different features intrinsic to each gene, such as promoter, exon or intron using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014] and appropriately
+for CpG islands and shores.\n')
+```
+
+```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
+source(paste0(params$scripts_dir, "fetch_procedures.R"))
+fetched.refgenes <- lookupBedFile(type="refGene",
+                                  filename = paste0("refGene.", assembly, ".bed"),
+                                  dir = params$genome_dir,
+                                  assembly = assembly)
+
+cpgi.file <- paste0("cpgIslandExt.", assembly, ".bed")
+fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
+                              filename = cpgi.file,
+                              dir = params$genome_dir,
+                              assembly = assembly)
+
+```
+
+```{r AnnotateDiffMeth.num_of_dmcs_title, results='asis', eval=AnnotateDiffMeth}
+cat('### Show number of differentially methylated cytosines per chromosome\n')
+```
+
+```{r AnnotateDiffMeth.num_of_dmcs, eval=AnnotateDiffMeth}
+
+number.of.elements.per.chr = function(gr.obj){
+  
+  # Optional, if you want a genomic order of the chromosomes
+  diffmeth.gr = sortSeqlevels(gr.obj)
+  # Split into a GRangesList
+  # where each element has all ranges for one chromosome
+  diffmeth.gr.perchr = split(diffmeth.gr, seqnames(diffmeth.gr))
+  el.chrs = elementNROWS(diffmeth.gr.perchr)
+  
+  df = data.frame(Chromosome=names(el.chrs), Number.diff.meth.bases=as.vector(el.chrs))
+  colnames(df) = c("Chromosome", "Number of diff. meth. cytosines")
+  return(df)
+}
+
+# Show number of differentially methylated cytosines per chromosome
+if(length(GRanges.diffmeth)!=0){
+  stats.df = number.of.elements.per.chr(GRanges.diffmeth)
+  knitr::kable(stats.df)
+}
+
+if(length(GRanges.diffmeth.hyper)!=0){
+  stats.df.hyper = number.of.elements.per.chr(GRanges.diffmeth.hyper)
+  knitr::kable(stats.df.hyper)
+}
+
+if(length(GRanges.diffmeth.hypo)!=0){
+  stats.df.hypo = number.of.elements.per.chr(GRanges.diffmeth.hypo)
+  knitr::kable(stats.df.hypo)
+}
+```
+
+```{r AnnotateDiffMeth.annotation_descr,results='asis',eval=AnnotateDiffMeth}
+cat('### Annotation\n')
+
+cat('Show overlap percentage of differentially methylated bases with gene features, CpG islands and shores.\n')
+```
+
+```{r AnnotateDiffMeth.annotation,  eval=AnnotateDiffMeth}
+
+if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
+  ## now we parse the gene features
+  refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
+
+  annot.gene <- annotateWithGeneParts(target = GRanges.diffmeth,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+
+  # plot the target overlap for each
+  genomation::plotTargetAnnotation(annot.gene,
+                       main="Differential methylation annotation")
+}
+
+if(!is.na(fetched.cpgi) & length(GRanges.diffmeth)!=0){
+  
+  # read the shores and flanking regions and name the flanks as shores 
+  # and CpG islands as CpGi
+  cpg.obj=readFeatureFlank(fetched.cpgi,
+                           feature.flank.name=c("CpGi","shores"))
+  #
+  # convert methylDiff object to GRanges and annotate
+  diffCpGann=annotateWithFeatureFlank(GRanges.diffmeth,
+                                      cpg.obj$CpGi, cpg.obj$shores,
+                                      feature.name="CpGi",flank.name="shores")
+
+  # plot the target overlap for each
+  genomation::plotTargetAnnotation(diffCpGann, 
+                       col=c("green","gray","white"),
+                       main="Differential methylation annotation")
+}
+
+
+```
+
+```{r AnnotateDiffMeth.plot_descr, results='asis', eval=AnnotateDiffMeth}
+cat('### Plot the distance to the nearest TSSs\n')
+
+cat('Show the distance of differentially methylated cytosines to TSSs of the nearest genes.\n')
+```
+
+```{r AnnotateDiffMeth.plot, eval=AnnotateDiffMeth}
+
+if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
+
+# Get distance to nearest TSS and gene id from AnnotationByGeneParts
+# target.row is the row number in diffmeth.gr
+assoTSS = getAssociationWithTSS(annot.gene)
+
+datatable(as.data.frame(assoTSS),
+          extensions = 'Buttons',
+          options = list(
+            dom = 'Bfrtip',
+            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+            scrollX = TRUE),
+          caption = "Distance to nearest TSS",
+          rownames = FALSE)
+
+
+hist(assoTSS[,2], main="Distance to the nearest TSS", xlab="bp", ylab="Frequency", col="cornflowerblue")
+
+}
+
+
+```
+
+```{r AnnotateDiffMeth.overview_descr, results='asis', eval=AnnotateDiffMeth}
+cat('### Plot overview of hyper and hypo-methylated CpGs over the genome\n')
+```
+
+```{r AnnotateDiffMeth.overview_plot, eval=AnnotateDiffMeth}
+
+if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
+
+require(GenomeInfoDb)
+chr.len.df=fetchExtendedChromInfoFromUCSC(assembly,
+        goldenPath_url="http://hgdownload.cse.ucsc.edu/goldenPath",
+        quiet=FALSE)
+chr.len=chr.len.df[,2]
+names(chr.len)=chr.len.df[,1]
+
+myseqinfo = Seqinfo(chr.len.df[,1], seqlengths=chr.len.df[,2], genome=assembly)
+myseqinfo.st = keepStandardChromosomes(myseqinfo)
+
+source(paste0(params$scripts_dir, "ideoDMC.R"))
+ideoDMC_hyper_hypo(methylDiff.obj_hyper, methylDiff.obj_hypo, chrom.length = seqlengths( myseqinfo.st ),
+       circos = FALSE, title = "Differential methylation", hyper.col = "magenta", hypo.col = "green") 
+
+}
+
+```
+
+
+## Session Information
+
+```{r SessionInfo}
+sessionInfo()
+```
+
+## References

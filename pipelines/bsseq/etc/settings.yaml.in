@@ -4,7 +4,7 @@ locations:
   genome-dir: genome/
 
 general:
-  genome-version: hg19
+  assembly: hg19
   methylation-calling:
     minimum-coverage: 0
     minimum-quality: 10
@@ -18,10 +18,21 @@ execution:
   jobs: 6
   nice: 19
   cluster:
+    missing-file-timeout: 120
     memory: 8G
     stack: 128M
     queue: all
     contact-email: none
+  rules:
+    __default__:
+      threads: 1
+      memory: 8G
+    bismark_align_and_map_se:
+      threads: 6
+      memory: 19G
+    bismark_align_and_map_pe:
+      threads: 12
+      memory: 19G
 
 tools:
   fastqc:
@@ -40,7 +51,6 @@ tools:
     executable: @BISMARK@
     args: " -N 0 -L 20 "
     cores: 3
-    memory: 19G
   deduplicate-bismark:
     executable: @DEDUPLICATE_BISMARK@
     args: ""
@@ -50,7 +60,9 @@ tools:
   samtools:
     executable: @SAMTOOLS@
     args: ""
-  R:
-    Rscript: @RSCRIPT@
-    executable: @R@
+  bowtie2-inspect:
+    executable: @BOWTIE2_INSPECT@
+    args: ""
+  Rscript:
+    executable: @RSCRIPT@
     args: ""

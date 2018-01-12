@@ -1,7 +1,7 @@
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2017 Bren Osberg <b.osberg@tum.de>
-# Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017, 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
@@ -81,53 +81,40 @@ def list_files_sortbam(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-
-def SEPEstr(files):
+def bam_processing(files, sampleID):
+    PATH = DIR_methcall
     if len(files) == 1:
-        return  "_trimmed_bismark_bt2_SE" #---- single end
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_methylRaw.RDS" #---- single end
     elif len(files) == 2:
-        return  "_val_1_bismark_bt2_PE" #---- paired end
-    else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length for file[0]="+files[0]+". HALTING! ===")
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS"] #---- paired end
 
-def Annot(PATH, files, assembly, sampleID):
+def bigwig_exporting(files, sampleID):
+    PATH = DIR_bigwig
     if len(files) == 1:
-      return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_annotation.nb.html" #---- single end
+        return  PATH+sampleID+"_se.bw" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_annotation.nb.html"] #---- paired end
+        return [PATH+sampleID+"_pe.bw"] #---- paired end
+        
+def methSeg(files, sampleID):
+    PATH = DIR_seg
+    if len(files) == 1:
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_segments_gr.RDS" #---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_segments_gr.RDS"] #---- paired end
+        
+def list_final_reports(files, sampleID):
+    PATH = DIR_final
+    if len(files) == 1:
+        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.html" #---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.html"] #---- paired end
 
+
+
 def fmt(message):
     """Format the MESSAGE string."""
     return "----------  " + message + "  ----------"
 
-def list_files_xmeth(PATH, files, sampleID):
-    if len(files) == 1:
-        return [ PATH+sampleID+"_se_bt2.deduped.bedGraph.gz",
-                 PATH+sampleID+"_se_bt2.deduped.bismark.cov.gz",
-                 PATH+sampleID+"_se_bt2.deduped.CpG_report.txt.gz"] #---- single end 
-    elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.bedGraph.gz",
-                PATH+sampleID+"_1_val_1_bt2.deduped.bismark.cov.gz",
-                PATH+sampleID+"_1_val_1_bt2.deduped.CpG_report.txt.gz"] #---- paired end 
-    else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")   
-
-def bam_processing(PATH, files, sampleID):
-    if len(files) == 1:
-      return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_calls.nb.html" #---- single end
-    elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_calls.nb.html"] #---- paired end
-
-def DiffMeth(PATH, treatments):
-    return [PATH+"_".join(treatments)+".sorted_diffmeth.nb.html"]
-
-def Final(PATH, files, assembly, sampleID):
-    if len(files) == 1:
-      return  PATH+sampleID+"_se_bt2.deduped.sorted_"+assembly+"_final.nb.html" #---- single end
-    elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+assembly+"_final.nb.html"] #---- paired end
-
-        
 def get_fastq_name(full_name):
     # single end
     find_se_inx=full_name.find('_se_bt2')
@@ -143,17 +130,33 @@ def get_fastq_name(full_name):
 
     return(output)
 
+SAMPLE_IDS = list(config["SAMPLES"].keys())
+SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+
 def diff_meth_input(wc):
   sample = wc.prefix
   sampleid = get_fastq_name(sample)
-  treatment_of_sampleid = SAMPLE_TREATMENTS_DICT[ sampleid ]
+  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
+  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
 
   mylist = []
-  for x in DIFF_METH_TREATMENT_PAIRS:
+  for x in config["general"]["differential-methylation"]["treatment-groups"]:
     if treatment_of_sampleid in x:
       name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
       mylist.append(DIR_annot + name_of_dir)
   return(mylist)
+  
+def finalReportDiffMeth_input(prefix):
+  sampleid = get_fastq_name(prefix)
+  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
+  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
+  treatments = ["_".join(pair) for pair in config["general"]["differential-methylation"]["treatment-groups"] if treatment_of_sampleid in pair]
+  outList = []
+  if treatments: 
+      outList  = [ "{}{}.sorted_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
+      outList += [ "{}{}.sorted_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
+  
+  return  outList
 
 def get_sampleids_from_treatment(treatment):
   treatments = treatment.split("_")
@@ -182,21 +185,27 @@ def diffmeth_input_function(wc):
   inputfiles = list(sum(inputfiles, []))
   return(inputfiles)
 
+def tool(name):
+    return config['tools'][name]['executable']
+
+# Generate a command line string that can be passed to snakemake's
+# "shell".  The string is prefixed with an invocation of "nice".
+def nice(cmd, args, log=None):
+    executable = tool(cmd)
+    line = ["nice -" + str(config['execution']['nice']), executable] + args
+    if log:
+        line.append("> {} 2>&1".format(log))
+    return " ".join(line)
 
 def generateReport(input, output, params, log, reportSubDir):
     dumps = json.dumps(dict(params.items()),sort_keys=True,
                        separators=(",",":"), ensure_ascii=True)
 
-    cmd =   "{RSCRIPT} {DIR_scripts}/report_functions.R"
-    cmd +=  " --reportFile={input.template}"
-    cmd +=  " --outFile={output.report}"
-    cmd +=  " --finalReportDir=" + os.path.join(DIR_final,reportSubDir)
-    cmd +=  " --report.params={dumps:q}"
-    cmd +=  " --logFile={log}"
+    cmd = nice('Rscript', ["{DIR_scripts}/generate_report.R",
+                           "--scriptsDir=" + DIR_scripts,
+                           "--reportFile={input.template}",
+                           "--outFile={output.report}",
+                           "--finalReportDir=" + os.path.join(DIR_final,reportSubDir),
+                           "--report.params={dumps:q}",
+                           "--logFile={log}"])
     shell(cmd, dumps)
-
-#--- NICE gauges the computational burden, ranging from -19 to +19.
-#--- The more "nice" you are, the more you allow other processes to jump ahead of you
-#--- (like in traffic). Generally set to maximally nice=19 to avoid interference with other users.
-def nice(cmd):
-    return "nice -" + str(config['execution']['nice']) + " " + cmd

@@ -1,5 +1,5 @@
 #!@PYTHON@
-
+# -*- python -*-
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2017 Bren Osberg <b.osberg@tum.de>
@@ -26,6 +26,12 @@
 
 
 import argparse
+from os import path
+import os, sys, json, csv, yaml
+from snakemake.utils import update_config
+import shutil, filecmp
+from glob import glob
+import subprocess
 
 description = """\
 PiGx BSseq Pipeline.
@@ -64,7 +70,7 @@ parser.add_argument('samplesheet',
 The sample sheet containing sample data in CSV format.\
 """)
 
-parser.add_argument('-s', '--settings', dest='settings',
+parser.add_argument('-s', '--settings', dest='settings', required=True,
                     help='A YAML file for settings that deviate from the defaults.')
 
 parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
@@ -74,7 +80,7 @@ default the file 'config.json' is dynamically created from the sample
 sheet and the settings file.
 """)
 
-parser.add_argument('--target', dest='target', default='final-report',
+parser.add_argument('--target', dest='target', action='append',
                     help="""\
 Stop when the named target is completed instead of running the whole
 pipeline.  The default target is "final-report".  Pass "--target=help"
@@ -85,58 +91,33 @@ parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
 Only show what work would be performed.  Do not actually run the
 pipeline.""")
 
-parser.add_argument('--graph', dest='graph', action='store_true',
+parser.add_argument('--graph', dest='graph',
                     help="""\
-Output a graph in Graphviz dot format showing the relations between
-rules of this pipeline.""")
+Output a graph in PDF format showing the relations between rules of
+this pipeline.  You must specify a graph file name such as
+"graph.pdf".""")
 
 parser.add_argument('--force', dest='force', action='store_true',
                     help="""\
 Force the execution of rules, even though the outputs are considered
 fresh.""")
 
+parser.add_argument('--reason', dest='reason', action='store_true',
+                    help="""\
+Print the reason why a rule is executed.""")
+
+parser.add_argument('--unlock', dest='unlock', action='store_true',
+                    help="""\
+Recover after a snakemake crash.""")
+
 args = parser.parse_args()
 
 
 # Generate config file
-
-from os import path
-import os, sys, json, csv, yaml
-
 def bail(msg):
     """Print the error message to stderr and exit."""
     print(msg, file=sys.stderr)
     exit(1)
-
-def parse_diff_meth(list_of_list, sample_params):
-    """
-    Parse lines with information pairs samples
-    which should be considered for differential
-    methylation. E.g. for treatments A,B,C and D
-    it could like:
-  
-    A, B
-    C, D
-    D, A, B
-  
-    It returns a dictionary required for the config file
-    with a list of treatment values, e.g:
-    [[A,B], [C,D], [D,A,B]]
-    """
-
-    # check if treatment values are in the the column samples from
-    # the second part of the input file
-    # treatments values from the [[ SAMPLES ]] part
-    treatments_samples = set([sample_params['SAMPLES'][s]['Treatment'] 
-                              for s in sample_params['SAMPLES'].keys()])
-
-    # treatments values from the [[ DIFFERENTIAL METHYLATION ]] part
-    treatments_diffmeth = set(sum(list_of_list, []))
-    if not treatments_diffmeth.issubset(treatments_samples):
-        invalid_treatments = list(set(treatments_diffmeth) - set(treatments_samples))
-        raise Exception("Invalid treatment value(s) " + ", ".join(invalid_treatments))
-
-    return {"DIFF_METH": list_of_list}
 
 def get_filenames(mylist):
     return list(map(lambda x: splitext_fqgz(x)[0], mylist))
@@ -206,13 +187,11 @@ def parse_samples(lines):
         outputdict[row[2]] = sampleid_dict
     return { 'SAMPLES': outputdict }
 
-from snakemake.utils import update_config
-
 def generate_config(configfile, samplesheet, settingsfile):
     """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
 SETTINGSFILE as inputs."""
     dirs = {}
-    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+    if os.getenv('PIGX_UNINSTALLED'):
         here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
         dirs['locations'] = {
             'prefix'       : here,
@@ -241,11 +220,15 @@ SETTINGSFILE as inputs."""
         }
 
     # Load defaults
-    if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
+    if os.getenv('PIGX_UNINSTALLED'):
         where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
         defaults = path.join(where, 'etc/settings.yaml')
     else:
         defaults = path.join(dirs['locations']['pkgdatadir'], 'settings.yaml')
+
+    if not path.exists(defaults):
+        bail("Could not find default settings.  Did you forget to set PIGX_UNINSTALLED?")
+
     settings = yaml.safe_load(open(defaults, 'r'))
 
     # Load user overrides
@@ -259,20 +242,15 @@ SETTINGSFILE as inputs."""
         lines = f.read().splitlines()
     sample_params = parse_samples(lines)
 
-    # Load pairs of treatments for differential methylation
-    diff_meth = settings['general']['differential-methylation']['treatment-groups']
-    diff_meth_params = parse_diff_meth(diff_meth, sample_params)
-
     # Create a config file
     settings.update(sample_params)
-    settings.update(diff_meth_params)
     settings['locations'].update(dirs['locations'])
 
     # Resolve relative paths in the locations section
     root = path.dirname(samplesheet)
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
-    for key in ['input-dir', 'output-dir', 'genome-dir']:
+    for key in settings['locations']:
         settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
 
     # Write the config file
@@ -283,23 +261,14 @@ SETTINGSFILE as inputs."""
         outfile.write(dumps)
 
 def generate_cluster_configuration():
-    bismark_cores = int(config['tools']['bismark']['cores'])
-    bismark_pe_threads = 4 * bismark_cores
-    bismark_se_threads = 2 * bismark_cores
-
-    # Create the cluster configuration file
-    rules = [
-        ('__default__', 1, config['execution']['cluster']['memory']),
-        ('bismark_se', bismark_se_threads, config['tools']['bismark']['memory']),
-        ('bismark_pe', bismark_pe_threads, config['tools']['bismark']['memory'])
-    ]
+    rules = config['execution']['rules']
 
     cluster_conf = {}
-    for rule, nthreads, mem in rules:
+    for rule in rules:
         cluster_conf[rule] = {
-            'nthreads': nthreads,
+            'nthreads': rules[rule]['threads'],
             'q': config['execution']['cluster']['queue'],
-            'MEM': mem,
+            'MEM': rules[rule]['memory'],
             'h_stack': config['execution']['cluster']['stack']
         }
 
@@ -311,12 +280,27 @@ def generate_cluster_configuration():
         outfile.write(dumps)
     return cluster_config_file
 
-
-generate_config(args.configfile,
-                args.samplesheet,
-                args.settings)
+# TODO: this should be external
+def validate_config():
+    # Check that all locations exist
+    for loc in config['locations']:
+        if (not loc == 'output-dir') and (not path.isdir(config['locations'][loc]) ) :
+            bail("ERROR: The following necessary directory does not exist: {} ({})".format(config['locations'][loc], loc))
 
-config = json.load(open(args.configfile, 'r'))
+    # Check that all of the requested differential methylation
+    # treatment values are found in the sample sheet.
+    treatments = set([ config["SAMPLES"][sample]["Treatment"] for sample in config["SAMPLES"] ])
+    for pair in config['general']['differential-methylation']['treatment-groups']:
+        for group in pair:
+            if group not in treatments:
+                bail("ERROR: Invalid treatment group '{}' in pair '{}'".format(group, pair))
+
+    # Check for a genome fasta file
+    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
+    fa    = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
+
+    if not len(fasta) + len(fa) == 1 :
+        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))
 
 
 # Create symbolic links to the inputs and reference genome
@@ -339,73 +323,86 @@ def makelink(src, target):
         except FileExistsError:
             pass
 
-os.makedirs(path.join(config['locations']['output-dir'], 'path_links/input'),
-            exist_ok=True)
-
-# Link the reference genome
-try:
-    os.symlink(config['locations']['genome-dir'],
-               path.join(config['locations']['output-dir'], 'path_links/refGenome'))
-except FileExistsError:
-    pass
-
-# Create file links
-for sample in config['SAMPLES']:
-  flist = config['SAMPLES'][sample]['files']
-  single_end = len(flist) == 1
-
-  for idx, f in enumerate(flist):
-    if not f.endswith(".gz"):
-      # FIXME: Future versions should handle unzipped .fq or .bz2.
-      bail("Input files must be gzipped: %s." % f)
-
-    tag = "" if single_end else '_' + str(idx + 1)
-    linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
-    makelink(path.join(config['locations']['input-dir'], f),
-             path.join(config['locations']['output-dir'], "path_links/input/", linkname))
-
-# Copy the report templates to a writable location because bookmark insists on placing
-# the generated ".md" files where the ".Rmd" source files are located.  This will not be
-# necessary once we generate only a single report.
-
-import shutil, filecmp
-from glob import glob
-os.makedirs(path.join(config['locations']['output-dir'], 'path_links/report_templates'),
-            exist_ok=True)
-
 def maybe_copy(source, target_dir):
     target = path.join(target_dir, path.basename(source))
     if not path.exists(target) or not filecmp.cmp(source, target):
         shutil.copy(source, target_dir)
 
-for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
-    maybe_copy(template, path.join(config['locations']['output-dir'], 'path_links/report_templates'))
+def prepare_links():
+    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/input'),
+                exist_ok=True)
+
+    # copy documentation file to the output work directory.
+    if os.getenv('PIGX_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        contents = path.join(where, 'etc/CONTENTS.txt')
+    else:
+        contents = path.join(config['locations']['pkgdatadir'], 'CONTENTS.txt')
+    shutil.copy(contents, path.join(config['locations']['output-dir'], 'pigx_work/'))
+
+    # Link the reference genome
+    try:
+        os.symlink(config['locations']['genome-dir'],
+                   path.join(config['locations']['output-dir'], 'pigx_work/refGenome'))
+    except FileExistsError:
+        pass
+
+    # Create file links
+    for sample in config['SAMPLES']:
+        flist = config['SAMPLES'][sample]['files']
+        single_end = len(flist) == 1
+
+        for idx, f in enumerate(flist):
+            if not f.endswith(".gz"):
+                # FIXME: Future versions should handle unzipped .fq or .bz2.
+                bail("Input files must be gzipped: %s." % f)
+
+            tag = "" if single_end else '_' + str(idx + 1)
+            linkname = config['SAMPLES'][sample]['SampleID'] + tag + ".fq.gz"
+            makelink(path.join(config['locations']['input-dir'], f),
+                     path.join(config['locations']['output-dir'], "pigx_work/input/", linkname))
+
+    # Copy the report templates to a writable location because bookmark insists on placing
+    # the generated ".md" files where the ".Rmd" source files are located.  This will not be
+    # necessary once we generate only a single report.
+    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/report_templates'),
+                exist_ok=True)
+
+    for template in glob(config['locations']['pkgdatadir'] + '/report_templates/*'):
+        maybe_copy(template, path.join(config['locations']['output-dir'], 'pigx_work/report_templates'))
+
+    # Ensure that we use the configured Pandoc, pandoc-citeproc
+    # ...and the configured Rscript
+    bin = path.join(config['locations']['output-dir'], 'pigx_work/bin')
+    if path.exists(bin): shutil.rmtree(bin)
+    os.makedirs(bin, exist_ok=True)
+    os.symlink('@PANDOC@', path.join(bin, "pandoc"))
+    os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
+    os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
+    os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+
+def display_logo():
+    if os.getenv('PIGX_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        pretty = path.join(where, 'etc/pretty.txt')
+    else:
+        pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
+
+    if not os.getenv('PIGX_UGLY'):
+        # Ensure that this is printed without errors, even if the user's
+        # locale is not a UTF-8 locale.
+        p = open(pretty, 'r', encoding='utf-8').read()
+        sys.stdout.buffer.write(p.encode('utf-8'))
 
 
 
 # Run snakemake!
+generate_config(args.configfile,
+                args.samplesheet,
+                args.settings)
 
-# Ensure that we use the configured Pandoc, pandoc-citeproc
-# ...and the configured Rscript
-bin = path.join(config['locations']['output-dir'], 'path_links/bin')
-if path.exists(bin): shutil.rmtree(bin)
-os.makedirs(bin, exist_ok=True)
-os.symlink('@PANDOC@', path.join(bin, "pandoc"))
-os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
-os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
-os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
-
-if os.getenv('PIGX_BSSEQ_UNINSTALLED'):
-    where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
-    pretty = path.join(where, 'etc/pretty.txt')
-else:
-    pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
-
-if not os.getenv('PIGX_BSSEQ_UGLY'):
-    # Ensure that this is printed without errors, even if the user's
-    # locale is not a UTF-8 locale.
-    p = open(pretty, 'r', encoding='utf-8').read()
-    sys.stdout.buffer.write(p.encode('utf-8'))
+config = json.load(open(args.configfile, 'r'))
+validate_config()
 
 command = [
     "@SNAKEMAKE@",
@@ -417,26 +414,47 @@ command = [
 
 if config['execution']['submit-to-cluster']:
     cluster_config_file = generate_cluster_configuration()
-    print("Commencing snakemake run submission to cluster", flush=True)
+    print("Commencing snakemake run submission to cluster", flush=True, file=sys.stderr)
     if config['execution']['cluster']['contact-email'].lower() == 'none':
         contact_email_string = ""
     else:
-        contact_email_string = "-m abe -M %s" % config['execution']['cluster']['contact-email']
+        contact_email_string = "-m a -M %s" % config['execution']['cluster']['contact-email']
 
+    try:
+        subprocess.call(["qsub", "-help"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            print("Error: Your system does not seem to support cluster submission.\nReason: Could not find qsub executable.", file=sys.stderr)
+            exit(1)
+        else:
+            raise
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
     command += [
         "--cluster-config={}".format(cluster_config_file),
-        "--cluster={}".format(qsub)
+        "--cluster={}".format(qsub),
+        "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
-    print("Commencing snakemake run submission locally", flush=True)
+    print("Commencing snakemake run submission locally", flush=True, file=sys.stderr)
 
-if args.force:
-    command.append("--forceall")
-if args.dry_run:
-    command.append("--dryrun")
+command.append("--rerun-incomplete")
 if args.graph:
     command.append("--dag")
-
-import subprocess
-subprocess.run(command)
+    with open(args.graph, "w") as outfile:
+        p1 = subprocess.Popen(command, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(['dot','-Tpdf'], stdin=p1.stdout, stdout=outfile)
+        p2.communicate()
+else:
+    prepare_links()
+    display_logo()
+    if args.force:
+        command.append("--forceall")
+    if args.dry_run:
+        command.append("--dryrun")
+    if args.reason:
+        command.append("--reason")
+    if args.unlock:
+        command.append("--unlock")
+    if args.target == 'help':
+        command.append("help")
+    subprocess.run(command)
