@@ -42,7 +42,8 @@ render2HTML <- function(reportFile,
   
   ## make independent intermediate dirs
   interDir <- paste0(outDir,"/",outFile,"_tmp")
-  
+
+  htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
     input = reportFile,
     output_dir = outDir,
