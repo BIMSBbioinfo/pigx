@@ -11,25 +11,24 @@
 Extract_Signal_Annotation = function(
     annotation  = NULL, 
     wig         = NULL,
-    outfile     = './PEAKS.rds',
+    outfile     = NULL,
     scriptdir   = NULL
 ){
     
-    if(is.null(scriptdir))
-        stop('Please specify the script directory')
+    # --------------------------------------------------------------- #
+    # checks for default arugments
+    deflist = as.list(formals(Annotate_Peaks))
+    arglist = as.list(match.call)
+    arg.ind = names(deflist) %in% names(arglist)
+    if(any(arg.ind))
+        stop(paste(paste(names(arglist)[arg.ind], collapse=','),'not defined'))
     
+    # --------------------------------------------------------------- #
     suppressPackageStartupMessages(library('genomation'))
     suppressPackageStartupMessages(library('GenomicRanges'))
     suppressPackageStartupMessages(library('data.table'))
     source(file.path(scriptdir,'Functions_Helper.R'), local=TRUE)
-    # --------------------------------------------------------------- #
-    if(is.null(annotation))
-        stop('Annotation is not specified')
-    
    
-    if(is.null(wig))
-        stop('wig file is not specified')
-    
     # --------------------------------------------------------------- #
     message('Annotation ...')
         annot = readRDS(annotation)
