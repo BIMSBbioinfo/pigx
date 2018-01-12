@@ -42,8 +42,9 @@ EXTRA_DIST =										\
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)"
 
 TESTS = \
+  tests/test_star_map/test.sh						\
   tests/test_trim_galore/test.sh					\
-  test.sh
+  test.sh 
 
 clean-local:
 	-rm -rf .snakemake
