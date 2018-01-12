@@ -241,10 +241,12 @@ rule report1:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates']
+    logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
   log: os.path.join(LOG_DIR, "report.star.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
-  shell: "{RSCRIPT_EXEC} {params.reportR} --pkgdatadir="+ config['locations']['pkgdatadir'] + " --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
+  shell:
+    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
 
 rule report2:
   input:
