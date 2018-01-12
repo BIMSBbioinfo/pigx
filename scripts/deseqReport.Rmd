@@ -13,6 +13,7 @@ params:
   prefix: ''
   workdir: '.'
   organism: ''
+  logo: ''
 ---
 
 <style>
@@ -38,7 +39,7 @@ body
 <!-- TODO: magic -->
 <div id="logo" align="top">
 ```{r echo=FALSE}
-knitr::include_graphics('../images/Logo_PiGx.png')
+knitr::include_graphics(params$logo)
 ```
 </div>
 

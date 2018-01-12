@@ -16,7 +16,8 @@ dist_pkglibexec_scripts_SCRIPTS =					\
 
 dist_pkgdata_DATA =									\
   etc/settings.yaml									\
-  etc/pretty.txt
+  etc/pretty.txt									\
+  images/Logo_PiGx.png
 
 dist_doc_DATA = 									\
   README.md
