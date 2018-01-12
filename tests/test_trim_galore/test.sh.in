@@ -1,34 +1,11 @@
-#!/usr/bin/bash
-
-# usage: 
-# > ./test.sh  <path to source directory> <path to executable in the environment>
-
-srcdir=$1
-EXEC=$2
-
-if [ -z ${srcdir} ]
-then 
-  echo "ERROR: provide path to source directory"
-  exit 1
-fi
-
-if [ -z ${EXEC} ]
-then 
-  echo "ERROR: provide path to tool's executable"
-  exit 1 
-fi 
+#!/bin/sh
 
 test_folder="${srcdir}/tests/test_trim_galore"
+EXEC="@TRIMGALORE"
 
 #the single-end read file provided as input to trim galore
 input1="${test_folder}/input_files/sample.read1.fastq.gz"
 input2="${test_folder}/input_files/sample.read2.fastq.gz" 
-
-if [ ! -d ${srcdir} ]
-then 
-  echo "ERROR: source directory at '${srcdir}' doesn't exist"
-  exit 1
-fi
 
 if [ ! -f ${EXEC} ]
 then
@@ -87,7 +64,7 @@ test_processed_reads () {
 }
 
 #Test trim_galore on single-end mode
-mkdir ${test_folder}/output_single_end
+mkdir -p ${test_folder}/output_single_end
 ${EXEC} -o ${test_folder}/output_single_end ${input1} >> ${test_folder}/output_single_end/log.out 2>&1 
 result_se="${test_folder}/output_single_end/sample.read1.fastq.gz_trimming_report.txt"
 
@@ -96,7 +73,7 @@ test_processed_reads ${result_se} ${input1} 50 single-end
 echo "Congrats! trim_galore passed tests on single-end mode"
 
 #Test trim_galore on paired-end mode
-mkdir ${test_folder}/output_paired_end
+mkdir -p ${test_folder}/output_paired_end
 ${EXEC} -o ${test_folder}/output_paired_end --paired ${input1} ${input2} >> ${test_folder}/output_paired_end/log.out 2>&1
 result_pe_1="${test_folder}/output_paired_end/sample.read1.fastq.gz_trimming_report.txt"
 result_pe_2="${test_folder}/output_paired_end/sample.read2.fastq.gz_trimming_report.txt"
@@ -105,9 +82,3 @@ test_processed_reads ${result_pe_1} ${input1} 50 paired-end
 test_processed_reads ${result_pe_2} ${input2} 50 paired-end
 
 echo "Congrats! trim_galore passed tests on paired-end mode"
-
-
-
-
-
-
