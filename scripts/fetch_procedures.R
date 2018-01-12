@@ -103,6 +103,9 @@ lookupBedFile <- function (type, filename, dir, assembly, webfetch) {
     }
     else
     {
-      stop(paste("Error: Could not find reference annotation files for differential methylation for the given assembly <'",assembly,"'> (see settings:general) option to fetch from internet was not set. Aborting." ))
+      stop(paste("Error: Could not find reference annotation files for 
+                  differential methylation for the given assembly <'",assembly,"'> 
+                  (see settings:general) option to fetch from internet was not 
+                  set. Aborting." ))
     }
 }

@@ -30,6 +30,9 @@ params:
   genome_dir: ''
   scripts_dir: ''
   AnnotateDiffMeth: TRUE
+  CpGfile:      ''
+  refGenfile:   ''
+  webfetch:     ''
 ---
 
 ```{r global_options, include=FALSE}
@@ -43,6 +46,11 @@ Segmentation      <- params$Segmentation
 AnnotateSegments  <- params$AnnotateSegments
 DiffMeth          <- params$DiffMeth
 AnnotateDiffMeth  <- params$AnnotateDiffMeth
+
+CpGfile           <- params$CpGfile 
+refGenfile        <- params$refGenfile 
+webfetch          <- params$webfetch
+
 
 genome_dir   <- params$genome_dir
 scripts_dir  <- params$scripts_dir
@@ -298,7 +306,8 @@ source(paste0(scripts_dir, "fetch_procedures.R"))
 refgenes.file <- lookupBedFile(type = "refGene",
                                filename = paste0("refGene.", assembly, ".bed"),
                                dir = genome_dir,
-                               assembly = assembly)
+                               assembly = assembly,
+                               webfetch = webfetch )
 ```
 
 ```{r AnnotateSegments.readRefGene, eval=AnnotateSegments}
@@ -562,13 +571,15 @@ source(paste0(params$scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type="refGene",
                                   filename = paste0("refGene.", assembly, ".bed"),
                                   dir = params$genome_dir,
-                                  assembly = assembly)
+                                  assembly = assembly,
+                                  webfetch = webfetch )
 
 cpgi.file <- paste0("cpgIslandExt.", assembly, ".bed")
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
                               filename = cpgi.file,
                               dir = params$genome_dir,
-                              assembly = assembly)
+                              assembly = assembly,
+                              webfetch = webfetch )
 
 ```
 
