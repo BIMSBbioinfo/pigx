@@ -37,7 +37,9 @@ body
 
 <!-- TODO: magic -->
 <div id="logo" align="top">
-  ![](../images/Logo_PiGx.png)
+```{r echo=FALSE}
+knitr::include_graphics('../images/Logo_PiGx.png')
+```
 </div>
 
 
