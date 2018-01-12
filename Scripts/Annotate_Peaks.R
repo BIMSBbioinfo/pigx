@@ -9,48 +9,39 @@
 #' @return saves RDS object with an annotated GRanges object
 Annotate_Peaks = function(
     annotation = NULL,
-    peaks      = NULL,
+    peaks_path = NULL,
     outfile    = NULL,
-    peakname   = 'Peak',
+    peakname   = NULL,
+    scriptdir  = NULL
 ){
-    
+
     # --------------------------------------------------------------- #
-    if(is.null(annotation))
-        stop('Annotation is not defined')
-    
-    if(is.null(peaks))
-        stop('Peaks are not defined')
-    
-    if(is.null(outfile))
-        stop('output file path is not defined')
-    
+    # checks for default arugments
+    deflist = as.list(formals(Annotate_Peaks))
+    arglist = as.list(match.call)
+    arg.ind = names(deflist) %in% names(arglist)
+    if(any(arg.ind))
+      stop(paste(paste(names(arglist)[arg.ind], collapse=','),'not defined'))
+
     # --------------------------------------------------------------- #
     library(data.table)
     library(stringr)
-    
+    library(genomation)
+    source(file.path(scriptdir, 'Functions_Helper.R'), local=TRUE)
+
     # --------------------------------------------------------------- #
     message('Annotation ...')
         annot = readRDS(annotation)
-        
+
     message('Reading peaks ...')
-        peaktype = ifelse(grepl('narrow', basename(bed)),'readNarrowPeak','readBroadPeak')
-        bed      = match.fun(peaktype)(bed)
-    
+        peaks  = readGeneric(peaks_path)
 
     message('Annotating peaks ...')
-        peaks$annot = Annotate_Ranges(bed, annot$genomic_annotation)
-    
-    message('CpGi ...')
-        if(!is.null(annot$cpg)){
-           
-            peaks$cpgi = countOverlaps(peaks, annot$cpgi) > 0
-        }else{
-            peaks$cpgi = NA
-        }
-    
+        peaks$annot = AnnotateRanges(peaks, annot$genomic_annotation)
+
     message('Saving annotated peaks ...')
         saveRDS(peaks, outfile)
-    
+
 }
 
 
@@ -58,7 +49,17 @@ Annotate_Peaks = function(
 # ---------------------------------------------------------------------------- #
 Annotate_Peaks(
     annotation  = snakemake@input[['annotation']],
-    peaks       = snakemake@input[['peaks']],
-    outfile     = snakemake@input[['outfile']],
-    peakname    = snakemake@params[['name']]
+    peaks_path  = snakemake@input[['peaks']],
+    outfile     = snakemake@output[['outfile']],
+    peakname    = snakemake@params[['name']],
+    scriptdir   = snakemake@params[['scriptdir']]
 )
+
+
+# annotation = '/home/vfranke/Tmp/pigxtest/Annotation/Processed_Annotation.rds'
+# peaks      = '/home/vfranke/Tmp/pigxtest/Peaks/MACS2/Peaks1/Peaks1_qsort.bed'
+# outfile    = '~/Tmp/file.rds'
+# peakname   = 'peak1'
+# scriptdir  = '/home/vfranke/Projects/AAkalin_PIX/Scripts'
+
+
