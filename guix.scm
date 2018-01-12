@@ -151,6 +151,7 @@ The main functions of FastQC are:
        ("r-crosstalk" ,r-crosstalk)
        ("r-tximport" ,r-tximport)
        ("r-rtracklayer" ,r-rtracklayer)
+       ("r-rjson" ,r-rjson)
        ("salmon" ,salmon)
        ("ghc-pandoc" ,ghc-pandoc)
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
