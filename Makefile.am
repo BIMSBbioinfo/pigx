@@ -27,7 +27,8 @@ dist_pkgdata_report_templates_SCRIPTS = 			\
 
 dist_pkgdata_DATA =					\
   etc/settings.yaml					\
-  etc/pretty.txt
+  etc/pretty.txt 					\
+  etc/CONTENTS.txt					
 
 dist_doc_DATA = 					\
   README.md
