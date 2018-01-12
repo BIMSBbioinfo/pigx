@@ -129,11 +129,15 @@ hub:
                 type: bigWig
 # ------------------------------------------------------------ #
 feature_combination:
-    idr:
+    Feature1:
         - ChIP_IDR
-    peaks:
+    Feature2:
         - Peaks6
         - Peaks5
+    Feature3:
+        - ChIP_IDR
+        - Peaks5
+
 
 
 
@@ -149,7 +153,7 @@ params:
         keep-dup: auto
         q: 0.05
     extract_signal:
-        expand.peak: 2000
+        expand_peak: 2000
         bin_num: 100
 
 
