@@ -67,7 +67,7 @@ $prefix/bin/pigx-rnaseq test/samplesheet.csv
 and we should see the flying pig. :)
 
 You may also skip the installation step.  In that case you will need
-to set the environment variable `PIGX_RNASEQ_UNINSTALLED` to any value
+to set the environment variable `PIGX_UNINSTALLED` to any value
 before running the executable from the current working directory.
 
 

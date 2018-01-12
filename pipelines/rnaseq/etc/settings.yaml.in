@@ -1,6 +1,6 @@
 locations:
-  reads-folder: /path/to/reads/
-  output-folder: /path/to/output/
+  reads-dir: /path/to/reads/
+  output-dir: /path/to/output/
   genome-fasta: /path/to/genome.fasta
   gtf-file: /path/to/sample.gtf
 
@@ -13,6 +13,19 @@ execution:
     stack: 128M
     queue: all
     contact-email: none
+  rules:
+    __default__:
+      threads: 1
+      memory: 8G
+    star_index:
+      threads: 8
+      memory: 32G
+    salmon_index:
+      threads: 8
+      memory: 32G
+    salmon_quant:
+      threads: 8
+      memory: 32G
 
 organism: hsapiens
 
@@ -37,7 +50,8 @@ tools:
     executable: @MULTIQC@
   star:
     executable: @STAR@
-    n-threads: 8
+    cores: 8
+    memory: 32G
   trim-galore:
     executable: @TRIMGALORE@
   bamCoverage:
@@ -48,7 +62,8 @@ tools:
     executable: @HTSEQ_COUNT@
   salmon:
     executable: @SALMON@
-    n-threads: 8
+    cores: 8
+    memory: 32G
   R:
     Rscript: @RSCRIPT@
     executable: @R@

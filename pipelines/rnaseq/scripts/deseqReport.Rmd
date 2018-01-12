@@ -28,7 +28,6 @@ library(reshape2)
 library(plotly)
 library(scales)
 library(crosstalk)
-library(gage)
 library(gProfileR)
 library(rtracklayer)
 library(SummarizedExperiment)
@@ -290,84 +289,6 @@ if(length(select) > 1) {
 
 ```
 
-# Gene Set Enrichment Analysis 
-
-Finding collectively up/down regulated list of genes 
-```{r run_GAGE}
-geneSetsFolder <- NULL
-if(!is.null(geneSetsFolder)) {
-  geneSetFiles = list.files(path = geneSetsFolder, pattern = '*.txt', full.names = T)
-  geneSetList = sapply(geneSetFiles, function(file) scan(file, what = "character"), USE.NAMES = T)
-  names(geneSetList) <- gsub('.txt', '', basename(names(geneSetList)))
-  
-  caseSampleIndices <- which(colnames(vsd.counts) %in% rownames(colData[colData$group %in% caseSamples,]))
-  controlSampleIndices <- which(colnames(vsd.counts) %in% rownames(colData[colData$group %in% controlSamples,]))
-  
-  #run gage analysis
-  mygage = gage::gage(exprs = vsd.counts, 
-                      gsets = geneSetList, 
-                      ref = controlSampleIndices, 
-                      samp = caseSampleIndices, 
-                      compare = 'unpaired', rank.test = TRUE, set.size = c(10,1000)) 
-  
-  greater <- data.frame(subset(mygage$greater, select = c('q.val')))
-  colnames(greater) <- 'FDR-upregulated'
-  greater$GeneSet <- rownames(greater)
-  less <- data.frame(subset(mygage$less, select = c('q.val')))
-  colnames(less) <- 'FDR-downregulated'
-  less$GeneSet <- rownames(less)
-  
-  results <- merge(x = greater, y = less, by = 'GeneSet')
-  
-  DT::datatable(results, 
-          extensions = c('Buttons', 'FixedColumns'), 
-          options = list(fixedColumns = TRUE, 
-                         scrollX = TRUE,
-                         dom = 'Bfrtip',
-                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
-          filter = 'bottom'
-          )
-  
-  write.table(x = results,  file = file.path(workdir, 
-                                        paste0(prefix,'.GSEA.results.tsv')), 
-                quote = F, sep = '\t')
-  
-  plotGageHeatmap <- function(geneSetName, geneIds, normCounts, colData) {
-    df <- as.data.frame(colData[,c("group","AnalysisGroup")])
-    M <- normCounts[rownames(normCounts) %in% geneIds,]
-    write.table(x = M, file = file.path(workdir, 
-                                        paste0(prefix,'.geneSets.normCounts.', geneSetName,'.tsv')), 
-                quote = F, sep = '\t')
-    callback = function(hc, ...){dendsort::dendsort(hc)}
-    pheatmap::pheatmap(M, 
-             cluster_rows=TRUE, 
-             show_rownames=FALSE, 
-             cluster_cols=TRUE, 
-             scale = 'row',
-             annotation_col=df, 
-             clustering_callback = callback,
-             main = paste0('Gene Set: ',geneSetName))
-  }
-  
-  pdf(file = file.path(workdir, paste0(prefix, '.geneSet.heatmaps.pdf')))
-  mdata <- reshape2::melt(results)
-  colnames(mdata) <- c('GeneSet', 'DeregulationType', 'FDR')
-  
-  p <- ggplot(mdata, aes(x = GeneSet, y = -log10(FDR))) + 
-    geom_bar(aes(fill = FDR < 0.1), stat = 'identity') +
-    facet_grid(~DeregulationType) + coord_flip() 
-  print(p)
-
-  for(geneSetName in names(geneSetList)) {
-    geneIds <- geneSetList[[geneSetName]]
-    plotGageHeatmap(geneSetName = geneSetName, 
-                         geneIds = geneIds, 
-                         normCounts = vsd.counts, 
-                         colData = colData)
-  }
-  dev.off()
-}
-```
 
 ```{r results='asis'}
 if(runGO == FALSE) {cat("Warning:Skipping GO analysis as there is no internet connection\n")}

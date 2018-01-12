@@ -9,8 +9,8 @@ import inspect
 
 GENOME_FASTA = config['locations']['genome-fasta']
 CDNA_FASTA = config['locations']['cdna-fasta']
-READS_DIR = config['locations']['reads-folder']
-OUTPUT_DIR = config['locations']['output-folder']
+READS_DIR = config['locations']['reads-dir']
+OUTPUT_DIR = config['locations']['output-dir']
 ORGANISM = config['organism']
 
 SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
@@ -28,9 +28,9 @@ PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
 FASTQC_EXEC  = config['tools']['fastqc']['executable']
 MULTIQC_EXEC = config['tools']['multiqc']['executable']
 STAR_EXEC    = config['tools']['star']['executable']
-STAR_THREADS = config['tools']['star']['n-threads']
+STAR_THREADS = config['tools']['star']['cores']
 SALMON_EXEC  = config['tools']['salmon']['executable']
-SALMON_THREADS = config['tools']['salmon']['n-threads']
+SALMON_THREADS = config['tools']['salmon']['cores']
 TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
 BAMCOVERAGE_EXEC = config['tools']['bamCoverage']['executable']
 SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
@@ -60,14 +60,41 @@ def lookup(column, predicate, fields=[]):
 
 SAMPLES = [line['name'] for line in SAMPLE_SHEET]
 
+targets = {
+    # rule to print all rule descriptions
+    'help': {
+        'description': "Print all rules and their descriptions.",
+        'files': []
+    },
+    'final-report': {
+        'description': "Produce a comprehensive report.  This is the default target.",
+        'files': [
+          os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
+          os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
+          os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
+        ]
+    }
+}
+
+# Selected output files from the above set.
+selected_targets = config['execution']['target'] or ['final-report']
+
+# FIXME: the list of files must be flattened twice(!).  We should make
+# sure that the targets really just return simple lists.
+from itertools import chain
+OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
+
+
+
 rule all:
-  input: 
-      star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
-      salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-      multiqc_report = os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-      reports_star = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-      reports_salmon = expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-      #bamCoverageBigWig =  expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample=SAMPLES)
+  input: OUTPUT_FILES
+
+rule help:
+  run:
+    for key in sorted(targets.keys()):
+      print('{}:\n  {}'.format(key, targets[key]['description']))
 
 rule translate_sample_sheet_for_report:
   input: SAMPLE_SHEET_FILE
