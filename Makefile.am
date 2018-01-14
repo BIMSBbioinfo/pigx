@@ -43,6 +43,7 @@ EXTRA_DIST =										\
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)"
 
 TESTS = \
+  tests/test_fastqc/test.sh						\
   tests/test_salmon_counts/test.sh					\
   tests/test_salmon/test_salmon_index.sh				\
   tests/test_salmon/test_salmon_quant.sh				\

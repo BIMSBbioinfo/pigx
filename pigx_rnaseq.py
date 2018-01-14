@@ -80,6 +80,11 @@ targets = {
         'files': 
           expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
     },
+    'fastqc': {
+        'description': "post-mapping quality control by FASTQC.",
+        'files': 
+          expand(os.path.join(FASTQC_DIR, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample = SAMPLES)
+    },
     'salmon_index' : {
         'description': "Create SALMON index file.",
         'files':
