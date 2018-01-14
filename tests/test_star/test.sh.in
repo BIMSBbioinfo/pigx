@@ -10,11 +10,11 @@ head -n 2 ${samplesheet} > ${tmp_samplesheet}
 
 ${srcdir}/pigx-rnaseq -s ${tmp_settings} --target star_map ${tmp_samplesheet} 
 
+rm ${tmp_settings} ${tmp_samplesheet}
 if ! test -f ${srcdir}/tests/test_star/mapped_reads/HBR_Rep1_Aligned.sortedByCoord.out.bam
 then
   echo "ERROR: failed the STAR mapping test"
   exit 1
 fi
  
-rm ${tmp_settings} ${tmp_samplesheet}
 

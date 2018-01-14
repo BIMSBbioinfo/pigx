@@ -10,11 +10,11 @@ head -n 2 ${samplesheet} > ${tmp_samplesheet}
 
 ${srcdir}/pigx-rnaseq -s ${tmp_settings} --target salmon_index ${tmp_samplesheet} 
 
+rm ${tmp_settings} ${tmp_samplesheet}
 if ! test -f ${srcdir}/tests/test_salmon/salmon_index/sa.bin
 then
   echo "ERROR: failed the SALMON indexing test"
   exit 1
 fi
  
-rm ${tmp_settings} ${tmp_samplesheet}
 
