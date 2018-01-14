@@ -240,7 +240,7 @@ rule report1:
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
-    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates']
+    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
     logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
   log: os.path.join(LOG_DIR, "report.star.log")
   output: 
