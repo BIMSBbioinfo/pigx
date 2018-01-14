@@ -1,0 +1,20 @@
+#!/bin/sh
+
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_fastqc/g' > ${tmp_settings}
+
+#create links to already preprocessed sample data
+samplesheet=${srcdir}/tests/sample_sheet.csv
+tmp_samplesheet=`mktemp "${srcdir}/tests/sample_sheet.tmp.XXXX.csv"`
+head -n 2 ${samplesheet} > ${tmp_samplesheet}
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target fastqc ${tmp_samplesheet}
+
+rm ${tmp_settings} ${tmp_samplesheet}
+if ! test -f ${srcdir}/tests/test_fastqc/fastqc/HBR_Rep1_Aligned.sortedByCoord.out_fastqc.zip
+then
+  echo "ERROR: failed to create FASTQC report"
+  exit 1
+fi
+
