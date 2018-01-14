@@ -1,0 +1,24 @@
+#!/bin/sh
+
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_salmon_counts/g' > ${tmp_settings}
+
+
+#create links to already preprocessed sample data
+test_folder=${srcdir}/tests/test_salmon_counts/
+mkdir ${test_folder}/salmon_output
+cd ${test_folder}/salmon_output
+ls -d ${srcdir}/tests/sample_data/preprocessed/salmon_output/* | grep -v 'counts_from' | while read f; do ln -s $f; done
+cd ${test_folder}
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target salmon_counts ${srcdir}/tests/sample_sheet.csv 
+
+if ! test -f ${test_folder}/salmon_output/counts_from_SALMON.tsv
+then
+  echo "ERROR: failed obtaining counts matrix from SALMON quant results"
+  exit 1
+fi
+ 
+rm ${tmp_settings} ${tmp_samplesheet}
+

@@ -89,6 +89,11 @@ targets = {
         'description': "Calculate read counts per transcript using SALMON.",
         'files':
           expand(os.path.join(SALMON_DIR, "{sample}", "quant.sf"), sample = SAMPLES)
+    },
+    'salmon_counts': {
+        'description': "Get count matrix from SALMON quant.",
+        'files': 
+          [os.path.join(SALMON_DIR, "counts_from_SALMON.tsv")]
     }
 }
 
