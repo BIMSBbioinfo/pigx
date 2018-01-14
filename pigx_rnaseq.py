@@ -79,7 +79,17 @@ targets = {
         'description': "Produce a STAR mapping results in BAM file format.",
         'files': 
           expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
-    }   
+    },
+    'salmon_index' : {
+        'description': "Create SALMON index file.",
+        'files':
+          [os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")]
+    },
+    'salmon_quant' : {
+        'description': "Calculate read counts per transcript using SALMON.",
+        'files':
+          expand(os.path.join(SALMON_DIR, "{sample}", "quant.sf"), sample = SAMPLES)
+    }
 }
 
 # Selected output files from the above set.
