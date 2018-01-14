@@ -1,0 +1,20 @@
+#!/bin/sh
+
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=${srcdir}/tests/settings.test_salmon.yaml
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_salmon/g' > ${tmp_settings}
+
+samplesheet=${srcdir}/tests/sample_sheet.csv
+tmp_samplesheet=${srcdir}/tests/sample_sheet.test_salmon.csv
+head -n 2 ${samplesheet} > ${tmp_samplesheet}
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target salmon_index ${tmp_samplesheet} 
+
+if ! test -f ${srcdir}/tests/test_salmon/salmon_index/sa.bin
+then
+  echo "ERROR: failed the SALMON indexing test"
+  exit 1
+fi
+ 
+rm ${tmp_settings} ${tmp_samplesheet}
+
