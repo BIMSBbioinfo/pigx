@@ -233,7 +233,7 @@ general:
 | methylation-calling:minimum-coverage | integer: minimum read coverage to be included in the methylKit objects. Defaults to 10. Any methylated base/region in the text files below the mincov value will be ignored.
 | methylation-calling:minimum-quality | integer: minimum phred quality score to call a methylation status for a base.  Defaults to 10.
 | differential-methylation:cores | integer: denotes how many cores should be used for parallel differential methylation calculations
-| differential-methylation:treatment-groups | array of strings
+| differential-methylation:treatment-groups | array of strings indicating which groups (the "Treatment" column in the sample sheet) ought to be compared against one-another in differential methylation. If differential methylation is to be omitted, remove this variable entirely from the settings file (i.e. delete both the line containing "treatment-groups:" and the line containing the strings within the braces.) 
 | differential-methylation:annotation | annotation files for differential methylation based on CpG islands and reference genes respectively.  
 | webfetch   | Boolean: should pigx download these files from the internet if they are unavailable? (if not, then these sections are simply ommitted.)
 
