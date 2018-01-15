@@ -12,13 +12,13 @@ ${srcdir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon ${samplesh
 
 rm ${tmp_settings} 
 
-if ! test -f ${srcdir}/tests/test_reports/analysis1.star.deseq.report.html
+if ! test -f ${srcdir}/tests/test_deseq_reports/report/analysis1.star.deseq.report.html
 then
   echo "ERROR: failed to create deseq report from STAR results"
   exit 1
 fi
 
-if ! test -f ${srcdir}/tests/test_reports/analysis1.salmon.deseq.report.html
+if ! test -f ${srcdir}/tests/test_deseq_reports/report/analysis1.salmon.deseq.report.html
 then
   echo "ERROR: failed to create deseq report from SALMON results"
   exit 1
