@@ -292,7 +292,7 @@ def validate_config():
     treatments = set([ config["SAMPLES"][sample]["Treatment"] for sample in config["SAMPLES"] ])
     for pair in config['general']['differential-methylation']['treatment-groups']:
         for group in pair:
-            if group not in treatments:
+            if ( (group not in treatments) or (not (str.isdigit(group))) )  :
                 bail("ERROR: Invalid treatment group '{}' in pair '{}'".format(group, pair))
 
     # Check for a genome fasta file
