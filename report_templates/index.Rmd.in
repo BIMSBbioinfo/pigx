@@ -314,12 +314,13 @@ fetched.refgenes <- lookupBedFile(type = "refGene",
                                dir = genome_dir,
                                assembly = assembly,
                                webfetch = webfetch )
+fetch_refgen_success <- ( fetched.refgenes != '')
 ```
 
 ```{r AnnotateSegments.readRefGene, eval=AnnotateSegments}
 
 ## now we parse the gene features
-if( fetched.refgenes != '' ) {
+if( fetch_refgen_success ) {
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
   } else { 
   print( " Reference gene file not found. Section omitted.")  
@@ -338,7 +339,7 @@ segments.grl <- GenomicRanges::split(x = segments.gr,f = segments.gr$name)
 
 # and detect overlaps 
 
-if( fetched.refgenes != '' )
+if( fetch_refgen_success )
   { 
   annot.gene.list <- annotateWithGeneParts(target = segments.grl,
                                            feature = refgenes.grl,
@@ -353,7 +354,7 @@ cat('Finally we plot the average methylation per segment group and the overlap w
 ```{r AnnotateSegments.plot,  eval=AnnotateSegments}
 ## percentage of target features overlapping with annotation:
 ## (with promoter > exon > intron precedence)
-if( fetched.refgenes != '' )
+if( fetch_refgen_success )
   { 
   annot.gene.mat <- as.matrix(sapply(annot.gene.list, function(x) x@precedence))
   }
@@ -363,7 +364,7 @@ boxplot(sapply(split(x = segments.gr,f = segments.gr$name),FUN = function(x) x$s
         ylab = "Methylation (%)",
         xlab = "Segment")
 
-if( fetched.refgenes != '' )
+if( fetch_refgen_success )
   { 
   # plot the target overlap for each segemnt type
   # barplot(annot.gene.mat,legend.text = TRUE)
@@ -636,7 +637,7 @@ cat('Show overlap percentage of differentially methylated bases with gene featur
 
 ```{r AnnotateDiffMeth.annotation,  eval=AnnotateDiffMeth}
 
-if( (fetched.refgenes != '') & length(GRanges.diffmeth)!=0){
+if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   ## now we parse the gene features
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
 
@@ -678,7 +679,7 @@ cat('Show the distance of differentially methylated cytosines to TSSs of the nea
 
 ```{r AnnotateDiffMeth.plot, eval=AnnotateDiffMeth}
 
-if( (fetched.refgenes != '') & length(GRanges.diffmeth)!=0)
+if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
   {
   # Get distance to nearest TSS and gene id from AnnotationByGeneParts
   # target.row is the row number in diffmeth.gr
