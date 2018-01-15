@@ -24,6 +24,7 @@
              (guix build-system gnu)
              (gnu packages)
              (gnu packages autotools)
+             (gnu packages base)
              (gnu packages statistics)
              (gnu packages bioinformatics)
              (gnu packages compression)
@@ -108,9 +109,16 @@ The main functions of FastQC are:
     (source (string-append (getcwd) "/pigx_bsseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
-     `(#:tests? #f ; requires network access
-       #:phases
+     `(#:phases
        (modify-phases %standard-phases
+         (add-before 'check 'set-timezone
+           ;; The readr package is picky about timezones.
+           (lambda* (#:key inputs #:allow-other-keys)
+             (setenv "TZ" "UTC+1")
+             (setenv "TZDIR"
+                     (string-append (assoc-ref inputs "tzdata")
+                                    "/share/zoneinfo"))
+             #t))
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
            (lambda* (#:key inputs outputs #:allow-other-keys)
@@ -121,7 +129,8 @@ The main functions of FastQC are:
              #t)))))
     (native-inputs
      `(("autoconf" ,autoconf)
-       ("automake" ,automake)))
+       ("automake" ,automake)
+       ("tzdata" ,tzdata)))
     (inputs
      `(("r-minimal" ,r-minimal)
        ("r-annotationhub" ,r-annotationhub)
