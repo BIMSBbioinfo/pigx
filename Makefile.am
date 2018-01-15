@@ -43,6 +43,7 @@ EXTRA_DIST =										\
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)"
 
 TESTS = \
+  tests/test_deseq_reports/test.sh					\
   tests/test_multiqc/test.sh						\
   tests/test_star_counts/test.sh					\
   tests/test_fastqc/test.sh						\

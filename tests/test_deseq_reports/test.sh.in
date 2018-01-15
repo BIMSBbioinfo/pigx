@@ -1,0 +1,25 @@
+#!/bin/sh
+
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_deseq_reports/g' > ${tmp_settings}
+
+#create links to already preprocessed sample data
+samplesheet=${srcdir}/tests/sample_sheet.csv
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_star ${samplesheet}
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon ${samplesheet}
+
+rm ${tmp_settings} 
+
+if ! test -f ${srcdir}/tests/test_reports/analysis1.star.deseq.report.html
+then
+  echo "ERROR: failed to create deseq report from STAR results"
+  exit 1
+fi
+
+if ! test -f ${srcdir}/tests/test_reports/analysis1.salmon.deseq.report.html
+then
+  echo "ERROR: failed to create deseq report from SALMON results"
+  exit 1
+fi

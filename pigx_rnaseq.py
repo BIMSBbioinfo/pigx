@@ -75,6 +75,16 @@ targets = {
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     }, 
+    'deseq_report_star': {
+        'description': "Produce one HTML report for each analysis based on STAR results.",
+        'files':
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) 
+    },
+    'deseq_report_salmon': {
+        'description': "Produce one HTML report for each analysis based on SALMON results.",
+        'files':
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) 
+    },
     'star_map' : {
         'description': "Produce a STAR mapping results in BAM file format.",
         'files': 
