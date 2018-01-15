@@ -10,7 +10,6 @@ pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/generate_report.R			\
   scripts/fetch_procedures.R		\
-  scripts/fetch_refGene.R			\
   scripts/func_defs.py				\
   scripts/ideoDMC.R					\
   scripts/report_functions.R		\
