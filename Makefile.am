@@ -34,6 +34,8 @@ dist_doc_DATA = 					\
 
 EXTRA_DIST =										\
   test/genome/myref_hg38_chr1_7291263_7302041.fasta	\
+  test/genome/refGene.hg19.bed.gz                       \
+  test/genome/cpgIslandExt.hg19.bed.gz                  \
   test/in/PE_1.fq.gz								\
   test/in/PE_2.fq.gz								\
   test/in/SE_techrep1.fq.gz							\
@@ -51,6 +53,8 @@ TESTS = \
   test.sh											\
   tests/test-check-samplesheet-header.sh			\
   tests/test-write-access-to-out.sh
+
+EXTRA_DIST += $(TESTS)
 
 clean-local:
 	-rm -rf .snakemake
