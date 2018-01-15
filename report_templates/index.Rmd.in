@@ -301,6 +301,12 @@ cat('After we have aquired the reference genes, we can determine different featu
 
 ```
 
+```{r AnnotateSegments.annotation, results='asis', eval=AnnotateSegments}
+cat('### Annotation\n')
+
+cat('Regionally (de-)methylated segments can now be compared with gene features.\n')
+```
+
 ```{r AnnotateSegments.fetchRefgene, eval=AnnotateSegments}
 source(paste0(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type = "refGene",
@@ -313,19 +319,13 @@ fetched.refgenes <- lookupBedFile(type = "refGene",
 ```{r AnnotateSegments.readRefGene, eval=AnnotateSegments}
 
 ## now we parse the gene features
-if( fetched.refgenes != '' )
-  {
+if( fetched.refgenes != '' ) {
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
-  } else  {
-  print("Reference gene set file `r paste0("refGene.", assembly, ".bed")`  not found. This section omitted.")
+  } else { 
+  print( " Reference gene file not found. Section omitted.")  
   }
 ```
 
-```{r AnnotateSegments.annotation, results='asis', eval=AnnotateSegments}
-cat('### Annotation\n')
-
-cat('Differentially methylated segments can now be compared with gene features.\n')
-```
 
 ```{r AnnotateSegments.loadSegments, eval=AnnotateSegments}
 

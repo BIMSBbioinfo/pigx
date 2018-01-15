@@ -587,5 +587,6 @@ rule final_report:
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
         os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
+    message: fmt("Compiling final report.")
     run:
         generateReport(input, output, params, log, "")
