@@ -80,6 +80,11 @@ targets = {
         'files': 
           expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
     },
+    'star_counts': {
+        'description': "Get count matrix from STAR mapping results.",
+        'files': 
+          [os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")]
+    },
     'fastqc': {
         'description': "post-mapping quality control by FASTQC.",
         'files': 

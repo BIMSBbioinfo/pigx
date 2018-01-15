@@ -94,6 +94,7 @@ AC_CONFIG_FILES([tests/test_salmon/test_salmon_index.sh], [chmod +x tests/test_s
 AC_CONFIG_FILES([tests/test_salmon/test_salmon_quant.sh], [chmod +x tests/test_salmon/test_salmon_quant.sh])
 AC_CONFIG_FILES([tests/test_salmon_counts/test.sh], [chmod +x tests/test_salmon_counts/test.sh])
 AC_CONFIG_FILES([tests/test_fastqc/test.sh], [chmod +x tests/test_fastqc/test.sh])
+AC_CONFIG_FILES([tests/test_star_counts/test.sh], [chmod +x tests/test_star_counts/test.sh])
 AC_CONFIG_FILES([pigx-rnaseq], [chmod +x pigx-rnaseq])
 
 AC_OUTPUT
