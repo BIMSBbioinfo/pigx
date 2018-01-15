@@ -1,18 +1,17 @@
 # ---------------------------------------------------------------------------- #
 #' ChIPQC
 #'
-#' @param annotation - list - processed annotation as given by Prepare_Annotation.R
-#' @param peaks      - narrowPeaks/broadPeaks in macs2 output
+#' @param config     - yaml formatted file used as snakemake config
 #' @param outfile    - location of the output file
-#' @param peakname   - Name of the peak file
+#' @param scriptdir  - location of R scripts
 #'
 #' @return saves RDS object with an annotated GRanges object
 ChIPQC = function(
-    bamfiles   = NULL,
-    peaks_path = NULL,
-    outfile    = NULL,
-    peakname   = NULL,
-    scriptdir  = NULL
+    config      = NULL,
+    outfile     = NULL,
+    scriptdir   = NULL,
+    path_mapped = NULL,
+    path_peaks  = NULL
 ){
     
     # --------------------------------------------------------------- #
@@ -29,10 +28,15 @@ ChIPQC = function(
     source(file.path(scriptdir, 'Functions_Helper.R'), local=TRUE)
     
     # --------------------------------------------------------------- #
+    sample_sheet = data.frame(
+        SampleID = names(config$peak_calling)
+    )
+    sample_sheet$bamReads = file.path(path_mapped)
+    
     bamReads <- grep(pattern = "mrg1.AB",x = aln, value = TRUE)
     bamControl <- grep(pattern = "no.AB",x = aln, value = TRUE)
     Tissue <- gsub("_.*","",basename(bamReads))
-    SampleID <- paste0(Tissue,seq(1,3))
+    
     Factor <- rep("mrg1",6)
     Replicate <- rep(seq(1,3),2)
     ControlID <- paste0(Tissue,"c",seq(1,3))
@@ -41,6 +45,10 @@ ChIPQC = function(
     
     sampleSheet <- data.frame(SampleID,Tissue,Factor,Replicate,bamReads,ControlID,bamControl,Peaks,PeakCaller)
     
+    
+    SampleID Tissue Factor Condition Treatment Replicate
+    
+    bamReads ControlID bamControl Peaks PeakCaller
     
     experiment = ChIPQC(sampleSheet,
                         consensus   = TRUE,
@@ -55,19 +63,11 @@ ChIPQC = function(
 
 # ---------------------------------------------------------------------------- #
 ChIPQC(
-    annotation  = snakemake@input[['annotation']],
-    peaks_path  = snakemake@input[['peaks']],
-    outfile     = snakemake@output[['outfile']],
-    peakname    = snakemake@params[['name']],
-    scriptdir   = snakemake@params[['scriptdir']]
+    config    = snakemake@input[['peaks']],
+    outfile   = snakemake@output[['outfile']],
+    scriptdir = snakemake@params[['scriptdir']]
 )
 
-
-annotation = '/home/vfranke/Tmp/pigxtest/Annotation/Processed_Annotation.rds'
-peaks      = '/home/vfranke/Tmp/pigxtest/Peaks/MACS2/Peaks1/Peaks1_qsort.bed'
-outfile    = '~/Tmp/file.rds'
-peakname   = 'peak1'
-scriptdir  = '/home/vfranke/Projects/AAkalin_PIX/Scripts'
 
 
 
