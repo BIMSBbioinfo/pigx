@@ -12,6 +12,10 @@ general:
     cores: 20
     treatment-groups:
       - ['0', '1']
+    annotation:
+      CpGfile:    "cpgIslandExt.hg19.bed.gz"
+      refGenfile: "refGene.hg19.bed.gz"
+      webfetch:   no
 
 execution:
   submit-to-cluster: no
