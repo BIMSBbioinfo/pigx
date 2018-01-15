@@ -1,0 +1,18 @@
+#!/bin/sh
+
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_multiqc/g' > ${tmp_settings}
+
+#create links to already preprocessed sample data
+samplesheet=${srcdir}/tests/sample_sheet.csv
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target multiqc ${samplesheet}
+
+rm ${tmp_settings} 
+if ! test -f ${srcdir}/tests/test_multiqc/multiqc/multiqc_report.html
+then
+  echo "ERROR: failed to create multiQC report"
+  exit 1
+fi
+

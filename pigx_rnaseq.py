@@ -104,6 +104,11 @@ targets = {
         'description': "Get count matrix from SALMON quant.",
         'files': 
           [os.path.join(SALMON_DIR, "counts_from_SALMON.tsv")]
+    }, 
+    'multiqc': {
+        'description': "Get multiQC report based on STAR alignments and fastQC reports.", 
+        'files':
+          [os.path.join(MULTIQC_DIR, 'multiqc_report.html')]
     }
 }
 
