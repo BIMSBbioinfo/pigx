@@ -71,7 +71,7 @@ if(!DiffMeth) AnnotateDiffMeth <- FALSE
 # Final Report {-}
 
 
-PiGx BSseq is a data processing pipeline for data from bisulfite experiments. It automates the analysis of raw single-end or paired-end fastq reads. It includes quality control, trimming and alignment, while further providing post mapping analysis, as differential methylation detection, methylation segmentation and annotation of detected regions. 
+PiGx BSseq is a data-processing pipeline for bisulfite experiments; it automates the analysis of raw single-end or paired-end fastq reads, including quality control, trimming and alignment. The software also provides post-mapping analysis, such as differential-methylation detection, methylation segmentation, and annotation of such detected regions. 
 It was first developed by the Akalin group at MDC in Berlin in 2017.
 
 This report was generated with PiGx BSseq version @VERSION@.
@@ -218,7 +218,7 @@ knitr::kable(inputParams)
 ```{r SegmentationDescription, results='asis', eval=Segmentation} 
 cat('### Segmentation of methylation profile\n')
 
-cat('The segmentation of the methylation profile is done using the methSeg() function, where change-points in the genome wide  signal are recorded and the genome is partitioned into regions between consecutive change points. This approach is typically used in the context of copy number variation detection [@klambauer2012] but can be applied to methylome segmentation as well [@Wreczycka2017]. Here the identified segments are further clustered based on their average methylation signal using a mixture modeling approach allowing the detection of distinct regions inside the genome  [@Wreczycka2017].\n')
+cat('Segmentation of the methylation profile is done using the methSeg() function, where change-points in the genome wide  signal are recorded and the genome is partitioned into regions between consecutive change points. This approach is typically used in the context of copy number variation detection [@klambauer2012] but can be applied to methylome segmentation as well [@Wreczycka2017]. Here the identified segments are further clustered based on their average methylation signal using a mixture modeling approach allowing the detection of distinct regions inside the genome  [@Wreczycka2017].\n')
 ```
 
 ```{r SegmentationDiagnostics, results='asis',eval=Segmentation}
@@ -303,7 +303,7 @@ cat('After we have aquired the reference genes, we can determine different featu
 
 ```{r AnnotateSegments.fetchRefgene, eval=AnnotateSegments}
 source(paste0(scripts_dir, "fetch_procedures.R"))
-refgenes.file <- lookupBedFile(type = "refGene",
+fetched.refgenes <- lookupBedFile(type = "refGene",
                                filename = paste0("refGene.", assembly, ".bed"),
                                dir = genome_dir,
                                assembly = assembly,
@@ -313,13 +313,18 @@ refgenes.file <- lookupBedFile(type = "refGene",
 ```{r AnnotateSegments.readRefGene, eval=AnnotateSegments}
 
 ## now we parse the gene features
-refgenes.grl <- readTranscriptFeatures(refgenes.file)
+if( fetched.refgenes != '' )
+  {
+  refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
+  } else  {
+  print("Reference gene set file `r paste0("refGene.", assembly, ".bed")`  not found. This section omitted.")
+  }
 ```
 
 ```{r AnnotateSegments.annotation, results='asis', eval=AnnotateSegments}
 cat('### Annotation\n')
 
-cat('Now we can load the segments to detect to overlap percentage with gene features.\n')
+cat('Differentially methylated segments can now be compared with gene features.\n')
 ```
 
 ```{r AnnotateSegments.loadSegments, eval=AnnotateSegments}
@@ -333,10 +338,12 @@ segments.grl <- GenomicRanges::split(x = segments.gr,f = segments.gr$name)
 
 # and detect overlaps 
 
-annot.gene.list <- annotateWithGeneParts(target = segments.grl,
-                                         feature = refgenes.grl,
-                                         intersect.chr = TRUE)
-
+if( fetched.refgenes != '' )
+  { 
+  annot.gene.list <- annotateWithGeneParts(target = segments.grl,
+                                           feature = refgenes.grl,
+                                           intersect.chr = TRUE)
+  }
 ```
 
 ```{r AnnotateSegments.text2, results='asis', eval=AnnotateSegments}
@@ -346,19 +353,25 @@ cat('Finally we plot the average methylation per segment group and the overlap w
 ```{r AnnotateSegments.plot,  eval=AnnotateSegments}
 ## percentage of target features overlapping with annotation:
 ## (with promoter > exon > intron precedence)
-annot.gene.mat <- as.matrix(sapply(annot.gene.list, function(x) x@precedence))
+if( fetched.refgenes != '' )
+  { 
+  annot.gene.mat <- as.matrix(sapply(annot.gene.list, function(x) x@precedence))
+  }
 
   par(mfrow=c(1,2))
 boxplot(sapply(split(x = segments.gr,f = segments.gr$name),FUN = function(x) x$score),
         ylab = "Methylation (%)",
         xlab = "Segment")
 
-# plot the target overlap for each segemnt type
-# barplot(annot.gene.mat,legend.text = TRUE)
-barplot(annot.gene.mat,
-        ylab = "Overlap (%)",
-        xlab = "Segment")
-legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,length.out = ncol(annot.gene.mat))))
+if( fetched.refgenes != '' )
+  { 
+  # plot the target overlap for each segemnt type
+  # barplot(annot.gene.mat,legend.text = TRUE)
+  barplot(annot.gene.mat,
+          ylab = "Overlap (%)",
+          xlab = "Segment")
+  legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,length.out = ncol(annot.gene.mat))))
+  }
 
 ```
 
@@ -568,11 +581,6 @@ for CpG islands and shores.\n')
 
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
 source(paste0(params$scripts_dir, "fetch_procedures.R"))
-fetched.refgenes <- lookupBedFile(type="refGene",
-                                  filename = paste0("refGene.", assembly, ".bed"),
-                                  dir = params$genome_dir,
-                                  assembly = assembly,
-                                  webfetch = webfetch )
 
 cpgi.file <- paste0("cpgIslandExt.", assembly, ".bed")
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
@@ -628,7 +636,7 @@ cat('Show overlap percentage of differentially methylated bases with gene featur
 
 ```{r AnnotateDiffMeth.annotation,  eval=AnnotateDiffMeth}
 
-if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
+if( (fetched.refgenes != '') & length(GRanges.diffmeth)!=0){
   ## now we parse the gene features
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
 
@@ -641,7 +649,7 @@ if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
                        main="Differential methylation annotation")
 }
 
-if(!is.na(fetched.cpgi) & length(GRanges.diffmeth)!=0){
+if( (fetched.cpgi != '') & length(GRanges.diffmeth)!=0){
   
   # read the shores and flanking regions and name the flanks as shores 
   # and CpG islands as CpGi
@@ -670,25 +678,25 @@ cat('Show the distance of differentially methylated cytosines to TSSs of the nea
 
 ```{r AnnotateDiffMeth.plot, eval=AnnotateDiffMeth}
 
-if(!is.na(fetched.refgenes) & length(GRanges.diffmeth)!=0){
+if( (fetched.refgenes != '') & length(GRanges.diffmeth)!=0)
+  {
+  # Get distance to nearest TSS and gene id from AnnotationByGeneParts
+  # target.row is the row number in diffmeth.gr
+  assoTSS = getAssociationWithTSS(annot.gene)
 
-# Get distance to nearest TSS and gene id from AnnotationByGeneParts
-# target.row is the row number in diffmeth.gr
-assoTSS = getAssociationWithTSS(annot.gene)
-
-datatable(as.data.frame(assoTSS),
-          extensions = 'Buttons',
-          options = list(
-            dom = 'Bfrtip',
-            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-            scrollX = TRUE),
-          caption = "Distance to nearest TSS",
-          rownames = FALSE)
+  datatable(as.data.frame(assoTSS),
+            extensions = 'Buttons',
+            options = list(
+              dom = 'Bfrtip',
+              buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+              scrollX = TRUE),
+            caption = "Distance to nearest TSS",
+            rownames = FALSE)
 
 
-hist(assoTSS[,2], main="Distance to the nearest TSS", xlab="bp", ylab="Frequency", col="cornflowerblue")
+  hist(assoTSS[,2], main="Distance to the nearest TSS", xlab="bp", ylab="Frequency", col="cornflowerblue")
 
-}
+  }
 
 
 ```
