@@ -137,6 +137,8 @@ The main functions of FastQC are:
        ("snakemake" ,snakemake)
        ("macs" ,macs)
        ("perl" ,perl)
+       ("ghc-pandoc" ,ghc-pandoc)
+       ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("fastqc" ,fastqc)
        ("bowtie" ,bowtie)
        ("idr" ,idr)
