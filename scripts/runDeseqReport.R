@@ -86,7 +86,8 @@ runReport <- function(reportFile,
                   covariates = covariates,
                   geneSetsFolder = geneSetsFolder, 
                   prefix = prefix,
-                  workdir = workdir, 
+                  workdir = workdir,
+                  logo = logo,
                   organism = organism),
     quiet = quiet
   )
@@ -258,12 +259,20 @@ if(!("selfContained" %in% argsDF$V1)) {
   selfContained <- argsL$selfContained
 }
 
+if(!("logo" %in% argsDF$V1)) {
+  warning("No logo specified.\n")
+} else {
+  logo <- argsL$logo
+}
+
 reportFile = argsL$reportFile
 countDataFile = argsL$countDataFile
 colDataFile = argsL$colDataFile
 gtfFile = argsL$gtfFile
 caseSampleGroups = argsL$caseSampleGroups
 controlSampleGroups = argsL$controlSampleGroups
+
+
 
 runReport(reportFile = reportFile, 
           countDataFile = countDataFile, 
@@ -276,5 +285,5 @@ runReport(reportFile = reportFile,
           workdir = workdir, 
           organism = organism,
           prefix = prefix,
-          logo = args$logo,
+          logo = logo,
           selfContained = selfContained)

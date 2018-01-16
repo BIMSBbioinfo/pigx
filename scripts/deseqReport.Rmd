@@ -16,6 +16,32 @@ params:
   logo: ''
 ---
 
+<style>
+#logo
+{
+    position: relative;
+}
+#logo img {
+    /*position: relative;*/
+    top: 25px;
+    /*right: 0px;*/
+    left: 50px;
+    position: fixed;
+    width: 125px;
+    }
+body
+{
+    position: absolute;
+    top: 150px;
+}
+</style>
+
+<div id="logo" align="top">
+```{r echo=FALSE}
+knitr::include_graphics(params$logo)
+```
+</div>
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
