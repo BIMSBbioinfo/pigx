@@ -148,7 +148,6 @@ FIND_READ_CUTOFF = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}
 # UMI matrix
 UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
-
 # ----------------------------------------------------------------------------- #
 # Bam To BigWig
 BIGWIG = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
@@ -519,8 +518,8 @@ rule get_umi_matrix:
         'O=' + output.outfile,
         'I=' + str(input.infile),
         'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
-        'MIN_NUM_GENES_PER_CELL=' + str(params.genes_per_cell),
-        'NUM_CORE_BARCODES=' + str(reads_cutoff)
+#         'MIN_NUM_GENES_PER_CELL=' + str(params.genes_per_cell),
+        'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff)
         ])
         shell(command)
 
