@@ -122,13 +122,13 @@ def bail(msg):
 def get_filenames(mylist):
     return list(map(lambda x: splitext_fqgz(x)[0], mylist))
 
-def fq_suffix(filename):
-    return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
-
-def is_zipped(filename):
-    return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
-
 def splitext_fqgz(string):
+    def fq_suffix(filename):
+        return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
+
+    def is_zipped(filename):
+        return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
+
     if is_zipped(string):
         string, zipext = os.path.splitext(string)
     else:
