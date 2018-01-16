@@ -12,7 +12,7 @@ settings=${srcdir}/tests/settings.yaml
 tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
 cat ${settings} | sed 's/output-dir:.*/output-dir: test_salmon_counts/g' > ${tmp_settings}
 
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target salmon_counts ${srcdir}/tests/sample_sheet.csv 
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target salmon_counts ${srcdir}/tests/sample_sheet.csv
 
 rm ${tmp_settings} ${tmp_samplesheet}
 

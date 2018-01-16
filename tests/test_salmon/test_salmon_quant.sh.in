@@ -14,7 +14,7 @@ samplesheet=${srcdir}/tests/sample_sheet.csv
 tmp_samplesheet=${srcdir}/tests/sample_sheet.test_salmon.csv
 head -n 2 ${samplesheet} > ${tmp_samplesheet}
 
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target salmon_quant ${tmp_samplesheet} 
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target salmon_quant ${tmp_samplesheet}
 
 rm ${tmp_settings} ${tmp_samplesheet}
 

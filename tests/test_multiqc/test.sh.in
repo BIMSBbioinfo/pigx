@@ -15,7 +15,7 @@ cat ${settings} | sed 's/output-dir:.*/output-dir: test_multiqc/g' > ${tmp_setti
 #create links to already preprocessed sample data
 samplesheet=${srcdir}/tests/sample_sheet.csv
 
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target multiqc ${samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target multiqc ${samplesheet}
 
 rm ${tmp_settings} 
 

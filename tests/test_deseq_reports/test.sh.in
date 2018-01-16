@@ -16,8 +16,8 @@ cat ${settings} | sed 's/output-dir:.*/output-dir: test_deseq_reports/g' > ${tmp
 #create links to already preprocessed sample data
 samplesheet=${srcdir}/tests/sample_sheet.csv
 
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_star ${samplesheet}
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon ${samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_star ${samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon ${samplesheet}
 
 rm ${tmp_settings} 
 

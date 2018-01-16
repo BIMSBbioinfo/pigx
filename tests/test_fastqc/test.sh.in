@@ -17,7 +17,7 @@ samplesheet=${srcdir}/tests/sample_sheet.csv
 tmp_samplesheet=`mktemp "${srcdir}/tests/sample_sheet.tmp.XXXX.csv"`
 head -n 2 ${samplesheet} > ${tmp_samplesheet}
 
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target fastqc ${tmp_samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target fastqc ${tmp_samplesheet}
 
 rm ${tmp_settings} ${tmp_samplesheet}
 
