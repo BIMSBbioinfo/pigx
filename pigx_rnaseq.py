@@ -13,6 +13,11 @@ READS_DIR = config['locations']['reads-dir']
 OUTPUT_DIR = config['locations']['output-dir']
 ORGANISM = config['organism']
 
+if os.getenv("PIGX_UNINSTALLED"):
+    LOGO = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png")
+else:
+    LOGO = os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
+
 SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
@@ -281,7 +286,7 @@ rule report1:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
-    logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
+    logo = LOGO
   log: os.path.join(LOG_DIR, "report.star.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
