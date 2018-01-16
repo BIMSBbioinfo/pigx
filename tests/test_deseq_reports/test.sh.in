@@ -10,7 +10,7 @@ cp ${srcdir}/tests/sample_data/preprocessed/colData.tsv ${testfolder}
 
 # prepare temporary sample sheet and settings files
 settings=${srcdir}/tests/settings.yaml
-tmp_settings=`mktemp "${testfolder}/settings.tmp.XXXX.yaml"`
+tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
 cat ${settings} | sed 's/output-dir:.*/output-dir: test_deseq_reports/g' > ${tmp_settings}
 
 #create links to already preprocessed sample data
