@@ -1,4 +1,10 @@
-Extend_Regions = function(inpath, outpath, extend=NULL, scale_index=FALSE, scale_factor=1e6){
+Extend_Regions = function(
+    inpath, 
+    outpath, 
+    extend       = NULL, 
+    scale_index  = FALSE, 
+    scale_factor = 1e6
+){
 
     suppressPackageStartupMessages(library(GenomicRanges))
     suppressPackageStartupMessages(library(data.table))
@@ -29,7 +35,7 @@ Extend_Regions = function(inpath, outpath, extend=NULL, scale_index=FALSE, scale
 }
 
 Extend_Regions(
-  inpath  = snakemake@input[['file']],
-  outpath = snakemake@output[['file']],
-  extend  = snakemake@params[['extend']],
+  inpath        = snakemake@input[['file']],
+  outpath       = snakemake@output[['outfile']],
+  extend        = snakemake@params[['extend']],
   scale_index   = snakemake@params[['scale']])

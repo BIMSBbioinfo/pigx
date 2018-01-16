@@ -1,52 +1,32 @@
+# ---------------------------------------------------------------------------- #
+def get_feature_combination_infiles(name):
+    infiles = []
+    for file in config['feature_combination'][str(name)]:
+        # This check is temporary. Once Check_Config is updated, can be removed.
+        if(not file in set(PEAK_NAME_LIST.keys())):
+            quit()
+    
+        infiles = infiles + [PEAK_NAME_LIST[file]]
+    
+    return(infiles)
+
 # ----------------------------------------------------------------------------- #
 rule feature_combination:
     input:
-        features   = peak_files,
-        annotation = rules.prepare_annotation.output.outfile,
-        bw         = BW
+        unpack(get_feature_combination_infiles)
     output:
-        outfile = os.path.join(PATH_FEATURE,'Feature_Combination.tsv')
+        outfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds')
     params:
         threads     = 1,
         mem         = '8G',
-        annotation  = ANNOTATION,
-        outpath     = PATH_FEATURE,
         scriptdir   = SCRIPT_PATH,
-        tss_up      = 2000,
-        R           = SOFTWARE['R']
     log:
-        log = os.path.join(PATH_LOG, 'feature_combination.log')
-    message:"""
+        log = os.path.join(PATH_LOG, '{name}_feature_combination.log')
+    message:
+        """
             Running: feature_combination:
-                output: {output.outfile}
+                features:   {input}
+                output:     {output.outfile}
             """
     script:
         os.path.join(SCRIPT_PATH, 'Feature_Combination.R')
-
-        # command = ' '.join([
-        #     params.R,
-        #     os.path.join(SCRIPT_PATH, 'Feature_Combination.R'),
-        #     '--features',   list_to_string(input.features),
-        #     '--annotation', list_to_string(params.annotation.values()),
-        #     '--bw',         list_to_string(input.bw),
-        #     '--scriptdir',  params.scriptdir,
-        #     '--outpath',    output.outfile,
-        #     '--tss.up',     str(params.tss_up)
-        # ])
-        # shell(command)
-
-
-# ---------------------------------------------------------------------------- #
-# given a list of lists, returns a flattened version
-def flatten(l):
-    out = []
-    for item in l:
-        if isinstance(item, (list, tuple)):
-            out.extend(flatten(item))
-        else:
-            out.append(item)
-    return out
-
-def list_to_string(l):
-    s = ' '.join(flatten(l))
-    return s

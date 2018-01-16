@@ -97,6 +97,7 @@ SOFTWARE   = SOFTWARE_CONFIG['software']
 GENOME       = config['genome']['name']
 GENOME_FASTA = config['genome']['fasta']
 NAMES        = config['samples'].keys()
+PEAK_NAMES   = config['peak_calling'].keys()
 PATH_FASTQ   = config['fastq']
 PARAMS       = config['params']
 ANNOTATION   = config['annotation']
@@ -109,18 +110,17 @@ PATH_INDEX      = 'Bowtie2_Index'
 PATH_LOG        = 'Log'
 PATH_PEAK       = 'Peaks/MACS2'
 PATH_BW         = 'BigWig'
-PATH_IDR        = 'IDR'
+PATH_IDR        = 'Peaks/IDR'
 PATH_HUB        = 'UCSC_HUB'
 PATH_ANALYSIS   = "Analysis"
 PATH_ANNOTATION = 'Annotation'
 
-# Analisys path
-PATH_FEATURE    = os.path.join(PATH_ANALYSIS, 'Feature_Combination')
 
 # Directory structure for saved R objects
 PATH_RDS            = os.path.join(PATH_ANALYSIS, 'RDS')
 PATH_RDS_ANNOTATION = os.path.join(PATH_RDS, 'Annotation')
-PATH_RDS_ANALYSIS   = os.path.join(PATH_RDS, 'Analysis')
+PATH_RDS_FEATURE    = os.path.join(PATH_RDS, 'Feature_Combination')
+PATH_RDS_TEMP       = os.path.join(PATH_RDS, 'Temp')
 
 
 # Hub variables which describe the types of files that can be used in the hub
@@ -130,6 +130,8 @@ TRACK_PATHS = {
     'idr' : {'path': PATH_IDR, 'suffix': 'IDR.narrowPeak'}
 }
 
+# Collects the locations of all peaks
+PEAK_NAME_LIST = {}
 
 #
 # ---------------------------------------------------------------------------- #
@@ -170,24 +172,30 @@ COMMAND = COMMAND + INDEX + BOWTIE2 + CHRLEN + BW + LINKS + FASTQC
 
 # ----------------------------------------------------------------------------- #
 if 'peak_calling' in set(config.keys()):
-    MACS  = []
-    QSORT = []
-    suffix = 'narrowPeak'
-    for name in config['peak_calling'].keys():
-        suffix = get_macs2_suffix(name, config)
+    if len(config['peak_calling'].keys()) > 0:
+        MACS  = []
+        QSORT = []
+        suffix = 'narrowPeak'
+        for name in PEAK_NAMES:
+            suffix = get_macs2_suffix(name, config)
 
-        MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks." + suffix)]
-        QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort." + suffix)]
-
-    include: os.path.join(RULES_PATH, 'Peak_Calling.py')
-    COMMAND = COMMAND + MACS + QSORT
+            MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks." + suffix)]
+            QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort.bed" )]
+            PEAK_NAME_LIST[name] = QSORT[-1]
+        
+        include: os.path.join(RULES_PATH, 'Peak_Calling.py')
+        COMMAND = COMMAND + MACS + QSORT
 
 # # ----------------------------------------------------------------------------- #
 if 'idr' in set(config.keys()):
-    IDR     = expand(os.path.join(PATH_IDR,    "{name}", "{name}.narrowPeak"),     name=config['idr'].keys())
+    if len(config['idr'].keys()) > 0:
+        IDR = []
+        for name in config['idr'].keys():
+            IDR = IDR + [os.path.join(PATH_IDR, name, name + ".bed")]
+            PEAK_NAME_LIST[name] = IDR[-1]
 
-    include: os.path.join(RULES_PATH, 'IDR.py')
-    COMMAND = COMMAND + IDR
+        include: os.path.join(RULES_PATH, 'IDR.py')
+        COMMAND = COMMAND + IDR
 
 # # ----------------------------------------------------------------------------- #
 HUB_NAME = None
@@ -206,35 +214,30 @@ if gtf_index:
     LINK_ANNOTATION    = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
     PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
 
+    ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds'), name=PEAK_NAMES)
+    
+#     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=PEAK_NAMES)    
+
+    include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
     include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
-    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION
+    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS 
 
 # ---------------------------------------------------------------------------- #
-if 'feature_combination' in set(config.keys()) and gtf_index:
-    peak_files = []
-    if 'idr' in config['feature_combination'].keys():
-        peak_files = peak_files + [os.path.join(PATH_IDR,  x, x + '.narrowPeak') for x in config['feature_combination']['idr']]
+if 'feature_combination' in set(config.keys()):
+    FEATURE_NAMES = config['feature_combination'].keys()
+    if len(FEATURE_NAMES) > 0:
 
-    if 'peaks' in config['feature_combination'].keys():
-        peak_files = peak_files + [os.path.join(PATH_PEAK, x, x + '_peaks.narrowPeak') for x in config['feature_combination']['peaks']]
-    FEATURE = [os.path.join(PATH_FEATURE,'Feature_Combination.tsv')]
-
+        FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'), 
+        name = FEATURE_NAMES)
+    
     include: os.path.join(RULES_PATH, 'Feature_Combination.py')
     COMMAND = COMMAND + FEATURE
-#
-#
-# # ----------------------------------------------------------------------------- #
-# if 'gtf' in set(config['annotation'].keys()):
-#     ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Annotate_Peaks.rds'), name=NAMES)
-#
-#     EXTRACT_SIGNAL_PEAKS = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Extract_Signal_Peaks.rds'), name=NAMES)
-#
-#     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_ANALYSIS,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
 
+# ----------------------------------------------------------------------------- #
+# extracts ChIP/Cont signal profiles around the peaks
+# EXTRACT_SIGNAL_PEAKS = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Peaks.rds'), name=PEAK_NAMES)
+# COMMAND = COMMAND + EXTRACT_SIGNAL_PEAKS
 
-
-    # include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
-    # COMMAND = COMMAND + PREPARE_ANNOTATION + ANNOTATE_PEAKS + EXTRACT_SIGNAL_PEAKS + EXTRACT_SIGNAL_ANNOTATION
 
 # ----------------------------------------------------------------------------- #
 # if 'feature_combination' in set(config.keys()) and 'gtf' in set(config['annotation'].keys()

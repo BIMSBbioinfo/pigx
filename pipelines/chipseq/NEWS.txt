@@ -1,6 +1,10 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+181201
+[*]. Refactored the code so that the output of pipelines is always in bed format
+[*]. Annotate peaks with given genomic annotation
+
 171124
 [*]. Refactored code - rules separated into multiple files
 [*]. sorted out the bigWig/bigBed/UCSC tracks issue
@@ -57,6 +61,20 @@ Initial commit
 # --------------------------------------------------------------------- #
 # TODO
 ## Main
+[]. IDR - column index is hardcoded, should be enabled and tested for bed files
+[]. Check_Config:
+    - check that IDR and Peak names and Feature combination names do not overlap!
+    
+[]. Feature combination:
+    - construct default feature combination for all peaks
+    
+[]. Add rule for FeatureCombination.rds -> txt
+
+
+[]. feature_combination message with multiple input files
+    
+[]. Check for spaces in genome fasta headers
+[]. Check whether the fasta sequence names are the same as gtf sequence names
 []. Feature combination singnal extraction 200
 []. QC for Peaks - ask alex for Peak QC rule
 []. Report with figures

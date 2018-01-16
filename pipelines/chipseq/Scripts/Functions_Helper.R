@@ -83,16 +83,24 @@ ReadGTFAnnotation = function(
 # ---------------------------------------------------------------------------- #
 setGeneric("AnnotateRanges",
            function(region, annotation,
-                    ignore.strand=FALSE,
-                    type='precedence',
-                    null.fact='None',
-                    collapse.char=':',
-                    precedence=NULL,
-                    id.col=NULL)
+                    ignore.strand = FALSE,
+                    type          = 'precedence',
+                    null.fact     = 'None',
+                    collapse.char = ':',
+                    precedence    = NULL,
+                    id.col        = NULL)
                standardGeneric("AnnotateRanges") )
 
 setMethod("AnnotateRanges",signature("GRanges","GRangesList"),
-          function(region, annotation, ignore.strand=FALSE, type = 'precedence', null.fact = 'None',collapse.char=':'){
+          function(
+              region, 
+              annotation, 
+              ignore.strand = FALSE, 
+              type          = 'precedence', 
+              null.fact     = 'None',
+              collapse.char = ':'
+            
+            ){
 
               if(! class(region) == 'GRanges')
                   stop('Ranges to be annotated need to be GRanges')
