@@ -1,6 +1,11 @@
 #!/bin/sh
 
-testfolder=${srcdir}/tests/test_deseq_reports
+set -e
+set -u
+
+root=$(mktemp -d "/tmp/pigx.XXXX")
+testfolder=${root}/tests/test_deseq_reports
+mkdir -p ${testfolder}
 
 # copy necessary input files to the test folder
 # we copy them to avoid re-creating these files when testing the pipeline 
@@ -8,10 +13,18 @@ cp -r ${srcdir}/tests/sample_data/preprocessed/preprocessed_data ${testfolder}
 cp -r ${srcdir}/tests/sample_data/preprocessed/salmon_output ${testfolder}
 cp ${srcdir}/tests/sample_data/preprocessed/colData.tsv ${testfolder}
 
+# make these copies writable
+chmod +w -R ${testfolder}
+
 # prepare temporary sample sheet and settings files
 settings=${srcdir}/tests/settings.yaml
-tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
-cat ${settings} | sed 's/output-dir:.*/output-dir: test_deseq_reports/g' > ${tmp_settings}
+tmp_settings="${testfolder}/settings.yaml"
+sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
+    -e "s,genome-fasta: ,genome-fasta: ${srcdir}/tests/,g" \
+    -e "s,cdna-fasta: ,cdna-fasta: ${srcdir}/tests/,g" \
+    -e "s,gtf-file: ,gtf-file: ${srcdir}/tests/,g" \
+    -e "s,output-dir:.*,output-dir: ${testfolder},g" \
+    ${settings} > ${tmp_settings}
 
 #create links to already preprocessed sample data
 samplesheet=${srcdir}/tests/sample_sheet.csv
@@ -19,20 +32,20 @@ samplesheet=${srcdir}/tests/sample_sheet.csv
 ${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_star ${samplesheet}
 ${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon ${samplesheet}
 
-rm ${tmp_settings} 
+rm ${tmp_settings}
 
 # removed copied input files
 rm -rf ${testfolder}/preprocessed_data
 rm -rf ${testfolder}/salmon_output
 rm ${testfolder}/colData.tsv
 
-if ! test -f ${srcdir}/tests/test_deseq_reports/report/analysis1.star.deseq.report.html
+if ! test -f ${testfolder}/report/analysis1.star.deseq.report.html
 then
   echo "ERROR: failed to create deseq report from STAR results"
   exit 1
 fi
 
-if ! test -f ${srcdir}/tests/test_deseq_reports/report/analysis1.salmon.deseq.report.html
+if ! test -f ${testfolder}/report/analysis1.salmon.deseq.report.html
 then
   echo "ERROR: failed to create deseq report from SALMON results"
   exit 1
