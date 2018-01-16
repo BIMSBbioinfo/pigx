@@ -13,6 +13,4 @@ DEanalyses:
     #if multiple sample names is provided, they must be separated by comma
     case_sample_groups: "HBR"
     control_sample_groups: "UHR"
-  analysis2:
-    case_sample_groups: "UHR"
-    control_sample_groups: "HBR"
+    covariates: ''

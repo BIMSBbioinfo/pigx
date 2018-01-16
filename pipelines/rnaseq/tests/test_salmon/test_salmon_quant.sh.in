@@ -1,0 +1,29 @@
+#!/bin/sh
+
+testfolder=${srcdir}/tests/test_salmon
+
+# copy necessary input files to the test folder
+# we copy them to avoid re-creating these files when testing the pipeline
+cp -r ${srcdir}/tests/sample_data/preprocessed/trimmed_reads ${testfolder}
+
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=${srcdir}/tests/settings.test_salmon.yaml
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_salmon/g' > ${tmp_settings}
+
+samplesheet=${srcdir}/tests/sample_sheet.csv
+tmp_samplesheet=${srcdir}/tests/sample_sheet.test_salmon.csv
+head -n 2 ${samplesheet} > ${tmp_samplesheet}
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target salmon_quant ${tmp_samplesheet} 
+
+rm ${tmp_settings} ${tmp_samplesheet}
+
+rm -rf ${testfolder}/trimmed_reads
+
+if ! test -f ${srcdir}/tests/test_salmon/salmon_output/HBR_Rep1/quant.sf
+then
+  echo "ERROR: failed the SALMON quantification test"
+  exit 1
+fi
+ 
+

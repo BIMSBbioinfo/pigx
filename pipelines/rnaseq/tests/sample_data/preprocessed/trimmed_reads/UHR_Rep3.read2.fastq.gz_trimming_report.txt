@@ -1,0 +1,61 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /data/local/buyar/pigx/pigx_rnaseq/tests/sample_data/reads/UHR_Rep3.read2.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.4.3
+Cutadapt version: 1.15
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'AGATCGGAAGAGC' (Illumina TruSeq, Sanger iPCR; default (inconclusive auto-detection))
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Output file will be GZIP compressed
+
+
+This is cutadapt 1.15 with Python 3.5.4
+Command line parameters: -f fastq -e 0.1 -q 20 -O 1 -a AGATCGGAAGAGC /data/local/buyar/pigx/pigx_rnaseq/tests/sample_data/reads/UHR_Rep3.read2.fastq.gz
+Running on 1 core
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 0.04 s (37 us/read; 1.60 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:                     951
+Reads with adapters:                       319 (33.5%)
+Reads written (passing filters):           951 (100.0%)
+
+Total basepairs processed:        95,100 bp
+Quality-trimmed:                   1,824 bp (1.9%)
+Total written (filtered):         92,832 bp (97.6%)
+
+=== Adapter 1 ===
+
+Sequence: AGATCGGAAGAGC; Type: regular 3'; Length: 13; Trimmed: 319 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-13 bp: 1
+
+Bases preceding removed adapters:
+  A: 27.9%
+  C: 35.1%
+  G: 21.6%
+  T: 15.4%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	220	237.8	0	220
+2	74	59.4	0	74
+3	24	14.9	0	24
+4	1	3.7	0	1
+
+
+RUN STATISTICS FOR INPUT FILE: /data/local/buyar/pigx/pigx_rnaseq/tests/sample_data/reads/UHR_Rep3.read2.fastq.gz
+=============================================
+951 sequences processed in total
+
+Total number of sequences analysed for the sequence pair length validation: 951
+
+Number of sequence pairs removed because at least one read was shorter than the length cutoff (20 bp): 0 (0.00%)

@@ -69,6 +69,8 @@ AX_R_PACKAGE([crosstalk])
 AX_R_PACKAGE([gProfileR])
 AX_R_PACKAGE([rtracklayer])
 AX_R_PACKAGE([SummarizedExperiment])
+AX_R_PACKAGE([tximport])
+AX_R_PACKAGE([rjson])
   ])
 
 
@@ -87,6 +89,14 @@ AC_CONFIG_FILES([etc/settings.yaml
                  Makefile])
 AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 AC_CONFIG_FILES([tests/test_trim_galore/test.sh], [chmod +x tests/test_trim_galore/test.sh])
+AC_CONFIG_FILES([tests/test_star/test.sh], [chmod +x tests/test_star/test.sh])
+AC_CONFIG_FILES([tests/test_salmon/test_salmon_index.sh], [chmod +x tests/test_salmon/test_salmon_index.sh])
+AC_CONFIG_FILES([tests/test_salmon/test_salmon_quant.sh], [chmod +x tests/test_salmon/test_salmon_quant.sh])
+AC_CONFIG_FILES([tests/test_salmon_counts/test.sh], [chmod +x tests/test_salmon_counts/test.sh])
+AC_CONFIG_FILES([tests/test_fastqc/test.sh], [chmod +x tests/test_fastqc/test.sh])
+AC_CONFIG_FILES([tests/test_star_counts/test.sh], [chmod +x tests/test_star_counts/test.sh])
+AC_CONFIG_FILES([tests/test_multiqc/test.sh], [chmod +x tests/test_multiqc/test.sh])
+AC_CONFIG_FILES([tests/test_deseq_reports/test.sh], [chmod +x tests/test_deseq_reports/test.sh])
 AC_CONFIG_FILES([pigx-rnaseq], [chmod +x pigx-rnaseq])
 
 AC_OUTPUT

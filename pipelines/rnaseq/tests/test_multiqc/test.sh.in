@@ -1,0 +1,31 @@
+#!/bin/sh
+
+testfolder=${srcdir}/tests/test_multiqc
+
+# copy necessary input files to the test folder
+# we copy them to avoid re-creating these files when testing the pipeline
+cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads ${testfolder}
+cp -r ${srcdir}/tests/sample_data/preprocessed/fastqc ${testfolder}
+
+
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_multiqc/g' > ${tmp_settings}
+
+#create links to already preprocessed sample data
+samplesheet=${srcdir}/tests/sample_sheet.csv
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target multiqc ${samplesheet}
+
+rm ${tmp_settings} 
+
+#Remove copied input files
+rm -rf ${testfolder}/mapped_reads
+rm -rf ${testfolder}/fastqc
+
+if ! test -f ${srcdir}/tests/test_multiqc/multiqc/multiqc_report.html
+then
+  echo "ERROR: failed to create multiQC report"
+  exit 1
+fi
+

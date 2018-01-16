@@ -1,0 +1,13 @@
+{
+    "salmon_version": "0.9.0",
+    "index": "/data/local/buyar/pigx/pigx_rnaseq/tests/output/salmon_index",
+    "libType": "A",
+    "threads": "8",
+    "mates1": "/data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/HBR_Rep1_R1.fastq.gz",
+    "mates2": "/data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/HBR_Rep1_R2.fastq.gz",
+    "output": "/data/local/buyar/pigx/pigx_rnaseq/tests/output/salmon_output/HBR_Rep1",
+    "seqBias": [],
+    "gcBias": [],
+    "geneMap": "/data/local/buyar/pigx/pigx_rnaseq/tests/sample_data/sample.gtf",
+    "auxDir": "aux_info"
+}

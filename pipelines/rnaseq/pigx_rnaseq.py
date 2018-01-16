@@ -13,6 +13,11 @@ READS_DIR = config['locations']['reads-dir']
 OUTPUT_DIR = config['locations']['output-dir']
 ORGANISM = config['organism']
 
+if os.getenv("PIGX_UNINSTALLED"):
+    LOGO = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png")
+else:
+    LOGO = os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
+
 SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
@@ -68,13 +73,57 @@ targets = {
     },
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
-        'files': [
-          os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
+        'files': 
+          [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
           os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-          os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()),
-        ]
+          os.path.join(MULTIQC_DIR, 'multiqc_report.html')] + 
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+    }, 
+    'deseq_report_star': {
+        'description': "Produce one HTML report for each analysis based on STAR results.",
+        'files':
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) 
+    },
+    'deseq_report_salmon': {
+        'description': "Produce one HTML report for each analysis based on SALMON results.",
+        'files':
+          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) 
+    },
+    'star_map' : {
+        'description': "Produce a STAR mapping results in BAM file format.",
+        'files': 
+          expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
+    },
+    'star_counts': {
+        'description': "Get count matrix from STAR mapping results.",
+        'files': 
+          [os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")]
+    },
+    'fastqc': {
+        'description': "post-mapping quality control by FASTQC.",
+        'files': 
+          expand(os.path.join(FASTQC_DIR, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample = SAMPLES)
+    },
+    'salmon_index' : {
+        'description': "Create SALMON index file.",
+        'files':
+          [os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")]
+    },
+    'salmon_quant' : {
+        'description': "Calculate read counts per transcript using SALMON.",
+        'files':
+          expand(os.path.join(SALMON_DIR, "{sample}", "quant.sf"), sample = SAMPLES)
+    },
+    'salmon_counts': {
+        'description': "Get count matrix from SALMON quant.",
+        'files': 
+          [os.path.join(SALMON_DIR, "counts_from_SALMON.tsv")]
+    }, 
+    'multiqc': {
+        'description': "Get multiQC report based on STAR alignments and fastQC reports.", 
+        'files':
+          [os.path.join(MULTIQC_DIR, 'multiqc_report.html')]
     }
 }
 
@@ -84,10 +133,11 @@ selected_targets = config['execution']['target'] or ['final-report']
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
 from itertools import chain
-OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
+OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
+
+print(OUTPUT_FILES)
 
 
-
 rule all:
   input: OUTPUT_FILES
 
@@ -235,11 +285,13 @@ rule report1:
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
-    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates']
+    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    logo = LOGO
   log: os.path.join(LOG_DIR, "report.star.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
-  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
+  shell:
+    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
 
 rule report2:
   input:
@@ -251,8 +303,9 @@ rule report2:
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
-    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates']
+    covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
   log: os.path.join(LOG_DIR, "report.salmon.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html')
-  shell: "{RSCRIPT_EXEC} {params.reportR} --prefix='{wildcards.analysis}.salmon' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder=' ' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder=' ' >> {log} 2>&1"

@@ -1,0 +1,415 @@
+STAR version=STAR_2.5.1b
+STAR compilation time,server,dir=Fri Jan 22 14:36:39 EST 2016 florence.cshl.edu:/sonas-hs/gingeras/nlsas_norepl/user/dobin/STAR/STAR.sandbox/source
+##### DEFAULT parameters:
+versionSTAR                       20201
+versionGenome                     20101   20200   
+parametersFiles                   -   
+sysShell                          -
+runMode                           alignReads
+runThreadN                        1
+runDirPerm                        User_RWX
+runRNGseed                        777
+genomeDir                         ./GenomeDir/
+genomeLoad                        NoSharedMemory
+genomeFastaFiles                  -   
+genomeSAindexNbases               14
+genomeChrBinNbits                 18
+genomeSAsparseD                   1
+genomeSuffixLengthMax             18446744073709551615
+readFilesIn                       Read1   Read2   
+readFilesCommand                  -   
+readMatesLengthsIn                NotEqual
+readMapNumber                     18446744073709551615
+readNameSeparator                 /   
+inputBAMfile                      -
+bamRemoveDuplicatesType           -
+bamRemoveDuplicatesMate2basesN    0
+limitGenomeGenerateRAM            31000000000
+limitIObufferSize                 150000000
+limitOutSAMoneReadBytes           100000
+limitOutSJcollapsed               1000000
+limitOutSJoneRead                 1000
+limitBAMsortRAM                   0
+limitSjdbInsertNsj                1000000
+outTmpDir                         -
+outStd                            Log
+outReadsUnmapped                  None
+outQSconversionAdd                0
+outMultimapperOrder               Old_2.4
+outSAMtype                        SAM   
+outSAMmode                        Full
+outSAMstrandField                 None
+outSAMattributes                  Standard   
+outSAMunmapped                    None   
+outSAMorder                       Paired
+outSAMprimaryFlag                 OneBestScore
+outSAMreadID                      Standard
+outSAMmapqUnique                  255
+outSAMflagOR                      0
+outSAMflagAND                     65535
+outSAMattrRGline                  -   
+outSAMheaderHD                    -   
+outSAMheaderPG                    -   
+outSAMheaderCommentFile           -
+outBAMcompression                 1
+outBAMsortingThreadN              0
+outSAMfilter                      None   
+outSAMmultNmax                    18446744073709551615
+outSAMattrIHstart                 1
+outSJfilterReads                  All
+outSJfilterCountUniqueMin         3   1   1   1   
+outSJfilterCountTotalMin          3   1   1   1   
+outSJfilterOverhangMin            30   12   12   12   
+outSJfilterDistToOtherSJmin       10   0   5   10   
+outSJfilterIntronMaxVsReadN       50000   100000   200000   
+outWigType                        None   
+outWigStrand                      Stranded   
+outWigReferencesPrefix            -
+outWigNorm                        RPM   
+outFilterType                     Normal
+outFilterMultimapNmax             10
+outFilterMultimapScoreRange       1
+outFilterScoreMin                 0
+outFilterScoreMinOverLread        0.66
+outFilterMatchNmin                0
+outFilterMatchNminOverLread       0.66
+outFilterMismatchNmax             10
+outFilterMismatchNoverLmax        0.3
+outFilterMismatchNoverReadLmax    1
+outFilterIntronMotifs             None
+clip5pNbases                      0   
+clip3pNbases                      0   
+clip3pAfterAdapterNbases          0   
+clip3pAdapterSeq                  -   
+clip3pAdapterMMp                  0.1   
+winBinNbits                       16
+winAnchorDistNbins                9
+winFlankNbins                     4
+winAnchorMultimapNmax             50
+scoreGap                          0
+scoreGapNoncan                    -8
+scoreGapGCAG                      -4
+scoreGapATAC                      -8
+scoreStitchSJshift                1
+scoreGenomicLengthLog2scale       -0.25
+scoreDelBase                      -2
+scoreDelOpen                      -2
+scoreInsOpen                      -2
+scoreInsBase                      -2
+seedSearchLmax                    0
+seedSearchStartLmax               50
+seedSearchStartLmaxOverLread      1
+seedPerReadNmax                   1000
+seedPerWindowNmax                 50
+seedNoneLociPerWindow             10
+seedMultimapNmax                  10000
+alignIntronMin                    21
+alignIntronMax                    0
+alignMatesGapMax                  0
+alignTranscriptsPerReadNmax       10000
+alignSJoverhangMin                5
+alignSJDBoverhangMin              3
+alignSJstitchMismatchNmax         0   -1   0   0   
+alignSplicedMateMapLmin           0
+alignSplicedMateMapLminOverLmate    0.66
+alignWindowsPerReadNmax           10000
+alignTranscriptsPerWindowNmax     100
+alignEndsType                     Local
+alignSoftClipAtReferenceEnds      Yes
+chimSegmentMin                    0
+chimScoreMin                      0
+chimScoreDropMax                  20
+chimScoreSeparation               10
+chimScoreJunctionNonGTAG          -1
+chimJunctionOverhangMin           20
+chimOutType                       SeparateSAMold
+chimFilter                        banGenomicN   
+chimSegmentReadGapMax             0
+sjdbFileChrStartEnd               -   
+sjdbGTFfile                       -
+sjdbGTFchrPrefix                  -
+sjdbGTFfeatureExon                exon
+sjdbGTFtagExonParentTranscript    transcript_id
+sjdbGTFtagExonParentGene          gene_id
+sjdbOverhang                      100
+sjdbScore                         2
+sjdbInsertSave                    Basic
+quantMode                         -   
+quantTranscriptomeBAMcompression    1
+quantTranscriptomeBan             IndelSoftclipSingleend
+twopass1readsN                    18446744073709551615
+twopassMode                       None
+##### Command Line:
+/home/buyar/.conda/envs/pigx_rnaseq/bin/STAR --runThreadN 8 --genomeDir /data/local/buyar/pigx/pigx_rnaseq/tests/output/star_index --readFilesIn /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz --readFilesCommand "gunzip -c" --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2_ --quantMode TranscriptomeSAM GeneCounts
+##### Initial USER parameters from Command Line:
+outFileNamePrefix                 /data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2_
+###### All USER parameters from Command Line:
+runThreadN                    8     ~RE-DEFINED
+genomeDir                     /data/local/buyar/pigx/pigx_rnaseq/tests/output/star_index     ~RE-DEFINED
+readFilesIn                   /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz   /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz        ~RE-DEFINED
+readFilesCommand              "gunzip -c"        ~RE-DEFINED
+outSAMtype                    BAM   SortedByCoordinate        ~RE-DEFINED
+outFileNamePrefix             /data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2_     ~RE-DEFINED
+quantMode                     TranscriptomeSAM   GeneCounts        ~RE-DEFINED
+##### Finished reading parameters from all sources
+
+##### Final user re-defined parameters-----------------:
+runThreadN                        8
+genomeDir                         /data/local/buyar/pigx/pigx_rnaseq/tests/output/star_index
+readFilesIn                       /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz   /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz   
+readFilesCommand                  "gunzip -c"   
+outFileNamePrefix                 /data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2_
+outSAMtype                        BAM   SortedByCoordinate   
+quantMode                         TranscriptomeSAM   GeneCounts   
+
+-------------------------------
+##### Final effective command line:
+/home/buyar/.conda/envs/pigx_rnaseq/bin/STAR   --runThreadN 8   --genomeDir /data/local/buyar/pigx/pigx_rnaseq/tests/output/star_index   --readFilesIn /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz   /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz      --readFilesCommand "gunzip -c"      --outFileNamePrefix /data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2_   --outSAMtype BAM   SortedByCoordinate      --quantMode TranscriptomeSAM   GeneCounts   
+
+##### Final parameters after user input--------------------------------:
+versionSTAR                       20201
+versionGenome                     20101   20200   
+parametersFiles                   -   
+sysShell                          -
+runMode                           alignReads
+runThreadN                        8
+runDirPerm                        User_RWX
+runRNGseed                        777
+genomeDir                         /data/local/buyar/pigx/pigx_rnaseq/tests/output/star_index
+genomeLoad                        NoSharedMemory
+genomeFastaFiles                  -   
+genomeSAindexNbases               14
+genomeChrBinNbits                 18
+genomeSAsparseD                   1
+genomeSuffixLengthMax             18446744073709551615
+readFilesIn                       /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz   /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz   
+readFilesCommand                  "gunzip -c"   
+readMatesLengthsIn                NotEqual
+readMapNumber                     18446744073709551615
+readNameSeparator                 /   
+inputBAMfile                      -
+bamRemoveDuplicatesType           -
+bamRemoveDuplicatesMate2basesN    0
+limitGenomeGenerateRAM            31000000000
+limitIObufferSize                 150000000
+limitOutSAMoneReadBytes           100000
+limitOutSJcollapsed               1000000
+limitOutSJoneRead                 1000
+limitBAMsortRAM                   0
+limitSjdbInsertNsj                1000000
+outFileNamePrefix                 /data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2_
+outTmpDir                         -
+outStd                            Log
+outReadsUnmapped                  None
+outQSconversionAdd                0
+outMultimapperOrder               Old_2.4
+outSAMtype                        BAM   SortedByCoordinate   
+outSAMmode                        Full
+outSAMstrandField                 None
+outSAMattributes                  Standard   
+outSAMunmapped                    None   
+outSAMorder                       Paired
+outSAMprimaryFlag                 OneBestScore
+outSAMreadID                      Standard
+outSAMmapqUnique                  255
+outSAMflagOR                      0
+outSAMflagAND                     65535
+outSAMattrRGline                  -   
+outSAMheaderHD                    -   
+outSAMheaderPG                    -   
+outSAMheaderCommentFile           -
+outBAMcompression                 1
+outBAMsortingThreadN              0
+outSAMfilter                      None   
+outSAMmultNmax                    18446744073709551615
+outSAMattrIHstart                 1
+outSJfilterReads                  All
+outSJfilterCountUniqueMin         3   1   1   1   
+outSJfilterCountTotalMin          3   1   1   1   
+outSJfilterOverhangMin            30   12   12   12   
+outSJfilterDistToOtherSJmin       10   0   5   10   
+outSJfilterIntronMaxVsReadN       50000   100000   200000   
+outWigType                        None   
+outWigStrand                      Stranded   
+outWigReferencesPrefix            -
+outWigNorm                        RPM   
+outFilterType                     Normal
+outFilterMultimapNmax             10
+outFilterMultimapScoreRange       1
+outFilterScoreMin                 0
+outFilterScoreMinOverLread        0.66
+outFilterMatchNmin                0
+outFilterMatchNminOverLread       0.66
+outFilterMismatchNmax             10
+outFilterMismatchNoverLmax        0.3
+outFilterMismatchNoverReadLmax    1
+outFilterIntronMotifs             None
+clip5pNbases                      0   
+clip3pNbases                      0   
+clip3pAfterAdapterNbases          0   
+clip3pAdapterSeq                  -   
+clip3pAdapterMMp                  0.1   
+winBinNbits                       16
+winAnchorDistNbins                9
+winFlankNbins                     4
+winAnchorMultimapNmax             50
+scoreGap                          0
+scoreGapNoncan                    -8
+scoreGapGCAG                      -4
+scoreGapATAC                      -8
+scoreStitchSJshift                1
+scoreGenomicLengthLog2scale       -0.25
+scoreDelBase                      -2
+scoreDelOpen                      -2
+scoreInsOpen                      -2
+scoreInsBase                      -2
+seedSearchLmax                    0
+seedSearchStartLmax               50
+seedSearchStartLmaxOverLread      1
+seedPerReadNmax                   1000
+seedPerWindowNmax                 50
+seedNoneLociPerWindow             10
+seedMultimapNmax                  10000
+alignIntronMin                    21
+alignIntronMax                    0
+alignMatesGapMax                  0
+alignTranscriptsPerReadNmax       10000
+alignSJoverhangMin                5
+alignSJDBoverhangMin              3
+alignSJstitchMismatchNmax         0   -1   0   0   
+alignSplicedMateMapLmin           0
+alignSplicedMateMapLminOverLmate    0.66
+alignWindowsPerReadNmax           10000
+alignTranscriptsPerWindowNmax     100
+alignEndsType                     Local
+alignSoftClipAtReferenceEnds      Yes
+chimSegmentMin                    0
+chimScoreMin                      0
+chimScoreDropMax                  20
+chimScoreSeparation               10
+chimScoreJunctionNonGTAG          -1
+chimJunctionOverhangMin           20
+chimOutType                       SeparateSAMold
+chimFilter                        banGenomicN   
+chimSegmentReadGapMax             0
+sjdbFileChrStartEnd               -   
+sjdbGTFfile                       -
+sjdbGTFchrPrefix                  -
+sjdbGTFfeatureExon                exon
+sjdbGTFtagExonParentTranscript    transcript_id
+sjdbGTFtagExonParentGene          gene_id
+sjdbOverhang                      100
+sjdbScore                         2
+sjdbInsertSave                    Basic
+quantMode                         TranscriptomeSAM   GeneCounts   
+quantTranscriptomeBAMcompression    1
+quantTranscriptomeBan             IndelSoftclipSingleend
+twopass1readsN                    18446744073709551615
+twopassMode                       None
+----------------------------------------
+
+
+   Input read files for mate 1, from input string /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz
+-rw-r--r-- 1 buyar buyar_usr 97598 Jan 12 14:52 /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz
+
+   readsCommandsFile:
+exec > "/data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2__STARtmp/tmp.fifo.read1"
+echo FILE 0
+gunzip -c      "/data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz"
+
+
+   Input read files for mate 2, from input string /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz
+-rw-r--r-- 1 buyar buyar_usr 100429 Jan 12 14:52 /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz
+
+   readsCommandsFile:
+exec > "/data/local/buyar/pigx/pigx_rnaseq/tests/output/mapped_reads/UHR_Rep2__STARtmp/tmp.fifo.read2"
+echo FILE 0
+gunzip -c      "/data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz"
+
+WARNING: --limitBAMsortRAM=0, will use genome size as RAM limit for BAM sorting
+Finished loading and checking parameters
+Reading genome generation parameters:
+versionGenome                 20201        ~RE-DEFINED
+genomeFastaFiles              /data/local/buyar/pigx/pigx_rnaseq/tests/sample_data/sample.fasta        ~RE-DEFINED
+genomeSAindexNbases           14     ~RE-DEFINED
+genomeChrBinNbits             18     ~RE-DEFINED
+genomeSAsparseD               1     ~RE-DEFINED
+sjdbOverhang                  100     ~RE-DEFINED
+sjdbFileChrStartEnd           -        ~RE-DEFINED
+sjdbGTFfile                   /data/local/buyar/pigx/pigx_rnaseq/tests/sample_data/sample.gtf     ~RE-DEFINED
+sjdbGTFchrPrefix              -     ~RE-DEFINED
+sjdbGTFfeatureExon            exon     ~RE-DEFINED
+sjdbGTFtagExonParentTranscripttranscript_id     ~RE-DEFINED
+sjdbGTFtagExonParentGene      gene_id     ~RE-DEFINED
+sjdbInsertSave                Basic     ~RE-DEFINED
+Genome version is compatible with current STAR version
+Number of real (reference) chromosmes= 1
+1	22	3000001	0
+--sjdbOverhang = 100 taken from the generated genome
+Started loading the genome: Fri Jan 12 14:52:45 2018
+
+checking Genome sizefile size: 3172662 bytes; state: good=1 eof=0 fail=0 bad=0
+checking SA sizefile size: 24971112 bytes; state: good=1 eof=0 fail=0 bad=0
+checking /SAindex sizefile size: 1565873619 bytes; state: good=1 eof=0 fail=0 bad=0
+Read from SAindex: genomeSAindexNbases=14  nSAi=357913940
+nGenome=3172662;  nSAbyte=24971112
+GstrandBit=32   SA number of indices=6053602
+Shared memory is not used for genomes. Allocated a private copy of the genome.
+Genome file size: 3172662 bytes; state: good=1 eof=0 fail=0 bad=0
+Loading Genome ... done! state: good=1 eof=0 fail=0 bad=0; loaded 3172662 bytes
+SA file size: 24971112 bytes; state: good=1 eof=0 fail=0 bad=0
+Loading SA ... done! state: good=1 eof=0 fail=0 bad=0; loaded 24971112 bytes
+Loading SAindex ... done: 1565873619 bytes
+Finished loading the genome: Fri Jan 12 14:52:47 2018
+
+Processing splice junctions database sjdbN=134,   sjdbOverhang=100 
+alignIntronMax=alignMatesGapMax=0, the max intron size will be approximately determined by (2^winBinNbits)*winAnchorDistNbins=589824
+Loaded transcript database, nTr=91
+Loaded exon database, nEx=591
+Created thread # 1
+Created thread # 2
+Created thread # 3
+Starting to map file # 0
+mate 1:   /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R1.fastq.gz
+mate 2:   /data/local/buyar/pigx/pigx_rnaseq/tests/output/trimmed_reads/UHR_Rep2_R2.fastq.gz
+Created thread # 4
+Created thread # 5
+Created thread # 6
+Created thread # 7
+Thread #1 end of input stream, nextChar=-1
+Completed: thread #2
+Completed: thread #3
+Completed: thread #6
+Completed: thread #5
+Completed: thread #0
+Completed: thread #4
+Completed: thread #7
+BAM sorting: 2444 mapped reads
+BAM sorting bins genomic start loci:
+1	0	1046596
+2	0	1093942
+3	0	1131574
+4	0	1163872
+5	0	1172707
+6	0	1239789
+7	0	1247694
+8	0	1295243
+9	0	1415029
+10	0	1493129
+11	0	1495856
+12	0	1525717
+13	0	1682574
+14	0	1749498
+15	0	1849033
+16	0	1907365
+Completed: thread #1
+Joined thread # 1
+Joined thread # 2
+Joined thread # 3
+Joined thread # 4
+Joined thread # 5
+Joined thread # 6
+Joined thread # 7
+Jan 12 14:52:48 ..... Started sorting BAM
+Max memory needed for sorting = 42617
+ALL DONE!

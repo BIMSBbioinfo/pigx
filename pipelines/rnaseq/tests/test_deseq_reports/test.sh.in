@@ -1,0 +1,41 @@
+#!/bin/sh
+
+testfolder=${srcdir}/tests/test_deseq_reports
+
+# copy necessary input files to the test folder
+# we copy them to avoid re-creating these files when testing the pipeline 
+cp -r ${srcdir}/tests/sample_data/preprocessed/preprocessed_data ${testfolder}
+cp -r ${srcdir}/tests/sample_data/preprocessed/salmon_output ${testfolder}
+cp ${srcdir}/tests/sample_data/preprocessed/colData.tsv ${testfolder}
+
+# prepare temporary sample sheet and settings files
+settings=${srcdir}/tests/settings.yaml
+tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
+cat ${settings} | sed 's/output-dir:.*/output-dir: test_deseq_reports/g' > ${tmp_settings}
+
+#create links to already preprocessed sample data
+samplesheet=${srcdir}/tests/sample_sheet.csv
+
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_star ${samplesheet}
+${srcdir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon ${samplesheet}
+
+rm ${tmp_settings} 
+
+# removed copied input files
+rm -rf ${testfolder}/preprocessed_data
+rm -rf ${testfolder}/salmon_output
+rm ${testfolder}/colData.tsv
+
+if ! test -f ${srcdir}/tests/test_deseq_reports/report/analysis1.star.deseq.report.html
+then
+  echo "ERROR: failed to create deseq report from STAR results"
+  exit 1
+fi
+
+if ! test -f ${srcdir}/tests/test_deseq_reports/report/analysis1.salmon.deseq.report.html
+then
+  echo "ERROR: failed to create deseq report from SALMON results"
+  exit 1
+fi
+
+
