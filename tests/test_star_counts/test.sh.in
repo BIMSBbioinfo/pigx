@@ -1,5 +1,11 @@
 #!/bin/sh
 
+testfolder=${srcdir}/tests/test_star_counts
+
+# copy necessary input files to the test folder
+# we copy them to avoid re-creating these files when testing the pipeline
+cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads/ ${testfolder}
+
 settings=${srcdir}/tests/settings.yaml
 tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
 cat ${settings} | sed 's/output-dir:.*/output-dir: test_star_counts/g' > ${tmp_settings}
@@ -9,6 +15,8 @@ samplesheet=${srcdir}/tests/sample_sheet.csv
 ${srcdir}/pigx-rnaseq -s ${tmp_settings} --target star_counts ${samplesheet}
 
 rm ${tmp_settings} ${tmp_samplesheet}
+
+rm -rf ${testfolder}/mapped_reads/
 
 if ! test -f ${srcdir}/tests/test_star_counts/preprocessed_data/counts_from_STAR.tsv 
 then
