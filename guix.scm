@@ -142,6 +142,7 @@ The main functions of FastQC are:
        ("fastqc" ,fastqc)
        ("bowtie" ,bowtie)
        ("idr" ,idr)
+       ("snakemake" ,snakemake)
        ("samtools" ,samtools)
        ("bedtools" ,bedtools)
        ("kentutils" ,kentutils)))
