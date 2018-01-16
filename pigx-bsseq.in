@@ -122,9 +122,6 @@ def bail(msg):
 def get_filenames(mylist):
     return list(map(lambda x: splitext_fqgz(x)[0], mylist))
 
-def get_extension(mylist):
-    return list(map(lambda x: splitext_fqgz(x)[1], mylist))
-
 def fq_suffix(filename):
     return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
 
@@ -183,7 +180,6 @@ def parse_samples(lines):
 
         sampleid_dict['files']      = files
         sampleid_dict['fastq_name'] = get_filenames(files)
-        sampleid_dict['fastq_ext']  = get_extension(files)
         outputdict[row[2]] = sampleid_dict
     return { 'SAMPLES': outputdict }
 
