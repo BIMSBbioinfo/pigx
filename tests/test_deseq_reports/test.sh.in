@@ -3,7 +3,7 @@
 set -e
 set -u
 
-root=$(mktemp -d "/tmp/pigx.XXXX")
+root=$(mktemp --tmpdir -d "pigx.XXXX")
 testfolder=${root}/tests/test_deseq_reports
 mkdir -p ${testfolder}
 
