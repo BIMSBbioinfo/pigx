@@ -12,6 +12,7 @@ general:
     cores: 20
     treatment-groups:
       - ['0', '1']
+      - ['0', '2']
     annotation:
       CpGfile:    genome/cpgIslandExt.hg19.bed.gz
       refGenfile: genome/refGene.hg19.bed.gz

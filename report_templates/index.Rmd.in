@@ -15,6 +15,9 @@ bibliography: reports.bib
 link-citations: yes
 params:
   MethCall: TRUE
+  Samplename: ''
+  source_dir: ''
+  out_dir:    ''
   inBam:    ''
   assembly: ''
   mincov:   10
@@ -102,12 +105,18 @@ cat('**Input parameters:**\n')
 
 ```{r MethCall.print_params_in2, eval=MethCall}
 
-paramsDesc <- c("Input Bam file",
+paramsDesc <- c("Sample ID",
+            "Source directory",
+            "Output directory",
+            "Bam file",
             "Genome Assembly",
             "Minimum Coverage",
             "Minimim Mapping Quality")
 
-paramsValues <- c( params$inBam,
+paramsValues <- c( params$Samplename,
+             params$source_dir,
+             params$out_dir, 
+             params$inBam,
              params$assembly,
              params$mincov,
              params$minqual)
@@ -183,16 +192,6 @@ cat('The segmentation based on methylation provides a way to compress the inform
 cat('### Parameters\n')
 
 cat('**Input parameters:**\n')
-```
-
-```{r Segmentation.print_params_in2, eval=Segmentation}
-
-inputParams <- data.frame(Parameters = "MethylRaw Object",
-                          Values     = methCallRDS,
-                          stringsAsFactors = FALSE)
-#params
-#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
-knitr::kable(inputParams)
 ```
 
 ```{r Segmentation.print_params_out, results='asis', eval=Segmentation}
