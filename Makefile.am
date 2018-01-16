@@ -43,7 +43,7 @@ EXTRA_DIST =										\
   test/samplesheet.csv								\
   test/settings.yaml
 
-AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)"
+AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
 
 # TODO: these tests still need to be fixed
 XFAIL_TESTS = \

@@ -26,5 +26,5 @@ EOF
 export PIGX_UGLY=1
 export PIGX_UNINSTALLED=1
 
-${srcdir}/pigx-bsseq -s $PWD/settings.yaml $PWD/samplesheet.csv 2>&1 | grep "First columns of the input table have to be"
+${builddir}/pigx-bsseq -s settings.yaml samplesheet.csv 2>&1 | grep "First columns of the input table have to be"
 rm -rf ${dir}
