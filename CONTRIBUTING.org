@@ -12,5 +12,7 @@ done
 To update, say, the copy of the bsseq pipeline, run:
 
 #+BEGIN_SRC sh
-git subtree pull --prefix=pipelines/bsseq/ bsseq master
+for pipeline in bsseq rnaseq chipseq crispr; do
+  git subtree pull --prefix=pipelines/$pipeline/ $pipeline master
+done
 #+END_SRC
