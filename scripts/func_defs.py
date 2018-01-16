@@ -20,6 +20,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+from glob import glob
+
 def files_for_sample(proc):
     return [ expand(proc(config['SAMPLES'][sample]['files'], config['SAMPLES'][sample]['SampleID'])) for sample in config['SAMPLES'] ]
 
@@ -209,3 +212,24 @@ def generateReport(input, output, params, log, reportSubDir):
                            "--report.params={dumps:q}",
                            "--logFile={log}"])
     shell(cmd, dumps)
+
+def validate_config(config):
+    # Check that all locations exist
+    for loc in config['locations']:
+        if (not loc == 'output-dir') and (not os.path.isdir(config['locations'][loc]) ) :
+            bail("ERROR: The following necessary directory does not exist: {} ({})".format(config['locations'][loc], loc))
+
+    # Check that all of the requested differential methylation
+    # treatment values are found in the sample sheet.
+    treatments = set([ config["SAMPLES"][sample]["Treatment"] for sample in config["SAMPLES"] ])
+    for pair in config['general']['differential-methylation']['treatment-groups']:
+        for group in pair:
+            if ( (group not in treatments) or (not (str.isdigit(group))) )  :
+                bail("ERROR: Invalid treatment group '{}' in pair '{}'".format(group, pair))
+
+    # Check for a genome fasta file
+    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
+    fa    = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
+
+    if not len(fasta) + len(fa) == 1 :
+        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))

@@ -276,28 +276,6 @@ def generate_cluster_configuration():
         outfile.write(dumps)
     return cluster_config_file
 
-# TODO: this should be external
-def validate_config():
-    # Check that all locations exist
-    for loc in config['locations']:
-        if (not loc == 'output-dir') and (not path.isdir(config['locations'][loc]) ) :
-            bail("ERROR: The following necessary directory does not exist: {} ({})".format(config['locations'][loc], loc))
-
-    # Check that all of the requested differential methylation
-    # treatment values are found in the sample sheet.
-    treatments = set([ config["SAMPLES"][sample]["Treatment"] for sample in config["SAMPLES"] ])
-    for pair in config['general']['differential-methylation']['treatment-groups']:
-        for group in pair:
-            if ( (group not in treatments) or (not (str.isdigit(group))) )  :
-                bail("ERROR: Invalid treatment group '{}' in pair '{}'".format(group, pair))
-
-    # Check for a genome fasta file
-    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
-    fa    = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
-
-    if not len(fasta) + len(fa) == 1 :
-        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))
-
 
 # Create symbolic links to the inputs and reference genome
 
@@ -398,7 +376,6 @@ generate_config(args.configfile,
                 args.settings)
 
 config = json.load(open(args.configfile, 'r'))
-validate_config()
 
 command = [
     "@SNAKEMAKE@",

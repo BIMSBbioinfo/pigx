@@ -48,6 +48,7 @@ ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped 
 
 # include function definitions and extra rules
 include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
+validate_config(config)
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
 
