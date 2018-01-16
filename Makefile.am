@@ -222,6 +222,8 @@ EXTRA_DIST =										\
   tests/sample_data/preprocessed/salmon_output/UHR_Rep1/cmd_info.json \
   tests/sample_data/preprocessed/salmon_output/UHR_Rep1/libParams/flenDist.txt \
   tests/sample_data/preprocessed/salmon_output/UHR_Rep1/lib_format_counts.json \
+  tests/test_trim_galore/input_files/sample.read1.fastq.gz \
+  tests/test_trim_galore/input_files/sample.read2.fastq.gz \
   tests/settings.yaml
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
