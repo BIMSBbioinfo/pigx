@@ -117,7 +117,7 @@ if(nrow(meth.unite)>1){
   
   meth.diffmeth <- calculateDiffMeth(meth.unite, 
                                      overdispersion="MN",
-                                     adjust = "qvalue",
+                                     adjust = "fdr",
                                      test="Chisq",
                                      mc.cores=cores) 
   
