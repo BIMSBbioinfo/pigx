@@ -17,52 +17,46 @@ RULES_PATH        = os.path.join(BASEDIR,'Rules')
 PARAMS_PATH       = '.'
 SETTINGS_NAME     = 'settings.yaml'
 SAMPLE_SHEET_NAME = 'sample_sheet.yaml'
-
+SETTINGS_PATH     = BASEDIR
 
 # ---------------------------------------------------------------------------- #
 # settings input
-with open(os.path.join(BASEDIR, SETTINGS_NAME), 'r') as stream:
+with open(os.path.join(SETTINGS_PATH, SETTINGS_NAME), 'r') as stream:
     SETTINGS = yaml.load(stream)
 
 # sample sheet input    
-with open(os.path.join(BASEDIR, SAMPLE_SHEET_NAME), 'r') as stream:
+with open(os.path.join(SETTINGS_PATH, SAMPLE_SHEET_NAME), 'r') as stream:
     SAMPLE_SHEET = yaml.load(stream)
 
 # ---------------------------------------------------------------------------- #
-# check config validity - NOT IMPLEMENTED
-# if check_settings(SETTING) == 1:
-#     quit()
-    
-if check_config(SAMPLE_SHEET) == 1:
-    quit()
-
+# check settings and sample_sheet validity
+check_proper_settings_configuration(SETTINGS, SAMPLE_SHEET)
 
 # ---------------------------------------------------------------------------- #
 # Software executables
-TOOLS = SETTINGS['tools']
-SOFTWARE = [TOOLS[tool_name]['executable'] for tool_name in TOOLS.keys()]
-SOFTWARE = dict(zip(TOOLS.keys(), SOFTWARE))
+SOFTWARE = SETTINGS['tools']
+
 
 # Per sample software parameters:
 # Loops throug the sample sheet and extracts per sample software parameters
+# Flattens all samples with custom parameters into one dict - sample names must be unique
 custom_param_names = sorted(list(set(SAMPLE_SHEET.keys()) - set(['samples','hub'])))
 CUSTOM_PARAMS = dict()
 for param_set in custom_param_names:
     for sample_name in SAMPLE_SHEET[param_set].keys():
         sample_set = SAMPLE_SHEET[param_set][sample_name]
-        if isinstance(sample_set, dict) 'params' in set(sample_set.keys()):
+        if isinstance(sample_set, dict) and 'params' in set(sample_set.keys()):
             CUSTOM_PARAMS[sample_name] = sample_set['params']
             
-print(CUSTOM_PARAMS)
 # ---------------------------------------------------------------------------- #
 # Variable definition
 
 # Default Function Parameters
-APP_PARAMS   = SETTINGS['general']['params']
+PARAMS       = SETTINGS['general']['params']
 GENOME       = SETTINGS['general']['assembly']
-GENOME_FASTA = SETTINGS['locations']['genome-dir']
-PATH_FASTQ   = SETTINGS['locations']['input-dir:']
-ANNOTATION   = SETTINGS['locations']['gff-file']
+GENOME_FASTA = SETTINGS['locations']['genome-file']
+PATH_FASTQ   = SETTINGS['locations']['input-dir']
+ANNOTATION   = SETTINGS['locations']['annotation']
 
 # Sample name definition
 PEAK_NAMES   = SAMPLE_SHEET['peak_calling'].keys()
@@ -102,18 +96,22 @@ PEAK_NAME_LIST = {}
 #
 # ---------------------------------------------------------------------------- #
 # config defaults
-if not ('extend' in config['params'].keys()):
-    config['params']['extend'] = 0
+if not ('extend' in PARAMS.keys()):
+    PARAMS['extend'] = 0
 
 
+# Constructs the genome index prefix name
+# If the prefix name is already supplied in the config file, it extracts this index
+# instead of creating a new index
+# index-dir should be the location of the index, without the genome prefix (i.e. without hg19)
 if GENOME_FASTA == None:
     prefix_default = ''
     GENOME_FASTA = ''
 else:
     prefix_default = os.path.join(PATH_INDEX, GENOME)
 
-
-PREFIX = os.path.join(set_default('index', prefix_default, config), GENOME)
+INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  SETTINGS['general'])
+PREFIX = os.path.join(set_default('index-dir', prefix_default, SETTINGS['locations']), INDEX_PREFIX_NAME)
 print(PREFIX)
 
 # ----------------------------------------------------------------------------- #
@@ -137,13 +135,13 @@ COMMAND = COMMAND + INDEX + BOWTIE2 + CHRLEN + BW + LINKS + FASTQC
 
 
 # ----------------------------------------------------------------------------- #
-if 'peak_calling' in set(config.keys()):
-    if len(config['peak_calling'].keys()) > 0:
+if 'peak_calling' in set(SAMPLE_SHEET.keys()):
+    if len(SAMPLE_SHEET['peak_calling'].keys()) > 0:
         MACS  = []
         QSORT = []
         suffix = 'narrowPeak'
         for name in PEAK_NAMES:
-            suffix = get_macs2_suffix(name, config)
+            suffix = get_macs2_suffix(name, CUSTOM_PARAMS)
 
             MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks." + suffix)]
             QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort.bed" )]
@@ -153,10 +151,10 @@ if 'peak_calling' in set(config.keys()):
         COMMAND = COMMAND + MACS + QSORT
 
 # # ----------------------------------------------------------------------------- #
-if 'idr' in set(config.keys()):
-    if len(config['idr'].keys()) > 0:
+if 'idr' in set(SAMPLE_SHEET.keys()):
+    if len(SAMPLE_SHEET['idr'].keys()) > 0:
         IDR = []
-        for name in config['idr'].keys():
+        for name in SAMPLE_SHEET['idr'].keys():
             IDR = IDR + [os.path.join(PATH_IDR, name, name + ".bed")]
             PEAK_NAME_LIST[name] = IDR[-1]
 
@@ -165,17 +163,17 @@ if 'idr' in set(config.keys()):
 
 # # ----------------------------------------------------------------------------- #
 HUB_NAME = None
-if 'hub' in set(config.keys()):
-    HUB_NAME = config['hub']['name']
+if 'hub' in set(SAMPLE_SHEET.keys()):
+    HUB_NAME = SAMPLE_SHEET['hub']['name']
     HUB = [os.path.join(PATH_HUB, HUB_NAME, 'done.txt')]
-    BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
+    BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=SAMPLE_SHEET['peak_calling'].keys())
 
     include: os.path.join(RULES_PATH, 'UCSC_Hub.py')
     COMMAND = COMMAND + BB + HUB
 
 
 # ---------------------------------------------------------------------------- #
-gtf_index = 'gtf' in set(config['annotation'].keys())
+gtf_index = 'gtf-file' in set(ANNOTATION.keys())
 if gtf_index:
     LINK_ANNOTATION    = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
     PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
@@ -189,8 +187,8 @@ if gtf_index:
     COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS 
 
 # ---------------------------------------------------------------------------- #
-if 'feature_combination' in set(config.keys()):
-    FEATURE_NAMES = config['feature_combination'].keys()
+if 'feature_combination' in set(SAMPLE_SHEET.keys()):
+    FEATURE_NAMES = SAMPLE_SHEET['feature_combination'].keys()
     if len(FEATURE_NAMES) > 0:
 
         FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'), 
