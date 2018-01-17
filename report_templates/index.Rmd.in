@@ -242,7 +242,7 @@ knitr::kable(inputParams)
 ```
 
 ```{r SegmentationDescription, results='asis', eval=Segmentation} 
-cat('### Segmentation of methylation profile\n')
+cat('### Segmentation of Methylation Profile\n')
 
 cat('Segmentation of the methylation profile is done using the methSeg() function, where change-points in the genome-wide  signal are recorded and the genome is partitioned into regions between consecutive change-points. This approach is typically used in the detection of copy-number variation [@klambauer2012] but can be applied to methylome segmentation as well [@Wreczycka2017]. Here, the identified segments are further clustered based on their average methylation signal, using a mixture-modeling approach, which permits the detection of distinct regions inside the genome  [@Wreczycka2017].\n')
 ```
@@ -422,9 +422,9 @@ if(!length(params$methylDiff_files) == 0 ) {
 ```
 
 ```{r DiffMethHeader, results='asis', eval=DiffMeth}
-cat('## Differential methylation report\n')
+cat('## Differential Methylation Report\n')
 
-cat('### Calling differentially methylated cytosines\n')
+cat('### Calling Differentially Methylated Cytosines\n')
 
 cat('For each set of samples specified in a treatment vector from the settings file, the ratio of methylation is calculated across the genome. Logistic regression is then applied to model the log-odds of observing this ratio, by chance, in any given location (p-value) as well as the probability of observing *somewhere* within the genome (q-value). The resulting probabilities are then tabulated below.\n')
 
@@ -489,7 +489,7 @@ knitr::kable(outputParams)
 # Check if there are some differentially methylated cytosines
 methylDiff.nonempty = nrow(methylDiff.obj)>1
 if(!methylDiff.nonempty) {
-  cat('**There are no differentially methylated cytosines.!**\n')
+  cat('**No differentially methylated cytosines were observed.**\n')
   DiffMeth <- FALSE
   AnnotateDiffMeth <- FALSE
 }
@@ -541,7 +541,7 @@ datatable(methylDiff2df_roundint(methylDiff.obj.hypo),
 
 ```{r DiffMeth.export, results='asis', eval=DiffMeth}
 
-cat('### Export differentially methylated cytosines\n')
+cat('### Export Differentially Methylated Cytosines\n')
 
 cat('Finally we export the regions to a *BED* file, which can be loaded into any genome browser like [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
 ```
@@ -549,7 +549,7 @@ cat('Finally we export the regions to a *BED* file, which can be loaded into any
 
 
 ```{r AnnotateDiffMethHeader,results='asis', eval=AnnotateDiffMeth}
-cat('## Annotation of differentially methylated cytosines\n')
+cat('## Annotation of Differentially Methylated Cytosines\n')
 ```
 
 ```{r AnnotateDiffMeth.load_libraries, eval=AnnotateDiffMeth}
@@ -617,7 +617,7 @@ fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
 ```
 
 ```{r AnnotateDiffMeth.num_of_dmcs_title, results='asis', eval=AnnotateDiffMeth}
-cat('### Show number of differentially methylated cytosines per chromosome\n')
+cat('### Differentially Methylated Cytosines per Chromosome\n')
 ```
 
 ```{r AnnotateDiffMeth.num_of_dmcs, eval=AnnotateDiffMeth}
@@ -696,7 +696,7 @@ if( (fetched.cpgi != '') & length(GRanges.diffmeth)!=0){
 ```
 
 ```{r AnnotateDiffMeth.plot_descr, results='asis', eval=AnnotateDiffMeth}
-cat('### Plot the distance to the nearest TSSs\n')
+cat('### Distance to the nearest TSSs\n')
 
 cat('Show the distance of differentially methylated cytosines to TSSs of the nearest genes.\n')
 ```
@@ -727,7 +727,7 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
 ```
 
 ```{r AnnotateDiffMeth.overview_descr, results='asis', eval=AnnotateDiffMeth}
-cat('### Plot overview of hyper and hypo-methylated CpGs over the genome\n')
+cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n')
 ```
 
 ```{r AnnotateDiffMeth.overview_plot, eval=AnnotateDiffMeth}
