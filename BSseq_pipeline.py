@@ -566,12 +566,14 @@ rule final_report:
         rules.bam_methCall.output,
         rules.methseg.output,
         lambda wc: finalReportDiffMeth_input(wc.prefix),
-        template      = os.path.join(DIR_templates,"index.Rmd")
+        template      = os.path.join(DIR_templates,"index.Rmd"),
+        chrom_seqlengths    = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv"
     output: 
         report        = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.html")
     params:
         ## absolute path to bamfiles
         Samplename  = lambda wc: get_fastq_name( wc.prefix ),
+        chrom_seqlengths  = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
         source_dir  = config['locations']['input-dir'],
         out_dir     = config['locations']['output-dir'],
         inBam       = os.path.join(DIR_sorted,"{prefix}.sorted.bam"),
