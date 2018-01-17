@@ -15,9 +15,9 @@ It includes the following pipelines:
 - [PiGx ChIPseq](https://github.com/BIMSBbioinfo/pigx_chipseq) for
   reads from ChIPseq experiments
 
-- [PiGx CRISPR](https://github.com/BIMSBbioinfo/pigx_crispr) for the
-  analysis of sequence mutations in CRISPR-CAS9 targeted amplicon
-  sequencing data
+- [PiGx CRISPR](https://github.com/BIMSBbioinfo/pigx_crispr) *(work in progress)*
+  for the analysis of sequence mutations in CRISPR-CAS9 targeted
+  amplicon sequencing data
 
 All pipelines are easily configured with a sample sheet (in CSV
 format) and a descriptive settings file (in YAML format).  For more
