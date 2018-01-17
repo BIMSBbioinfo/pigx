@@ -79,3 +79,12 @@ You can enable or disable each of the pipelines with the
 `scrnaseq`, `chipseq`, and `crispr`.  For more options run
 `./configure --help`.
 
+
+# License
+
+All PiGx pipelines are free software: you can redistribute PiGx and/or
+modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+See `LICENSE` for the full license text.
