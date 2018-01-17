@@ -7,6 +7,8 @@ root=$(mktemp --tmpdir -d "pigx.XXXX")
 testfolder=${root}/tests/test_trim_galore
 mkdir -p ${testfolder}
 
+echo "TEST FOLDER: ${testfolder}"
+
 EXEC="@TRIMGALORE@"
 
 #the single-end read file provided as input to trim galore

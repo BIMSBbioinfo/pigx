@@ -7,6 +7,8 @@ root=$(mktemp --tmpdir -d "pigx.XXXX")
 testfolder=${root}/tests/test_salmon
 mkdir -p ${testfolder}
 
+echo "TEST FOLDER: ${testfolder}"
+
 # prepare temporary sample sheet and settings files
 settings=${srcdir}/tests/settings.yaml
 tmp_settings="${testfolder}/settings.yaml"
