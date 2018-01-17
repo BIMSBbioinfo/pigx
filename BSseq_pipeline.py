@@ -571,7 +571,10 @@ rule final_report:
         report        = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.html")
     params:
         ## absolute path to bamfiles
-        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
+        Samplename  = lambda wc: get_fastq_name( wc.prefix ),
+        source_dir  = config['locations']['input-dir'],
+        out_dir     = config['locations']['output-dir'],
+        inBam       = os.path.join(DIR_sorted,"{prefix}.sorted.bam"),
         assembly    = ASSEMBLY,
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
