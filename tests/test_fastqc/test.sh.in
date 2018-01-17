@@ -15,7 +15,7 @@ cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads/ ${testfolder}
 chmod +w -R ${testfolder}
 
 # prepare temporary sample sheet and settings files
-settings=${srcdir}/tests/settings.yaml
+settings=${srcdir}/tests/settings_no_real_de.yaml
 tmp_settings="${testfolder}/settings.yaml"
 sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
     -e "s,genome-fasta: ,genome-fasta: ${srcdir}/tests/,g" \
