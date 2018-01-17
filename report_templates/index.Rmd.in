@@ -559,8 +559,6 @@ cat('## Annotation of Differentially Methylated Cytosines\n')
     library("rtracklayer")
     library("DT")
     library("ggplot2")
-    library("GenomeInfoDb")
-
 ```
 
 ```{r AnnotateDiffMeth.print_params_in, results='asis', eval=AnnotateDiffMeth}
