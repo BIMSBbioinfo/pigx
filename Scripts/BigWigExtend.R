@@ -1,8 +1,14 @@
+# ---------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Scripts/Argument_Parser.R'))
+argv = Parse_Arguments('Extend_Regions')
+
+# ---------------------------------------------------------------------------- #
 Extend_Regions = function(
-    inpath, 
-    outpath, 
-    extend       = NULL, 
-    scale_index  = FALSE, 
+    inpath,
+    outpath,
+    extend       = NULL,
+    scale_index  = FALSE,
     scale_factor = 1e6
 ){
 
@@ -34,8 +40,9 @@ Extend_Regions = function(
     export.bw(cov, outpath)
 }
 
+# ---------------------------------------------------------------------------- #
 Extend_Regions(
-  inpath        = snakemake@input[['file']],
-  outpath       = snakemake@output[['outfile']],
-  extend        = snakemake@params[['extend']],
-  scale_index   = snakemake@params[['scale']])
+  inpath        = argv$input[['file']],
+  outpath       = argv$output[['outfile']],
+  extend        = argv$params[['extend']],
+  scale_index   = argv$params[['scale']])

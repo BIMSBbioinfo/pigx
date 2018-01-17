@@ -1,8 +1,14 @@
 # ---------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Scripts/Argument_Parser.R'))
+argv = Parse_Arguments('Annotate_Peaks')
+
+
+# ---------------------------------------------------------------------------- #
 #' Annotate_Peaks
 #'
 #' @param annotation - list - processed annotation as given by Prepare_Annotation.R
-#' @param peaks      - narrowPeaks/broadPeaks in macs2 output
+#' @param peaks_path - narrowPeaks/broadPeaks in macs2 output
 #' @param outfile    - location of the output file
 #' @param peakname   - Name of the peak file
 #'
@@ -48,11 +54,11 @@ Annotate_Peaks = function(
 
 # ---------------------------------------------------------------------------- #
 Annotate_Peaks(
-    annotation  = snakemake@input[['annotation']],
-    peaks_path  = snakemake@input[['peaks']],
-    outfile     = snakemake@output[['outfile']],
-    peakname    = snakemake@params[['name']],
-    scriptdir   = snakemake@params[['scriptdir']]
+    annotation  = argv$input[['annotation']],
+    peaks_path  = argv$input[['peaks']],
+    outfile     = argv$output[['outfile']],
+    peakname    = argv$params[['name']],
+    scriptdir   = argv$params[['scriptdir']]
 )
 
 
@@ -61,5 +67,3 @@ Annotate_Peaks(
 # outfile    = '~/Tmp/file.rds'
 # peakname   = 'peak1'
 # scriptdir  = '/home/vfranke/Projects/AAkalin_PIX/Scripts'
-
-

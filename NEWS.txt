@@ -1,6 +1,11 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+181701
+[*] Adjusted code to settings.yaml and sample_sheet.yaml. The pipeline now works witwo yaml files.
+[*] Custom function for calling Rscript + Rscript parser for yaml like arguments
+[*] Any number of feature combinations is now supported.
+
 181201
 [*]. Refactored the code so that the output of pipelines is always in bed format
 [*]. Annotate peaks with given genomic annotation
@@ -71,7 +76,6 @@ Initial commit
 []. Add rule for FeatureCombination.rds -> txt
 
 
-[]. feature_combination message with multiple input files
     
 []. Check for spaces in genome fasta headers
 []. Check whether the fasta sequence names are the same as gtf sequence names
@@ -98,8 +102,6 @@ Initial commit
 
 [#]. enable sample specific parameter deposition - works for macs
 [#]. write tests
-[]. set default app parameters in config
-    - works for macs2
 []. the pipeline does not work without app params - change config check
 []. add check for gzipped bowtie reference
 []. Add samplesheet To yaml file
@@ -148,3 +150,8 @@ Initial commit
 []. Delete temporary files - bed and bedGraph files
 []. Sample specific read extension
 []. Motif Discovery
+
+
+#
+link to the sample sheet
+https://docs.google.com/spreadsheets/d/1SokqvaLEhR_tJhkxDwXGg1OzmGErbKv5Vq41dxz3qlQ/edit#gid=0

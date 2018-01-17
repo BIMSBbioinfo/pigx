@@ -1,68 +1,3 @@
-"""
-SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX/Snake_ChIPseq.py'
-WORKDIR='/data/akalin/vfranke/AAkalin_PIX/ChIP'
-CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX/config.yaml'
-PATH='/home/vfranke/bin/Software/miniconda3/envs/p35/bin:/usr/local/bin:/usr/bin:/bin:/home/vfranke/.guix-profile/bin:/home/vfranke/.guix-profile/sbin:/home/vfranke/bin'
-# Beast run
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
-
-# Visualize the graph horizontally
-snakemake --dag --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE | perl -pe 's|graph\[|graph[rankdir=LR,|'| dot -T png > Snake_ChIPseq.png
-
-# Cluster run
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --timestamp --jobs 24 --cluster "qsub -V -l h_vmem={params.mem} -pe smp {params.threads} -l h_rt=36:00:00" --rerun-incomplete --latency-wait 30
-
-for i in `ls $WORKDIR | grep -v Fastq$ | grep -v Genome`;do rm -r $WORKDIR/$i;done
-
-rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE --summary | tail -n+2 | cut -f1)
-
-
-gp -i gcc-toolchain@5 gfortran@5 pkg-config curl cairo libxt libxml2 openssl xz zlib -p pix
-
-gp -i gcc -p pix
-
-bash
-cd /home/vfranke/bin/guix
-profile=/home/vfranke/bin/guix/pix
-source $profile/etc/profile
-
-export PATH="$profile/bin${PATH:+:}$PATH"
-export PKG_CONFIG_PATH="pix/lib/pkgconfig${PKG_CONFIG_PATH:+:}$PKG_CONFIG_PATH"
-export XDG_DATA_DIRS="pix/share${XDG_DATA_DIRS:+:}$XDG_DATA_DIRS"
-export GIO_EXTRA_MODULES="pix/lib/gio/modules${GIO_EXTRA_MODULES:+:}$GIO_EXTRA_MODULES"
-export R_LIBS_SITE="pix/site-library/${R_LIBS_SITE:+:}$R_LIBS_SITE"
-export GUIX_LOCPATH=$profile/lib/locale
-export CURL_CA_BUNDLE="/etc/ssl/certs/ca-bundle.crt"
-/home/vfranke/bin/guix/pix/bin/R
-source("https://bioconductor.org/biocLite.R")
-biocLite('S4Vectors')
-biocLite(c('data.table','genomation','GenomicRanges','RCAS','rtracklayr','stringr', 'plotly', 'DT', 'data.table', 'topGO', 'motifRG', 'biomaRt', 'AnnotationDbi', 'GenomicRanges', 'BSgenome.Hsapiens.UCSC.hg19', 'GenomeInfoDb', 'Biostrings', 'rtracklayer', 'org.Hs.eg.db', 'GenomicFeatures', 'genomation', 'rmarkdown', 'knitr', 'S4Vectors'), dependencies=TRUE)
-
-
-
-
-Integrate_Expression_Mouse_Hamster_Difference
-1. Figure out how to prevent bombing
-
-### 13. config file check
-
-Q:
-1. How to write dynamic rules? - that the rules execute based on the input parameters?
-    - if the user supplies the genome index, do not make the index
-2. What to do downstream? Some basic plots? ChromHMM
-3. How to speed up the extension?
-
-"""
-
-SCRIPT_PATH = os.path.join(workflow.basedir,'Scripts')
-RULES_PATH  = os.path.join(workflow.basedir,'Rules')
-PARAMS_PATH = '.'
-
 # ---------------------------------------------------------------------------- #
 import glob
 import fnmatch
@@ -76,31 +11,56 @@ include: 'SnakeFunctions.py'
 from Check_Config import *
 localrules: makelinks
 
+BASEDIR           = workflow.basedir
+SCRIPT_PATH       = os.path.join(BASEDIR,'Scripts')
+RULES_PATH        = os.path.join(BASEDIR,'Rules')
+PARAMS_PATH       = '.'
+SETTINGS_NAME     = 'settings.yaml'
+SAMPLE_SHEET_NAME = 'sample_sheet.yaml'
+SETTINGS_PATH     = BASEDIR
 
 # ---------------------------------------------------------------------------- #
-# check config validity
-if check_config(config) == 1:
-    quit()
+# settings input
+with open(os.path.join(SETTINGS_PATH, SETTINGS_NAME), 'r') as stream:
+    SETTINGS = yaml.load(stream)
+
+# sample sheet input    
+with open(os.path.join(SETTINGS_PATH, SAMPLE_SHEET_NAME), 'r') as stream:
+    SAMPLE_SHEET = yaml.load(stream)
 
 # ---------------------------------------------------------------------------- #
-# Software parameters
-with open(os.path.join(workflow.basedir, 'software.yaml'), 'r') as stream:
-    SOFTWARE_CONFIG = yaml.load(stream)
+# check settings and sample_sheet validity
+check_proper_settings_configuration(SETTINGS, SAMPLE_SHEET)
 
-# Function parameter
-APP_PARAMS = SOFTWARE_CONFIG['params']
-
+# ---------------------------------------------------------------------------- #
 # Software executables
-SOFTWARE   = SOFTWARE_CONFIG['software']
+SOFTWARE = SETTINGS['tools']
+
+
+# Per sample software parameters:
+# Loops throug the sample sheet and extracts per sample software parameters
+# Flattens all samples with custom parameters into one dict - sample names must be unique
+custom_param_names = sorted(list(set(SAMPLE_SHEET.keys()) - set(['samples','hub'])))
+CUSTOM_PARAMS = dict()
+for param_set in custom_param_names:
+    for sample_name in SAMPLE_SHEET[param_set].keys():
+        sample_set = SAMPLE_SHEET[param_set][sample_name]
+        if isinstance(sample_set, dict) and 'params' in set(sample_set.keys()):
+            CUSTOM_PARAMS[sample_name] = sample_set['params']
+            
 # ---------------------------------------------------------------------------- #
 # Variable definition
-GENOME       = config['genome']['name']
-GENOME_FASTA = config['genome']['fasta']
-NAMES        = config['samples'].keys()
-PEAK_NAMES   = config['peak_calling'].keys()
-PATH_FASTQ   = config['fastq']
-PARAMS       = config['params']
-ANNOTATION   = config['annotation']
+
+# Default Function Parameters
+PARAMS       = SETTINGS['general']['params']
+GENOME       = SETTINGS['general']['assembly']
+GENOME_FASTA = SETTINGS['locations']['genome-file']
+PATH_FASTQ   = SETTINGS['locations']['input-dir']
+ANNOTATION   = SETTINGS['locations']['annotation']
+
+# Sample name definition
+PEAK_NAMES   = SAMPLE_SHEET['peak_calling'].keys()
+NAMES        = SAMPLE_SHEET['samples'].keys()
 
 
 # Directory structure definition
@@ -136,18 +96,22 @@ PEAK_NAME_LIST = {}
 #
 # ---------------------------------------------------------------------------- #
 # config defaults
-if not ('extend' in config['params'].keys()):
-    config['params']['extend'] = 0
+if not ('extend' in PARAMS.keys()):
+    PARAMS['extend'] = 0
 
 
+# Constructs the genome index prefix name
+# If the prefix name is already supplied in the config file, it extracts this index
+# instead of creating a new index
+# index-dir should be the location of the index, without the genome prefix (i.e. without hg19)
 if GENOME_FASTA == None:
     prefix_default = ''
     GENOME_FASTA = ''
 else:
     prefix_default = os.path.join(PATH_INDEX, GENOME)
 
-
-PREFIX = os.path.join(set_default('index', prefix_default, config), GENOME)
+INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  SETTINGS['general'])
+PREFIX = os.path.join(set_default('index-dir', prefix_default, SETTINGS['locations']), INDEX_PREFIX_NAME)
 print(PREFIX)
 
 # ----------------------------------------------------------------------------- #
@@ -171,13 +135,13 @@ COMMAND = COMMAND + INDEX + BOWTIE2 + CHRLEN + BW + LINKS + FASTQC
 
 
 # ----------------------------------------------------------------------------- #
-if 'peak_calling' in set(config.keys()):
-    if len(config['peak_calling'].keys()) > 0:
+if 'peak_calling' in set(SAMPLE_SHEET.keys()):
+    if len(SAMPLE_SHEET['peak_calling'].keys()) > 0:
         MACS  = []
         QSORT = []
         suffix = 'narrowPeak'
         for name in PEAK_NAMES:
-            suffix = get_macs2_suffix(name, config)
+            suffix = get_macs2_suffix(name, CUSTOM_PARAMS)
 
             MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks." + suffix)]
             QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort.bed" )]
@@ -187,10 +151,10 @@ if 'peak_calling' in set(config.keys()):
         COMMAND = COMMAND + MACS + QSORT
 
 # # ----------------------------------------------------------------------------- #
-if 'idr' in set(config.keys()):
-    if len(config['idr'].keys()) > 0:
+if 'idr' in set(SAMPLE_SHEET.keys()):
+    if len(SAMPLE_SHEET['idr'].keys()) > 0:
         IDR = []
-        for name in config['idr'].keys():
+        for name in SAMPLE_SHEET['idr'].keys():
             IDR = IDR + [os.path.join(PATH_IDR, name, name + ".bed")]
             PEAK_NAME_LIST[name] = IDR[-1]
 
@@ -199,17 +163,17 @@ if 'idr' in set(config.keys()):
 
 # # ----------------------------------------------------------------------------- #
 HUB_NAME = None
-if 'hub' in set(config.keys()):
-    HUB_NAME = config['hub']['name']
+if 'hub' in set(SAMPLE_SHEET.keys()):
+    HUB_NAME = SAMPLE_SHEET['hub']['name']
     HUB = [os.path.join(PATH_HUB, HUB_NAME, 'done.txt')]
-    BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
+    BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=SAMPLE_SHEET['peak_calling'].keys())
 
     include: os.path.join(RULES_PATH, 'UCSC_Hub.py')
     COMMAND = COMMAND + BB + HUB
 
 
 # ---------------------------------------------------------------------------- #
-gtf_index = 'gtf' in set(config['annotation'].keys())
+gtf_index = 'gtf-file' in set(ANNOTATION.keys())
 if gtf_index:
     LINK_ANNOTATION    = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
     PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
@@ -218,13 +182,13 @@ if gtf_index:
     
 #     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=PEAK_NAMES)    
 
-    include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
+#     include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
     include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
     COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS 
 
 # ---------------------------------------------------------------------------- #
-if 'feature_combination' in set(config.keys()):
-    FEATURE_NAMES = config['feature_combination'].keys()
+if 'feature_combination' in set(SAMPLE_SHEET.keys()):
+    FEATURE_NAMES = SAMPLE_SHEET['feature_combination'].keys()
     if len(FEATURE_NAMES) > 0:
 
         FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'), 

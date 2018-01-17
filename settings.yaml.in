@@ -1,0 +1,114 @@
+locations:
+  input-dir: in/
+  output-dir: out/
+  genome-dir: genome/
+
+general:
+  assembly: hg19
+
+sample_sheet:
+
+
+
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    missing-file-timeout: 120
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: none
+  rules:
+    __default__:
+      threads: 1
+      memory: 8G
+    bowtie2:
+      threads: 1
+      memory: 16G
+     bowtie2-build:
+      threads: 1
+      memory: 16G
+
+tools:
+    fastqc: 
+        executable: @FASTQC@
+        args: ""
+    bamToBed: 
+        executable: @BAMTOBED@
+        args: ""
+    bowtie2: 
+        executable: @BOWTIE2@
+        args: ""
+        help: '-h'
+        remove:
+             - S
+             - x
+             - 1
+             - 2
+             - U
+        
+        
+    bowtie2-build: 
+        executable: @BOWTIE2-BUILD@
+        args: ""
+
+    bowtie2-inspect: 
+        executable: @bOWTIE2-INSPECT@
+        args: ""
+    idr: 
+        executable: @IDR@
+        args: ""
+        help: '-h'
+        remove:
+            - samples
+            - input-file-type
+            - rank
+            - output-file
+            - l
+            - plot
+
+    macs2: 
+        executable: @MACS2@
+        args: ""
+        help: 'callpeak -h'
+        remove:
+            - t
+            - c
+            - outdir
+            - n
+
+    perl: 
+        executable: @PERL@
+        args: ""
+
+    Rscript: 
+        executable: RSCRIPT@
+        args: ""
+        dependencies:
+            - data.table
+            - genomation
+            - GenomicRanges
+            - RCAS
+            - rtracklayer
+            - stringr
+    samtools: 
+        executable: @SAMTOOLS@
+        args: ""
+
+    python: 
+        executable: @PYTHON@
+        args: ""
+        python_deps:
+            - fnmatch
+            - os
+            - sys
+            - yaml
+            - pytest
+            - itertools
+            
+    bedToBigBed:
+        executable: @BEDTOBIGBED@
+        args: ""
+

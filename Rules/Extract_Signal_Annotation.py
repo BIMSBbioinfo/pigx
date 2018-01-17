@@ -9,7 +9,8 @@ rule extract_signal_annotation:
             threads     = 1,
             mem         = '16G',
             peakname    = '{name}',
-            scriptdir   = SCRIPT_PATH
+            scriptdir   = SCRIPT_PATH,
+            Rscript     = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'prepare_annotation.log')
         message:"""
@@ -18,8 +19,9 @@ rule extract_signal_annotation:
                     wig:    {input.wig}
                     output: {output.outfile}
             """
-        script:
-            os.path.join(SCRIPT_PATH, 'Extract_Signal_Annotation.R')
+        run:
+            RunRscript(input, output, params, BASEDIR, 'Extract_Signal_Annotation.R')
+
 
 
 
@@ -34,10 +36,11 @@ rule extract_signal_peaks:
         params:
             threads     = 1,
             mem         = '16G',
-            expand_peak = config['params']['extract_signal']['expand_peak'],
-            bin_num     = config['params']['extract_signal']['bin_num'],
+            expand_peak = PARAMS['extract_signal']['expand_peak'],
+            bin_num     = PARAMS['extract_signal']['bin_num'],
             peakname    = '{name}',
-            scriptdir   = SCRIPT_PATH
+            scriptdir   = SCRIPT_PATH,
+            Rscript     = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'prepare_annotation.log')
         message:"""
@@ -46,8 +49,9 @@ rule extract_signal_peaks:
                     wig: {input.wig}
                     output: {output.outfile}
             """
-        script:
-            os.path.join(SCRIPT_PATH, 'Extract_Signal_Peaks.R')
+        run:
+            RunRscript(input, output, params, BASEDIR, 'Extract_Signal_Peaks.R')
+
 
 # #----------------------------------------------------------------------------- #
 # Annotate Peaks
@@ -61,7 +65,8 @@ rule annotate_peaks:
             threads     = 1,
             mem         = '16G',
             peakname    = '{name}',
-            scriptdir   = SCRIPT_PATH
+            scriptdir   = SCRIPT_PATH,
+            Rscript     = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'annotate_peaks.log')
         message:"""
@@ -70,5 +75,5 @@ rule annotate_peaks:
                     peaks: {input.peaks}
                     output: {output.outfile}
             """
-        script:
-            os.path.join(SCRIPT_PATH, 'Annotate_Peaks.R')
+        run:
+            RunRscript(input, output, params, BASEDIR, 'Annotate_Peaks.R')

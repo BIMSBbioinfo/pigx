@@ -1,4 +1,9 @@
 # ---------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Scripts/Argument_Parser.R'))
+argv = Parse_Arguments('Prepare_Annotation')
+
+# ---------------------------------------------------------------------------- #
 Prepare_Annotation = function(
     gtf_path=NULL,
     outfile,
@@ -27,7 +32,7 @@ Prepare_Annotation = function(
 # ---------------------------------------------------------------------------- #
 # function call
 Prepare_Annotation(
-    gtf_path  = snakemake@input[['gtf_path']],
-    outfile     = snakemake@output[['outfile']],
-    scriptdir   = snakemake@params[['scriptdir']]
+    gtf_path  = argv$input[['gtf_path']],
+    outfile   = argv$output[['outfile']],
+    scriptdir = argv$params[['scriptdir']]
 )

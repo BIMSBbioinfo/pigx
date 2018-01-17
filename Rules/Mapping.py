@@ -5,10 +5,10 @@ rule bowtie2_build:
     output:
         outfile = PREFIX + '.1.bt2'
     params:
-        prefix = PREFIX,
+        prefix  = PREFIX,
         threads = 1,
         mem = '32G',
-        bowtie2_build = SOFTWARE['bowtie2-build']
+        bowtie2_build = SOFTWARE['bowtie2-build']['executable']
     log:
         os.path.join(PATH_LOG, "bowtie2_build.log")
     message:
@@ -31,7 +31,7 @@ rule index_to_chrlen:
             prefix  = PREFIX,
             threads = 1,
             mem     = '1G',
-            bowtie2_inspect = SOFTWARE['bowtie2-inspect']
+            bowtie2_inspect = SOFTWARE['bowtie2-inspect']['executable']
         log:
             os.path.join(PATH_LOG, "index_to_chrlen.log")
         message:
@@ -52,11 +52,11 @@ rule bowtie2:
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}/{name}.bam")
     params:
-        threads  = 2,
-        mem      ='16G',
-        bowtie2  = SOFTWARE['bowtie2'],
-        samtools = SOFTWARE['samtools'],
-        library  = get_library_type,
+        threads        = 2,
+        mem            =  '16G',
+        bowtie2        = SOFTWARE['bowtie2']['executable'],
+        samtools       = SOFTWARE['samtools']['executable'],
+        library        = get_library_type,
         params_bowtie2 = PARAMS['bowtie2']
     log:
         log = os.path.join(PATH_LOG, "{name}.bowtie2.log")
@@ -79,7 +79,7 @@ rule bowtie2:
         '-p', str(params.threads),
         '-x', genome,
         map_args,
-        join_params("bowtie2", APP_PARAMS, params.params_bowtie2),
+        join_params("bowtie2", PARAMS, params.params_bowtie2),
         '2>',log.log,
         '|', params.samtools,'view -bhS >', output.bamfile
         ])
@@ -94,7 +94,7 @@ rule samtools_sort:
     params:
         threads = 4,
         mem = '16G',
-        samtools = SOFTWARE['samtools']
+        samtools = SOFTWARE['samtools']['executable']
     message:"""
             Sorting mapped reads:
                 input: {input}
@@ -113,7 +113,7 @@ rule samtools_index:
     params:
         threads = 1,
         mem = '8G',
-        samtools = SOFTWARE['samtools']
+        samtools = SOFTWARE['samtools']['executable']
     message:"""
         Indexing bam file:\n
             input: {input}

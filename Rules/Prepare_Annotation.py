@@ -25,12 +25,13 @@ rule prepare_annotation:
         params:
             threads   = 1,
             mem       = '16G',
-            scriptdir = SCRIPT_PATH
+            scriptdir = SCRIPT_PATH,
+            Rscript   = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'prepare_annotation.log')
         message:"""
                 Running: prepare_annotation:
                     output: {output.outfile}
             """
-        script:
-            os.path.join(SCRIPT_PATH, 'Prepare_Annotation.R')
+        run:
+            RunRscript(input, output, params, BASEDIR, 'Prepare_Annotation.R')
