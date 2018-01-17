@@ -1,0 +1,114 @@
+locations:
+  input-dir: in
+  output-dir: out
+  genome-dir: genome
+
+general:
+  assembly: hg19
+
+
+
+#execution:
+#  submit-to-cluster: no
+#  jobs: 6
+#  nice: 19
+#  cluster:
+#    missing-file-timeout: 120
+#    memory: 8G
+#    stack: 128M
+#    queue: all
+#    contact-email: none
+#  rules:
+#    __default__:
+#      threads: 1
+#      memory: 8G
+#    bowtie2:
+#      threads: 1
+#      memory: 16G
+#     bowtie2-build:
+#      threads: 1
+#      memory: 16G
+
+tools:
+    bamToBed: 
+        executable: bamToBed
+        args: ""
+    bowtie2: 
+        executable: bowtie2
+        args: ""
+        help: '-h'
+        remove:
+             - S
+             - x
+             - 1
+             - 2
+             - U
+        
+        
+    bowtie2-build: 
+        executable: bowtie2-build
+        args: ""
+
+    bowtie2-inspect: 
+        executable: bowtie2-inspect
+        args: ""
+        
+    fastqc: 
+        executable: fastqc
+        args: ""    
+        
+    idr: 
+        executable: idr
+        args: ""
+        help: '-h'
+        remove:
+            - samples
+            - input-file-type
+            - rank
+            - output-file
+            - l
+            - plot
+
+    macs2: 
+        executable: macs2
+        args: ""
+        help: 'callpeak -h'
+        remove:
+            - t
+            - c
+            - outdir
+            - n
+
+    perl: 
+        executable: perl
+        args: ""
+
+    Rscript: 
+        executable: /usr/bin/Rscript
+        args: ""
+        dependencies:
+            - data.table
+            - genomation
+            - GenomicRanges
+            - RCAS
+            - rtracklayer
+            - stringr
+    samtools: 
+        executable: samtools
+        args: ""
+
+    python: 
+        executable: pyton
+        args: ""
+        dependencies:
+            - fnmatch
+            - os
+            - sys
+            - yaml
+            - pytest
+            - itertools
+            
+    bedToBigBed:
+        executable: '/home/vfranke/bin/Software/UCSC/bedToBigBed'
+        args: ""
+
