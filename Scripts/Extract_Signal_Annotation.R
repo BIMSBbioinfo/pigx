@@ -1,4 +1,9 @@
 # ---------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Scripts/Argument_Parser.R'))
+argv = Parse_Arguments('Extract_Signal_Annotation')
+
+# ---------------------------------------------------------------------------- #
 #' Extract_Signal_Annotation - given a bigWig file and a set of regions, extracts
 #' the signal for downstream analysis
 #'
@@ -9,12 +14,12 @@
 #'
 #' @return saves RDS object with a list of ScoreMatrix and summarized profiles
 Extract_Signal_Annotation = function(
-    annotation  = NULL, 
+    annotation  = NULL,
     wig         = NULL,
     outfile     = NULL,
     scriptdir   = NULL
 ){
-    
+
     # --------------------------------------------------------------- #
     # checks for default arugments
     deflist = as.list(formals(Annotate_Peaks))
@@ -22,29 +27,29 @@ Extract_Signal_Annotation = function(
     arg.ind = names(deflist) %in% names(arglist)
     if(any(arg.ind))
         stop(paste(paste(names(arglist)[arg.ind], collapse=','),'not defined'))
-    
+
     # --------------------------------------------------------------- #
     suppressPackageStartupMessages(library('genomation'))
     suppressPackageStartupMessages(library('GenomicRanges'))
     suppressPackageStartupMessages(library('data.table'))
     source(file.path(scriptdir,'Functions_Helper.R'), local=TRUE)
-   
+
     # --------------------------------------------------------------- #
     message('Annotation ...')
         annot = readRDS(annotation)
         annot$genomic_annotation$gene = subset(annot$gtf$gtf, type='gene')
-        
+
     message('Extract Profiles ...')
         nams = names(annot$genomic_annotation)
         lsml = lapply(setNames(nams, nams), function(x)
             ScoreMatrixBin(wig, x[[x]], bin.num = bin.num, strand.aware=TRUE))
-    
-    message('Sumarize Profiles ...')    
+
+    message('Sumarize Profiles ...')
         profiles = lapply(lsml, function(x){
-            d = data.table(sample = peakname, 
+            d = data.table(sample = peakname,
                            signal = rowMeans(x))
         })
-    
+
     lout = list(
         sml      = lsml,
         profiles = profiles
@@ -55,9 +60,9 @@ Extract_Signal_Annotation = function(
 
 # ---------------------------------------------------------------------------- #
 Extract_Signal_Annotation(
-    annotation  = snakemake@input[['annotation']],
-    wig         = snakemake@input[['wig']],
-    outfile     = snakemake@output[['outfile']],
-    scriptdir   = snakemake@params[['scriptdir']],
-    peakname    = snakemake@params[['peakname']]
+    annotation  = argv$input[['annotation']],
+    wig         = argv$input[['wig']],
+    outfile     = argv$output[['outfile']],
+    scriptdir   = argv$params[['scriptdir']],
+    peakname    = argv$params[['peakname']]
 )
