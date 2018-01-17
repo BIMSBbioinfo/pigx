@@ -79,6 +79,31 @@ It was first developed by the Akalin group at MDC in Berlin in 2017.
 
 This report was generated with PiGx BSseq version @VERSION@.
 
+The results were saved to the output directory listed in the following table; for the remainder of this report, this path will be referred to as '[out]'.
+  
+ 
+```{r Reporttoplevel_HEADER, eval=TRUE}
+
+basic_paramsDesc <- c("Sample ID",
+            "Source directory",
+            "Output directory",
+            "Reference genome assembly"
+            )
+
+basic_paramsValues <- c( params$Samplename,
+             params$source_dir,
+             params$out_dir, 
+             params$assembly
+             )
+
+basic_inputParams <- data.frame(Parameters = basic_paramsDesc,
+                          Values = basic_paramsValues,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(basic_inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(basic_inputParams)
+
+```
 
 ```{r MethCallHeader, results='asis', eval=MethCall} 
 cat('## Methylation Calling\n')
@@ -105,21 +130,13 @@ cat('**Input parameters:**\n')
 
 ```{r MethCall.print_params_in2, eval=MethCall}
 
-paramsDesc <- c("Sample ID",
-            "Source directory",
-            "Output directory",
-            "Bam file",
-            "Genome Assembly",
-            "Minimum Coverage",
-            "Minimim Mapping Quality")
+paramsDesc <- c( "Bam file",
+                 "Minimum Coverage",
+                 "Minimim Mapping Quality")
 
-paramsValues <- c( params$Samplename,
-             params$source_dir,
-             params$out_dir, 
-             params$inBam,
-             params$assembly,
-             params$mincov,
-             params$minqual)
+paramsValues <- c( paste0("[out]/",params$inBam),
+                   params$mincov,
+                   params$minqual)
 
 inputParams <- data.frame(Parameters = paramsDesc,
                           Values = paramsValues,
@@ -136,7 +153,7 @@ cat('**Output parameters:**\n')
 ```{r MethCall.print_params_out2, eval=MethCall}
 
 inputParams <- data.frame(Parameters = "MethylRaw Object",
-                          Values      = params$methCallRDS,
+                          Values      = gsub( params$out_dir, "[out]",  params$methCallRDS),
                           stringsAsFactors = FALSE)
 #params
 #datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
@@ -194,6 +211,16 @@ cat('### Parameters\n')
 cat('**Input parameters:**\n')
 ```
 
+```{r Segmentation.print_params_in2, eval=Segmentation}
+
+inputParams <- data.frame(Parameters = "MethylRaw Object",
+                          Values     = gsub( params$out_dir, "[out]",  methCallRDS),
+                          stringsAsFactors = FALSE)
+#params
+#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(inputParams)
+```
+
 ```{r Segmentation.print_params_out, results='asis', eval=Segmentation}
 cat('**Output parameters:**\n')
 ```
@@ -207,7 +234,7 @@ paramsValues <- c(methSegBed,
                   methSegGR)
 
 inputParams <- data.frame(Parameters = paramsDesc,
-                          Values = paramsValues,
+                          Values     = gsub( params$out_dir, "[out]", paramsValues),
                           stringsAsFactors = FALSE)
 #params
 #datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
@@ -280,8 +307,8 @@ paramsDesc <- c("Segments (GRanges)",
 paramsValues <- c(params$methSegGR,
                   params$assembly)
 
-inputParams <- data.frame(Parameters = paramsDesc,
-                          Values = paramsValues,
+inputParams <- data.frame(Parameters =  paramsDesc,
+                          Values     =  gsub( params$out_dir, "[out]", paramsValues),
                           stringsAsFactors = FALSE)
 #params
 #datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
@@ -450,8 +477,8 @@ cat('**Output parameters:**\n')
   
 ```{r DiffMeth.print_params_out2, eval=DiffMeth}
 
-paramsDesc <- c("BEDfile", "RDSfile (diff. methyl. Cs)","RDSfile_hyper (hyper-methyl. Cs)","RDSfile_hypo (hypo-methyl. Cs)")
-paramsValues <- c(methylDiffBed, methylDiff_file, methylDiff_hyper_file, methylDiff_hypo_file)
+paramsDesc   <- c("BEDfile", "RDSfile (diff. methyl. Cs)","RDSfile_hyper (hyper-methyl. Cs)","RDSfile_hypo (hypo-methyl. Cs)")
+paramsValues <-  gsub( params$out_dir, "[out]", c(methylDiffBed, methylDiff_file, methylDiff_hyper_file, methylDiff_hypo_file) )
 outputParams <- data.frame(Parameters = paramsDesc,
                           Values = paramsValues,
                           stringsAsFactors = FALSE)
