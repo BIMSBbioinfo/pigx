@@ -213,6 +213,11 @@ def generateReport(input, output, params, log, reportSubDir):
                            "--logFile={log}"])
     shell(cmd, dumps)
 
+def bail(msg):
+    """Print the error message to stderr and exit."""
+    print(msg, file=sys.stderr)
+    exit(1)
+
 def validate_config(config):
     # Check that all locations exist
     for loc in config['locations']:
