@@ -53,4 +53,4 @@
         (email  . "ricardo.wurmus@mdc-berlin.de"))
       #:readers (list commonmark-reader html-reader)
       #:builders (list (blog #:theme default-theme #:collections '())
-                       (static-directory "static")))
+                       (static-directory "static" ".")))
