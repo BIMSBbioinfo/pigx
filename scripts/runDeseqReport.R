@@ -61,7 +61,8 @@ runReport <- function(reportFile,
                       quiet = FALSE) {
   
   outFile <- paste0(prefix, '.deseq.report.html')
-  
+
+  htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
     input = reportFile, 
     output_dir = workdir,
