@@ -23,11 +23,6 @@
 #'   differential expression analysis (e.g. batch, age, temperature,
 #'   sequencing_technology etc.). Must correspond to a column field in the
 #'   colDataFile file).
-#' @param geneSetsFolder A folder with one or more .txt files, where each txt
-#'   file contains a list of gene ids (subset of the gene ids used as row names
-#'   in the count data table), one id per line. GAGE package is utilized to find
-#'   out if the given gene set is collectively up/down regulated in the case
-#'   samples compared to the control samples.
 #' @param workdir Path to working directory where the output files will be
 #'   written
 #' @param organism The organism for which the analysis is done (e.g. hsapiens, 
@@ -85,7 +80,6 @@ runReport <- function(reportFile,
                   caseSampleGroups = caseSampleGroups,
                   controlSampleGroups = controlSampleGroups,
                   covariates = covariates,
-                  geneSetsFolder = geneSetsFolder, 
                   prefix = prefix,
                   workdir = workdir,
                   logo = logo,
@@ -131,11 +125,6 @@ wild-type or untreated samples)
 differential expression analysis (e.g. batch, age, temperature,
 sequencing_technology etc.). Must correspond to a column field in the 
 colDataFile file).
---geneSetsFolder (Optional) A folder with one or more .txt files, where each txt
-file contains a list of gene ids (subset of the gene ids used as row names
-in the count data table), one id per line. GAGE package is utilized to find
-out if the given gene set is collectively up/down regulated in the case
-samples compared to the control samples.
 --workdir (Optional, default: current working directory) Path to working directory 
 where the output files will be written
 --organism (Optional) The organism for which the analysis is done. Supported
@@ -157,7 +146,6 @@ Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \\\
 --caseSampleGroups='spt.16_N2_L4, hmg.4_N2_L4' \\\
 --controlSampleGroups='ctrl_N2_L4' \\\
 --covariates='batch, temp' \\\
---geneSetsFolder='./sample_data/genesets' \\\
 --workdir=`pwd` \\\
 --organism='hsapiens' \\\
 --prefix='spt-16_hmg-4_vs_ctrl' \\\
@@ -222,14 +210,6 @@ if(!("covariates") %in% argsDF$V1) {
   covariates <- argsL$covariates
 }
 
-if(!("geneSetsFolder") %in% argsDF$V1) {
-  cat(help_command, "\n")
-  warning("Missing argument: geneSetsFolder. Will not do gene set enrichment analysis\n")
-  geneSetsFolder <- ''
-} else {
-  geneSetsFolder <- argsL$geneSetsFolder
-}
-
 if(!("organism") %in% argsDF$V1) {
   cat(help_command, "\n")
   warning("Missing argument: organism Will skip GO term analysis\n")
@@ -282,7 +262,6 @@ runReport(reportFile = reportFile,
           caseSampleGroups = caseSampleGroups, 
           controlSampleGroups = controlSampleGroups, 
           covariates = covariates,
-          geneSetsFolder = geneSetsFolder,
           workdir = workdir, 
           organism = organism,
           prefix = prefix,

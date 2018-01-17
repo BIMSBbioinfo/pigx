@@ -9,7 +9,6 @@ params:
   caseSampleGroups: ''
   controlSampleGroups: '' 
   covariates: ''
-  geneSetsFolder: ''
   prefix: ''
   workdir: '.'
   organism: ''
@@ -79,7 +78,6 @@ controlSampleGroups <- params$controlSampleGroups
 covariates <- params$covariates
 prefix <- params$prefix
 workdir <- params$workdir
-geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
 organism <- params$organism
 
 #gProfiler tool needs internet access to work. So, go analysis module is conditional
@@ -90,7 +88,6 @@ inputParameterDesc <- c('Count Data File',
                      'Case sample groups',
                      'Control sample groups', 
                      'Covariates to control for',
-                     'Gene Sets Folder',
                      'Prefix for output files',
                      'Working directory',
                      'Analyzed organism'
@@ -100,7 +97,6 @@ inputParameterValues <- c(countDataFile,
                           caseSampleGroups,
                           controlSampleGroups, 
                           covariates,
-                          geneSetsFolder,
                           prefix,
                           workdir,
                           organism)
@@ -111,7 +107,7 @@ DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 9,
+                         pageLength = 8,
                          dom = 't'))
 ```
 
