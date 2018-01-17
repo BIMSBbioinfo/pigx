@@ -3,16 +3,16 @@
 This repository includes the pipeline repositories as git subtrees.  The following commands were used to add them:
 
 #+BEGIN_SRC sh
-for pipeline in bsseq rnaseq chipseq crispr; do
+for pipeline in bsseq rnaseq chipseq crispr scrnaseq; do
   git remote add $pipeline git@github.com:BIMSBbioinfo/pigx_$pipeline.git
   git subtree add --prefix=pipelines/$pipeline/ $pipeline master
 done
 #+END_SRC
 
-To update, say, the copy of the bsseq pipeline, run:
+To update all subtrees run:
 
 #+BEGIN_SRC sh
-for pipeline in bsseq rnaseq chipseq crispr; do
+for pipeline in bsseq rnaseq chipseq crispr scrnaseq; do
   git subtree pull --prefix=pipelines/$pipeline/ $pipeline master
 done
 #+END_SRC

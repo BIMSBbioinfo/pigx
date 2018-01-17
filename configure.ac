@@ -46,6 +46,13 @@ if test "x$enable_crispr" = "xyes"; then
   pipelines="$pipelines crispr"
 fi
 
+AC_ARG_ENABLE([scrnaseq],
+   AS_HELP_STRING([--enable-scrnaseq], [Build the single cell RNAseq pipeline.]))
+if test "x$enable_scrnaseq" = "xyes"; then
+  AC_CONFIG_SUBDIRS([pipelines/scrnaseq])
+  pipelines="$pipelines scrnaseq"
+fi
+
 AC_SUBST([pipelines], [$pipelines])
 AC_CONFIG_FILES([pigx], [chmod +x pigx])
 AC_CONFIG_FILES([Makefile])
