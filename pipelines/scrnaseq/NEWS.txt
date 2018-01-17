@@ -1,0 +1,66 @@
+NEWS:
+
+
+
+171207:
+   [*]. bigWig files for selected cells
+   [*]. Add fastqc
+
+171206:
+    - working pipeline
+
+
+
+
+To Do:
+
+[]. Gene count matrix
+[]. Read statistics with dropbeat
+[]. manual parameters
+
+
+
+[]. indrop parser
+[]. File order for read_dropseq is hardcoded - change this
+[]. Downstream analysis:
+    - normalization
+    - imputation
+    - clustering
+    - cell types
+    - visualization
+    - tsne
+    - pseudotime inference
+    - diffusion maps
+[]. set report to relative path
+
+
+Indrop index specification:
+indrop UMI description:
+sequence W1 adapter: AAGGCGTCACAAGCAATCACTC
+
+B1 anatomy: BBBBBBBB[BBB]WWWWWWWWWWWWWWWWWWWWWWCCCCCCCCUUUUUUTTTTTTTTTT______________
+B = Barcode1, can be 8, 9, 10 or 11 bases long.
+W = 'W1' sequence, specified below
+C = Barcode2, always 8 bases
+U = UMI, always 6 bases
+T = Beginning of polyT tail.
+_ = Either sequencing survives across the polyT tail, or signal starts dropping off
+(and start being anything, likely with poor quality)
+minimal_polyT_len_on_R1 = 7
+hamming_threshold_for_W1_matching = 3
+w1 = "GAGTGATTGCTTGTGACGCCTT"
+rev_w1 = "AAGGCGTCACAAGCAATCACTC" #Hard-code so we don't recompute on every one of millions of calls
+
+
+Tests:
+    - gtf tests:
+        - check for gene_id and gene_name columns in gtf
+
+
+ADDITIONAL WORK:
+
+* scRNA_report - dependency on the get_umi_matrix must be set
+* Create rules for making all of the annotation
+* The rmarkdown document needs to be updated for the experiment selection
+* sort out the getfiles function to be unambiguous
+* write checks for data structures
