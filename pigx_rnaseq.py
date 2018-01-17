@@ -135,9 +135,6 @@ selected_targets = config['execution']['target'] or ['final-report']
 from itertools import chain
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
-print(OUTPUT_FILES)
-
-
 rule all:
   input: OUTPUT_FILES
 
