@@ -1,4 +1,4 @@
-
+# ---------------------------------------------------------------------------- #
 import subprocess
 import re
 import os
@@ -6,7 +6,7 @@ import sys
 
 # ---------------------------------------------------------------------------- #
 def get_fastq_input(wc):
-    samps = config['samples'][wc.name]['fastq']
+    samps = SAMPLE_SHEET['samples'][wc.name]['fastq']
 
     if type(samps) is str:
         samps = [samps]
@@ -16,15 +16,15 @@ def get_fastq_input(wc):
 
 # ---------------------------------------------------------------------------- #
 def get_library_type(wc):
-    lib = config['samples'][wc.name]['library']
+    lib = SAMPLE_SHEET['samples'][wc.name]['library']
     return(lib)
 
 # ---------------------------------------------------------------------------- #
 # given a config dictionary sets the default value
-def set_default(param, default, config):
+def set_default(param, default, dictionary):
 	VALUE = ''
-	if param in config.keys() and config[param] != None:
-		VALUE = config[param]
+	if param in dictionary.keys() and dictionary[param] != None:
+		VALUE = dictionary[param]
 	else:
 		VALUE = default
 
@@ -32,8 +32,8 @@ def set_default(param, default, config):
 
 # ---------------------------------------------------------------------------- #
 # given a app name calls the help and parses the parameters
-def get_app_params(app, app_name, app_params):
-    app_return = subprocess.check_output(app +' '+ app_params[app_name]['help'], shell=True)
+def get_app_params(app_name):
+    app_return = subprocess.check_output(SOFTWARE[app_name]['executable'] +' '+ SOFTWARE[app_name]['help'], shell=True)
     app_return = str(app_return)
     vals = list(set(re.findall('(\-{1,2}[a-zA-Z][\w\-]*)\W' , app_return)))
     keys = [re.sub('^-+','',i) for i in vals]
@@ -41,18 +41,19 @@ def get_app_params(app, app_name, app_params):
     return(args)
 
 # ---------------------------------------------------------------------------- #
+# WRITE TESTS FOR THIS FUNCTION!!!
 def join_params(app, app_params, params_set):
-    app_name = os.path.basename(app)
-    params_all = get_app_params(app, app_name, app_params)
-    names  = set(params_all.keys())
+    app_name    = os.path.basename(app)
+    params_all  = get_app_params(app_name)
+    names       = set(params_all.keys())
     params_diff = set(params_set) - names
     if len(params_diff) > 0:
         print(app_name + 'contains unknown parameters:' + ", ".join(list(params_diff)))
         return(0)
     params_set_keys = set(params_set.keys())
-    # check whether some of the arguments are disallower
-    if 'remove' in app_params[app_name].keys():
-        params_set_keys = params_set_keys- set(app_params[app_name]['remove'])
+    # check whether some of the arguments are not allowed
+    if 'remove' in SOFTWARE[app_name].keys():
+        params_set_keys = params_set_keys- set(SOFTWARE[app_name]['remove'])
     params_set_keys = list(params_set_keys)
     params = [params_all[i] +' '+ str(params_set[i]) for i in params_set_keys]
     params = " ".join(params)
@@ -60,12 +61,11 @@ def join_params(app, app_params, params_set):
 
 # ---------------------------------------------------------------------------- #
 # given a sample name extracts whether the sample is broadPeak or narrowPeak
-def get_macs2_suffix(name, config):
-    sample = config['peak_calling'][name]
+def get_macs2_suffix(name, dictionary):
+    sample = dictionary[name]
     suffix = 'narrowPeak'
-    if 'params' in set(sample.keys()):
-        if 'macs2' in set(sample['params'].keys()):
-            if 'broad' in set(sample['params']['macs2'].keys()):
+    if 'macs2' in set(sample.keys()):
+        if 'broad' in set(sample['macs2'].keys()):
                 suffix = 'broadPeak'
     return(suffix)
 
@@ -79,3 +79,26 @@ def flatten(l):
         else:
             out.append(item)
     return out
+
+
+# ---------------------------------------------------------------------------- #
+def RunRscript(input, output, params, basedir, script):
+
+    # if isinstance(input, list):
+    #     input = dict(zip(input, input))
+
+    print(input.items())
+    params_dump = json.dumps(dict(params.items()),sort_keys=True,
+                       separators=(",",":"), ensure_ascii=True)
+    input_dump  = json.dumps(dict(input.items()),sort_keys=True,
+                       separators=(",",":"), ensure_ascii=True)
+    output_dump = json.dumps(dict(output.items()),sort_keys=True,
+                       separators=(",",":"), ensure_ascii=True)
+
+    cmd = " ".join(['nice -19',str(params.Rscript), os.path.join(SCRIPT_PATH, script),
+                    "--basedir", basedir,
+                    "--input",  "{input_dump:q}",
+                    "--output", "{output_dump:q}",
+                    "--params", "{params_dump:q}"])
+
+    shell(cmd)

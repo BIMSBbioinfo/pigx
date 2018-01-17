@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------- #
 def get_sample_idr(wc):
-    name = config['idr'][wc.name]
+    name = SAMPLE_SHEET['idr'][wc.name]
     samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_qsort.bed') for i in name.values()]))
     return(samps)
 
@@ -11,9 +11,9 @@ rule idr:
     output:
         outfile = os.path.join(PATH_IDR, "{name}", "{name}.bed")
     params:
-        threads = 1,
-        mem = '8G',
-        idr = SOFTWARE['idr'],
+        threads    = 1,
+        mem        = '8G',
+        idr        = SOFTWARE['idr']['executable'],
         params_idr = PARAMS['idr']
     log:
         log = os.path.join(PATH_LOG, '{name}.idr.log')
@@ -32,6 +32,6 @@ rule idr:
         '--output-file', output.outfile,
         '-l', log.log,
         '--plot',
-        join_params("idr", APP_PARAMS, params.params_idr)
+        join_params("idr", PARAMS, params.params_idr)
         ])
         shell(command)

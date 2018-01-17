@@ -1,25 +1,59 @@
 import itertools
 import os
-# ---------------------------------------------------------------------------- #
-# checks the proper structure of the config file
-# ---------------------------------------------------------------------------- #
-def check_config(config):
 
-    from itertools import chain
+# ---------------------------------------------------------------------------- #
+def check_proper_settings_configuration(settings_dict, sample_sheet_dict):
     message = ''
-    # checks for proper top level config categories
-    params = ['genome','index','fastq','params','samples','peak_calling','idr','hub','software','annotation','feature_combination']
+    message = check_settings(settings_dict, message)
+    message = check_sample_sheet(sample_sheet_dict, settings_dict, message)
+    
+    if len(message) > 0:
+        message = 'ERROR: Config file is not properly formated:\n' + message
+        print(message)
+        quit();
 
+# ---------------------------------------------------------------------------- #
+# checks the proper structure of the settings file
+# ---------------------------------------------------------------------------- #
+def check_settings(settings_dict, message):
+    
     # ---------------------------------------------------------------------------- #
-    params_diff = set(config.keys()) - set(params)
-    if len(params_diff) > 0:
-        message = message + "\t" + "config file contains unknown parameters\n"
-
+    params_list  = ['locations','general','execution','tools']
+    message = check_params(settings_dict, params_list, message)
+  
     # ---------------------------------------------------------------------------- #
-    # checks for index or genome specification
-    if (config['genome']['fasta'] == None) and (config['index'] == None):
+    # checks for index or genome specification   
+    locations_dict = settings_dict['locations']
+    if (locations_dict['genome-file'] == None) and (locations_dict['index-dir'] == None):
         message = message + "\t" + "neither genome nor index are specified\n"
     
+    # checks whether the locations files exist if they are specified
+    for location in sorted(list(set(locations_dict.keys()) - set(['annotation']))):
+        message = check_file_exists(locations_dict, location, message)
+
+    # checks whether the annotation files exist if they are specified
+    if not locations_dict['annotation'] == None:
+        annotations_dict = locations_dict['annotation']
+        for annotation in annotations_dict.keys():
+            message = check_file_exists(annotations_dict, annotation, message)
+   
+
+    return(message)
+  
+
+
+# ---------------------------------------------------------------------------- #
+# checks the proper structure of the sample_sheet file
+# ---------------------------------------------------------------------------- #
+def check_sample_sheet(config, settings_dict, message):
+
+    from itertools import chain
+
+    # ---------------------------------------------------------------------------- #
+    # checks for proper top level config categories
+    params = ['samples','peak_calling','idr','hub','feature_combination']
+    params_list  = ['locations','general','execution','tools']
+    message = check_params(settings_dict, params_list, message)
 
     # ---------------------------------------------------------------------------- #
     # checks for sample specification
@@ -73,43 +107,58 @@ def check_config(config):
 
     # ---------------------------------------------------------------------------- #
     # checks whether the designated files exist
-    message = check_file_exists(config, message)
+    message = check_sample_exists(config, settings_dict, message)
 
     # checks whether extend is a number
     # if not (is.number(config['params']['extend'])):
     #     message = message + "extend must be a number\n"
+    
+    return(message)
 
-    if len(message) > 0:
-        message = 'ERROR: Config file is not properly formated:\n' + message
-        print(message)
-        return(1);
-
-    return(0)
 
 # ---------------------------------------------------------------------------- #
-def check_file_exists(config, message=''):
+# checks whether the supplied file or directory exists in the settings file
+def check_file_exists(locations_dict, file_name, message=''):
     import os
     from itertools import chain
-#     IPython.embed()
+    if not locations_dict[file_name] == None:
+       dirfile = locations_dict[file_name]
+       dir_ind = os.path.isfile(dirfile) or os.path.isdir(dirfile)
+       if not dir_ind:
+           message = message + "\t" + file_name + "is not a valid file\n"
 
-    # checks whether the genome fasta file exists if the file is specified
-    if not config['genome']['fasta'] == None:
-        if not os.path.isfile(config['genome']['fasta']):
-            message = message + "\tgenome file is not a valid file\n"
+    return(message)
+    
+# ---------------------------------------------------------------------------- #
+def check_sample_exists(config, settings_dict, message=''):
+    import os
+    from itertools import chain
 
     # checks whether the fastq path is specified
-    if config['fastq'] == None:
+    locations_dict = settings_dict['locations']
+    if locations_dict['input-dir'] == None:
         message = message + "\tfastq input directory is not specified\n"
     else:
+        input_dir = locations_dict['input-dir']
         if not config['samples'] == None:
             files = [config['samples'][s]['fastq'] for s in config['samples'].keys()]
             files = [([x] if isinstance(x,str) else x) for x in files]
             files = list(itertools.chain(*files))
             for file in files:
-                if not os.path.isfile(os.path.join(config['fastq'],file)):
-                    message = message + '\t'+file + ": file does not exist\n"
+                if not os.path.isfile(os.path.join(input_dir, file)):
+                    message = message + '\t'+ file + ": file does not exist\n"
 
     return(message)
+    
+# ---------------------------------------------------------------------------- #
+# given a dict, checks for existence of params
+def check_params(settings_dict, params, message):
+    params_diff = set(settings_dict.keys()) - set(params)
+
+    if len(params_diff) > 0:
+        message = message + "\t" + "sample_sheet file contains unknown parameters\n" 
+    
+    return(params_diff) 
     
 # ---------------------------------------------------------------------------- #
 # given a list of lists, returns a flattened version

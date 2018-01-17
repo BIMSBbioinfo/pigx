@@ -1,4 +1,9 @@
 # ---------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Scripts/Argument_Parser.R'))
+argv = Parse_Arguments('Extract_Signal_Peaks')
+
+# ---------------------------------------------------------------------------- #
 #' Extract_Signal_Peaks - given a bigWig file and a set of regions, extracts
 #' the signal around the peak regions
 #'
@@ -19,10 +24,10 @@ Extract_Signal_Peaks = function(
     scriptdir   = NULL,
     peakname    = 'Peak'
 ){
-    
+
     if(is.null(scriptdir))
         stop('Please specify the script directory')
-    
+
     suppressPackageStartupMessages(library('genomation'))
     suppressPackageStartupMessages(library('GenomicRanges'))
     suppressPackageStartupMessages(library('data.table'))
@@ -30,32 +35,32 @@ Extract_Signal_Peaks = function(
     # --------------------------------------------------------------- #
     if(is.null(annotation))
         stop('Annotation is not specified')
-    
+
     if(is.null(bed))
         stop('bed file is not specified')
-    
+
     if(is.null(wig))
         stop('wig file is not specified')
-    
+
     # --------------------------------------------------------------- #
     message('Annotation ...')
         annot = readRDS(annotation)
         annot$genomic_annotation$gene = subset(annot$gtf$gtf, type='gene')
-        
+
     message('Data ...')
         peaktype = ifelse(grepl('narrow', basename(bed)),'readNarrowPeak','readBroadPeak')
         bed      = match.fun(peaktype)(bed)
-        
+
     message('Extract Profiles ...')
         bed_expand = resize(bed, width = expand.peak, fix='center')
         sml  = ScoreMatrixBin(wig, bed_expand, bin.num = bin.num)
-   
-    message('Sumarize Profiles ...')    
+
+    message('Sumarize Profiles ...')
         profiles = data.table(
-            sample  = peakname, 
+            sample  = peakname,
             signal = rowMeans(x))
-        
-    
+
+
     lout = list(
         sml      = ssml,
         profiles = profiles
@@ -66,11 +71,11 @@ Extract_Signal_Peaks = function(
 
 # ---------------------------------------------------------------------------- #
 Extract_Signal_Peaks(
-    bed         = snakemake@input[['peaks']],
-    wig         = snakemake@input[['wig']],
-    outfile     = snakemake@output[['outfile']],
-    expand.peak = snakemake@params[['expand_peak']],
-    bin.num     = snakemake@params[['bin_num']],
-    scriptdir   = snakemake@params[['scriptdir']],
-    peakname    = snakemake@params[['peakname']]
+    bed         = argv$input[['peaks']],
+    wig         = argv$input[['wig']],
+    outfile     = argv$output[['outfile']],
+    expand.peak = argv$params[['expand_peak']],
+    bin.num     = argv$params[['bin_num']],
+    scriptdir   = argv$params[['scriptdir']],
+    peakname    = argv$params[['peakname']]
 )

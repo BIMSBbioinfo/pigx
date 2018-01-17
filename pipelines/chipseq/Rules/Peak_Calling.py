@@ -2,13 +2,13 @@
 def get_files_macs(wc):
     paths = {}
 
-    chip = config['peak_calling'][wc.name]['ChIP']
+    chip = SAMPLE_SHEET['peak_calling'][wc.name]['ChIP']
     if isinstance(chip,str):
         chip = [chip]
     chips = [os.path.join('Mapped','Bowtie', i, i + '.sorted.bam') for i in chip]
     paths['ChIP'] = chips
 
-    cont = config['peak_calling'][wc.name]['Cont']
+    cont = SAMPLE_SHEET['peak_calling'][wc.name]['Cont']
     if not cont == None:
         if isinstance(cont,str):
             cont = [cont]
@@ -24,11 +24,11 @@ rule macs2:
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.{class, narrow|broad}Peak")
     params:
-        outpath = os.path.join(PATH_PEAK, "{name}"),
-        name = "{name}",
-        threads = 1,
-        mem = '16G',
-        macs2 = SOFTWARE['macs2'],
+        outpath     = os.path.join(PATH_PEAK, "{name}"),
+        name        = "{name}",
+        threads     = 1,
+        mem         = '16G',
+        macs2       = SOFTWARE['macs2']['executable'],
         params_macs = PARAMS['macs2']
     log:
         log = os.path.join(PATH_LOG, '{name}.macs.log')
@@ -39,9 +39,8 @@ rule macs2:
     """
     run:
         params_macs = params.params_macs
-        if 'params' in config['peak_calling'][params.name].keys():
-            if 'macs2' in config['peak_calling'][params.name]['params'].keys():
-                params_macs.update(config['peak_calling'][params.name]['params']['macs2'])
+        if 'macs2' in CUSTOM_PARAMS[params.name].keys():
+            params_macs.update(CUSTOM_PARAMS[params.name]['macs2'])
 
         # checks whether the control samples are specified
         samples = ''
@@ -55,20 +54,20 @@ rule macs2:
         samples,
         '--outdir', params.outpath,
         '-n', params.name,
-        join_params("macs2", APP_PARAMS, params_macs),
+        join_params("macs2", PARAMS, params_macs),
         '2>', log.log
         ])
         shell(command)
 
 # ----------------------------------------------------------------------------- #
-def get_macs_output(name, PATH):
-    suffix = get_macs2_suffix(name, config)
-    peak_name = os.path.join(PATH, name, name + '_peaks.' + suffix)
+def get_macs_output(wc):
+    suffix = get_macs2_suffix(wc.name, CUSTOM_PARAMS)
+    peak_name = os.path.join(PATH_PEAK, wc.name, wc.name + '_peaks.' + suffix)
     return(peak_name)
 
 rule sort_peak:
     input:
-        get_macs_output(name, PATH_PEAK)
+        get_macs_output
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.bed")
     params:

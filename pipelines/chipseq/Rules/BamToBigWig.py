@@ -6,10 +6,10 @@ rule bam2bed:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}/{name}.bed")
     params:
-        extend=config['params']['extend'],
-        threads = 1,
-        mem = '16G',
-        bamToBed = SOFTWARE['bamToBed']
+        extend   = PARAMS['extend'],
+        threads  = 1,
+        mem      = '16G',
+        bamToBed = SOFTWARE['bamToBed']['executable']
     shell: """
         {params.bamToBed} -i {input.file} > {output.outfile}
     """
@@ -23,16 +23,17 @@ rule bam2bigWig:
     params:
         threads  = 1,
         mem      = '16G',
-        extend   = config['params']['extend'],
-        scale    = config['params']['scale_bw']
+        extend   = PARAMS['extend'],
+        scale    = PARAMS['scale_bw'],
+        Rscript  = SOFTWARE['Rscript']['executable']
     message:"""
         Making bigWig:
             input : {input.file}
             output: {output.outfile}
             scale:  {params.scale}
     """
-    script:
-        os.path.join(SCRIPT_PATH, 'BigWigExtend.R')
+    run:
+        RunRscript(input, output, params, BASEDIR, 'BigWigExtend.R')
 
 # ----------------------------------------------------------------------------- #
 rule makelinks:

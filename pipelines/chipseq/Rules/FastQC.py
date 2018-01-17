@@ -7,8 +7,8 @@ rule fastqc:
     params:
         outpath = os.path.join(PATH_QC, "{name}"),
         threads = 1,
-        mem = '8G',
-        fastqc = SOFTWARE['fastqc']
+        mem     = '8G',
+        fastqc  = SOFTWARE['fastqc']['executable']
     message:"""
             FastQC:
                 input: {input.infile}

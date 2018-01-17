@@ -1,4 +1,9 @@
 # ---------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Scripts/Argument_Parser.R'))
+argv = Parse_Arguments('Feature_Combination')
+
+# ---------------------------------------------------------------------------- #
 Feature_Combination = function(
   features,
   scriptdir,
@@ -29,27 +34,15 @@ Feature_Combination = function(
           feat.comb = findFeatureComb(feat.list, use.names=TRUE)
       }
       feat.comb$peak_id = paste0('Peak',sprintf('%07d', 1:length(feat.comb)))
-      
+
 
       saveRDS(feat.comb, file = outfile)
-
 }
-
-
-
 
 # ---------------------------------------------------------------------------- #
 # function call
 Feature_Combination(
-    features         = snakemake@input,
-    outfile          = snakemake@output[['outfile']],
-    scriptdir        = snakemake@params[['scriptdir']]
+    features         = argv$input,
+    outfile          = argv$output[['outfile']],
+    scriptdir        = argv$params[['scriptdir']]
 )
-
-# feature_Combination(
-#     features    =args[['features']],
-#     bw          =args[['bw']],
-#     annotation  = args[['annotation']],
-#     outpath     = args[['outpath']],
-#     scriptdir   = args[['scriptdir']]
-# )
