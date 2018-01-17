@@ -1,3 +1,24 @@
+# PiGx RNAseq Pipeline.
+#
+# Copyright © 2017, 2018 Bora Uyar <bora.uyar@mdc-berlin.de>
+# Copyright © 2017, 2018 Jonathan Ronen <yablee@gmail.com>
+# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx RNAseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
 Snakefile for pigx rnaseq pipeline
 """
