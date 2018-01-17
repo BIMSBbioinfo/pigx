@@ -1,3 +1,24 @@
+# PiGx RNAseq Pipeline.
+#
+# Copyright © 2017, 2018 Bora Uyar <bora.uyar@mdc-berlin.de>
+# Copyright © 2017, 2018 Jonathan Ronen <yablee@gmail.com>
+# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx RNAseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
 Snakefile for pigx rnaseq pipeline
 """
@@ -6,6 +27,9 @@ import os
 import yaml
 import csv
 import inspect
+
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/validate_input.py')
+validate_config(config)
 
 GENOME_FASTA = config['locations']['genome-fasta']
 CDNA_FASTA = config['locations']['cdna-fasta']
@@ -135,9 +159,6 @@ selected_targets = config['execution']['target'] or ['final-report']
 from itertools import chain
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
-print(OUTPUT_FILES)
-
-
 rule all:
   input: OUTPUT_FILES
 
@@ -145,6 +166,29 @@ rule help:
   run:
     for key in sorted(targets.keys()):
       print('{}:\n  {}'.format(key, targets[key]['description']))
+
+# Record any existing output files, so that we can detect if they have
+# changed.
+expected_files = {}
+onstart:
+    if OUTPUT_FILES:
+        for name in OUTPUT_FILES:
+            if os.path.exists(name):
+                expected_files[name] = os.path.getmtime(name)
+
+# Print generated target files.
+onsuccess:
+    if OUTPUT_FILES:
+        # check if any existing files have been modified
+        generated = []
+        for name in OUTPUT_FILES:
+            if name not in expected_files or os.path.getmtime(name) != expected_files[name]:
+                generated.append(name)
+        if generated:
+            print("The following files have been generated:")
+            for name in generated:
+                print("  - {}".format(name))
+
 
 rule translate_sample_sheet_for_report:
   input: SAMPLE_SHEET_FILE
@@ -291,7 +335,7 @@ rule report1:
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html')
   shell:
-    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder='' >> {log} 2>&1"
+    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.star' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}'  >> {log} 2>&1"
 
 rule report2:
   input:
@@ -308,4 +352,4 @@ rule report2:
   log: os.path.join(LOG_DIR, "report.salmon.log")
   output: 
     os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html')
-  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --geneSetsFolder=' ' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' >> {log} 2>&1"

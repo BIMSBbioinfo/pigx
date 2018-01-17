@@ -1,27 +1,41 @@
 #!/bin/sh
 
-testfolder=${srcdir}/tests/test_star_counts
+set -e
+set -u
+
+root=$(mktemp --tmpdir -d "pigx.XXXX")
+testfolder=${root}/tests/test_star_counts
+mkdir -p ${testfolder}
+
+echo "TEST FOLDER: ${testfolder}"
 
 # copy necessary input files to the test folder
 # we copy them to avoid re-creating these files when testing the pipeline
 cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads/ ${testfolder}
 
+# make these copies writable
+chmod +w -R ${testfolder}
+
+# prepare temporary sample sheet and settings files
 settings=${srcdir}/tests/settings.yaml
-tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
-cat ${settings} | sed 's/output-dir:.*/output-dir: test_star_counts/g' > ${tmp_settings}
+tmp_settings="${testfolder}/settings.yaml"
+sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
+    -e "s,genome-fasta: ,genome-fasta: ${srcdir}/tests/,g" \
+    -e "s,cdna-fasta: ,cdna-fasta: ${srcdir}/tests/,g" \
+    -e "s,gtf-file: ,gtf-file: ${srcdir}/tests/,g" \
+    -e "s,output-dir:.*,output-dir: ${testfolder},g" \
+    ${settings} > ${tmp_settings}
 
 samplesheet=${srcdir}/tests/sample_sheet.csv
 
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target star_counts ${samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target star_counts ${samplesheet}
 
-rm ${tmp_settings} ${tmp_samplesheet}
+rm ${tmp_settings}
 
 rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${srcdir}/tests/test_star_counts/preprocessed_data/counts_from_STAR.tsv 
+if ! test -f ${testfolder}/preprocessed_data/counts_from_STAR.tsv
 then
   echo "ERROR: failed obtaining counts matrix from STAR results"
   exit 1
 fi
- 
-

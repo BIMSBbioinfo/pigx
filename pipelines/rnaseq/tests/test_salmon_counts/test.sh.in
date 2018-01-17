@@ -1,6 +1,13 @@
 #!/bin/sh
 
-testfolder=${srcdir}/tests/test_salmon_counts
+set -e
+set -u
+
+root=$(mktemp --tmpdir -d "pigx.XXXX")
+testfolder=${root}/tests/test_salmon_counts
+mkdir -p ${testfolder}
+
+echo "TEST FOLDER: ${testfolder}"
 
 # copy necessary input files to the test folder
 # we copy them to avoid re-creating these files when testing the pipeline
@@ -8,13 +15,22 @@ cp -r ${srcdir}/tests/sample_data/preprocessed/trimmed_reads ${testfolder}
 mkdir ${testfolder}/salmon_output
 cp -r ${srcdir}/tests/sample_data/preprocessed/salmon_output/*Rep* ${testfolder}/salmon_output
 
+# make these copies writable
+chmod +w -R ${testfolder}
+
+# prepare temporary sample sheet and settings files
 settings=${srcdir}/tests/settings.yaml
-tmp_settings=`mktemp "${srcdir}/tests/settings.tmp.XXXX.yaml"`
-cat ${settings} | sed 's/output-dir:.*/output-dir: test_salmon_counts/g' > ${tmp_settings}
+tmp_settings="${testfolder}/settings.yaml"
+sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
+    -e "s,genome-fasta: ,genome-fasta: ${srcdir}/tests/,g" \
+    -e "s,cdna-fasta: ,cdna-fasta: ${srcdir}/tests/,g" \
+    -e "s,gtf-file: ,gtf-file: ${srcdir}/tests/,g" \
+    -e "s,output-dir:.*,output-dir: ${testfolder},g" \
+    ${settings} > ${tmp_settings}
 
-${srcdir}/pigx-rnaseq -s ${tmp_settings} --target salmon_counts ${srcdir}/tests/sample_sheet.csv 
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target salmon_counts ${srcdir}/tests/sample_sheet.csv
 
-rm ${tmp_settings} ${tmp_samplesheet}
+rm ${tmp_settings}
 
 rm -rf ${testfolder}/salmon_output/*Rep*
 rm -rf ${testfolder}/trimmed_reads
@@ -24,5 +40,3 @@ then
   echo "ERROR: failed obtaining counts matrix from SALMON quant results"
   exit 1
 fi
- 
-

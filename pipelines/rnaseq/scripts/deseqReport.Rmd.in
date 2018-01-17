@@ -1,7 +1,7 @@
 ---
 title: "PiGx-RNAseq - DESeq2 Report"
 author: "BIMSB Bioinformatics Platform"
-date: "`r Sys.time()`"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 params: 
   countDataFile: ''
   colDataFile: ''
@@ -9,7 +9,6 @@ params:
   caseSampleGroups: ''
   controlSampleGroups: '' 
   covariates: ''
-  geneSetsFolder: ''
   prefix: ''
   workdir: '.'
   organism: ''
@@ -64,7 +63,9 @@ library(SummarizedExperiment)
 # Description
 
 This report script runs DESeq2 differential expression analysis tool and produces tables and figures that summarize the similarities and differences
- between given groups of case-control samples at a global scale. Along with the results, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.  
+ between given groups of case-control samples at a global scale. Along with the results, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.
+
+This report was generated with PiGx RNAseq version @VERSION@.
 
 # Input Settings
 ```{r printInputSettings}
@@ -77,7 +78,6 @@ controlSampleGroups <- params$controlSampleGroups
 covariates <- params$covariates
 prefix <- params$prefix
 workdir <- params$workdir
-geneSetsFolder <- ifelse(params$geneSetsFolder == '', NA, params$geneSetsFolder) 
 organism <- params$organism
 
 #gProfiler tool needs internet access to work. So, go analysis module is conditional
@@ -88,7 +88,6 @@ inputParameterDesc <- c('Count Data File',
                      'Case sample groups',
                      'Control sample groups', 
                      'Covariates to control for',
-                     'Gene Sets Folder',
                      'Prefix for output files',
                      'Working directory',
                      'Analyzed organism'
@@ -98,7 +97,6 @@ inputParameterValues <- c(countDataFile,
                           caseSampleGroups,
                           controlSampleGroups, 
                           covariates,
-                          geneSetsFolder,
                           prefix,
                           workdir,
                           organism)
@@ -109,7 +107,7 @@ DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 9,
+                         pageLength = 8,
                          dom = 't'))
 ```
 

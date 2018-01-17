@@ -1,3 +1,23 @@
+# PiGx RNAseq Pipeline.
+#
+# Copyright © 2017 Bora Uyar <bora.uyar@mdc-berlin.de>
+# Copyright © 2018 Jonathan Ronen <yablee@gmail.com>
+# Copyright © 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx RNAseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #' runReport
 #' 
@@ -23,11 +43,6 @@
 #'   differential expression analysis (e.g. batch, age, temperature,
 #'   sequencing_technology etc.). Must correspond to a column field in the
 #'   colDataFile file).
-#' @param geneSetsFolder A folder with one or more .txt files, where each txt
-#'   file contains a list of gene ids (subset of the gene ids used as row names
-#'   in the count data table), one id per line. GAGE package is utilized to find
-#'   out if the given gene set is collectively up/down regulated in the case
-#'   samples compared to the control samples.
 #' @param workdir Path to working directory where the output files will be
 #'   written
 #' @param organism The organism for which the analysis is done (e.g. hsapiens, 
@@ -61,7 +76,8 @@ runReport <- function(reportFile,
                       quiet = FALSE) {
   
   outFile <- paste0(prefix, '.deseq.report.html')
-  
+
+  htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
     input = reportFile, 
     output_dir = workdir,
@@ -73,8 +89,7 @@ runReport <- function(reportFile,
       depth = 2,
       toc = TRUE,
       toc_float = TRUE,
-      theme = 'united',
-      highlight = 'tango',
+      theme = 'lumen',
       number_sections = TRUE
     ),
     output_options = list(self_contained = selfContained),
@@ -84,7 +99,6 @@ runReport <- function(reportFile,
                   caseSampleGroups = caseSampleGroups,
                   controlSampleGroups = controlSampleGroups,
                   covariates = covariates,
-                  geneSetsFolder = geneSetsFolder, 
                   prefix = prefix,
                   workdir = workdir,
                   logo = logo,
@@ -130,11 +144,6 @@ wild-type or untreated samples)
 differential expression analysis (e.g. batch, age, temperature,
 sequencing_technology etc.). Must correspond to a column field in the 
 colDataFile file).
---geneSetsFolder (Optional) A folder with one or more .txt files, where each txt
-file contains a list of gene ids (subset of the gene ids used as row names
-in the count data table), one id per line. GAGE package is utilized to find
-out if the given gene set is collectively up/down regulated in the case
-samples compared to the control samples.
 --workdir (Optional, default: current working directory) Path to working directory 
 where the output files will be written
 --organism (Optional) The organism for which the analysis is done. Supported
@@ -156,7 +165,6 @@ Rscript runDeseqReport.R --reportFile=./deseqReport.Rmd \\\
 --caseSampleGroups='spt.16_N2_L4, hmg.4_N2_L4' \\\
 --controlSampleGroups='ctrl_N2_L4' \\\
 --covariates='batch, temp' \\\
---geneSetsFolder='./sample_data/genesets' \\\
 --workdir=`pwd` \\\
 --organism='hsapiens' \\\
 --prefix='spt-16_hmg-4_vs_ctrl' \\\
@@ -221,14 +229,6 @@ if(!("covariates") %in% argsDF$V1) {
   covariates <- argsL$covariates
 }
 
-if(!("geneSetsFolder") %in% argsDF$V1) {
-  cat(help_command, "\n")
-  warning("Missing argument: geneSetsFolder. Will not do gene set enrichment analysis\n")
-  geneSetsFolder <- ''
-} else {
-  geneSetsFolder <- argsL$geneSetsFolder
-}
-
 if(!("organism") %in% argsDF$V1) {
   cat(help_command, "\n")
   warning("Missing argument: organism Will skip GO term analysis\n")
@@ -281,7 +281,6 @@ runReport(reportFile = reportFile,
           caseSampleGroups = caseSampleGroups, 
           controlSampleGroups = controlSampleGroups, 
           covariates = covariates,
-          geneSetsFolder = geneSetsFolder,
           workdir = workdir, 
           organism = organism,
           prefix = prefix,
