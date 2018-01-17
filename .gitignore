@@ -1,0 +1,8 @@
+website/site
+Makefile
+Makefile.in
+config.log
+config.status
+configure
+pigx
+autom4te.cache/
