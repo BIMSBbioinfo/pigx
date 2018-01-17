@@ -1,3 +1,5 @@
+[![install with Guix badge](https://img.shields.io/badge/install%20with-guix-F4BB15.svg)](https://gnu.org/s/guix)
+
 <div align="center">
 <img src="logo.svg" alt="PiGx logo" width="30%" height="30%" />
 </div>
