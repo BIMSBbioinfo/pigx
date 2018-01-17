@@ -59,9 +59,8 @@ Q:
 
 """
 
-SCRIPT_PATH = os.path.join(workflow.basedir,'Scripts')
-RULES_PATH  = os.path.join(workflow.basedir,'Rules')
-PARAMS_PATH = '.'
+
+
 
 # ---------------------------------------------------------------------------- #
 import glob
@@ -76,6 +75,13 @@ include: 'SnakeFunctions.py'
 from Check_Config import *
 localrules: makelinks
 
+BASEDIR           = workflow.basedir
+SCRIPT_PATH       = os.path.join(BASEDIR,'Scripts')
+RULES_PATH        = os.path.join(BASEDIR,'Rules')
+PARAMS_PATH       = '.'
+SETTINGS_NAME     = 'settings.yaml'
+SAMPLE_SHEET_NAME = 'sample_sheet.yaml'
+
 
 # ---------------------------------------------------------------------------- #
 # check config validity
@@ -83,15 +89,25 @@ if check_config(config) == 1:
     quit()
 
 # ---------------------------------------------------------------------------- #
+# settings input
+with open(os.path.join(BASEDIR, SETTINGS_NAME), 'r') as stream:
+    SETTINGS = yaml.load(stream)
+    
+with open(os.path.join(BASEDIR, SAMPLE_SHEET_NAME), 'r') as stream:
+    SAMPLE_SHEET = yaml.load(stream)
+
 # Software parameters
-with open(os.path.join(workflow.basedir, 'software.yaml'), 'r') as stream:
+with open(os.path.join(BASEDIR, 'software.yaml'), 'r') as stream:
     SOFTWARE_CONFIG = yaml.load(stream)
 
 # Function parameter
 APP_PARAMS = SOFTWARE_CONFIG['params']
 
 # Software executables
-SOFTWARE   = SOFTWARE_CONFIG['software']
+TOOLS = SETTINGS['tools']
+SOFTWARE = [TOOLS[tool_name]['executable'] for tool_name in TOOLS.keys()]
+SOFTWARE = dict(zip(TOOLS.keys(), SOFTWARE))
+
 # ---------------------------------------------------------------------------- #
 # Variable definition
 GENOME       = config['genome']['name']
@@ -218,7 +234,7 @@ if gtf_index:
     
 #     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=PEAK_NAMES)    
 
-    include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
+#     include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
     include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
     COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS 
 
