@@ -1,7 +1,6 @@
 ;; -*- geiser-scheme-implementation: guile -*-
 
-(use-modules (srfi srfi-19) ; date functions
-             (haunt builder blog)
+(use-modules (haunt builder blog)
              (haunt builder assets)
              (haunt reader)
              (haunt reader commonmark)
@@ -9,10 +8,6 @@
              (haunt post))
 
 
-(define (date->string* date)
-  "Convert DATE to human readable string."
-  (date->string date "~B ~e, ~Y"))
-
 (define (default-layout site title body)
   `((doctype "html")
     (head
@@ -42,8 +37,6 @@
          #:post-template
          (lambda (post)
            `((h1 ,(post-ref post 'title))
-             (div (@ (class "time"))
-                  ,(date->string* (post-date post)))
              ,(post-sxml post)))))
 
 (site #:title "PiGx: Pipelines in Genomics"
