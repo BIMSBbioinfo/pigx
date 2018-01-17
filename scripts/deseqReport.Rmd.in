@@ -64,7 +64,9 @@ library(SummarizedExperiment)
 # Description
 
 This report script runs DESeq2 differential expression analysis tool and produces tables and figures that summarize the similarities and differences
- between given groups of case-control samples at a global scale. Along with the results, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.  
+ between given groups of case-control samples at a global scale. Along with the results, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.
+
+This report was generated with PiGx RNAseq version @VERSION@.
 
 # Input Settings
 ```{r printInputSettings}

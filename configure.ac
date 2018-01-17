@@ -86,6 +86,7 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
   ])
 
 AC_CONFIG_FILES([etc/settings.yaml
+                 scripts/deseqReport.Rmd
                  Makefile])
 AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 AC_CONFIG_FILES([tests/test_trim_galore/test.sh], [chmod +x tests/test_trim_galore/test.sh])
