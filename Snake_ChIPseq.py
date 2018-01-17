@@ -1,67 +1,3 @@
-"""
-SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX/Snake_ChIPseq.py'
-WORKDIR='/data/akalin/vfranke/AAkalin_PIX/ChIP'
-CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX/config.yaml'
-PATH='/home/vfranke/bin/Software/miniconda3/envs/p35/bin:/usr/local/bin:/usr/bin:/bin:/home/vfranke/.guix-profile/bin:/home/vfranke/.guix-profile/sbin:/home/vfranke/bin'
-# Beast run
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
-
-# Visualize the graph horizontally
-snakemake --dag --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE | perl -pe 's|graph\[|graph[rankdir=LR,|'| dot -T png > Snake_ChIPseq.png
-
-# Cluster run
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --timestamp --jobs 24 --cluster "qsub -V -l h_vmem={params.mem} -pe smp {params.threads} -l h_rt=36:00:00" --rerun-incomplete --latency-wait 30
-
-for i in `ls $WORKDIR | grep -v Fastq$ | grep -v Genome`;do rm -r $WORKDIR/$i;done
-
-rm $(snakemake --snakefile $SNAKEFILE --directory $WORKDIR --configfile $CONFIGFILE --summary | tail -n+2 | cut -f1)
-
-
-gp -i gcc-toolchain@5 gfortran@5 pkg-config curl cairo libxt libxml2 openssl xz zlib -p pix
-
-gp -i gcc -p pix
-
-bash
-cd /home/vfranke/bin/guix
-profile=/home/vfranke/bin/guix/pix
-source $profile/etc/profile
-
-export PATH="$profile/bin${PATH:+:}$PATH"
-export PKG_CONFIG_PATH="pix/lib/pkgconfig${PKG_CONFIG_PATH:+:}$PKG_CONFIG_PATH"
-export XDG_DATA_DIRS="pix/share${XDG_DATA_DIRS:+:}$XDG_DATA_DIRS"
-export GIO_EXTRA_MODULES="pix/lib/gio/modules${GIO_EXTRA_MODULES:+:}$GIO_EXTRA_MODULES"
-export R_LIBS_SITE="pix/site-library/${R_LIBS_SITE:+:}$R_LIBS_SITE"
-export GUIX_LOCPATH=$profile/lib/locale
-export CURL_CA_BUNDLE="/etc/ssl/certs/ca-bundle.crt"
-/home/vfranke/bin/guix/pix/bin/R
-source("https://bioconductor.org/biocLite.R")
-biocLite('S4Vectors')
-biocLite(c('data.table','genomation','GenomicRanges','RCAS','rtracklayr','stringr', 'plotly', 'DT', 'data.table', 'topGO', 'motifRG', 'biomaRt', 'AnnotationDbi', 'GenomicRanges', 'BSgenome.Hsapiens.UCSC.hg19', 'GenomeInfoDb', 'Biostrings', 'rtracklayer', 'org.Hs.eg.db', 'GenomicFeatures', 'genomation', 'rmarkdown', 'knitr', 'S4Vectors'), dependencies=TRUE)
-
-
-
-
-Integrate_Expression_Mouse_Hamster_Difference
-1. Figure out how to prevent bombing
-
-### 13. config file check
-
-Q:
-1. How to write dynamic rules? - that the rules execute based on the input parameters?
-    - if the user supplies the genome index, do not make the index
-2. What to do downstream? Some basic plots? ChromHMM
-3. How to speed up the extension?
-
-"""
-
-
-
-
 # ---------------------------------------------------------------------------- #
 import glob
 import fnmatch
@@ -92,13 +28,11 @@ if check_config(config) == 1:
 # settings input
 with open(os.path.join(BASEDIR, SETTINGS_NAME), 'r') as stream:
     SETTINGS = yaml.load(stream)
-    
+
+# sample sheet input    
 with open(os.path.join(BASEDIR, SAMPLE_SHEET_NAME), 'r') as stream:
     SAMPLE_SHEET = yaml.load(stream)
 
-# Software parameters
-with open(os.path.join(BASEDIR, 'software.yaml'), 'r') as stream:
-    SOFTWARE_CONFIG = yaml.load(stream)
 
 # Function parameter
 APP_PARAMS = SOFTWARE_CONFIG['params']
