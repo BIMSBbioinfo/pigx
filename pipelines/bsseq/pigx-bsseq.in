@@ -2,7 +2,7 @@
 # -*- python -*-
 # PiGx BSseq Pipeline.
 #
-# Copyright © 2017 Bren Osberg <b.osberg@tum.de>
+# Copyright © 2017 Bren Osberg <brendan.osberg@mdc-berlin.de>
 # Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
@@ -122,16 +122,13 @@ def bail(msg):
 def get_filenames(mylist):
     return list(map(lambda x: splitext_fqgz(x)[0], mylist))
 
-def get_extension(mylist):
-    return list(map(lambda x: splitext_fqgz(x)[1], mylist))
-
-def fq_suffix(filename):
-    return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
-
-def is_zipped(filename):
-    return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
-
 def splitext_fqgz(string):
+    def fq_suffix(filename):
+        return any(filename.endswith(ext) for ext in [".fq", ".fastq", ".fasta"])
+
+    def is_zipped(filename):
+        return any(filename.endswith(ext) for ext in [".gz", ".bz2"])
+
     if is_zipped(string):
         string, zipext = os.path.splitext(string)
     else:
@@ -183,7 +180,6 @@ def parse_samples(lines):
 
         sampleid_dict['files']      = files
         sampleid_dict['fastq_name'] = get_filenames(files)
-        sampleid_dict['fastq_ext']  = get_extension(files)
         outputdict[row[2]] = sampleid_dict
     return { 'SAMPLES': outputdict }
 
@@ -279,28 +275,6 @@ def generate_cluster_configuration():
                            separators=(",",": "), ensure_ascii=True)
         outfile.write(dumps)
     return cluster_config_file
-
-# TODO: this should be external
-def validate_config():
-    # Check that all locations exist
-    for loc in config['locations']:
-        if (not loc == 'output-dir') and (not path.isdir(config['locations'][loc]) ) :
-            bail("ERROR: The following necessary directory does not exist: {} ({})".format(config['locations'][loc], loc))
-
-    # Check that all of the requested differential methylation
-    # treatment values are found in the sample sheet.
-    treatments = set([ config["SAMPLES"][sample]["Treatment"] for sample in config["SAMPLES"] ])
-    for pair in config['general']['differential-methylation']['treatment-groups']:
-        for group in pair:
-            if ( (group not in treatments) or (not (str.isdigit(group))) )  :
-                bail("ERROR: Invalid treatment group '{}' in pair '{}'".format(group, pair))
-
-    # Check for a genome fasta file
-    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
-    fa    = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
-
-    if not len(fasta) + len(fa) == 1 :
-        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))
 
 
 # Create symbolic links to the inputs and reference genome
@@ -402,7 +376,6 @@ generate_config(args.configfile,
                 args.settings)
 
 config = json.load(open(args.configfile, 'r'))
-validate_config()
 
 command = [
     "@SNAKEMAKE@",

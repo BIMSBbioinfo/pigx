@@ -35,5 +35,5 @@ export PIGX_UNINSTALLED=1
 # directory.
 chmod -w genome
 
-${srcdir}/pigx-bsseq --target=genome-prep -s $PWD/settings.yaml $PWD/samplesheet.csv 2>&1 >/dev/null | grep "TODO"
+${builddir}/pigx-bsseq --target=genome-prep -s $PWD/settings.yaml $PWD/samplesheet.csv 2>&1 >/dev/null | grep "TODO"
 rm -rf ${dir}

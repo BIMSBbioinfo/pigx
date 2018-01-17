@@ -48,6 +48,7 @@ ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped 
 
 # include function definitions and extra rules
 include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
+validate_config(config)
 
 #---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
 
@@ -570,7 +571,10 @@ rule final_report:
         report        = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.html")
     params:
         ## absolute path to bamfiles
-        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
+        Samplename  = lambda wc: get_fastq_name( wc.prefix ),
+        source_dir  = config['locations']['input-dir'],
+        out_dir     = config['locations']['output-dir'],
+        inBam       = os.path.join(DIR_sorted,"{prefix}.sorted.bam"),
         assembly    = ASSEMBLY,
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
