@@ -1,13 +1,15 @@
 # ---------------------------------------------------------------------------- #
-def get_feature_combination_infiles(name):
+def get_feature_combination_infiles(wc):
     infiles = []
-    for file in config['feature_combination'][str(name)]:
+    for file in SAMPLE_SHEET['feature_combination'][wc.name]:
         # This check is temporary. Once Check_Config is updated, can be removed.
         if(not file in set(PEAK_NAME_LIST.keys())):
             quit()
-    
+
+
         infiles = infiles + [PEAK_NAME_LIST[file]]
-    
+
+    infiles = dict(zip(infiles, infiles))
     return(infiles)
 
 # ----------------------------------------------------------------------------- #
@@ -20,6 +22,7 @@ rule feature_combination:
         threads     = 1,
         mem         = '8G',
         scriptdir   = SCRIPT_PATH,
+        Rscript     = SOFTWARE['Rscript']['executable']
     log:
         log = os.path.join(PATH_LOG, '{name}_feature_combination.log')
     message:
@@ -28,5 +31,5 @@ rule feature_combination:
                 features:   {input}
                 output:     {output.outfile}
             """
-    script:
-        os.path.join(SCRIPT_PATH, 'Feature_Combination.R')
+    run:
+        RunRscript(input, output, params, BASEDIR, 'Feature_Combination.R')

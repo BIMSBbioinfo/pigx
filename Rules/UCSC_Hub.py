@@ -8,22 +8,24 @@ rule make_ucsc_hub:
         params:
             threads     = 1,
             mem         = '8G',
-            hub         = config['hub'],
+            hub         = SAMPLE_SHEET['hub'],
             genome_name = GENOME,
             paths       = TRACK_PATHS,
-            path_hub    = os.path.join(PATH_HUB, HUB_NAME)
+            path_hub    = os.path.join(PATH_HUB, HUB_NAME),
+            Rscript     = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'UCSC_HUB.log')
         message:"""
                 Running: UCSC_HUB:
                     output: {output.outfile}
             """
-        script:
-            os.path.join(SCRIPT_PATH, 'Make_UCSC_HUB.R')
+        run:
+            RunRscript(input, output, params, BASEDIR, 'Make_UCSC_HUB.R')
+
 
 # ----------------------------------------------------------------------------- #
 def bedToBigBed_input(wc):
-    suffix = get_macs2_suffix(wc.name, config)
+    suffix = get_macs2_suffix(wc.name, CUSTOM_PARAMS)
     infile = os.path.join(PATH_PEAK, wc.name, wc.name + "_peaks." + suffix)
     return(infile)
 
@@ -37,14 +39,14 @@ rule bedTobigBed:
         threads     = 1,
         mem         = '8G',
         name        = '{name}',
-        bedToBigBed = SOFTWARE['bedToBigBed']
+        bedToBigBed = SOFTWARE['bedToBigBed']['executable']
     message:"""
             bedToBigBed:
                 input : {input}
                 output: {output}
         """
     run:
-        suffix = get_macs2_suffix(params.name, config)
+        suffix = get_macs2_suffix(params.name, CUSTOM_PARAMS)
         if suffix == 'narrowPeak':
             ncol = 7
         else:

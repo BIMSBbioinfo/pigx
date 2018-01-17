@@ -1,8 +1,8 @@
 # ----------------------------------------------------------------------------- #
 rule chipqc:
     input:
-        peakfiles = 
-        bamfiles  = 
+        peakfiles =
+        bamfiles  =
         config    = config
     output:
         outfile  = os.path.join(PATH_RDS_TEMP,'Peaks_ChIPQC.rds')
@@ -17,5 +17,5 @@ rule chipqc:
             Running: feature_combination:
                 output:     {output.outfile}
             """
-    script:
-        os.path.join(SCRIPT_PATH, 'ChIPQC.R')
+    run:
+        RunRscript(input, output, params, BASEDIR, 'ChIPQC.R')

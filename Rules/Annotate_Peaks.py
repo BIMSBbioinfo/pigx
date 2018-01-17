@@ -10,7 +10,8 @@ rule annotate_peaks:
             threads     = 1,
             mem         = '16G',
             peakname    = '{name}',
-            scriptdir   = SCRIPT_PATH
+            scriptdir   = SCRIPT_PATH,
+            Rscript     = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'prepare_annotation.log')
         message:"""
@@ -19,5 +20,5 @@ rule annotate_peaks:
                     peaks: {input.peaks}
                     output: {output.outfile}
             """
-        script:
-            os.path.join(SCRIPT_PATH, 'Annotate_Peaks.R')
+        run:
+            RunRscript(input, output, params, BASEDIR, 'Annotatae_Peaks.R')
