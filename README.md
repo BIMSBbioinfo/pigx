@@ -50,7 +50,7 @@ pigx [pipeline] --init-sample-sheet my-sample-sheet.csv
 Here's a simple example to run the RNAseq pipeline:
 
 ```sh
-$ pigx rnaseq my-sample-sheet.csv --settings my-settings.yaml
+pigx rnaseq my-sample-sheet.csv --settings my-settings.yaml
 ```
 
 To see all available options run `pigx --help`.
