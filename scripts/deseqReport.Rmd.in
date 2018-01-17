@@ -62,8 +62,7 @@ library(SummarizedExperiment)
 
 # Description
 
-This report script runs DESeq2 differential expression analysis tool and produces tables and figures that summarize the similarities and differences
- between given groups of case-control samples at a global scale. Along with the results, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.
+PiGx RNAseq performs differential expression analysis using _DESeq2_, and produces this report. The report includes tables and figures summarizing similarities and differences between comparison groups as specified. In addition to the differential expression analysis, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.
 
 This report was generated with PiGx RNAseq version @VERSION@.
 
@@ -177,6 +176,9 @@ write.table(x = DE,
 # Differential Expression Analysis
 
 ## Differential Expression Results Table (unfiltered)
+
+This is the full table of DE results comparing cases to controls (as specified in the input settings listed above). The `baseMean` refers to expression level in the controls, and the log fold change column denotes the expression in the cases, as compared to the control. Finally, the `padj` column is the multiple-testing adjusted P value for the significance of a differentially expressed gene.
+
 ```{r write_DEtable}
 DT::datatable(DE, 
           extensions = c('Buttons', 'FixedColumns'), 
@@ -191,7 +193,12 @@ DT::datatable(DE,
 
 # Diagnostic Plots 
 
+This section holds a number of plots meant for a quick diagnostic and/or sanity check of the analysis.
+
 ## Number of reads assigned to genes 
+
+This plot shows the number of reads, in each sample, that are assigned to genes/transcripts. Outlier samples may be faulty and should be examined.
+
 ```{r plot_readcounts}
 readCounts <- as.data.frame(colSums(countData))
 readCounts$group <- colData[rownames(readCounts),]$group
@@ -206,11 +213,17 @@ ggplot(readCounts, aes(x = sample, y = readCounts)) + geom_bar(aes(fill = group)
 ```
 
 ## p-value histogram
+
+The P value distribution from the DE analysis.
+
 ```{r plot_pvalhistogram}
 ggplot(data = DE, aes(x = pvalue)) + geom_histogram(bins = 100)
 ```
 
 ## MA plot
+
+The MA plot gives an overview of the comparison between the two groups in the experiment. The log2 fold change for each gene is plotted on the y axis, against the average expression of that gene on the x axis.
+
 ```{r plot_MA}
 DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
 ```
@@ -223,6 +236,9 @@ pcaPlots <- lapply(plotGroups, function(g) {
 ```
 
 ## PCA plots  {.tabset}
+
+The 2-dimensional principal component analysis plot shows which samples group together when plotted in a reduced dimension. The 2D PCA reduced dimension conserves as much of the variance in the dataset as is possible for any 2D embedding of the data. It provides a useful birds-eye view of the data and an intuition as to which factors may drive the differences between samples or groups.
+
 ```{r plotPCA, results='asis', echo = FALSE}
 for (i in 1:length(pcaPlots)) {
   cat("### ",plotGroups[i],"\n")
@@ -232,6 +248,9 @@ for (i in 1:length(pcaPlots)) {
 ```
 
 ## Correlation Plot
+
+The pairwise correlation plot provides a more detaield view of which samples are more similar or different.
+
 ```{r plot_corr}
 M <- stats::cor(vsd.counts)
 corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
@@ -239,7 +258,10 @@ corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
 
 ## Heatmaps 
 
-### Top 100 most highly variable genes 
+### Top 100 most highly variable genes
+
+The heatmap below shows the expression values for the 100 highest variance genes.
+
 ```{r plot_heatmap}
 select <- na.omit(names(sort(apply(X = vsd.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100])
 df <- as.data.frame(colData[,c("group","AnalysisGroup")])
@@ -253,7 +275,10 @@ pheatmap::pheatmap(vsd.counts[select,],
 
 # Exploratory Plots and Tables
 
-## Summary of up/down regulated genes 
+## Summary of up/down regulated genes
+
+This volcano plot summarizes the differential expression landscape in the comparison between the two groups.
+
 ```{r plot_summary}
 #Idea: use linked views and plotly?
 ggplot(DE, aes(x = log2FoldChange, y = -log10(padj))) + geom_point(aes(color = padj < 0.1))
@@ -281,7 +306,10 @@ p <- ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = var
 plotly::ggplotly(p)
 ```
 
-## Interactive box plots of genes with significant differential expression (padj < 0.1 & abs(log2foldchange) > 1) 
+## Interactive box plots of genes with significant differential expression (padj < 0.1 & abs(log2foldchange) > 1)
+
+This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest.
+
 ```{r plot_interactive_boxplots}
 select <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & abs(DE$log2FoldChange) > 1,])
 if(length(select) > 1) {
@@ -322,6 +350,7 @@ if(runGO == FALSE) {cat("Warning:Skipping GO analysis as there is no internet co
 
 ```{r goAnalysisTitle, eval = runGO, results='asis'}
 cat("# GO Term Enrichment Analysis\n")
+cat("\nThe following tables list GO terms for up- and down-regulated genes.\n")
 ```
 
 ```{r goAnalysis, eval = runGO}
