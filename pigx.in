@@ -1,0 +1,105 @@
+#!@PYTHON@
+
+# PiGx -- Pipelines in Genomics
+#
+# Copyright © 2017, 2018 Bora Uyar <bora.uyar@mdc-berlin.de>
+# Copyright © 2017, 2018 Jonathan Ronen <yablee@gmail.com>
+# Copyright © 2017, 2018 Bren Osberg <brendan.osberg@mdc-berlin.de>
+# Copyright © 2017, 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017, 2018 Katarzyna Wreczycka <katwre@gmail.com>
+# Copyright © 2017, 2018 Altuna Akalin <altuna.akalin@mdc-berlin.de>
+# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of PiGx.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import argparse
+
+description = """\
+PiGx Pipelines.
+
+PiGx is a collection of data processing pipelines.
+"""
+
+epilog = 'These pipelines were developed by the Akalin group at MDC in Berlin in 2017-2018.'
+
+version = """\
+PiGx Pipelines.
+Version: @PACKAGE_VERSION@
+
+Copyright © 2017, 2018 BIMSB Bioinformatics (Akalin Lab).
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+"""
+
+def formatter(prog):
+    return argparse.RawTextHelpFormatter(prog, max_help_position=80)
+
+parser = argparse.ArgumentParser(description=description,
+                                 epilog=epilog,
+                                 formatter_class=formatter)
+
+parser.add_argument('-v', '--version', action='version',
+                    version=version)
+
+parser.add_argument('pipeline',
+                    help="""\
+The pipeline to run.  The following pipelines are available:@pipelines@\
+""")
+
+parser.add_argument('samplesheet',
+                    help="""\
+The sample sheet containing sample data in CSV format.\
+""")
+
+parser.add_argument('-s', '--settings', dest='settings',
+                    help='A YAML file for settings that deviate from the defaults.')
+
+parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
+                    help="""\
+The config file used for calling the underlying snakemake process.  By
+default the file 'config.json' is dynamically created from the sample
+sheet and the settings file.
+""")
+
+parser.add_argument('--target', dest='target', default='final-report',
+                    help="""\
+Stop when the named target is completed instead of running the whole
+pipeline.  The default target is "final-report".  Pass "--target=help"
+to describe all available targets.""")
+
+parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
+                    help="""\
+Only show what work would be performed.  Do not actually run the
+pipeline.""")
+
+parser.add_argument('--graph', dest='graph', action='store_true',
+                    help="""\
+Output a graph in Graphviz dot format showing the relations between
+rules of this pipeline.""")
+
+parser.add_argument('--force', dest='force', action='store_true',
+                    help="""\
+Force the execution of rules, even though the outputs are considered
+fresh.""")
+
+args = parser.parse_args()
+
+print("TODO")
