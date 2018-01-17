@@ -28,6 +28,8 @@
 
 
 
+import os
+import sys
 import argparse
 
 description = """\
@@ -102,4 +104,52 @@ fresh.""")
 
 args = parser.parse_args()
 
-print("TODO")
+
+
+pipelines = "@pipelines@".split()
+if args.pipeline not in pipelines:
+  print("Pipeline not available: {}".format(args.pipeline), file=sys.stderr)
+  exit(1)
+
+# TODO: this is the quick and dirty version to get to a point where we
+# can just call the individual pipeline's driver scripts.  Eventually,
+# this script should do the heavy lifting for all pipelines, but this
+# requires changes in the pipelines.
+
+dirs = {}
+if os.getenv('PIGX_UNINSTALLED'):
+    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+    dirs['locations'] = {
+        'prefix'       : here,
+        'exec_prefix'  : os.path.join(here, 'pipelines', args.pipeline),
+        'libexecdir'   : here,
+        'pkglibexecdir': here,
+        'datarootdir'  : here,
+        'pkgdatadir'   : here
+    }
+    bin = dirs['locations']['exec_prefix']
+else:
+    # Expand and store autoconf directory variables
+    prefix = '@prefix@'
+    exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
+    libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
+    pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
+    datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
+    pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+
+    dirs['locations'] = {
+        'prefix'       : '@prefix@',
+        'exec_prefix'  : exec_prefix,
+        'libexecdir'   : libexecdir,
+        'pkglibexecdir': pkglibexecdir,
+        'datarootdir'  : datarootdir,
+        'pkgdatadir'   : pkgdatadir
+    }
+    bin = os.path.join(dirs['locations']['exec_prefix'], 'bin')
+
+pipeline_script = os.path.join(bin, "pigx-"+args.pipeline)
+if os.path.isfile(pipeline_script) and os.access(pipeline_script, os.X_OK):
+  os.execv("@PYTHON@", ["", pipeline_script] + sys.argv[2:])
+else:
+  print("Cannot execute {}.".format(pipeline_script), file=sys.stderr)
+  exit(1)
