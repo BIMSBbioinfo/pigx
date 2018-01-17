@@ -45,10 +45,6 @@ EXTRA_DIST =										\
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
 
-# TODO: these tests still need to be fixed
-XFAIL_TESTS = \
-  tests/test-write-access-to-out.sh
-
 TESTS = \
   test.sh											\
   tests/test-check-samplesheet-header.sh			\
