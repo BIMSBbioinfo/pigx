@@ -1,12 +1,23 @@
+# What is PiGx?
+
 PiGx is a collection of genomics pipelines.
 
 It includes the following pipelines:
 
-- [PiGx BSseq](https://github.com/BIMSBbioinfo/pigx_bsseq) for raw fastq read data of bisulfite experiments
+- [PiGx BSseq](https://github.com/BIMSBbioinfo/pigx_bsseq) for raw
+  fastq read data of bisulfite experiments
+
 - [PiGx RNAseq](https://github.com/BIMSBbioinfo/pigx_rnaseq) for RNAseq samples
-- [PiGx scRNAseq](https://github.com/BIMSBbioinfo/pigx_scrnaseq) for single cell dropseq analysis
-- [PiGx ChIPseq](https://github.com/BIMSBbioinfo/pigx_chipseq) for reads from ChIPseq experiments
-- [PiGx CRISPR](https://github.com/BIMSBbioinfo/pigx_crispr)
+
+- [PiGx scRNAseq](https://github.com/BIMSBbioinfo/pigx_scrnaseq) for
+  single cell dropseq analysis
+
+- [PiGx ChIPseq](https://github.com/BIMSBbioinfo/pigx_chipseq) for
+  reads from ChIPseq experiments
+
+- [PiGx CRISPR](https://github.com/BIMSBbioinfo/pigx_crispr) for the
+  analysis of sequence mutations in CRISPR-CAS9 targeted amplicon
+  sequencing data
 
 All pipelines are easily configured with a sample sheet (in CSV
 format) and a descriptive settings file (in YAML format).  For more
