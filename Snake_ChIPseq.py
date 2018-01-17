@@ -20,11 +20,6 @@ SAMPLE_SHEET_NAME = 'sample_sheet.yaml'
 
 
 # ---------------------------------------------------------------------------- #
-# check config validity
-if check_config(config) == 1:
-    quit()
-
-# ---------------------------------------------------------------------------- #
 # settings input
 with open(os.path.join(BASEDIR, SETTINGS_NAME), 'r') as stream:
     SETTINGS = yaml.load(stream)
@@ -33,24 +28,45 @@ with open(os.path.join(BASEDIR, SETTINGS_NAME), 'r') as stream:
 with open(os.path.join(BASEDIR, SAMPLE_SHEET_NAME), 'r') as stream:
     SAMPLE_SHEET = yaml.load(stream)
 
+# ---------------------------------------------------------------------------- #
+# check config validity - NOT IMPLEMENTED
+# if check_settings(SETTING) == 1:
+#     quit()
+    
+if check_config(SAMPLE_SHEET) == 1:
+    quit()
 
-# Function parameter
-APP_PARAMS = SOFTWARE_CONFIG['params']
 
+# ---------------------------------------------------------------------------- #
 # Software executables
 TOOLS = SETTINGS['tools']
 SOFTWARE = [TOOLS[tool_name]['executable'] for tool_name in TOOLS.keys()]
 SOFTWARE = dict(zip(TOOLS.keys(), SOFTWARE))
 
+# Per sample software parameters:
+# Loops throug the sample sheet and extracts per sample software parameters
+custom_param_names = sorted(list(set(SAMPLE_SHEET.keys()) - set(['samples','hub'])))
+CUSTOM_PARAMS = dict()
+for param_set in custom_param_names:
+    for sample_name in SAMPLE_SHEET[param_set].keys():
+        sample_set = SAMPLE_SHEET[param_set][sample_name]
+        if isinstance(sample_set, dict) 'params' in set(sample_set.keys()):
+            CUSTOM_PARAMS[sample_name] = sample_set['params']
+            
+print(CUSTOM_PARAMS)
 # ---------------------------------------------------------------------------- #
 # Variable definition
-GENOME       = config['genome']['name']
-GENOME_FASTA = config['genome']['fasta']
-NAMES        = config['samples'].keys()
-PEAK_NAMES   = config['peak_calling'].keys()
-PATH_FASTQ   = config['fastq']
-PARAMS       = config['params']
-ANNOTATION   = config['annotation']
+
+# Default Function Parameters
+APP_PARAMS   = SETTINGS['general']['params']
+GENOME       = SETTINGS['general']['assembly']
+GENOME_FASTA = SETTINGS['locations']['genome-dir']
+PATH_FASTQ   = SETTINGS['locations']['input-dir:']
+ANNOTATION   = SETTINGS['locations']['gff-file']
+
+# Sample name definition
+PEAK_NAMES   = SAMPLE_SHEET['peak_calling'].keys()
+NAMES        = SAMPLE_SHEET['samples'].keys()
 
 
 # Directory structure definition
