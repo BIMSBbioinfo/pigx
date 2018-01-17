@@ -20,3 +20,9 @@ done
 * Website
 
 The website is generated with the static site generator [[https://haunt.dthompson.us/][Haunt]] from the Scheme sources in the =website= directory.  To publish the website, move the generated output to the root directory of the =gh-pages= branch and make a new commit.
+
+Get the required dependencies with Guix:
+
+#+BEGIN_SRC sh
+guix environment --ad-hoc haunt guile guile-commonmark
+#+END_SRC
