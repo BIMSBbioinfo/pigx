@@ -1,10 +1,28 @@
 locations:
-  input-dir: in
-  output-dir: out
-  genome-dir: genome
+  input-dir: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Fastq'
+  output-dir: '/home/vfranke/Tmp/pigxtest'
+  genome-file: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Genome/chr19.fa'
+  index-dir:
+  annotation:
+      gff-file: "/data/akalin/Base/Annotation/mm9/EnsemblGenes/150520_Ensembl_Mus_musculus.NCBIM37.67.form.gtf"
+
 
 general:
   assembly: hg19
+  params:
+    extend: 200
+    scale_bw: 'yes'
+    bowtie2:
+        k: 1
+    idr:
+        idr-threshold: 0.1
+    macs2:
+        g: hs
+        keep-dup: auto
+        q: 0.05
+    extract_signal:
+        expand_peak: 200
+        bin_num: 20
 
 
 
@@ -43,6 +61,7 @@ tools:
              - 1
              - 2
              - U
+ 
         
         
     bowtie2-build: 
@@ -62,22 +81,24 @@ tools:
         args: ""
         help: '-h'
         remove:
-            - samples
-            - input-file-type
-            - rank
-            - output-file
-            - l
-            - plot
+            -samples
+            -input-file-type
+            -rank
+            -output-file
+            -l
+            -plot
+ 
 
     macs2: 
         executable: macs2
         args: ""
         help: 'callpeak -h'
         remove:
-            - t
-            - c
-            - outdir
-            - n
+            -t
+            -c
+            -outdir
+            -n
+ 
 
     perl: 
         executable: perl
