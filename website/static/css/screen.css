@@ -28,12 +28,6 @@ body {
 #index {
     padding: 1rem;
     margin-left: 2rem; }
-#index img {
-    border: 3px solid white;
-    border-radius: 50%;
-    box-shadow: 1px 2px 2px 0 #888;
-    float: left;
-    height: 4rem; }
 
 @media screen and (max-width: 600px) {
   #index {
@@ -199,20 +193,23 @@ warning {
   display: block; }
 
 pre {
-  margin: 1rem;
+  margin: 0;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   padding: 1rem;
+  width: 100%;
   display: inline-block;
   border-radius: 3px;
-  background: #444; }
+  background: #fff; }
 
 pre.example {
-    color: #aaff00;
+    color: #333;
     display: block;
     overflow-x: auto;
     font-size: .85rem; }
 
 pre code {
-  color: #aaff00;
+  color: #333;
   background: transparent; }
 
 img.undecorated {
@@ -225,19 +222,9 @@ img.headline {
   padding: 0;
   vertical-align: text-bottom; }
 
-div#columns {
-  overflow: hidden;
-  margin-bottom: 1rem; }
-  div#columns ul {
-    list-style: none outside none;
-    margin: 0;
-    float: left;
-    width: 50%; }
-
 span.code, code {
   font-family: "Envy Code R", "Inconsolata", "Consolas", "Courier New", monospace;
-  color: #111;
-  background: #dedede; }
+  color: #111; }
 
 span.code {
   font-size: 0.85rem;
