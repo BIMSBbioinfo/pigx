@@ -7,6 +7,9 @@ import yaml
 import csv
 import inspect
 
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/validate_input.py')
+validate_config(config)
+
 GENOME_FASTA = config['locations']['genome-fasta']
 CDNA_FASTA = config['locations']['cdna-fasta']
 READS_DIR = config['locations']['reads-dir']
