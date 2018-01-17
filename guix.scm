@@ -136,7 +136,6 @@ The main functions of FastQC are:
        ("r-annotationhub" ,r-annotationhub)
        ("r-dt" ,r-dt)
        ("r-genomation" ,r-genomation)
-       ("r-genomeinfodb" ,r-genomeinfodb)
        ("r-methylkit" ,r-methylkit)
        ("r-rtracklayer" ,r-rtracklayer)
        ("r-rmarkdown" ,r-rmarkdown)

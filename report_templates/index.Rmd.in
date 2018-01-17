@@ -16,6 +16,7 @@ link-citations: yes
 params:
   MethCall: TRUE
   Samplename: ''
+  chrom_seqlengths: ''
   source_dir: ''
   out_dir:    ''
   inBam:    ''
@@ -558,8 +559,6 @@ cat('## Annotation of Differentially Methylated Cytosines\n')
     library("rtracklayer")
     library("DT")
     library("ggplot2")
-    library("GenomeInfoDb")
-
 ```
 
 ```{r AnnotateDiffMeth.print_params_in, results='asis', eval=AnnotateDiffMeth}
@@ -734,14 +733,12 @@ cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n')
 
 if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
 
-require(GenomeInfoDb)
-chr.len.df=fetchExtendedChromInfoFromUCSC(assembly,
-        goldenPath_url="http://hgdownload.cse.ucsc.edu/goldenPath",
-        quiet=FALSE)
-chr.len=chr.len.df[,2]
-names(chr.len)=chr.len.df[,1]
 
-myseqinfo = Seqinfo(chr.len.df[,1], seqlengths=chr.len.df[,2], genome=assembly)
+seqdat_temp    = read.csv(chrom_seqlengths, sep="\t", header=FALSE)
+chr.len        = seqdat_temp[,2]
+names(chr.len) = seqdat_temp[,1]
+
+myseqinfo = Seqinfo(seqdat_temp[,1], seqlengths=seqdat_temp[,2], genome=assembly)
 myseqinfo.st = keepStandardChromosomes(myseqinfo)
 
 source(paste0(params$scripts_dir, "ideoDMC.R"))

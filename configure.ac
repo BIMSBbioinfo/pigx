@@ -55,7 +55,6 @@ AC_ARG_ENABLE([r-packages-check],
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
 AX_R_PACKAGE([genomation])
-AX_R_PACKAGE([GenomeInfoDb])
 AX_R_PACKAGE([methylKit], [1.3.3])
 AX_R_PACKAGE([AnnotationHub])
 AX_R_PACKAGE([DT])
