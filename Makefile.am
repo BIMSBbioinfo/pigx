@@ -12,7 +12,8 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/runDeseqReport.R							\
   scripts/translate_sample_sheet_for_report.R		\
   scripts/deseqReport.Rmd		\
-  scripts/counts_matrix_from_SALMON.R
+  scripts/counts_matrix_from_SALMON.R		\
+  scripts/validate_input.py
 
 dist_pkgdata_DATA =									\
   etc/settings.yaml									\
