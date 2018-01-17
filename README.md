@@ -1,3 +1,7 @@
+<div align="center">
+<img src="logo.svg" alt="PiGx logo" width="30%" height="30%" />
+</div>
+
 # What is PiGx?
 
 PiGx is a collection of genomics pipelines.
