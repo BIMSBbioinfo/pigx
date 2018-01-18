@@ -105,7 +105,6 @@ else:
 
 INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  config['general'])
 PREFIX = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
-print(PREFIX)
 
 # ----------------------------------------------------------------------------- #
 # include rules
