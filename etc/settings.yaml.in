@@ -27,7 +27,7 @@ execution:
     bowtie2:
       threads: 1
       memory: 16G
-     bowtie2-build:
+    bowtie2_build:
       threads: 1
       memory: 16G
 
