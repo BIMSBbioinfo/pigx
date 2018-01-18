@@ -3,9 +3,7 @@ import os
 import yaml
 
 # ---------------------------------------------------------------------------- #
-def validate_config(settings_file, sample_sheet_file):
-    with open(settings_file, 'r') as stream:
-        settings_dict = yaml.load(stream)
+def validate_config(settings_dict, sample_sheet_file):
     with open(sample_sheet_file, 'r') as stream:
         sample_sheet_dict = yaml.load(stream)
 

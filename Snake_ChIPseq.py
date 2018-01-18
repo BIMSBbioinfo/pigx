@@ -15,27 +15,20 @@ BASEDIR           = workflow.basedir
 SCRIPT_PATH       = os.path.join(BASEDIR,'scripts')
 RULES_PATH        = os.path.join(BASEDIR,'Rules')
 PARAMS_PATH       = '.'
-SETTINGS_NAME     = 'settings.yaml'
-SAMPLE_SHEET_NAME = 'sample_sheet.yaml'
-SETTINGS_PATH     = BASEDIR
+SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 # ---------------------------------------------------------------------------- #
-# settings input
-with open(os.path.join(SETTINGS_PATH, SETTINGS_NAME), 'r') as stream:
-    SETTINGS = yaml.load(stream)
-
 # sample sheet input    
-with open(os.path.join(SETTINGS_PATH, SAMPLE_SHEET_NAME), 'r') as stream:
+with open(SAMPLE_SHEET_FILE, 'r') as stream:
     SAMPLE_SHEET = yaml.load(stream)
 
 # ---------------------------------------------------------------------------- #
 # check settings and sample_sheet validity
-validate_config(os.path.join(SETTINGS_PATH, SETTINGS_NAME),
-                os.path.join(SETTINGS_PATH, SAMPLE_SHEET_NAME))
+validate_config(config, SAMPLE_SHEET_FILE)
 
 # ---------------------------------------------------------------------------- #
 # Software executables
-SOFTWARE = SETTINGS['tools']
+SOFTWARE = config['tools']
 
 
 # Per sample software parameters:
@@ -53,11 +46,11 @@ for param_set in custom_param_names:
 # Variable definition
 
 # Default Function Parameters
-PARAMS       = SETTINGS['general']['params']
-GENOME       = SETTINGS['general']['assembly']
-GENOME_FASTA = SETTINGS['locations']['genome-file']
-PATH_FASTQ   = SETTINGS['locations']['input-dir']
-ANNOTATION   = SETTINGS['locations']['annotation']
+PARAMS       = config['general']['params']
+GENOME       = config['general']['assembly']
+GENOME_FASTA = config['locations']['genome-file']
+PATH_FASTQ   = config['locations']['input-dir']
+ANNOTATION   = config['locations']['annotation']
 
 # Sample name definition
 PEAK_NAMES   = SAMPLE_SHEET['peak_calling'].keys()
@@ -111,8 +104,8 @@ if GENOME_FASTA == None:
 else:
     prefix_default = os.path.join(PATH_INDEX, GENOME)
 
-INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  SETTINGS['general'])
-PREFIX = os.path.join(set_default('index-dir', prefix_default, SETTINGS['locations']), INDEX_PREFIX_NAME)
+INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  config['general'])
+PREFIX = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
 print(PREFIX)
 
 # ----------------------------------------------------------------------------- #
