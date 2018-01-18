@@ -65,7 +65,7 @@ parser = argparse.ArgumentParser(description=description,
 parser.add_argument('-v', '--version', action='version',
                     version=version)
 
-parser.add_argument('samplesheet',
+parser.add_argument('sample_sheet',
                     help="""\
 The sample sheet containing sample data in CSV format.\
 """)
@@ -183,7 +183,7 @@ def parse_samples(lines):
         outputdict[row[2]] = sampleid_dict
     return { 'SAMPLES': outputdict }
 
-def generate_config(configfile, samplesheet, settingsfile):
+def generate_config(configfile, sample_sheet, settingsfile):
     """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
 SETTINGSFILE as inputs."""
     dirs = {}
@@ -234,7 +234,7 @@ SETTINGSFILE as inputs."""
     settings['execution']['target'] = args.target
 
     # Load parameters specific to samples
-    with open(samplesheet, 'r') as f:
+    with open(sample_sheet, 'r') as f:
         lines = f.read().splitlines()
     sample_params = parse_samples(lines)
 
@@ -243,7 +243,7 @@ SETTINGSFILE as inputs."""
     settings['locations'].update(dirs['locations'])
 
     # Resolve relative paths in the locations section
-    root = path.dirname(samplesheet)
+    root = path.dirname(sample_sheet)
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
     for key in settings['locations']:
@@ -372,7 +372,7 @@ def display_logo():
 
 # Run snakemake!
 generate_config(args.configfile,
-                args.samplesheet,
+                args.sample_sheet,
                 args.settings)
 
 config = json.load(open(args.configfile, 'r'))

@@ -88,7 +88,7 @@ guix environment -l guix.scm
 To run PiGx BSseq on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
 
 ```sh
-$ pigx-bsseq [options] samplesheet.csv -s settings.yaml
+$ pigx-bsseq [options] sample_sheet.csv -s settings.yaml
 ```
 
 To see all available options type the `--help` option
@@ -98,7 +98,7 @@ $ pigx-bsseq --help
 
 usage: pigx-bsseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET] [-n] [--graph GRAPH] [--force] [--reason]
                   [--unlock]
-                  samplesheet
+                  sample_sheet
 
 PiGx BSseq Pipeline.
 
@@ -108,7 +108,7 @@ information and can be used to produce information on differential
 methylation and segmentation.
 
 positional arguments:
-  samplesheet                             The sample sheet containing sample data in CSV format.
+  sample_sheet                             The sample sheet containing sample data in CSV format.
 
 optional arguments:
   -h, --help                              show this help message and exit
