@@ -51,7 +51,7 @@ PATH_FASTQ   = config['locations']['input-dir']
 ANNOTATION   = config['locations']['gff-file']
 
 # Sample name definition
-PEAK_NAMES   = SAMPLE_SHEET['peak_calling'].keys()
+PEAK_NAMES   = []
 NAMES        = SAMPLE_SHEET['samples'].keys()
 
 
@@ -130,6 +130,7 @@ COMMAND = COMMAND + INDEX + BOWTIE2 + CHRLEN + BW + LINKS + FASTQC
 # ----------------------------------------------------------------------------- #
 if 'peak_calling' in set(SAMPLE_SHEET.keys()):
     if len(SAMPLE_SHEET['peak_calling'].keys()) > 0:
+        PEAK_NAMES = SAMPLE_SHEET['peak_calling'].keys()
         MACS  = []
         QSORT = []
         suffix = 'narrowPeak'
