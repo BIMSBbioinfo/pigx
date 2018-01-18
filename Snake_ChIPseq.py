@@ -7,7 +7,7 @@ import sys
 import yaml
 
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
-include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Conf.py')
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
 
 localrules: makelinks
 
