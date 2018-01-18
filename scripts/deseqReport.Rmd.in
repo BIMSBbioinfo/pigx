@@ -62,7 +62,7 @@ library(SummarizedExperiment)
 
 # Description
 
-PiGx RNAseq performs differential expression analysis using _DESeq2_, and produces this report. The report includes tables and figures summarizing similarities and differences between comparison groups as specified. In addition to the differential expression analysis, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.
+PiGx RNAseq performs differential expression analysis using _DESeq2_, and produces this report. The report includes tables and figures summarizing similarities and differences between comparison groups as specified in the settings file. In addition to the differential expression analysis, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.
 
 This report was generated with PiGx RNAseq version @VERSION@.
 
@@ -175,6 +175,8 @@ write.table(x = DE,
 
 # Differential Expression Analysis
 
+Differential expression (DE) analysis was done using the [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) R package. First, read counts are transformed using a _variance stabilizing transformation_, and then the expression values of each gene is compared between the control and sample groups using a negative binomial distribution as a model.
+
 ## Differential Expression Results Table (unfiltered)
 
 This is the full table of DE results comparing cases to controls (as specified in the input settings listed above). The `baseMean` refers to expression level in the controls, and the log fold change column denotes the expression in the cases, as compared to the control. Finally, the `padj` column is the multiple-testing adjusted P value for the significance of a differentially expressed gene.
@@ -214,7 +216,7 @@ ggplot(readCounts, aes(x = sample, y = readCounts)) + geom_bar(aes(fill = group)
 
 ## p-value histogram
 
-The P value distribution from the DE analysis.
+The P value distribution from the DE analysis. The expected shape depends on the expected difference / similarity between the controls and samples.
 
 ```{r plot_pvalhistogram}
 ggplot(data = DE, aes(x = pvalue)) + geom_histogram(bins = 100)
@@ -260,7 +262,7 @@ corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
 
 ### Top 100 most highly variable genes
 
-The heatmap below shows the expression values for the 100 highest variance genes.
+The heatmap below summarizes the experiment, and the apparent relationship between samples, based on the 100 highest variance genes. Each column is a sample, and each row is a gene. Both rows and columns are clustered using euclidean distance and complete linkage.
 
 ```{r plot_heatmap}
 select <- na.omit(names(sort(apply(X = vsd.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100])
