@@ -32,4 +32,4 @@ rule feature_combination:
                 output:     {output.outfile}
             """
     run:
-        RunRscript(input, output, params, BASEDIR, 'Feature_Combination.R')
+        RunRscript(input, output, params, 'Feature_Combination.R')

@@ -34,4 +34,4 @@ rule prepare_annotation:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, BASEDIR, 'Prepare_Annotation.R')
+            RunRscript(input, output, params, 'Prepare_Annotation.R')

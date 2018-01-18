@@ -37,11 +37,11 @@ library(genomation)
 ```
 
 ```{r input, include=FALSE}
-source('../Scripts/Prepare_Annotation.R')
+source('../scripts/Prepare_Annotation.R')
 annotation = list(
         gtf = '../Data/mm9.chr19.gtf.gz',
         cpg_island = '../Data/mm9.chr19.cpg.bed')
-prepare_Annotation(annotation, outpath='../Data/Annotation.rds', scriptdir = '../Scripts/')
+prepare_Annotation(annotation, outpath='../Data/Annotation.rds', scriptdir = '../scripts/')
 annot = readRDS('../Data/Annotation.rds')
 ```
 

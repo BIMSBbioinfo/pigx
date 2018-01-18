@@ -21,4 +21,4 @@ rule annotate_peaks:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, BASEDIR, 'Annotatae_Peaks.R')
+            RunRscript(input, output, params, 'Annotate_Peaks.R')

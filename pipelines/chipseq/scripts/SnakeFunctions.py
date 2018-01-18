@@ -82,7 +82,7 @@ def flatten(l):
 
 
 # ---------------------------------------------------------------------------- #
-def RunRscript(input, output, params, basedir, script):
+def RunRscript(input, output, params, script):
 
     # if isinstance(input, list):
     #     input = dict(zip(input, input))
@@ -96,7 +96,7 @@ def RunRscript(input, output, params, basedir, script):
                        separators=(",",":"), ensure_ascii=True)
 
     cmd = " ".join(['nice -19',str(params.Rscript), os.path.join(SCRIPT_PATH, script),
-                    "--basedir", basedir,
+                    "--basedir", SCRIPT_PATH,
                     "--input",  "{input_dump:q}",
                     "--output", "{output_dump:q}",
                     "--params", "{params_dump:q}"])

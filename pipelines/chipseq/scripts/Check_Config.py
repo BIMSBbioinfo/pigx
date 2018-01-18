@@ -1,8 +1,12 @@
 import itertools
 import os
+import yaml
 
 # ---------------------------------------------------------------------------- #
-def check_proper_settings_configuration(settings_dict, sample_sheet_dict):
+def validate_config(settings_dict, sample_sheet_file):
+    with open(sample_sheet_file, 'r') as stream:
+        sample_sheet_dict = yaml.load(stream)
+
     message = ''
     message = check_settings(settings_dict, message)
     message = check_sample_sheet(sample_sheet_dict, settings_dict, message)
@@ -170,15 +174,3 @@ def flatten(l):
         else:
             out.append(item)
     return out
-
-
-
-# ---------------------------------------------------------------------------- #
-# checks the config file for validity
-# config check
-def is_number(s):
-	try:
-		float(s)
-		return True
-	except ValueError:
-		return False
