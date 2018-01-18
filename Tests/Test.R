@@ -1,3 +1,0 @@
-annotation = 
-scriptdir  = 
-outpath    = 
