@@ -56,16 +56,17 @@ NAMES        = SAMPLE_SHEET['samples'].keys()
 
 
 # Directory structure definition
-PATH_MAPPED     = 'Mapped/Bowtie'
-PATH_QC         = 'FastQC'
-PATH_INDEX      = 'Bowtie2_Index'
-PATH_LOG        = 'Log'
-PATH_PEAK       = 'Peaks/MACS2'
-PATH_BW         = 'BigWig'
-PATH_IDR        = 'Peaks/IDR'
-PATH_HUB        = 'UCSC_HUB'
-PATH_ANALYSIS   = "Analysis"
-PATH_ANNOTATION = 'Annotation'
+OUTPUT_DIR      = config['locations']['output-dir']
+PATH_MAPPED     = os.path.join(OUTPUT_DIR, 'Mapped/Bowtie')
+PATH_QC         = os.path.join(OUTPUT_DIR, 'FastQC')
+PATH_INDEX      = os.path.join(OUTPUT_DIR, 'Bowtie2_Index')
+PATH_LOG        = os.path.join(OUTPUT_DIR, 'Log')
+PATH_PEAK       = os.path.join(OUTPUT_DIR, 'Peaks/MACS2')
+PATH_BW         = os.path.join(OUTPUT_DIR, 'BigWig')
+PATH_IDR        = os.path.join(OUTPUT_DIR, 'Peaks/IDR')
+PATH_HUB        = os.path.join(OUTPUT_DIR, 'UCSC_HUB')
+PATH_ANALYSIS   = os.path.join(OUTPUT_DIR, "Analysis")
+PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
 
 
 # Directory structure for saved R objects
