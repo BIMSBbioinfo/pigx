@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------------- #
 rule link_annotation:
         input:
-            annotation = ANNOTATION['gtf'],
+            annotation = ANNOTATION,
         output:
             outfile = os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')
         params:

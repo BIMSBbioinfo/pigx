@@ -48,7 +48,7 @@ PARAMS       = config['general']['params']
 GENOME       = config['general']['assembly']
 GENOME_FASTA = config['locations']['genome-file']
 PATH_FASTQ   = config['locations']['input-dir']
-ANNOTATION   = config['locations']['annotation']
+ANNOTATION   = config['locations']['gff-file']
 
 # Sample name definition
 PEAK_NAMES   = SAMPLE_SHEET['peak_calling'].keys()
@@ -165,7 +165,7 @@ if 'hub' in set(SAMPLE_SHEET.keys()):
 
 
 # ---------------------------------------------------------------------------- #
-gtf_index = 'gtf-file' in set(ANNOTATION.keys())
+gtf_index = type(ANNOTATION) is str
 if gtf_index:
     LINK_ANNOTATION    = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
     PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]

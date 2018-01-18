@@ -3,8 +3,7 @@ locations:
   output-dir: out/
   genome-dir: genome/
   index-dir:
-  annotation:
-      gff-file: 
+  gff-file:
 
 general:
   assembly: 

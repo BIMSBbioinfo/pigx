@@ -34,15 +34,8 @@ def check_settings(settings_dict, message):
         message = message + "\t" + "neither genome nor index are specified\n"
 
     # checks whether the locations files exist if they are specified
-    for location in sorted(list(set(locations_dict.keys()) - set(['annotation']))):
+    for location in sorted(list(set(locations_dict.keys()))):
         message = check_file_exists(locations_dict, location, message)
-
-    # checks whether the annotation files exist if they are specified
-    if not locations_dict['annotation'] == None:
-        annotations_dict = locations_dict['annotation']
-        for annotation in annotations_dict.keys():
-            message = check_file_exists(annotations_dict, annotation, message)
-
 
     return(message)
 
