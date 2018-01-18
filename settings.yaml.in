@@ -48,12 +48,9 @@ tools:
              - 1
              - 2
              - U
-        
-        
     bowtie2-build: 
         executable: @BOWTIE2-BUILD@
         args: ""
-
     bowtie2-inspect: 
         executable: @bOWTIE2-INSPECT@
         args: ""
@@ -68,7 +65,6 @@ tools:
             - output-file
             - l
             - plot
-
     macs2: 
         executable: @MACS2@
         args: ""
@@ -78,36 +74,18 @@ tools:
             - c
             - outdir
             - n
-
     perl: 
         executable: @PERL@
         args: ""
-
     Rscript: 
         executable: RSCRIPT@
         args: ""
-        dependencies:
-            - data.table
-            - genomation
-            - GenomicRanges
-            - RCAS
-            - rtracklayer
-            - stringr
     samtools: 
         executable: @SAMTOOLS@
         args: ""
-
     python: 
         executable: @PYTHON@
         args: ""
-        python_deps:
-            - fnmatch
-            - os
-            - sys
-            - yaml
-            - pytest
-            - itertools
-            
     bedToBigBed:
         executable: @BEDTOBIGBED@
         args: ""
