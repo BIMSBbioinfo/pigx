@@ -6,7 +6,7 @@ locations:
 general:
   assembly: hg19
   methylation-calling:
-    minimum-coverage: 0
+    minimum-coverage: 1
     minimum-quality: 10
   differential-methylation:
     cores: 20

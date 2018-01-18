@@ -40,14 +40,14 @@ EXTRA_DIST =										\
   test/in/PE_2.fq.gz								\
   test/in/SE_techrep1.fq.gz							\
   test/in/SE_techrep2.fq.gz							\
-  test/samplesheet.csv								\
+  test/sample_sheet.csv								\
   test/settings.yaml
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
 
 TESTS = \
   test.sh											\
-  tests/test-check-samplesheet-header.sh			\
+  tests/test-check-sample_sheet-header.sh			\
   tests/test-write-access-to-out.sh
 
 EXTRA_DIST += $(TESTS)

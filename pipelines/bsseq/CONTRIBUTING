@@ -65,7 +65,7 @@ make install
 
 Now finally we can call the executable:
 ```
-$prefix/bin/pigx-bsseq test/samplesheet.csv
+$prefix/bin/pigx-bsseq test/sample_sheet.csv
 ```
 
 and we should see the flying pig. :)
