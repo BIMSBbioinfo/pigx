@@ -10,7 +10,7 @@ def validate_config(settings_dict, sample_sheet_file):
     message = ''
     message = check_settings(settings_dict, message)
     message = check_sample_sheet(sample_sheet_dict, settings_dict, message)
-    
+
     if len(message) > 0:
         message = 'ERROR: Config file is not properly formated:\n' + message
         print(message)
@@ -20,17 +20,17 @@ def validate_config(settings_dict, sample_sheet_file):
 # checks the proper structure of the settings file
 # ---------------------------------------------------------------------------- #
 def check_settings(settings_dict, message):
-    
+
     # ---------------------------------------------------------------------------- #
     params_list  = ['locations','general','execution','tools']
     message = check_params(settings_dict, params_list, message)
-  
+
     # ---------------------------------------------------------------------------- #
-    # checks for index or genome specification   
+    # checks for index or genome specification
     locations_dict = settings_dict['locations']
     if (locations_dict['genome-file'] == None) and (locations_dict['index-dir'] == None):
         message = message + "\t" + "neither genome nor index are specified\n"
-    
+
     # checks whether the locations files exist if they are specified
     for location in sorted(list(set(locations_dict.keys()) - set(['annotation']))):
         message = check_file_exists(locations_dict, location, message)
@@ -40,10 +40,10 @@ def check_settings(settings_dict, message):
         annotations_dict = locations_dict['annotation']
         for annotation in annotations_dict.keys():
             message = check_file_exists(annotations_dict, annotation, message)
-   
+
 
     return(message)
-  
+
 
 
 # ---------------------------------------------------------------------------- #
@@ -69,7 +69,7 @@ def check_sample_sheet(config, settings_dict, message):
             # checks whether the fastq file names are given as a list
             if(not isinstance(config['samples'][samp]['fastq'], list)):
                 message = message + "\t" + "sample: " + samp + " fastq should be a yaml list\n"
-            
+
     else:
         message = message + "\t" + "There are no input samples!\n"
 
@@ -98,7 +98,7 @@ def check_sample_sheet(config, settings_dict, message):
                 message = message + "\tsome peak calling samples are not specified\n"
 
 
-    # ---------------------------------------------------------------------------- #
+    # ------------------------------------------------------------------------ #
     # checks whether the idr samples correspond to the peaks_calling samples
     if 'idr' in set(config.keys()):
         if(len(config['peak_calling']) > 0 and len(config['idr']) > 0):
@@ -108,15 +108,34 @@ def check_sample_sheet(config, settings_dict, message):
                 if len(peaks_idr - peaks_calling) > 0:
                     message = message + "\tIDR: " + i + " Contains samples not in peak calling\n"
 
+    # ------------------------------------------------------------------------ #
+    # checks for proper feature combination
+    # This check is temporary. Once Check_Config is updated, can be removed.
+    if 'feature_combination' in set(config.keys()):
+        if len(config['feature_combination']) > 0:
+            feature_keys = config['feature_combination'].keys()
+            samps = []
+            if 'idr' in set(config.keys()):
+                samps = samps + list(config['idr'].keys())
 
-    # ---------------------------------------------------------------------------- #
+            if 'peak_calling' in set(config.keys()):
+                samps = samps + list(config['peak_calling'].keys())
+
+            samps = set(samps)
+
+            for key in feature_keys:
+                key_diff = len(set(config['feature_combination'][key])  - samps)
+                if(key_diff > 0):
+                    message = message + "\tfeature_combination contains unknown peak files"
+
+    # ------------------------------------------------------------------------ #
     # checks whether the designated files exist
     message = check_sample_exists(config, settings_dict, message)
 
     # checks whether extend is a number
     # if not (is.number(config['params']['extend'])):
     #     message = message + "extend must be a number\n"
-    
+
     return(message)
 
 
@@ -132,7 +151,7 @@ def check_file_exists(locations_dict, file_name, message=''):
            message = message + "\t" + file_name + "is not a valid file\n"
 
     return(message)
-    
+
 # ---------------------------------------------------------------------------- #
 def check_sample_exists(config, settings_dict, message=''):
     import os
@@ -153,17 +172,17 @@ def check_sample_exists(config, settings_dict, message=''):
                     message = message + '\t'+ file + ": file does not exist\n"
 
     return(message)
-    
+
 # ---------------------------------------------------------------------------- #
 # given a dict, checks for existence of params
 def check_params(settings_dict, params, message):
     params_diff = set(settings_dict.keys()) - set(params)
 
     if len(params_diff) > 0:
-        message = message + "\t" + "sample_sheet file contains unknown parameters\n" 
-    
-    return(params_diff) 
-    
+        message = message + "\t" + "sample_sheet file contains unknown parameters\n"
+
+    return(params_diff)
+
 # ---------------------------------------------------------------------------- #
 # given a list of lists, returns a flattened version
 def flatten(l):
