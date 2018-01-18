@@ -1,5 +1,8 @@
 ACLOCAL_AMFLAGS = -I m4
 
+nodist_bin_SCRIPTS = \
+  pigx-rnaseq
+
 dist_pkglibexec_SCRIPTS = \
   Snake_ChIPseq.py
 
