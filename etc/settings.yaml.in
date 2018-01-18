@@ -8,7 +8,7 @@ general:
 
 sample_sheet:
 
-
+settings:
 
 execution:
   submit-to-cluster: no
