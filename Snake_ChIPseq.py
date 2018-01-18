@@ -178,6 +178,7 @@ if gtf_index:
 
 #     include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
     include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
+    include: os.path.join(RULES_PATH, 'Annotate_Peaks.py')
     COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS 
 
 # ---------------------------------------------------------------------------- #
