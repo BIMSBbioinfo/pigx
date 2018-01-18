@@ -22,8 +22,6 @@ general:
         expand_peak:
         bin_num:
 
-settings:
-
 execution:
   submit-to-cluster: no
   jobs: 6
