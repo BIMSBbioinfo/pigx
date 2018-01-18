@@ -50,7 +50,7 @@ rule bowtie2:
         infile = get_fastq_input,
         genome = rules.bowtie2_build.output.outfile
     output:
-        bamfile = os.path.join(PATH_MAPPED, "{name}/{name}.bam")
+        bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
     params:
         threads        = 2,
         mem            =  '16G',
@@ -88,9 +88,9 @@ rule bowtie2:
 #----------------------------------------------------------------------------- #
 rule samtools_sort:
     input:
-        os.path.join(PATH_MAPPED, "{name}/{name}.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}/{name}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
     params:
         threads = 4,
         mem = '16G',
@@ -107,9 +107,9 @@ rule samtools_sort:
 # ----------------------------------------------------------------------------- #
 rule samtools_index:
     input:
-        os.path.join(PATH_MAPPED, "{name}/{name}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}/{name}.sorted.bam.bai")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai")
     params:
         threads = 1,
         mem = '8G',
