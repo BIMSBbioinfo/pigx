@@ -1,0 +1,11 @@
+# Emacs backup files
+*~
+
+# autoconf generated files
+configure
+config.status
+pigx-chipseq
+Makefile.in
+Makefile
+autom4te.cache/
+etc/settings.yaml
