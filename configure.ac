@@ -75,5 +75,6 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
   ])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([etc/settings.yaml
+                 Makefile])
 AC_OUTPUT
