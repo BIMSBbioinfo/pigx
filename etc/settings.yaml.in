@@ -6,9 +6,6 @@ locations:
   annotation:
       gff-file: 
 
-general:
-  assembly: 
-
 sample_sheet:
 
 general:
@@ -28,10 +25,7 @@ general:
         expand_peak:
         bin_num:
 
-
-
 settings:
-
 
 execution:
   submit-to-cluster: no
