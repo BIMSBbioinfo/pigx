@@ -2,13 +2,36 @@ locations:
   input-dir: in/
   output-dir: out/
   genome-dir: genome/
+  index-dir:
+  annotation:
+      gff-file: 
 
 general:
-  assembly: hg19
+  assembly: 
 
 sample_sheet:
 
+general:
+  assembly: 
+  params:
+    extend: 
+    scale_bw:
+    bowtie2:
+        k:
+    idr:
+        idr-threshold: 
+    macs2:
+        g:
+        keep-dup:
+        q:
+    extract_signal:
+        expand_peak:
+        bin_num:
+
+
+
 settings:
+
 
 execution:
   submit-to-cluster: no
