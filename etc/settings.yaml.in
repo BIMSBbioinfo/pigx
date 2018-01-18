@@ -49,10 +49,10 @@ tools:
              - 2
              - U
     bowtie2-build: 
-        executable: @BOWTIE2-BUILD@
+        executable: @BOWTIE2_BUILD@
         args: ""
     bowtie2-inspect: 
-        executable: @bOWTIE2-INSPECT@
+        executable: @BOWTIE2_INSPECT@
         args: ""
     idr: 
         executable: @IDR@
@@ -78,7 +78,7 @@ tools:
         executable: @PERL@
         args: ""
     Rscript: 
-        executable: RSCRIPT@
+        executable: @RSCRIPT@
         args: ""
     samtools: 
         executable: @SAMTOOLS@
