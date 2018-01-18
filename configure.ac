@@ -57,6 +57,7 @@ AC_ARG_ENABLE([r-packages-check],
   [dnl
 AX_R_PACKAGE([argparser])
 AX_R_PACKAGE([data.table])
+AX_R_PACKAGE([jsonlite])
 AX_R_PACKAGE([genomation])
 AX_R_PACKAGE([GenomicRanges])
 AX_R_PACKAGE([RCAS])
