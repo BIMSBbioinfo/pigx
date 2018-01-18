@@ -2,7 +2,7 @@
 # Annotate Peaks
 rule annotate_peaks:
         input:
-            annotation = rules.prepare_annoation.outfile.output,
+            annotation = rules.prepare_annotation.outfile.output,
             peaks      = rules.sort_peak.outfile,
         output:
             outfile    = os.path.join(PATH_PEAK,'{name}','{name}.Annotate_Peaks.rds')
