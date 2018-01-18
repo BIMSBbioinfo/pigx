@@ -1,11 +1,10 @@
 locations:
-  input-dir: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Fastq'
-  output-dir: '/home/vfranke/Tmp/pigxtest'
-  genome-file: '/data/akalin/vfranke/AAkalin_PIX/ChIP/Genome/chr19.fa'
+  input-dir: in/
+  output-dir: out/
+  genome-file: genome/chr19.fa
   index-dir:
   annotation:
-      gff-file: "/data/akalin/Base/Annotation/mm9/EnsemblGenes/150520_Ensembl_Mus_musculus.NCBIM37.67.form.gtf"
-
+    gff-file: genome/150520_Ensembl_Mus_musculus.NCBIM37.67.form.gtf
 
 general:
   assembly: hg19
