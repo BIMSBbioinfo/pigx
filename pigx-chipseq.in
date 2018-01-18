@@ -170,7 +170,8 @@ SETTINGSFILE as inputs."""
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
     for key in settings['locations']:
-        settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
+        if settings['locations'][key]:
+            settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
 
     # Record the location of the sample sheet.
     settings['locations']['sample-sheet'] = path.abspath(samplesheet)
