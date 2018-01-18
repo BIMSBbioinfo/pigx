@@ -1,0 +1,23 @@
+locations:
+  input-dir: in/
+  output-dir: out/
+  genome-file: genome/genome_subset_mm9_chr1_13590945_17791527.fa
+  index-dir:
+  gff-file: genome/mm_chr19.gtf
+
+general:
+  assembly: hg19
+  params:
+    extend: 200
+    scale_bw: 'yes'
+    bowtie2:
+        k: 1
+    idr:
+        idr-threshold: 0.1
+    macs2:
+        g: hs
+        keep-dup: auto
+        q: 0.05
+    extract_signal:
+        expand_peak: 200
+        bin_num: 20

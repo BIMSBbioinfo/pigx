@@ -2,10 +2,10 @@
 # Annotate Peaks
 rule annotate_peaks:
         input:
-            annotation = rules.prepare_annoation.outfile.output,
-            peaks      = rules.sort_peak.outfile,
+            annotation = rules.prepare_annotation.output.outfile,
+            peaks      = rules.sort_peak.output.outfile,
         output:
-            outfile    = os.path.join(PATH_PEAK,'{name}','{name}.Annotate_Peaks.rds')
+            outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds')
         params:
             threads     = 1,
             mem         = '16G',

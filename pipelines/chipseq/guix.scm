@@ -22,6 +22,7 @@
              (guix download)
              (guix build-system ant)
              (guix build-system gnu)
+             (guix build-system r)
              (gnu packages)
              (gnu packages autotools)
              (gnu packages statistics)
@@ -99,6 +100,27 @@ The main functions of FastQC are:
 @end itemize\n")
     (license gpl3+)))
 
+(define-public r-argparser
+  (package
+    (name "r-argparser")
+    (version "0.4")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (cran-uri "argparser" version))
+       (sha256
+        (base32
+         "0s1wxshx4jk69wfxhycx973q6y8cmqrfymyjklhq1i8xrj0kmmx9"))))
+    (build-system r-build-system)
+    (home-page "https://bitbucket.org/djhshih/argparser")
+    (synopsis "Command-line argument parser")
+    (description
+     "This package provides a cross-platform command-line argument parser
+written purely in R with no external dependencies.  It is useful with the
+Rscript front-end and facilitates turning an R script into an executable
+script.")
+    (license gpl3+)))
+
 (define %pigx-chipseq-version
   (symbol->string (with-input-from-file "VERSION" read)))
 
@@ -125,12 +147,14 @@ The main functions of FastQC are:
        ("automake" ,automake)))
     (inputs
      `(("r-minimal" ,r-minimal)
+       ("r-argparser" ,r-argparser)
        ("r-data-table" ,r-data-table)
        ("r-genomation" ,r-genomation)
        ("r-genomicranges" ,r-genomicranges)
        ("r-rtracklayer" ,r-rtracklayer)
        ("r-rcas" ,r-rcas)
        ("r-stringr" ,r-stringr)
+       ("r-jsonlite" ,r-jsonlite)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
        ("python-pytest" ,python-pytest)

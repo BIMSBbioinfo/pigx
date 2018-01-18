@@ -26,17 +26,6 @@ dist_pkglibexec_scripts_SCRIPTS =		\
 dist_pkgdata_DATA =						\
   etc/settings.yaml						\
   etc/pretty.txt						\
-  Data/Annot.rds						\
-  Data/Annotation.rds					\
-  Data/ChIP1.bw							\
-  Data/ChIP2.bw							\
-  Data/ChIPpe.bw						\
-  Data/Cont1.bw							\
-  Data/Cont2.bw							\
-  Data/Peaks1_qsort.narrowPeak			\
-  Data/mm9.chr19.cpg.bed				\
-  Data/mm9.chr19.gtf.gz					\
-  Data/mm9.chr19.gtf.gz.granges.rds		\
   Rules/Annotate_Peaks.py				\
   Rules/BamToBigWig.py					\
   Rules/ChIPQC.py						\

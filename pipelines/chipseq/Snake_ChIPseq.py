@@ -6,9 +6,8 @@ import re
 import sys
 import yaml
 
-# from SnakeFunctions import *
-include: 'SnakeFunctions.py'
-include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Conf.py')
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
 
 localrules: makelinks
 
@@ -49,24 +48,25 @@ PARAMS       = config['general']['params']
 GENOME       = config['general']['assembly']
 GENOME_FASTA = config['locations']['genome-file']
 PATH_FASTQ   = config['locations']['input-dir']
-ANNOTATION   = config['locations']['annotation']
+ANNOTATION   = config['locations']['gff-file']
 
 # Sample name definition
-PEAK_NAMES   = SAMPLE_SHEET['peak_calling'].keys()
+PEAK_NAMES   = []
 NAMES        = SAMPLE_SHEET['samples'].keys()
 
 
 # Directory structure definition
-PATH_MAPPED     = 'Mapped/Bowtie'
-PATH_QC         = 'FastQC'
-PATH_INDEX      = 'Bowtie2_Index'
-PATH_LOG        = 'Log'
-PATH_PEAK       = 'Peaks/MACS2'
-PATH_BW         = 'BigWig'
-PATH_IDR        = 'Peaks/IDR'
-PATH_HUB        = 'UCSC_HUB'
-PATH_ANALYSIS   = "Analysis"
-PATH_ANNOTATION = 'Annotation'
+OUTPUT_DIR      = config['locations']['output-dir']
+PATH_MAPPED     = os.path.join(OUTPUT_DIR, 'Mapped/Bowtie')
+PATH_QC         = os.path.join(OUTPUT_DIR, 'FastQC')
+PATH_INDEX      = os.path.join(OUTPUT_DIR, 'Bowtie2_Index')
+PATH_LOG        = os.path.join(OUTPUT_DIR, 'Log')
+PATH_PEAK       = os.path.join(OUTPUT_DIR, 'Peaks/MACS2')
+PATH_BW         = os.path.join(OUTPUT_DIR, 'BigWig')
+PATH_IDR        = os.path.join(OUTPUT_DIR, 'Peaks/IDR')
+PATH_HUB        = os.path.join(OUTPUT_DIR, 'UCSC_HUB')
+PATH_ANALYSIS   = os.path.join(OUTPUT_DIR, "Analysis")
+PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
 
 
 # Directory structure for saved R objects
@@ -105,7 +105,6 @@ else:
 
 INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  config['general'])
 PREFIX = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
-print(PREFIX)
 
 # ----------------------------------------------------------------------------- #
 # include rules
@@ -130,6 +129,7 @@ COMMAND = COMMAND + INDEX + BOWTIE2 + CHRLEN + BW + LINKS + FASTQC
 # ----------------------------------------------------------------------------- #
 if 'peak_calling' in set(SAMPLE_SHEET.keys()):
     if len(SAMPLE_SHEET['peak_calling'].keys()) > 0:
+        PEAK_NAMES = SAMPLE_SHEET['peak_calling'].keys()
         MACS  = []
         QSORT = []
         suffix = 'narrowPeak'
@@ -166,7 +166,7 @@ if 'hub' in set(SAMPLE_SHEET.keys()):
 
 
 # ---------------------------------------------------------------------------- #
-gtf_index = 'gtf-file' in set(ANNOTATION.keys())
+gtf_index = type(ANNOTATION) is str
 if gtf_index:
     LINK_ANNOTATION    = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
     PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
@@ -177,6 +177,7 @@ if gtf_index:
 
 #     include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
     include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
+    include: os.path.join(RULES_PATH, 'Annotate_Peaks.py')
     COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS 
 
 # ---------------------------------------------------------------------------- #

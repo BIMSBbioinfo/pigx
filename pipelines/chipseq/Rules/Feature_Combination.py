@@ -2,11 +2,6 @@
 def get_feature_combination_infiles(wc):
     infiles = []
     for file in SAMPLE_SHEET['feature_combination'][wc.name]:
-        # This check is temporary. Once Check_Config is updated, can be removed.
-        if(not file in set(PEAK_NAME_LIST.keys())):
-            quit()
-
-
         infiles = infiles + [PEAK_NAME_LIST[file]]
 
     infiles = dict(zip(infiles, infiles))

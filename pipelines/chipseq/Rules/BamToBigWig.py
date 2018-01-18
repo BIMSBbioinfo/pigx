@@ -4,7 +4,7 @@ rule bam2bed:
         file   = os.path.join(PATH_MAPPED, "{name}/{name}.sorted.bam"),
         chrlen = rules.index_to_chrlen.output.outfile
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}/{name}.bed")
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bed")
     params:
         extend   = PARAMS['extend'],
         threads  = 1,
@@ -19,7 +19,7 @@ rule bam2bigWig:
         file    = rules.bam2bed.output.outfile,
         chrlen  = rules.index_to_chrlen.output.outfile
     output:
-        outfile = os.path.join(os.getcwd(), PATH_MAPPED, "{name}/{name}.bw")
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bw")
     params:
         threads  = 1,
         mem      = '16G',
@@ -38,7 +38,7 @@ rule bam2bigWig:
 # ----------------------------------------------------------------------------- #
 rule makelinks:
     input:
-        file = os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}" + '.bw')
+        file = os.path.join(PATH_MAPPED, "{name}", "{name}" + '.bw')
     output:
         os.path.join(PATH_BW, "{name}.bw")
     shell: """

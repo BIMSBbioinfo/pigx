@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------- #
 options = commandArgs(trailingOnly=TRUE)
-source(file.path(options[2],'/scripts/Argument_Parser.R'))
+source(file.path(options[2],'/Argument_Parser.R'))
 argv = Parse_Arguments('Make_UCSC_HUB')
 
 

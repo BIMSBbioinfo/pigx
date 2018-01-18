@@ -55,7 +55,9 @@ AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
+AX_R_PACKAGE([argparser])
 AX_R_PACKAGE([data.table])
+AX_R_PACKAGE([jsonlite])
 AX_R_PACKAGE([genomation])
 AX_R_PACKAGE([GenomicRanges])
 AX_R_PACKAGE([RCAS])
