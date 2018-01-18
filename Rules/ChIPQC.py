@@ -18,4 +18,4 @@ rule chipqc:
                 output:     {output.outfile}
             """
     run:
-        RunRscript(input, output, params, BASEDIR, 'ChIPQC.R')
+        RunRscript(input, output, params, 'ChIPQC.R')

@@ -11,10 +11,8 @@ include: 'SnakeFunctions.py'
 from Check_Config import *
 localrules: makelinks
 
-BASEDIR           = workflow.basedir
-SCRIPT_PATH       = os.path.join(BASEDIR,'scripts')
-RULES_PATH        = os.path.join(BASEDIR,'Rules')
-PARAMS_PATH       = '.'
+SCRIPT_PATH       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
+RULES_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'Rules/')
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 # ---------------------------------------------------------------------------- #

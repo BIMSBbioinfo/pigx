@@ -20,7 +20,7 @@ rule make_ucsc_hub:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, BASEDIR, 'Make_UCSC_HUB.R')
+            RunRscript(input, output, params, 'Make_UCSC_HUB.R')
 
 
 # ----------------------------------------------------------------------------- #

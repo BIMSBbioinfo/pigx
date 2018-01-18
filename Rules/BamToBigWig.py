@@ -33,7 +33,7 @@ rule bam2bigWig:
             scale:  {params.scale}
     """
     run:
-        RunRscript(input, output, params, BASEDIR, 'BigWigExtend.R')
+        RunRscript(input, output, params, 'BigWigExtend.R')
 
 # ----------------------------------------------------------------------------- #
 rule makelinks:

@@ -20,7 +20,7 @@ rule extract_signal_annotation:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, BASEDIR, 'Extract_Signal_Annotation.R')
+            RunRscript(input, output, params, 'Extract_Signal_Annotation.R')
 
 
 
@@ -50,7 +50,7 @@ rule extract_signal_peaks:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, BASEDIR, 'Extract_Signal_Peaks.R')
+            RunRscript(input, output, params, 'Extract_Signal_Peaks.R')
 
 
 # #----------------------------------------------------------------------------- #
@@ -76,4 +76,4 @@ rule annotate_peaks:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, BASEDIR, 'Annotate_Peaks.R')
+            RunRscript(input, output, params, 'Annotate_Peaks.R')
