@@ -12,7 +12,7 @@ from Check_Config import *
 localrules: makelinks
 
 BASEDIR           = workflow.basedir
-SCRIPT_PATH       = os.path.join(BASEDIR,'Scripts')
+SCRIPT_PATH       = os.path.join(BASEDIR,'scripts')
 RULES_PATH        = os.path.join(BASEDIR,'Rules')
 PARAMS_PATH       = '.'
 SETTINGS_NAME     = 'settings.yaml'
