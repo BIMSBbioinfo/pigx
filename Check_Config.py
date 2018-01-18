@@ -1,8 +1,14 @@
 import itertools
 import os
+import yaml
 
 # ---------------------------------------------------------------------------- #
-def check_proper_settings_configuration(settings_dict, sample_sheet_dict):
+def validate_config(settings_file, sample_sheet_file):
+    with open(settings_file, 'r') as stream:
+        settings_dict = yaml.load(stream)
+    with open(sample_sheet_file, 'r') as stream:
+        sample_sheet_dict = yaml.load(stream)
+
     message = ''
     message = check_settings(settings_dict, message)
     message = check_sample_sheet(sample_sheet_dict, settings_dict, message)

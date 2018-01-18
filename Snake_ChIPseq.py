@@ -30,7 +30,8 @@ with open(os.path.join(SETTINGS_PATH, SAMPLE_SHEET_NAME), 'r') as stream:
 
 # ---------------------------------------------------------------------------- #
 # check settings and sample_sheet validity
-check_proper_settings_configuration(SETTINGS, SAMPLE_SHEET)
+validate_config(os.path.join(SETTINGS_PATH, SETTINGS_NAME),
+                os.path.join(SETTINGS_PATH, SAMPLE_SHEET_NAME))
 
 # ---------------------------------------------------------------------------- #
 # Software executables
