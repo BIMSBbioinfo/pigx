@@ -4,7 +4,7 @@ rule bam2bed:
         file   = os.path.join(PATH_MAPPED, "{name}/{name}.sorted.bam"),
         chrlen = rules.index_to_chrlen.output.outfile
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}/{name}.bed")
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bed")
     params:
         extend   = PARAMS['extend'],
         threads  = 1,
