@@ -8,7 +8,8 @@ import yaml
 
 # from SnakeFunctions import *
 include: 'SnakeFunctions.py'
-from Check_Config import *
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Conf.py')
+
 localrules: makelinks
 
 SCRIPT_PATH       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
