@@ -4,6 +4,7 @@
 # autoconf generated files
 configure
 config.status
+config.log
 pigx-chipseq
 Makefile.in
 Makefile
