@@ -1,3 +1,4 @@
+
 # pigx pipeline for RNAseq
 
 
@@ -11,17 +12,22 @@
 **Copyright 2017-2018: Bora Uyar, Jona Ronen, Ricardo Wurmus.**
 **This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
+-----------
+
+## Summary
+
+PiGX RNAseq is an analysis pipeline for preprocessing and reporting for RNA sequencing experiments. It is easy to use and produces high quality reports. The inputs are reads files from the sequencing experiment, and a configuration file which describes the experiment. In addition to quality control of the experiment, the pipeline produces a differential expression report comparing samples in an easily configurable manner.
 
 ## What does it do
 
-- trim reads
-- quality control reads
-- map reads using STAR
-- count genes using HTseq
+- Trim reads
+- Quality control reads
+- Map reads using STAR
+- Map reads using salmon
 
 ## What does it output
 
-- qc report
+- QC report
 - bam files
 - bigwig files
 - reads matrix
