@@ -189,9 +189,5 @@ An example can be found in the `tests` directory.  The
   - 3 replicates of mRNA from human brain (HBR)
   - only chromosome 22 and ERCC spike-ins
 
-## To do
-
-- fix gene sets for DE report
-
 ----------------------------------------
 2017
