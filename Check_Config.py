@@ -176,15 +176,3 @@ def flatten(l):
         else:
             out.append(item)
     return out
-
-
-
-# ---------------------------------------------------------------------------- #
-# checks the config file for validity
-# config check
-def is_number(s):
-	try:
-		float(s)
-		return True
-	except ValueError:
-		return False
