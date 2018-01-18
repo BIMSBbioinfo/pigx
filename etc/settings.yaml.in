@@ -6,8 +6,6 @@ locations:
   annotation:
       gff-file: 
 
-sample_sheet:
-
 general:
   assembly: 
   params:
