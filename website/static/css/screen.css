@@ -134,17 +134,17 @@ h1 {
   color: #000;
   clear: both;
   line-height: 125%;
-  margin-top: 1.3rem;
-  margin-bottom: .3rem;
+  margin-top: 1.5rem;
+  margin-bottom: .5rem;
   display: block;
   font-family: "droid sans", sans-serif;
   font-size: 1.2rem;
   font-weight: 800; }
 
 h1:first-child {
-    font-size: 1.8rem;
+    font-size: 2rem;
     margin-bottom: 3rem;
-    margin-top: 3rem; }
+    margin-top: 0; }
 
 @media screen and (max-width: 600px) {
     h1:first-child {
@@ -242,7 +242,7 @@ div#page {
       float: left;
       margin-right: .5rem; }
 
-p + p, div.figure + p {
+p + p, div.figure + p, ul + p {
   text-indent: .5rem;
   margin-top: 0.4rem; }
 
@@ -342,3 +342,6 @@ ul.tags {
     margin-right: 1rem;
     white-space: nowrap;
     display: inline-block; }
+
+li + li {
+    padding-top: .5rem; }
