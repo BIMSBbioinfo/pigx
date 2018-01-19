@@ -53,6 +53,9 @@ EXTRA_DIST =												\
   Tests/in/ChIP_2.fq.gz										\
   Tests/in/Cont.fq.gz
 
+clean-local:
+	-rm -rf .snakemake
+
 CLEANFILES = $(nodist_bin_SCRIPTS) config.json
 
 # Build docker image with Guix
