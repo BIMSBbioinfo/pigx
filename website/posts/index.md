@@ -27,6 +27,7 @@ format) and a descriptive settings file (in YAML format).  For more
 detailed information see the README.md file for each of the pipelines
 in the `pipelines` directory.
 
+###### INSERT EXAMPLES HERE
 
 # Getting started
 

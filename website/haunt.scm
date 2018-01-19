@@ -44,11 +44,53 @@
            `((h1 ,(post-ref post 'title))
              ,(post-sxml post)))))
 
+
+;;; XXX This is needed because Guile Commonmark does not yet support
+;;; raw HTML blocks.  See
+;;; https://github.com/OrangeShark/guile-commonmark/issues/8
+(use-modules (commonmark)
+             (haunt post)
+             (haunt reader)
+             (srfi srfi-1)
+             (sxml transform))
+
+;; Render markdown but replace any "###### INSERT EXAMPLES HERE" with
+;; the examples.
+(define commonmark-reader-with-examples
+  (make-reader
+   (make-file-extension-matcher "md")
+   (lambda (file)
+     (call-with-input-file file
+       (lambda (port)
+         (values (read-metadata-headers port)
+                 (pre-post-order
+                  (commonmark->sxml port)
+                  `((h6 . ,(lambda (sym tree)
+                             (if (and (string? tree)
+                                      (string=? "INSERT EXAMPLES HERE" tree))
+                                 '(div (@ (id "example-scroller"))
+                                       (div (@ (id "examples"))
+                                            (img (@ (class "example")
+                                                    (src "images/report1.png")
+                                                    (alt "Example report screenshot")))
+                                            (img (@ (class "example")
+                                                    (src "images/report2.png")
+                                                    (alt "Example report screenshot")))
+                                            (img (@ (class "example")
+                                                    (src "images/report1.png")
+                                                    (alt "Example report screenshot")))
+                                            (img (@ (class "example")
+                                                    (src "images/report2.png")
+                                                    (alt "Example report screenshot")))))
+                                 tree)))
+                    (*text* . ,(lambda (sym text) text))
+                    (*default* . ,(lambda arg arg))))))))))
+
 (site #:title "PiGx: Pipelines in Genomics"
       #:domain "http://bioinformatics.mdc-berlin.de/pigx"
       #:default-metadata
       '((author . "BIMSB Bioinformatics")
         (email  . "ricardo.wurmus@mdc-berlin.de"))
-      #:readers (list commonmark-reader html-reader)
+      #:readers (list commonmark-reader-with-examples html-reader)
       #:builders (list (blog #:theme default-theme #:collections '())
                        (static-directory "static" ".")))
