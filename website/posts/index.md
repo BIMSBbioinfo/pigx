@@ -22,10 +22,13 @@ It includes the following pipelines:
   for the analysis of sequence mutations in CRISPR-CAS9 targeted
   amplicon sequencing data
 
-All pipelines are easily configured with a sample sheet (in CSV
-format) and a descriptive settings file (in YAML format).  For more
-detailed information see the README.md file for each of the pipelines
-in the `pipelines` directory.
+For more detailed information see the README.md file for each of the
+pipelines in the `pipelines` directory.
+
+All pipelines are easily configured with a simple sample sheet and a
+descriptive settings file.  The result is a comprehensive, interactive
+HTML report with interesting findings about your samples.  Here are
+some examples:
 
 ###### INSERT EXAMPLES HERE
 
