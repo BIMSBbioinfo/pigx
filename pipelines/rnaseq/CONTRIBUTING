@@ -52,23 +52,32 @@ should not be used when installing the pipeline to a shared location
 for all users.
 
 
+## Building
+
+Even if you don't choose to install the pipeline, you will still need
+to build a couple of files.  Do that by running `make`.
+
+If you want to skip the installation step, you will need to set the
+environment variable `PIGX_UNINSTALLED` to any value before running
+the executable from the current working directory.
+
+Now finally you can call the executable:
+
+```
+./pigx-rnaseq tests/sample_sheet.csv -s tests/settings.yaml
+```
+
+and you should see the flying pig. :)
+
+
 ## Install
 
-In order to properly set up the packages structure under the prefix location type:
+In order to properly set up the packages structure under the prefix
+location run:
+
 ```
 make install
 ```
-
-Now finally we can call the executable:
-```
-$prefix/bin/pigx-rnaseq test/samplesheet.csv
-```
-
-and we should see the flying pig. :)
-
-You may also skip the installation step.  In that case you will need
-to set the environment variable `PIGX_UNINSTALLED` to any value
-before running the executable from the current working directory.
 
 
 ## Releases
