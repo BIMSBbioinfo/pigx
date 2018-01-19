@@ -38,6 +38,11 @@ dist_pkgdata_DATA =						\
   Rules/Prepare_Annotation.py			\
   Rules/UCSC_Hub.py
 
+AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1 SOURCE_DATE_EPOCH=1
+
+TESTS = \
+  Tests/test.sh
+
 # Build docker image with Guix
 docker: dist
 	guix pack -e '(load "guix.scm")' --with-source=pigx_chipseq-$(VERSION).tar.gz -f docker -S /bin=bin -S /lib=lib -S /share=share glibc-utf8-locales tzdata coreutils
