@@ -30,37 +30,35 @@ in the `pipelines` directory.
 
 # Getting started
 
-To run PiGx on your experimental data, describe your samples in a CSV
-file `sample_sheet.csv`, provide a `settings.yaml` to override the
-defaults defaults, and select the pipeline.
+To run PiGx on your experimental data you only need to follow these
+three steps:
 
-To generate a settings file template for any pipeline:
+- **Describe your samples.** Describe all your samples in a CSV file
+   `sample_sheet.csv`.  To generate a sample sheet template for any
+   pipeline run this command:
 
-```sh
-pigx [pipeline] --init-settings my-settings.yaml
-```
+       pigx [pipeline] --init-sample-sheet
 
-To generate a sample sheet template for any pipeline:
+- **Tweak the default settings.** Specify input and output
+   directories, and override defaults by providing a `settings.yaml`.
+   To generate a template for this file for any pipeline run this
+   command:
 
-```sh
-pigx [pipeline] --init-sample-sheet my-sample-sheet.csv
-```
+       pigx [pipeline] --init-settings
 
-Here's a simple example to run the RNAseq pipeline:
+- **Run the pipeline!** Here's a simple example to run the RNAseq
+   pipeline when the settings file and the sample sheet are in the
+   current working directory:
 
-```sh
-pigx rnaseq my-sample-sheet.csv --settings my-settings.yaml
-```
-
-To see all available options run `pigx --help`.
+       pigx rnaseq
 
 
 # Install
 
-Pre-built binaries for PiGx are (soon) available through GNU Guix, the
-functional package manager for reproducible, user-controlled software
-management.  Install the complete pipeline bundle with the following
-command: 
+Pre-built binaries for PiGx are (soon) available through [GNU
+Guix](https://gnu.org/software/guix), the functional package manager
+for reproducible, user-controlled software management.  Install the
+complete pipeline bundle with the following command:
 
 ```sh
 guix package -i pigx
