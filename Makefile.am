@@ -43,6 +43,16 @@ AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
 TESTS = \
   Tests/test.sh
 
+EXTRA_DIST =												\
+  Tests/sample_sheet.yaml									\
+  Tests/settings.yaml										\
+  Tests/genome/genome_subset_mm9_chr1_13590945_17791527.fa	\
+  Tests/genome/mm_chr19.gtf									\
+  Tests/in/ChIP.fq.gz										\
+  Tests/in/ChIP_1.fq.gz										\
+  Tests/in/ChIP_2.fq.gz										\
+  Tests/in/Cont.fq.gz
+
 CLEANFILES = $(nodist_bin_SCRIPTS) config.json
 
 # Build docker image with Guix
