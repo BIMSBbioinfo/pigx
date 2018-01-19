@@ -11,11 +11,11 @@ samples:
         library: single
     ChIP2:
         fastq:
-            - ChIP.fq
+            - ChIP.fq.gz
         library: single
     Cont2:
         fastq:
-            - Cont.fq
+            - Cont.fq.gz
         library: single
     ChIPpe:
         fastq:
