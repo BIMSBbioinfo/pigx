@@ -53,7 +53,7 @@ three steps:
        pigx rnaseq
 
 
-# Install
+# Get it
 
 Pre-built binaries for PiGx are (soon) available through [GNU
 Guix](https://gnu.org/software/guix), the functional package manager
@@ -63,3 +63,10 @@ complete pipeline bundle with the following command:
 ```sh
 guix package -i pigx
 ```
+
+PiGx is [free
+software](https://www.fsf.org/about/what-is-free-software) under the
+[GNU General Public License](https://www.gnu.org/licenses/gpl.html)
+(version 3 or, at your option, any later version).  You can [get the
+complete source code here](https://github.com/BIMSBbioinfo/pigx).
+Your contributions are welcome!
