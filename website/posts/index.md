@@ -3,9 +3,8 @@ title: PiGx: Pipelines in Genomics
 
 # What is PiGx?
 
-PiGx is a collection of genomics pipelines.
-
-It includes the following pipelines:
+PiGx is a collection of genomics pipelines.  It includes the following
+pipelines:
 
 - [PiGx BSseq](https://github.com/BIMSBbioinfo/pigx_bsseq) for raw
   fastq read data of bisulfite experiments
@@ -22,13 +21,11 @@ It includes the following pipelines:
   for the analysis of sequence mutations in CRISPR-CAS9 targeted
   amplicon sequencing data
 
-For more detailed information see the README.md file for each of the
-pipelines in the `pipelines` directory.
-
 All pipelines are easily configured with a simple sample sheet and a
-descriptive settings file.  The result is a comprehensive, interactive
-HTML report with interesting findings about your samples.  Here are
-some examples:
+descriptive settings file.  The result is a set of comprehensive,
+interactive HTML reports with interesting findings about your samples.
+
+Here are some examples:
 
 ###### INSERT EXAMPLES HERE
 
@@ -55,6 +52,12 @@ three steps:
    current working directory:
 
        pigx rnaseq
+
+That's it!  After some time you'll get a bunch of reports that you can
+view in your browser.
+
+For more detailed information about each of the pipelines see the
+`README.md` file in the `pipelines` directory.
 
 
 # Get it
