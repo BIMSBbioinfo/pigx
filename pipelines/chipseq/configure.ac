@@ -79,5 +79,6 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
 
 AC_CONFIG_FILES([etc/settings.yaml
                  Makefile])
+AC_CONFIG_FILES([Tests/test.sh], [chmod +x Tests/test.sh])
 AC_CONFIG_FILES([pigx-chipseq], [chmod +x pigx-chipseq])
 AC_OUTPUT
