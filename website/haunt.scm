@@ -29,7 +29,12 @@
                        (width "30%")
                        (height "30%"))))
           (div (@ (id "page"))
-               ,body))))
+               ,body
+               (footer
+                (img (@ (alt "decoration")
+                        (class "end-decoration")
+                        (src "images/end.svg")))
+                (p "Made by the Akalin lab at the Berlin Institute of Medical Systems Biology in 2018"))))))
 
 (define default-theme
   (theme #:name "Default"

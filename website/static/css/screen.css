@@ -100,7 +100,8 @@ body {
       float: none; }}
 
 #page ul {
-  list-style: square outside;
+  list-style-type: none;
+  list-style-position: outside;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem; }
 
@@ -190,7 +191,6 @@ div#page {
     max-width: 32rem; }
   div#page p {
     margin-bottom: 0;
-    text-align: justify;
     max-width: 32rem; }
     div#page p img, div#page p video {
       display: inline;
@@ -223,24 +223,6 @@ div#page {
     border-radius: 15px; }
   div#page img.stretch {
     width: 100%; }
-  div#page div.fineprint {
-    font-size: .7rem;
-    text-indent: 0;
-    line-height: 1rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px dotted #aaaaaa;
-    width: 100%;
-    color: #666;
-    clear: both;
-    display: block; }
-    div#page div.fineprint div.license {
-      display: block;
-      clear: both; }
-    div#page div.fineprint img {
-      display: block;
-      float: left;
-      margin-right: .5rem; }
 
 p + p, div.figure + p, ul + p {
   text-indent: .5rem;
@@ -345,3 +327,45 @@ ul.tags {
 
 li + li {
     padding-top: .5rem; }
+
+li p {
+    display: inline; }
+
+li:before {
+    /*
+    The desired width gets defined in two places: The element width,
+    and background size.  The height only gets defined once, in
+    background size.
+    */
+    display: inline-block;
+    content: '\2022'; /* bullet point, for screen readers */
+    text-indent: -999999px; /* move the bullet point out of sight */
+    margin-left: -1.3rem;
+    padding-right: .3rem;
+    width: 1em;
+    background-repeat: no-repeat;
+    background-image: url('../images/list.svg');
+    background-size: .8rem;
+    background-position: 0 .2em;
+}
+
+footer {
+    text-align: center;
+    padding-top: 1rem;
+    padding-bottom: 3rem; }
+    footer p {
+        font-size: .7rem;
+        text-indent: 0;
+        line-height: 1rem;
+        text-align: center;
+        margin: 1rem auto;
+        width: 60%;
+        color: #666;
+        clear: both;
+        display: block; }
+
+img.end-decoration {
+    display: block;
+    margin: 0 auto;
+    padding-top: .5rem;
+    padding-bottom: .5rem; }
