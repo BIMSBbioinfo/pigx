@@ -11,3 +11,4 @@ Makefile
 autom4te.cache/
 etc/settings.yaml
 .guix-profile
+.snakemake
