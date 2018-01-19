@@ -43,6 +43,8 @@ AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
 TESTS = \
   Tests/test.sh
 
+CLEANFILES = $(nodist_bin_SCRIPTS) config.json
+
 # Build docker image with Guix
 docker: dist
 	guix pack -e '(load "guix.scm")' --with-source=pigx_chipseq-$(VERSION).tar.gz -f docker -S /bin=bin -S /lib=lib -S /share=share glibc-utf8-locales tzdata coreutils
