@@ -199,7 +199,9 @@ pre {
   width: 100%;
   display: inline-block;
   border-radius: 3px;
-  background: #fff; }
+  box-shadow: 2px 2px 3px #ccc inset;
+  box-sizing: border-box;
+  background: #efeee6; }
 
 pre.example {
     color: #333;
