@@ -121,8 +121,7 @@ div#page {
     margin-bottom: 100px; }
   @media only screen and (min-width: 600px) {
     div#page {
-        margin-left: 10rem;
-        margin-right: 4rem; }}
+        margin: 0 auto; }}
   div#page ul {
     max-width: 32rem; }
   div#page p {
