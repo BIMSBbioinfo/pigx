@@ -1,0 +1,27 @@
+<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><meta http-equiv="Content-Language" content="en" /><meta name="author" content="BIMSB Bioinformatics" /><meta name="viewport" content="width=device-width" /><title>PiGx: Pipelines in Genomics</title><link rel="stylesheet" media="screen" type="text/css" href="css/screen.css" /><link rel="shortcut icon" href="https://bioinformatics.mdc-berlin.de/pigx/favicon.ico" /></head><body id="top"><div id="index" align="center"><img alt="logo" src="images/logo.svg" width="30%" height="30%" /></div><div id="page"><h1>PiGx: Pipelines in Genomics</h1><h1>What is PiGx?</h1><p>PiGx is a collection of genomics pipelines.  It includes the following
+pipelines:</p><ul><li><p><a href="https://github.com/BIMSBbioinfo/pigx_bsseq">PiGx BSseq</a> for raw
+fastq read data of bisulfite experiments</p></li><li><p><a href="https://github.com/BIMSBbioinfo/pigx_rnaseq">PiGx RNAseq</a> for RNAseq samples</p></li><li><p><a href="https://github.com/BIMSBbioinfo/pigx_scrnaseq">PiGx scRNAseq</a> for
+single cell dropseq analysis</p></li><li><p><a href="https://github.com/BIMSBbioinfo/pigx_chipseq">PiGx ChIPseq</a> for
+reads from ChIPseq experiments</p></li><li><p><a href="https://github.com/BIMSBbioinfo/pigx_crispr">PiGx CRISPR</a> <em>(work in progress)</em>
+for the analysis of sequence mutations in CRISPR-CAS9 targeted
+amplicon sequencing data</p></li></ul><p>All pipelines are easily configured with a simple sample sheet and a
+descriptive settings file.  The result is a set of comprehensive,
+interactive HTML reports with interesting findings about your samples.</p><p>Here are some examples:</p><div id="example-scroller"><div id="examples"><img class="example" src="images/report1.png" alt="Example report screenshot" /><img class="example" src="images/report2.png" alt="Example report screenshot" /><img class="example" src="images/report1.png" alt="Example report screenshot" /><img class="example" src="images/report2.png" alt="Example report screenshot" /></div></div><h1>Getting started</h1><p>To run PiGx on your experimental data you only need to follow these
+three steps:</p><ul><li><p><strong>Describe your samples.</strong> Describe all your samples in a CSV file
+<code>sample_sheet.csv</code>.  To generate a sample sheet template for any
+pipeline run this command:</p><pre><code> pigx [pipeline] --init-sample-sheet</code></pre></li><li><p><strong>Tweak the default settings.</strong> Specify input and output
+directories, and override defaults by providing a <code>settings.yaml</code>.
+To generate a template for this file for any pipeline run this
+command:</p><pre><code> pigx [pipeline] --init-settings</code></pre></li><li><p><strong>Run the pipeline!</strong> Here&apos;s a simple example to run the RNAseq
+pipeline when the settings file and the sample sheet are in the
+current working directory:</p><pre><code> pigx rnaseq</code></pre></li></ul><p>That&apos;s it!  After some time you&apos;ll get a bunch of reports that you can
+view in your browser.</p><p>For more detailed information about each of the pipelines see the
+<code>README.md</code> file in the <code>pipelines</code> directory.</p><h1>Get it</h1><p>Pre-built binaries for PiGx are (soon) available through <a href="https://gnu.org/software/guix">GNU
+Guix</a>, the functional package manager
+for reproducible, user-controlled software management.  Install the
+complete pipeline bundle with the following command:</p><pre><code class="language-sh">guix package -i pigx</code></pre><p>PiGx is <a href="https://www.fsf.org/about/what-is-free-software">free
+software</a> under the
+<a href="https://www.gnu.org/licenses/gpl.html">GNU General Public License</a>
+(version 3 or, at your option, any later version).  You can <a href="https://github.com/BIMSBbioinfo/pigx">get the
+complete source code here</a>.
+Your contributions are welcome!</p><footer><img alt="decoration" class="end-decoration" src="images/end.svg" /><p>Made by the Akalin lab at the Berlin Institute of Medical Systems Biology in 2018</p></footer></div></body>

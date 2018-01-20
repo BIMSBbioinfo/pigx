@@ -1,0 +1,357 @@
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0b1 | 201101
+   NOTE: WORK IN PROGRESS
+   USE WITH CAUTION AND TEST WITH ABANDON */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+        display: block;
+}
+body {
+        line-height: 1;
+}
+ol, ul {
+        list-style: none;
+}
+blockquote, q {
+        quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+        content: '';
+        content: none;
+}
+
+/* remember to define visible focus styles!
+:focus {
+        outline: ?????;
+} */
+
+/* remember to highlight inserts somehow! */
+ins {
+        text-decoration: none;
+}
+del {
+        text-decoration: line-through;
+}
+
+table {
+        border-collapse: collapse;
+        border-spacing: 0;
+}
+/* End of reset */
+
+@font-face {
+    font-family: 'droid_serifregular';
+    src: url('DroidSerif-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+html, body {
+    font-family: "droid_serifregular", serif;
+    text-rendering: optimizelegibility;
+    -moz-font-feature-settings: "liga";
+    line-height: 140%;
+    color: #333;
+    background: #fcfbf3; }
+
+@media all {html {font-size: 24px;}}
+@media all and (max-width:1000px){html {font-size: 24px;}}
+@media all and (max-width:960px){html {font-size: 23px;}}
+@media all and (max-width:920px){html {font-size: 22px;}}
+@media all and (max-width:880px){html {font-size: 21px;}}
+@media all and (max-width:840px){html {font-size: 20px;}}
+@media all and (max-width:800px){html {font-size: 19px;}}
+@media all and (max-width:760px){html {font-size: 18px;}}
+
+body {
+  margin: 0 auto; }
+
+#index {
+    padding: 1rem; }
+
+@media screen and (max-width: 600px) {
+  #index {
+      text-align: center; }
+  #index img {
+      float: none; }}
+
+#page ul {
+  list-style-type: none;
+  list-style-position: outside;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem; }
+
+div.time {
+  color: #9ba0a7;
+  margin-top: -2.8rem;
+  margin-bottom: 2.5rem;
+  font-size: 0.9rem;
+  font-weight: normal; }
+
+div.figure {
+  text-align: center;
+  background: #fff;
+  box-sizing: border-box;
+  box-shadow: 0 0 0.4em 0 #888;
+  margin: 1rem;
+  padding: 1rem; }
+  @media screen and (min-width: 600px) {
+    div.figure {
+      float: right; }}
+  @media screen and (max-width: 600px) {
+    div.figure {
+      float: none;
+      clear: both; }}
+  div#page div.figure p.caption {
+    width: auto;
+    text-align: center;
+    font-size: 0.8rem; }
+
+h1 {
+  color: #000;
+  clear: both;
+  line-height: 125%;
+  margin-top: 1.5rem;
+  margin-bottom: .5rem;
+  display: block;
+  font-family: "droid sans", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800; }
+
+h1:first-child {
+    font-size: 2rem;
+    margin-bottom: 3rem;
+    margin-top: 0; }
+
+@media screen and (max-width: 600px) {
+    h1:first-child {
+        margin-top: 1rem; }}
+
+* + h2, * + h3 {
+    margin-top: 1.5rem; }
+
+h2, h3 {
+  color: #333;
+  margin-bottom: 0.5em;
+  clear: both;
+  letter-spacing: -0.04em;
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-family: "Droid Sans", Arial, sans-serif; }
+
+h3 {
+  font-size: 1.2rem; }
+
+a {
+  color: #389;
+  text-decoration: none; }
+  a:visited {
+    color: #167; }
+  a:hover {
+      color: #000;
+    background: #eeede5; }
+
+strong {
+  font-weight: bold; }
+
+div#page {
+    overflow: visible;
+    max-width: 32rem;
+    margin-bottom: 100px; }
+  @media only screen and (min-width: 600px) {
+    div#page {
+        margin: 0 auto; }}
+  div#page ul {
+    max-width: 32rem; }
+  div#page p {
+    margin-bottom: 0;
+    max-width: 32rem; }
+    div#page p img, div#page p video {
+      display: inline;
+      float: right;
+      margin-left: 0.8rem;
+      -moz-border-radius: 15px;
+      border-radius: 15px; }
+  div#page p.back {
+    margin-top: 1.5rem;
+    width: 50%; }
+  div#page blockquote {
+      margin-left: 3rem;
+      margin-right: 3rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    font-style: italic; }
+  div#page img.full {
+      width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+    position: static;
+    float: none;
+    clear: both;
+    padding: 0;
+    display: block;
+    -moz-border-radius: 15px;
+    border-radius: 15px; }
+  div#page img.stretch {
+    width: 100%; }
+
+p + p, div.figure + p, ul + p {
+  text-indent: .5rem;
+  margin-top: 0.4rem; }
+
+warning {
+  clear: both;
+  margin: 1rem;
+  padding: 1rem;
+  background: #ffffaa;
+  border: 2px dashed #dddd88;
+  border-radius: 3px;
+  display: block; }
+
+pre {
+  margin: 0;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  width: 100%;
+  display: inline-block;
+  border-radius: 3px;
+  box-shadow: 2px 2px 3px #ccc inset;
+  box-sizing: border-box;
+  background: #efeee6; }
+
+pre code {
+  color: #333;
+  background: transparent; }
+
+img.undecorated {
+  margin: 0;
+  padding: 0; }
+
+span.code, code {
+  font-family: "Envy Code R", "Inconsolata", "Consolas", "Courier New", monospace;
+  color: #111; }
+
+span.code {
+  font-size: 0.85rem;
+  border-bottom: #888;
+  padding: .15rem; }
+
+br {
+  clear: left; }
+
+em {
+  font-style: italic; }
+
+h1.year {
+  border-bottom: 4px solid #eeede5;
+  width: 50%; }
+
+h2.month {
+  font-weight: normal; }
+
+ul.archive {
+  margin-left: 1rem; }
+
+ul.tags {
+  list-style: none;
+  margin-left: 1rem; }
+  ul.tags li {
+    margin-right: 1rem;
+    white-space: nowrap;
+    display: inline-block; }
+
+li + li {
+    padding-top: .5rem; }
+
+li p {
+    display: inline; }
+
+li:before {
+    /*
+    The desired width gets defined in two places: The element width,
+    and background size.  The height only gets defined once, in
+    background size.
+    */
+    display: inline-block;
+    content: '\2022'; /* bullet point, for screen readers */
+    text-indent: -999999px; /* move the bullet point out of sight */
+    margin-left: -1.3rem;
+    padding-right: .3rem;
+    width: 1em;
+    background-repeat: no-repeat;
+    background-image: url('../images/list.svg');
+    background-size: .8rem;
+    background-position: 0 .2em;
+}
+
+footer {
+    text-align: center;
+    padding-top: 1rem;
+    padding-bottom: 3rem; }
+    footer p {
+        font-size: .7rem;
+        text-indent: 0;
+        line-height: 1rem;
+        text-align: center;
+        margin: 1rem auto;
+        width: 60%;
+        color: #666;
+        clear: both;
+        display: block; }
+
+img.end-decoration {
+    display: block;
+    margin: 0 auto;
+    padding-top: .5rem;
+    padding-bottom: .5rem; }
+
+#example-scroller {
+    box-shadow: 0 0 0.4em 0 #888;
+    background: #fff;
+    width: 100vw;
+    min-width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: .5rem;
+    box-sizing: border-box;
+    overflow-x: scroll;
+    white-space: nowrap; }
+    #example-wrapper #examples {
+        padding: 1rem;
+        display: block; }
+        #examples .example {
+            padding: 1em;
+            background-image: linear-gradient(black 33%, rgba(255,255,255,0) 0%);
+            background-position: right;
+            background-size: 1px 10px;
+            background-repeat: repeat-y;
+            display: inline-block; }
