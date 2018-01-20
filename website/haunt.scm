@@ -5,7 +5,10 @@
              (haunt reader)
              (haunt reader commonmark)
              (haunt site)
-             (haunt post))
+             (haunt post)
+             (haunt page)
+             (haunt html)
+             (srfi srfi-1))
 
 
 (define (default-layout site title body)
@@ -86,6 +89,15 @@
                     (*text* . ,(lambda (sym text) text))
                     (*default* . ,(lambda arg arg))))))))))
 
+(define* (alias-post file-name alias #:key theme)
+  "Return a builder procedure that builds FILE-NAME as ALIAS."
+  (lambda (site posts)
+    (make-page alias
+               (render-post theme site
+                            (find (cut string=? (post-file-name <>) file-name)
+                                  posts))
+               sxml->html)))
+
 (site #:title "PiGx: Pipelines in Genomics"
       #:domain "http://bioinformatics.mdc-berlin.de/pigx"
       #:default-metadata
@@ -93,4 +105,5 @@
         (email  . "ricardo.wurmus@mdc-berlin.de"))
       #:readers (list commonmark-reader-with-examples html-reader)
       #:builders (list (blog #:theme default-theme #:collections '())
+                       (alias-post "posts/index.md" "index.html" #:theme default-theme)
                        (static-directory "static" ".")))
