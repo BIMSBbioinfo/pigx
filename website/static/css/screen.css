@@ -244,6 +244,7 @@ pre {
   border-radius: 3px;
   box-shadow: 2px 2px 3px #ccc inset;
   box-sizing: border-box;
+  white-space: pre-wrap;
   background: #efeee6; }
 
 pre code {
