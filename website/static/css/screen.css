@@ -350,9 +350,10 @@ img.end-decoration {
     margin-right: calc(-50vw + 50%);
     margin-top: 1rem;
     margin-bottom: 1rem;
-    padding: .5rem;
+    padding: 0;
     box-sizing: border-box;
-    overflow-x: scroll;
+    overflow-y: hidden;
+    overflow-x: auto;
     white-space: nowrap; }
     #example-wrapper #examples {
         padding: 1rem;
