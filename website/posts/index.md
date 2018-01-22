@@ -77,3 +77,7 @@ software](https://www.fsf.org/about/what-is-free-software) under the
 (version 3 or, at your option, any later version).  You can [get the
 complete source code here](https://github.com/BIMSBbioinfo/pigx).
 Your contributions are welcome!
+
+Consider [subscribing here to infrequent announcements regarding
+PiGx](https://groups.google.com/forum/#!forum/pigx-announcements/join),
+such as release announcements.
