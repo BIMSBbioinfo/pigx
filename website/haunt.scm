@@ -8,8 +8,7 @@
              (haunt post)
              (haunt page)
              (haunt html)
-             (srfi srfi-1)
-             (srfi srfi-26))
+             (srfi srfi-1))
 
 
 (define (default-layout site title body)
@@ -95,7 +94,8 @@
   (lambda (site posts)
     (make-page alias
                (render-post theme site
-                            (find (cut string=? (post-file-name <>) file-name)
+                            (find (lambda (post)
+                                    (string=? (post-file-name post) file-name))
                                   posts))
                sxml->html)))
 
