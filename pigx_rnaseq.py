@@ -269,7 +269,7 @@ rule salmon_quant:
       os.path.join(SALMON_DIR, "{sample}", "quant.sf")
   params:
       outfolder = os.path.join(SALMON_DIR, "{sample}")
-  log: os.path.join(LOG_DIR, 'salmon_quant.log')
+  log: os.path.join(LOG_DIR, 'salmon_quant_{sample}.log')
   run:
     if(len(input.reads) == 1):
         COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
