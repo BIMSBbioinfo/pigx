@@ -195,3 +195,21 @@ Annotate_Reads = function(
     sdg[,freq:=round(cnts/sum(cnts),2)]
     return(sdg)
 }
+
+# ---------------------------------------------------------------------------- #
+#' .listBamFiles
+#'
+#' @param path - top directory with mapped samples
+#'
+#' @return a data.frame with location of bam files
+
+.listBamFiles = function(path){
+    
+    suppressPackageStartupMessages(library(dplyr))
+    suppressPackageStartupMessages(library(stringr))
+    d = data.frame(file = list.files(path_mapped, full.names=TRUE, pattern='bam$', recursive=TRUE)) %>%
+        mutate(bam_name = basename(file)) %>%
+        dplyr::filter(str_detect(bam_name,'sorted')) %>%
+        mutate(bam_name = str_replace(bam_name,'.sorted.bam',''))
+    return(d)
+}
