@@ -15,18 +15,19 @@ PiGX RNAseq is an analysis pipeline for preprocessing and reporting for RNA sequ
 
 ## What does it do
 
-- Trim reads
-- Quality control reads
-- Map reads using STAR
-- Map reads using salmon
+- Trim reads using trim-galore
+- Quality control reads using fastQC and multiQC
+- Map reads and quantify read counts per gene using STAR
+- Estimate read counts per transcript using SALMON
+- Run differential expression analyses using DESeq2
 
 ## What does it output
 
-- QC report
+- QC reports
 - bam files
 - bigwig files
 - reads matrix
-- DE report
+- DE reports
 
 # Install
 
@@ -205,7 +206,7 @@ organism: hsapiens
 DEanalyses:
   #names of analyses can be anything but they have to be unique for each combination of case control group comparisons.
   analysis1:
-    #if multiple sample names is provided, they must be separated by comma
+    #if multiple sample names are provided, they must be separated by comma
     case_sample_groups: "HBR"
     control_sample_groups: "UHR"
     covariates: ''
@@ -218,7 +219,7 @@ execution:
 
 ### DEanalysis
 
-The section named `DEanalyses` in the settings file allows the user to specify a number of differential expresison analyses to be performed. In the example above, `analysis1` will be the name of the only analysis specified. In that analysis, samples with `sample_type` _HBR_ will be compared with those with `sample_type` _UHR_, with no covariates included in the analysis.
+The section named `DEanalyses` in the settings file allows the user to specify a number of differential expression analyses to be performed. In the example above, `analysis1` will be the name of the only analysis specified. In that analysis, samples with `sample_type` _HBR_ will be compared with those with `sample_type` _UHR_, with no covariates included in the analysis.
 
 #### Using multiple `sample_type`s as cases or controls
 
@@ -251,13 +252,13 @@ DEanalyses:
   analysis_with_covariate:
     case_sample_groups: "treatment"
     case_control_groups: "control"
-    covariates: sex
+    covariates: "sex"
 ```
 
 Multiple covariates may be specified by providing a comma-separated list, such as
 
 ```
-covariates: sex,age,smoking_history
+covariates: "sex,age,smoking_history"
 ```
 
 ### Execution
