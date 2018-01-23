@@ -317,9 +317,9 @@ mdata <- melt(summary, id.vars = c('log2FoldChange', 'padj'))
 ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = variable), stat = 'identity', position = 'dodge') + facet_grid(~ padj) + theme(legend.position = 'bottom', legend.title = element_blank()) + labs(title = 'Number of differentially up/down regulated genes', subtitle = 'based on different p-value and log2foldChange cut-off values')
 ```
 
-## Interactive box plots of genes with significant differential expression (padj < 0.1 & abs(log2foldchange) > 1)
+## Interactive box plots of genes with significant differential expression 
 
-This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest.
+This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest. Notice that only genes that have an adjusted p-value less than 0.1 and log2 fold change value of greater than 1 are plotted. 
 
 ```{r plot_interactive_boxplots}
 select <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & abs(DE$log2FoldChange) > 1,])
