@@ -189,7 +189,10 @@ DT::datatable(DE,
                          scrollX = TRUE,
                          scroller = TRUE,
                          dom = 'Bfrtip',
-                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
+                         buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'),
+                         columnDefs = list(
+                           list(targets = c(3,4,5), visible = FALSE)
+                         )),
           filter = 'bottom'
           )
 ```
@@ -305,9 +308,7 @@ summary <- do.call(rbind, lapply(pVals, function(p) {
 
 mdata <- melt(summary, id.vars = c('log2FoldChange', 'padj'))
 
-p <- ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = variable), stat = 'identity', position = 'dodge') + facet_grid(~ padj) + theme(legend.position = 'bottom', legend.title = element_blank()) + labs(title = 'Number of differentially up/down regulated genes', subtitle = 'based on different p-value and log2foldChange cut-off values')
-
-plotly::ggplotly(p)
+ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = variable), stat = 'identity', position = 'dodge') + facet_grid(~ padj) + theme(legend.position = 'bottom', legend.title = element_blank()) + labs(title = 'Number of differentially up/down regulated genes', subtitle = 'based on different p-value and log2foldChange cut-off values')
 ```
 
 ## Interactive box plots of genes with significant differential expression (padj < 0.1 & abs(log2foldchange) > 1)
