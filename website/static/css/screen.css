@@ -358,10 +358,14 @@ img.end-decoration {
     #example-wrapper #examples {
         padding: 1rem;
         display: block; }
-        #examples .example {
+        #examples img.example {
             padding: 1em;
             background-image: linear-gradient(black 33%, rgba(255,255,255,0) 0%);
             background-position: right;
             background-size: 1px 10px;
             background-repeat: repeat-y;
+            height: 330px;
+            width: 330px;
+            overflow: hidden;
+            object-fit: contain;
             display: inline-block; }
