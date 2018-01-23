@@ -1,0 +1,8 @@
+locations:
+  reads-dir: sample_data/reads/
+  output-dir: output/
+  genome-fasta: sample_data/sample.fasta
+  cdna-fasta: sample_data/sample.cdna.fasta
+  gtf-file: sample_data/sample.gtf
+
+organism: hsapiens

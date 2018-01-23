@@ -22,13 +22,14 @@ def validate_config(config):
         if (not loc == 'output-dir') and (not (os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
             raise Exception("ERROR: The following necessary directory/file does not exist: {} ({})".format(config['locations'][loc], loc))
 
-    # Check that requested analyses make sense
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
-    for analysis in config['DEanalyses']:
-        for group in config['DEanalyses'][analysis]['case_sample_groups'] .split(',') + config['DEanalyses'][analysis]['control_sample_groups'].split(','):
-            group = group.strip() #remove any leading/trailing whitespaces in the sample group names
-            if not any(row['sample_type'] == group for row in sample_sheet):
-                raise Exception('ERROR: no samples in sample sheet have sample type {}, specified in analysis {}.'.format(group, analysis))
+    # Check that requested analyses make sense
+    if 'DEanalyses' in config:
+        for analysis in config['DEanalyses']:
+            for group in config['DEanalyses'][analysis]['case_sample_groups'] .split(',') + config['DEanalyses'][analysis]['control_sample_groups'].split(','):
+                group = group.strip() #remove any leading/trailing whitespaces in the sample group names
+                if not any(row['sample_type'] == group for row in sample_sheet):
+                    raise Exception('ERROR: no samples in sample sheet have sample type {}, specified in analysis {}.'.format(group, analysis))
 
     # Check that reads files exist
     for row in sample_sheet:

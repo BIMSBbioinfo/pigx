@@ -70,7 +70,7 @@ RSCRIPT_EXEC     = config['tools']['R']['Rscript']
 GTF_FILE = config['locations']['gtf-file']
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
-DE_ANALYSIS_LIST = config['DEanalyses']
+DE_ANALYSIS_LIST = config.get('DEanalyses', {})
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
