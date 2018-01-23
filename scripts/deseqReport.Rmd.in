@@ -183,9 +183,11 @@ This is the full table of DE results comparing cases to controls (as specified i
 
 ```{r write_DEtable}
 DT::datatable(DE, 
-          extensions = c('Buttons', 'FixedColumns'), 
+          extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
           options = list(fixedColumns = TRUE, 
+                         scrollY = 400,
                          scrollX = TRUE,
+                         scroller = TRUE,
                          dom = 'Bfrtip',
                          buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf')),
           filter = 'bottom'
@@ -370,9 +372,11 @@ goUp <- gProfileR::gprofiler(query = genesUp,
                              hier_filtering = "moderate",
                              significant = TRUE)
 DT::datatable(goUp, 
-        extensions = c('Buttons', 'FixedColumns'), 
+        extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
         options = list(fixedColumns = TRUE, 
+                       scrollY = 400,
                        scrollX = TRUE,
+                       scroller = TRUE,
                        dom = 'Bfrtip',
                        buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
                        columnDefs = list(
@@ -393,9 +397,11 @@ goDown <- gProfileR::gprofiler(query = genesDown,
                                hier_filtering = "moderate", 
                                significant = TRUE)
 DT::datatable(goDown, 
-        extensions = c('Buttons', 'FixedColumns'), 
+        extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
         options = list(fixedColumns = TRUE, 
+                       scrollY = 400,
                        scrollX = TRUE,
+                       scroller = TRUE,
                        dom = 'Bfrtip',
                        buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
                        columnDefs = list(
