@@ -361,7 +361,7 @@ if(runGO == FALSE) {cat("Warning:Skipping GO analysis as there is no internet co
 
 ```{r goAnalysisTitle, eval = runGO, results='asis'}
 cat("# GO Term Enrichment Analysis\n")
-cat("\nThe following tables list GO terms for up- and down-regulated genes.\n")
+cat("\n The following tables list GO terms for up- and down-regulated genes. GO term analysis was carried out using [g:Profiler](https://cran.r-project.org/web/packages/gProfileR/) R package. Up-regulated genes are defined as those genes with adjusted p-value of less than 0.1 and log2 fold change value of greater than 1. Down-regulated genes are defined as those genes with adjusted p-value of less than 0.1 and log2 fold change of less than -1.")
 ```
 
 ```{r goAnalysis, eval = runGO}
