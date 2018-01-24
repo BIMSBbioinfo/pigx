@@ -286,8 +286,10 @@ execution:
 | nice                  | integer: From -20 to 19; higher values make the program execution less demanding on computational resources
 | cluster:memory        | string: Amount of memory used for all jobs besides bismark, e.g. "8G"
 | cluster:stack         | string: Stack size limit (used for cluster jobs), e.g. "128m"
-| cluster:queue         | string: Queue name (used for cluster jobs), e.g. "all"
+| cluster:queue**       | string: Queue name (used for cluster jobs), e.g. "all.q"
 | cluster:contact-email | string: Email address where information about pipelines progress is sent (if it is running on a cluster).
+
+** - Most users will submit a single queue name to the settings file, and all rules will be executed on that queue. Advanced users may wish to submit different rules to different queues; this can be performed by omitting the field `cluster:queue` from the settings files, and directly editing the default values (per-rule) in `etc/settings.yaml.in` under `execution:rules`.
 
 ### Tools
 

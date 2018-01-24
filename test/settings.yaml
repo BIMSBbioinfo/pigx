@@ -25,5 +25,5 @@ execution:
   cluster:
     memory: 8G
     stack: 128M
-    queue: all
+    queue: all.q
     contact-email: none
