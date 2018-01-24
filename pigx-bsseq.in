@@ -265,10 +265,14 @@ def generate_cluster_configuration():
     for rule in rules:
         cluster_conf[rule] = {
             'nthreads': rules[rule]['threads'],
-            'q': config['execution']['cluster']['queue'],
-            'MEM': rules[rule]['memory'],
+            'MEM':      rules[rule]['memory'],
+            'q':        rules[rule]['queue'], # advanced users can set rule-based queues in the defaults
             'h_stack': config['execution']['cluster']['stack']
         }
+        if 'queue' in config['execution']['cluster']:
+            cluster_conf[rule]['q'] = config['execution']['cluster']['queue'],
+	    # most users will submit a single queue name to the settings file
+	    # over-writing the defaults & submitting all rules to the same queue.
 
     cluster_config_file = "cluster_conf.json"
     with open(cluster_config_file, 'w') as outfile:
