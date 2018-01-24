@@ -234,6 +234,8 @@ SETTINGSFILE as inputs."""
     settings['execution']['target'] = args.target
 
     # Load parameters specific to samples
+    if not path.isfile(sample_sheet):
+        bail("ERROR: Failed to find sample sheet provided. No such file: " + sample_sheet)
     with open(sample_sheet, 'r') as f:
         lines = f.read().splitlines()
     sample_params = parse_samples(lines)
