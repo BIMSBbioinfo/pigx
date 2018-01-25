@@ -30,15 +30,12 @@ execution:
     __default__:
       threads: 1
       memory: 8G
-      queue: all.q
     bismark_align_and_map_se:
       threads: 6
       memory: 19G
-      queue: all.q
     bismark_align_and_map_pe:
       threads: 12
       memory: 19G
-      queue: all.q
 
 tools:
   fastqc:
