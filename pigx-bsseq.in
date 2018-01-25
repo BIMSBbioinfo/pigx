@@ -263,12 +263,32 @@ def generate_cluster_configuration():
 
     cluster_conf = {}
     for rule in rules:
-        cluster_conf[rule] = {
-            'nthreads': rules[rule]['threads'],
-            'q': config['execution']['cluster']['queue'],
-            'MEM': rules[rule]['memory'],
-            'h_stack': config['execution']['cluster']['stack']
-        }
+        if 'queue' in config['execution']['cluster']:
+            # --- User has supplied general queue name for all rules---
+            if 'queue' in rules[rule]:
+              bail("ERROR: 'queue' multiply defined in settings file.") #AND per rule ->error
+            else:
+              cluster_conf[rule] = {
+              'nthreads': rules[rule]['threads'],
+              'MEM':      rules[rule]['memory'],
+              'queue':    config['execution']['cluster']['queue'],
+              'h_stack':  config['execution']['cluster']['stack']
+              }
+        elif ( 'queue' in rules[rule] ):
+              # --- User has supplied a queue for this specific rule.
+              cluster_conf[rule] = {
+              'nthreads': rules[rule]['threads'],
+              'MEM':      rules[rule]['memory'],
+              'queue':    rules[rule]['queue'],
+              'h_stack':  config['execution']['cluster']['stack']
+              }
+        else:
+              # --- User has provided no information on queue for this rule -> default.
+              cluster_conf[rule] = {
+              'nthreads': rules[rule]['threads'],
+              'MEM':      rules[rule]['memory'],
+              'h_stack':  config['execution']['cluster']['stack']
+              }
 
     cluster_config_file = "cluster_conf.json"
     with open(cluster_config_file, 'w') as outfile:
@@ -390,6 +410,18 @@ command = [
 if config['execution']['submit-to-cluster']:
     cluster_config_file = generate_cluster_configuration()
     print("Commencing snakemake run submission to cluster", flush=True, file=sys.stderr)
+
+    if ( ('queue' in config['execution']['cluster'] )  or ( 'queue' in config['execution']['rules']['__default__'] )):
+        queue_selection_string = " -q {cluster.queue} "
+	# User has defined queue name(s) --either generally, or rule-specific.
+	# in either case, generate_cluster_configuration() (defined above) has 
+        # already printed thk apropriate queue name to each rule.
+        queue_selection_string = " -q {cluster.queue} "
+    else :
+        # User has supplied no q value -> let SGE pick the the default.
+        queue_selection_string = ""
+    # --- done checking if ( queue name(s) supplied by user)
+
     if config['execution']['cluster']['contact-email'].lower() == 'none':
         contact_email_string = ""
     else:
@@ -403,7 +435,7 @@ if config['execution']['submit-to-cluster']:
             exit(1)
         else:
             raise
-    qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    qsub = "qsub -V  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
     command += [
         "--cluster-config={}".format(cluster_config_file),
         "--cluster={}".format(qsub),
