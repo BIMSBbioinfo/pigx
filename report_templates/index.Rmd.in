@@ -190,9 +190,10 @@ cat('## Segmentation \n')
 
 ```{r Segmentation.eval_params, eval=Segmentation}
 methCallRDS     <- params$methCallRDS
-methSegBed    <- params$methSegBed
-methSegGR    <- params$methSegGR
-pngFile   <- params$methSegPng
+methSegBed      <- params$methSegBed
+methSegGR       <- params$methSegGR
+pngFile         <- params$methSegPng
+pngFile_exists  <- file.exists(pngFile )
 ```
 
 ```{r SegmentationIntro, results='asis', eval=Segmentation} 
@@ -248,9 +249,15 @@ cat('### Segmentation of Methylation Profile\n')
 cat('Segmentation of the methylation profile is done using the methSeg() function, where change-points in the genome-wide  signal are recorded and the genome is partitioned into regions between consecutive change-points. This approach is typically used in the detection of copy-number variation [@klambauer2012] but can be applied to methylome segmentation as well [@Wreczycka2017]. Here, the identified segments are further clustered based on their average methylation signal, using a mixture-modeling approach, which permits the detection of distinct regions inside the genome  [@Wreczycka2017].\n')
 ```
 
-```{r SegmentationDiagnostics, results='asis',eval=Segmentation}
+```{r SegmentationDiagnostics, results='asis', eval= pngFile_exists  }
 
 cat('![Diagnostic Plot of the Segmentation](',pngFile,')')
+
+```
+
+```{r Segmentation_explain_lack_of_Diagnostics, results='asis', eval= !pngFile_exists  }
+
+cat('For the given sample, there were insufficient segments detected to perform segmentation diagnostics on the methylation data. This can be an indication of insufficient coverage.')
 
 ```
 
