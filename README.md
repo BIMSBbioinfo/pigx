@@ -83,7 +83,7 @@ installed:
 - multiqc
 - star
 - trim-galore
-- bamCoverage
+- bedtools
 - samtools
 - htseq-count
 
