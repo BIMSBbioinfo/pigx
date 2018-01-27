@@ -56,8 +56,8 @@ tools:
     executable: @STAR@
   trim-galore:
     executable: @TRIMGALORE@
-  bamCoverage:
-    executable: @BAMCOVERAGE@
+  bedtools:
+    executable: @BEDTOOLS@
   samtools:
     executable: @SAMTOOLS@
   htseq-count:

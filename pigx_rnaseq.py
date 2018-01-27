@@ -49,7 +49,7 @@ LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
-BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
+BEDGRAPH_DIR      = os.path.join(OUTPUT_DIR, 'bedgraph_files')
 HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
 SALMON_DIR        = os.path.join(OUTPUT_DIR, 'salmon_output')
 PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
@@ -59,7 +59,7 @@ MULTIQC_EXEC = config['tools']['multiqc']['executable']
 STAR_EXEC    = config['tools']['star']['executable']
 SALMON_EXEC  = config['tools']['salmon']['executable']
 TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
-BAMCOVERAGE_EXEC = config['tools']['bamCoverage']['executable']
+BEDTOOLS_EXEC    = config['tools']['bedtools']['executable']
 SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
 HTSEQ_COUNT_EXEC = config['tools']['htseq-count']['executable']
 RSCRIPT_EXEC     = config['tools']['R']['Rscript']
@@ -103,7 +103,9 @@ targets = {
         'files': 
           [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
           os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-          os.path.join(MULTIQC_DIR, 'multiqc_report.html')] + 
+          os.path.join(MULTIQC_DIR, 'multiqc_report.html')] +
+	      #expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample = SAMPLES) +  
+	      expand(os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph'), sample = SAMPLES) +  
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     }, 
@@ -126,6 +128,11 @@ targets = {
         'description': "Get count matrix from STAR mapping results.",
         'files': 
           [os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")]
+    },
+    'genomeCoverage': {
+        'description': "Compute genome coverage values from BAM files - save in bedgraph format",
+        'files':
+          expand(os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph'), sample = SAMPLES)
     },
     'fastqc': {
         'description': "post-mapping quality control by FASTQC.",
@@ -294,13 +301,15 @@ rule index_bam:
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
-rule bamCoverage:
+
+rule genomeCoverage:
   input:
     bam=rules.star_map.output[0],
-    bai=rules.index_bam.output
-  output: os.path.join(BIGWIG_DIR, '{sample}.bw')
-  log: os.path.join(LOG_DIR, 'bamCoverage_{sample}.log')
-  shell: "{BAMCOVERAGE_EXEC} --bam {input.bam} -o {output} >> {log} 2>&1"
+    bai=rules.index_bam.output            
+  output: os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph')
+  log: os.path.join(LOG_DIR, 'genomeCoverage_{sample}.log')
+  shell: "{BEDTOOLS_EXEC} genomecov -trackline -bga -split -ibam {input.bam} 1> {output} 2>> {log}"
+
 
 rule multiqc:
   input:
