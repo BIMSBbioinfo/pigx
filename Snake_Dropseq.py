@@ -48,6 +48,8 @@ with open(os.path.join(workflow.basedir, 'software_scRNA.yaml'), 'r') as stream:
 # Function parameter
 APP_PARAMS = SOFTWARE_CONFIG['params']
 SOFTWARE = SOFTWARE_CONFIG['software']
+
+
 # ----------------------------------------------------------------------------- #
 # Variables
 GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
@@ -76,7 +78,7 @@ if 'secondary' in set(config['annotation'].keys()):
     REFERENCE_NAMES = REFERENCE_NAMES + [GENOME_NAME_MIX]
 
 
-PATH_BASE = os.path.join(os.environ['BASEPATH'],'Dropseq')
+#PATH_BASE = os.path.join(os.environ['BASEPATH'],'Dropseq')
 
 PATH_MAPPED   = 'Mapped'
 PATH_LOG      = 'Log'
@@ -148,10 +150,15 @@ FIND_READ_CUTOFF = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}
 # UMI matrix
 UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
+# UMI matrix in loom format
+UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
+
+# Combined UMI matrices in loom format
+COMBINED_UMI_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
+
 # ----------------------------------------------------------------------------- #
 # Bam To BigWig
 BIGWIG = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
-
 
 # ----------------------------------------------------------------------------- #
 RULE_ALL = []
@@ -160,7 +167,7 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES
 print(RULE_ALL)
 
 
@@ -388,7 +395,7 @@ rule merge_fastq_to_bam:
                 output : {output}
         """
     shell: """
-    java -Xmx12000m  -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
+    export TMPDIR=/data/local/buyar/tmp; java -Xmx12000m  -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
     """
 
 
@@ -523,6 +530,39 @@ rule get_umi_matrix:
         ])
         shell(command)
 
+# ----------------------------------------------------------------------------- #
+# convert UMI matrix from txt format into one loom format
+rule convert_matrix_from_txt_to_loom:
+    input:
+        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt')
+    output:
+        outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom')
+    message: """
+            Comvert UMI Matrix from .txt fo .loom:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {input.infile} {output.outfile}"
+
+        
+# ----------------------------------------------------------------------------- #
+## combines multiple loom files into one loom file
+# TODO: currently we assume that all input .loom files contain the same list of gene names as row attributes. Need to update this to account for otherwise.
+rule combine_UMI_matrices_into_loom:
+    input:
+        infile        = lambda wildcards: expand(os.path.join(PATH_MAPPED, "{name}", wildcards.genome, '_'.join(["{name}", wildcards.genome, 'UMI.Matrix.loom'])), name = SAMPLE_NAMES)
+    output:
+        outfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
+    params:
+        tmpfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp")
+    message: """
+            Combine multiple loom files into one:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    shell: "echo {input.infile} > {params.tmpfile}; python {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; rm {params.tmpfile}"
+        
+    
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
