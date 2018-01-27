@@ -98,6 +98,7 @@ AC_CONFIG_FILES([tests/test_fastqc/test.sh], [chmod +x tests/test_fastqc/test.sh
 AC_CONFIG_FILES([tests/test_star_counts/test.sh], [chmod +x tests/test_star_counts/test.sh])
 AC_CONFIG_FILES([tests/test_multiqc/test.sh], [chmod +x tests/test_multiqc/test.sh])
 AC_CONFIG_FILES([tests/test_deseq_reports/test.sh], [chmod +x tests/test_deseq_reports/test.sh])
+AC_CONFIG_FILES([tests/test_genome_coverage/test.sh], [chmod +x tests/test_genome_coverage/test.sh])
 AC_CONFIG_FILES([pigx-rnaseq], [chmod +x pigx-rnaseq])
 
 AC_OUTPUT

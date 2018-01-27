@@ -231,6 +231,7 @@ EXTRA_DIST =										\
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
 
 TESTS = \
+  tests/test_genome_coverage/test.sh					\
   tests/test_deseq_reports/test.sh					\
   tests/test_multiqc/test.sh						\
   tests/test_star_counts/test.sh					\

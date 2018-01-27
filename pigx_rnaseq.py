@@ -129,8 +129,8 @@ targets = {
         'files': 
           [os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")]
     },
-    'genomeCoverage': {
-        'description': "Compute genome coverage values from BAM files - save in bedgraph format",
+    'genome_coverage': {
+        'description': "Compute genome coverage values from BAM files using bedtools genomecov - save in bedgraph format",
         'files':
           expand(os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph'), sample = SAMPLES)
     },
