@@ -1,0 +1,32 @@
+# This file may be used to create an environment using:
+# $ conda create --name pigx_rnaseq --file <this file> 
+## make sure to have the following conda channels in ~/.condarc file
+#channels:
+#  - anaconda-fusion
+#  - defaults
+#  - bioconda
+#  - r
+#  - pypi
+#  - conda-forge
+
+snakemake=4.0.0
+python=3.6*
+loompy
+yaml
+snakemake
+fastqc
+
+#R dependencies
+#dplyr
+#dropbead
+#GenomicAlignments
+#GenomicFiles
+#GenomicRanges
+#ggplot2
+#methods
+#Rsamtools
+#rtracklayer
+#SCStats
+#stringr
+#yaml
+
