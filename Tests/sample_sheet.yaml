@@ -19,8 +19,8 @@ samples:
         library: single
     ChIPpe:
         fastq:
-            - ChIP_1.fq.gz
-            - ChIP_2.fq.gz
+            - ChIPpe_R1.fq.gz
+            - ChIPpe_R2.fq.gz
         library: paired
 
 # ------------------------------------------------------------ #
