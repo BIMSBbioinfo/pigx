@@ -46,7 +46,7 @@ for param_set in custom_param_names:
 # Default Function Parameters
 PARAMS       = config['general']['params']
 GENOME       = config['general']['assembly']
-GENOME_FASTA = config['locations']['genome-file']
+GENOME_ORIG  = config['locations']['genome-file']
 PATH_FASTQ   = config['locations']['input-dir']
 ANNOTATION   = config['locations']['gff-file']
 
@@ -97,33 +97,36 @@ if not ('extend' in PARAMS.keys()):
 # If the prefix name is already supplied in the config file, it extracts this index
 # instead of creating a new index
 # index-dir should be the location of the index, without the genome prefix (i.e. without hg19)
-if GENOME_FASTA == None:
+if GENOME_ORIG == None:
     prefix_default = ''
-    GENOME_FASTA = ''
+    GENOME_ORIG = ''
 else:
     prefix_default = os.path.join(PATH_INDEX, GENOME)
 
 INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  config['general'])
 PREFIX = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
 
+
+# ----------------------------------------------------------------------------- #
+# RULE ALL
+COMMAND         = []
+GENOME_FASTA    = [PREFIX + '.fa']
+INDEX           = [PREFIX + '.1.bt2']
+BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
+CHRLEN          = [PREFIX + '.chrlen.txt']
+TILLING_WINDOWS = [PREFIX + '.GenomicWindows.GRanges.rds']
+NUCLEOTIDE_FREQ = [PREFIX + '.NucleotideFrequency.GRanges.rds']
+FASTQC          = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name=NAMES)
+BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
+LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
+
+COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC
+
 # ----------------------------------------------------------------------------- #
 # include rules
 include: os.path.join(RULES_PATH, 'Mapping.py')
 include: os.path.join(RULES_PATH, 'FastQC.py')
 include: os.path.join(RULES_PATH, 'BamToBigWig.py')
-
-# ----------------------------------------------------------------------------- #
-# RULE ALL
-COMMAND    = []
-INDEX      = [PREFIX + '.1.bt2']
-BOWTIE2    = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
-CHRLEN     = [PREFIX + '.chrlen.txt']
-FASTQC     = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name=NAMES)
-BW         = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
-LINKS      = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
-
-COMMAND = COMMAND + INDEX + BOWTIE2 + CHRLEN + BW + LINKS + FASTQC
-
 
 
 # ----------------------------------------------------------------------------- #
@@ -195,6 +198,9 @@ if 'feature_combination' in set(SAMPLE_SHEET.keys()):
 # extracts ChIP/Cont signal profiles around the peaks
 # EXTRACT_SIGNAL_PEAKS = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Peaks.rds'), name=PEAK_NAMES)
 # COMMAND = COMMAND + EXTRACT_SIGNAL_PEAKS
+
+# ----------------------------------------------------------------------------- #
+# CHIPQC
 
 
 # ----------------------------------------------------------------------------- #

@@ -1,4 +1,26 @@
 # ---------------------------------------------------------------------------- #
+rule link_genome:
+    input:
+        genome  = GENOME_ORIG
+    output:
+        outfile = GENOME_FASTA
+    params:
+        prefix  = PREFIX,
+        threads = 1,
+        mem     = '1G',
+    log:
+        os.path.join(PATH_LOG, "link_genome.log")
+    message:
+        """
+            Linking genome fasta:
+                input : {input.genome}
+                output: {output.outfile}
+        """
+    run:
+        import os
+        os.symlink(str(input.genome), str(output.outfile))
+        
+# ---------------------------------------------------------------------------- #
 rule bowtie2_build:
     input:
         genome = GENOME_FASTA
@@ -43,6 +65,49 @@ rule index_to_chrlen:
         shell:"""
             {params.bowtie2_inspect} -s {params.prefix} | grep Sequence | cut -f2,3 > {output.outfile} 2> {log}
         """
+
+
+#----------------------------------------------------------------------------- #
+rule construct_genomic_windows:
+        input:
+            infile = rules.index_to_chrlen.output.outfile
+        output:
+            outfile = PREFIX + '.GenomicWindows.GRanges.rds'
+        params:
+            threads   = 1,
+            mem       = '8',
+            tilewidth = 10000,
+            scriptdir = SCRIPT_PATH,
+            Rscript   = SOFTWARE['Rscript']['executable']
+        log:
+            log = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
+        message:"""
+                Running: construct_genomic_windows:
+                    output: {output.outfile}
+            """
+        run:
+            RunRscript(input, output, params, 'ConstructGenomicWindows.R')
+            
+#----------------------------------------------------------------------------- #
+rule extract_nucleotide_frequency:
+        input:
+            genome_fasta    = GENOME_FASTA, 
+            tilling_windows = rules.construct_genomic_windows.output.outfile
+        output:
+            outfile = PREFIX + '.NucleotideFrequency.GRanges.rds'
+        params:
+            threads   = 1,
+            mem       = '8',
+            scriptdir = SCRIPT_PATH,
+            Rscript   = SOFTWARE['Rscript']['executable']
+        log:
+            log = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
+        message:"""
+                Running: extract_nucleotide_frequency:
+                    output: {output.outfile}
+            """
+        run:
+            RunRscript(input, output, params, 'Extract_Nucleotide_Frequency.R')
 
 #----------------------------------------------------------------------------- #
 rule bowtie2:
