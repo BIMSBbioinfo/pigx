@@ -6,7 +6,7 @@ rule multiqc:
     output:
         os.path.join(PATH_REPORTS, "multiqc.html")
     params:
-        path_mapped = PATH_LOG,
+        path_lot    = PATH_LOG,
         path_fastqc = PATH_QC,
         threads     = 1,
         mem         = '8G',
@@ -18,5 +18,5 @@ rule multiqc:
             multiqc
         """
     shell: """
-        {params.multiqc} -o {output} {params.path_mapped} {params.path_fastqc} >> {log} 2>&1
+        {params.multiqc} -o {output} {params.path_log} {params.path_fastqc} >> {log} 2>&1
     """
