@@ -16,7 +16,7 @@ RULES_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'Rules/')
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 # ---------------------------------------------------------------------------- #
-# sample sheet input    
+# sample sheet input
 with open(SAMPLE_SHEET_FILE, 'r') as stream:
     SAMPLE_SHEET = yaml.load(stream)
 
@@ -39,7 +39,7 @@ for param_set in custom_param_names:
         sample_set = SAMPLE_SHEET[param_set][sample_name]
         if isinstance(sample_set, dict) and 'params' in set(sample_set.keys()):
             CUSTOM_PARAMS[sample_name] = sample_set['params']
-            
+
 # ---------------------------------------------------------------------------- #
 # Variable definition
 
@@ -54,9 +54,9 @@ ANNOTATION   = config['locations']['gff-file']
 PEAK_NAMES   = []
 NAMES        = SAMPLE_SHEET['samples'].keys()
 
-
 # Directory structure definition
 OUTPUT_DIR      = config['locations']['output-dir']
+# PATH_FASTQ      = os.path.join(OUTPUT_DIR, 'Fastq')
 PATH_MAPPED     = os.path.join(OUTPUT_DIR, 'Mapped/Bowtie')
 PATH_QC         = os.path.join(OUTPUT_DIR, 'FastQC')
 PATH_INDEX      = os.path.join(OUTPUT_DIR, 'Bowtie2_Index')
@@ -67,6 +67,7 @@ PATH_IDR        = os.path.join(OUTPUT_DIR, 'Peaks/IDR')
 PATH_HUB        = os.path.join(OUTPUT_DIR, 'UCSC_HUB')
 PATH_ANALYSIS   = os.path.join(OUTPUT_DIR, "Analysis")
 PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
+PATH_REPORTS    = os.path.join(OUTPUT_DIR, 'Reports')
 
 
 # Directory structure for saved R objects
@@ -107,7 +108,19 @@ INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  config['general'])
 PREFIX = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
 
 
-# ----------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+# due to the iditotic namig scheme in FASTQC the next lines construct
+# FASTQC output files
+FASTQC_DICT = {}
+for i in NAMES:
+    for fqfile in SAMPLE_SHEET['samples'][i]['fastq']:
+        prefix  = fqfile
+        prefix  = re.sub('.fq.+'   , '', prefix)
+        prefix  = re.sub('.fastq.+', '', prefix)
+        key     = os.path.join(PATH_QC,  i, prefix + "_fastqc.zip")
+        FASTQC_DICT[key]  =  fqfile
+
+
 # RULE ALL
 COMMAND         = []
 GENOME_FASTA    = [PREFIX + '.fa']
@@ -116,16 +129,18 @@ BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.
 CHRLEN          = [PREFIX + '.chrlen.txt']
 TILLING_WINDOWS = [PREFIX + '.GenomicWindows.GRanges.rds']
 NUCLEOTIDE_FREQ = [PREFIX + '.NucleotideFrequency.GRanges.rds']
-FASTQC          = expand(os.path.join(PATH_QC,     "{name}", "{name}.fastqc.done"), name=NAMES)
+FASTQC          = list(FASTQC_DICT.keys())
+MULTIQC         = [os.path.join(PATH_REPORTS, "multiqc.html")]
 BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
-COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC
+COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC
 
 # ----------------------------------------------------------------------------- #
 # include rules
 include: os.path.join(RULES_PATH, 'Mapping.py')
 include: os.path.join(RULES_PATH, 'FastQC.py')
+include: os.path.join(RULES_PATH, 'MultiQC.py')
 include: os.path.join(RULES_PATH, 'BamToBigWig.py')
 
 
@@ -142,7 +157,7 @@ if 'peak_calling' in set(SAMPLE_SHEET.keys()):
             MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks." + suffix)]
             QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort.bed" )]
             PEAK_NAME_LIST[name] = QSORT[-1]
-        
+
         include: os.path.join(RULES_PATH, 'Peak_Calling.py')
         COMMAND = COMMAND + MACS + QSORT
 
@@ -175,22 +190,22 @@ if gtf_index:
     PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
 
     ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds'), name=PEAK_NAMES)
-    
-#     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=PEAK_NAMES)    
+
+#     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=PEAK_NAMES)
 
 #     include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
     include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
     include: os.path.join(RULES_PATH, 'Annotate_Peaks.py')
-    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS 
+    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS
 
 # ---------------------------------------------------------------------------- #
 if 'feature_combination' in set(SAMPLE_SHEET.keys()):
     FEATURE_NAMES = SAMPLE_SHEET['feature_combination'].keys()
     if len(FEATURE_NAMES) > 0:
 
-        FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'), 
+        FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
         name = FEATURE_NAMES)
-    
+
     include: os.path.join(RULES_PATH, 'Feature_Combination.py')
     COMMAND = COMMAND + FEATURE
 
