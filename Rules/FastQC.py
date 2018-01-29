@@ -1,15 +1,17 @@
 # ----------------------------------------------------------------------------- #
+def get_fastqc_input(wc):
+    return FASTQC_DICT[wc.name]['fastq']
+
 rule fastqc:
     input:
-        infile = get_fastq_input
+        infile = get_fastqc_input
     output:
-        outfile = os.path.join(PATH_QC, "{name}", "{name}_fastqc.zip")
+        outfile = os.path.join(PATH_QC, "{folder}", "{name}_fastqc.zip")
     params:
-        outpath = os.path.join(PATH_QC, "{name}"),
+        outpath = os.path.join(PATH_QC, "{folder}"),
         threads = 1,
         mem     = '8G',
         fastqc  = SOFTWARE['fastqc']['executable']
-
     log:
         os.path.join(PATH_LOG, "{name}.fastqc.log")
     message:"""
