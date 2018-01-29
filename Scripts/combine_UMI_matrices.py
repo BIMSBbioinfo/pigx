@@ -4,6 +4,8 @@ import sys
 import numpy
 import pandas
 
+
+# get list of files from a txt file that contains space separated list of file paths
 def get_filepaths (file):
     filepaths = []
     with open(file, "r") as f:
