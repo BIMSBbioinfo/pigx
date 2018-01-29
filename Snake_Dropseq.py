@@ -534,15 +534,18 @@ rule get_umi_matrix:
 # convert UMI matrix from txt format into one loom format
 rule convert_matrix_from_txt_to_loom:
     input:
-        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt')
+        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'),
+        gtf           = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf']))
     output:
         outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom')
+    log:
+        log = os.path.join(PATH_LOG, "{name}.{genome}.convert2loom.log")
     message: """
             Comvert UMI Matrix from .txt fo .loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {input.infile} {output.outfile}"
+    shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {input.infile} {input.gtf} {output.outfile} &> {log.log}"
 
         
 # ----------------------------------------------------------------------------- #
