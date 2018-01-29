@@ -74,6 +74,7 @@ PATH_REPORTS    = os.path.join(OUTPUT_DIR, 'Reports')
 PATH_RDS            = os.path.join(PATH_ANALYSIS, 'RDS')
 PATH_RDS_ANNOTATION = os.path.join(PATH_RDS, 'Annotation')
 PATH_RDS_FEATURE    = os.path.join(PATH_RDS, 'Feature_Combination')
+PATH_RDS_CHIPQC     = os.path.join(PATH_RDS, 'ChIPQC')
 PATH_RDS_TEMP       = os.path.join(PATH_RDS, 'Temp')
 
 
@@ -115,11 +116,11 @@ FASTQC_DICT = {}
 for i in NAMES:
     for fqfile in SAMPLE_SHEET['samples'][i]['fastq']:
         prefix  = fqfile
-        prefix  = re.sub('.fq.+'   , '', prefix)
-        prefix  = re.sub('.fastq.+', '', prefix)
-        key     = os.path.join(PATH_QC,  i, prefix + "_fastqc.zip")
-        FASTQC_DICT[key]  =  fqfile
-
+        prefix  = re.sub('.fq.*'   , '', prefix)
+        prefix  = re.sub('.fastq.*', '', prefix)
+        fastqc  = os.path.join(PATH_QC, i, prefix + "_fastqc.zip")
+        FASTQC_DICT[prefix]  =  {'fastq'  : os.path.join(PATH_FASTQ, fqfile),
+                                 'fastqc' : fastqc}
 
 # RULE ALL
 COMMAND         = []
@@ -129,18 +130,20 @@ BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.
 CHRLEN          = [PREFIX + '.chrlen.txt']
 TILLING_WINDOWS = [PREFIX + '.GenomicWindows.GRanges.rds']
 NUCLEOTIDE_FREQ = [PREFIX + '.NucleotideFrequency.GRanges.rds']
-FASTQC          = list(FASTQC_DICT.keys())
+FASTQC          = [FASTQC_DICT[i]['fastqc'] for i in list(FASTQC_DICT.keys())]
 MULTIQC         = [os.path.join(PATH_REPORTS, "multiqc.html")]
+ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), name=NAMES)
 BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
-COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC
+COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + ChIPQC
 
 # ----------------------------------------------------------------------------- #
 # include rules
 include: os.path.join(RULES_PATH, 'Mapping.py')
 include: os.path.join(RULES_PATH, 'FastQC.py')
 include: os.path.join(RULES_PATH, 'MultiQC.py')
+include: os.path.join(RULES_PATH, 'ChIPQC.py')
 include: os.path.join(RULES_PATH, 'BamToBigWig.py')
 
 
