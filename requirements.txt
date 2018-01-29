@@ -12,6 +12,8 @@
 snakemake=4.0.0
 python=3.6*
 loompy
+numpy
+pandas
 yaml
 snakemake
 fastqc
