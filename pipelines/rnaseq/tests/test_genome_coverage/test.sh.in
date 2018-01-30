@@ -4,14 +4,14 @@ set -e
 set -u
 
 root=$(mktemp --tmpdir -d "pigx.XXXX")
-testfolder=${root}/tests/test_star
+testfolder=${root}/tests/test_genome_coverage
 mkdir -p ${testfolder}
 
 echo "TEST FOLDER: ${testfolder}"
 
 # copy necessary input files to the test folder
 # we copy them to avoid re-creating these files when testing the pipeline
-cp -r ${srcdir}/tests/sample_data/preprocessed/trimmed_reads ${testfolder}
+cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads/ ${testfolder}
 
 # make these copies writable
 chmod +w -R ${testfolder}
@@ -26,18 +26,20 @@ sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
     -e "s,output-dir:.*,output-dir: ${testfolder},g" \
     ${settings} > ${tmp_settings}
 
+#create links to already preprocessed sample data
 samplesheet=${srcdir}/tests/sample_sheet.csv
-tmp_samplesheet=${testfolder}/sample_sheet.test_star.csv
+tmp_samplesheet="${testfolder}/sample_sheet.csv"
 head -n 2 ${samplesheet} > ${tmp_samplesheet}
 
-${builddir}/pigx-rnaseq -s ${tmp_settings} --target star_map ${tmp_samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target genome_coverage ${tmp_samplesheet}
 
 rm ${tmp_settings} ${tmp_samplesheet}
 
-rm -rf ${testfolder}/trimmed_reads
+rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${testfolder}/mapped_reads/HBR_Rep1_Aligned.sortedByCoord.out.bam
+if ! test -f ${testfolder}/bedgraph_files/HBR_Rep1.bedgraph
 then
-  echo "ERROR: failed the STAR mapping test"
+  echo "ERROR: failed to create bedgraph file from input BAM file"
   exit 1
 fi
+

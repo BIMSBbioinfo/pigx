@@ -133,7 +133,7 @@ The main functions of FastQC are:
        ("trim-galore" ,trim-galore)
        ("htseq" ,htseq)
        ("samtools" ,samtools)
-       ("deeptools" ,deeptools)
+       ("bedtools" ,bedtools)
        ("r-minimal" ,r-minimal)
        ("r-rmarkdown" ,r-rmarkdown)
        ("r-ggplot2" ,r-ggplot2)

@@ -9,6 +9,7 @@ execution:
   jobs: 6
   nice: 19
   cluster:
+    missing-file-timeout: 120
     memory: 8G
     stack: 128M
     queue: all
@@ -19,13 +20,16 @@ execution:
       memory: 8G
     star_index:
       threads: 8
-      memory: 32G
+      memory: 4G
     salmon_index:
       threads: 8
-      memory: 32G
+      memory: 4G
     salmon_quant:
       threads: 8
-      memory: 32G
+      memory: 4G
+    star_map:
+      threads: 8
+      memory: 4G
 
 organism: hsapiens
 
@@ -50,20 +54,16 @@ tools:
     executable: @MULTIQC@
   star:
     executable: @STAR@
-    cores: 8
-    memory: 32G
   trim-galore:
     executable: @TRIMGALORE@
-  bamCoverage:
-    executable: @BAMCOVERAGE@
+  bedtools:
+    executable: @BEDTOOLS@
   samtools:
     executable: @SAMTOOLS@
   htseq-count:
     executable: @HTSEQ_COUNT@
   salmon:
     executable: @SALMON@
-    cores: 8
-    memory: 32G
   R:
     Rscript: @RSCRIPT@
     executable: @R@

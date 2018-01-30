@@ -49,7 +49,7 @@ LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
-BIGWIG_DIR        = os.path.join(OUTPUT_DIR, 'bigwig_files')
+BEDGRAPH_DIR      = os.path.join(OUTPUT_DIR, 'bedgraph_files')
 HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
 SALMON_DIR        = os.path.join(OUTPUT_DIR, 'salmon_output')
 PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
@@ -57,20 +57,23 @@ PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
 FASTQC_EXEC  = config['tools']['fastqc']['executable']
 MULTIQC_EXEC = config['tools']['multiqc']['executable']
 STAR_EXEC    = config['tools']['star']['executable']
-STAR_THREADS = config['tools']['star']['cores']
 SALMON_EXEC  = config['tools']['salmon']['executable']
-SALMON_THREADS = config['tools']['salmon']['cores']
 TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
-BAMCOVERAGE_EXEC = config['tools']['bamCoverage']['executable']
+BEDTOOLS_EXEC    = config['tools']['bedtools']['executable']
 SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
 HTSEQ_COUNT_EXEC = config['tools']['htseq-count']['executable']
 RSCRIPT_EXEC     = config['tools']['R']['Rscript']
+
+STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
+SALMON_INDEX_THREADS = config['execution']['rules']['salmon_index']['threads']
+STAR_MAP_THREADS     = config['execution']['rules']['star_map']['threads']
+SALMON_QUANT_THREADS = config['execution']['rules']['salmon_quant']['threads']
 
 
 GTF_FILE = config['locations']['gtf-file']
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
-DE_ANALYSIS_LIST = config['DEanalyses']
+DE_ANALYSIS_LIST = config.get('DEanalyses', {})
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
@@ -100,7 +103,9 @@ targets = {
         'files': 
           [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
           os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-          os.path.join(MULTIQC_DIR, 'multiqc_report.html')] + 
+          os.path.join(MULTIQC_DIR, 'multiqc_report.html')] +
+	      #expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample = SAMPLES) +  
+	      expand(os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph'), sample = SAMPLES) +  
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     }, 
@@ -123,6 +128,11 @@ targets = {
         'description': "Get count matrix from STAR mapping results.",
         'files': 
           [os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")]
+    },
+    'genome_coverage': {
+        'description': "Compute genome coverage values from BAM files using bedtools genomecov - save in bedgraph format",
+        'files':
+          expand(os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph'), sample = SAMPLES)
     },
     'fastqc': {
         'description': "post-mapping quality control by FASTQC.",
@@ -230,7 +240,7 @@ rule star_index:
         star_index_dir = os.path.join(OUTPUT_DIR, 'star_index'),
         star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex")
     log: os.path.join(LOG_DIR, 'star_index.log')
-    shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --runMode genomeGenerate --genomeDir {output.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
+    shell: "{STAR_EXEC} --runThreadN {STAR_INDEX_THREADS} --runMode genomeGenerate --genomeDir {output.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
 
 def map_input(args):
   sample = args[0]
@@ -250,7 +260,7 @@ rule star_map:
   params:
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_'),
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
+  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
 
 rule salmon_index: 
   input:
@@ -259,7 +269,7 @@ rule salmon_index:
       salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index'),
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")
   log: os.path.join(LOG_DIR, 'salmon_index.log')
-  shell: "{SALMON_EXEC} index -t {input} -i {output.salmon_index_dir} -p {SALMON_THREADS} >> {log} 2>&1"                   
+  shell: "{SALMON_EXEC} index -t {input} -i {output.salmon_index_dir} -p {SALMON_INDEX_THREADS} >> {log} 2>&1"
 
 rule salmon_quant: 
   input: 
@@ -269,12 +279,12 @@ rule salmon_quant:
       os.path.join(SALMON_DIR, "{sample}", "quant.sf")
   params:
       outfolder = os.path.join(SALMON_DIR, "{sample}")
-  log: os.path.join(LOG_DIR, 'salmon_quant.log')
+  log: os.path.join(LOG_DIR, 'salmon_quant_{sample}.log')
   run:
     if(len(input.reads) == 1):
-        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_QUANT_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
     elif(len(input.reads) == 2):
-        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_THREADS} -1 {input.reads[0]} -2 {input.reads[1]} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_QUANT_THREADS} -1 {input.reads[0]} -2 {input.reads[1]} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
     shell(COMMAND)
 
 rule counts_from_SALMON:
@@ -291,13 +301,15 @@ rule index_bam:
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
-rule bamCoverage:
+
+rule genomeCoverage:
   input:
     bam=rules.star_map.output[0],
-    bai=rules.index_bam.output
-  output: os.path.join(BIGWIG_DIR, '{sample}.bw')
-  log: os.path.join(LOG_DIR, 'bamCoverage_{sample}.log')
-  shell: "{BAMCOVERAGE_EXEC} --bam {input.bam} -o {output} >> {log} 2>&1"
+    bai=rules.index_bam.output            
+  output: os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph')
+  log: os.path.join(LOG_DIR, 'genomeCoverage_{sample}.log')
+  shell: "{BEDTOOLS_EXEC} genomecov -trackline -bga -split -ibam {input.bam} 1> {output} 2>> {log}"
+
 
 rule multiqc:
   input:
