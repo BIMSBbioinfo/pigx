@@ -246,6 +246,7 @@ def prepare_links():
     os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
     os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
     os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+    os.environ['R_LIBS_USER'] = "/dev/null"
 
 def display_logo():
     if os.getenv('PIGX_UNINSTALLED'):
