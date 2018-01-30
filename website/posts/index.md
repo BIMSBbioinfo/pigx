@@ -56,8 +56,8 @@ three steps:
 That's it!  After some time you'll get a bunch of reports that you can
 view in your browser.
 
-For more detailed information about each of the pipelines see the
-`README.md` file in the `pipelines` directory.
+For more detailed information about each of the pipelines [see the
+online documentation](http://bioinformatics.mdc-berlin.de/pigx_docs).
 
 
 # Get it
