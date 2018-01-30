@@ -21,7 +21,10 @@ The figure below provides a schematic of the process.
 # Install
 
 PiGx BSseq uses the GNU build system.  If you want to install PiGx BSseq from
-source (here you can find the [latest release here](https://github.com/BIMSBbioinfo/pigx_bsseq/releases/latest)), please make sure that all required dependencies are installed and then follow these steps after unpacking the latest release tarball:
+source (here you can find the [latest release
+here](https://github.com/BIMSBbioinfo/pigx_bsseq/releases/latest)), please make
+sure that all required dependencies are installed and then follow these steps
+after unpacking the latest release tarball:
 
 ```sh
 ./configure --prefix=/some/where
@@ -73,11 +76,10 @@ configuration time.
 
 You can install PiGx BSseq through Guix (TODO: add details here after release).
 
-Run the `configure` script to probe your environment for tools needed
-by the pipeline.  Rather than installing  all packages manually, we 
-generally recommend using [GNU Guix](https://gnu.org/s/guix).  The
-following command spawns a sub-shell in which all dependencies are
-available:
+Run the `configure` script to probe your environment for tools needed by the
+pipeline.  Rather than installing  all packages manually, we generally
+recommend using [GNU Guix](https://gnu.org/s/guix).  The following command
+spawns a sub-shell in which all dependencies are available:
 
 ```sh
 guix environment -l guix.scm
@@ -138,10 +140,9 @@ This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 
 # Input Parameters
 
-The pipeline expects two kinds of input: a sample sheet in CSV format
-and a settings file specifying the desired behaviour of PiGx BSseq.
-PiGx BSseq will automatically generate a JSON configuration file from
-these inputs.
+The pipeline expects two kinds of input: a sample sheet in CSV format and a
+settings file specifying the desired behaviour of PiGx BSseq.  PiGx BSseq will
+automatically generate a JSON configuration file from these inputs.
 
 ## Sample Sheet
 
@@ -275,19 +276,48 @@ execution:
   cluster:
     memory: 8G
     stack: 128M
-    queue: all
+    queue: all.q
     contact-email: none
 ```
 
 | Variable name         | description |
 | --------------------- |:-----------:|
-| submit-to-cluster     | string: Whether the pipeline should run locally ("no") or on a cluster with an SGE queueing system.
+| submit-to-cluster     | string: Whether the pipeline should run locally ("no") or on a cluster with an SGE queueing system ("yes").
 | jobs                  | string: Number of jobs sent to cluster, e.g. "6"
 | nice                  | integer: From -20 to 19; higher values make the program execution less demanding on computational resources
 | cluster:memory        | string: Amount of memory used for all jobs besides bismark, e.g. "8G"
 | cluster:stack         | string: Stack size limit (used for cluster jobs), e.g. "128m"
-| cluster:queue         | string: Queue name (used for cluster jobs), e.g. "all"
 | cluster:contact-email | string: Email address where information about pipelines progress is sent (if it is running on a cluster).
+
+
+Further values can be supplied. For example, should the user wish to allocate
+job submission onto a specific queue (which we will call **X**) for  _all_
+rules being executed, they may set:
+
+```
+execution:
+  ...
+  cluster:
+    queue:  X
+  ...
+...
+```
+
+Or certain rules can be allocated to specific queues as follows:
+
+```
+execution:
+  ...
+  rules:
+    __default__:
+      queue: X
+    bismark_align_and_map_se:
+      queue: Y
+    ...
+...
+```
+In the latter case, the `__default__` rule must be defined, and there may not
+be any multiply-defined variables.
 
 ### Tools
 
@@ -318,9 +348,7 @@ during execution, however, the underlying process based on snakemake will
 produce further updates to screen showing the status of the run. Within each
 subfolder, further programs will generate their own log files that can be
 consulted in case debugging is necessary (e.g. if a run fails with a cryptic
-error message, and the output directory contains folders named `01\_\*`, 
-`02\_\*`,  `03\_\*`, etc., we recommend reading the last few lines of the 
-`\*.log` files in the last directory to be created.)
-
- 
+error message, and the output directory contains folders named `01_*`, 
+`02_*`,  `03_*`, etc., we recommend reading the last few lines of the 
+`*.log` files in the last directory to be created.)
 
