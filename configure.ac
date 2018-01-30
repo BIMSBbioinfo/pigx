@@ -33,8 +33,8 @@ if test "x$enable_rnaseq" != "xno"; then
 fi
 
 AC_ARG_ENABLE([chipseq],
-   AS_HELP_STRING([--enable-chipseq], [Build the chipseq pipeline.]))
-if test "x$enable_chipseq" = "xyes"; then
+   AS_HELP_STRING([--disable-chipseq], [Do not build the chipseq pipeline.]))
+if test "x$enable_chipseq" != "xno"; then
   AC_CONFIG_SUBDIRS([pipelines/chipseq])
   pipelines="$pipelines chipseq"
 fi
