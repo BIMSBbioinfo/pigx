@@ -1,0 +1,28 @@
+STAR
+java
+picard
+Drop-seq_tools-1.12 #see software at http://mccarrolllab.com/dropseq/
+
+snakemake=4.0.0
+python=3.6*
+loompy
+numpy
+pandas
+yaml
+snakemake
+fastqc
+
+#R dependencies
+#dplyr
+#dropbead
+#GenomicAlignments
+#GenomicFiles
+#GenomicRanges
+#ggplot2
+#methods
+#Rsamtools
+#rtracklayer
+#SCStats
+#stringr
+#yaml
+
