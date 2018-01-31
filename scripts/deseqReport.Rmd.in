@@ -166,11 +166,14 @@ DE <- as.data.frame(DEtable)
 
 DE$geneName <- mapIdsToNames(rownames(DE), gtfData)
 
+DEnormalizedCountsFile <- file.path(workdir, paste0(prefix, '.normalized_counts.tsv'))
 write.table(x = vsd.counts, 
-            file = file.path(workdir, paste0(prefix, '.normalized_counts.tsv')), 
+            file = DEnormalizedCountsFile, 
             quote = FALSE, sep = '\t')
+            
+DEresultsFile <- file.path(workdir, paste0(prefix, '.deseq_results.tsv'))             
 write.table(x = DE, 
-            file = file.path(workdir, paste0(prefix, '.deseq_results.tsv')), 
+            file = DEresultsFile, 
             quote = FALSE, sep = '\t')
 
 ```
@@ -179,12 +182,24 @@ write.table(x = DE,
 
 Differential expression (DE) analysis was done using the [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) R package. First, read counts are transformed using a _variance stabilizing transformation_, and then the expression values of each gene is compared between the control and sample groups using a negative binomial distribution as a model.
 
-## Differential Expression Results Table (unfiltered)
+## Differential Expression Results Table (top 1000)
 
-This is the full table of DE results comparing cases to controls (as specified in the input settings listed above). The `baseMean` refers to expression level in the controls, and the log fold change column denotes the expression in the cases, as compared to the control. Finally, the `padj` column is the multiple-testing adjusted P value for the significance of a differentially expressed gene.
+This is the table of top 1000 differentially expressed genes comparing cases to controls (as specified in the input settings listed above). The table is first filtered by absolute log2foldChange > 1 and sorted by adjusted P value after multiple testing correction (`padj`). The `baseMean` refers to expression level in the controls, and the log fold change column denotes the expression in the cases, as compared to the control. 
+
+The full table of DESeq2 results and normalized counts tables can be found at: 
+ 
+ - DESeq2 results table: `r DEresultsFile`
+ - DESeq2 normalized counts table: `r DEnormalizedCountsFile`
 
 ```{r write_DEtable}
-DT::datatable(DE, 
+DEsubset <- DE[!is.na(DE$padj) & abs(DE$log2FoldChange) > 1,]
+max <- 1000
+if(nrow(DE) < max) {
+max <- nrow(DE)
+}
+DEsubset <- DEsubset[1:max,]
+
+DT::datatable(DEsubset, 
           extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
           options = list(fixedColumns = TRUE, 
                          scrollY = 400,
@@ -321,10 +336,10 @@ ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = variable
 
 ## Interactive box plots of genes with significant differential expression 
 
-This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest. Notice that only genes that have an adjusted p-value less than 0.1 and log2 fold change value of greater than 1 are plotted. 
+This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest. Notice that only top 1000 genes that have an adjusted p-value less than 0.1 and absolute log2 fold change value of greater than 1 are plotted. 
 
 ```{r plot_interactive_boxplots}
-select <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & abs(DE$log2FoldChange) > 1,])
+select <- rownames(DEsubset)
 if(length(select) > 1) {
   expressionLevels <- reshape2::melt(vsd.counts[select,])
   colnames(expressionLevels) <- c('geneId', 'sampleName', 'expressionLevel')
