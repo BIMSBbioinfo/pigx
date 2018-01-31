@@ -188,8 +188,10 @@ This is the table of top 1000 differentially expressed genes comparing cases to 
 
 The full table of DESeq2 results and normalized counts tables can be found at: 
  
- - DESeq2 results table: `r DEresultsFile`
- - DESeq2 normalized counts table: `r DEnormalizedCountsFile`
+ - **DESeq2 results table**: 
+ `r DEresultsFile`
+ - **DESeq2 normalized counts table**: 
+ `r DEnormalizedCountsFile`
 
 ```{r write_DEtable}
 DEsubset <- DE[!is.na(DE$padj) & abs(DE$log2FoldChange) > 1,]
@@ -382,8 +384,8 @@ cat("\n The following tables list GO terms for up- and down-regulated genes. GO 
 ```
 
 ```{r goAnalysis, eval = runGO}
-genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 1,]) # change this to 0.1 and +1
-genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -1,]) #change this to 0.1 and -1
+genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 1,]) 
+genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -1,]) 
 ```
 
 ```{r goAnalysisTitleUp, eval = runGO, results='asis'}
@@ -404,7 +406,7 @@ DT::datatable(goUp,
                        dom = 'Bfrtip',
                        buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
                        columnDefs = list(
-                         list(targets = c(0,1,7,8,11,13,14), visible = FALSE)
+                         list(targets = c(0,1,2,5,9,10,11,13,14), visible = FALSE)
                        )
                        ),
         filter = 'bottom'
@@ -429,7 +431,7 @@ DT::datatable(goDown,
                        dom = 'Bfrtip',
                        buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
                        columnDefs = list(
-                         list(targets = c(0,1,7,8,11,13,14), visible = FALSE)
+                         list(targets = c(0,1,2,5,9,10,11,13,14), visible = FALSE)
                        )
                        ),
         filter = 'bottom'
