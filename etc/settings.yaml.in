@@ -23,7 +23,6 @@ execution:
   nice: 19
   cluster:
     missing-file-timeout: 120
-    memory: 8G
     stack: 128M
     contact-email: none
   rules:

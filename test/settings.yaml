@@ -23,7 +23,6 @@ execution:
   jobs: 6
   nice: 19
   cluster:
-    memory: 8G
     stack: 128M
     queue: all.q
     contact-email: none
