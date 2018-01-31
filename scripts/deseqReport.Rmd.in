@@ -260,7 +260,7 @@ The pairwise correlation plot provides a more detaield view of which samples are
 
 ```{r plot_corr}
 M <- stats::cor(vsd.counts)
-corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
+corrplot::corrplot(corr = M, order = 'hclust', method = 'ellipse', type = 'lower', tl.srt = 45)
 ```
 
 ## Heatmaps 
