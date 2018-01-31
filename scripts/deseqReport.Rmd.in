@@ -84,6 +84,7 @@ runGO <- curl::has_internet()
 
 inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
+                     'GTF File', 
                      'Case sample groups',
                      'Control sample groups', 
                      'Covariates to control for',
@@ -93,6 +94,7 @@ inputParameterDesc <- c('Count Data File',
                      )
 inputParameterValues <- c(countDataFile,
                           colDataFile,
+                          gtfFile, 
                           caseSampleGroups,
                           controlSampleGroups, 
                           covariates,
@@ -106,7 +108,7 @@ DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 8,
+                         pageLength = 9,
                          dom = 't'))
 ```
 
