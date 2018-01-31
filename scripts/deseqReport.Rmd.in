@@ -240,7 +240,7 @@ DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
 ```{r computePCAplots} 
 plotGroups <- c(covariates, 'AnalysisGroup', 'group')
 pcaPlots <- lapply(plotGroups, function(g) {
-  DESeq2::plotPCA(object = vsd, intgroup = g) + geom_label_repel(label = rownames(colData(vsd)))
+  DESeq2::plotPCA(object = vsd, intgroup = g) + geom_label_repel(label = rownames(colData(vsd)), size = 3)
 })
 ```
 
