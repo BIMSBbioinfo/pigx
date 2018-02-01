@@ -384,8 +384,8 @@ cat("\n The following tables list GO terms for up- and down-regulated genes. GO 
 ```
 
 ```{r goAnalysis, eval = runGO}
-genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 1,]) 
-genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -1,]) 
+genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 0,]) 
+genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < 0,]) 
 ```
 
 ```{r goAnalysisTitleUp, eval = runGO, results='asis'}
@@ -395,7 +395,7 @@ cat("## GO Terms for Up-regulated Genes\n")
 ```{r goAnalysisUp, eval = runGO}
 goUp <- gProfileR::gprofiler(query = genesUp, 
                              organism = organism, 
-                             hier_filtering = "moderate",
+                             hier_filtering = "none",
                              significant = TRUE)
 DT::datatable(goUp, 
         extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
@@ -420,7 +420,7 @@ cat("## GO Terms for Down-regulated Genes\n")
 ```{r goAnalysisDown, eval = runGO}
 goDown <- gProfileR::gprofiler(query = genesDown, 
                                organism = organism, 
-                               hier_filtering = "moderate", 
+                               hier_filtering = "none", 
                                significant = TRUE)
 DT::datatable(goDown, 
         extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
