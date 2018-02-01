@@ -63,7 +63,7 @@ the executable from the current working directory.
 Now finally you can call the executable:
 
 ```
-./pigx-bsseq test/sample_sheet.csv -s test/settings.yaml
+./pigx-bsseq tests/sample_sheet.csv -s tests/settings.yaml
 ```
 
 and you should see the flying pig. :)

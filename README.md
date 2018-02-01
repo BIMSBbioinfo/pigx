@@ -152,7 +152,7 @@ bisulfite sequencing experiment (such as RRBS or WGBS, currently,
 only WGBS is available) and treatment group for differential methylation
 detection.
 
-An example sample sheet is provided in test/sample_sheet.csv and contains
+An example sample sheet is provided in tests/sample_sheet.csv and contains
 the following:
 
 ```
@@ -173,7 +173,7 @@ to ensure that fields are separated by a comma (i.e. `Field delimiter = ','`)
 The default settings file can be found at `etc/settings.yaml`; the values
 here are used for any settings that are not specified by the user in the main
 settings file (which override the defaults).  An example settings file is 
-provided in test/settings.yaml with the following content 
+provided in tests/settings.yaml with the following content 
 
 ```
 locations:
