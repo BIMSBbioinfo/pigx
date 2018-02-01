@@ -196,8 +196,8 @@ The full table of DESeq2 results and normalized counts tables can be found at:
 ```{r write_DEtable}
 DEsubset <- DE[!is.na(DE$padj) & abs(DE$log2FoldChange) > 1,]
 max <- 1000
-if(nrow(DE) < max) {
-max <- nrow(DE)
+if(nrow(DEsubset) < max) {
+max <- nrow(DEsubset)
 }
 DEsubset <- DEsubset[1:max,]
 
@@ -306,7 +306,7 @@ pheatmap::pheatmap(vsd.counts[select,],
 This volcano plot summarizes the differential expression landscape in the comparison between the two groups.
 
 ```{r plot_summary_volcano}
-ggplot(DE, aes(x = log2FoldChange, y = -log10(padj))) + geom_point(aes(color = padj < 0.1))
+ggplot(DE, aes(x = log2FoldChange, y = -log10(pvalue))) + geom_point(aes(color = padj < 0.1))
 ```
 
 ## Summary of up/down regulated genes - bar plots
@@ -316,8 +316,8 @@ different adjusted p-value (selected adjusted p-values are 0.001, 0.01, 0.05, an
 
 ```{r plot_summary_barplots}
 
-filterUP <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange >= log2fc & df$padj <= p,])}
-filterDOWN <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange < -log2fc & df$padj <= p,])}
+filterUP <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange >= log2fc & !is.na(df$padj) & df$padj <= p,])}
+filterDOWN <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange < -log2fc & !is.na(df$padj) & df$padj <= p,])}
 
 pVals <- c(0.001, 0.01, 0.05, 0.1)
 fcVals <- c(0:(max(DE$log2FoldChange)+1))
