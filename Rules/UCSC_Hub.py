@@ -6,8 +6,6 @@ rule make_ucsc_hub:
         output:
             outfile = os.path.join(PATH_HUB, HUB_NAME, 'done.txt')
         params:
-            threads     = 1,
-            mem         = '8G',
             hub         = SAMPLE_SHEET['hub'],
             genome_name = GENOME,
             paths       = TRACK_PATHS,
@@ -36,8 +34,6 @@ rule bedTobigBed:
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}.bb")
     params:
-        threads     = 1,
-        mem         = '8G',
         name        = '{name}',
         bedToBigBed = SOFTWARE['bedToBigBed']['executable']
     message:"""

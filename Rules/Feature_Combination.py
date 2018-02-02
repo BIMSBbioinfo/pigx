@@ -14,8 +14,6 @@ rule feature_combination:
     output:
         outfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds')
     params:
-        threads     = 1,
-        mem         = '8G',
         scriptdir   = SCRIPT_PATH,
         Rscript     = SOFTWARE['Rscript']['executable']
     log:

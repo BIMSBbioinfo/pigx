@@ -6,8 +6,6 @@ rule extract_signal_annotation:
         output:
             outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds')
         params:
-            threads     = 1,
-            mem         = '16G',
             peakname    = '{name}',
             scriptdir   = SCRIPT_PATH,
             Rscript     = SOFTWARE['Rscript']['executable']
@@ -34,8 +32,6 @@ rule extract_signal_peaks:
         output:
             outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Peaks.rds')
         params:
-            threads     = 1,
-            mem         = '16G',
             expand_peak = PARAMS['extract_signal']['expand_peak'],
             bin_num     = PARAMS['extract_signal']['bin_num'],
             peakname    = '{name}',
@@ -62,8 +58,6 @@ rule annotate_peaks:
         output:
             outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds')
         params:
-            threads     = 1,
-            mem         = '16G',
             peakname    = '{name}',
             scriptdir   = SCRIPT_PATH,
             Rscript     = SOFTWARE['Rscript']['executable']

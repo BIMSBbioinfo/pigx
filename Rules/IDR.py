@@ -11,8 +11,6 @@ rule idr:
     output:
         outfile = os.path.join(PATH_IDR, "{name}", "{name}.bed")
     params:
-        threads    = 1,
-        mem        = '8G',
         idr        = SOFTWARE['idr']['executable'],
         params_idr = PARAMS['idr']
     log:

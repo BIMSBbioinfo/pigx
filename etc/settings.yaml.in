@@ -33,14 +33,68 @@ execution:
     contact-email: none
   rules:
     __default__:
-      threads: 1
-      memory: 8G
+      threads:   1
+      memory:    8G
+    annotate_peaks:
+      threads:   1
+      memory:    16G
+    bam2bed:
+      threads:   1
+      memory:    16G
+    bam2bigWig:
+      threads:   1
+      memory:    16G
+    bedTobigBed:
+      threads:   1 
+      memory:    8G
     bowtie2:
-      threads: 1
-      memory: 16G
+      threads:   2
+      memory:    16G
     bowtie2_build:
-      threads: 1
-      memory: 16G
+      threads:   1
+      memory:    32G
+    chipqc:
+      threads:   1
+      memory:    8G
+    extract_signal_annotation:
+      threads:   1
+      memory:    16G
+    extract_signal_peaks:
+      threads:   1
+      memory:    16G
+    fastqc:
+      threads:   1
+      memory:    8G
+    feature_combination:
+      threads:   1
+      memory:    8G
+    idr:
+      threads:   1
+      memory:    8G
+    index_to_chrlen:
+      threads:   1
+      memory:    1G
+    link_annotation:
+      threads:   1 
+      memory:    16G
+    make_ucsc_hub:
+      threads:   1 
+      memory:    8G
+    samtools_sort:
+      threads:   4
+      memory:    16G
+    samtools_index:
+      threads:   1 
+      memory:    8G
+    macs2:
+      threads:   1 
+      memory:    16G
+    prepare_annotation:
+      threads:   1 
+      memory:    16G
+    sort_peak:
+      threads:   1 
+      memory:    8G
 
 tools:
     fastqc: 

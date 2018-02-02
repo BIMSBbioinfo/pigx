@@ -7,8 +7,6 @@ rule annotate_peaks:
         output:
             outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds')
         params:
-            threads     = 1,
-            mem         = '16G',
             peakname    = '{name}',
             scriptdir   = SCRIPT_PATH,
             Rscript     = SOFTWARE['Rscript']['executable']
