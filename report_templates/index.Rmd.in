@@ -170,7 +170,7 @@ We apply filters based on a minimum coverage of ',mincov,' and a mapping quality
 cat('Here we show some simple statistics related to the distribution of methylation and coverage in the sample.\n')
 ```
 
-```{r MethCallPlots,  eval=MethCall}
+```{r MethCallPlots,  eval=MethCall, fig.width=16, fig.height=8}
   
     methRaw <- readRDS(methCallRDS)
     
