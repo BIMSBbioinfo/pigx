@@ -24,13 +24,22 @@ args <- commandArgs(trailingOnly = TRUE)
 salmon_output_folder <- args[1]
 colDataFile <- args[2]
 
-colData <- read.table(colDataFile)
-files <- file.path(salmon_output_folder, rownames(colData), "quant.sf")
-names(files) <- rownames(colData)
-txi <- tximport::tximport(files, type = "salmon", txOut = TRUE)
+writeCounts <- function(colDataFile, salmon_output_folder, type) {
+  colData <- read.table(colDataFile)
+  if(type == 'transcripts') {
+    files <- file.path(salmon_output_folder, rownames(colData), "quant.sf")
+  } else if ( type == 'genes') {
+    files <- file.path(salmon_output_folder, rownames(colData), "quant.genes.sf")
+  }
+  names(files) <- rownames(colData)
+  txi <- tximport::tximport(files, type = "salmon", txOut = TRUE)
+  
+  dds <- DESeq2::DESeqDataSetFromTximport(txi, colData, ~group)
+  
+  write.table(x = DESeq2::counts(dds), 
+              file = file.path(salmon_output_folder, paste0("counts_from_SALMON.", type,".tsv")), 
+              quote = F, sep = '\t')
+}
 
-dds <- DESeq2::DESeqDataSetFromTximport(txi, colData, ~group)
-
-write.table(x = DESeq2::counts(dds), 
-            file = file.path(salmon_output_folder, "counts_from_SALMON.tsv"), 
-            quote = F, sep = '\t')
+writeCounts(colDataFile, salmon_output_folder, type = 'transcripts')
+writeCounts(colDataFile, salmon_output_folder, type = 'genes')
