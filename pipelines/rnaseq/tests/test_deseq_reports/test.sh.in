@@ -32,7 +32,8 @@ sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
 samplesheet=${srcdir}/tests/sample_sheet.csv
 
 ${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_star ${samplesheet}
-${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon ${samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon_transcripts ${samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target deseq_report_salmon_genes ${samplesheet}
 
 rm ${tmp_settings}
 
@@ -47,9 +48,15 @@ then
   exit 1
 fi
 
-if ! test -f ${testfolder}/report/analysis1.salmon.deseq.report.html
+if ! test -f ${testfolder}/report/analysis1.salmon.transcripts.deseq.report.html
 then
-  echo "ERROR: failed to create deseq report from SALMON results"
+  echo "ERROR: failed to create deseq report from SALMON results at transcript-level"
+  exit 1
+fi
+
+if ! test -f ${testfolder}/report/analysis1.salmon.genes.deseq.report.html
+then
+  echo "ERROR: failed to create deseq report from SALMON results at gene-level"
   exit 1
 fi
 

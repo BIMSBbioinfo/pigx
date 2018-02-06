@@ -84,6 +84,7 @@ runGO <- curl::has_internet()
 
 inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
+                     'GTF File', 
                      'Case sample groups',
                      'Control sample groups', 
                      'Covariates to control for',
@@ -93,6 +94,7 @@ inputParameterDesc <- c('Count Data File',
                      )
 inputParameterValues <- c(countDataFile,
                           colDataFile,
+                          gtfFile, 
                           caseSampleGroups,
                           controlSampleGroups, 
                           covariates,
@@ -106,7 +108,7 @@ DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 8,
+                         pageLength = 9,
                          dom = 't'))
 ```
 
@@ -164,11 +166,14 @@ DE <- as.data.frame(DEtable)
 
 DE$geneName <- mapIdsToNames(rownames(DE), gtfData)
 
+DEnormalizedCountsFile <- file.path(workdir, paste0(prefix, '.normalized_counts.tsv'))
 write.table(x = vsd.counts, 
-            file = file.path(workdir, paste0(prefix, '.normalized_counts.tsv')), 
+            file = DEnormalizedCountsFile, 
             quote = FALSE, sep = '\t')
+            
+DEresultsFile <- file.path(workdir, paste0(prefix, '.deseq_results.tsv'))             
 write.table(x = DE, 
-            file = file.path(workdir, paste0(prefix, '.deseq_results.tsv')), 
+            file = DEresultsFile, 
             quote = FALSE, sep = '\t')
 
 ```
@@ -177,12 +182,26 @@ write.table(x = DE,
 
 Differential expression (DE) analysis was done using the [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) R package. First, read counts are transformed using a _variance stabilizing transformation_, and then the expression values of each gene is compared between the control and sample groups using a negative binomial distribution as a model.
 
-## Differential Expression Results Table (unfiltered)
+## Differential Expression Results Table (top 1000)
 
-This is the full table of DE results comparing cases to controls (as specified in the input settings listed above). The `baseMean` refers to expression level in the controls, and the log fold change column denotes the expression in the cases, as compared to the control. Finally, the `padj` column is the multiple-testing adjusted P value for the significance of a differentially expressed gene.
+This is the table of top 1000 differentially expressed genes comparing cases to controls (as specified in the input settings listed above). The table is first filtered by absolute log2foldChange > 1 and sorted by adjusted P value after multiple testing correction (`padj`). The `baseMean` refers to expression level in the controls, and the log fold change column denotes the expression in the cases, as compared to the control. 
+
+The full table of DESeq2 results and normalized counts tables can be found at: 
+ 
+ - **DESeq2 results table**: 
+ `r DEresultsFile`
+ - **DESeq2 normalized counts table**: 
+ `r DEnormalizedCountsFile`
 
 ```{r write_DEtable}
-DT::datatable(DE, 
+DEsubset <- DE[!is.na(DE$padj) & abs(DE$log2FoldChange) > 1,]
+max <- 1000
+if(nrow(DEsubset) < max) {
+max <- nrow(DEsubset)
+}
+DEsubset <- DEsubset[1:max,]
+
+DT::datatable(DEsubset, 
           extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
           options = list(fixedColumns = TRUE, 
                          scrollY = 400,
@@ -238,7 +257,7 @@ DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
 ```{r computePCAplots} 
 plotGroups <- c(covariates, 'AnalysisGroup', 'group')
 pcaPlots <- lapply(plotGroups, function(g) {
-  DESeq2::plotPCA(object = vsd, intgroup = g)
+  DESeq2::plotPCA(object = vsd, intgroup = g) + geom_label_repel(label = rownames(colData(vsd)), size = 3)
 })
 ```
 
@@ -256,11 +275,11 @@ for (i in 1:length(pcaPlots)) {
 
 ## Correlation Plot
 
-The pairwise correlation plot provides a more detaield view of which samples are more similar or different.
+The pairwise correlation plot provides a more detailed view of which samples are more similar or different.
 
 ```{r plot_corr}
 M <- stats::cor(vsd.counts)
-corrplot::corrplot(corr = M, method = 'ellipse', type = 'lower', tl.srt = 45)
+corrplot::corrplot(corr = M, order = 'hclust', method = 'ellipse', type = 'lower', tl.srt = 45)
 ```
 
 ## Heatmaps 
@@ -287,7 +306,7 @@ pheatmap::pheatmap(vsd.counts[select,],
 This volcano plot summarizes the differential expression landscape in the comparison between the two groups.
 
 ```{r plot_summary_volcano}
-ggplot(DE, aes(x = log2FoldChange, y = -log10(padj))) + geom_point(aes(color = padj < 0.1))
+ggplot(DE, aes(x = log2FoldChange, y = -log10(pvalue))) + geom_point(aes(color = padj < 0.1))
 ```
 
 ## Summary of up/down regulated genes - bar plots
@@ -297,8 +316,8 @@ different adjusted p-value (selected adjusted p-values are 0.001, 0.01, 0.05, an
 
 ```{r plot_summary_barplots}
 
-filterUP <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange >= log2fc & df$padj <= p,])}
-filterDOWN <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange < -log2fc & df$padj <= p,])}
+filterUP <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange >= log2fc & !is.na(df$padj) & df$padj <= p,])}
+filterDOWN <- function(df, log2fc = 1, p = 0.1) {nrow(df[df$log2FoldChange < -log2fc & !is.na(df$padj) & df$padj <= p,])}
 
 pVals <- c(0.001, 0.01, 0.05, 0.1)
 fcVals <- c(0:(max(DE$log2FoldChange)+1))
@@ -319,10 +338,10 @@ ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = variable
 
 ## Interactive box plots of genes with significant differential expression 
 
-This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest. Notice that only genes that have an adjusted p-value less than 0.1 and log2 fold change value of greater than 1 are plotted. 
+This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest. Notice that only top 1000 genes that have an adjusted p-value less than 0.1 and absolute log2 fold change value of greater than 1 are plotted. 
 
 ```{r plot_interactive_boxplots}
-select <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & abs(DE$log2FoldChange) > 1,])
+select <- rownames(DEsubset)
 if(length(select) > 1) {
   expressionLevels <- reshape2::melt(vsd.counts[select,])
   colnames(expressionLevels) <- c('geneId', 'sampleName', 'expressionLevel')
@@ -365,8 +384,8 @@ cat("\n The following tables list GO terms for up- and down-regulated genes. GO 
 ```
 
 ```{r goAnalysis, eval = runGO}
-genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 1,]) # change this to 0.1 and +1
-genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < -1,]) #change this to 0.1 and -1
+genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 0,]) 
+genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < 0,]) 
 ```
 
 ```{r goAnalysisTitleUp, eval = runGO, results='asis'}
@@ -376,7 +395,7 @@ cat("## GO Terms for Up-regulated Genes\n")
 ```{r goAnalysisUp, eval = runGO}
 goUp <- gProfileR::gprofiler(query = genesUp, 
                              organism = organism, 
-                             hier_filtering = "moderate",
+                             hier_filtering = "none",
                              significant = TRUE)
 DT::datatable(goUp, 
         extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
@@ -387,7 +406,7 @@ DT::datatable(goUp,
                        dom = 'Bfrtip',
                        buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
                        columnDefs = list(
-                         list(targets = c(0,1,7,8,11,13,14), visible = FALSE)
+                         list(targets = c(0,1,2,5,9,10,11,13,14), visible = FALSE)
                        )
                        ),
         filter = 'bottom'
@@ -401,7 +420,7 @@ cat("## GO Terms for Down-regulated Genes\n")
 ```{r goAnalysisDown, eval = runGO}
 goDown <- gProfileR::gprofiler(query = genesDown, 
                                organism = organism, 
-                               hier_filtering = "moderate", 
+                               hier_filtering = "none", 
                                significant = TRUE)
 DT::datatable(goDown, 
         extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
@@ -412,7 +431,7 @@ DT::datatable(goDown,
                        dom = 'Bfrtip',
                        buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
                        columnDefs = list(
-                         list(targets = c(0,1,7,8,11,13,14), visible = FALSE)
+                         list(targets = c(0,1,2,5,9,10,11,13,14), visible = FALSE)
                        )
                        ),
         filter = 'bottom'

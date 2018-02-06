@@ -14,12 +14,23 @@ chmod -R +w ${srcdir}/tests
 
 ./pigx-rnaseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
 
-if ! test -f "${srcdir}/tests/output/report/analysis1.salmon.deseq.report.html"
+if ! test -f "${srcdir}/tests/output/report/analysis1.salmon.transcripts.deseq.report.html"
 then
-  echo "ERROR: could not find report"
+  echo "ERROR: could not find report for SALMON at transcript level"
   exit 1
 fi
 
+if ! test -f "${srcdir}/tests/output/report/analysis1.salmon.genes.deseq.report.html"
+then
+  echo "ERROR: could not find report for SALMON at gene level"
+  exit 1
+fi
+
+if ! test -f "${srcdir}/tests/output/report/analysis1.star.deseq.report.html"
+then
+  echo "ERROR: could not find report for STAR"
+  exit 1
+fi
 
 message=$(./pigx-rnaseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv 2>&1 >/dev/null | tail -n1)
 
