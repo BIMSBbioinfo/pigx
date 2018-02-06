@@ -26,8 +26,6 @@ rule macs2:
     params:
         outpath     = os.path.join(PATH_PEAK, "{name}"),
         name        = "{name}",
-        threads     = 1,
-        mem         = '16G',
         macs2       = SOFTWARE['macs2']['executable'],
         params_macs = PARAMS['macs2']
     log:
@@ -70,9 +68,6 @@ rule sort_peak:
         get_macs_output
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.bed")
-    params:
-        threads = 1,
-        mem = '8G'
     message:"""
             Sorting peak:
                 input : {input}

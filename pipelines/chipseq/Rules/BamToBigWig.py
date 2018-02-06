@@ -7,8 +7,6 @@ rule bam2bed:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bed")
     params:
         extend   = PARAMS['extend'],
-        threads  = 1,
-        mem      = '16G',
         bamToBed = SOFTWARE['bamToBed']['executable']
     shell: """
         {params.bamToBed} -i {input.file} > {output.outfile}
@@ -21,8 +19,6 @@ rule bam2bigWig:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bw")
     params:
-        threads  = 1,
-        mem      = '16G',
         extend   = PARAMS['extend'],
         scale    = PARAMS['scale_bw'],
         Rscript  = SOFTWARE['Rscript']['executable']
