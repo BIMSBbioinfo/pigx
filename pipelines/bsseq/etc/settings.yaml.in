@@ -9,7 +9,7 @@ general:
     minimum-coverage: 10
     minimum-quality: 10
   differential-methylation:
-    cores: 20
+    cores: 1
     treatment-groups:
       - []
     annotation:
@@ -23,13 +23,12 @@ execution:
   nice: 19
   cluster:
     missing-file-timeout: 120
-    memory: 8G
     stack: 128M
     contact-email: none
   rules:
     __default__:
       threads: 1
-      memory: 8G
+      memory: 10G
     bismark_align_and_map_se:
       threads: 6
       memory: 19G

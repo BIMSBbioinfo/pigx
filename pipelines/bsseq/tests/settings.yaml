@@ -9,7 +9,7 @@ general:
     minimum-coverage: 1
     minimum-quality: 10
   differential-methylation:
-    cores: 20
+    cores: 1
     treatment-groups:
       - ['0', '1']
       - ['0', '2']
@@ -23,7 +23,6 @@ execution:
   jobs: 6
   nice: 19
   cluster:
-    memory: 8G
     stack: 128M
     queue: all.q
     contact-email: none

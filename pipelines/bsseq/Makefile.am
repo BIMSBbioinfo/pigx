@@ -33,15 +33,15 @@ dist_doc_DATA = 					\
   README.md
 
 EXTRA_DIST =										\
-  test/genome/myref_hg38_chr1_7291263_7302041.fasta	\
-  test/genome/refGene.hg19.bed.gz                       \
-  test/genome/cpgIslandExt.hg19.bed.gz                  \
-  test/in/PE_1.fq.gz								\
-  test/in/PE_2.fq.gz								\
-  test/in/SE_techrep1.fq.gz							\
-  test/in/SE_techrep2.fq.gz							\
-  test/sample_sheet.csv								\
-  test/settings.yaml
+  tests/genome/myref_hg38_chr1_7291263_7302041.fasta	\
+  tests/genome/refGene.hg19.bed.gz                       \
+  tests/genome/cpgIslandExt.hg19.bed.gz                  \
+  tests/in/PE_1.fq.gz								\
+  tests/in/PE_2.fq.gz								\
+  tests/in/SE_techrep1.fq.gz							\
+  tests/in/SE_techrep2.fq.gz							\
+  tests/sample_sheet.csv								\
+  tests/settings.yaml
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
 
