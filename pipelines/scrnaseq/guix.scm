@@ -144,6 +144,8 @@
      `(("dropseq-tools" ,dropseq-tools)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
+       ("python-pandas" ,python-pandas)
+       ("python-numpy" ,python-numpy)
        ("ghc-pandoc" ,ghc-pandoc)
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("snakemake" ,snakemake)

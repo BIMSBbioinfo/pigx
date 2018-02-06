@@ -13,7 +13,8 @@ def get_all_gene_ids (gtf_file):
         i = 0
         for line in f:
             m = re.search('gene_id "(.+?)"', line)
-            gene_ids.append(m.group(1))
+            if m != None:
+                gene_ids.append(m.group(1))
     return(set(gene_ids))
             
 # parse the gene x cell matrix file and return a matrix object, row attributes along with column attributes (necessary to construct a loom file)
