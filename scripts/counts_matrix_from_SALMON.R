@@ -20,6 +20,8 @@
 # R script takes outputs from salmon and uses tximport package to create a matrix
 # that is genes x samples
 
+library(data.table)
+
 args <- commandArgs(trailingOnly = TRUE)
 salmon_output_folder <- args[1]
 colDataFile <- args[2]
@@ -41,5 +43,36 @@ writeCounts <- function(colDataFile, salmon_output_folder, type) {
               quote = F, sep = '\t')
 }
 
+writeTPMcounts <- function(colDataFile, salmon_output_folder, type) {
+  colData <- read.table(colDataFile)
+  if(type == 'transcripts') {
+    files <- file.path(salmon_output_folder, rownames(colData), "quant.sf")
+  } else if ( type == 'genes') {
+    files <- file.path(salmon_output_folder, rownames(colData), "quant.genes.sf")
+  }
+  names(files) <- rownames(colData)
+
+  tpmTables <- lapply(names(files), function(n) {
+    f <- files[[n]]
+    df <- subset(fread(f), select = c('Name', 'TPM'))
+    colnames(df) <- c('Name', n)
+    return(df)
+  })
+  names(tpmTables) <- names(files)
+  
+  #tpmMatrix = data.frame(Reduce(function(...) merge(..., all = TRUE, by = c('Name')), tpmTables))
+  tpmMatrix = Reduce(function(...) merge(..., all = TRUE, by = c('Name')), tpmTables)
+  
+  rownames(tpmMatrix) <- tpmMatrix$Name
+  tpmMatrix <- tpmMatrix[-1]
+  write.table(x = tpmMatrix, 
+              file = file.path(salmon_output_folder, paste0("TPM_counts_from_SALMON.", type,".tsv")), 
+              quote = F, sep = '\t')
+} 
+
 writeCounts(colDataFile, salmon_output_folder, type = 'transcripts')
 writeCounts(colDataFile, salmon_output_folder, type = 'genes')
+
+
+writeTPMcounts(colDataFile, salmon_output_folder, type = 'transcripts')
+writeTPMcounts(colDataFile, salmon_output_folder, type = 'genes')

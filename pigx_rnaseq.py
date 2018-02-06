@@ -104,7 +104,10 @@ targets = {
           [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
           os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
           os.path.join(MULTIQC_DIR, 'multiqc_report.html')] +
-	  #expand(os.path.join(BIGWIG_DIR, '{sample}.bw'), sample = SAMPLES) +  
+	  [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
+           os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
+           os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
+           os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")] + 
 	  expand(os.path.join(BEDGRAPH_DIR, '{sample}.bedgraph'), sample = SAMPLES) +  
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
           expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) + 
@@ -159,7 +162,10 @@ targets = {
     'salmon_counts': {
         'description': "Get count matrix from SALMON quant.",
         'files': 
-          [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"), os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),]
+          [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"), 
+	   os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
+	   os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
+	   os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")]
     }, 
     'multiqc': {
         'description': "Get multiQC report based on STAR alignments and fastQC reports.", 
@@ -302,7 +308,9 @@ rule counts_from_SALMON:
       colDataFile = rules.translate_sample_sheet_for_report.output                  
   output: 
       os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
-      os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv")
+      os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"), 
+      os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
+      os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")
   log: os.path.join(LOG_DIR, 'salmon_import_counts.log')
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {input.colDataFile} >> {log} 2>&1"
 
