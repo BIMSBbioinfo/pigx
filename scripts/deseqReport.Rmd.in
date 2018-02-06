@@ -275,7 +275,7 @@ for (i in 1:length(pcaPlots)) {
 
 ## Correlation Plot
 
-The pairwise correlation plot provides a more detaield view of which samples are more similar or different.
+The pairwise correlation plot provides a more detailed view of which samples are more similar or different.
 
 ```{r plot_corr}
 M <- stats::cor(vsd.counts)
