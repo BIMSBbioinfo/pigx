@@ -157,6 +157,12 @@ UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genom
 COMBINED_UMI_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
+# Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects. 
+SCE_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"), genome = REFERENCE_NAMES)
+# ----------------------------------------------------------------------------- #
+
+
+# ----------------------------------------------------------------------------- #
 # Bam To BigWig
 BIGWIG = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
@@ -167,7 +173,7 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES
 print(RULE_ALL)
 
 
@@ -550,7 +556,6 @@ rule convert_matrix_from_txt_to_loom:
         
 # ----------------------------------------------------------------------------- #
 ## combines multiple loom files into one loom file
-# TODO: currently we assume that all input .loom files contain the same list of gene names as row attributes. Need to update this to account for otherwise.
 rule combine_UMI_matrices_into_loom:
     input:
         infile        = lambda wildcards: expand(os.path.join(PATH_MAPPED, "{name}", wildcards.genome, '_'.join(["{name}", wildcards.genome, 'UMI.Matrix.loom'])), name = SAMPLE_NAMES)
@@ -566,6 +571,20 @@ rule combine_UMI_matrices_into_loom:
     shell: "echo {input.infile} > {params.tmpfile}; python {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; rm {params.tmpfile}"
         
     
+# ----------------------------------------------------------------------------- #
+## Imports and preprocesses the combined loom files and saves as SingleCellExperiment.RDS objects. 
+rule convert_loom_to_singleCellExperiment:
+    input:
+        infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
+    output:
+        outfile       = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
+    message: """
+            Import loom file, preprocess and save as singleCellExperiment.RDS:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    shell: "Rscript {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --outFile={output.outfile}"
+
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
