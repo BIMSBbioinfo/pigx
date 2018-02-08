@@ -1,0 +1,53 @@
+---
+title: "PiGx-scRNAseq Report"
+author: "BIMSB Bioinformatics Platform"
+date: '`r date()`'
+params: 
+  sceRdsFile: ''
+  prefix: ''
+  workdir: '.'
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+library(cowplot)
+```
+
+# Description
+
+PiGx scRNAseq 
+
+This report was generated with PiGx RNAseq version 0.0.1.
+
+# Input Settings
+```{r printInputSettings}
+
+sceRdsFile <- params$sceRdsFile
+prefix <- params$prefix
+workdir <- params$workdir
+
+#gProfiler tool needs internet access to work. So, go analysis module is conditional
+runGO <- curl::has_internet() 
+
+inputParameterDesc <- c('.RDS format file containing a SingleCellExperiment object',
+                     'Prefix for output files',
+                     'Working directory'
+                     )
+inputParameterValues <- c(sceRdsFile,
+                          prefix,
+                          workdir)
+inputSettings <- data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = length(inputParameterValues),
+                         dom = 't'))
+```
+
+
+
