@@ -30,7 +30,7 @@ Arguments:
 --outFile Path to the writing location of the output .RDS file 
 
 Example:
-Rscript convert_loom_to_singleCellExperiment.R --loomFile=foo.loom --outFile=bar.RDS"
+Rscript convert_loom_to_singleCellExperiment.R --loomFile=foo.loom --outFile=foo.RDS"
 
 ## Help section
 if("--help" %in% args) {
@@ -56,16 +56,16 @@ names(argsL) <- argsDF$V1
 
 if(!("loomFile" %in% argsDF$V1)) {
   cat(help_command, "\n")
-  stop("Missing argument: loomFile Provide the path to .loom file")
+  stop("Missing argument: loomFile. Provide the path to .loom file")
 }
 
 if(!("outFile" %in% argsDF$V1)) {
   cat(help_command, "\n")
-  stop("Missing argument: outFile Provide the path to the output RDS file")
+  stop("Missing argument: outFile. Provide the path to the output RDS file")
 }
 
-
 loomFile = argsL$loomFile
+metaDataFile = argsL$metaDataFile
 outFile = argsL$outFile
 
 #2. load libraries
@@ -150,6 +150,48 @@ scaleDM <- function(dm) {
   return(scdm)
 }
 
+#' Given a DelayedMatrix object (genes on the row, cells on the column), 
+#' calculate basic statistics and return a DataFrame object
+#' 
+#' @param dm A DelayedMatrix object 
+#' @return A DataFrame object (nrow = number of genes) 
+#' of basic stats of genes versus cells
+getGeneStats <- function(m) {
+  #ndetected -> number of cells detected per gene
+  nCells <- rowSums(m > 0)
+  #max_gene -> maximum gene expression per gene detected in any cell
+  maxGene <- rowMaxs(m)
+  #mean_gene -> average expression per gene in all cells
+  meanGene <- rowMeans(m)
+  #mean_expr -> average expression per gene only in detected cells
+  meanExpr <- ifelse(nCells > 0, rowSums(m)/nCells, 0)
+  return(DataFrame('ndetected' = nCells, 
+                   'max_gene' = maxGene, 
+                   'mean_gene' = meanGene, 
+                   'mean_expr' = meanExpr))
+}
+
+#' Given a DelayedMatrix object (genes on the row, cells on the column), 
+#' calculate basic statistics and return a DataFrame object
+#' 
+#' @param dm A DelayedMatrix object 
+#' @return A DataFrame object (nrow = number of cells) 
+#' of basic stats of genes versus cells
+getCellStats <- function(m) {
+  #nGene -> number of genes detected per cell
+  nGene <- colSums(m > 0)
+  #max_gene -> maximum gene expression detected per cell
+  maxGene <- colMaxs(m)
+  #mean_gene -> average gene expression detected per cell
+  meanGene <- colMeans(m)
+  #mean_expr -> average non-zero gene expression per cell
+  meanExpr <- colSums(m)/nGene
+  return(DataFrame('nGene' = nGene, 
+                   'max_gene' = maxGene, 
+                   'mean_gene' = meanGene, 
+                   'mean_expr' = meanExpr))
+}
+
 #4. start analysis
 
 #4.1 import loom into SingleCellExperiment object
@@ -166,6 +208,14 @@ counts <- assays(sce)[[1]]
 
 #4.2 Normalize counts (get counts per million)
 counts_per_million <- round(getCPM(dm = counts), 2)
+
+##4.2.1 update cell stats using cpm values
+colData(sce) <- cbind(colData(sce), 
+                      getCellStats(m = counts_per_million))
+
+#4.2.2 update gene stats using cpm values
+rowData(sce) <- cbind(rowData(sce), 
+                      getGeneStats(m = counts_per_million))
 
 #4.3 scale normalized counts
 scaled_counts <- round(scaleDM(dm = counts_per_million), 2)
