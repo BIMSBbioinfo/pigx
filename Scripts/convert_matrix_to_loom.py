@@ -39,9 +39,10 @@ def fill_missing_genes_into_matrix(gene_ids, matrix, row_names, col_names):
 
 if __name__ == '__main__':
     
-    input_file = sys.argv[1]
-    gtf_file = sys.argv[2]
-    output_filepath = sys.argv[3] 
+    sample_id = sys.argv[1]
+    input_file = sys.argv[2]
+    gtf_file = sys.argv[3]
+    output_filepath = sys.argv[4]
                     
     print("Parsing umi matrix file",input_file)
     umi_matrix, row_names, col_names = parse_umi_matrix_file(input_file)
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     
     print("Converting matrix of shape",umi_matrix.shape,"into file",output_filepath)
     row_attrs = { "Genes": row_names}
-    col_attrs = { "Cells": col_names}
+    col_attrs = { "Cells": ['_'.join([sample_id, cn]) for cn in col_names] } #prepend sample ids to the cell ids
     loompy.create(output_filepath, umi_matrix, row_attrs, col_attrs)
     
     

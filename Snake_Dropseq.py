@@ -551,7 +551,7 @@ rule convert_matrix_from_txt_to_loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {input.infile} {input.gtf} {output.outfile} &> {log.log}"
+    shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
 
         
 # ----------------------------------------------------------------------------- #
