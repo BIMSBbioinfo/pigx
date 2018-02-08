@@ -156,8 +156,10 @@ scaleDM <- function(dm) {
 sce <- loom2sce(path = loomFile)
 #find cells with zero expression for all genes 
 zeros <- which(colSums(assays(sce)[[1]]) == 0)
-#subset sce object to exclude those cells
-sce <- sce[,-zeros]
+if(length(zeros) > 0){
+  #subset sce object to exclude those cells
+  sce <- sce[,-zeros]
+}
 
 #count matrix
 counts <- assays(sce)[[1]]
