@@ -1,19 +1,19 @@
 locations:
   input-dir: in/
   output-dir: out/
-  genome-dir: genome/
+  genome-file: genome/
   index-dir:
   gff-file:
 
 general:
-  assembly: 
+  assembly:
   params:
-    extend: 
+    extend:
     scale_bw:
     bowtie2:
         k:
     idr:
-        idr-threshold: 
+        idr-threshold:
     macs2:
         g:
         keep-dup:
@@ -44,13 +44,13 @@ execution:
       memory: 16G
 
 tools:
-    fastqc: 
+    fastqc:
         executable: @FASTQC@
         args: ""
-    bamToBed: 
+    bamToBed:
         executable: @BAMTOBED@
         args: ""
-    bowtie2: 
+    bowtie2:
         executable: @BOWTIE2@
         args: ""
         help: '-h'
@@ -60,13 +60,13 @@ tools:
              - 1
              - 2
              - U
-    bowtie2-build: 
+    bowtie2-build:
         executable: @BOWTIE2_BUILD@
         args: ""
-    bowtie2-inspect: 
+    bowtie2-inspect:
         executable: @BOWTIE2_INSPECT@
         args: ""
-    idr: 
+    idr:
         executable: @IDR@
         args: ""
         help: '-h'
@@ -77,7 +77,7 @@ tools:
             - output-file
             - l
             - plot
-    macs2: 
+    macs2:
         executable: @MACS2@
         args: ""
         help: 'callpeak -h'
@@ -86,19 +86,18 @@ tools:
             - c
             - outdir
             - n
-    perl: 
+    perl:
         executable: @PERL@
         args: ""
-    Rscript: 
+    Rscript:
         executable: @RSCRIPT@
         args: ""
-    samtools: 
+    samtools:
         executable: @SAMTOOLS@
         args: ""
-    python: 
+    python:
         executable: @PYTHON@
         args: ""
     bedToBigBed:
         executable: @BEDTOBIGBED@
         args: ""
-
