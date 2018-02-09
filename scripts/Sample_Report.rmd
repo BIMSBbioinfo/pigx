@@ -131,11 +131,12 @@ ggplotly(g)
 ---
 
 
-
-
-```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation']}
+```{r Read_Distribution_in_Genomic_Features_Header, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
 ncat('# Read Distribution in Genomic Features')
 ncat('## Signal profiles around genomic features')
+```
+
+```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation']}
 tab = lstats$Extract_Signal_Annotation$profiles
 genomic_locations = unique(tab$genomic_location)
 for(i in seq(genomic_locations)){
