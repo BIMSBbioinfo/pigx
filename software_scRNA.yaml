@@ -4,6 +4,7 @@ software:
     droptools: /home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/
     java: '/home/vfranke/.guix-profile/bin/java'
     R:
+        Rscript: /usr/bin/Rscript
         libraries:
             dropbead
 params:
