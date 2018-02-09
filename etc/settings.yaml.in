@@ -92,9 +92,6 @@ execution:
     prepare_annotation:
       threads:   1 
       memory:    16G
-    samtools_sort:
-      threads:   1
-      memory:    8G
     sort_peak:
       threads:   1 
       memory:    8G
