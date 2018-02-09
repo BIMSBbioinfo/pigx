@@ -93,13 +93,13 @@ setGeneric("AnnotateRanges",
 
 setMethod("AnnotateRanges",signature("GRanges","GRangesList"),
           function(
-              region, 
-              annotation, 
-              ignore.strand = FALSE, 
-              type          = 'precedence', 
+              region,
+              annotation,
+              ignore.strand = FALSE,
+              type          = 'precedence',
               null.fact     = 'None',
               collapse.char = ':'
-            
+
             ){
 
               if(! class(region) == 'GRanges')
@@ -153,11 +153,36 @@ GTFGetAnnotation = function(g, downstream=500, upstream=1000){
                     upstream=upstream)
     intron = GenomicRanges::setdiff(gene, exon)
 
+    tss_wide = gene
+    tss_wide = resize(tss_wide, width=1, fix='start')
+    tss_wide = resize(tss_wide, width=upstream, fix='end')
+    tss_wide = resize(tss_wide, width=width(tss_wide)+10000, fix='start')
+
+    tts_wide = gene
+    tts_wide = resize(tts_wide, width=1, fix='end')
+    tts_wide = resize(tts_wide, width=upstream, fix='start')
+    tts_wide = resize(tts_wide, width=width(tts_wide)+10000, fix='end')
+
+    splicing_donor    = exon
+    splicing_donor    = resize(splicing_donor, width = 1,   fix='end')
+    splicing_donor    = resize(splicing_donor, width = 250, fix='center')
+
+    splicing_acceptor = exon
+    splicing_acceptor = resize(splicing_acceptor, width = 1,   fix='start')
+    splicing_acceptor = resize(splicing_acceptor, width = 250, fix='center')
+
     values(exon) = NULL
-    gl = GRangesList(tss    = tss,
-                     tts    = tts,
-                     exon   = exon,
-                     intron = intron)
+    gl = list(tss      = tss,
+              tts      = tts,
+              exon     = exon,
+              intron   = intron,
+              gene     = gene,
+              tss_wide = tss_wide,
+              tts_wide = tts_wide,
+              splicing_acceptor = splicing_acceptor,
+              splicing_donor    = splicing_donor)
+    gl = GRangesList(lapply(gl, function(x){values(x) = NULL;x}))
+    gl = endoapply(gl, function(x)x[width(x) > 1])
 
     return(gl)
 
@@ -203,13 +228,51 @@ Annotate_Reads = function(
 #'
 #' @return a data.frame with location of bam files
 
-.listBamFiles = function(path){
-    
+.list_BamFiles = function(path){
+
     suppressPackageStartupMessages(library(dplyr))
     suppressPackageStartupMessages(library(stringr))
-    d = data.frame(file = list.files(path_mapped, full.names=TRUE, pattern='bam$', recursive=TRUE)) %>%
-        mutate(bam_name = basename(file)) %>%
-        dplyr::filter(str_detect(bam_name,'sorted')) %>%
+    suppressPackageStartupMessages(library(tibble))
+    d = tibble(bam_file = list.files(path,
+                                         full.names=TRUE,
+                                         pattern='bam$',
+                                         recursive=TRUE)) %>%
+        mutate(bam_name = basename(bam_file))             %>%
+        dplyr::filter(str_detect(bam_name,'sorted'))      %>%
         mutate(bam_name = str_replace(bam_name,'.sorted.bam',''))
+    return(d)
+}
+
+# ---------------------------------------------------------------------------- #
+.list_qsortPeaks = function(path){
+
+    suppressPackageStartupMessages(library(dplyr))
+    suppressPackageStartupMessages(library(stringr))
+    suppressPackageStartupMessages(library(tibble))
+    d = tibble(bed_file = list.files(path, full.names=TRUE, pattern='bed$', recursive=TRUE)) %>%
+        mutate(chip_name = basename(bed_file)) %>%
+        dplyr::filter(str_detect(chip_name,'sort')) %>%
+        mutate(chip_name = str_replace(chip_name,'_qsort.bed',''))
+    return(d)
+}
+
+# ---------------------------------------------------------------------------- #
+# for bowtie2
+MappingStats_Bowtie2 = function(path){
+
+    require(stringr)
+    require(data.table)
+    s = scan(path, what='character', sep='\t', quiet=TRUE)
+    s = str_replace(s,'^ +','')
+    s = str_replace(s,' .+','')
+    s = str_replace(s,'%','')
+    if(length(s) > 6)
+        s = s[c(1:5, 15)]
+    s = as.numeric(s)
+    d = data.table(value = s)
+    d$stat = c('reads.total','reads.unpaired','reads.unmapped','reads.uniq','reads.mult','alignment.rate')
+    d = rbind(d, data.table(
+        stat  ='mapped.total',
+        value = subset(d,stat=='reads.uniq')$value + subset(d,stat=='reads.mult')$value))
     return(d)
 }
