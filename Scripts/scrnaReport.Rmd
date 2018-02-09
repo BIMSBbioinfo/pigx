@@ -31,11 +31,9 @@ sceRdsFile <- params$sceRdsFile
 workdir <- params$workdir
 
 inputParameterDesc <- c('RDS format file containing a SingleCellExperiment object',
-                     'Prefix for output files',
                      'Working directory'
                      )
 inputParameterValues <- c(sceRdsFile,
-                          prefix,
                           workdir)
 inputSettings <- data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
