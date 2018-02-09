@@ -49,6 +49,9 @@ with open(os.path.join(workflow.basedir, 'software_scRNA.yaml'), 'r') as stream:
 APP_PARAMS = SOFTWARE_CONFIG['params']
 SOFTWARE = SOFTWARE_CONFIG['software']
 
+RSCRIPT_EXEC     = SOFTWARE['R']['Rscript']
+
+
 
 # ----------------------------------------------------------------------------- #
 # Variables
@@ -60,8 +63,12 @@ PARAMS = config['params']
 
 # ----------------------------------------------------------------------------- #
 # PATHS
+OUTPUT_DIR = config['locations']['output-dir']
 PATH_FASTQ = config['fastq']
-PATH_ANNOTATION = 'Annotation'
+PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
+PATH_MAPPED   = os.path.join(OUTPUT_DIR, 'Mapped')
+PATH_LOG      = os.path.join(OUTPUT_DIR, 'Log')
+
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
 PATH_GTF_PRIMARY        = config['annotation']['primary']['gtf']
@@ -76,13 +83,6 @@ if 'secondary' in set(config['annotation'].keys()):
     GENOME_NAME_MIX = GENOME_NAME_PRIMARY + '_' + GENOME_NAME_SECONDARY
     PATH_ANNOTATION_MIX = os.path.join(PATH_ANNOTATION, GENOME_NAME_MIX)
     REFERENCE_NAMES = REFERENCE_NAMES + [GENOME_NAME_MIX]
-
-
-#PATH_BASE = os.path.join(os.environ['BASEPATH'],'Dropseq')
-
-PATH_MAPPED   = 'Mapped'
-PATH_LOG      = 'Log'
-PATH_MARKDOWN = os.path.join(workflow.basedir,'Templates/scRNA_Report.rmd')
 
 
 # ----------------------------------------------------------------------------- #
@@ -161,6 +161,10 @@ COMBINED_UMI_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), g
 SCE_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"), genome = REFERENCE_NAMES)
 # ----------------------------------------------------------------------------- #
 
+# ----------------------------------------------------------------------------- #
+## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report  
+REPORT_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html"), genome = REFERENCE_NAMES) 
+# ----------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
 # Bam To BigWig
@@ -173,7 +177,7 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
 print(RULE_ALL)
 
 
@@ -583,8 +587,25 @@ rule convert_loom_to_singleCellExperiment:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "Rscript {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --outFile={output.outfile}"
+    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --outFile={output.outfile}"
 
+
+# ----------------------------------------------------------------------------- #
+## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report  
+rule report:
+    input:
+        infile        = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
+    output:
+        outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
+    params:
+        reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd")
+    log: os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
+    message: """
+            Generate an HTML report from SingleCellExperiment.RDS:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --prefix={wildcards.genome} --workdir={PATH_MAPPED}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
