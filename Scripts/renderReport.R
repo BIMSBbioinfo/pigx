@@ -3,6 +3,7 @@
 # This script takes as input an RDS file containing a SingleCellExperiment object 
 # and renders the scrnaReport.Rmd script 
 
+library(rmarkdown)
 
 #1. Collect arguments
 args <- commandArgs(TRUE)
