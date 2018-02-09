@@ -10,7 +10,8 @@ rule multiqc:
         path_fastqc = PATH_QC,
         threads     = 1,
         mem         = '8G',
-        multiqc = SOFTWARE['multiqc']['executable']
+        multiqc     = 'multiqc'
+        # multiqc = SOFTWARE['multiqc']['executable']
     log:
         os.path.join(PATH_LOG, 'multiqc.log')
     message:"""
