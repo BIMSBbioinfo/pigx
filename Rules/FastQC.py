@@ -9,8 +9,6 @@ rule fastqc:
         outfile = os.path.join(PATH_QC, "{folder}", "{name}_fastqc.zip")
     params:
         outpath = os.path.join(PATH_QC, "{folder}"),
-        threads = 1,
-        mem     = '8G',
         fastqc  = SOFTWARE['fastqc']['executable']
     log:
         os.path.join(PATH_LOG, "{name}.fastqc.log")

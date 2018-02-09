@@ -4,9 +4,6 @@ rule link_annotation:
             annotation = ANNOTATION,
         output:
             outfile = os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')
-        params:
-            threads   = 1,
-            mem       = '16G',
         message:"""
                 Running: link_annotation:
                     output: {output.outfile}
@@ -23,8 +20,6 @@ rule prepare_annotation:
         output:
             outfile = os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')
         params:
-            threads   = 1,
-            mem       = '16G',
             scriptdir = SCRIPT_PATH,
             Rscript   = SOFTWARE['Rscript']['executable']
         log:

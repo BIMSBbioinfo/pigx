@@ -28,8 +28,6 @@ rule bowtie2_build:
         outfile = PREFIX + '.1.bt2'
     params:
         prefix  = PREFIX,
-        threads = 1,
-        mem = '32G',
         bowtie2_build = SOFTWARE['bowtie2-build']['executable']
     log:
         os.path.join(PATH_LOG, "bowtie2_build.log")
@@ -51,8 +49,6 @@ rule index_to_chrlen:
             outfile = PREFIX + '.chrlen.txt'
         params:
             prefix  = PREFIX,
-            threads = 1,
-            mem     = '1G',
             bowtie2_inspect = SOFTWARE['bowtie2-inspect']['executable']
         log:
             os.path.join(PATH_LOG, "index_to_chrlen.log")
@@ -117,8 +113,7 @@ rule bowtie2:
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
     params:
-        threads        = 2,
-        mem            =  '16G',
+        threads        = config['execution']['rules']['bowtie2']['threads'],
         bowtie2        = SOFTWARE['bowtie2']['executable'],
         samtools       = SOFTWARE['samtools']['executable'],
         library        = get_library_type,
@@ -141,7 +136,7 @@ rule bowtie2:
 
         command = " ".join(
         [params.bowtie2,
-        '-p', str(params.threads),
+        '-p', '{params.threads}',
         '-x', genome,
         map_args,
         join_params("bowtie2", PARAMS, params.params_bowtie2),
@@ -157,8 +152,7 @@ rule samtools_sort:
     output:
         os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
     params:
-        threads = 4,
-        mem = '16G',
+        threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     message:"""
             Sorting mapped reads:
@@ -176,8 +170,6 @@ rule samtools_index:
     output:
         os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai")
     params:
-        threads = 1,
-        mem = '8G',
         samtools = SOFTWARE['samtools']['executable']
     message:"""
         Indexing bam file:\n

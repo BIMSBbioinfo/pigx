@@ -6,8 +6,6 @@ rule extract_signal_annotation:
         output:
             outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds')
         params:
-            threads        = 1,
-            mem            = '16G',
             peakname       = '{name}',
             number_of_bins = 40,
             scriptdir      = SCRIPT_PATH,

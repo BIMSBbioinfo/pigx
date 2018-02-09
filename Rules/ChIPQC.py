@@ -8,8 +8,6 @@ rule chipqc:
     output:
         outfile  = os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds")
     params:
-        threads         = 1,
-        mem             = '8G',
         use_longest_chr = 'TRUE',
         sample_name     = "{name}",
         sample_sheet    = SAMPLE_SHEET,
