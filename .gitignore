@@ -16,3 +16,4 @@ run/
 Tests/out
 Tests/test.sh
 .DS_Store
+config.json
