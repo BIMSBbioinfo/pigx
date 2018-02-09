@@ -15,3 +15,4 @@ etc/settings.yaml
 run/
 Tests/out
 Tests/test.sh
+.DS_Store
