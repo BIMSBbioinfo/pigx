@@ -69,5 +69,8 @@ Summarize_Statistics_List = function(
     message('SSD ...')
         lsum$SSDAv = mean(unlist(lout$SSD))
 
+    message('readlength ...')
+        lsum$readlength = lout$readlength
+
     return(lsum)
 }
