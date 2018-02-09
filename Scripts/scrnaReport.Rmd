@@ -4,6 +4,7 @@ author: "BIMSB Bioinformatics Platform"
 date: "`r date()`"
 params:
   sceRdsFile: ''
+  outFile: ''
   workdir: .
 ---
 
@@ -29,12 +30,15 @@ This report was generated with PiGx RNAseq version 0.0.1.
 
 sceRdsFile <- params$sceRdsFile
 workdir <- params$workdir
+outFile <- params$outFile
 
 inputParameterDesc <- c('RDS format file containing a SingleCellExperiment object',
-                     'Working directory'
+                     'Working directory',
+                     'Path to HTML report output'
                      )
 inputParameterValues <- c(sceRdsFile,
-                          workdir)
+                          workdir, 
+                          outFile)
 inputSettings <- data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
                             stringsAsFactors = FALSE)
@@ -106,7 +110,7 @@ for (i in 1:length(cellStatsPlots)) {
 }
 ```
 
-
+# Session Information
 ```{r sessionInfo}
 sessionInfo()
 ```
