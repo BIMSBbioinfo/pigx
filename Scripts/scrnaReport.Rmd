@@ -1,18 +1,21 @@
 ---
 title: "PiGx-scRNAseq Report"
 author: "BIMSB Bioinformatics Platform"
-date: '`r date()`'
-params: 
+date: "`r date()`"
+params:
   sceRdsFile: ''
-  prefix: ''
-  workdir: '.'
+  workdir: .
 ---
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = params$workdir)
 library(cowplot)
+library(DT)
+library(Seurat)
+library(SingleCellExperiment)
+library(dplyr)
+library(data.table)
 ```
 
 # Description
@@ -25,13 +28,9 @@ This report was generated with PiGx RNAseq version 0.0.1.
 ```{r printInputSettings}
 
 sceRdsFile <- params$sceRdsFile
-prefix <- params$prefix
 workdir <- params$workdir
 
-#gProfiler tool needs internet access to work. So, go analysis module is conditional
-runGO <- curl::has_internet() 
-
-inputParameterDesc <- c('.RDS format file containing a SingleCellExperiment object',
+inputParameterDesc <- c('RDS format file containing a SingleCellExperiment object',
                      'Prefix for output files',
                      'Working directory'
                      )
@@ -49,5 +48,67 @@ DT::datatable(data = inputSettings,
                          dom = 't'))
 ```
 
+First a pre-generated SingleCellExperiment object is read.
+This object must have the following `assays`: 
+  - cnts (row read counts matrix per gene X cell) 
+  - cpm (`cnts` object normalized into counts per million) 
+  - scale (centered and scaled version of `cpm`)
+And the following `reduced dimension` datasets:
+  - PCA: Principle Component Analysis values for each cell (at least top 10 components)
+  - TSNE: t-SNE analysis values of for each cell (at least top 2 components)
+TODO: 
+  - VariableGenes as a DataFrame object in `rowData` slot
+  - cell cycle stage scoring 
+  
+```{r read-sce-object}
+sce <- readRDS(file = sceRdsFile)
+```
+
+# Results
+
+```{r cell-stats}
+plotCellStats <- function(df, x, y, label_x, label_y, title) {
+  p <- ggplot(df, aes_string(x=x, y=y)) +
+  geom_boxplot() +
+  labs(x = label_x, y = label_y, title = title) + 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
+  return(p)
+}
+
+plotDesc <- list('nGene' = c('Sample', 
+                          'Number of detected genes', 
+                          'Number of detected genes per cell'), 
+              'max_gene' = c('Sample',
+                             'Maximum gene expression per cell',
+                             'Maximum gene expression'),
+              'mean_expr' = c('Sample',
+                              'Average gene expression',
+                              'Average gene expression per cell\nfor genes with >0 UMI'))
+
+cellStatsPlots <- lapply(names(plotDesc), function(y){
+  p <- plotCellStats(df = as.data.frame(colData(sce)), 
+                x = 'sample_id',
+                y = y, 
+                label_x = plotDesc[[y]][1], 
+                label_y = plotDesc[[y]][2],
+                title = plotDesc[[y]][3])
+  return(p)
+})
+names(cellStatsPlots) <- paste(lapply(plotDesc, function(x) x[2]))
+```
+
+## Cell Statistics {.tabset}
+
+```{r cellStatsPlots, results='asis', echo = FALSE}
+for (i in 1:length(cellStatsPlots)) {
+  cat("### ",names(cellStatsPlots)[i],"\n")
+  print(cellStatsPlots[[i]])
+  cat('\n\n')
+}
+```
 
 
+```{r sessionInfo}
+sessionInfo()
+```
