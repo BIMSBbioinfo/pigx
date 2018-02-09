@@ -60,7 +60,7 @@ if __name__ == '__main__':
     
     print("Converting matrix of shape",umi_matrix.shape,"into file",output_filepath)
     row_attrs = { "Genes": row_names}
-    col_attrs = { "Cells": ['_'.join([sample_id, cn]) for cn in col_names] } #prepend sample ids to the cell ids
+    col_attrs = { "cell_id": ['_'.join([sample_id, cn]) for cn in col_names] } #prepend sample ids to the cell ids
     loompy.create(output_filepath, umi_matrix, row_attrs, col_attrs)
     
     

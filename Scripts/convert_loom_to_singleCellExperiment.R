@@ -27,10 +27,11 @@ ready for reporting.
 
 Arguments:
 --loomFile Path to .loom file from the scRNA-seq experiment
+--metaDataFile Experiment meta data file in tsv format (minimally with mappings between cell ids and sample  ids)
 --outFile Path to the writing location of the output .RDS file 
 
 Example:
-Rscript convert_loom_to_singleCellExperiment.R --loomFile=foo.loom --outFile=foo.RDS"
+Rscript convert_loom_to_singleCellExperiment.R --loomFile=foo.loom --metaDataFile bar.tsv --outFile=foo.RDS"
 
 ## Help section
 if("--help" %in% args) {
@@ -59,6 +60,11 @@ if(!("loomFile" %in% argsDF$V1)) {
   stop("Missing argument: loomFile. Provide the path to .loom file")
 }
 
+if(!("metaDataFile" %in% argsDF$V1)) {
+  cat(help_command, "\n")
+  stop("Missing argument: metaDataFile Provide the path to meta data file")
+}
+
 if(!("outFile" %in% argsDF$V1)) {
   cat(help_command, "\n")
   stop("Missing argument: outFile. Provide the path to the output RDS file")
@@ -74,6 +80,8 @@ library(SingleCellExperiment)
 library(scater)
 library(scran)
 library(DelayedMatrixStats)
+library(DelayedArray)
+library(data.table)
 
 #3. Define functions
 
@@ -158,13 +166,13 @@ scaleDM <- function(dm) {
 #' of basic stats of genes versus cells
 getGeneStats <- function(m) {
   #ndetected -> number of cells detected per gene
-  nCells <- rowSums(m > 0)
+  nCells <- DelayedArray::rowSums(m > 0)
   #max_gene -> maximum gene expression per gene detected in any cell
-  maxGene <- rowMaxs(m)
+  maxGene <- DelayedArray::rowMaxs(m)
   #mean_gene -> average expression per gene in all cells
-  meanGene <- rowMeans(m)
+  meanGene <- DelayedArray::rowMeans(m)
   #mean_expr -> average expression per gene only in detected cells
-  meanExpr <- ifelse(nCells > 0, rowSums(m)/nCells, 0)
+  meanExpr <- ifelse(nCells > 0, DelayedArray::rowSums(m)/nCells, 0)
   return(DataFrame('ndetected' = nCells, 
                    'max_gene' = maxGene, 
                    'mean_gene' = meanGene, 
@@ -179,13 +187,13 @@ getGeneStats <- function(m) {
 #' of basic stats of genes versus cells
 getCellStats <- function(m) {
   #nGene -> number of genes detected per cell
-  nGene <- colSums(m > 0)
+  nGene <- DelayedArray::colSums(m > 0)
   #max_gene -> maximum gene expression detected per cell
-  maxGene <- colMaxs(m)
+  maxGene <- DelayedArray::colMaxs(m)
   #mean_gene -> average gene expression detected per cell
-  meanGene <- colMeans(m)
+  meanGene <- DelayedArray::colMeans(m)
   #mean_expr -> average non-zero gene expression per cell
-  meanExpr <- colSums(m)/nGene
+  meanExpr <- DelayedArray::colSums(m)/nGene
   return(DataFrame('nGene' = nGene, 
                    'max_gene' = maxGene, 
                    'mean_gene' = meanGene, 
@@ -197,11 +205,15 @@ getCellStats <- function(m) {
 #4.1 import loom into SingleCellExperiment object
 sce <- loom2sce(path = loomFile)
 #find cells with zero expression for all genes 
-zeros <- which(colSums(assays(sce)[[1]]) == 0)
+zeros <- which(DelayedArray::colSums(assays(sce)[[1]]) == 0)
 if(length(zeros) > 0){
   #subset sce object to exclude those cells
   sce <- sce[,-zeros]
 }
+#4.1.1 update colData with additional meta data
+colData(sce) <- merge(colData(sce), 
+                      DataFrame(data.table::fread(metaDataFile)),
+                      by = 'cell_id')
 
 #count matrix
 counts <- assays(sce)[[1]]

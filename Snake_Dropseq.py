@@ -65,7 +65,7 @@ PATH_ANNOTATION = 'Annotation'
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
 PATH_GTF_PRIMARY        = config['annotation']['primary']['gtf']
-
+PATH_META_DATA          = config['metadata']
 
 GENOME_NAME_MIX = None
 if 'secondary' in set(config['annotation'].keys()):
@@ -583,7 +583,7 @@ rule convert_loom_to_singleCellExperiment:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "Rscript {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --outFile={output.outfile}"
+    shell: "Rscript {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --outFile={output.outfile}"
 
 
 # ----------------------------------------------------------------------------- #
