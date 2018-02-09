@@ -5,7 +5,7 @@ rule link_genome:
     output:
         outfile = GENOME_FASTA
     params:
-        prefix  = PREFIX,
+        prefix  = GENOME_PREFIX_PATH,
         threads = 1,
         mem     = '1G',
     log:
@@ -25,9 +25,9 @@ rule bowtie2_build:
     input:
         genome = GENOME_FASTA
     output:
-        outfile = PREFIX + '.1.bt2'
+        outfile = INDEX_PREFIX_PATH + '.1.bt2'
     params:
-        prefix  = PREFIX,
+        prefix  = INDEX_PREFIX_PATH,
         bowtie2_build = SOFTWARE['bowtie2-build']['executable']
     log:
         os.path.join(PATH_LOG, "bowtie2_build.log")
@@ -46,9 +46,9 @@ rule index_to_chrlen:
         input:
             rules.bowtie2_build.output
         output:
-            outfile = PREFIX + '.chrlen.txt'
+            outfile = GENOME_PREFIX_PATH + '.chrlen.txt'
         params:
-            prefix  = PREFIX,
+            prefix  = GENOME_PREFIX_PATH,
             bowtie2_inspect = SOFTWARE['bowtie2-inspect']['executable']
         log:
             os.path.join(PATH_LOG, "index_to_chrlen.log")
@@ -68,7 +68,7 @@ rule construct_genomic_windows:
         input:
             infile = rules.index_to_chrlen.output.outfile
         output:
-            outfile = PREFIX + '.GenomicWindows.GRanges.rds'
+            outfile = GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds'
         params:
             threads   = 1,
             mem       = '8',
@@ -90,7 +90,7 @@ rule extract_nucleotide_frequency:
             genome_fasta    = GENOME_FASTA, 
             tilling_windows = rules.construct_genomic_windows.output.outfile
         output:
-            outfile = PREFIX + '.NucleotideFrequency.GRanges.rds'
+            outfile = GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds'
         params:
             threads   = 1,
             mem       = '8',

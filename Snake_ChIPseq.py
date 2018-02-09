@@ -108,8 +108,17 @@ if GENOME_ORIG == None:
 else:
     prefix_default = os.path.join(PATH_INDEX, GENOME)
 
+# set_default is a function of three arguments
+# key, default, dictionary
+# if dictionary[key] does not exist, it returns default
 INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  config['general'])
-PREFIX = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
+
+# defines the link to the genome location
+GENOME_PREFIX_PATH = os.path.join(prefix_default, INDEX_PREFIX_NAME)
+
+# defines the location of the index (if the index is not specified)
+INDEX_PREFIX_PATH  = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
+
 
 
 # ---------------------------------------------------------------------------- #
@@ -129,13 +138,13 @@ for i in NAMES:
 # Default output files from the pipeline
 
 COMMAND         = []
-GENOME_FASTA    = [PREFIX + '.fa']
-INDEX           = [PREFIX + '.1.bt2']
+GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
+INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
 BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
-CHRLEN          = [PREFIX + '.chrlen.txt']
-TILLING_WINDOWS = [PREFIX + '.GenomicWindows.GRanges.rds']
-NUCLEOTIDE_FREQ = [PREFIX + '.NucleotideFrequency.GRanges.rds']
+CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
+TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
+NUCLEOTIDE_FREQ = [GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']
 FASTQC          = [FASTQC_DICT[i]['fastqc'] for i in list(FASTQC_DICT.keys())]
 MULTIQC         = [os.path.join(PATH_REPORTS, "multiqc.html")]
 ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), name=NAMES)
