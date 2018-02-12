@@ -3,8 +3,9 @@ title: "PiGx-scRNAseq Report"
 author: "BIMSB Bioinformatics Platform"
 date: "`r date()`"
 params:
-  sceRdsFile: ''
-  outFile: ''
+  covariates: time, replicate
+  outFile: test.scRNA.html
+  sceRdsFile: /data/local/buyar/pigx/scrna/integrate_report/results_test3/Mapped/hg19.SingleCellExperiment.RDS
   workdir: .
 ---
 
@@ -13,9 +14,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = params$workdir)
 library(cowplot)
 library(DT)
-library(Seurat)
 library(SingleCellExperiment)
-library(dplyr)
 library(data.table)
 ```
 
@@ -31,14 +30,17 @@ This report was generated with PiGx RNAseq version 0.0.1.
 sceRdsFile <- params$sceRdsFile
 workdir <- params$workdir
 outFile <- params$outFile
+covariates <- gsub(' ', '', unlist(strsplit(x = params$covariates, split = ',')))
 
 inputParameterDesc <- c('RDS format file containing a SingleCellExperiment object',
                      'Working directory',
-                     'Path to HTML report output'
+                     'Path to HTML report output',
+                     'Covariates to use when plotting (PCA and t-SNE)'
                      )
 inputParameterValues <- c(sceRdsFile,
                           workdir, 
-                          outFile)
+                          outFile, 
+                          paste0(covariates, collapse = ', '))
 inputSettings <- data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
                             stringsAsFactors = FALSE)
@@ -50,6 +52,7 @@ DT::datatable(data = inputSettings,
                          dom = 't'))
 ```
 
+
 First a pre-generated SingleCellExperiment object is read.
 This object must have the following `assays`: 
   - cnts (row read counts matrix per gene X cell) 
@@ -58,6 +61,7 @@ This object must have the following `assays`:
 And the following `reduced dimension` datasets:
   - PCA: Principle Component Analysis values for each cell (at least top 10 components)
   - TSNE: t-SNE analysis values of for each cell (at least top 2 components)
+
 TODO: 
   - VariableGenes as a DataFrame object in `rowData` slot
   - cell cycle stage scoring 
@@ -109,6 +113,45 @@ for (i in 1:length(cellStatsPlots)) {
   cat('\n\n')
 }
 ```
+
+## Cell Composition
+
+```{r definePlotPCAFunction, include=TRUE, fig.width=35, fig.height=5}
+plotPCA <- function(df, dim1, dim2, title = NULL, color_by = NULL) {
+  p <- ggplot2::ggplot(df, aes_string(x = dim1, y = dim2)) +
+    geom_point(aes_string(color = color_by), size = 0.5) +
+    labs(title = title)
+  return(p)
+}
+```
+
+```{r CellComposition}
+pcaData <- as.data.table(cbind(colData(sce), sce@reducedDims$PCA))
+
+pcaPlotList <- lapply(covariates, function(cov) {
+  pL<- lapply(paste0('PC', c(2:8)), function(pc) {
+  myTitle <- paste('PC1 vs', pc)
+  plotPCA(df = pcaData, dim1 = 'PC1', dim2 = pc, title = myTitle, color_by = cov)
+  })
+  names(pL) <- paste0('PC1 vs PC',c(2:8))
+  return(pL)
+  }
+)
+names(pcaPlotList) <- covariates
+```
+
+
+```{r pcaPlotList, results='asis', echo = FALSE}
+for(cov in names(pcaPlotList)) {
+  cat("### PCA - Colored by",cov," {.tabset} \n")
+  for (i in 1:length(pcaPlotList[[cov]])) {
+    cat("#### ",names(pcaPlotList[[cov]])[i],"\n")
+    print(pcaPlotList[[cov]][[i]])
+    cat('\n\n')
+  }
+}
+```
+
 
 # Session Information
 ```{r sessionInfo}

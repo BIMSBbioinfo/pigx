@@ -59,6 +59,7 @@ GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
 REFERENCE_NAMES = [GENOME_NAME_PRIMARY]
 
 SAMPLE_NAMES = config['samples'].keys()
+COVARIATES = config['covariates']
 PARAMS = config['params']
 
 # ----------------------------------------------------------------------------- #
@@ -611,7 +612,7 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
+    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:

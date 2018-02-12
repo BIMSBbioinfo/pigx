@@ -17,12 +17,14 @@ renderReport.R: Run scrnaReport.Rmd script to render an HTML report
 Arguments:
 --reportFile Path to .loom file from the scRNA-seq experiment
 --sceRdsFile Path to the RDS format file containing the SingleCellExperiment object
+--covariates Comma-sepated list of factors to use when plotting PCA/t-SNE 
 --workdir Path to working directory where the output files will be written
 --prefix Prefix to use for output file
 
 Example:
 Rscript renderReport.R --reportFile=<path to scranReport.Rmd> \\\
                        --sceRdsFile=<path to sce.RDS> \\\
+                       --covariates='Age,Sex,Treatment' \\\
                        --workdir=<path to working directory> \\\
                        --prefix=MyProjectName \n"
                         
@@ -59,6 +61,14 @@ if(!("sceRdsFile" %in% argsDF$V1)) {
       containing the SingleCellExperiment object.")
 }
 
+if(!("covariates" %in% argsDF$V1)) {
+  cat(help_command, "\n")
+  covariates <- 'sample_id'
+  warning("No covariates provided. Will use 'sample_id' as the only covariate when plotting PCA/t-SNE\n")
+} else {
+  covariates <- argsL$covariates
+}
+
 if(!("prefix" %in% argsDF$V1)) {
   cat(help_command, "\n")
   prefix <- 'PiGx'
@@ -81,11 +91,13 @@ sceRdsFile <- argsL$sceRdsFile
 #2. Define report rendering function
 #' runReport
 #' 
-#' Generate a DESeq2 Report in a self-contained HTML file
-#' 
+#' Generate a PiGx-scRNAseq Report in a self-contained HTML file
+#'
 #' @param reportFile Path to .Rmd script to generate a HTML report
 #' @param sceRdsFile Path to the RDS format file containing the
 #'   SingleCellExperiment object
+#' @param covariates Comma-sepated list of factors to use when plotting
+#'   PCA/t-SNE
 #' @param workdir Path to working directory where the output files will be
 #'   written
 #' @param prefix Prefix to be attached to the beginning of output files
@@ -94,6 +106,7 @@ sceRdsFile <- argsL$sceRdsFile
 #'   experiment
 runReport <- function(reportFile, 
                       sceRdsFile, 
+                      covariates, 
                       workdir = getwd(),
                       prefix = 'PiGx') {
   
@@ -116,6 +129,7 @@ runReport <- function(reportFile,
     ),
     output_options = list(self_contained = selfContained),
     params = list(sceRdsFile = sceRdsFile,
+                  covariates = covariates, 
                   outFile = outFile,
                   workdir = workdir),
     quiet = FALSE
@@ -128,6 +142,7 @@ runReport <- function(reportFile,
 
 runReport(reportFile = reportFile, 
           sceRdsFile = sceRdsFile, 
+          covariates = covariates,
           workdir = workdir,
           prefix = prefix)
 

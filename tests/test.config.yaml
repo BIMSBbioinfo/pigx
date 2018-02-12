@@ -13,6 +13,8 @@ fastq: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/sample_data/reads'
 
 metadata: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/metaData.tsv'
 
+covariates: 'time, replicate'
+
 samples:
 
     WT_NHDF_HSV1_0h_br1:
