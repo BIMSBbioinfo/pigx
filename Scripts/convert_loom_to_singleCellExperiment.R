@@ -135,14 +135,15 @@ loom2sce <- function(path) {
   return(sce)
 }
 
-#' Given a DelayedMatrix object (genes on the row, cells on the column), calculate 
-#' counts per million
-#' 
+#' Given a DelayedMatrix object (genes on the row, cells on the column),
+#' calculate counts per million
+#'
 #' @param dm A DelayedMatrix object containing counts of genes per cell
-#' @return A DelayedMatrix object of normalized counts per million of genes per cell
+#' @return A DelayedMatrix object of normalized counts per million of genes per
+#'   cell in log2 scale
 getCPM <- function(dm) {
   cpm <- t((t(dm)/DelayedMatrixStats::rowSums2(t(dm)) * 10^6))
-  return(cpm)
+  return(log2(cpm+1))
 }
 
 #' Given a DelayedMatrix object (genes on the row, cells on the column), scale the 
@@ -258,7 +259,7 @@ sce <- scater::runPCA(object = sce, ncomponents = 10, exprs_values = 'scale')
 
 message(date()," Computing t-SNE")
 #4.6 get t-SNE results
-sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')#,exprs_values = 'PCA')
+sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')
 
 #4.7 get highly variable genes 
 #fit <- scran::trendVar(x = sce, parametric=TRUE, assay.type = 'cpm', use.spikes = FALSE)
