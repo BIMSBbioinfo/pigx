@@ -117,7 +117,7 @@ for (i in 1:length(cellStatsPlots)) {
 ## Cell Composition
 
 ```{r definePlotPCAFunction, include=TRUE, fig.width=35, fig.height=5}
-plotPCA <- function(df, dim1, dim2, title = NULL, color_by = NULL) {
+reducedDimPlot <- function(df, dim1, dim2, title = NULL, color_by = NULL) {
   p <- ggplot2::ggplot(df, aes_string(x = dim1, y = dim2)) +
     geom_point(aes_string(color = color_by), size = 0.5) +
     labs(title = title)
@@ -125,13 +125,13 @@ plotPCA <- function(df, dim1, dim2, title = NULL, color_by = NULL) {
 }
 ```
 
-```{r CellComposition}
+```{r CellComposition-PCA}
 pcaData <- as.data.table(cbind(colData(sce), sce@reducedDims$PCA))
 
 pcaPlotList <- lapply(covariates, function(cov) {
   pL<- lapply(paste0('PC', c(2:8)), function(pc) {
   myTitle <- paste('PC1 vs', pc)
-  plotPCA(df = pcaData, dim1 = 'PC1', dim2 = pc, title = myTitle, color_by = cov)
+  reducedDimPlot(df = pcaData, dim1 = 'PC1', dim2 = pc, title = myTitle, color_by = cov)
   })
   names(pL) <- paste0('PC1 vs PC',c(2:8))
   return(pL)
@@ -152,6 +152,25 @@ for(cov in names(pcaPlotList)) {
 }
 ```
 
+
+```{r CellComposition-TSNE}
+tsneData <- as.data.table(cbind(colData(sce), sce@reducedDims$TSNE))
+
+tsnePlotList <- lapply(covariates, function(cov) {
+  reducedDimPlot(df = tsneData, dim1 = 'V1', dim2 = 'V2', title = 'tSNE_1 vs tSNE_2', color_by = cov)
+})
+names(tsnePlotList) <- covariates
+```
+
+### t-SNE - colored by different covariates {.tabset}
+
+```{r tsnePlotList, results='asis', echo = FALSE}
+for (i in 1:length(tsnePlotList)) {
+  cat("#### t-SNE colored by ",names(tsnePlotList)[[i]],"\n")
+  print(tsnePlotList[[i]])
+  cat('\n\n')
+}
+```
 
 # Session Information
 ```{r sessionInfo}
