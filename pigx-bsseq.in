@@ -415,7 +415,7 @@ if config['execution']['submit-to-cluster']:
         queue_selection_string = " -q {cluster.queue} "
 	# User has defined queue name(s) --either generally, or rule-specific.
 	# in either case, generate_cluster_configuration() (defined above) has 
-        # already printed thk apropriate queue name to each rule.
+        # already printed the apropriate queue name to each rule.
         queue_selection_string = " -q {cluster.queue} "
     else :
         # User has supplied no q value -> let SGE pick the the default.
