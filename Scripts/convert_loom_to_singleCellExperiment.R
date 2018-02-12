@@ -207,8 +207,14 @@ getCellStats <- function(m) {
 #4.1 import loom into SingleCellExperiment object
 message(date()," Importing loom file into SingleCellExperiment object")
 sce <- loom2sce(path = loomFile)
-#find cells with zero expression for all genes 
-message(date()," Removing cells with zero expression for all genes")
+
+#4.1.1 Subset the sce object, remove cells that don't exist in the metaDataFile
+warning(date()," Removing cells that don't exist in the meta data file",metaDataFile)
+cellMetaData <- data.table::fread(metaDataFile)
+sce <- sce[,colData(sce)$cell_id %in% cellMetaData$cell_id]
+
+#4.1.2 remove cells with zero expression for all genes 
+warning(date()," Removing cells with zero expression for all genes")
 zeros <- which(DelayedMatrixStats::rowSums2(t(assays(sce)[[1]])) == 0)
 
 if(length(zeros) > 0){
@@ -219,7 +225,7 @@ if(length(zeros) > 0){
 message(date()," Updating colData")
 #4.1.1 update colData with additional meta data
 colData(sce) <- merge(colData(sce), 
-                      DataFrame(data.table::fread(metaDataFile)),
+                      DataFrame(cellMetaData),
                       by = 'cell_id')
 
 #count matrix
