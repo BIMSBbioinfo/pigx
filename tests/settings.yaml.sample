@@ -1,0 +1,30 @@
+annotation:
+    primary:
+        genome:
+            name: 'hg19'
+            fasta: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/sample_data/hg19_chr19.10094960.25108012.fa'
+        gtf: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/sample_data/hg19_chr19.10094960.25108012.gtf'
+     
+locations:
+    output-dir: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/output'
+
+fastq: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/sample_data/reads'
+
+metadata: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/metaData.tsv'
+
+covariates: 'time, replicate'
+
+params:
+    genes_per_cell: 10
+    num_core_barcodes: 10
+
+software:
+    picard: /home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/3rdParty/picard/picard.jar
+    star: /home/vfranke/bin/Software/Mapping/STAR-2.5.3a/bin/Linux_x86_64_static/STAR
+    droptools: /home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/
+    java: '/home/vfranke/.guix-profile/bin/java'
+    R:
+        Rscript: /usr/bin/Rscript
+        libraries:
+            dropbead
+    params:
