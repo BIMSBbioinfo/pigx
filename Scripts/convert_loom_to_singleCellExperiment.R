@@ -93,11 +93,12 @@ library(data.table)
 #' @param path Path to the .loom file to import into SingleCellExperiment object
 #' @return A SingleCellExperiment object 
 loom2sce <- function(path) {
-  # Extracting the count matrix.
+  message("Importing",path,"into SingleCellExperiment object")
+  message("Extracting the count matrix")
   mat <- HDF5Array(path, "matrix")
   mat <- t(mat)
   
-  # Extracting the row and column metadata.
+  message("Extracting the row and column metadata")
   col.attrs <- h5read(path, "col_attrs")
   if (length(col.attrs)) { 
     col.df <- data.frame(col.attrs)
@@ -112,7 +113,8 @@ loom2sce <- function(path) {
     row.df <- NULL
   }
   
-  # Extracting layers (if there are any)
+
+  message("Extracting layers (if there are any)")
   optional <- h5ls(path)
   is.layer <- optional$group=="/layer"
   if (any(is.layer)) {
@@ -128,7 +130,7 @@ loom2sce <- function(path) {
     other.layers <- list()
   }
   
-  # Returning SingleCellExperiment object.
+  message("Returning SingleCellExperiment object.")
   sce <- SingleCellExperiment(c(matrix=mat, other.layers), rowData=row.df, colData=col.df)
   return(sce)
 }
@@ -166,13 +168,13 @@ scaleDM <- function(dm) {
 #' of basic stats of genes versus cells
 getGeneStats <- function(m) {
   #ndetected -> number of cells detected per gene
-  nCells <- DelayedArray::rowSums(m > 0)
+  nCells <- DelayedMatrixStats::colSums2(t(m) > 0)
   #max_gene -> maximum gene expression per gene detected in any cell
   maxGene <- DelayedArray::rowMaxs(m)
   #mean_gene -> average expression per gene in all cells
-  meanGene <- DelayedArray::rowMeans(m)
+  meanGene <- DelayedMatrixStats::colMeans2(t(m))
   #mean_expr -> average expression per gene only in detected cells
-  meanExpr <- ifelse(nCells > 0, DelayedArray::rowSums(m)/nCells, 0)
+  meanExpr <- ifelse(nCells > 0, DelayedMatrixStats::colSums2(t(m))/nCells, 0)
   return(DataFrame('ndetected' = nCells, 
                    'max_gene' = maxGene, 
                    'mean_gene' = meanGene, 
@@ -187,13 +189,13 @@ getGeneStats <- function(m) {
 #' of basic stats of genes versus cells
 getCellStats <- function(m) {
   #nGene -> number of genes detected per cell
-  nGene <- DelayedArray::colSums(m > 0)
+  nGene <- DelayedMatrixStats::rowSums2(t(m) > 0)
   #max_gene -> maximum gene expression detected per cell
   maxGene <- DelayedArray::colMaxs(m)
   #mean_gene -> average gene expression detected per cell
-  meanGene <- DelayedArray::colMeans(m)
+  meanGene <- DelayedMatrixStats::rowMeans2(t(m))
   #mean_expr -> average non-zero gene expression per cell
-  meanExpr <- DelayedArray::colSums(m)/nGene
+  meanExpr <- DelayedMatrixStats::rowSums2(t(m))/nGene
   return(DataFrame('nGene' = nGene, 
                    'max_gene' = maxGene, 
                    'mean_gene' = meanGene, 
@@ -203,13 +205,18 @@ getCellStats <- function(m) {
 #4. start analysis
 
 #4.1 import loom into SingleCellExperiment object
+message(date()," Importing loom file into SingleCellExperiment object")
 sce <- loom2sce(path = loomFile)
 #find cells with zero expression for all genes 
-zeros <- which(DelayedArray::colSums(assays(sce)[[1]]) == 0)
+message(date()," Removing cells with zero expression for all genes")
+zeros <- which(DelayedMatrixStats::rowSums2(t(assays(sce)[[1]])) == 0)
+
 if(length(zeros) > 0){
   #subset sce object to exclude those cells
   sce <- sce[,-zeros]
 }
+
+message(date()," Updating colData")
 #4.1.1 update colData with additional meta data
 colData(sce) <- merge(colData(sce), 
                       DataFrame(data.table::fread(metaDataFile)),
@@ -219,6 +226,7 @@ colData(sce) <- merge(colData(sce),
 counts <- assays(sce)[[1]]
 
 #4.2 Normalize counts (get counts per million)
+message(date()," Normalizing counts")
 counts_per_million <- round(getCPM(dm = counts), 2)
 
 ##4.2.1 update cell stats using cpm values
@@ -229,6 +237,7 @@ colData(sce) <- cbind(colData(sce),
 rowData(sce) <- cbind(rowData(sce), 
                       getGeneStats(m = counts_per_million))
 
+message(date()," Scaling normalized counts")
 #4.3 scale normalized counts
 scaled_counts <- round(scaleDM(dm = counts_per_million), 2)
 
@@ -237,9 +246,11 @@ assays(sce) <- SimpleList("cnts" = counts,
                           "cpm" = counts_per_million, 
                           "scale" = scaled_counts)
 
+message(date()," Computing PCA")
 #4.5 get PCA results
 sce <- scater::runPCA(object = sce, ncomponents = 10, exprs_values = 'scale')
 
+message(date()," Computing t-SNE")
 #4.6 get t-SNE results
 sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')#,exprs_values = 'PCA')
 
