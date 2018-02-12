@@ -13,14 +13,13 @@ locations:
 
 covariates: 'time, replicate'
 
-params:
-    genes_per_cell: 10
-    num_core_barcodes: 10
-
 tools:
     picard: /home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/3rdParty/picard/picard.jar
     star: /home/vfranke/bin/Software/Mapping/STAR-2.5.3a/bin/Linux_x86_64_static/STAR
-    droptools: /home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/
+    droptools: 
+        bin: '/home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/'
+        genes_per_cell: 10
+        num_core_barcodes: 10
     java: '/home/vfranke/.guix-profile/bin/java'
     R:
         Rscript: /usr/bin/Rscript

@@ -23,7 +23,6 @@ SOFTWARE = config['tools']
 GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
 REFERENCE_NAMES = [GENOME_NAME_PRIMARY]
 COVARIATES = config['covariates']
-PARAMS = config['params']
 
 # ----------------------------------------------------------------------------- #
 # PATHS
@@ -328,7 +327,7 @@ rule gtf_to_refflat:
     output:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
     params:
-        droptools=SOFTWARE['droptools'],
+        droptools=SOFTWARE['droptools']['bin'],
         threads=1,
         mem='50G'
     log:
@@ -390,7 +389,7 @@ rule map_scRNA:
     params:
         outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         genome    = os.path.join(PATH_ANNOTATION, '{genome}', 'STAR_INDEX'),
-        droptools = SOFTWARE['droptools'],
+        droptools = SOFTWARE['droptools']['bin'],
         star      = SOFTWARE['star'],
         threads   = 8,
         mem       = '35G'
@@ -436,7 +435,7 @@ rule bam_tag_histogram:
     params:
         outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         outname           = "{name}_{genome}",
-        droptools         = SOFTWARE['droptools'],
+        droptools         = SOFTWARE['droptools']['bin'],
         threads           = 1,
         mem               = '64G'
     message: """
@@ -481,11 +480,11 @@ rule get_umi_matrix:
     params:
         outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         outname           = "{name}_{genome}",
-        droptools         = SOFTWARE['droptools'],
+        droptools         = SOFTWARE['droptools']['bin'],
         threads           = 1,
         mem               = '8G',
-        genes_per_cell    = PARAMS['genes_per_cell'],
-        num_core_barcodes = PARAMS['num_core_barcodes']
+        genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
+        num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
     message: """
             Count UMI:
                 input:  {input.infile}
