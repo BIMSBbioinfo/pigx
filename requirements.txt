@@ -26,3 +26,13 @@ fastqc
 #stringr
 #yaml
 
+#cowplot
+#data.table
+#DelayedArray
+#DelayedMatrixStats
+#DT
+#HDF5Array
+#rmarkdown
+#scater
+#SingleCellExperiment
+
