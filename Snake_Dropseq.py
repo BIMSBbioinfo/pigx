@@ -1,30 +1,6 @@
-"""
-# ---------------------------------------------------------------------------------- #
-SNAKEFILE='/home/vfranke/Projects/AAkalin_PIX_scRNA/Snake_Dropseq.py'
-WORKDIR='/data/local/vfranke/AAkalin_PIX/scRNA'
-CONFIGFILE='/home/vfranke/Projects/AAkalin_PIX_scRNA/Config_scRNA.yaml'
-PATH='/home/vfranke/bin/Software/miniconda3/envs/p35/bin:/usr/local/bin:/usr/bin:/bin:/home/vfranke/.guix-profile/bin:/home/vfranke/.guix-profile/sbin:/home/vfranke/bin'
-# Beast run
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 12 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
-
-snakemake -R --snakefile $SNAKEFILE --directory $WORKDIR --jobs 4 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
-"""
-
 
 """
-
-TODO:
-
-
-Variables to extract in the config file:
-DROPTOOLS
-PICARD
-STAR
-PROJECT PATH
-MARKDOWN PATH
-
-
+Snakefile for pigx-scrnaseq pipeline
 """
 
 # ----------------------------------------------------------------------------- #
@@ -34,46 +10,34 @@ import os
 import re
 import subprocess
 import yaml
+import csv
+import inspect
 
-localrules: report_links, mk_outdir
 
 PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
-PATH_RULES  = os.path.join(workflow.basedir,'Rules')
 
 # ----------------------------------------------------------------------------- #
 # Software parameters
-with open(os.path.join(workflow.basedir, 'software_scRNA.yaml'), 'r') as stream:
-    SOFTWARE_CONFIG = yaml.load(stream)
-
-# Function parameter
-APP_PARAMS = SOFTWARE_CONFIG['params']
-SOFTWARE = SOFTWARE_CONFIG['software']
-
-RSCRIPT_EXEC     = SOFTWARE['R']['Rscript']
-
-
-
-# ----------------------------------------------------------------------------- #
-# Variables
+SOFTWARE = config['tools']
+# variables
 GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
 REFERENCE_NAMES = [GENOME_NAME_PRIMARY]
-
-SAMPLE_NAMES = config['samples'].keys()
 COVARIATES = config['covariates']
 PARAMS = config['params']
 
 # ----------------------------------------------------------------------------- #
 # PATHS
 OUTPUT_DIR = config['locations']['output-dir']
-PATH_FASTQ = config['fastq']
+PATH_FASTQ = config['locations']['reads-dir']
 PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
 PATH_MAPPED   = os.path.join(OUTPUT_DIR, 'Mapped')
 PATH_LOG      = os.path.join(OUTPUT_DIR, 'Log')
+SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
 PATH_GTF_PRIMARY        = config['annotation']['primary']['gtf']
-PATH_META_DATA          = config['metadata']
+PATH_META_DATA          = config['locations']['metadata']
 
 GENOME_NAME_MIX = None
 if 'secondary' in set(config['annotation'].keys()):
@@ -85,6 +49,22 @@ if 'secondary' in set(config['annotation'].keys()):
     PATH_ANNOTATION_MIX = os.path.join(PATH_ANNOTATION, GENOME_NAME_MIX)
     REFERENCE_NAMES = REFERENCE_NAMES + [GENOME_NAME_MIX]
 
+## Load sample sheet
+with open(SAMPLE_SHEET_FILE, 'r') as fp:
+  rows =  [row for row in csv.reader(fp, delimiter=',')]
+  header = rows[0]; rows = rows[1:]
+  SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
+
+# Convenience function to access fields of sample sheet columns that
+# match the predicate.  The predicate may be a string.
+def lookup(column, predicate, fields=[]):
+  if inspect.isfunction(predicate):
+    records = [line for line in SAMPLE_SHEET if predicate(line[column])]
+  else:
+    records = [line for line in SAMPLE_SHEET if line[column]==predicate]
+  return [record[field] for record in records for field in fields]
+
+SAMPLE_NAMES = [line['sample_name'] for line in SAMPLE_SHEET]
 
 # ----------------------------------------------------------------------------- #
 # RULES
@@ -94,7 +74,6 @@ if 'secondary' in set(config['annotation'].keys()):
 # TODO : make extension dynamic (to accept both fasta and fasta.gz files)
 LINK_REFERENCE_PRIMARY   = os.path.join(PATH_ANNOTATION_PRIMARY,  GENOME_NAME_PRIMARY + '.fasta')
 LINK_GTF_PRIMARY         = os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.gtf')
-
 
 
 # ----------------------------------------------------------------------------- #
@@ -179,19 +158,6 @@ if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
 RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + READ_STATISTICS + BAM_HISTOGRAM + FIND_READ_CUTOFF + UMI + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
-print(RULE_ALL)
-
-
-# FASTQC  = expand(os.path.join(MAPPED_DIR, "{name}", 'FastQC', '{name}_R2_001_fastqc.zip'), name=NAMES)
-# UMI     = expand(os.path.join(MAPPED_DIR, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'),
-# name=NAMES, genome=GENOMES.keys())
-# READ    = expand(os.path.join(MAPPED_DIR, "{name}", "{genome}",'{name}_{genome}_Read.Matrix.txt'), name=NAMES, genome=GENOMES.keys())
-#
-# REPORT  = expand(os.path.join(MAPPED_DIR, "{name}", "Report",  BATCH + "_" + "{name}.scRNA_Report.html"), name=NAMES)
-#
-# LINKS   = expand(os.path.join(PROJECT_PATH, "Reports",  BATCH + "_" + "{name}.scRNA_Report.html"), name=NAMES)
-# 		REFFLAT + DICT + FASTQC + UMI + READ + REPORT + LINKS
-
 
 # ----------------------------------------------------------------------------- #
 rule all:
@@ -380,10 +346,10 @@ rule gtf_to_refflat:
 
 # # ----------------------------------------------------------------------------- #
 def get_fastq_files(wc):
-
-    h = {'barcode' : os.path.join(PATH_FASTQ, config['samples'][wc.name]['barcode']),
-         'reads'   : os.path.join(PATH_FASTQ, config['samples'][wc.name]['reads'])}
+    h = {'barcode' : os.path.join(PATH_FASTQ, lookup('sample_name', wc.name, ['barcode'])[0]),
+         'reads'   : os.path.join(PATH_FASTQ, lookup('sample_name', wc.name, ['reads'])[0])}
     return h
+
 
 rule merge_fastq_to_bam:
     input:
@@ -587,12 +553,14 @@ rule convert_loom_to_singleCellExperiment:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
     log:
         log = os.path.join(PATH_LOG, "{genome}.loom2sce.log")
+    params: 
+        rscript = SOFTWARE['R']['Rscript']
     message: """
             Import loom file, preprocess and save as singleCellExperiment.RDS:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --outFile={output.outfile} &> {log.log}"
+    shell: "{params.rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -603,8 +571,8 @@ rule report:
     output:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
     params:
-        reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd")
-    
+        reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
+        rscript       = SOFTWARE['R']['Rscript']
     log: 
         log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
     message: """
@@ -612,7 +580,7 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
+    shell: "{params.rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
@@ -639,7 +607,7 @@ rule fastqc:
     input:
         unpack(get_fastq_files)
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}","{name}.fastqc.done")
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.fastqc.done")
     params:
         outpath = os.path.join(PATH_MAPPED, "{name}"),
         threads = 1,
@@ -658,90 +626,3 @@ rule fastqc:
         touch {output.outfile}
     """
 
-
-
-
-# ----------------------------------------------------------------------------- #
-# rule fastqc:
-# 	input:
-# 		unpack(getfiles)
-# 	output:
-# 		os.path.join(MAPPED_DIR, "{name}", 'FastQC', '{name}_R2_001_fastqc.zip')
-# 	params:
-# 		outdir = os.path.join(MAPPED_DIR, "{name}", 'FastQC'),
-# 		threads=1,
-# 		mem='4G'
-# 	message:"""
-#         fastqc...
-# 	"""
-# 	shell:"""
-# 		mkdir {params.outdir}
-# 		fastqc -t 1 -o {params.outdir} {input.R2}
-# 	"""
-#
-#
-
-#
-#
-#
-
-#
-
-# 	"""
-#
-# # ----------------------------------------------------------------------------- #
-# rule get_read_matrix:
-# 	input:
-# 		infile = rules.map_dropseq.output
-# 	output:
-# 		os.path.join(MAPPED_DIR, "{name}", "{genome}",'{name}_{genome}_Read.Matrix.txt')
-# 	params:
-# 		outdir = os.path.join(MAPPED_DIR, "{name}", "{genome}"),
-# 		outname = "{name}_{genome}",
-# 		droptools=DROPTOOLS,
-# 		threads=1,
-# 		mem='8G'
-# 	message:"""
-# 		Count reads ...
-# 	"""
-# 	shell:"""
-# 		{params.droptools}/DigitalExpression O={output} I={input} SUMMARY={params.outdir}/{params.outname}_Summary.txt MIN_NUM_GENES_PER_CELL=10 NUM_CORE_BARCODES=10 OUTPUT_READS_INSTEAD=true
-# 	"""
-#
-#
-# # ----------------------------------------------------------------------------- #
-# rule scRNA_report:
-# 	input:
-# 		inpath  =  os.path.join(MAPPED_DIR, "{name}"),
-# 		infiles = [os.path.join(MAPPED_DIR, "{name}", genome,'{name}_'+ genome +'_UMI.Matrix.txt') for genome in GENOMES.keys()]
-# 	output:
-# 		outfile = os.path.join(MAPPED_DIR, "{name}", "Report",  BATCH + "_" + "{name}.scRNA_Report.html")
-# 	params:
-# 		dropseq = BASE,
-# 		report  = REPORT_MARKDOWN,
-# 		threads=1,
-# 		mem='80G'
-# 	message:"""
-# 		scRNA_Report ...
-# 	"""
-# 	shell:
-# 		"""
-# 		Rscript -e 'rmarkdown::render(input = "{params.report}", output_file = "{output.outfile}", knit_root_dir="{input.inpath}", params=list(dropseq="{params.dropseq}"))'
-#  		"""
-#
-#
-# # ----------------------------------------------------------------------------- #
-# rule report_links:
-#     input:
-#         infile = rules.scRNA_report.output
-#     output:
-#         os.path.join(PROJECT_PATH, "Reports", BATCH + "_" + "{name}.scRNA_Report.html")
-#     params:
-#         threads=1,
-#         mem='1G'
-#     message:"""
-#         Report links ...
-# 	"""
-# 	shell:"""
-#     	ln -s {input.infile} {output}
-# 	"""

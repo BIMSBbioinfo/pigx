@@ -7,10 +7,9 @@ annotation:
      
 locations:
     output-dir: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/output'
-
-fastq: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/sample_data/reads'
-
-metadata: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/metaData.tsv'
+    reads-dir: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/sample_data/reads'
+    sample-sheet: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/sample_sheet.csv'
+    metadata: '/data/local/buyar/pigx/scrna/pigx_scrnaseq/tests/metaData.tsv'
 
 covariates: 'time, replicate'
 
@@ -18,7 +17,7 @@ params:
     genes_per_cell: 10
     num_core_barcodes: 10
 
-software:
+tools:
     picard: /home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/3rdParty/picard/picard.jar
     star: /home/vfranke/bin/Software/Mapping/STAR-2.5.3a/bin/Linux_x86_64_static/STAR
     droptools: /home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/
@@ -27,4 +26,3 @@ software:
         Rscript: /usr/bin/Rscript
         libraries:
             dropbead
-    params:
