@@ -551,7 +551,7 @@ rule convert_matrix_from_txt_to_loom:
     log:
         log = os.path.join(PATH_LOG, "{name}.{genome}.convert2loom.log")
     message: """
-            Comvert UMI Matrix from .txt fo .loom:
+            Convert UMI Matrix from .txt to .loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
@@ -603,13 +603,15 @@ rule report:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
     params:
         reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd")
-    log: os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
+    
+    log: 
+        log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
     message: """
             Generate an HTML report from SingleCellExperiment.RDS:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --prefix={wildcards.genome} --workdir={PATH_MAPPED}"
+    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
