@@ -23,6 +23,4 @@ execution:
   jobs: 6
   nice: 19
   cluster:
-    stack: 128M
-    queue: all.q
     contact-email: none

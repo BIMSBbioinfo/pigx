@@ -154,7 +154,7 @@ def parse_samples(lines):
   
     header = all_rows[0]
     rows   = all_rows[1:]
-    minimal_header = ['Read1', 'Read2', 'SampleID', 'ReadType', 'Treatment']
+    minimal_header = ['Read1', 'Read2', 'SampleID', 'Protocol', 'Treatment']
   
     if header[:5] != minimal_header:
         raise Exception("First columns of the input table have to be " +
@@ -275,8 +275,10 @@ def generate_cluster_configuration():
               'h_stack':  config['execution']['cluster']['stack']
               }
         elif ( 'queue' in rules[rule] ):
-              # --- User has supplied a queue for this specific rule.
-              cluster_conf[rule] = {
+            # --- User has supplied a queue for this specific rule.
+            if not 'queue' in rules['__default__']:
+              bail("ERROR: submission queue specified per rule with no default.")
+            cluster_conf[rule] = {
               'nthreads': rules[rule]['threads'],
               'MEM':      rules[rule]['memory'],
               'queue':    rules[rule]['queue'],
