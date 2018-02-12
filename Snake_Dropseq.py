@@ -567,12 +567,14 @@ rule combine_UMI_matrices_into_loom:
         outfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
     params:
         tmpfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp")
+    log:
+        log = os.path.join(PATH_LOG, "{genome}.combine_looms.log")
     message: """
             Combine multiple loom files into one:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "echo {input.infile} > {params.tmpfile}; python {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; rm {params.tmpfile}"
+    shell: "echo {input.infile} > {params.tmpfile}; python {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; rm {params.tmpfile} &> {log.log}"
         
     
 # ----------------------------------------------------------------------------- #
@@ -582,12 +584,14 @@ rule convert_loom_to_singleCellExperiment:
         infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
     output:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
+    log:
+        log = os.path.join(PATH_LOG, "{genome}.loom2sce.log")
     message: """
             Import loom file, preprocess and save as singleCellExperiment.RDS:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --outFile={output.outfile}"
+    shell: "{RSCRIPT_EXEC} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
