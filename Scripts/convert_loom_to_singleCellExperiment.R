@@ -261,11 +261,18 @@ message(date()," Computing t-SNE")
 #4.6 get t-SNE results
 sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')
 
-#4.7 get highly variable genes 
-#fit <- scran::trendVar(x = sce, parametric=TRUE, assay.type = 'cpm', use.spikes = FALSE)
-#decomp <- scran::decomposeVar(x = sce, fit = fit, assay.type = 'cpm')
-#top.hvgs <- rownames(decomp[order(decomp$bio, decreasing=TRUE),])[1:50]
-#rowData(sce) <- cbind(DataFrame(VariableGenes = top.hvgs))
+#4.7 compute gene variability across conditions 
+fit <- scran::trendVar(x = sce, assay.type = 'cpm', use.spikes = FALSE)
+decomp <- scran::decomposeVar(x = sce, fit = fit, assay.type = 'cpm')
+
+rowData(sce) <- cbind(rowData(sce), 
+                      DataFrame('Variability' = decomp$bio))
+
+#4.8 Assign cell cycle phase scores
+
+# cc.pairs <- readRDS(system.file("exdata", "human_cycle_markers.rds", package="scran"))
+# assigned <- scran::cyclone(sce, pairs=cc.pairs)
+# 
 
 #5 save SingleCellExperiment object in .RDS format
 saveRDS(object = sce, file = outFile)
