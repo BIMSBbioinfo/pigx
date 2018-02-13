@@ -13,8 +13,11 @@ import yaml
 import csv
 import inspect
 
-
 PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
+
+include: os.path.join(PATH_SCRIPT, 'validate_input.py')
+validate_config(config)
+
 
 # ----------------------------------------------------------------------------- #
 # Software parameters
