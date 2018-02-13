@@ -69,8 +69,10 @@ TODO:
   - VariableGenes as a DataFrame object in `rowData` slot
   - cell cycle stage scoring 
   
+## Content Summary of the SingleCellExperiment Object
 ```{r read-sce-object}
 sce <- readRDS(file = sceRdsFile)
+print(sce)
 ```
 
 # Results
