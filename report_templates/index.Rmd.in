@@ -341,6 +341,7 @@ cat('Regionally (de-)methylated segments can now be compared with gene features.
 ```
 
 ```{r AnnotateSegments.fetchRefgene, eval=AnnotateSegments}
+originally_present_refgen = file.exists(refGenes_bedfile)
 source(paste0(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type      = "refGene",
                                   filename  = refGenes_bedfile,
@@ -357,6 +358,8 @@ if( fetch_refgen_success ) {
   print( paste( "In this run, the reference gene set was obtained with webfetch =", webfetch) )
   if( !webfetch )
     {print("This implies that the bed file was found locally.") }
+  if( webfetch && !originally_present_refgen)
+    { print("Downloaded from remote server.") }
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
   } else { 
   print( paste(" Failed to find Reference gene file ", refGenes_bedfile, ", with webfetch =", webfetch, "; this section omitted.") )  
