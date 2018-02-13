@@ -135,13 +135,16 @@ reducedDimPlot <- function(df, dim1, dim2, title = NULL, color_by = NULL, gradie
 ```
 
 ```{r CellComposition-PCA}
-pcaData <- as.data.table(cbind(colData(sce), sce@reducedDims$PCA))
-pcaData$log10nGene <- log10(pcaData$nGene)
-
+colData(sce)$log10nGene <- log10(colData(sce)$nGene)
 gradientList <- c('log10nGene')
-myList <- c(covariates, gradientList)
+covariateList <- c(covariates, gradientList)
+if('CellCyclePhase' %in% colnames(colData(sce))) {
+  covariateList <- c(covariateList, 'CellCyclePhase')  
+}
 
-pcaPlotList <- lapply(myList, function(cov) {
+pcaData <- as.data.table(cbind(colData(sce), sce@reducedDims$PCA))
+
+pcaPlotList <- lapply(covariateList, function(cov) {
   pL<- lapply(paste0('PC', c(2:8)), function(pc) {
   myTitle <- paste('PC1 vs', pc)
   reducedDimPlot(df = pcaData, 
@@ -155,7 +158,7 @@ pcaPlotList <- lapply(myList, function(cov) {
   return(pL)
   }
 )
-names(pcaPlotList) <- myList
+names(pcaPlotList) <- covariateList
 ```
 
 
@@ -174,10 +177,10 @@ for(cov in names(pcaPlotList)) {
 ```{r CellComposition-TSNE}
 tsneData <- as.data.table(cbind(colData(sce), sce@reducedDims$TSNE))
 
-tsnePlotList <- lapply(covariates, function(cov) {
+tsnePlotList <- lapply(covariateList, function(cov) {
   reducedDimPlot(df = tsneData, dim1 = 'V1', dim2 = 'V2', title = 'tSNE_1 vs tSNE_2', color_by = cov)
 })
-names(tsnePlotList) <- covariates
+names(tsnePlotList) <- covariateList
 ```
 
 ### t-SNE - colored by different covariates {.tabset}

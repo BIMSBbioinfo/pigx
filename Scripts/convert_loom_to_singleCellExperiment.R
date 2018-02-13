@@ -28,10 +28,11 @@ ready for reporting.
 Arguments:
 --loomFile Path to .loom file from the scRNA-seq experiment
 --metaDataFile Experiment meta data file in tsv format (minimally with mappings between cell ids and sample  ids)
+--genomeBuild Genome build version (e.g. hg38, mm10)
 --outFile Path to the writing location of the output .RDS file 
 
 Example:
-Rscript convert_loom_to_singleCellExperiment.R --loomFile=foo.loom --metaDataFile bar.tsv --outFile=foo.RDS"
+Rscript convert_loom_to_singleCellExperiment.R --loomFile=foo.loom --metaDataFile bar.tsv --genomeBuild hg38 --outFile=foo.RDS"
 
 ## Help section
 if("--help" %in% args) {
@@ -65,6 +66,11 @@ if(!("metaDataFile" %in% argsDF$V1)) {
   stop("Missing argument: metaDataFile Provide the path to meta data file")
 }
 
+if(!("genomeBuild" %in% argsDF$V1)) {
+  cat(help_command, "\n")
+  stop("Missing argument: genomeBuild. Provide the genome build version (e.g. hg38, mm10)")
+}
+
 if(!("outFile" %in% argsDF$V1)) {
   cat(help_command, "\n")
   stop("Missing argument: outFile. Provide the path to the output RDS file")
@@ -72,6 +78,7 @@ if(!("outFile" %in% argsDF$V1)) {
 
 loomFile = argsL$loomFile
 metaDataFile = argsL$metaDataFile
+genomeBuild = argsL$genomeBuild
 outFile = argsL$outFile
 
 #2. load libraries
@@ -269,10 +276,36 @@ rowData(sce) <- cbind(rowData(sce),
                       DataFrame('Variability' = decomp$bio))
 
 #4.8 Assign cell cycle phase scores
-
-# cc.pairs <- readRDS(system.file("exdata", "human_cycle_markers.rds", package="scran"))
-# assigned <- scran::cyclone(sce, pairs=cc.pairs)
-# 
+skipCycleScore <- FALSE
+if(grepl('hg[0-9]+', genomeBuild)) {
+  organism <- 'human'
+} else if(grepl('mm[0-9]+', genomeBuild)) {
+  organism <- 'mouse'
+} else {
+  skipCycleScore <- TRUE
+  warning("Skipping cell cycle score assignment as genome builds except for human and mouse are not supported")
+}
+if(skipCycleScore == FALSE) {
+  cc.pairs <- readRDS(system.file("exdata", paste0(organism,"_cycle_markers.rds"), package="scran"))
+  #check if the gene id namespace in the SingleCellExperimet object follows Ensembl style
+  #randomly select 100 genes from cc.pairs
+  overlap <- sum(grepl('^ENSG', rowData(sce)$Genes)) / nrow(sce)
+    
+  if(overlap > 0.5) { #require at least 50% overlap in the gene id overlap
+    assigned <- scran::cyclone(x = sce, 
+                               gene.names = rowData(sce)$Genes, 
+                               assay.type = 'cpm', 
+                               pairs=cc.pairs)
+    phases <- assigned$phases
+    phases[is.na(phases)] <- 'unknown'
+    colData(sce) <- cbind(colData(sce), 
+                          DataFrame("CellCyclePhase" = phases))
+  } else {
+    warning("Skipping cell cycle score assignment as 
+            gene id namespace used in scran package doesn't match 
+            the gene id namespace found in the SingleCellExperiment object")
+  }
+}
 
 #5 save SingleCellExperiment object in .RDS format
 saveRDS(object = sce, file = outFile)
