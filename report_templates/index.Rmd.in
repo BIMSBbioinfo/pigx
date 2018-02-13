@@ -35,7 +35,7 @@ params:
   scripts_dir: ''
   AnnotateDiffMeth: TRUE
   CpGfile:      ''
-  refGenfile:   ''
+  refGenes_bedfile:   ''
   webfetch:     ''
 ---
 
@@ -52,7 +52,7 @@ DiffMeth          <- params$DiffMeth
 AnnotateDiffMeth  <- params$AnnotateDiffMeth
 
 CpGfile           <- params$CpGfile 
-refGenfile        <- params$refGenfile 
+refGenes_bedfile  <- params$refGenes_bedfile 
 webfetch          <- params$webfetch
 
 
@@ -342,11 +342,11 @@ cat('Regionally (de-)methylated segments can now be compared with gene features.
 
 ```{r AnnotateSegments.fetchRefgene, eval=AnnotateSegments}
 source(paste0(scripts_dir, "fetch_procedures.R"))
-fetched.refgenes <- lookupBedFile(type = "refGene",
-                               filename = paste0("refGene.", assembly, ".bed"),
-                               dir = genome_dir,
-                               assembly = assembly,
-                               webfetch = webfetch )
+fetched.refgenes <- lookupBedFile(type      = "refGene",
+                                  filename  = refGenes_bedfile,
+                                  dir       = genome_dir,
+                                  assembly  = assembly,
+                                  webfetch  = webfetch )
 fetch_refgen_success <- ( fetched.refgenes != '')
 ```
 
@@ -354,12 +354,14 @@ fetch_refgen_success <- ( fetched.refgenes != '')
 
 ## now we parse the gene features
 if( fetch_refgen_success ) {
+  print( paste( "In this run, the reference gene set was obtained with webfetch =", webfetch) )
+  if( !webfetch )
+    {print("This implies that the bed file was found locally.") }
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
   } else { 
-  print( " Reference gene file not found. Section omitted.")  
+  print( paste(" Failed to find Reference gene file ", refGenes_bedfile, ", with webfetch =", webfetch, "; this section omitted.") )  
   }
 ```
-
 
 ```{r AnnotateSegments.loadSegments, eval=AnnotateSegments}
 
