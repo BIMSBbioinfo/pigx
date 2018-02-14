@@ -191,8 +191,7 @@ The main functions of FastQC are:
     (source (string-append (getcwd) "/pigx_scrnaseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
-     `(#:tests? #f ; requires network access
-       #:phases
+     `(#:phases
        (modify-phases %standard-phases
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
