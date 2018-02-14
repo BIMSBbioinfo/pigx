@@ -1,0 +1,32 @@
+locations:
+  output-dir: output/
+  reads-dir: reads/
+  sample-sheet: sample_sheet.csv
+  metadata: metaData.tsv
+
+annotation:
+  primary:
+    genome:
+      name: hg19
+      fasta: hg19_chr19.10094960.25108012.fa
+    gtf: hg19_chr19.10094960.25108012.gtf
+
+covariates: 'time, replicate'
+
+tools:
+  picard:
+    executable: @PICARDJAR@
+  star:
+    executable: @STAR@
+  convert-to-ref-flat:
+    executable: @CONVERTTOREFFLAT@
+  drop-seq-alignment:
+    executable: @DROP_SEQ_ALIGNMENT_SH@
+  digital-expression:
+    executable: @DIGITALEXPRESSION@
+    genes_per_cell: 10
+    num_core_barcodes: 10
+  java:
+    executable: @JAVA@
+  Rscript:
+    executable: @RSCRIPT@
