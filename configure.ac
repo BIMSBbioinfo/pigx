@@ -9,6 +9,12 @@ AM_SILENT_RULES([yes])
 dnl We need sed for version checks
 AC_PROG_SED
 
+dnl Check for Picard first, because that's likely going to fail.
+AC_ARG_VAR([PICARDJAR], [specify location of picard.jar])
+AS_IF([test -z "$PICARDJAR"],dnl
+      AC_MSG_ERROR([Please provide the location of picard.jar with the PICARDJAR variable.]),dnl
+      AC_MSG_NOTICE([Using PICARDJAR.]))
+
 dnl Load Python support for Automake and ensure we have a Python
 dnl interpreter for at least version 3.6.  This sets the "PYTHON"
 dnl variable.
@@ -44,11 +50,8 @@ find_or_override_prog([FASTQC],          [fastqc])
 find_or_override_prog([STAR],            [STAR])
 find_or_override_prog([JAVA],            [java])
 
-dnl TODO: check for picard and dropseq tools on the CLASSPATH
-
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
-
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
@@ -75,5 +78,11 @@ AX_R_PACKAGE([scater])
 AX_R_PACKAGE([SingleCellExperiment])
   ])
 
+AC_MSG_NOTICE([Checking all Dropseq tools.])
+find_or_override_prog([CONVERTTOREFFLAT],      [ConvertToRefFlat])
+find_or_override_prog([DROP_SEQ_ALIGNMENT_SH], [Drop-seq_alignment.sh])
+find_or_override_prog([BAMTAGHISTOGRAM],       [BAMTagHistogram])
+find_or_override_prog([DIGITALEXPRESSION],     [DigitalExpression])
 
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
