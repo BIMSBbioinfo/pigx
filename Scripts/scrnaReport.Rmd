@@ -25,7 +25,7 @@ library(data.table)
 
 PiGx scRNAseq 
 
-This report was generated with PiGx RNAseq version 0.0.1.
+This report was generated with PiGx-scRNAseq version 0.0.1.
 
 # Input Settings
 ```{r printInputSettings}
@@ -56,20 +56,22 @@ DT::datatable(data = inputSettings,
 ```
 
 
+## Content Summary of the SingleCellExperiment Object
+
+
 First a pre-generated SingleCellExperiment object is read.
-This object must have the following `assays`: 
+
+This object must minimally have the following `assays`: 
+
   - cnts (row read counts matrix per gene X cell) 
-  - cpm (`cnts` object normalized into counts per million) 
+  - cpm (`cnts` object normalized into counts per million in log2 scale) 
   - scale (centered and scaled version of `cpm`)
+
 And the following `reduced dimension` datasets:
+
   - PCA: Principle Component Analysis values for each cell (at least top 10 components)
   - TSNE: t-SNE analysis values of for each cell (at least top 2 components)
 
-TODO: 
-  - VariableGenes as a DataFrame object in `rowData` slot
-  - cell cycle stage scoring 
-  
-## Content Summary of the SingleCellExperiment Object
 ```{r read-sce-object}
 sce <- readRDS(file = sceRdsFile)
 print(sce)
@@ -187,7 +189,7 @@ names(tsnePlotList) <- covariateList
 
 ```{r tsnePlotList, results='asis', echo = FALSE}
 for (i in 1:length(tsnePlotList)) {
-  cat("#### t-SNE colored by ",names(tsnePlotList)[[i]],"\n")
+  cat("#### t-SNE - Colored by ",names(tsnePlotList)[[i]],"\n")
   print(tsnePlotList[[i]])
   cat('\n\n')
 }
