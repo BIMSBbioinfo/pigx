@@ -112,8 +112,10 @@
      `(("unzip" ,unzip)
        ("java-testng" ,java-testng)))
     (home-page "http://mccarrolllab.com/dropseq/")
-    (synopsis "TODO")
-    (description "TODO")
+    (synopsis "Tools for Drop-seq analyses")
+    (description "Drop-seq is a technology to enable biologists to
+analyze RNA expression genome-wide in thousands of individual cells at
+once.  This package provides tools to perform Drop-seq analyses.")
     (license expat)))
 
 (define %pigx-scrnaseq-version
