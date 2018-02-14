@@ -75,6 +75,7 @@
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
        ("python-pytest" ,python-pytest)
+       ("python-xlrd" ,python-xlrd)
        ("snakemake" ,snakemake)
        ("macs" ,macs)
        ("multiqc" ,multiqc)
