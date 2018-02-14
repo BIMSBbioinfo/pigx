@@ -8,6 +8,7 @@ import yaml
 
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SampleSheetParser.py')
 
 localrules: makelinks
 
@@ -17,13 +18,42 @@ SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 REPORT_TEMPLATE   = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
 
 # ---------------------------------------------------------------------------- #
+
+
 # sample sheet input
-with open(SAMPLE_SHEET_FILE, 'r') as stream:
-    SAMPLE_SHEET = yaml.load(stream)
+if SAMPLE_SHEET_FILE.endswith('.yaml'):
+    with open(SAMPLE_SHEET_FILE, 'r') as stream:
+        SAMPLE_SHEET = yaml.load(stream)
+else:
+    if SAMPLE_SHEET_FILE.endswith('.xlsx'):
+        with load_book(SAMPLE_SHEET_FILE) as book:
+            tmp_dict = excel_sheet_to_dict(book)### needs a parameter to specify sheet (by default "sample_sheet" )
+    elif SAMPLE_SHEET_FILE.endswith('.csv'):
+        tmp_dict = csv_file_to_dict(SAMPLE_SHEET_FILE)
+    else: 
+        raise InputError('File format of the sample_sheet has to be: yaml, xlsx or csv.')
+
+    _TMP_DICT = parse_sample_sheet(tmp_dict)
+    if _TMP_DICT[0]:
+        keys = _TMP_DICT[0].keys()
+
+    SAMPLE_SHEET = {}
+    if set(['Peak_Name','ChIP', 'Cont']).issubset(set(keys)):
+        SAMPLE_SHEET["samples"] = define_mapping(_TMP_DICT)
+        SAMPLE_SHEET["peak_calling"] = define_peakCalling(_TMP_DICT, SAMPLE_SHEET["samples"])
+    else: 
+        raise InputError('The sample sheet does not include information about samples or peak_calling')
+    if set(['idr']).issubset(set(keys)):
+        SAMPLE_SHEET["idr"] = define_idr(_TMP_DICT)
+    for key in keys: 
+        if "feature_" in key:
+            SAMPLE_SHEET[key] = define_feature(_TMP_DICT, key)
+
+
 
 # ---------------------------------------------------------------------------- #
 # check settings and sample_sheet validity
-validate_config(config, SAMPLE_SHEET_FILE)
+validate_config(config, SAMPLE_SHEET)
 
 # ---------------------------------------------------------------------------- #
 # Software executables

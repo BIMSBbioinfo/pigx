@@ -4,9 +4,7 @@ import yaml
 import sys
 
 # ---------------------------------------------------------------------------- #
-def validate_config(settings_dict, sample_sheet_file):
-    with open(sample_sheet_file, 'r') as stream:
-        sample_sheet_dict = yaml.load(stream)
+def validate_config(settings_dict, sample_sheet_dict):
 
     message = ''
     message = check_settings(settings_dict, message)
