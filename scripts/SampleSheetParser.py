@@ -26,6 +26,8 @@ import re
 import yaml
 import csv
 
+from collections import OrderedDict
+
 # "PigX_ChIP sample_sheet template.excel"
 
 
@@ -201,7 +203,6 @@ def define_peakCalling(sample_dict, mapping_dict):
 
 def define_idr(sample_dict):
     idr_dict = {}
-    idr_dict = {}
     idr_list = [dict['idr'] for dict in sample_dict]
     idr_names = list(filter(None, set(idr_list)))
     for name in idr_names:
@@ -216,7 +217,6 @@ def define_idr(sample_dict):
 
 def define_feature(sample_dict, feature_name):
     feature_dict = {}
-    feature_dict = {}
     feature_list = [dict[feature_name] for dict in sample_dict]
     feature_names = list(filter(None, set(feature_list)))
     for name in feature_names:
@@ -225,6 +225,22 @@ def define_feature(sample_dict, feature_name):
                  if dict[feature_name] in name]
         feature_dict[name] = peaks
     return feature_dict
+
+def define_hub_tracks(sample_dict):
+    track_dict = OrderedDict()
+    track_list = [dict['UCSC'] for dict in sample_dict]
+    track_names = list(filter(None, set(track_list)))
+    for name in sorted(track_names):
+        track_dict[name] = OrderedDict()
+        counter = 1
+        for sample in sample_dict:
+            if name in sample.values():
+                track_dict[name]['track-{}'.format(counter)] = {'name': sample['Peak_Name'], 'type': 'macs'}
+                counter += 1
+                for chip in sample['ChIP']:
+                    track_dict[name]['track-{}'.format(counter)] = {'name': chip[0], 'type': 'bigWig'}
+                    counter += 1
+    return track_dict
 
 
 if __name__ == '__main__':
@@ -256,6 +272,7 @@ if __name__ == '__main__':
     sample_sheet_dict["idr"] = define_idr(sample_dict)
     sample_sheet_dict["feature_combination"] = define_feature(sample_dict, "feature_combination")
     sample_sheet_dict["feature_factors"] = define_feature(sample_dict, "feature_factors")
+    sample_sheet_dict["hub"] = {'supertracks': define_hub_tracks(sample_sheet)}
 
     # print(json.dumps(sample_dict, indent=4))
     print("__________")

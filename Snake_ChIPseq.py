@@ -27,7 +27,8 @@ if SAMPLE_SHEET_FILE.endswith('.yaml'):
 else:
     if SAMPLE_SHEET_FILE.endswith('.xlsx'):
         with load_book(SAMPLE_SHEET_FILE) as book:
-            tmp_dict = excel_sheet_to_dict(book)### needs a parameter to specify sheet (by default "sample_sheet" )
+            ### needs a parameter to specify sheet (by default "sample_sheet" )
+            tmp_dict = excel_sheet_to_dict(book)
     elif SAMPLE_SHEET_FILE.endswith('.csv'):
         tmp_dict = csv_file_to_dict(SAMPLE_SHEET_FILE)
     else: 
@@ -45,6 +46,8 @@ else:
         raise InputError('The sample sheet does not include information about samples or peak_calling')
     if set(['idr']).issubset(set(keys)):
         SAMPLE_SHEET["idr"] = define_idr(_TMP_DICT)
+    if set(['UCSC']).issubset(set(keys)):
+        SAMPLE_SHEET["hub"] = {'supertracks': define_hub_tracks(_TMP_DICT)}
     for key in keys: 
         if "feature_" in key:
             SAMPLE_SHEET[key] = define_feature(_TMP_DICT, key)
