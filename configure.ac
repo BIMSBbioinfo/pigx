@@ -15,6 +15,13 @@ AS_IF([test -z "$PICARDJAR"],dnl
       AC_MSG_ERROR([Please provide the location of picard.jar with the PICARDJAR variable.]),dnl
       AC_MSG_NOTICE([Using Picard from here: $PICARDJAR.]))
 
+dnl Check for Dropseq jar next, because that's likely also going to fail.
+AC_ARG_VAR([DROPSEQJAR], [specify location of dropseq.jar])
+AS_IF([test -z "$DROPSEQJAR"],dnl
+      AC_MSG_ERROR([Please provide the location of dropseq.jar with the DROPSEQJAR variable.]),dnl
+      AC_MSG_NOTICE([Using the Dropseq tools from here: $DROPSEQJAR.]))
+
+
 dnl Load Python support for Automake and ensure we have a Python
 dnl interpreter for at least version 3.6.  This sets the "PYTHON"
 dnl variable.
@@ -77,12 +84,6 @@ AX_R_PACKAGE([rmarkdown])
 AX_R_PACKAGE([scater])
 AX_R_PACKAGE([SingleCellExperiment])
   ])
-
-AC_MSG_NOTICE([Checking all Dropseq tools.])
-find_or_override_prog([CONVERTTOREFFLAT],      [ConvertToRefFlat])
-find_or_override_prog([DROP_SEQ_ALIGNMENT_SH], [Drop-seq_alignment.sh])
-find_or_override_prog([BAMTAGHISTOGRAM],       [BAMTagHistogram])
-find_or_override_prog([DIGITALEXPRESSION],     [DigitalExpression])
 
 AC_CONFIG_FILES([etc/settings.yaml
                  Makefile])

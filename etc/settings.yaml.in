@@ -17,16 +17,12 @@ covariates: 'time, replicate'
 tools:
   picard:
     executable: @PICARDJAR@
-  star:
-    executable: @STAR@
-  convert-to-ref-flat:
-    executable: @CONVERTTOREFFLAT@
-  drop-seq-alignment:
-    executable: @DROP_SEQ_ALIGNMENT_SH@
-  digital-expression:
-    executable: @DIGITALEXPRESSION@
+  dropseq:
+    executable: @DROPSEQJAR@
     genes_per_cell: 10
     num_core_barcodes: 10
+  star:
+    executable: @STAR@
   java:
     executable: @JAVA@
   Rscript:
