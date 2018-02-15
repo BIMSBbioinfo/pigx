@@ -207,6 +207,7 @@ The main functions of FastQC are:
     (inputs
      `(("dropseq-tools" ,dropseq-tools)
        ("fastqc" ,fastqc)
+       ("java-picard" ,java-picard)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
        ("python-pandas" ,python-pandas)
