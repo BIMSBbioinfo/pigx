@@ -23,20 +23,27 @@ dist_pkglibexec_scripts_SCRIPTS =		\
   scripts/Sample_Report.rmd				\
   scripts/SnakeFunctions.py
 
+pkglibexec_rulesdir = $(pkglibexecdir)/Rules
+dist_pkglibexec_rules_SCRIPTS =   \
+  Rules/Annotate_Peaks.py       \
+  Rules/BamToBigWig.py          \
+  Rules/ChIPQC.py           \
+  Rules/Extract_Signal_Annotation.py  \
+  Rules/FastQC.py           \
+  Rules/Feature_Combination.py      \
+  Rules/IDR.py              \
+  Rules/Knit_Report.py           \
+  Rules/Mapping.py            \
+  Rules/MultiQC.py            \
+  Rules/Parse_Bowtie2log.py            \
+  Rules/Peak_Calling.py         \
+  Rules/Peak_Statistics.py         \
+  Rules/Prepare_Annotation.py     \
+  Rules/UCSC_Hub.py
+
 dist_pkgdata_DATA =						\
   etc/settings.yaml						\
-  etc/pretty.txt						\
-  Rules/Annotate_Peaks.py				\
-  Rules/BamToBigWig.py					\
-  Rules/ChIPQC.py						\
-  Rules/Extract_Signal_Annotation.py	\
-  Rules/FastQC.py						\
-  Rules/Feature_Combination.py			\
-  Rules/IDR.py							\
-  Rules/Mapping.py						\
-  Rules/Peak_Calling.py					\
-  Rules/Prepare_Annotation.py			\
-  Rules/UCSC_Hub.py
+  etc/pretty.txt						
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1 SOURCE_DATE_EPOCH=1
 
