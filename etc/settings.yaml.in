@@ -13,8 +13,8 @@ general:
     treatment-groups:
       - []
     annotation:
-      CpGfile:    "cpgIslandExt.hg19.bed.gz"
-      refGenfile: "refGene.hg19.bed.gz"
+      CpGfile:    "pigx_work/refGenome/cpgIslandExt.hg19.bed.gz"
+      refGenes_bedfile: "pigx_work/refGenome/refGene.hg19.bed.gz"
       webfetch:   no
 
 execution:
@@ -34,6 +34,9 @@ execution:
       memory: 19G
     bismark_align_and_map_pe:
       threads: 12
+      memory: 19G
+    bismark_genome_preparation:
+      threads: 2 
       memory: 19G
 
 tools:

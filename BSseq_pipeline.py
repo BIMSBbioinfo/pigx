@@ -589,7 +589,7 @@ rule final_report:
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
         CpGfile     = config['general']['differential-methylation']['annotation']['CpGfile'],
-        refGenfile  = config['general']['differential-methylation']['annotation']['refGenfile'],
+        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
         os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")

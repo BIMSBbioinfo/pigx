@@ -63,11 +63,10 @@ fetchTableFromUCSC <- function (table.name, table.loc=NULL, assembly) {
 
 lookupBedFile <- function (type, filename, dir, assembly, webfetch) {
     ## import local bed file if available
-    test <- paste0(dir, "/", filename)
-    if (file.exists(test)) {
-        return(test)
+    if (file.exists(filename)) {
+        return(filename)
     }
-    gzipped <- paste0(test, ".gz")
+    gzipped <- paste0(filename, ".gz")
     if (file.exists(gzipped)) {
         return(gzipped)
     }
@@ -103,8 +102,7 @@ lookupBedFile <- function (type, filename, dir, assembly, webfetch) {
     }
     else
     {
-      ## @@@ TODO: print this warning to a separate file for visibility.
-      print( paste("WARNING: Could not find reference annotation files for differential methylation for the given assembly <'",assembly,"'> (see settings:general in settings file.) The option to fetch from the internet was not set." ))
-      return('')
+    # print( paste("Failed to find reference annotation file",type," for <'",assembly,"'> (see settings:general in settings file.)." ))
+    return('')
     }
 }
