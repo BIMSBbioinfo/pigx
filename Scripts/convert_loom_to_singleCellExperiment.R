@@ -168,6 +168,40 @@ scaleDM <- function(dm) {
   return(scdm)
 }
 
+#' runPrComp 
+#' 
+#' run stats::prcomp to obtain PCA rotations and loadings
+#' 
+#' Given a SingleCellExperiment object with at least one assay matrix named `expr_values`, 
+#' compute the PCA and loadings, update the SingleCellExperiment object with 'PCA' in 
+#' reducedDimensions slot of the object.
+#' 
+#'  @param x A SingleCellExperiment object
+#'  @param features A character vector of features (should be subset of rowData(x)$Genes)
+#'  @param center whether to center the data
+#'  @param scale whether to scale the data
+#'  @param ncomponents Max number of principle components to look for
+#'  @param expr_values The name of the assay data matrix in `x` 
+#'  
+#'  @return A matrix of dimensions [ncol(x), ncomponents] with attributes matrix
+#'    of [len(features), ncol(x)]
+runPrComp <- function(x, features = NULL, center = FALSE, scale = FALSE, ncomponents = 2, expr_values = 'scale') {
+  dm <- assays(x)[[expr_values]]
+  if(!is.null(features)){
+    select <- rowData(x)$Genes %in% features
+    dm <- assays(x[select,])[[expr_values]]
+    rownames(dm) <- features
+  }
+  results <- stats::prcomp(x = dm, 
+                       center = center, 
+                       scale. = scale, 
+                       rank. = ncomponents)
+  PCA <- results$rotation
+  attr(PCA, 'gene.loadings') <- results$x
+  reducedDim(x, 'PCA') <- PCA
+  return(x)
+}
+
 #' Given a DelayedMatrix object (genes on the row, cells on the column), 
 #' calculate basic statistics and return a DataFrame object
 #' 
@@ -261,19 +295,30 @@ assays(sce) <- SimpleList("cnts" = counts,
                           "scale" = scaled_counts)
 
 message(date()," Computing PCA")
-#4.5 get PCA results
-sce <- scater::runPCA(object = sce, ncomponents = 10, exprs_values = 'scale')
 
-message(date()," Computing t-SNE")
-#4.6 get t-SNE results
-sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')
-
-#4.7 compute gene variability across conditions 
+#4.5 compute gene variability across conditions 
 fit <- scran::trendVar(x = sce, assay.type = 'cpm', use.spikes = FALSE)
 decomp <- scran::decomposeVar(x = sce, fit = fit, assay.type = 'cpm')
-
 rowData(sce) <- cbind(rowData(sce), 
-                      DataFrame('Variability' = decomp$bio))
+                      DataFrame('fitted_variability' = decomp$bio))
+
+max <- 500
+if(max > nrow(sce)) {
+  max <- nrow(sce)
+}
+
+rowvars <- DelayedMatrixStats::colVars(t(assay(sce, 'cpm')))
+rowData(sce) <- cbind(rowData(sce), 
+                      DataFrame('row_variability' = rowvars))
+topgenes <- rowData(sce)[order(rowData(sce)$row_variability, decreasing = T),][1:max,]$Genes
+
+#4.6 get PCA results using genes with top row variance
+sce <- runPrComp(x = sce, expr_values = 'scale', ncomponents = 10,
+            features = topgenes, center = FALSE, scale = FALSE)
+
+message(date()," Computing t-SNE")
+#4.7 get t-SNE results
+sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')
 
 #4.8 Assign cell cycle phase scores
 skipCycleScore <- FALSE
@@ -288,8 +333,7 @@ if(grepl('hg[0-9]+', genomeBuild)) {
 if(skipCycleScore == FALSE) {
   cc.pairs <- readRDS(system.file("exdata", paste0(organism,"_cycle_markers.rds"), package="scran"))
   #check if the gene id namespace in the SingleCellExperimet object follows Ensembl style
-  #randomly select 100 genes from cc.pairs
-  overlap <- sum(grepl('^ENSG', rowData(sce)$Genes)) / nrow(sce)
+  overlap <- sum(grepl('^ENS', rowData(sce)$Genes)) / nrow(sce)
     
   if(overlap > 0.5) { #require at least 50% overlap in the gene id overlap
     assigned <- scran::cyclone(x = sce, 
