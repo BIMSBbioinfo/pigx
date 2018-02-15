@@ -112,9 +112,74 @@
      `(("unzip" ,unzip)
        ("java-testng" ,java-testng)))
     (home-page "http://mccarrolllab.com/dropseq/")
-    (synopsis "TODO")
-    (description "TODO")
+    (synopsis "Tools for Drop-seq analyses")
+    (description "Drop-seq is a technology to enable biologists to
+analyze RNA expression genome-wide in thousands of individual cells at
+once.  This package provides tools to perform Drop-seq analyses.")
     (license expat)))
+
+(define-public fastqc
+  (package
+    (name "fastqc")
+    (version "0.11.5")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (string-append "http://www.bioinformatics.babraham.ac.uk/"
+                           "projects/fastqc/fastqc_v"
+                           version "_source.zip"))
+       (sha256
+        (base32
+         "18rrlkhcrxvvvlapch4dpj6xc6mpayzys8qfppybi8jrpgx5cc5f"))))
+    (build-system ant-build-system)
+    (arguments
+     `(#:tests? #f ; there are no tests
+       #:build-target "build"
+       #:phases
+       (modify-phases %standard-phases
+         ;; There is no installation target
+         (replace 'install
+           (lambda* (#:key inputs outputs #:allow-other-keys)
+             (let* ((out   (assoc-ref outputs "out"))
+                    (bin   (string-append out "/bin"))
+                    (share (string-append out "/share/fastqc/"))
+                    (exe   (string-append share "/fastqc")))
+               (for-each mkdir-p (list bin share))
+               (copy-recursively "bin" share)
+               (substitute* exe
+                 (("my \\$java_bin = 'java';")
+                  (string-append "my $java_bin = '"
+                                 (assoc-ref inputs "java")
+                                 "/bin/java';")))
+               (chmod exe #o555)
+               (symlink exe (string-append bin "/fastqc"))
+               #t))))))
+    (inputs
+     `(("java" ,icedtea)
+       ("perl" ,perl)))  ; needed for the wrapper script
+    (native-inputs
+     `(("unzip" ,unzip)))
+    (home-page "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/")
+    (synopsis "Quality control tool for high throughput sequence data")
+    (description
+     "FastQC aims to provide a simple way to do some quality control
+checks on raw sequence data coming from high throughput sequencing
+pipelines.  It provides a modular set of analyses which you can use to
+give a quick impression of whether your data has any problems of which
+you should be aware before doing any further analysis.
+
+The main functions of FastQC are:
+
+@itemize
+@item Import of data from BAM, SAM or FastQ files (any variant);
+@item Providing a quick overview to tell you in which areas there may
+  be problems;
+@item Summary graphs and tables to quickly assess your data;
+@item Export of results to an HTML based permanent report;
+@item Offline operation to allow automated generation of reports
+  without running the interactive application.
+@end itemize\n")
+    (license gpl3+)))
 
 (define %pigx-scrnaseq-version
   (symbol->string (with-input-from-file "VERSION" read)))
@@ -126,8 +191,7 @@
     (source (string-append (getcwd) "/pigx_scrnaseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
-     `(#:tests? #f ; requires network access
-       #:phases
+     `(#:phases
        (modify-phases %standard-phases
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
@@ -142,14 +206,35 @@
        ("automake" ,automake)))
     (inputs
      `(("dropseq-tools" ,dropseq-tools)
+       ("fastqc" ,fastqc)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
        ("python-pandas" ,python-pandas)
        ("python-numpy" ,python-numpy)
+       ("python-loompy" ,python-loompy)
        ("ghc-pandoc" ,ghc-pandoc)
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("snakemake" ,snakemake)
-))
+       ("star" ,star)
+       ("r-cowplot" ,r-cowplot)
+       ("r-data-table" ,r-data-table)
+       ("r-delayedarray" ,r-delayedarray)
+       ("r-delayedmatrixstats" ,r-delayedmatrixstats)
+       ("r-dplyr" ,r-dplyr)
+       ("r-dropbead" ,r-dropbead)
+       ("r-dt" ,r-dt)
+       ("r-genomicalignments" ,r-genomicalignments)
+       ("r-genomicfiles" ,r-genomicfiles)
+       ("r-genomicranges" ,r-genomicranges)
+       ("r-ggplot2" ,r-ggplot2)
+       ("r-hdf5array" ,r-hdf5array)
+       ("r-rmarkdown" ,r-rmarkdown)
+       ("r-rsamtools" ,r-rsamtools)
+       ("r-rtracklayer" ,r-rtracklayer)
+       ("r-scater" ,r-scater)
+       ("r-singlecellexperiment" ,r-singlecellexperiment)
+       ("r-stringr" ,r-stringr)
+       ("r-yaml" ,r-yaml)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_scrnaseq/")
     (synopsis "TODO")
     (description "TODO")
