@@ -8,7 +8,7 @@ output:
 params:
   covariates: time, replicate
   outFile: test.scRNA.html
-  sceRdsFile: /data/local/buyar/pigx/scrna/integrate_report/results_test3/Mapped/hg19.SingleCellExperiment.RDS
+  sceRdsFile: /data/local/buyar/pigx/scrna/integrate_report/test.RDS
   workdir: .
 ---
 
@@ -19,6 +19,8 @@ library(cowplot)
 library(DT)
 library(SingleCellExperiment)
 library(data.table)
+library(dplyr)
+library(pheatmap)
 ```
 
 # Description
@@ -194,6 +196,86 @@ for (i in 1:length(tsnePlotList)) {
   cat('\n\n')
 }
 ```
+
+## Gene Exploration
+
+```{r Genes_PCA_contribution}
+plotPCAContribution = function(sce, pc, n = 20){
+  p = attr(sce@reducedDims$PCA, 'gene.loadings')  %>%
+    as.data.frame() %>%
+    mutate(gene_id = rownames(.)) %>%
+    mutate_(X = pc)  %>%
+    arrange(-abs(X)) %>%
+    head(n=n) %>%
+    arrange(X) %>%
+    mutate(gene_id = factor(gene_id, levels=gene_id)) %>%
+    ggplot(aes_string(x = pc, y = 'gene_id')) +
+    geom_point() +
+    ylab('Gene Id')+
+    ggtitle(paste('Top',n,'genes for', pc)) + theme_bw()
+    return(p)
+}
+
+pcaContributionPlots <- lapply(paste0('PC', 1:8), function(pc) {
+  plotPCAContribution(sce = sce, pc = pc, n = 20)
+})
+names(pcaContributionPlots) <- paste0('PC', 1:8)
+```
+
+### Top Genes Contributing to Principle Components {.tabset}
+```{r top_PCA_Genes, results='asis'}
+for (i in 1:length(pcaContributionPlots)) {
+  cat("#### ",names(pcaContributionPlots)[[i]],"\n")
+  print(pcaContributionPlots[[i]])
+  cat('\n\n')
+}
+```
+
+```{r Genes_PCA_contribution_Heatmap}
+plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20){
+  M <- attr(sce@reducedDims$PCA, 'gene.loadings')
+  if(n > nrow(M)) {
+    n <- nrow(M)
+  }
+  topGenes <- names(sort(x = M[,pc], decreasing = TRUE))[1:n]
+  
+  if(ncol(sce) < cellCount) {
+    cellCount <- ncol(sce)
+  }
+  select <- sample(1:ncol(sce), cellCount)
+  exprMatrix <- assay(sce, 'cpm')[which(rowData(sce)$Genes %in% topGenes),select]
+
+  annotationDf <- as.data.frame(colData(sce)[select,covariateList])
+  rownames(annotationDf) <- colData(sce)[select,]$cell_id
+  rownames(exprMatrix) <- topGenes
+  colnames(exprMatrix) <- rownames(annotationDf)
+  p <- pheatmap::pheatmap(mat = exprMatrix, scale = 'column', 
+                     show_rownames = TRUE, 
+                     annotation_col = annotationDf, 
+                     show_colnames = FALSE)
+  filename <- file.path(workdir, paste0("heatmap", pc, '.png'))
+  png(filename = filename, width = 800, height = 500, units = 'px')
+  grid::grid.newpage()
+  grid::grid.draw(p$gtable)
+  dev.off()
+  return(filename)
+}
+
+pcaContributorHeatmaps <- lapply(paste0('PC', 1:8), function(pc) {
+  plotPCAcontributorsHeatmap(workdir = workdir, sce = sce, pc = pc, n = 20, cellCount = 100)
+})
+names(pcaContributorHeatmaps) <- paste0('PC', 1:8)
+```
+
+### Heatmaps of Top Genes Contributing to Principle Components {.tabset}
+```{r top_PCA_Genes_Heatmaps, results='asis'}
+for (i in 1:length(pcaContributorHeatmaps)) {
+  cat("#### ",names(pcaContributorHeatmaps)[[i]],"\n")
+  cat(paste0("![](",pcaContributorHeatmaps[[i]],")"))
+  cat('\n\n')
+}
+```
+
 
 # Session Information
 ```{r sessionInfo}
