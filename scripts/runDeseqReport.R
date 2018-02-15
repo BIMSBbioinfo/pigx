@@ -152,6 +152,7 @@ affects GO term analysis results. If the organism is not supported, GO
 results will not be displayed.
 --prefix (Optional, default: 'comparison1') Prefix to be attached to the beginning 
 of output files
+--workdir (Optional, default: 'current working directory')
 --selfContained boolean value (default: TRUE). By default, the generated
 html file will be self-contained, which means that all figures and tables 
 will be embedded in a single html file with no external dependencies (See 
