@@ -13,6 +13,7 @@ import yaml
 import csv
 import inspect
 
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Run_Rscript.py')
 PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
 
 include: os.path.join(PATH_SCRIPT, 'validate_input.py')
@@ -35,6 +36,7 @@ PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
 PATH_MAPPED   = os.path.join(OUTPUT_DIR, 'Mapped')
 PATH_LOG      = os.path.join(OUTPUT_DIR, 'Log')
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
+PATH_RSCRIPT = SOFTWARE['Rscript']['executable']
 
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
@@ -305,16 +307,18 @@ rule change_gtf_id:
     output:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
     params:
-        threads=1,
-        mem='4G'
+        threads = 1,
+        mem     = '4G',
+        Rscript = PATH_RSCRIPT
     message:
         """
             Changing GTF id:
                 input  : {input}
                 output : {output}
         """
-    script:
-        os.path.join(PATH_SCRIPT, 'change_gtf_id.R')
+    run:
+        RunRscript(input, output, params, 'change_gtf_id.R')
+
 
 
 
@@ -359,10 +363,10 @@ rule merge_fastq_to_bam:
     output:
         os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
     params:
-        name='{name}',
-        picard=SOFTWARE['picard'],
-        threads=1,
-        mem='16G'
+        name    = '{name}',
+        picard  = SOFTWARE['picard'],
+        threads = 1,
+        mem     = '16G'
 
     log:
         os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
@@ -419,14 +423,15 @@ rule extract_read_statistics:
     params:
         outname  = "{name}_{genome}",
         threads  = 1,
-        mem      = '8G'
+        mem      = '8G',
+        Rscript  = PATH_RSCRIPT
     message: """
             extract_read_statistics:
                 input:  {input.bamfile}
                 output: {output.outfile}
         """
-    script:
-        os.path.join(PATH_SCRIPT, 'Extract_Read_Statistics.R')
+    run:
+        RunRscript(input, output, params, 'Extract_Read_Statistics.R')
 
 # ----------------------------------------------------------------------------- #
 rule extract_downstream_statistics:
@@ -442,7 +447,8 @@ rule extract_downstream_statistics:
         outname       = "{name}_{genome}",
         threads       = 1,
         mem           = '8G',
-        scriptdir     = SCRIPTDIR
+        scriptdir     = SCRIPTDIR,
+        Rscript       = RSCRIPT_PATH
     message: """
             extract_downstream_statistics:
                 umi:    {input.umi_matrix}
@@ -450,8 +456,8 @@ rule extract_downstream_statistics:
                 stats:  {input.reads_stats}
                 output: {output.outfile}
         """
-    script:
-        os.path.join(PATH_SCRIPT, 'Extract_Downstream_Statistics.R')
+    run:
+        RunRscript(input, output, params, 'Extract_Downstream_Statistics.R')
 
 
 # ----------------------------------------------------------------------------- #
@@ -490,14 +496,16 @@ rule find_absolute_read_cutoff:
         outname  = "{name}_{genome}",
         threads  = 1,
         mem      = '8G',
-        cutoff   = 50000
+        cutoff   = 50000,
+        Rscript  = RSCRIPT_PATH
     message: """
             find_absolute_read_cutoff:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    script:
-        os.path.join(PATH_SCRIPT, 'Find_Absolute_Read_Cutoff.R')
+    run:
+        RunRscript(input, output, params, 'Find_Absolute_Read_Cutoff.R')
+
 
 # ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
@@ -659,14 +667,15 @@ rule bam_to_BigWig:
         bwfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw')
     params:
         threads = 1,
-        mem     = '16G'
+        mem     = '16G',
+        Rscript = PATH_RSCRIPT
     message: """
             bam_to_BigWig:
                 input:  {input.bamfile}
                 output: {output.bwfile}
             """
-    script:
-        os.path.join(PATH_SCRIPT, 'BamToBigWig.R')
+    run:
+        RunRscript(input, output, params, 'BamToBigWig.R')
 
 
 # ----------------------------------------------------------------------------- #
