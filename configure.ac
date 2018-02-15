@@ -87,4 +87,5 @@ find_or_override_prog([DIGITALEXPRESSION],     [DigitalExpression])
 AC_CONFIG_FILES([etc/settings.yaml
                  Makefile])
 AC_CONFIG_FILES([tests/test.sh], [chmod +x tests/test.sh])
+AC_CONFIG_FILES([pigx-scrnaseq], [chmod +x pigx-scrnaseq])
 AC_OUTPUT
