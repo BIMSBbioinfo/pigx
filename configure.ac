@@ -84,5 +84,6 @@ find_or_override_prog([DROP_SEQ_ALIGNMENT_SH], [Drop-seq_alignment.sh])
 find_or_override_prog([BAMTAGHISTOGRAM],       [BAMTagHistogram])
 find_or_override_prog([DIGITALEXPRESSION],     [DigitalExpression])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([etc/settings.yaml
+                 Makefile])
 AC_OUTPUT
