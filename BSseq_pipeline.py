@@ -123,9 +123,16 @@ targets = {
         'files': files_for_sample(methSeg)
     },
     
+
     'diffmeth': {
         'description': "Perform differential methylation calling.",
         'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["general"]["differential-methylation"]["treatment-groups"]]
+    },
+    
+    # @TODO: what if there is no diff meth files???,then files will be an empty list []
+    'diffmeth-report': {
+        'description': "Produce a comprehensive report for differential methylation.",
+        'files':[ [DIR_final+"_".join(x)+".report.html"] for x in config["general"]["differential-methylation"]["treatment-groups"] ]
     },
 
     'final-report': {
@@ -135,13 +142,14 @@ targets = {
 }
 
 # Selected output files from the above set.
-selected_targets = config['execution']['target'] or ['final-report','bigwig']
+selected_targets = config['execution']['target'] or ['final-report',
+'diffmeth-report', 
+'bigwig']
 
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
 from itertools import chain
 OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
-
 
 # ==============================================================================================================
 #
@@ -596,3 +604,50 @@ rule final_report:
     message: fmt("Compiling final report.")
     run:
         generateReport(input, output, params, log, "")
+
+if( targets['diffmeth-report']['files'] != []):
+  #@TODO: here make a if else clause to generate this    
+  # print(DIR_diffmeth)        
+  # ## Final Report for diff. meth.
+  rule final_report_df:
+      input:
+          #lambda wc: finalReportDiffMeth_input(wc.prefix),
+          #lambda wc: finalReportDiffMeth_input(wc.treatment),
+          #[ "{}{}.sorted_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
+          #inputfiles  = lambda wc: diffmeth_input_function(wc),
+          lambda wc: DIR_diffmeth + wc.treatment + '.sorted_diffmeth.bed',
+          template      = os.path.join(DIR_templates,"diffmeth.Rmd"),
+          chrom_seqlengths    = os.path.join(config['locations']['output-dir'], DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+      output:
+          report        = os.path.join(DIR_final, "{treatment}.report.html")
+      params:
+  #         ## absolute path to bamfiles
+          #Samplename  = lambda wc: get_fastq_name( wc.prefix ),
+          chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+          source_dir  = config['locations']['input-dir'],
+          out_dir     = config['locations']['output-dir'],
+          diffmeth_dir = DIR_diffmeth,
+          treatment = lambda wc: wc,
+          #inBam       = os.path.join(DIR_sorted,"{prefix}.sorted.bam"),
+          assembly    = ASSEMBLY,
+          #mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
+          #minqual     = int(config['general']['methylation-calling']['minimum-quality']),
+          ## absolute path to output folder in working dir
+          #methCallRDS         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
+          #methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
+          #methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
+          #methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png"),
+          #methylDiff_files      = lambda wc: [ os.path.join(WORKDIR,rds) for rds in finalReportDiffMeth_input(wc.prefix)],
+          genome_dir  = config['locations']['genome-dir'],
+          scripts_dir = DIR_scripts,
+          CpGfile     = config['general']['differential-methylation']['annotation']['CpGfile'],
+          refGenfile  = config['general']['differential-methylation']['annotation']['refGenfile'],
+          webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
+      log:
+          os.path.join(DIR_final,"{treatment}.report.log")
+  #     message: fmt("Compiling differential methylation report " + "for treatment " + "{treatment}.")
+      run:
+          generateReport(input, output, params, log, "")
+  #         
+  #         
+          
