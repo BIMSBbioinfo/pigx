@@ -72,6 +72,12 @@ def lookup(column, predicate, fields=[]):
 SAMPLE_NAMES = [line['sample_name'] for line in SAMPLE_SHEET]
 
 # ----------------------------------------------------------------------------- #
+# sets the temporrary directory to default in the working directory if the tempdir does not exist
+if TEMPDIR == None:
+    TEMPDIR = os.environ['TMPDIR']
+
+
+# ----------------------------------------------------------------------------- #
 # RULES
 
 # ----------------------------------------------------------------------------- #
