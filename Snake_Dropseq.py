@@ -23,6 +23,7 @@ validate_config(config)
 # Software parameters
 SOFTWARE = config['tools']
 # variables
+
 GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
 REFERENCE_NAMES = [GENOME_NAME_PRIMARY]
 COVARIATES = config['covariates']
@@ -31,6 +32,7 @@ COVARIATES = config['covariates']
 # PATHS
 OUTPUT_DIR = config['locations']['output-dir']
 PATH_FASTQ = config['locations']['reads-dir']
+TEMPDIR    = config['locations']['tempdir']
 PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
 PATH_MAPPED   = os.path.join(OUTPUT_DIR, 'Mapped')
 PATH_LOG      = os.path.join(OUTPUT_DIR, 'Log')
@@ -40,6 +42,7 @@ PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
 PATH_GTF_PRIMARY        = config['annotation']['primary']['gtf']
 PATH_META_DATA          = config['locations']['metadata']
+
 
 GENOME_NAME_MIX = None
 if 'secondary' in set(config['annotation'].keys()):
@@ -139,13 +142,13 @@ UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genom
 COMBINED_UMI_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
-# Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects. 
+# Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects.
 SCE_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"), genome = REFERENCE_NAMES)
 # ----------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
-## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report  
-REPORT_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html"), genome = REFERENCE_NAMES) 
+## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
+REPORT_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html"), genome = REFERENCE_NAMES)
 # ----------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
@@ -330,9 +333,11 @@ rule gtf_to_refflat:
     output:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
     params:
-        droptools=SOFTWARE['droptools']['bin'],
-        threads=1,
-        mem='50G'
+        threads   = 1,
+        mem       = '50G'
+        java      = SOFTWARE['java']['executable'] ,
+        droptools = SOFTWARE['droptools']['executable'],
+        tempdir   = TEMPDIR
     log:
         os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
     message:"""
@@ -343,8 +348,9 @@ rule gtf_to_refflat:
                 output : {output}
         """
     shell:"""
-        {params.droptools}/ConvertToRefFlat O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log} O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
     """
+
 
 # # ----------------------------------------------------------------------------- #
 def get_fastq_files(wc):
@@ -436,19 +442,23 @@ rule bam_tag_histogram:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt')
     params:
-        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname           = "{name}_{genome}",
-        droptools         = SOFTWARE['droptools']['bin'],
-        threads           = 1,
-        mem               = '64G'
+        outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname   = "{name}_{genome}",
+        threads   = 1,
+        mem       = '64G'
+        java      = SOFTWARE['java']['executable'] ,
+        droptools = SOFTWARE['droptools']['executable'],
+        tempdir   = TEMPDIR
     message: """
             BamTagHistogram:
                 input:  {input.infile}
                 output: {output.outfile}
         """
     shell:"""
-        {params.droptools}/BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
-		"""
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
+	"""
+
+
 
 # ----------------------------------------------------------------------------- #
 
@@ -483,9 +493,11 @@ rule get_umi_matrix:
     params:
         outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         outname           = "{name}_{genome}",
-        droptools         = SOFTWARE['droptools']['bin'],
         threads           = 1,
         mem               = '8G',
+        java              = SOFTWARE['java']['executable'] ,
+        droptools         = SOFTWARE['droptools']['executable'],
+        tempdir           = TEMPDIR,
         genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
         num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
     message: """
@@ -498,7 +510,13 @@ rule get_umi_matrix:
         with open(input.reads_cutoff) as stream:
             reads_cutoff = yaml.load(stream)['reads_cutoff']
 
-        tool = os.path.join(params.droptools,'DigitalExpression')
+
+        tool = params.java +
+        ' -XX:ParallelGCThreads=' + params.threads +
+        ' -Xmx$'                  + params.mem +
+        ' -Djava.io.tmpdir='      + params.tempdir +
+        params.droptools + ' DigitalExpression'
+
         command = ' '.join([
         tool,
         'O=' + output.outfile,
@@ -508,6 +526,11 @@ rule get_umi_matrix:
         'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff)
         ])
         shell(command)
+
+
+
+
+
 
 # ----------------------------------------------------------------------------- #
 # convert UMI matrix from txt format into one loom format
@@ -526,7 +549,7 @@ rule convert_matrix_from_txt_to_loom:
         """
     shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
 
-        
+
 # ----------------------------------------------------------------------------- #
 ## combines multiple loom files into one loom file
 rule combine_UMI_matrices_into_loom:
@@ -544,10 +567,10 @@ rule combine_UMI_matrices_into_loom:
                 output: {output.outfile}
         """
     shell: "echo {input.infile} > {params.tmpfile}; python {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; rm {params.tmpfile} &> {log.log}"
-        
-    
+
+
 # ----------------------------------------------------------------------------- #
-## Imports and preprocesses the combined loom files and saves as SingleCellExperiment.RDS objects. 
+## Imports and preprocesses the combined loom files and saves as SingleCellExperiment.RDS objects.
 rule convert_loom_to_singleCellExperiment:
     input:
         infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
@@ -555,7 +578,7 @@ rule convert_loom_to_singleCellExperiment:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
     log:
         log = os.path.join(PATH_LOG, "{genome}.loom2sce.log")
-    params: 
+    params:
         rscript = SOFTWARE['R']['Rscript']
     message: """
             Import loom file, preprocess and save as singleCellExperiment.RDS:
@@ -566,7 +589,7 @@ rule convert_loom_to_singleCellExperiment:
 
 
 # ----------------------------------------------------------------------------- #
-## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report  
+## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
 rule report:
     input:
         infile        = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
@@ -575,7 +598,7 @@ rule report:
     params:
         reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
         rscript       = SOFTWARE['R']['Rscript']
-    log: 
+    log:
         log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
     message: """
             Generate an HTML report from SingleCellExperiment.RDS:
@@ -627,4 +650,3 @@ rule fastqc:
         fastqc -j {params.java} -t {params.threads} -o {params.outpath} {input.barcode} {input.reads} 2> {log.log}
         touch {output.outfile}
     """
-
