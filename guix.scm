@@ -217,6 +217,7 @@ The main functions of FastQC are:
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("snakemake" ,snakemake)
        ("star" ,star)
+       ("r-minimal" ,r-minimal)
        ("r-cowplot" ,r-cowplot)
        ("r-data-table" ,r-data-table)
        ("r-delayedarray" ,r-delayedarray)
