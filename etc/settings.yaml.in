@@ -35,6 +35,9 @@ execution:
     bismark_align_and_map_pe:
       threads: 12
       memory: 19G
+    bismark_genome_preparation:
+      threads: 2 
+      memory: 19G
 
 tools:
   fastqc:
