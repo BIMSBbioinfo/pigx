@@ -73,22 +73,43 @@
              (let* ((out     (assoc-ref outputs "out"))
                     (bin     (string-append out "/bin"))
                     (share   (string-append out "/share/dropseq-tools/"))
-                    (scripts (list "CreateIntervalsFiles"
-				   "ConvertToRefFlat"
-				   "GatherGeneGCLength"
-				   "GatherReadQualityMetrics")))
+                    (scripts (list "BAMTagHistogram"
+                                   "BAMTagofTagCounts"
+                                   "BaseDistributionAtReadPosition"
+                                   "CollapseBarcodesInPlace"
+                                   "CollapseTagWithContext"
+                                   "ConvertToRefFlat"
+                                   "CreateIntervalsFiles"
+                                   "DetectBeadSynthesisErrors"
+                                   "DigitalExpression"
+                                   "Drop-seq_alignment.sh"
+                                   "FilterBAM"
+                                   "FilterBAMByTag"
+                                   "GatherGeneGCLength"
+                                   "GatherMolecularBarcodeDistributionByGene"
+                                   "GatherReadQualityMetrics"
+                                   "PolyATrimmer"
+                                   "ReduceGTF"
+                                   "SelectCellsByNumTranscripts"
+                                   "SingleCellRnaSeqMetricsCollector"
+                                   "TagBamWithReadSequenceExtended"
+                                   "TagReadWithGeneExon"
+                                   "TagReadWithInterval"
+                                   "TrimStartingSequence"
+                                   "ValidateReference")))
                (for-each mkdir-p (list bin share))
-	       (install-file "dist/dropseq.jar" share)
-	       (for-each (lambda (script)
-			   (chmod script #o555)
-			   (install-file script bin))
-			 scripts)
-	       (substitute* (map (lambda (script)
-				   (string-append bin "/" script))
-				 scripts)
-		 (("^java") (which "java"))
-		 (("jar_deploy_dir=.*")
-		  (string-append "jar_deploy_dir=" share "\n")))))))))
+               (install-file "dist/dropseq.jar" share)
+               (for-each (lambda (script)
+                           (chmod script #o555)
+                           (install-file script bin))
+                         scripts)
+               (substitute* (map (lambda (script)
+                                   (string-append bin "/" script))
+                                 scripts)
+                 (("^java") (which "java"))
+                 (("jar_deploy_dir=.*")
+                  (string-append "jar_deploy_dir=" share "\n"))))
+             #t)))))
     (inputs
      `(("java" ,icedtea-8)
        ("java-picard" ,java-picard)
@@ -207,6 +228,8 @@ The main functions of FastQC are:
     (inputs
      `(("dropseq-tools" ,dropseq-tools)
        ("fastqc" ,fastqc)
+       ("java-picard" ,java-picard)
+       ("java" ,icedtea-8)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
        ("python-pandas" ,python-pandas)
@@ -216,6 +239,7 @@ The main functions of FastQC are:
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("snakemake" ,snakemake)
        ("star" ,star)
+       ("r-minimal" ,r-minimal)
        ("r-cowplot" ,r-cowplot)
        ("r-data-table" ,r-data-table)
        ("r-delayedarray" ,r-delayedarray)

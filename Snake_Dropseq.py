@@ -24,6 +24,7 @@ validate_config(config)
 # Software parameters
 SOFTWARE = config['tools']
 # variables
+
 GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
 REFERENCE_NAMES = [GENOME_NAME_PRIMARY]
 COVARIATES = config['covariates']
@@ -32,6 +33,7 @@ COVARIATES = config['covariates']
 # PATHS
 OUTPUT_DIR = config['locations']['output-dir']
 PATH_FASTQ = config['locations']['reads-dir']
+TEMPDIR    = config['locations']['tempdir']
 PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
 PATH_MAPPED   = os.path.join(OUTPUT_DIR, 'Mapped')
 PATH_LOG      = os.path.join(OUTPUT_DIR, 'Log')
@@ -42,6 +44,7 @@ PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
 PATH_GTF_PRIMARY        = config['annotation']['primary']['gtf']
 PATH_META_DATA          = config['locations']['metadata']
+
 
 GENOME_NAME_MIX = None
 if 'secondary' in set(config['annotation'].keys()):
@@ -69,6 +72,16 @@ def lookup(column, predicate, fields=[]):
   return [record[field] for record in records for field in fields]
 
 SAMPLE_NAMES = [line['sample_name'] for line in SAMPLE_SHEET]
+
+# ----------------------------------------------------------------------------- #
+# sets the temporrary directory to default in the working directory if the tempdir does not exist
+if TEMPDIR == None:
+    if TMPDIR in os.environ.keys():
+        TEMPDIR = os.environ['TMPDIR']
+    else:
+        TEMPDIR = '/tmp'
+
+
 
 # ----------------------------------------------------------------------------- #
 # RULES
@@ -283,9 +296,11 @@ rule fasta_dict:
     output:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict')
     params:
-        picard=SOFTWARE['picard'],
-        threads=1,
-        mem='4G'
+        picard  = SOFTWARE['picard']['executable'],
+        java    = SOFTWARE['java']['executable']
+        threads = 1,
+        mem     = '2G',
+        tempdir = TEMPDIR
     log:
         os.path.join(PATH_LOG, '{genome}.fasta_dict.log')
     message:
@@ -295,7 +310,7 @@ rule fasta_dict:
                 output : {output}
         """
     shell:"""
-        java -Xmx1200m -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -334,9 +349,11 @@ rule gtf_to_refflat:
     output:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
     params:
-        droptools=SOFTWARE['droptools']['bin'],
-        threads=1,
-        mem='50G'
+        threads   = 1,
+        mem       = '50G'
+        java      = SOFTWARE['java']['executable'] ,
+        droptools = SOFTWARE['droptools']['executable'],
+        tempdir   = TEMPDIR
     log:
         os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
     message:"""
@@ -347,8 +364,9 @@ rule gtf_to_refflat:
                 output : {output}
         """
     shell:"""
-        {params.droptools}/ConvertToRefFlat O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log} O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
     """
+
 
 # # ----------------------------------------------------------------------------- #
 def get_fastq_files(wc):
@@ -364,10 +382,11 @@ rule merge_fastq_to_bam:
         os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
     params:
         name    = '{name}',
-        picard  = SOFTWARE['picard'],
+        picard  = SOFTWARE['picard']['executable'],
+        java    = SOFTWARE['picard']['java'],
         threads = 1,
-        mem     = '16G'
-
+        mem     = '2G',
+        tempdir = TEMPDIR
     log:
         os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
     message:"""
@@ -378,7 +397,7 @@ rule merge_fastq_to_bam:
                 output : {output}
         """
     shell: """
-    export TMPDIR=/data/local/buyar/tmp; java -Xmx12000m  -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
+    {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
     """
 
 
@@ -468,19 +487,23 @@ rule bam_tag_histogram:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt')
     params:
-        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname           = "{name}_{genome}",
-        droptools         = SOFTWARE['droptools']['bin'],
-        threads           = 1,
-        mem               = '64G'
+        outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname   = "{name}_{genome}",
+        threads   = 1,
+        mem       = '64G'
+        java      = SOFTWARE['java']['executable'] ,
+        droptools = SOFTWARE['droptools']['executable'],
+        tempdir   = TEMPDIR
     message: """
             BamTagHistogram:
                 input:  {input.infile}
                 output: {output.outfile}
         """
     shell:"""
-        {params.droptools}/BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
-		"""
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
+	"""
+
+
 
 # ----------------------------------------------------------------------------- #
 
@@ -518,9 +541,11 @@ rule get_umi_matrix:
     params:
         outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         outname           = "{name}_{genome}",
-        droptools         = SOFTWARE['droptools']['bin'],
         threads           = 1,
         mem               = '8G',
+        java              = SOFTWARE['java']['executable'] ,
+        droptools         = SOFTWARE['droptools']['executable'],
+        tempdir           = TEMPDIR,
         genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
         num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
     message: """
@@ -533,7 +558,13 @@ rule get_umi_matrix:
         with open(input.reads_cutoff) as stream:
             reads_cutoff = yaml.load(stream)['reads_cutoff']
 
-        tool = os.path.join(params.droptools,'DigitalExpression')
+
+        tool = params.java +
+        ' -XX:ParallelGCThreads=' + params.threads +
+        ' -Xmx$'                  + params.mem +
+        ' -Djava.io.tmpdir='      + params.tempdir +
+        params.droptools + ' DigitalExpression'
+
         command = ' '.join([
         tool,
         'O=' + output.outfile,
@@ -688,7 +719,7 @@ rule fastqc:
         outpath = os.path.join(PATH_MAPPED, "{name}"),
         threads = 1,
         mem     = '16G',
-        java    = SOFTWARE['java']
+        java    = SOFTWARE['java']['executable']
     log:
         log = os.path.join(PATH_LOG, "{name}.fastqc.log")
     message: """

@@ -13,7 +13,7 @@ dnl Check for Picard first, because that's likely going to fail.
 AC_ARG_VAR([PICARDJAR], [specify location of picard.jar])
 AS_IF([test -z "$PICARDJAR"],dnl
       AC_MSG_ERROR([Please provide the location of picard.jar with the PICARDJAR variable.]),dnl
-      AC_MSG_NOTICE([Using PICARDJAR.]))
+      AC_MSG_NOTICE([Using Picard from here: $PICARDJAR.]))
 
 dnl Load Python support for Automake and ensure we have a Python
 dnl interpreter for at least version 3.6.  This sets the "PYTHON"

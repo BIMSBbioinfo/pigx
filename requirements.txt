@@ -22,7 +22,6 @@ fastqc
 #methods
 #Rsamtools
 #rtracklayer
-#SCStats
 #stringr
 #yaml
 
