@@ -74,21 +74,22 @@
                     (bin     (string-append out "/bin"))
                     (share   (string-append out "/share/dropseq-tools/"))
                     (scripts (list "CreateIntervalsFiles"
-				   "ConvertToRefFlat"
-				   "GatherGeneGCLength"
-				   "GatherReadQualityMetrics")))
+                                   "ConvertToRefFlat"
+                                   "GatherGeneGCLength"
+                                   "GatherReadQualityMetrics")))
                (for-each mkdir-p (list bin share))
-	       (install-file "dist/dropseq.jar" share)
-	       (for-each (lambda (script)
-			   (chmod script #o555)
-			   (install-file script bin))
-			 scripts)
-	       (substitute* (map (lambda (script)
-				   (string-append bin "/" script))
-				 scripts)
-		 (("^java") (which "java"))
-		 (("jar_deploy_dir=.*")
-		  (string-append "jar_deploy_dir=" share "\n")))))))))
+               (install-file "dist/dropseq.jar" share)
+               (for-each (lambda (script)
+                           (chmod script #o555)
+                           (install-file script bin))
+                         scripts)
+               (substitute* (map (lambda (script)
+                                   (string-append bin "/" script))
+                                 scripts)
+                 (("^java") (which "java"))
+                 (("jar_deploy_dir=.*")
+                  (string-append "jar_deploy_dir=" share "\n"))))
+             #t)))))
     (inputs
      `(("java" ,icedtea-8)
        ("java-picard" ,java-picard)
