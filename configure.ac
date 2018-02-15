@@ -31,7 +31,7 @@ AM_PATH_PYTHON([3.6])
 AX_PYTHON_MODULE([yaml],   "required")
 AX_PYTHON_MODULE([pandas], "required")
 AX_PYTHON_MODULE([numpy],  "required")
-AX_PYTHON_MODULE([loompy],  "required")
+AX_PYTHON_MODULE([loompy], "required")
 
 dnl Check for required programmes and store their full path in the
 dnl given variables.  The variables are used to substitute
