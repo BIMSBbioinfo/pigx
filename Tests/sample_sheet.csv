@@ -1,4 +1,4 @@
-Peak_Name,ChIP,Cont,params.macs2,idr,feature_combination,UCSC
+Peak_Name,ChIP,Cont,params.macs2,idr,feature_combination,hub_Pigx_Hub
 Peaks1,ChIP.fq.gz,Cont.fq.gz,nomodel:''; extsize: 300,idr_A,FC1,Tracks1
 Peaks2,ChIP.fq.gz;ChIP.fq.gz,Cont.fq.gz;Cont.fq,nomodel; extsize 147,idr_A,FC1,Tracks1
 Peaks3,"ChIP_1.fq.gz,ChIP_2.fq.gz",Cont.fq.gz;Cont.fq,nomodel:'';,idr_B,FC1,Tracks2

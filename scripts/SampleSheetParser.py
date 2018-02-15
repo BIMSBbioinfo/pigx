@@ -226,9 +226,12 @@ def define_feature(sample_dict, feature_name):
         feature_dict[name] = peaks
     return feature_dict
 
-def define_hub_tracks(sample_dict):
+def define_hub_tracks(sample_dict,hub_identifier="hub_"):
+
+    hub_dict_name = [key for key in sample_dict[0].keys() if "hub" in key][0]
+    hub_name = hub_dict_name[len(hub_identifier):]
     track_dict = OrderedDict()
-    track_list = [dict['UCSC'] for dict in sample_dict]
+    track_list = [dict[hub_name] for dict in sample_dict]
     track_names = list(filter(None, set(track_list)))
     for name in sorted(track_names):
         track_dict[name] = OrderedDict()
@@ -240,7 +243,9 @@ def define_hub_tracks(sample_dict):
                 for chip in sample['ChIP']:
                     track_dict[name]['track-{}'.format(counter)] = {'name': chip[0], 'type': 'bigWig'}
                     counter += 1
-    return track_dict
+    hub_dict = {"name": hub_name}
+    hub_dict['supertracks'] = track_dict
+    return hub_dict
 
 
 if __name__ == '__main__':
@@ -272,7 +277,7 @@ if __name__ == '__main__':
     sample_sheet_dict["idr"] = define_idr(sample_dict)
     sample_sheet_dict["feature_combination"] = define_feature(sample_dict, "feature_combination")
     sample_sheet_dict["feature_factors"] = define_feature(sample_dict, "feature_factors")
-    sample_sheet_dict["hub"] = {'supertracks': define_hub_tracks(sample_sheet)}
+    sample_sheet_dict["hub"] = define_hub_tracks(sample_sheet)
 
     # print(json.dumps(sample_dict, indent=4))
     print("__________")

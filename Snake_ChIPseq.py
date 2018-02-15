@@ -47,7 +47,7 @@ else:
     if set(['idr']).issubset(set(keys)):
         SAMPLE_SHEET["idr"] = define_idr(_TMP_DICT)
     if set(['UCSC']).issubset(set(keys)):
-        SAMPLE_SHEET["hub"] = {'supertracks': define_hub_tracks(_TMP_DICT)}
+        SAMPLE_SHEET["hub"] = define_hub_tracks(_TMP_DICT)
     for key in keys: 
         if "feature_" in key:
             SAMPLE_SHEET[key] = define_feature(_TMP_DICT, key)
