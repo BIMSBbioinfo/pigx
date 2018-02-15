@@ -294,9 +294,11 @@ rule fasta_dict:
     output:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict')
     params:
-        picard=SOFTWARE['picard'],
-        threads=1,
-        mem='4G'
+        picard  = SOFTWARE['picard']['executable'],
+        java    = SOFTWARE['java']['executable']
+        threads = 1,
+        mem     = '2G',
+        tempdir = TEMPDIR
     log:
         os.path.join(PATH_LOG, '{genome}.fasta_dict.log')
     message:
@@ -306,7 +308,7 @@ rule fasta_dict:
                 output : {output}
         """
     shell:"""
-        java -Xmx1200m -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -375,10 +377,12 @@ rule merge_fastq_to_bam:
     output:
         os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
     params:
-        name='{name}',
-        picard=SOFTWARE['picard'],
-        threads=1,
-        mem='16G'
+        name    = '{name}',
+        picard  = SOFTWARE['picard']['executable'],
+        java    = SOFTWARE['picard']['java'],
+        threads = 1,
+        mem     = '2G',
+        tempdir = TEMPDIR
 
     log:
         os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
@@ -390,7 +394,7 @@ rule merge_fastq_to_bam:
                 output : {output}
         """
     shell: """
-    export TMPDIR=/data/local/buyar/tmp; java -Xmx12000m  -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
+    {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
     """
 
 
@@ -647,7 +651,7 @@ rule fastqc:
         outpath = os.path.join(PATH_MAPPED, "{name}"),
         threads = 1,
         mem     = '16G',
-        java    = SOFTWARE['java']
+        java    = SOFTWARE['java']['executable']
     log:
         log = os.path.join(PATH_LOG, "{name}.fastqc.log")
     message: """
