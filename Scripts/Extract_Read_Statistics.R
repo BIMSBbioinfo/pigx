@@ -1,4 +1,9 @@
 # -------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Argument_Parser.R'))
+argv = Parse_Arguments('Extract_Read_Statistics')
+
+# -------------------------------------------------------------------------- #
 Extract_Read_Statistics = function(
     bamfile = NULL,
     outfile = NULL,
@@ -26,7 +31,7 @@ Extract_Read_Statistics = function(
 
 # -------------------------------------------------------------------------- #
 Extract_Read_Statistics(
-      bamfile = snakemake@input[['bamfile']],
-      outfile = snakemake@output[['outfile']],
-      outname = snakemake@params[['outname']]
+      bamfile = argv$input[['bamfile']],
+      outfile = argv$output[['outfile']],
+      outname = argv$params[['outname']]
   )

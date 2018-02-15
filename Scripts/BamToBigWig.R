@@ -1,4 +1,7 @@
-
+# -------------------------------------------------------------------------- #
+options = commandArgs(trailingOnly=TRUE)
+source(file.path(options[2],'/Argument_Parser.R'))
+argv = Parse_Arguments('Extract_Read_Statistics')
 
 # ---------------------------------------------------------------------------- #
 GRangesToBigWig = function(g, outfile, scale.fac){
@@ -70,8 +73,8 @@ BamToBigWig = function(
 
 # -------------------------------------------------------------------------- #
 BamToBigWig(
-    bamfile            = snakemake@input[['bamfile']],
-    reads_by_cell_file = snakemake@input[['reads_by_cell_file']],
-    cell_cutoff_file   = snakemake@input[['cell_cutoff_file']],
-    bwfile             = snakemake@output[['bwfile']]
+    bamfile            = argv$input[['bamfile']],
+    reads_by_cell_file = argv$input[['reads_by_cell_file']],
+    cell_cutoff_file   = argv$input[['cell_cutoff_file']],
+    bwfile             = argv$output[['bwfile']]
 )

@@ -13,6 +13,7 @@ import yaml
 import csv
 import inspect
 
+include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Run_Rscript.py')
 PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
 
 include: os.path.join(PATH_SCRIPT, 'validate_input.py')
@@ -37,6 +38,7 @@ PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
 PATH_MAPPED   = os.path.join(OUTPUT_DIR, 'Mapped')
 PATH_LOG      = os.path.join(OUTPUT_DIR, 'Log')
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
+PATH_RSCRIPT = SOFTWARE['Rscript']['executable']
 
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
@@ -320,16 +322,18 @@ rule change_gtf_id:
     output:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
     params:
-        threads=1,
-        mem='4G'
+        threads = 1,
+        mem     = '4G',
+        Rscript = PATH_RSCRIPT
     message:
         """
             Changing GTF id:
                 input  : {input}
                 output : {output}
         """
-    script:
-        os.path.join(PATH_SCRIPT, 'change_gtf_id.R')
+    run:
+        RunRscript(input, output, params, 'change_gtf_id.R')
+
 
 
 
@@ -383,7 +387,6 @@ rule merge_fastq_to_bam:
         threads = 1,
         mem     = '2G',
         tempdir = TEMPDIR
-
     log:
         os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
     message:"""
@@ -439,14 +442,42 @@ rule extract_read_statistics:
     params:
         outname  = "{name}_{genome}",
         threads  = 1,
-        mem      = '8G'
+        mem      = '8G',
+        Rscript  = PATH_RSCRIPT
     message: """
             extract_read_statistics:
                 input:  {input.bamfile}
                 output: {output.outfile}
         """
-    script:
-        os.path.join(PATH_SCRIPT, 'Extract_Read_Statistics.R')
+    run:
+        RunRscript(input, output, params, 'Extract_Read_Statistics.R')
+
+# ----------------------------------------------------------------------------- #
+rule extract_downstream_statistics:
+    input:
+        umi_matrix   = rules.get_umi_matrix.output.outfile,
+        reads_matrix = rules.get_reads_matrix.output.outfile,
+        reads_stats  = rules.extract_read_statistics.output.outfile,
+        bam_tag_hist = rules.bam_tag_histogram.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt')
+    params:
+        file_location = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname       = "{name}_{genome}",
+        threads       = 1,
+        mem           = '8G',
+        scriptdir     = SCRIPTDIR,
+        Rscript       = RSCRIPT_PATH
+    message: """
+            extract_downstream_statistics:
+                umi:    {input.umi_matrix}
+                reads:  {input.reads_matrix}
+                stats:  {input.reads_stats}
+                output: {output.outfile}
+        """
+    run:
+        RunRscript(input, output, params, 'Extract_Downstream_Statistics.R')
+
 
 # ----------------------------------------------------------------------------- #
 # calculates the number of reads per cell
@@ -488,14 +519,17 @@ rule find_absolute_read_cutoff:
         outname  = "{name}_{genome}",
         threads  = 1,
         mem      = '8G',
-        cutoff   = 50000
+        cutoff   = 50000,
+        Rscript  = RSCRIPT_PATH
     message: """
             find_absolute_read_cutoff:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    script:
-        os.path.join(PATH_SCRIPT, 'Find_Absolute_Read_Cutoff.R')
+    run:
+        RunRscript(input, output, params, 'Find_Absolute_Read_Cutoff.R')
+
+
 # ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
 rule get_umi_matrix:
@@ -542,9 +576,42 @@ rule get_umi_matrix:
         shell(command)
 
 
+# ----------------------------------------------------------------------------- #
+# calculates the reads matrix - used for PCR duplication estimations
+rule get_reads_matrix:
+    input:
+        infile        = rules.map_scRNA.output,
+        reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt')
+    params:
+        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname           = "{name}_{genome}",
+        droptools         = SOFTWARE['droptools']['bin'],
+        threads           = 1,
+        mem               = '8G',
+        genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
+        num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
+    message: """
+            Count UMI:
+                input:  {input.infile}
+                reads:  {input.reads_cutoff}
+                output: {output.outfile}
+        """
+    run:
+        with open(input.reads_cutoff) as stream:
+            reads_cutoff = yaml.load(stream)['reads_cutoff']
 
-
-
+        tool = os.path.join(params.droptools,'DigitalExpression')
+        command = ' '.join([
+        tool,
+        'O=' + output.outfile,
+        'I=' + str(input.infile),
+        'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
+        'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff),
+        'OUTPUT_READS_INSTEAD=T'
+        ])
+        shell(command)
 
 # ----------------------------------------------------------------------------- #
 # convert UMI matrix from txt format into one loom format
@@ -631,14 +698,15 @@ rule bam_to_BigWig:
         bwfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw')
     params:
         threads = 1,
-        mem     = '16G'
+        mem     = '16G',
+        Rscript = PATH_RSCRIPT
     message: """
             bam_to_BigWig:
                 input:  {input.bamfile}
                 output: {output.bwfile}
             """
-    script:
-        os.path.join(PATH_SCRIPT, 'BamToBigWig.R')
+    run:
+        RunRscript(input, output, params, 'BamToBigWig.R')
 
 
 # ----------------------------------------------------------------------------- #
