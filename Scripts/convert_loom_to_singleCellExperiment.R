@@ -294,9 +294,11 @@ assays(sce) <- SimpleList("cnts" = counts,
                           "cpm" = counts_per_million, 
                           "scale" = scaled_counts)
 
-message(date()," Computing PCA")
+saveRDS(object = sce, file = paste0(outFile, '.intermediate.RDS'))
+
 
 #4.5 compute gene variability across conditions 
+message(date()," Computing gene variability across cells")
 fit <- scran::trendVar(x = sce, assay.type = 'cpm', use.spikes = FALSE)
 decomp <- scran::decomposeVar(x = sce, fit = fit, assay.type = 'cpm')
 rowData(sce) <- cbind(rowData(sce), 
@@ -313,12 +315,16 @@ rowData(sce) <- cbind(rowData(sce),
 topgenes <- rowData(sce)[order(rowData(sce)$row_variability, decreasing = T),][1:max,]$Genes
 
 #4.6 get PCA results using genes with top row variance
+message(date()," Computing PCA")
 sce <- runPrComp(x = sce, expr_values = 'scale', ncomponents = 10,
             features = topgenes, center = FALSE, scale = FALSE)
+saveRDS(object = sce, file =  paste0(outFile, '.intermediate.RDS'))
 
 message(date()," Computing t-SNE")
 #4.7 get t-SNE results
 sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')
+
+saveRDS(object = sce, file =  paste0(outFile, '.intermediate.RDS'))
 
 #4.8 Assign cell cycle phase scores
 skipCycleScore <- FALSE
@@ -336,6 +342,7 @@ if(skipCycleScore == FALSE) {
   overlap <- sum(grepl('^ENS', rowData(sce)$Genes)) / nrow(sce)
     
   if(overlap > 0.5) { #require at least 50% overlap in the gene id overlap
+    message(date()," Computing cell cycle phase scores")
     assigned <- scran::cyclone(x = sce, 
                                gene.names = rowData(sce)$Genes, 
                                assay.type = 'cpm', 
