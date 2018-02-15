@@ -71,6 +71,7 @@ lookupBedFile <- function (type, filename, dir, assembly, webfetch) {
       return(gzipped)
   }
 
+  # can't fine file locally: now check if we should try to download it:
   if( webfetch )
   {
     message(paste0("Could not find ", filename, ".  Fetching from Internet."))
@@ -104,18 +105,5 @@ lookupBedFile <- function (type, filename, dir, assembly, webfetch) {
   {
   # print( paste("Failed to find reference annotation file",type," for <'",assembly,"'> (see settings:general in settings file.)." ))
   return('')
-    }
-    
-    tryCatch({
-      return(fetchTableFromUCSC(type, filename, assembly))
-    }, error = function (msg) {
-      message(paste0("Error while downloading from UCSC browser: ", msg))
-    })
-  }
-  else
-  {
-    ## @@@ TODO: print this warning to a separate file for visibility.
-    print( paste("WARNING: Could not find reference annotation files for differential methylation for the given assembly <'",assembly,"'> (see settings:general in settings file.) The option to fetch from the internet was not set." ))
-    return('')
   }
 }
