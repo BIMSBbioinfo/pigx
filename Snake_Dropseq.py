@@ -139,13 +139,13 @@ UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genom
 COMBINED_UMI_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
-# Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects. 
+# Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects.
 SCE_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"), genome = REFERENCE_NAMES)
 # ----------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
-## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report  
-REPORT_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html"), genome = REFERENCE_NAMES) 
+## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
+REPORT_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html"), genome = REFERENCE_NAMES)
 # ----------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
@@ -429,6 +429,32 @@ rule extract_read_statistics:
         os.path.join(PATH_SCRIPT, 'Extract_Read_Statistics.R')
 
 # ----------------------------------------------------------------------------- #
+rule extract_downstream_statistics:
+    input:
+        umi_matrix   = rules.get_umi_matrix.output.outfile,
+        reads_matrix = rules.get_reads_matrix.output.outfile,
+        reads_stats  = rules.extract_read_statistics.output.outfile,
+        bam_tag_hist = rules.bam_tag_histogram.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt')
+    params:
+        file_location = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname       = "{name}_{genome}",
+        threads       = 1,
+        mem           = '8G',
+        scriptdir     = SCRIPTDIR
+    message: """
+            extract_downstream_statistics:
+                umi:    {input.umi_matrix}
+                reads:  {input.reads_matrix}
+                stats:  {input.reads_stats}
+                output: {output.outfile}
+        """
+    script:
+        os.path.join(PATH_SCRIPT, 'Extract_Downstream_Statistics.R')
+
+
+# ----------------------------------------------------------------------------- #
 # calculates the number of reads per cell
 rule bam_tag_histogram:
     input:
@@ -472,6 +498,7 @@ rule find_absolute_read_cutoff:
         """
     script:
         os.path.join(PATH_SCRIPT, 'Find_Absolute_Read_Cutoff.R')
+
 # ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
 rule get_umi_matrix:
@@ -509,6 +536,44 @@ rule get_umi_matrix:
         ])
         shell(command)
 
+
+# ----------------------------------------------------------------------------- #
+# calculates the reads matrix - used for PCR duplication estimations
+rule get_reads_matrix:
+    input:
+        infile        = rules.map_scRNA.output,
+        reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt')
+    params:
+        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname           = "{name}_{genome}",
+        droptools         = SOFTWARE['droptools']['bin'],
+        threads           = 1,
+        mem               = '8G',
+        genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
+        num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
+    message: """
+            Count UMI:
+                input:  {input.infile}
+                reads:  {input.reads_cutoff}
+                output: {output.outfile}
+        """
+    run:
+        with open(input.reads_cutoff) as stream:
+            reads_cutoff = yaml.load(stream)['reads_cutoff']
+
+        tool = os.path.join(params.droptools,'DigitalExpression')
+        command = ' '.join([
+        tool,
+        'O=' + output.outfile,
+        'I=' + str(input.infile),
+        'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
+        'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff),
+        'OUTPUT_READS_INSTEAD=T'
+        ])
+        shell(command)
+
 # ----------------------------------------------------------------------------- #
 # convert UMI matrix from txt format into one loom format
 rule convert_matrix_from_txt_to_loom:
@@ -526,7 +591,7 @@ rule convert_matrix_from_txt_to_loom:
         """
     shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
 
-        
+
 # ----------------------------------------------------------------------------- #
 ## combines multiple loom files into one loom file
 rule combine_UMI_matrices_into_loom:
@@ -544,10 +609,10 @@ rule combine_UMI_matrices_into_loom:
                 output: {output.outfile}
         """
     shell: "echo {input.infile} > {params.tmpfile}; python {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; rm {params.tmpfile} &> {log.log}"
-        
-    
+
+
 # ----------------------------------------------------------------------------- #
-## Imports and preprocesses the combined loom files and saves as SingleCellExperiment.RDS objects. 
+## Imports and preprocesses the combined loom files and saves as SingleCellExperiment.RDS objects.
 rule convert_loom_to_singleCellExperiment:
     input:
         infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
@@ -555,7 +620,7 @@ rule convert_loom_to_singleCellExperiment:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
     log:
         log = os.path.join(PATH_LOG, "{genome}.loom2sce.log")
-    params: 
+    params:
         rscript = SOFTWARE['R']['Rscript']
     message: """
             Import loom file, preprocess and save as singleCellExperiment.RDS:
@@ -566,7 +631,7 @@ rule convert_loom_to_singleCellExperiment:
 
 
 # ----------------------------------------------------------------------------- #
-## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report  
+## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
 rule report:
     input:
         infile        = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
@@ -575,7 +640,7 @@ rule report:
     params:
         reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
         rscript       = SOFTWARE['R']['Rscript']
-    log: 
+    log:
         log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
     message: """
             Generate an HTML report from SingleCellExperiment.RDS:
@@ -627,4 +692,3 @@ rule fastqc:
         fastqc -j {params.java} -t {params.threads} -o {params.outpath} {input.barcode} {input.reads} 2> {log.log}
         touch {output.outfile}
     """
-
