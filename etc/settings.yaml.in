@@ -3,6 +3,7 @@ locations:
   reads-dir: reads/
   sample-sheet: sample_sheet.csv
   metadata: metaData.tsv
+  tempdir:
 
 annotation:
   primary:
