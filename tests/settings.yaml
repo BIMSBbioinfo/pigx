@@ -1,31 +1,12 @@
 locations:
-  output-dir: /data/local/vfranke/temp/pigx-scrna
-  reads-dir: tests/sample_data/reads/
-  sample-sheet: tests/sample_sheet.csv
-  metadata: tests/metaData.tsv
-  tempdir: /data/local/vfranke/temp/pigx-scrna/temp
+  output-dir: out/
+  reads-dir: sample_data/reads/
+  sample-sheet: sample_sheet.csv
+  metadata: metaData.tsv
 
 annotation:
   primary:
     genome:
       name: hg19
-      fasta: /home/vfranke/Projects/AAkalin_pigx/pigx_scrnaseq/tests/sample_data/hg19_chr19.10094960.25108012.fa
-    gtf: /home/vfranke/Projects/AAkalin_pigx/pigx_scrnaseq/tests/sample_data/hg19_chr19.10094960.25108012.gtf
-
-covariates: 'time, replicate'
-
-tools:
-  picard:
-    executable: '/home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/3rdParty/picard/picard.jar'
-  droptools:
-    executable: '/home/vfranke/bin/Software/Dropseq/Drop-seq_tools-1.12/jar/dropseq.jar'
-    genes_per_cell: 10
-    num_core_barcodes: 10
-  star:
-    executable: '/home/vfranke/bin/Software/Mapping/STAR-2.5.3a/bin/Linux_x86_64_static/STAR'
-  java:
-    executable: '/home/vfranke/.guix-profile/bin/java'
-  Rscript:
-    executable: '/usr/bin/Rscript'
-
-
+      fasta: sample_data/hg19_chr19.10094960.25108012.fa
+    gtf: sample_data/hg19_chr19.10094960.25108012.gtf
