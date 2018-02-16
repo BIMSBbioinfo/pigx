@@ -611,7 +611,7 @@ rule diffmeth_report:
     input:
         lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.sorted_diffmeth.bed',
         template      = os.path.join(DIR_templates,"diffmeth.Rmd"),
-        chrom_seqlengths    = os.path.join(config['locations']['output-dir'], DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
         report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
     params:
