@@ -17,7 +17,7 @@ covariates: 'time, replicate'
 tools:
   picard:
     executable: @PICARDJAR@
-  dropseq:
+  droptools:
     executable: @DROPSEQJAR@
     genes_per_cell: 10
     num_core_barcodes: 10
