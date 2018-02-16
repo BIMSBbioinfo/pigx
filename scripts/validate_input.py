@@ -20,7 +20,7 @@ def validate_config(config):
         
     # Check that all locations exist
     for loc in config['locations']:
-        if (not loc == 'output-dir') and (not (os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
+        if (not loc == 'output-dir') and config['locations'][loc] and (not (os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
             raise Exception("ERROR: The following necessary directory/file does not exist: {} ({})".format(config['locations'][loc], loc))
 
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
