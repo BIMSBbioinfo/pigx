@@ -123,7 +123,6 @@ targets = {
         'files': files_for_sample(methSeg)
     },
     
-
     'diffmeth': {
         'description': "Perform differential methylation calling.",
         'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
@@ -132,12 +131,6 @@ targets = {
     'diffmeth-report': {
         'description': "Produce a comprehensive report for differential methylation.",
         'files':[ [DIR_final+"diffmeth-report."+"vs".join(x)+".html"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
-    },
-    
-    # @TODO: what if there is no diff meth files???,then files will be an empty list []
-    'diffmeth-report': {
-        'description': "Produce a comprehensive report for differential methylation.",
-        'files':[ [DIR_final+"_".join(x)+".report.html"] for x in config["general"]["differential-methylation"]["treatment-groups"] ]
     },
 
     'final-report': {
@@ -618,7 +611,7 @@ rule diffmeth_report:
     input:
         lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.sorted_diffmeth.bed',
         template      = os.path.join(DIR_templates,"diffmeth.Rmd"),
-        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+        chrom_seqlengths    = os.path.join(config['locations']['output-dir'], DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
         report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
     params:
@@ -638,4 +631,4 @@ rule diffmeth_report:
     message: fmt("Compiling differential methylation report " + "for treatment " + "{wildcards.treatment}")
     run:
         generateReport(input, output, params, log, "")
-         
+

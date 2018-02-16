@@ -15,12 +15,10 @@ bibliography: reports.bib
 link-citations: yes
 params:
   MethCall: TRUE
-  Samplename: ''
   chrom_seqlengths: ''
   source_dir: ''
   out_dir:    ''
   diffmeth_dir: ''
-  inBam:    ''
   assembly: ''
   DiffMeth: TRUE
   methylDiff_files: list()
@@ -110,7 +108,7 @@ methylDiff.obj.hyper <- readRDS(methylDiff_hyper_file)
 sampleids <- methylDiff.obj@sample.ids
 treatment <- getTreatment(methylDiff.obj)
 
-################################################################ fake diff meh cytosines START
+################################################################@TODO: Remove me START
 library(methylKit)
 file.list=list( system.file("extdata", 
                             "test1.myCpG.txt", package = "methylKit"),
@@ -129,7 +127,7 @@ myDiff=calculateDiffMeth(meth)
 methylDiff.obj <- myDiff
 methylDiff.obj.hypo <- myDiff
 methylDiff.obj.hyper <- myDiff
-################################################################ fake diff meh cytosines END
+################################################################ @TODO: Remove me END
 
 ```
 
@@ -287,15 +285,14 @@ cat('Annotation of differential methylation can also be performed, using the sam
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
 source(paste0(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type      = "refGene",
-                                  filename  = basename(refGenfile),
+                                  filename  = basename(refGenfile), ###########@TODO: fix me
                                   dir       = genome_dir,
                                   assembly  = assembly,
                                   webfetch  = webfetch )
 fetch_refgen_success <- ( fetched.refgenes != '')
-saveRDS(list(paste0(genome_dir,"/",basename(refGenfile)),fetched.refgenes, CpGfile, genome_dir, out_dir), "~/tmp1.RDS")
 
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
-                              filename =  basename(CpGfile),
+                              filename =  basename(CpGfile), ###########@TODO: fix me
                               dir = genome_dir,
                               assembly = assembly,
                               webfetch = webfetch )
@@ -408,7 +405,6 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
   hist(assoTSS[,2], main="Distance to the nearest TSS", xlab="bp", ylab="Frequency", col="cornflowerblue")
 
   }
-
 
 ```
 
