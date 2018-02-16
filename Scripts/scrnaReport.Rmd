@@ -243,7 +243,7 @@ plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20)
     cellCount <- ncol(sce)
   }
   select <- sample(1:ncol(sce), cellCount)
-  exprMatrix <- assay(sce, 'cpm')[match(topGenes, rowData(sce)$Genes),select]
+  exprMatrix <- assay(sce, 'scale')[match(topGenes, rowData(sce)$Genes),select]
 
   annotationDf <- as.data.frame(colData(sce)[select,covariateList])
   rownames(annotationDf) <- colData(sce)[select,]$cell_id
@@ -251,7 +251,6 @@ plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20)
   colnames(exprMatrix) <- rownames(annotationDf)
   p <- pheatmap::pheatmap(mat = exprMatrix, 
                      show_rownames = TRUE, 
-                     scale = 'row',
                      annotation_col = annotationDf, 
                      show_colnames = FALSE)
   filename <- file.path(workdir, paste0("heatmap", pc, '.png'))
