@@ -8,7 +8,7 @@ output:
 params:
   covariates: time, replicate
   outFile: test.scRNA.html
-  sceRdsFile: /data/local/buyar/pigx/scrna/integrate_report/test.RDS
+  sceRdsFile: /data/local/buyar/pigx/scrna/integrate_report/results_test4/Mapped/hg38.SingleCellExperiment.RDS
   workdir: .
 ---
 
@@ -243,14 +243,15 @@ plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20)
     cellCount <- ncol(sce)
   }
   select <- sample(1:ncol(sce), cellCount)
-  exprMatrix <- assay(sce, 'cpm')[which(rowData(sce)$Genes %in% topGenes),select]
+  exprMatrix <- assay(sce, 'cpm')[match(topGenes, rowData(sce)$Genes),select]
 
   annotationDf <- as.data.frame(colData(sce)[select,covariateList])
   rownames(annotationDf) <- colData(sce)[select,]$cell_id
   rownames(exprMatrix) <- topGenes
   colnames(exprMatrix) <- rownames(annotationDf)
-  p <- pheatmap::pheatmap(mat = exprMatrix, scale = 'column', 
+  p <- pheatmap::pheatmap(mat = exprMatrix, 
                      show_rownames = TRUE, 
+                     scale = 'row',
                      annotation_col = annotationDf, 
                      show_colnames = FALSE)
   filename <- file.path(workdir, paste0("heatmap", pc, '.png'))
@@ -276,6 +277,87 @@ for (i in 1:length(pcaContributorHeatmaps)) {
 }
 ```
 
+
+```{r define-projectGeneExpression}
+plotGeneExpressionOnPCA <- function(sce, geneIds, assay.type = 'scale', dim1, dim2, reducedDimType = 'PCA') {
+  geneIds <- intersect(geneIds, rowData(sce)$Genes)
+  if(length(geneIds) > 0){
+    #find indices of given genes in the rowData
+    select <- match(geneIds, rowData(sce)$Genes)
+    #subset assay matrix for the selected genes
+    assayData <- assay(sce, assay.type)[select,]
+    rownames(assayData) <- geneIds
+    dt <- cbind(as.data.table(reducedDim(sce, reducedDimType)[,c(dim1, dim2)]), 
+                as.data.table(t(assayData)))
+    mdt <- reshape2::melt(dt, id.vars = 1:2)
+    
+    p <- ggplot2::ggplot(mdt, aes_string(x = colnames(mdt)[1], 
+                                         y = colnames(mdt)[2])) + 
+      geom_point(aes(color = value), size = 0.2, alpha = 0.5) + 
+      facet_wrap(~ variable, ncol = 4) + 
+      theme(axis.text.x = element_text(angle = 90),  
+            strip.text = element_text(size = 10)) + 
+      scale_color_gradient(low = 'grey', high = 'blue')
+    return(p)
+  } else{
+    stop("None of the provided gene ids match the gene ids 
+         in the SingleCellExperiment object")
+  }
+}
+
+highlyVariableGenes <- rowData(sce)[order(rowData(sce)$fitted_variability, decreasing = T),][1:20,]$Genes
+
+```
+
+```{r compute-projectGeneExpression-PCA}
+myPlotList <- list('PC1_vs_PC2'  = 1:2, 
+                   'PC3_vs_PC4'  = 3:4,
+                   'PC5_vs_PC6'  = 5:6, 
+                   'PC7_vs_PC8'  = 7:8)
+
+geneProjectionPlots <- lapply(myPlotList, function(x) {
+  plotGeneExpressionOnPCA(sce = sce, 
+                          geneIds = highlyVariableGenes, 
+                          assay.type = 'scale', 
+                          reducedDimType = 'PCA',
+                          dim1 = x[1], dim2 = x[2])
+}) 
+names(geneProjectionPlots) <- names(myPlotList)
+```
+
+### Project Highly Variable Genes on PCA {.tabset}
+
+```{r print-projectGeneExpression-PCA, results='asis'}
+for (i in 1:length(geneProjectionPlots)) {
+  cat("#### ",names(geneProjectionPlots)[[i]],"\n")
+  print(geneProjectionPlots[[i]])
+  cat('\n\n')
+}
+```
+
+```{r compute-projectGeneExpression-TSNE}
+myPlotList <- list('tSNE-1 vs tSNE-2'  = 1:2) 
+        
+
+geneProjectionPlots <- lapply(myPlotList, function(x) {
+  plotGeneExpressionOnPCA(sce = sce, 
+                          geneIds = highlyVariableGenes, 
+                          assay.type = 'scale', 
+                          reducedDimType = 'TSNE',
+                          dim1 = x[1], dim2 = x[2])
+}) 
+names(geneProjectionPlots) <- names(myPlotList)
+```
+
+### Project Highly Variable Genes on TSNE {.tabset}
+
+```{r print-projectGeneExpression-TSNE, results='asis'}
+for (i in 1:length(geneProjectionPlots)) {
+  cat("#### ",names(geneProjectionPlots)[[i]],"\n")
+  print(geneProjectionPlots[[i]])
+  cat('\n\n')
+}
+```
 
 # Session Information
 ```{r sessionInfo}
