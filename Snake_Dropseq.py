@@ -13,8 +13,7 @@ import yaml
 import csv
 import inspect
 
-# PATH_SCRIPT = os.path.join(config['locations']['pkglibexecdir'])
-PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
+PATH_SCRIPT = os.path.join(config['locations']['pkglibexecdir'], 'scripts')
 
 # loads function for running Rscripts
 include: os.path.join(PATH_SCRIPT, 'Run_Rscript.py')
