@@ -6,7 +6,7 @@ import sys
 
 # ---------------------------------------------------------------------------- #
 def get_fastq_input(wc):
-    samps = SAMPLE_SHEET['samples'][wc.name]['fastq']
+    samps = lookup('name', wc.name, ['Reads', 'Reads2'])
 
     if type(samps) is str:
         samps = [samps]
@@ -16,7 +16,9 @@ def get_fastq_input(wc):
 
 # ---------------------------------------------------------------------------- #
 def get_library_type(wc):
-    lib = SAMPLE_SHEET['samples'][wc.name]['library']
+    lib = ["paired" if len(files) == 2
+            else "single"
+            for files in lookup('name', wc.name, ['Reads', 'Reads2'])]
     return(lib)
 
 # ---------------------------------------------------------------------------- #

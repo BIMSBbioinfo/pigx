@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import yaml
+import xlrd
 
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
@@ -18,39 +19,29 @@ SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 REPORT_TEMPLATE   = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
 
 # ---------------------------------------------------------------------------- #
+# read the sample sheet
 
-
-# sample sheet input
-if SAMPLE_SHEET_FILE.endswith('.yaml'):
-    with open(SAMPLE_SHEET_FILE, 'r') as stream:
-        SAMPLE_SHEET = yaml.load(stream)
+## Load sample sheet
+if SAMPLE_SHEET_FILE.endswith('.xlsx'):
+    with xlrd.open_workbook(file_name) as book:
+        sheet = book.sheet_by_index(0)
+        rows = [sheet.row_values(r) for r in range(0, sheet.nrows)]
+elif SAMPLE_SHEET_FILE.endswith('.csv'):
+    with open(SAMPLE_SHEET_FILE, 'r') as fp:
+        rows = [row for row in csv.reader(fp, delimiter=',')]
 else:
-    if SAMPLE_SHEET_FILE.endswith('.xlsx'):
-        with load_book(SAMPLE_SHEET_FILE) as book:
-            ### needs a parameter to specify sheet (by default "sample_sheet" )
-            tmp_dict = excel_sheet_to_dict(book)
-    elif SAMPLE_SHEET_FILE.endswith('.csv'):
-        tmp_dict = csv_file_to_dict(SAMPLE_SHEET_FILE)
-    else: 
-        raise InputError('File format of the sample_sheet has to be: yaml, xlsx or csv.')
+    raise InputError('File format of the sample_sheet has to be: csv or excel table (xls,xlsx).')
+header = rows[0]; rows = rows[1:]
+SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
 
-    _TMP_DICT = parse_sample_sheet(tmp_dict)
-    if _TMP_DICT[0]:
-        keys = _TMP_DICT[0].keys()
-
-    SAMPLE_SHEET = {}
-    if set(['Peak_Name','ChIP', 'Cont']).issubset(set(keys)):
-        SAMPLE_SHEET["samples"] = define_mapping(_TMP_DICT)
-        SAMPLE_SHEET["peak_calling"] = define_peakCalling(_TMP_DICT, SAMPLE_SHEET["samples"])
-    else: 
-        raise InputError('The sample sheet does not include information about samples or peak_calling')
-    if set(['idr']).issubset(set(keys)):
-        SAMPLE_SHEET["idr"] = define_idr(_TMP_DICT)
-    if set(['UCSC']).issubset(set(keys)):
-        SAMPLE_SHEET["hub"] = define_hub_tracks(_TMP_DICT)
-    for key in keys: 
-        if "feature_" in key:
-            SAMPLE_SHEET[key] = define_feature(_TMP_DICT, key)
+# Convenience function to access fields of sample sheet columns that
+# match the predicate.  The predicate may be a string.
+def lookup(column, predicate, fields=[]):
+    if inspect.isfunction(predicate):
+        records = [line for line in SAMPLE_SHEET if predicate(line[column])]
+    else:
+        records = [line for line in SAMPLE_SHEET if line[column]==predicate]
+    return [record[field] for record in records for field in fields]
 
 
 
@@ -66,7 +57,7 @@ SOFTWARE = config['tools']
 # Per sample software parameters:
 # Loops throug the sample sheet and extracts per sample software parameters
 # Flattens all samples with custom parameters into one dict - sample names must be unique
-custom_param_names = sorted(list(set(SAMPLE_SHEET.keys()) - set(['samples','hub'])))
+custom_param_names = sorted(list(set(SAMPLE_SHEET.keys()) - set(['samples', 'hub'])))
 CUSTOM_PARAMS = dict()
 for param_set in custom_param_names:
     for sample_name in SAMPLE_SHEET[param_set].keys():
@@ -88,7 +79,7 @@ ANNOTATION   = config['locations']['gff-file']
 
 # Sample name definition
 PEAK_NAMES   = []
-NAMES        = SAMPLE_SHEET['samples'].keys()
+NAMES = [line['name'] for line in SAMPLE_SHEET]
 
 # Directory structure definition
 OUTPUT_DIR      = config['locations']['output-dir']
@@ -158,7 +149,7 @@ INDEX_PREFIX_PATH  = os.path.join(set_default('index-dir', prefix_default, confi
 # FASTQC output files
 FASTQC_DICT = {}
 for i in NAMES:
-    for fqfile in SAMPLE_SHEET['samples'][i]['fastq']:
+    for fqfile in lookup('name', wc.name, ['Reads', 'Reads2']:
         prefix  = fqfile
         prefix  = re.sub('.fq.*'   , '', prefix)
         prefix  = re.sub('.fastq.*', '', prefix)
@@ -245,10 +236,10 @@ COMMAND = COMMAND + ChIPQC
 # ---------------------------------------------------------------------------- #
 # CONDITIONAL OUTPUT FILES
 
-peak_index = 'peak_calling' in set(SAMPLE_SHEET.keys())
+peak_index = 'peak_calling' in set(config.keys())
 if peak_index:
-    if len(SAMPLE_SHEET['peak_calling'].keys()) > 0:
-        PEAK_NAMES = SAMPLE_SHEET['peak_calling'].keys()
+    if len(config['peak_calling'].keys()) > 0:
+        PEAK_NAMES = config['peak_calling'].keys()
         MACS  = []
         QSORT = []
         suffix = 'narrowPeak'
@@ -268,10 +259,10 @@ if peak_index:
         COMMAND = COMMAND + MACS + QSORT + PEAK_STATISTICS
 
 # # ----------------------------------------------------------------------------- #
-if 'idr' in set(SAMPLE_SHEET.keys()):
-    if len(SAMPLE_SHEET['idr'].keys()) > 0:
+if 'idr' in set(config.keys()):
+    if len(config['idr'].keys()) > 0:
         IDR = []
-        for name in SAMPLE_SHEET['idr'].keys():
+        for name in config['idr'].keys():
             IDR = IDR + [os.path.join(PATH_IDR, name, name + ".bed")]
             PEAK_NAME_LIST[name] = IDR[-1]
 
@@ -280,10 +271,10 @@ if 'idr' in set(SAMPLE_SHEET.keys()):
 
 # # ----------------------------------------------------------------------------- #
 HUB_NAME = None
-if 'hub' in set(SAMPLE_SHEET.keys()):
-    HUB_NAME = SAMPLE_SHEET['hub']['name']
+if 'hub' in set(config.keys()):
+    HUB_NAME = config['hub']['name']
     HUB = [os.path.join(PATH_HUB, HUB_NAME, 'done.txt')]
-    BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=SAMPLE_SHEET['peak_calling'].keys())
+    BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
 
     include: os.path.join(RULES_PATH, 'UCSC_Hub.py')
     COMMAND = COMMAND + BB + HUB
@@ -297,8 +288,8 @@ if peak_index:
     COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS
 
 # ---------------------------------------------------------------------------- #
-if 'feature_combination' in set(SAMPLE_SHEET.keys()):
-    FEATURE_NAMES = SAMPLE_SHEET['feature_combination'].keys()
+if 'feature_combination' in set(config.keys()):
+    FEATURE_NAMES = config['feature_combination'].keys()
     if len(FEATURE_NAMES) > 0:
 
         FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),

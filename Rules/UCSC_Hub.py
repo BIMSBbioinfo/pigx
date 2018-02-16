@@ -6,7 +6,7 @@ rule make_ucsc_hub:
         output:
             outfile = os.path.join(PATH_HUB, HUB_NAME, 'done.txt')
         params:
-            hub         = SAMPLE_SHEET['hub'],
+            hub         = config['hub'],
             genome_name = GENOME,
             paths       = TRACK_PATHS,
             path_hub    = os.path.join(PATH_HUB, HUB_NAME),
