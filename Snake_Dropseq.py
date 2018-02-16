@@ -13,9 +13,12 @@ import yaml
 import csv
 import inspect
 
-include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Run_Rscript.py')
-PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
+PATH_SCRIPT = os.path.join(config['locations']['pkglibexecdir'])
 
+# loads function for running Rscripts
+include: os.path.join(PATH_SCRIPT, 'Run_Rscript.py')
+# functions for java input
+include: os.path.join(PATH_SCRIPT, 'Accessory_Functions.py')
 include: os.path.join(PATH_SCRIPT, 'validate_input.py')
 validate_config(config)
 
@@ -399,39 +402,314 @@ rule merge_fastq_to_bam:
     shell: """
     {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
     """
+# ----------------------------------------------------------------------------- #
+rule tag_cells:
+    input:
+        rules.merge_fastq_to_bam.output.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cell.bam"))
+    params:
+        summary   = os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cellular.bam_summary.txt")
+        droptools = SOFTWARE['droptools']['executable'],
+        java      = SOFTWARE['java']['executable'],
+        app_name  = 'TagBamWithReadSequenceExtended',
+        threads   = 8,
+        mem       = '35G',
+        tempdir   = TEMPDIR,
+        base_min  = 1,
+        base_max  = 12,
+        base_qual = 10,
+        barcoded_read = 1,
+        discard_read  = 'false'
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
 
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+
+        command = ' '.join([
+        tool,
+        'SUMMARY='       + str(params.summary),
+        'BASE_RANGE='    + "_".join([str(params.base_min),str(params.base_max)]),
+        'BASE_QUALITY='  + str(params.base_qual),
+        'BARCODED_READ=' + str(params.barcoded_read),
+        'DISCARD_READ='  + str(params.discard_read),
+        'TAG_NAME=XC',
+        'NUM_BASES_BELOW_QUALITY=1',
+        'INPUT='  + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+    shell(command)
 
 # ----------------------------------------------------------------------------- #
-# Maps reads using Dropseq tools and STAR
-rule map_scRNA:
+rule tag_molecules:
     input:
-        refflat   = rules.gtf_to_refflat.output,
-        dict      = rules.fasta_dict.output,
-        index     = rules.make_star_reference.output,
-        infile    = rules.merge_fastq_to_bam.output,
+        rules.tag_cells.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_CellMolecular.bam"))
+    params:
+        summary   = os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Molecular.bam_summary.txt"),
+        droptools = SOFTWARE['droptools']['executable'],
+        java      = SOFTWARE['java']['executable'],
+        app_name  = 'TagBamWithReadSequenceExtended',
+        threads   = 8,
+        mem       = '35G',
+        tempdir   = TEMPDIR,
+        base_min  = 13,
+        base_max  = 20,
+        base_qual = 10,
+        barcoded_read = 1,
+        discard_read  = 'true'
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+
+        command = ' '.join([
+        tool,
+        'SUMMARY='       + params.summary,
+        'BASE_RANGE='    + "_".join([str(params.base_min),str(params.base_max)]),
+        'BASE_QUALITY='  + str(params.base_qual),
+        'BARCODED_READ=' + str(params.barcoded_read),
+        'DISCARD_READ='  + str(params.discard_read),
+        'TAG_NAME=XM',
+        'NUM_BASES_BELOW_QUALITY=1',
+        'INPUT='  + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+    shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule filter_bam:
+    input:
+        rules.tag_molecules.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_filtered.bam"))
+    params:
+        droptools = SOFTWARE['droptools']['executable'],
+        java      = SOFTWARE['java']['executable'],
+        app_name  = 'FilterBAM',
+        threads   = 1,
+        mem       = '10G',
+        tempdir   = TEMPDIR,
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.filter_bam.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'TAG_REJECT=XQ',
+        'INPUT='  + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+    shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule trim_starting_sequence:
+    input:
+        rules.filter_bam.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_trimmed_smart.bam"))
+    params:
+        droptools  = SOFTWARE['droptools']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'TrimStartingSequence',
+        threads    = 1,
+        mem        = '10G',
+        tempdir    = TEMPDIR,
+        summary    = os.path.join(PATH_MAPPED, "{name}", "{genome}","adapter_trimming_report.txt"),
+        mismatches = 1,
+        num_bases  = 5
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.trim_starting_sequence.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'OUTPUT_SUMMARY=', + str(param.summary),
+        'MISMATCHES=',     + str(params.mismatches),
+        'NUM_BASES='       + str(params.num_bases),
+        'INPUT='           + str(input.infile),
+        'OUTPUT='          + str(output.outfile)
+        ])
+    shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule trim_polya:
+    input:
+        rules.trim_starting_sequence.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.bam"))
+    params:
+        droptools  = SOFTWARE['droptools']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'PolyATrimmer',
+        threads    = 1,
+        mem        = '10G',
+        tempdir    = TEMPDIR,
+        summary    = os.path.join(PATH_MAPPED, "{name}", "{genome}","polyA_trimming_report.txt"),
+        mismatches = 0,
+        num_bases  = 6
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.trim_polya.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'OUTPUT_SUMMARY=', + str(param.summary),
+        'MISMATCHES=',     + str(params.mismatches),
+        'NUM_BASES='       + str(params.num_bases),
+        'INPUT='           + str(input.infile),
+        'OUTPUT='          + str(output.outfile)
+        ])
+    shell(command)
+# ----------------------------------------------------------------------------- #
+rule sam_to_fastq:
+    input:
+        rules.trim_polya.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.fastq"))
+    params:
+        picard     = SOFTWARE['picard']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'SamToFastq',
+        threads    = 1,
+        mem        = '10G',
+        tempdir    = TEMPDIR
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.SamToFastq.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'INPUT='   + str(input.infile),
+        'OUTPUT='  + str(output.outfile)
+        ])
+    shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule map_star:
+    input:
+        infile = rules.sam_to_fastq.outfile,
+        genome = rules.make_star_reference.output
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","star.Aligned.out.sam"))
+    params:
+        star       = SOFTWARE['star']['executable'],
+        outpth     = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        threads    = 4,
+        mem        = '32G',
+        tempdir    = TEMPDIR,
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.star.log")
+
+    shell"""
+    {param.star} --genomeDir {input.genome} --runThreadN {params.threads} --outFileNamePrefix {params.outpath}/star. --readFilesIn {input.infile}
+    """
+
+# ----------------------------------------------------------------------------- #
+rule sort_aligned:
+    input:
+        rules.map_star.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","aligned.sorted.bam"))
+    params:
+        picard     = SOFTWARE['picard']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'SortSam',
+        threads    = 1,
+        mem        = '5G',
+        tempdir    = TEMPDIR
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.sort_aligned.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'SORT_ORDER=queryname',
+        'TMP_DIR=' + str(params.tempdir),
+        'INPUT='   + str(input.infile),
+        'OUTPUT='  + str(output.outfile)
+        ])
+    shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule merge_bam:
+    input:
+        mapped    = rules.sort_aligned.outfile,
+        unmapped  = rules.trim_polya.outfile,
         reference = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta'),
+        dict      = rules.fasta_dice.output
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","merged.bam"))
+    params:
+        picard     = SOFTWARE['picard']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'MergeBamAlignment',
+        threads    = 1,
+        mem        = '5G',
+        tempdir    = TEMPDIR
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.merge_bam.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'REFERENCE_SEQUENCE=' + str(input.reference),
+        'UNMAPPED_BAM='       + str(input.unmapped),
+        'ALIGNED_BAM='        + str(input.mapped),
+        'INCLUDE_SECONDARY_ALIGNMENTS=false',
+        'PAIRED_RUN=false',
+        'OUTPUT='             + str(output.outfile)
+        ])
+    shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule tag_with_gene_exon:
+    input:
+        infile    = rules.merge_bam.outfile,
+        refflat   = rules.gtf_to_refflat.output
     output:
         outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","star_gene_exon_tagged.bam")
     params:
-        outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        genome    = os.path.join(PATH_ANNOTATION, '{genome}', 'STAR_INDEX'),
-        droptools = SOFTWARE['droptools']['bin'],
-        star      = SOFTWARE['star'],
-        threads   = 8,
-        mem       = '35G'
+        droptools  = SOFTWARE['droptools']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'TagReadWithGeneExon',
+        threads    = 1,
+        mem        = '5G',
+        tempdir    = TEMPDIR
     log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.STAR.log")
-    message: """
-            Mapping scRNA:
-                input:
-                    dict   : {input.dict}
-                    reads  : {input.infile}
-                    genome : {params.genome}
-        """
-    shell:"""
-        {params.droptools}/Drop-seq_alignment.sh -g {params.genome} -d {params.droptools} -o {params.outdir} -s {params.star} -r {input.reference} {input.infile} 2> {log}
-        touch {output.outfile}
-    """
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_with_gene_exon.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'ANNOTATIONS_FILE=' + str(input.refflat),
+        'TAG=GE',
+        'CREATE_INDEX=true',
+        'INPUT=f' + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+    shell(command)
+
+
 
 # ----------------------------------------------------------------------------- #
 rule extract_read_statistics:
@@ -503,9 +781,6 @@ rule bam_tag_histogram:
         {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
 	"""
 
-
-
-# ----------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
