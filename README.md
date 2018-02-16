@@ -34,7 +34,7 @@ adapter - read files.
 - bigwig files
 - UMI and read count matrices
 - Quality control report
-- SingleCellExperiment object with precalculated statistics and dimensionallity reductions
+- SingleCellExperiment object with pre-calculated statistics and dimensionallity reductions
 
 # Install
 
