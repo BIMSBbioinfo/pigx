@@ -240,6 +240,7 @@ The main functions of FastQC are:
        ("snakemake" ,snakemake)
        ("star" ,star)
        ("r-minimal" ,r-minimal)
+       ("r-argparser" ,r-argparser)
        ("r-cowplot" ,r-cowplot)
        ("r-data-table" ,r-data-table)
        ("r-delayedarray" ,r-delayedarray)
