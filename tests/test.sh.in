@@ -6,14 +6,11 @@ echo "start: `date`"
 
 SNAKEFILE="${srcdir}/Snake_Dropseq.py"
 CONFIGFILE="${srcdir}/tests/settings.yaml"
-PATH='/home/buyar/.conda/envs/pigx_scrna/bin:/usr/bin'
 
-export PATH=$PATH
 # export TMPDIR='/data/local/buyar/tmp'
 # export _JAVA_OPTIONS=-Djava.io.tmpdir=$TMPDIR
 
-@SNAKEMAKE@ -R -p --snakefile $SNAKEFILE --jobs 12 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
-@SNAKEMAKE@ -R -p --snakefile $SNAKEFILE --jobs 11 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30
+${builddir}/pigx-scrnaseq --settings=${CONFIGFILE} ${srcdir}/tests/sample_sheet.csv
 
 if ! test -f "${srcdir}/tests/output/Mapped/hg19.scRNA-Seq.report.html"
 then
