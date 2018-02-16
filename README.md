@@ -11,26 +11,30 @@
 
 ## Summary
 
-PiGX scRNAseq is an analysis pipeline for preprocessing and quality control for RNA sequencing experiments. 
-The inputs are reads files from the sequencing experiment, and a configuration file which describes the experiment. 
+PiGX scRNAseq is an analysis pipeline for preprocessing and quality control for single cell RNA sequencing experiments. 
+The inputs are read files from the sequencing experiment, and a configuration file which describes the experiment. 
 It produces processed files for downstream analysis and interactive quality reports. 
+The pipeline is designed to work with UMI based methods. It currently supports all methods which output paired
+adapter - read files.
 
 
 ## What does it do
 
-- Trim reads using trim-galore
 - Quality control reads using fastQC and multiQC
-- Map reads and quantify read counts per gene using STAR
-- Estimate read counts per transcript using SALMON
-- Run differential expression analyses using DESeq2
+- Automatically determines the appropriate cell number
+- Constructs the digital gene expression matrix
+- Calculates per sample and per cell statistics
+- Prepares a quality control report
+- Normalizes data and does dimensionallity reduction
+
 
 ## What does it output
 
-- QC reports
 - bam files
 - bigwig files
-- reads matrix
-- DE reports
+- UMI and read count matrices
+- Quality control report
+- SingleCellExperiment object with precalculated statistics and dimensionallity reductions
 
 # Install
 
@@ -38,7 +42,7 @@ At this time there are no ready-made packages for this pipeline, so
 you need to install PiGx from source.
 
 You can find the [latest
-release](https://github.com/BIMSBbioinfo/pigx_rnaseq/releases/latest)
+release](https://github.com/BIMSBbioinfo/pigx_scrnaseq/releases/latest)
 here.  PiGx uses the GNU build system.  Please make sure that all
 required dependencies are installed and then follow these steps after
 unpacking the latest release tarball:
@@ -57,52 +61,19 @@ script about them with variables.  Run `./configure --help` for a list
 of all variables and options.
 
 You can prepare a suitable environment with Conda or with [GNU
-Guix](https://gnu.org/s/guix).  If you do not use one of these package
-managers, you will need to ensure that the following software is
-installed:
-
-<details>
-<summary>Software dependencies</summary>
-
-- R
-	- ggplot2
-	- ggrepel
-	- DESeq2
-	- DT
-	- pheatmap
-	- dendsort
-	- corrplot
-	- reshape2
-	- plotly
-	- scales
-	- crosstalk
-	- rtracklayer
-	- SummarizedExperiment
-	- gProfileR
-- python
-	- snakemake
-	- pyyaml
-- fastqc
-- multiqc
-- star
-- trim-galore
-- bedtools
-- samtools
-- htseq-count
-
-</details>
+Guix](https://gnu.org/s/guix).  
 
 ## Via Conda
 
-- Download pigx_rnaseq source code 
+- Download pigx_scrnaseq source code 
     - run: 
-    > git clone https://github.com/BIMSBbioinfo/pigx_rnaseq.git
+    > git clone https://github.com/BIMSBbioinfo/pigx_scrnaseq.git
 - Download and install Anaconda from https://www.anaconda.com/download
 - Locate the 'environment.yml' file in the source code. 
     - run:
     > conda env create -f environment.yml #provide path to the environment.yml file
     - activate the environment:
-    > source activate pigx_rnaseq 
+    > source activate pigx_scrnaseq 
 
 ## Via Guix
 
@@ -113,26 +84,37 @@ sub-shell in which all dependencies are available:
 guix environment -l guix.scm
 ```
 
+If you do not use one of these package
+managers, you will need to ensure that the following software is
+installed:
+
+<details>
+<summary>Software dependencies</summary>
+
+</details>
 
 # Getting started
 
-To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
+To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type.
+To run the pipeline, you will also need the appropriate genome sequence in fasta format, and the genome annotation in a 
+gtf format.
 
 ```sh
-$ pigx-rnaseq [options] sample_sheet.csv
+$ pigx-rscnaseq [options] sample_sheet.csv -s settings.yaml
 ```
+
 To see all available options type the `--help` option
 
 ```sh
-$ pigx-rnaseq --help
+$ pigx-scrnaseq --help
 
-usage: pigx-rnaseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET]
+usage: pigx-scrnaseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET]
                    [-n] [--graph GRAPH] [--force] [--reason] [--unlock]
                    samplesheet
 
-PiGx RNAseq Pipeline.
+PiGx scRNAseq Pipeline.
 
-PiGx RNAseq is a data processing pipeline for RNAseq read data.
+PiGx scRNAseq is a data processing pipeline for RNAseq read data.
 
 positional arguments:
   samplesheet                             The sample sheet containing sample data in CSV format.
@@ -168,14 +150,15 @@ This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 
 The sample sheet is a tabular file describing the experiment. The table has the following columns:
 
-| name | reads | reads2 | sample_type | covariate1 |
-|------|-------|--------|-------------|------------|
+| name | reads1 | reads2 | library | covariate1 | covariate2 |
+|------|--------|--------|---------|------------|------------|
 
-- _name_ is the name for the sample
-- _reads1/2_ are the fastq file names of paired end reads
-  - the location of these files is specified in `settings.yaml`
-  - for single-end data, leave the reads2 column in place, but have it empty
-- _sample_type_ can be anything. For instance, a group of biologial replicates.
+- _name_ - name for the sample, which will be used to label the sample in all downstream analysis
+- _reads1 - fastq file containing the **adapter sequences**
+- _reads2 - fastq file containing the **sequenced reads**
+  - location of these files is specified in `settings.yaml`
+- _library - sequencing platform on which the experiment was performed (i.e. dropseq)
+- _covariates - variables which describe the samples
 
 Additional columns may be included which may be used as covariates in the differential expression analysis (sex, age, different treatments).
 
@@ -184,17 +167,13 @@ Additional columns may be included which may be used as covariates in the differ
 The settings file is a _YAML_ file which specifies:
 
 - Locations:
-  - The locations of the reads (directory where `fastq` files are)
-  - The location of the outputs for the pipeline
+  - The locations of the reads (directory where `fastq` files are located)
+  - The location of the output directory
   - The location of the `fasta` file with the reference genome (must be prepared by the user)
-  - The locations of the transcriptome assembly (for alignment with salmon)
   - The location of a `GTF` file with genome annotations
-- Organism (for GO-term analysis using `gProfileR`)
-- Differential Expression analyses to be run
-  - Which samples to compare (by `sample_type` in the sample sheet)
-  - Which covariates to include in the DE analysis (from additional columns in the sample sheet)
+- Organism name
 
-In order to get started, enter `pigx-rnaseq --init-settings my_settings.yaml`. This will create a file called `my_settings.yaml` with the default structure. The file will look like this:
+In order to get started, enter `pigx-scrnaseq --init-settings my_settings.yaml`. This will create a file called `my_settings.yaml` with the default structure. The file will look like this:
 
 ```
 locations:
@@ -206,65 +185,25 @@ locations:
 
 organism: hsapiens
 
-DEanalyses:
-  #names of analyses can be anything but they have to be unique for each combination of case control group comparisons.
-  analysis1:
-    #if multiple sample names are provided, they must be separated by comma
-    case_sample_groups: "HBR"
-    control_sample_groups: "UHR"
-    covariates: ''
-
 execution:
   submit-to-cluster: no
   jobs: 6
   nice: 19
 ```
 
-### DEanalysis
+### Mixed species experiments
 
-The section named `DEanalyses` in the settings file allows the user to specify a number of differential expression analyses to be performed. In the example above, `analysis1` will be the name of the only analysis specified. In that analysis, samples with `sample_type` _HBR_ will be compared with those with `sample_type` _UHR_, with no covariates included in the analysis.
+**TODO**
 
-#### Using multiple `sample_type`s as cases or controls
+# Output file description
 
-The user may include more than one `sample_type` as the controls or cases for any DE analysis by specifiying a comma-spearated list. For example, the following block specified an analysis which compares samples belonging to _mut1_ and _mut2_ to the _WT_ samples:
+# Detailed pipeline description
 
-```
-DEanalyses:
-  two_cases_analysis:
-    case_sample_groups: "mut1,mut2"
-    case_control_groups: "WT"
-```
+# Downstream analysis
 
-The same may be done to specify several `sample_type`s for the controls.
+# Using iSEE for interactive exploration of the single cell experiment object
 
-#### Covariates in DE analysis
-
-Any number of additional columns may be added to the sample sheet and used as covariates in the DE analysis. The following sample sheet includes a column indicating the sex of the sample:
-
-| name       | reads               | reads2              | sample_type | sex |
-|------------|---------------------|---------------------|-------------|-----|
-| treatment1 | treatment1.r1.fastq | treatment1.r2.fastq | treatment   | m   |
-| treatment2 | treatment2.r1.fastq | treatment2.r2.fastq | treatment   | m   |
-| control1   | control1.r1.fastq   | control1.r2.fastq   | control     | m   |
-| control2   | control2.r1.fastq   | control2.r2.fastq   | control     | f   |
-
-With the use of the following block in the settings file, the sex will be used as a covariate in the differential expression analysis:
-
-```
-DEanalyses:
-  analysis_with_covariate:
-    case_sample_groups: "treatment"
-    case_control_groups: "control"
-    covariates: "sex"
-```
-
-Multiple covariates may be specified by providing a comma-separated list, such as
-
-```
-covariates: "sex,age,smoking_history"
-```
-
-### Execution
+### Cluster Execution
 
 The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
 
@@ -273,9 +212,6 @@ The `execution` section in the settings file allows the user to specify whether 
 An example can be found in the `tests` directory.  The
 `sample_sheet.csv` file here specifies the following sample data:
 
-  - 3 replicates of mRNA from human (UHR)
-  - 3 replicates of mRNA from human brain (HBR)
-  - only chromosome 22 and ERCC spike-ins
-
+ 
 ----------------------------------------
-2017
+2018
