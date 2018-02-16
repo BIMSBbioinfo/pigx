@@ -188,8 +188,8 @@ scaleDM <- function(dm) {
 runPrComp <- function(x, features = NULL, center = FALSE, scale = FALSE, ncomponents = 2, expr_values = 'scale') {
   dm <- assays(x)[[expr_values]]
   if(!is.null(features)){
-    select <- rowData(x)$Genes %in% features
-    dm <- assays(x[select,])[[expr_values]]
+    select <- match(features, rowData(x)$Genes)
+    dm <- assay(x, expr_values)[select,]
     rownames(dm) <- features
   }
   results <- stats::prcomp(x = dm, 
