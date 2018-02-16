@@ -108,7 +108,7 @@ methylDiff.obj.hyper <- readRDS(methylDiff_hyper_file)
 sampleids <- methylDiff.obj@sample.ids
 treatment <- getTreatment(methylDiff.obj)
 
-################################################################@TODO: Remove me START
+################################################################TODO: Remove me START
 library(methylKit)
 file.list=list( system.file("extdata", 
                             "test1.myCpG.txt", package = "methylKit"),
@@ -127,7 +127,7 @@ myDiff=calculateDiffMeth(meth)
 methylDiff.obj <- myDiff
 methylDiff.obj.hypo <- myDiff
 methylDiff.obj.hyper <- myDiff
-################################################################ @TODO: Remove me END
+################################################################TODO: Remove me END
 
 ```
 
@@ -172,55 +172,6 @@ if(!methylDiff.nonempty) {
   AnnotateDiffMeth <- FALSE
 }
 ```
-
-```{r DiffMeth.calcDiffResults, results='asis', eval=DiffMeth}
-cat('Here we show the results of the differential methylation analysis.\n')
-```
-
-<!-- ```{r DiffMeth.show_differential_methylation, eval=DiffMeth} -->
-
-<!-- # Show differentially methylated cytosines in a table. -->
-
-<!-- methylDiff2df_roundint = function(methylDiff.obj, roundval=4){ -->
-<!--   df = as(methylDiff.obj, "data.frame") -->
-<!--   df[,5:7] = round(df[,5:7], roundval) -->
-<!--   return(df) -->
-<!-- } -->
-<!-- methylDiff_sort_top = function(x, top=50){ -->
-<!--   x=x[order(x$meth.diff),] -->
-<!--   x = x[1:min(top, nrow(x)),] -->
-<!-- } -->
-<!-- topc=50 -->
-
-<!-- ## show top 50 differentially methylated regions -->
-<!-- datatable(methylDiff_sort_top(methylDiff2df_roundint(methylDiff.obj), top=topc), -->
-<!--               extensions = 'Buttons', -->
-<!--               options = list( -->
-<!--                 dom = 'Bfrtip', -->
-<!--                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), -->
-<!--                 scrollX = TRUE), -->
-<!--               caption = paste0("Top ",topc," differentially methylated cytosines"), -->
-<!--               rownames = FALSE) -->
-<!-- ## show top 50 hyper-methylated regions -->
-<!-- datatable(methylDiff_sort_top(methylDiff2df_roundint(methylDiff.obj.hyper), top=topc), -->
-<!--               extensions = 'Buttons', -->
-<!--               options = list( -->
-<!--                 dom = 'Bfrtip', -->
-<!--                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), -->
-<!--                 scrollX = TRUE), -->
-<!--               caption = paste0("Top ",topc," hyper-methylated cytosines"), -->
-<!--               rownames = FALSE) -->
-<!-- ## show top 50 hypo-methylated regions -->
-<!-- datatable(methylDiff_sort_top(methylDiff2df_roundint(methylDiff.obj.hypo), top=topc), -->
-<!--               extensions = 'Buttons', -->
-<!--               options = list( -->
-<!--                 dom = 'Bfrtip', -->
-<!--                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), -->
-<!--                 scrollX = TRUE), -->
-<!--               caption = paste0("Top ",topc," hypo-methylated cytosines"), -->
-<!--               rownames = FALSE) -->
-
-<!-- ``` -->
 
 ```{r DiffMeth.export, results='asis', eval=DiffMeth}
 
@@ -284,16 +235,15 @@ cat('Annotation of differential methylation can also be performed, using the sam
 
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
 source(paste0(scripts_dir, "fetch_procedures.R"))
-fetched.refgenes <- lookupBedFile(type      = "refGene",
-                                  filename  = basename(refGenfile), ###########@TODO: fix me
-                                  dir       = genome_dir,
-                                  assembly  = assembly,
-                                  webfetch  = webfetch )
+fetched.refgenes <- lookupBedFile(type = "refGene",
+                               filename = paste0("refGene.", assembly, ".bed"),
+                               dir = genome_dir,
+                               assembly = assembly,
+                               webfetch = webfetch )
 fetch_refgen_success <- ( fetched.refgenes != '')
 
-
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
-                              filename =  basename(CpGfile), ###########@TODO: fix me
+                              filename =  basename(CpGfile),
                               dir = genome_dir,
                               assembly = assembly,
                               webfetch = webfetch )
