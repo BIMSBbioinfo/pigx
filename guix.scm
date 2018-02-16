@@ -64,7 +64,8 @@
        #:jdk ,icedtea-8
        #:make-flags
        (list (string-append "-Dpicard.executable.dir="
-			    (assoc-ref %build-inputs "java-picard") "/share/java/"))
+                            (assoc-ref %build-inputs "java-picard")
+                            "/share/java/"))
        #:phases
        (modify-phases %standard-phases
          ;; There is no installation target
