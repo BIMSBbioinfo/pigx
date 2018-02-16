@@ -154,11 +154,11 @@ The sample sheet is a tabular file describing the experiment. The table has the 
 |------|--------|--------|---------|------------|------------|
 
 - _name_ - name for the sample, which will be used to label the sample in all downstream analysis
-- _reads1 - fastq file containing the **adapter sequences**
-- _reads2 - fastq file containing the **sequenced reads**
+- _reads1_ - fastq file containing the **adapter sequences**
+- _reads2_ - fastq file containing the **sequenced reads**
   - location of these files is specified in `settings.yaml`
-- _library - sequencing platform on which the experiment was performed (i.e. dropseq)
-- _covariates - variables which describe the samples
+- _library_ - sequencing platform on which the experiment was performed (i.e. dropseq)
+- _covariates_ - variables which describe the samples
 
 Additional columns may be included which may be used as covariates in the differential expression analysis (sex, age, different treatments).
 
