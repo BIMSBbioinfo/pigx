@@ -173,6 +173,14 @@ SETTINGSFILE as inputs."""
         if settings['locations'][key]:
             settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
 
+    # FIXME: special case for scrnaseq: resolve genome fasta / gtf files
+    for annotation in ['primary', 'secondary']:
+        if settings['annotation'][annotation]:
+            if settings['annotation'][annotation]['gtf']:
+                settings['annotation'][annotation]['gtf'] = path.normpath(path.join(here, root, settings['annotation'][annotation]['gtf']))
+            if settings['annotation'][annotation]['genome'] and settings['annotation'][annotation]['genome']['fasta']:
+                settings['annotation'][annotation]['genome']['fasta'] = path.normpath(path.join(here, root, settings['annotation'][annotation]['genome']['fasta']))
+
     # Record the location of the sample sheet.
     settings['locations']['sample-sheet'] = path.abspath(samplesheet)
 
