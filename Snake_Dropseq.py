@@ -948,7 +948,7 @@ rule convert_loom_to_singleCellExperiment:
 ## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
 rule report:
     input:
-        infile        = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
+        infile        = os.path.abspath(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"))
     output:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
     params:
@@ -963,7 +963,11 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
+<<<<<<< HEAD
     shell: "{params.Rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} &> {log.log}"
+=======
+    shell: "{params.Rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} &> {log.log}"
+>>>>>>> 70144754a22b84523761560518c9c6cc925672f2
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
