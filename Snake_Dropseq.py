@@ -13,9 +13,13 @@ import yaml
 import csv
 import inspect
 
-include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Run_Rscript.py')
+# PATH_SCRIPT = os.path.join(config['locations']['pkglibexecdir'])
 PATH_SCRIPT = os.path.join(workflow.basedir,'Scripts')
 
+# loads function for running Rscripts
+include: os.path.join(PATH_SCRIPT, 'Run_Rscript.py')
+# functions for java input
+include: os.path.join(PATH_SCRIPT, 'Accessory_Functions.py')
 include: os.path.join(PATH_SCRIPT, 'validate_input.py')
 validate_config(config)
 
@@ -246,7 +250,7 @@ rule make_star_reference:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','done.txt')
     params:
         outdir  = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
-        star    = SOFTWARE['star'],
+        star    = SOFTWARE['star']['executable'],
         threads = 8,
         mem     = '40G'
     log:
@@ -297,7 +301,7 @@ rule fasta_dict:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict')
     params:
         picard  = SOFTWARE['picard']['executable'],
-        java    = SOFTWARE['java']['executable']
+        java    = SOFTWARE['java']['executable'],
         threads = 1,
         mem     = '2G',
         tempdir = TEMPDIR
@@ -310,7 +314,7 @@ rule fasta_dict:
                 output : {output}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -324,6 +328,7 @@ rule change_gtf_id:
     params:
         threads = 1,
         mem     = '4G',
+        script  = PATH_SCRIPT,
         Rscript = PATH_RSCRIPT
     message:
         """
@@ -332,14 +337,8 @@ rule change_gtf_id:
                 output : {output}
         """
     run:
-        RunRscript(input, output, params, 'change_gtf_id.R')
+        RunRscript(input, output, params, params.script, 'change_gtf_id.R')
 
-
-
-
-    # shell:"""
-    #     cat {input} | perl -pe '/gene_id "([A-Z0-9]+?)";/; $gene_id = $1; s/gene_name ".+?"/gene_name "$gene_id"/;' > {output}
-    # """
 
 # ----------------------------------------------------------------------------- #
 rule gtf_to_refflat:
@@ -350,7 +349,7 @@ rule gtf_to_refflat:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
     params:
         threads   = 1,
-        mem       = '50G'
+        mem       = '30G',
         java      = SOFTWARE['java']['executable'] ,
         droptools = SOFTWARE['droptools']['executable'],
         tempdir   = TEMPDIR
@@ -364,7 +363,7 @@ rule gtf_to_refflat:
                 output : {output}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log} O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log} 
     """
 
 
@@ -379,11 +378,11 @@ rule merge_fastq_to_bam:
     input:
         unpack(get_fastq_files)
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
     params:
         name    = '{name}',
         picard  = SOFTWARE['picard']['executable'],
-        java    = SOFTWARE['picard']['java'],
+        java    = SOFTWARE['java']['executable'],
         threads = 1,
         mem     = '2G',
         tempdir = TEMPDIR
@@ -397,52 +396,330 @@ rule merge_fastq_to_bam:
                 output : {output}
         """
     shell: """
-    {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
+    {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
     """
+# ----------------------------------------------------------------------------- #
+rule tag_cells:
+    input:
+        infile = rules.merge_fastq_to_bam.output.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cell.bam"))
+    params:
+        summary   = os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cellular.bam_summary.txt"),
+        droptools = SOFTWARE['droptools']['executable'],
+        java      = SOFTWARE['java']['executable'],
+        app_name  = 'TagBamWithReadSequenceExtended',
+        threads   = 8,
+        mem       = '35G',
+        tempdir   = TEMPDIR,
+        base_min  = 1,
+        base_max  = 12,
+        base_qual = 10,
+        barcoded_read = 1,
+        discard_read  = 'false'
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
 
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'SUMMARY='       + str(params.summary),
+        'BASE_RANGE='    + "-".join([str(params.base_min),str(params.base_max)]),
+        'BASE_QUALITY='  + str(params.base_qual),
+        'BARCODED_READ=' + str(params.barcoded_read),
+        'DISCARD_READ='  + str(params.discard_read),
+        'TAG_NAME=XC',
+        'NUM_BASES_BELOW_QUALITY=1',
+        'INPUT='  + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+        shell(command)
 
 # ----------------------------------------------------------------------------- #
-# Maps reads using Dropseq tools and STAR
-rule map_scRNA:
+rule tag_molecules:
     input:
-        refflat   = rules.gtf_to_refflat.output,
-        dict      = rules.fasta_dict.output,
-        index     = rules.make_star_reference.output,
-        infile    = rules.merge_fastq_to_bam.output,
+        infile = rules.tag_cells.output.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_CellMolecular.bam"))
+    params:
+        summary   = os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Molecular.bam_summary.txt"),
+        droptools = SOFTWARE['droptools']['executable'],
+        java      = SOFTWARE['java']['executable'],
+        app_name  = 'TagBamWithReadSequenceExtended',
+        threads   = 8,
+        mem       = '35G',
+        tempdir   = TEMPDIR,
+        base_min  = 13,
+        base_max  = 20,
+        base_qual = 10,
+        barcoded_read = 1,
+        discard_read  = 'true'
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+
+        command = ' '.join([
+        tool,
+        'SUMMARY='       + params.summary,
+        'BASE_RANGE='    + "-".join([str(params.base_min),str(params.base_max)]),
+        'BASE_QUALITY='  + str(params.base_qual),
+        'BARCODED_READ=' + str(params.barcoded_read),
+        'DISCARD_READ='  + str(params.discard_read),
+        'TAG_NAME=XM',
+        'NUM_BASES_BELOW_QUALITY=1',
+        'INPUT='  + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+        shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule filter_bam:
+    input:
+        infile = rules.tag_molecules.output.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_filtered.bam"))
+    params:
+        droptools = SOFTWARE['droptools']['executable'],
+        java      = SOFTWARE['java']['executable'],
+        app_name  = 'FilterBAM',
+        threads   = 1,
+        mem       = '10G',
+        tempdir   = TEMPDIR,
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.filter_bam.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'TAG_REJECT=XQ',
+        'INPUT='  + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+        shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule trim_starting_sequence:
+    input:
+        infile  = rules.filter_bam.output.outfile
+    output:
+        outfile = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_trimmed_smart.bam"))
+    params:
+        droptools  = SOFTWARE['droptools']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'TrimStartingSequence',
+        threads    = 1,
+        mem        = '10G',
+        tempdir    = TEMPDIR,
+        summary    = os.path.join(PATH_MAPPED, "{name}", "{genome}","adapter_trimming_report.txt"),
+        mismatches = 1,
+        num_bases  = 5,
+        sequence   = 'AAGCAGTGGTATCAACGCAGAGTGAATGGG'
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.trim_starting_sequence.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'OUTPUT_SUMMARY='  + str(params.summary),
+        'MISMATCHES='      + str(params.mismatches),
+        'NUM_BASES='       + str(params.num_bases),
+        'SEQUENCE='        + str(params.sequence),
+        'INPUT='           + str(input.infile),
+        'OUTPUT='          + str(output.outfile)
+        ])
+        shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule trim_polya:
+    input:
+        infile = rules.trim_starting_sequence.output.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.bam"))
+    params:
+        droptools  = SOFTWARE['droptools']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'PolyATrimmer',
+        threads    = 1,
+        mem        = '10G',
+        tempdir    = TEMPDIR,
+        summary    = os.path.join(PATH_MAPPED, "{name}", "{genome}","polyA_trimming_report.txt"),
+        mismatches = 0,
+        num_bases  = 6
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.trim_polya.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'OUTPUT_SUMMARY='  + str(params.summary),
+        'MISMATCHES='      + str(params.mismatches),
+        'NUM_BASES='       + str(params.num_bases),
+        'INPUT='           + str(input.infile),
+        'OUTPUT='          + str(output.outfile)
+        ])
+        shell(command)
+# ----------------------------------------------------------------------------- #
+rule sam_to_fastq:
+    input:
+        infile = rules.trim_polya.output.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.fastq"))
+    params:
+        picard     = SOFTWARE['picard']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'SamToFastq',
+        threads    = 1,
+        mem        = '10G',
+        tempdir    = TEMPDIR
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.SamToFastq.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'INPUT='   + str(input.infile),
+        'FASTQ='   + str(output.outfile)
+        ])
+        shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule map_star:
+    input:
+        infile = rules.sam_to_fastq.output.outfile,
+        genome = rules.make_star_reference.output
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","star.Aligned.out.sam"))
+    params:
+        star       = SOFTWARE['star']['executable'],
+        genome     = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
+        outpath    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        threads    = 4,
+        mem        = '32G',
+        tempdir    = TEMPDIR,
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.star.log")
+
+    shell:"""
+    {params.star} --genomeDir {params.genome} --runThreadN {params.threads} --outFileNamePrefix {params.outpath}/star. --readFilesIn {input.infile}
+    """
+
+# ----------------------------------------------------------------------------- #
+rule sort_aligned:
+    input:
+        infile = rules.map_star.output.outfile
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","aligned.sorted.bam"))
+    params:
+        picard     = SOFTWARE['picard']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'SortSam',
+        threads    = 1,
+        mem        = '5G',
+        tempdir    = TEMPDIR
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.sort_aligned.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'SORT_ORDER=queryname',
+        'TMP_DIR=' + str(params.tempdir),
+        'INPUT='   + str(input.infile),
+        'OUTPUT='  + str(output.outfile)
+        ])
+        shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule merge_bam:
+    input:
+        mapped    = rules.sort_aligned.output.outfile,
+        unmapped  = rules.trim_polya.output.outfile,
         reference = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta'),
+        dict      = rules.fasta_dict.output
+    output:
+        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","merged.bam"))
+    params:
+        picard     = SOFTWARE['picard']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'MergeBamAlignment',
+        threads    = 1,
+        mem        = '5G',
+        tempdir    = TEMPDIR
+    log:
+       log = os.path.join(PATH_LOG, "{name}.{genome}.merge_bam.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'REFERENCE_SEQUENCE=' + str(input.reference),
+        'UNMAPPED_BAM='       + str(input.unmapped),
+        'ALIGNED_BAM='        + str(input.mapped),
+        'INCLUDE_SECONDARY_ALIGNMENTS=false',
+        'PAIRED_RUN=false',
+        'OUTPUT='             + str(output.outfile)
+        ])
+        shell(command)
+
+# ----------------------------------------------------------------------------- #
+rule tag_with_gene_exon:
+    input:
+        infile    = rules.merge_bam.output.outfile,
+        refflat   = rules.gtf_to_refflat.output
     output:
         outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","star_gene_exon_tagged.bam")
     params:
-        outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        genome    = os.path.join(PATH_ANNOTATION, '{genome}', 'STAR_INDEX'),
-        droptools = SOFTWARE['droptools']['bin'],
-        star      = SOFTWARE['star'],
-        threads   = 8,
-        mem       = '35G'
+        droptools  = SOFTWARE['droptools']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'TagReadWithGeneExon',
+        threads    = 1,
+        mem        = '5G',
+        tempdir    = TEMPDIR
     log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.STAR.log")
-    message: """
-            Mapping scRNA:
-                input:
-                    dict   : {input.dict}
-                    reads  : {input.infile}
-                    genome : {params.genome}
-        """
-    shell:"""
-        {params.droptools}/Drop-seq_alignment.sh -g {params.genome} -d {params.droptools} -o {params.outdir} -s {params.star} -r {input.reference} {input.infile} 2> {log}
-        touch {output.outfile}
-    """
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_with_gene_exon.log")
+
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'ANNOTATIONS_FILE=' + str(input.refflat),
+        'TAG=GE',
+        'CREATE_INDEX=true',
+        'INPUT='  + str(input.infile),
+        'OUTPUT=' + str(output.outfile)
+        ])
+        shell(command)
+
+
 
 # ----------------------------------------------------------------------------- #
 rule extract_read_statistics:
     input:
-        bamfile = rules.map_scRNA.output.outfile
+        bamfile = rules.tag_with_gene_exon.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadStatistics.txt')
     params:
         outname  = "{name}_{genome}",
         threads  = 1,
         mem      = '8G',
+        script   = PATH_SCRIPT,
         Rscript  = PATH_RSCRIPT
     message: """
             extract_read_statistics:
@@ -450,48 +727,24 @@ rule extract_read_statistics:
                 output: {output.outfile}
         """
     run:
-        RunRscript(input, output, params, 'Extract_Read_Statistics.R')
+        RunRscript(input, output, params, params.script, 'Extract_Read_Statistics.R')
 
-# ----------------------------------------------------------------------------- #
-rule extract_downstream_statistics:
-    input:
-        umi_matrix   = rules.get_umi_matrix.output.outfile,
-        reads_matrix = rules.get_reads_matrix.output.outfile,
-        reads_stats  = rules.extract_read_statistics.output.outfile,
-        bam_tag_hist = rules.bam_tag_histogram.output.outfile
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt')
-    params:
-        file_location = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname       = "{name}_{genome}",
-        threads       = 1,
-        mem           = '8G',
-        scriptdir     = SCRIPTDIR,
-        Rscript       = RSCRIPT_PATH
-    message: """
-            extract_downstream_statistics:
-                umi:    {input.umi_matrix}
-                reads:  {input.reads_matrix}
-                stats:  {input.reads_stats}
-                output: {output.outfile}
-        """
-    run:
-        RunRscript(input, output, params, 'Extract_Downstream_Statistics.R')
+
 
 
 # ----------------------------------------------------------------------------- #
 # calculates the number of reads per cell
 rule bam_tag_histogram:
     input:
-        infile = rules.map_scRNA.output.outfile
+        infile = rules.tag_with_gene_exon.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt')
     params:
         outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         outname   = "{name}_{genome}",
         threads   = 1,
-        mem       = '64G'
-        java      = SOFTWARE['java']['executable'] ,
+        mem       = '64G',
+        java      = SOFTWARE['java']['executable'],
         droptools = SOFTWARE['droptools']['executable'],
         tempdir   = TEMPDIR
     message: """
@@ -500,12 +753,9 @@ rule bam_tag_histogram:
                 output: {output.outfile}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
 	"""
 
-
-
-# ----------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
@@ -520,21 +770,22 @@ rule find_absolute_read_cutoff:
         threads  = 1,
         mem      = '8G',
         cutoff   = 50000,
-        Rscript  = RSCRIPT_PATH
+        script   = PATH_SCRIPT,
+        Rscript  = PATH_RSCRIPT
     message: """
             find_absolute_read_cutoff:
                 input:  {input.infile}
                 output: {output.outfile}
         """
     run:
-        RunRscript(input, output, params, 'Find_Absolute_Read_Cutoff.R')
+        RunRscript(input, output, params, params.script, 'Find_Absolute_Read_Cutoff.R')
 
 
 # ----------------------------------------------------------------------------- #
 # calculates the UMI matrix
 rule get_umi_matrix:
     input:
-        infile        = rules.map_scRNA.output,
+        infile        = rules.tag_with_gene_exon.output,
         reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt')
@@ -545,6 +796,7 @@ rule get_umi_matrix:
         mem               = '8G',
         java              = SOFTWARE['java']['executable'] ,
         droptools         = SOFTWARE['droptools']['executable'],
+        app_name          = 'DigitalExpression',
         tempdir           = TEMPDIR,
         genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
         num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
@@ -558,13 +810,8 @@ rule get_umi_matrix:
         with open(input.reads_cutoff) as stream:
             reads_cutoff = yaml.load(stream)['reads_cutoff']
 
-
-        tool = params.java +
-        ' -XX:ParallelGCThreads=' + params.threads +
-        ' -Xmx$'                  + params.mem +
-        ' -Djava.io.tmpdir='      + params.tempdir +
-        params.droptools + ' DigitalExpression'
-
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+       
         command = ' '.join([
         tool,
         'O=' + output.outfile,
@@ -580,18 +827,19 @@ rule get_umi_matrix:
 # calculates the reads matrix - used for PCR duplication estimations
 rule get_reads_matrix:
     input:
-        infile        = rules.map_scRNA.output,
+        infile        = rules.tag_with_gene_exon.output,
         reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt')
     params:
         outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         outname           = "{name}_{genome}",
-        droptools         = SOFTWARE['droptools']['bin'],
+        java              = SOFTWARE['java']['executable'] ,
+        droptools         = SOFTWARE['droptools']['executable'],
+        app_name          = 'DigitalExpression',
+        tempdir           = TEMPDIR,
         threads           = 1,
-        mem               = '8G',
-        genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
-        num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
+        mem               = '8G'
     message: """
             Count UMI:
                 input:  {input.infile}
@@ -602,7 +850,8 @@ rule get_reads_matrix:
         with open(input.reads_cutoff) as stream:
             reads_cutoff = yaml.load(stream)['reads_cutoff']
 
-        tool = os.path.join(params.droptools,'DigitalExpression')
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+        
         command = ' '.join([
         tool,
         'O=' + output.outfile,
@@ -612,6 +861,32 @@ rule get_reads_matrix:
         'OUTPUT_READS_INSTEAD=T'
         ])
         shell(command)
+        
+# ----------------------------------------------------------------------------- #
+rule extract_downstream_statistics:
+    input:
+        umi_matrix   = rules.get_umi_matrix.output.outfile,
+        reads_matrix = rules.get_reads_matrix.output.outfile,
+        reads_stats  = rules.extract_read_statistics.output.outfile,
+        bam_tag_hist = rules.bam_tag_histogram.output.outfile
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt')
+    params:
+        file_location = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname       = "{name}_{genome}",
+        threads       = 1,
+        mem           = '8G',
+        scriptdir     = PATH_SCRIPT,
+        Rscript       = PATH_RSCRIPT
+    message: """
+            extract_downstream_statistics:
+                umi:    {input.umi_matrix}
+                reads:  {input.reads_matrix}
+                stats:  {input.reads_stats}
+                output: {output.outfile}
+        """
+    run:
+        RunRscript(input, output, params, params.script, 'Extract_Downstream_Statistics.R')
 
 # ----------------------------------------------------------------------------- #
 # convert UMI matrix from txt format into one loom format
@@ -660,13 +935,13 @@ rule convert_loom_to_singleCellExperiment:
     log:
         log = os.path.join(PATH_LOG, "{genome}.loom2sce.log")
     params:
-        rscript = SOFTWARE['R']['Rscript']
+        Rscript = PATH_RSCRIPT
     message: """
             Import loom file, preprocess and save as singleCellExperiment.RDS:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
+    shell: "{params.Rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -678,7 +953,7 @@ rule report:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
     params:
         reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
-        rscript       = SOFTWARE['R']['Rscript']
+        Rscript       = PATH_RSCRIPT
     log:
         log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
     message: """
@@ -686,12 +961,12 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
+    shell: "{params.Rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
     input:
-        bamfile            = rules.map_scRNA.output,
+        bamfile            = rules.tag_with_gene_exon.output,
         cell_cutoff_file   = rules.find_absolute_read_cutoff.output.outfile,
         reads_by_cell_file = rules.bam_tag_histogram.output.outfile
     output:
@@ -699,6 +974,7 @@ rule bam_to_BigWig:
     params:
         threads = 1,
         mem     = '16G',
+        script  = PATH_SCRIPT,
         Rscript = PATH_RSCRIPT
     message: """
             bam_to_BigWig:
@@ -706,7 +982,7 @@ rule bam_to_BigWig:
                 output: {output.bwfile}
             """
     run:
-        RunRscript(input, output, params, 'BamToBigWig.R')
+        RunRscript(input, output, params, params.script, 'BamToBigWig.R')
 
 
 # ----------------------------------------------------------------------------- #

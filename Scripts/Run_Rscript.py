@@ -5,7 +5,7 @@ run:
     RunRscript(input, output, params, 'SCRIPT.R')
 """
 
-def RunRscript(input, output, params, script):
+def RunRscript(input, output, params, path_script, script):
 
     # if isinstance(input, list):
     #     input = dict(zip(input, input))
@@ -18,8 +18,8 @@ def RunRscript(input, output, params, script):
     output_dump = json.dumps(dict(output.items()),sort_keys=True,
                        separators=(",",":"), ensure_ascii=True)
 
-    cmd = " ".join(['nice -19',str(params.Rscript), os.path.join(SCRIPT_PATH, script),
-                    "--basedir", SCRIPT_PATH,
+    cmd = " ".join(['nice -19',str(params.Rscript), os.path.join(path_script, script),
+                    "--basedir", path_script,
                     "--input",  "{input_dump:q}",
                     "--output", "{output_dump:q}",
                     "--params", "{params_dump:q}"])

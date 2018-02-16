@@ -1,14 +1,14 @@
 echo "start: `date`"
 
-srcdir='/data/local/buyar/pigx/scrna/pigx_scrnaseq/'
+srcdir='/home/vfranke/Projects/AAkalin_pigx/pigx_scrnaseq'
 
 SNAKEFILE="${srcdir}/Snake_Dropseq.py"
 CONFIGFILE="${srcdir}/tests/settings.yaml"
-PATH='/home/buyar/.conda/envs/pigx_scrna/bin:/usr/bin:/home/buyar/.guix-profile/bin/'
+PATH='/home/buyar/.conda/envs/pigx_scrna/bin:/usr/bin'
 
 export PATH=$PATH
-export TMPDIR='/data/local/buyar/tmp'
-export _JAVA_OPTIONS=-Djava.io.tmpdir=$TMPDIR
+# export TMPDIR='/data/local/buyar/tmp'
+# export _JAVA_OPTIONS=-Djava.io.tmpdir=$TMPDIR
 
 snakemake -R -p --snakefile $SNAKEFILE --jobs 12 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 --dryrun
 snakemake -R -p --snakefile $SNAKEFILE --jobs 11 --rerun-incomplete --configfile $CONFIGFILE --latency-wait 30 

@@ -14,3 +14,4 @@ autom4te.cache/
 etc/settings.yaml
 test.sh
 config.json
+.snakemake
