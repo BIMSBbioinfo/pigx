@@ -49,7 +49,7 @@ MethCall          <- params$MethCall
 Segmentation      <- params$Segmentation
 AnnotateSegments  <- params$AnnotateSegments
 
-refGenfile        <- params$refGenfile 
+refGenes_bedfile        <- params$refGenes_bedfile
 webfetch          <- params$webfetch
 
 
@@ -339,7 +339,6 @@ originally_present_refgen = file.exists(refGenes_bedfile)
 source(paste0(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type      = "refGene",
                                   filename  = refGenes_bedfile,
-                                  dir       = genome_dir,
                                   assembly  = assembly,
                                   webfetch  = webfetch )
 fetch_refgen_success <- ( fetched.refgenes != '')

@@ -26,7 +26,7 @@ params:
   scripts_dir: ''
   AnnotateDiffMeth: TRUE
   CpGfile:      ''
-  refGenfile:   ''
+  refGenes_bedfile:   ''
   webfetch:     ''
   treatment: ''
 ---
@@ -43,7 +43,7 @@ DiffMeth          <- params$DiffMeth
 AnnotateDiffMeth  <- params$AnnotateDiffMeth
 
 CpGfile           <- params$CpGfile
-refGenfile        <- params$refGenfile
+refGenes_bedfile        <- params$refGenes_bedfile
 webfetch          <- params$webfetch
 chrom_seqlengths <- params$chrom_seqlengths
 
@@ -236,15 +236,13 @@ cat('Annotation of differential methylation can also be performed, using the sam
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
 source(paste0(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type = "refGene",
-                               filename = paste0("refGene.", assembly, ".bed"),
-                               dir = genome_dir,
+                               filename = refGenes_bedfile,
                                assembly = assembly,
                                webfetch = webfetch )
 fetch_refgen_success <- ( fetched.refgenes != '')
 
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
-                              filename =  basename(CpGfile),
-                              dir = genome_dir,
+                              filename =  CpGfile,
                               assembly = assembly,
                               webfetch = webfetch )
 
