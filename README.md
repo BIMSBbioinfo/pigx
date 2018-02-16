@@ -114,7 +114,7 @@ usage: pigx-scrnaseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET]
 
 PiGx scRNAseq Pipeline.
 
-PiGx scRNAseq is a data processing pipeline for RNAseq read data.
+PiGx scRNAseq is a data processing pipeline for single cell RNAseq read data.
 
 positional arguments:
   samplesheet                             The sample sheet containing sample data in CSV format.
