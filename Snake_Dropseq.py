@@ -50,7 +50,7 @@ PATH_META_DATA          = config['locations']['metadata']
 
 
 GENOME_NAME_MIX = None
-if 'secondary' in set(config['annotation'].keys()):
+if config['annotation']['secondary']:
     GENOME_NAME_SECONDARY    = config['annotation']['secondary']['genome']['name']
     PATH_REFERENCE_SECONDARY = config['annotation']['secondary']['genome']['fasta']
     PATH_GTF_SECONDARY       = config['annotation']['secondary']['gtf']

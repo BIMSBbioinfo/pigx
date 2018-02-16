@@ -11,6 +11,8 @@ annotation:
       name: hg19
       fasta: hg19_chr19.10094960.25108012.fa
     gtf: hg19_chr19.10094960.25108012.gtf
+  # The secondary annotation is optional
+  secondary:
 
 covariates: 'time, replicate'
 
