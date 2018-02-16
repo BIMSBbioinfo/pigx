@@ -177,13 +177,16 @@ In order to get started, enter `pigx-scrnaseq --init-settings my_settings.yaml`.
 
 ```
 locations:
+  output-dir: out/
   reads-dir: sample_data/reads/
-  output-dir: output/
-  genome-fasta: sample_data/sample.fasta
-  cdna-fasta: sample_data/sample.cdna.fasta
-  gtf-file: sample_data/sample.gtf
+  metadata: metaData.tsv
 
-organism: hsapiens
+annotation:
+  primary:
+    genome:
+      name: hg19
+      fasta: sample_data/genome.fa
+    gtf: sample_data/genome.gtf
 
 execution:
   submit-to-cluster: no
