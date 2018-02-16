@@ -250,7 +250,7 @@ rule make_star_reference:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','done.txt')
     params:
         outdir  = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
-        star    = SOFTWARE['star'],
+        star    = SOFTWARE['star']['executable'],
         threads = 8,
         mem     = '40G'
     log:
@@ -314,7 +314,7 @@ rule fasta_dict:
                 output : {output}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -328,6 +328,7 @@ rule change_gtf_id:
     params:
         threads = 1,
         mem     = '4G',
+        script  = PATH_SCRIPT,
         Rscript = PATH_RSCRIPT
     message:
         """
@@ -336,14 +337,8 @@ rule change_gtf_id:
                 output : {output}
         """
     run:
-        RunRscript(input, output, params, 'change_gtf_id.R')
+        RunRscript(input, output, params, params.script, 'change_gtf_id.R')
 
-
-
-
-    # shell:"""
-    #     cat {input} | perl -pe '/gene_id "([A-Z0-9]+?)";/; $gene_id = $1; s/gene_name ".+?"/gene_name "$gene_id"/;' > {output}
-    # """
 
 # ----------------------------------------------------------------------------- #
 rule gtf_to_refflat:
@@ -368,7 +363,7 @@ rule gtf_to_refflat:
                 output : {output}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log} O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log} 
     """
 
 
@@ -401,12 +396,12 @@ rule merge_fastq_to_bam:
                 output : {output}
         """
     shell: """
-    {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
+    {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
     """
 # ----------------------------------------------------------------------------- #
 rule tag_cells:
     input:
-        rules.merge_fastq_to_bam.output.outfile
+        infile = rules.merge_fastq_to_bam.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cell.bam"))
     params:
@@ -431,7 +426,7 @@ rule tag_cells:
         command = ' '.join([
         tool,
         'SUMMARY='       + str(params.summary),
-        'BASE_RANGE='    + "_".join([str(params.base_min),str(params.base_max)]),
+        'BASE_RANGE='    + "-".join([str(params.base_min),str(params.base_max)]),
         'BASE_QUALITY='  + str(params.base_qual),
         'BARCODED_READ=' + str(params.barcoded_read),
         'DISCARD_READ='  + str(params.discard_read),
@@ -445,7 +440,7 @@ rule tag_cells:
 # ----------------------------------------------------------------------------- #
 rule tag_molecules:
     input:
-        rules.tag_cells.output.outfile
+        infile = rules.tag_cells.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_CellMolecular.bam"))
     params:
@@ -471,7 +466,7 @@ rule tag_molecules:
         command = ' '.join([
         tool,
         'SUMMARY='       + params.summary,
-        'BASE_RANGE='    + "_".join([str(params.base_min),str(params.base_max)]),
+        'BASE_RANGE='    + "-".join([str(params.base_min),str(params.base_max)]),
         'BASE_QUALITY='  + str(params.base_qual),
         'BARCODED_READ=' + str(params.barcoded_read),
         'DISCARD_READ='  + str(params.discard_read),
@@ -485,7 +480,7 @@ rule tag_molecules:
 # ----------------------------------------------------------------------------- #
 rule filter_bam:
     input:
-        rules.tag_molecules.output.outfile
+        infile = rules.tag_molecules.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_filtered.bam"))
     params:
@@ -512,9 +507,9 @@ rule filter_bam:
 # ----------------------------------------------------------------------------- #
 rule trim_starting_sequence:
     input:
-        rules.filter_bam.output.outfile
+        infile  = rules.filter_bam.output.outfile
     output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_trimmed_smart.bam"))
+        outfile = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_trimmed_smart.bam"))
     params:
         droptools  = SOFTWARE['droptools']['executable'],
         java       = SOFTWARE['java']['executable'],
@@ -524,7 +519,8 @@ rule trim_starting_sequence:
         tempdir    = TEMPDIR,
         summary    = os.path.join(PATH_MAPPED, "{name}", "{genome}","adapter_trimming_report.txt"),
         mismatches = 1,
-        num_bases  = 5
+        num_bases  = 5,
+        sequence   = 'AAGCAGTGGTATCAACGCAGAGTGAATGGG'
     log:
        log = os.path.join(PATH_LOG, "{name}.{genome}.trim_starting_sequence.log")
 
@@ -533,9 +529,10 @@ rule trim_starting_sequence:
 
         command = ' '.join([
         tool,
-        'OUTPUT_SUMMARY=', + str(param.summary),
-        'MISMATCHES=',     + str(params.mismatches),
+        'OUTPUT_SUMMARY='  + str(params.summary),
+        'MISMATCHES='      + str(params.mismatches),
         'NUM_BASES='       + str(params.num_bases),
+        'SEQUENCE='        + str(params.sequence),
         'INPUT='           + str(input.infile),
         'OUTPUT='          + str(output.outfile)
         ])
@@ -544,7 +541,7 @@ rule trim_starting_sequence:
 # ----------------------------------------------------------------------------- #
 rule trim_polya:
     input:
-        rules.trim_starting_sequence.output.outfile
+        infile = rules.trim_starting_sequence.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.bam"))
     params:
@@ -565,8 +562,8 @@ rule trim_polya:
 
         command = ' '.join([
         tool,
-        'OUTPUT_SUMMARY=', + str(param.summary),
-        'MISMATCHES=',     + str(params.mismatches),
+        'OUTPUT_SUMMARY='  + str(params.summary),
+        'MISMATCHES='      + str(params.mismatches),
         'NUM_BASES='       + str(params.num_bases),
         'INPUT='           + str(input.infile),
         'OUTPUT='          + str(output.outfile)
@@ -575,7 +572,7 @@ rule trim_polya:
 # ----------------------------------------------------------------------------- #
 rule sam_to_fastq:
     input:
-        rules.trim_polya.output.outfile
+        infile = rules.trim_polya.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.fastq"))
     params:
@@ -594,7 +591,7 @@ rule sam_to_fastq:
         command = ' '.join([
         tool,
         'INPUT='   + str(input.infile),
-        'OUTPUT='  + str(output.outfile)
+        'FASTQ='   + str(output.outfile)
         ])
         shell(command)
 
@@ -607,7 +604,8 @@ rule map_star:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","star.Aligned.out.sam"))
     params:
         star       = SOFTWARE['star']['executable'],
-        outpath     = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        genome     = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
+        outpath    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         threads    = 4,
         mem        = '32G',
         tempdir    = TEMPDIR,
@@ -615,13 +613,13 @@ rule map_star:
        log = os.path.join(PATH_LOG, "{name}.{genome}.star.log")
 
     shell:"""
-    {params.star} --genomeDir {input.genome} --runThreadN {params.threads} --outFileNamePrefix {params.outpath}/star. --readFilesIn {input.infile}
+    {params.star} --genomeDir {params.genome} --runThreadN {params.threads} --outFileNamePrefix {params.outpath}/star. --readFilesIn {input.infile}
     """
 
 # ----------------------------------------------------------------------------- #
 rule sort_aligned:
     input:
-        rules.map_star.output.outfile
+        infile = rules.map_star.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","aligned.sorted.bam"))
     params:
@@ -704,7 +702,7 @@ rule tag_with_gene_exon:
         'ANNOTATIONS_FILE=' + str(input.refflat),
         'TAG=GE',
         'CREATE_INDEX=true',
-        'INPUT=f' + str(input.infile),
+        'INPUT='  + str(input.infile),
         'OUTPUT=' + str(output.outfile)
         ])
         shell(command)
@@ -721,6 +719,7 @@ rule extract_read_statistics:
         outname  = "{name}_{genome}",
         threads  = 1,
         mem      = '8G',
+        script   = PATH_SCRIPT,
         Rscript  = PATH_RSCRIPT
     message: """
             extract_read_statistics:
@@ -728,7 +727,7 @@ rule extract_read_statistics:
                 output: {output.outfile}
         """
     run:
-        RunRscript(input, output, params, 'Extract_Read_Statistics.R')
+        RunRscript(input, output, params, params.script, 'Extract_Read_Statistics.R')
 
 
 
@@ -754,7 +753,7 @@ rule bam_tag_histogram:
                 output: {output.outfile}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx${params.mem} -Djava.io.tmpdir={params.tempdir} {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
 	"""
 
 
@@ -771,6 +770,7 @@ rule find_absolute_read_cutoff:
         threads  = 1,
         mem      = '8G',
         cutoff   = 50000,
+        script   = PATH_SCRIPT,
         Rscript  = PATH_RSCRIPT
     message: """
             find_absolute_read_cutoff:
@@ -778,7 +778,7 @@ rule find_absolute_read_cutoff:
                 output: {output.outfile}
         """
     run:
-        RunRscript(input, output, params, 'Find_Absolute_Read_Cutoff.R')
+        RunRscript(input, output, params, params.script, 'Find_Absolute_Read_Cutoff.R')
 
 
 # ----------------------------------------------------------------------------- #
@@ -886,7 +886,7 @@ rule extract_downstream_statistics:
                 output: {output.outfile}
         """
     run:
-        RunRscript(input, output, params, 'Extract_Downstream_Statistics.R')
+        RunRscript(input, output, params, params.script, 'Extract_Downstream_Statistics.R')
 
 # ----------------------------------------------------------------------------- #
 # convert UMI matrix from txt format into one loom format
@@ -974,6 +974,7 @@ rule bam_to_BigWig:
     params:
         threads = 1,
         mem     = '16G',
+        script  = PATH_SCRIPT,
         Rscript = PATH_RSCRIPT
     message: """
             bam_to_BigWig:
@@ -981,7 +982,7 @@ rule bam_to_BigWig:
                 output: {output.bwfile}
             """
     run:
-        RunRscript(input, output, params, 'BamToBigWig.R')
+        RunRscript(input, output, params, params.script, 'BamToBigWig.R')
 
 
 # ----------------------------------------------------------------------------- #
