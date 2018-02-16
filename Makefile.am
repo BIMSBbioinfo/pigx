@@ -37,7 +37,7 @@ EXTRA_DIST =										   \
   tests/sample_data/reads/NHDF_HSV1_4h_br1_R1.fastq.gz \
   tests/sample_data/reads/NHDF_HSV1_4h_br1_R2.fastq.gz
 
-AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
+AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
 
 TESTS = \
   tests/test.sh
