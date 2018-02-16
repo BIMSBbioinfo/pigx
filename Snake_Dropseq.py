@@ -745,7 +745,7 @@ rule extract_downstream_statistics:
         threads       = 1,
         mem           = '8G',
         scriptdir     = SCRIPTDIR,
-        Rscript       = RSCRIPT_PATH
+        Rscript       = PATH_RSCRIPT
     message: """
             extract_downstream_statistics:
                 umi:    {input.umi_matrix}
@@ -795,7 +795,7 @@ rule find_absolute_read_cutoff:
         threads  = 1,
         mem      = '8G',
         cutoff   = 50000,
-        Rscript  = RSCRIPT_PATH
+        Rscript  = PATH_RSCRIPT
     message: """
             find_absolute_read_cutoff:
                 input:  {input.infile}
@@ -935,13 +935,13 @@ rule convert_loom_to_singleCellExperiment:
     log:
         log = os.path.join(PATH_LOG, "{genome}.loom2sce.log")
     params:
-        rscript = SOFTWARE['R']['Rscript']
+        Rscript = PATH_RSCRIPT
     message: """
             Import loom file, preprocess and save as singleCellExperiment.RDS:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
+    shell: "{params.Rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -953,7 +953,7 @@ rule report:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
     params:
         reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
-        rscript       = SOFTWARE['R']['Rscript']
+        Rscript       = PATH_RSCRIPT
     log:
         log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
     message: """
@@ -961,7 +961,7 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
+    shell: "{params.Rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={input.infile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={PATH_MAPPED} &> {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
