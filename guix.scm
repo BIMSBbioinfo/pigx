@@ -15,7 +15,7 @@
 ;;;  $ guix package --with-source=pigx_scrnaseq-0.0.1.tar.gz -f guix.scm
 ;;;
 ;;; This environment file was developed for Guix version
-;;; v0.13.0-4757-ga0837294a
+;;; 0.14.0.1850-7c8f2
 
 (use-modules (guix packages)
              (guix licenses)
