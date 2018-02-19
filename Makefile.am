@@ -8,7 +8,10 @@ dist_pkglibexec_SCRIPTS =			\
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS =					\
+  scripts/Accessory_Functions.py					\
+  scripts/Argument_Parser.R						\
   scripts/BamToBigWig.R								\
+  scripts/Extract_Downstream_Statistics.R				\
   scripts/Extract_Read_Statistics.R					\
   scripts/Find_Absolute_Read_Cutoff.R				\
   scripts/change_gtf_id.R							\
@@ -16,6 +19,7 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/convert_loom_to_singleCellExperiment.R	\
   scripts/convert_matrix_to_loom.py					\
   scripts/renderReport.R							\
+  scripts/Run_Rscript.py						\
   scripts/scrnaReport.Rmd							\
   scripts/validate_input.py
 
