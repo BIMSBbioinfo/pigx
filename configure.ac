@@ -9,21 +9,12 @@ AM_SILENT_RULES([yes])
 dnl We need sed for version checks
 AC_PROG_SED
 
-dnl Check for Picard first, because that's likely going to fail.
-AC_ARG_VAR([PICARDJAR], [specify location of picard.jar])
-AS_IF([test -z "$PICARDJAR"],dnl
-      AC_MSG_ERROR([Please provide the location of picard.jar with the PICARDJAR variable.]),dnl
-      [AS_IF([test -f "$PICARDJAR"],dnl
-             AC_MSG_NOTICE([Using Picard from here: $PICARDJAR.]),dnl
-             AC_MSG_ERROR([Could not find Picard at $PICARDJAR.]))])
 
-dnl Check for Dropseq jar next, because that's likely also going to fail.
-AC_ARG_VAR([DROPSEQJAR], [specify location of dropseq.jar])
-AS_IF([test -z "$DROPSEQJAR"],dnl
-      AC_MSG_ERROR([Please provide the location of dropseq.jar with the DROPSEQJAR variable.]),dnl
-      [AS_IF([test -f "$DROPSEQJAR"],dnl
-             AC_MSG_NOTICE([Using the Dropseq tools from here: $DROPSEQJAR.]),dnl
-             AC_MSG_ERROR([Could not find Dropseq tools at $DROPSEQJAR.]))])
+AC_CHECK_CLASSPATH
+AX_PROG_JAVAC
+AX_PROG_JAVA
+AX_CHECK_RQRD_CLASS(picard.cmdline.PicardCommandLine)
+AX_CHECK_RQRD_CLASS(org.broadinstitute.dropseqrna.cmdline.DropSeqMain)
 
 
 dnl Load Python support for Automake and ensure we have a Python
@@ -59,7 +50,6 @@ find_or_override_prog([PANDOC],          [pandoc])
 find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
 find_or_override_prog([FASTQC],          [fastqc])
 find_or_override_prog([STAR],            [STAR])
-find_or_override_prog([JAVA],            [java])
 
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
