@@ -31,7 +31,7 @@ Find_Absolute_Read_Cutoff = function(
 
 
   message('Print output yaml ...')
-    infl_point = findInflectionPoint(reads_by_cell[,1], max.cells=cutoff)
+    infl_point = estimateCellNumber(reads_by_cell[,1], max.cells=cutoff)
     lout       = list(reads_cutoff = reads_by_cell[infl_point,1])
     cat(as.yaml(lout), file=outfile)
 
