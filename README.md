@@ -221,8 +221,6 @@ By default the tempdir is set to **/tmp**.
 
 ## Mixed species experiments
 
-## Using iSEE for interactive exploration of the single cell experiment object
-
 ### Cluster Execution
 
 The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
