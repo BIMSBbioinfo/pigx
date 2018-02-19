@@ -75,7 +75,7 @@ sink(out, type = "message")
 
 ## Differential methylation report
 
-
+saveRDS(argsL, "~/argsL.RDS")
 ## load libraries
 library("methylKit")
 
@@ -98,14 +98,39 @@ qvalue <- as.numeric(argsL$qvalue)
 
 ### Find differentially methylated cytosines
 
+
+#' Combine multiple methylRaw objects into a methylRawList object
+#' 
+#' @param list.of.methylRaw a list of methylRaw objects from the methylKit package
+#' @param treatment a numeric vector indicating treaments
+combine2methylRawList <- function(list.of.methylRaw, treatment, min.cov) {
+  
+  ## check if treatment has same length as number of inputs 
+  if(length(list.of.methylRaw)!=length(treatment))
+    stop("Treatment vector doesnt have the same length as list of methylRaw objects.")
+  
+  ## check if input is really of type methylRaw 
+  if(!all(sapply(list.of.methylRaw, function(x) class(x)=="methylRaw")))
+    stop("Input objects are not methylRaw objects.")
+  
+  ## remove data beyond min coverage
+  list.of.methylRaw.mincov = lapply(1:length(list.of.methylRaw), function(i){
+    #which.gtmincov = which( getData(rds.objs[[i]])$coverage >= min.cov )
+    which.gtmincov = which( rds.objs[[i]][[5]] >= min.cov )
+    rds.objs[[i]][which.gtmincov,]
+    })
+
+  ## merge
+  mrl <- new("methylRawList", list.of.methylRaw.mincov)
+  mrl@treatment <- treatment
+  mrl
+}
+
 # Read input files
 inputfiles = paste0(workdir, input)
-methRawList.obj = methRead(as.list(inputfiles),
-                           sample.id = as.list(sampleids),
-                           assembly = assembly,
-                           treatment=treatment,
-                           mincov = mincov
-)
+rds.objs = lapply(inputfiles, readRDS)
+
+methRawList.obj = combine2methylRawList(rds.objs, treatment, mincov)
 
 # Take bases with coverage in all samples.
 meth.unite=unite(methRawList.obj, destrand=FALSE)
