@@ -112,8 +112,9 @@
                   (string-append "jar_deploy_dir=" share "\n"))))
              #t)))))
     (inputs
-     `(("java" ,icedtea-8)
-       ("java-picard" ,java-picard)
+     `(("java" ,icedtea-8)))
+    (propagated-inputs
+     `(("java-picard" ,java-picard)
        ("java-log4j-1.2" ,java-log4j-1.2-api)
        ("java-commons-math3" ,java-commons-math3)
        ("java-commons-jexl2" ,java-commons-jexl-2)
