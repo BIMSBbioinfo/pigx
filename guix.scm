@@ -244,8 +244,20 @@ The main functions of FastQC are:
     (source (string-append (getcwd) "/pigx_scrnaseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
-     `(#:phases
+     `(#:configure-flags
+       (list (string-append "PICARDJAR=" (assoc-ref %build-inputs "java-picard")
+			    "/share/java/picard.jar")
+	     (string-append "DROPSEQJAR=" (assoc-ref %build-inputs "dropseq-tools")
+			    "/share/java/dropseq-tools/dropseq.jar"))
+       #:phases
        (modify-phases %standard-phases
+         (add-after 'unpack 'set-CLASSPATH
+           (lambda* (#:key inputs #:allow-other-keys)
+             (setenv "CLASSPATH" (string-append (assoc-ref inputs "java-picard")
+                                                "/share/java/picard.jar:"
+                                                (assoc-ref inputs "dropseq-tools")
+                                                "/share/java/dropseq-tools/dropseq.jar"))
+             #t))
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
            (lambda* (#:key inputs outputs #:allow-other-keys)
