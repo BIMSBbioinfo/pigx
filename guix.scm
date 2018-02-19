@@ -68,12 +68,18 @@
                             "/share/java/"))
        #:phases
        (modify-phases %standard-phases
+         (add-after 'unpack 'record-references
+	   (lambda* (#:key outputs #:allow-other-keys)
+	     (substitute* "build.xml"
+	      (("to=\"lib/")
+	       (string-append "to=\"" (assoc-ref outputs "out") "/share/java/dropseq-tools/")))
+	     #t))
          ;; There is no installation target
          (replace 'install
            (lambda* (#:key inputs outputs #:allow-other-keys)
              (let* ((out     (assoc-ref outputs "out"))
                     (bin     (string-append out "/bin"))
-                    (share   (string-append out "/share/dropseq-tools/"))
+                    (share   (string-append out "/share/java/dropseq-tools/"))
                     (scripts (list "BAMTagHistogram"
                                    "BAMTagofTagCounts"
                                    "BaseDistributionAtReadPosition"
@@ -100,6 +106,13 @@
                                    "ValidateReference")))
                (for-each mkdir-p (list bin share))
                (install-file "dist/dropseq.jar" share)
+
+	       ;; FIXME: we don't have packages for all of these jars,
+	       ;; so we just install the pre-built jars.
+	       (for-each (lambda (jar)
+			   (install-file jar share))
+			 (find-files "jar/lib" ".jar$"))
+
                (for-each (lambda (script)
                            (chmod script #o555)
                            (install-file script bin))
