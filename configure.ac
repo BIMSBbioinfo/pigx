@@ -9,6 +9,24 @@ AM_SILENT_RULES([yes])
 dnl We need sed for version checks
 AC_PROG_SED
 
+dnl TODO: this is not pretty.  We shouldn't need to do this as long as
+dnl these jars are on the CLASSPATH.
+
+dnl Check for Picard first, because that's likely going to fail.
+AC_ARG_VAR([PICARDJAR], [specify location of picard.jar])
+AS_IF([test -z "$PICARDJAR"],dnl
+      AC_MSG_ERROR([Please provide the location of picard.jar with the PICARDJAR variable.]),dnl
+      [AS_IF([test -f "$PICARDJAR"],dnl
+             AC_MSG_NOTICE([Using Picard from here: $PICARDJAR.]),dnl
+             AC_MSG_ERROR([Could not find Picard at $PICARDJAR.]))])
+
+dnl Check for Dropseq jar next, because that's likely also going to fail.
+AC_ARG_VAR([DROPSEQJAR], [specify location of dropseq.jar])
+AS_IF([test -z "$DROPSEQJAR"],dnl
+      AC_MSG_ERROR([Please provide the location of dropseq.jar with the DROPSEQJAR variable.]),dnl
+      [AS_IF([test -f "$DROPSEQJAR"],dnl
+             AC_MSG_NOTICE([Using the Dropseq tools from here: $DROPSEQJAR.]),dnl
+             AC_MSG_ERROR([Could not find Dropseq tools at $DROPSEQJAR.]))])
 
 AC_CHECK_CLASSPATH
 AX_PROG_JAVAC
