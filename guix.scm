@@ -221,11 +221,13 @@ The main functions of FastQC are:
              (let ((out (assoc-ref outputs "out")))
                (wrap-program (string-append out "/bin/pigx-scrnaseq")
                  `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))
-                 `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))))
+                 `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))
+                 `("CLASSPATH"   ":" = (,(getenv "CLASSPATH")))))
              #t)))))
     (native-inputs
      `(("autoconf" ,autoconf)
-       ("automake" ,automake)))
+       ("automake" ,automake)
+       ("javac" ,icedtea-8 "jdk")))
     (inputs
      `(("dropseq-tools" ,dropseq-tools)
        ("fastqc" ,fastqc)
