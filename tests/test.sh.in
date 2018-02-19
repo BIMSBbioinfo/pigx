@@ -2,13 +2,9 @@
 
 echo "start: `date`"
 
-#srcdir='/home/vfranke/Projects/AAkalin_pigx/pigx_scrnaseq'
+chmod -R +w ${srcdir}/tests
 
-SNAKEFILE="${srcdir}/Snake_Dropseq.py"
 CONFIGFILE="${srcdir}/tests/settings.yaml"
-
-# export TMPDIR='/data/local/buyar/tmp'
-# export _JAVA_OPTIONS=-Djava.io.tmpdir=$TMPDIR
 
 ${builddir}/pigx-scrnaseq --settings=${CONFIGFILE} ${srcdir}/tests/sample_sheet.csv
 
