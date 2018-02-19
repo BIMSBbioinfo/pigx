@@ -198,13 +198,14 @@ execution:
 # Resource consideration
 
 Single cell expression analysis is data intensive, and requires substantial computing resources. 
-The pipeline uses the STAR aligner for read mapping, so the memory requirements will scale with the 
-size of the genome. Please look at the STAR manual for the concrete number about the memory requirements.
+The pipeline uses the [STAR](https://github.com/alexdobin/STAR) aligner for read mapping, so the memory requirements will scale with the 
+size of the genome. 
+Please look at the [STAR](https://github.com/alexdobin/STAR) manual for the concrete number about the memory requirements.
 For the human/mouse genome it requires ~ 40Gb of RAM. 
 The pipeline produces temporary files which require a substantial amount of disk space. Please ensure
 that you have at least 30Gb of disk space per 100 milion sequenced reads.
 The location of the temporary directory can be controlled using the tempdir: variable in the settings.yaml.
-By default the tempdir is set to /tmp.
+By default the tempdir is set to **/tmp**.
 
 
 # Output structure description
