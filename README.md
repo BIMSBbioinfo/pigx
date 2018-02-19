@@ -180,6 +180,7 @@ locations:
   output-dir: out/
   reads-dir: sample_data/reads/
   metadata: metaData.tsv
+  tempdir:
 
 annotation:
   primary:
@@ -194,17 +195,32 @@ execution:
   nice: 19
 ```
 
-### Mixed species experiments
+# Resource consideration
 
-**TODO**
+Single cell expression analysis is data intensive, and requires substantial computing resources. 
+The pipeline uses the STAR aligner for read mapping, so the memory requirements will scale with the 
+size of the genome. Please look at the STAR manual for the concrete number about the memory requirements.
+For the human/mouse genome it requires ~ 40Gb of RAM. 
+The pipeline produces temporary files which require a substantial amount of disk space. Please ensure
+that you have at least 30Gb of disk space per 100 milion sequenced reads.
+The location of the temporary directory can be controlled using the tempdir: variable in the settings.yaml.
+By default the tempdir is set to /tmp.
 
-# Output file description
+
+# Output structure description
+
 
 # Detailed pipeline description
 
+
 # Downstream analysis
 
-# Using iSEE for interactive exploration of the single cell experiment object
+
+# Advanced usage
+
+## Mixed species experiments
+
+## Using iSEE for interactive exploration of the single cell experiment object
 
 ### Cluster Execution
 
