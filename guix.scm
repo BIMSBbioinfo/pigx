@@ -310,8 +310,11 @@ The main functions of FastQC are:
        ("r-stringr" ,r-stringr)
        ("r-yaml" ,r-yaml)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_scrnaseq/")
-    (synopsis "TODO")
-    (description "TODO")
+    (synopsis "Analysis pipeline for single-cell RNA sequencing experiments")
+    (description "PiGX scRNAseq is an analysis pipeline for preprocessing and quality control for single cell
+RNA sequencing experiments.  The inputs are read files from the sequencing experiment, and a configuration
+file which describes the experiment.  It produces processed files for downstream analysis and interactive
+quality reports.  The pipeline is designed to work with UMI based methods.")
     (license gpl3+)))
 
 pigx-scrnaseq
