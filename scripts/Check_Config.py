@@ -127,7 +127,7 @@ def check_sample_sheet(sample_sheet_dict, settings_dict, message):
     message = check_sample_exists(sample_sheet_dict, settings_dict, message)
 
     # checks whether extend is a number
-    # if not (is.number(config['params']['extend'])):
+    # if not (is.number(conig['general']['params']['export_bigwig']['extend'])):
     #     message = message + "extend must be a number\n"
 
     return(message)

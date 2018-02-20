@@ -6,7 +6,7 @@ rule bam2bed:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bed")
     params:
-        extend   = PARAMS['extend'],
+        extend   = PARAMS['export_bigwig']['extend'],
         bamToBed = SOFTWARE['bamToBed']['executable']
     shell: """
         {params.bamToBed} -i {input.file} > {output.outfile}
@@ -19,7 +19,7 @@ rule bam2bigWig:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bw")
     params:
-        extend   = PARAMS['extend'],
+        extend   = PARAMS['export_bigwig']['extend'],
         scale    = PARAMS['scale_bw'],
         Rscript  = SOFTWARE['Rscript']['executable']
     message:"""

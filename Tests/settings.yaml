@@ -8,8 +8,9 @@ locations:
 general:
   assembly: hg19
   params:
-    extend: 200
-    scale_bw: 'yes'
+    export_bigwig:
+        extend: 200
+        scale_bw: 'yes'
     bowtie2:
         k: 1
     idr:

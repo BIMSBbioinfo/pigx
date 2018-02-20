@@ -8,8 +8,9 @@ locations:
 general:
   assembly:
   params:
-    extend: 0
-    scale_bw: 'no'
+    export_bigwig:
+        extend: 0
+        scale_bw: 'no'
     bowtie2:
         k: 1
     idr:
