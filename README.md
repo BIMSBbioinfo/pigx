@@ -1,11 +1,153 @@
-# pigx_chipseq - enables easy and reproducible analysis of ChIP-seq data
+<a name="logo"/>
+<div align="center">
+<img src="images/Logo_PiGx.png" alt="PiGx Logo"  width="30%" height="30%" ></img>
+</a>
+</div>
 
-pigx_chipseq is a snakemake pipeline wrapped in GUIX, which enables
-easy and reproducible analsys of ChIP-seq data.
+**Copyright 2017-2018: Vedran Franke, Alexander Gosdschan, Ricardo Wurmus.**
+**This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
-## Installation
+-----------
 
-## Usage
+## Summary
+
+PiGX ChIPseq is an analysis pipeline for preprocessing, peak calling and reporting for ChIP sequencing experiments. It is easy to use and produces high quality reports. The inputs are reads files from the sequencing experiment, and a configuration file which describes the experiment. In addition to quality control of the experiment, the pipeline enables to set up multiple peak calling analysis and allows the generation of a UCSC track hub in an easily configurable manner.
+
+## What does it do
+
+- ??? Trim reads using trim-galore ??? 
+- Quality control reads using fastQC and multiQC
+- Map reads to genome using Bowtie2
+- Call peaks for multiple combinations of samples using MACS2
+- Control reproducibility of experiments using IDR
+- Generate a UCSC track hub to view in Genome Browser  
+
+## What does it output
+
+- QC reports
+- bam files
+- bigwig files
+- narrowPeak files
+- UCSC track hub folder
+
+# Install
+
+At this time there are no ready-made packages for this pipeline, so
+you need to install PiGx from source.
+
+You can find the [latest
+release](https://github.com/BIMSBbioinfo/pigx_chipseq/releases/latest)
+here.  PiGx uses the GNU build system.  Please make sure that all
+required dependencies are installed and then follow these steps after
+unpacking the latest release tarball:
+
+```sh
+./configure --prefix=/some/where
+make install
+```
+
+# Dependencies
+
+By default the `configure` script expects tools to be in a directory
+listed in the `PATH` environment variable.  If the tools are installed
+in a location that is not on the `PATH` you can tell the `configure`
+script about them with variables.  Run `./configure --help` for a list
+of all variables and options.
+
+You can prepare a suitable environment with Conda or with [GNU
+Guix](https://gnu.org/s/guix).  If you do not use one of these package
+managers, you will need to ensure that the following software is
+installed:
+
+<details>
+<summary>Software dependencies</summary>
+
+- R
+    - argparser
+    - chipseq
+    - data.table
+    - genomation
+    - genomicranges
+    - rtracklayer
+    - rcas
+    - stringr
+    - jsonlite
+    - heatmaply
+    - ggplot2
+    - ggrepel
+    - plotly
+- python
+    - snakemake
+    - pyyaml
+- pandoc
+- fastqc
+- multiqc
+- bowtie
+- macs2
+- idr
+- samtools
+- bedtools
+- bedToBigBed
+- bamToBed
+
+
+</details>
+
+## Via Guix
+
+Assuming you have Guix installed, the following command spawns a
+sub-shell in which all dependencies are available:
+
+```sh
+guix environment -l guix.scm
+```
+
+
+# Getting started
+
+To run PiGx on your experimental data, first enter the necessary parameters in the spreadsheet file (see following section), and then from the terminal type
+
+```sh
+$ pigx-chipseq [options] sample_sheet.csv
+```
+To see all available options type the `--help` option
+
+```sh
+$ pigx-chipseq --help
+
+usage: pigx-chipseq [-h] [-v] -s SETTINGS [-c CONFIGFILE] [--target TARGET]
+                   [-n] [--graph GRAPH] [--force] [--reason] [--unlock]
+                   samplesheet
+
+PiGx ChIPseq Pipeline.
+
+PiGx ChIPseq is a data processing pipeline for ChIPseq read data.
+
+positional arguments:
+  samplesheet                             The sample sheet containing sample data in yaml format.
+
+optional arguments:
+  -h, --help                              show this help message and exit
+  -v, --version                           show program version number and exit
+  -s SETTINGS, --settings SETTINGS        A YAML file for settings that deviate from the defaults.
+  -c CONFIGFILE, --configfile CONFIGFILE  The config file used for calling the underlying snakemake process.  By
+                                          default the file 'config.json' is dynamically created from the sample
+                                          sheet and the settings file.
+  --target TARGET                         Stop when the named target is completed instead of running the whole
+                                          pipeline.  The default target is "final-report".  Pass "--target=help"
+                                          to describe all available targets.
+  -n, --dry-run                           Only show what work would be performed.  Do not actually run the
+                                          pipeline.
+  --graph GRAPH                           Output a graph in Graphviz dot format showing the relations between
+                                          rules of this pipeline.  You must specify a graph file name such as
+                                          "graph.pdf".
+  --force                                 Force the execution of rules, even though the outputs are considered
+                                          fresh.
+  --reason                                Print the reason why a rule is executed.
+  --unlock                                Recover after a snakemake crash.
+
+This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
+```
 
 ## Input Parameters
 
@@ -22,15 +164,13 @@ The sample sheet is a file in yaml format describing the experiment. It has foll
 | *feature_combination* | no | defines for a list of *peak calling* and/or *idr* analysis the combination of regions shared among this list ([see here for details](#feature_combination)) |
 
 
-#### Sample Sheet configuration
-
 The creation of the sample sheet is straight forward considering the following snippets as template and put them into one file. Comments and examples within the snippets provide guidance of what is possible and what to take care of.
 
-##### Samples
+#### Samples
 
 The samples used for any subsequent analysis are defined in the _samples_ section. 
 
-```
+```yaml
 # define mapping
 samples:
     # samples can have any name, but the names have to be unique
@@ -52,12 +192,12 @@ samples:
         library: paired
 ```
 
-##### Peak Calling
+#### Peak Calling
 
 The previously defined samples are used for subsequent peak calling analysis to detect regions of enriched binding. In this section any number of comparisons can be defined, while multiple combinations and variations are possible. In terms of peak calling the **ChIP** (also called treatment) is the sample in which we want to detect enriched regions compared to the **Cont(rol)** (or background) sample. Each analysis can be run with a unique set of parameters and default parameters for all analysis can be defined in the [settings file](#settings-file) , check available parameters and description [here](https://github.com/taoliu/MACS).
 For more information have a look at the publication for the software we are using "Zhang et al. Model-based Analysis of ChIP-Seq (MACS). Genome Biol (2008) vol. 9 (9) pp. R137".  
 
-```
+```yaml
 # define peak calling analysis
 peak_calling:
     # analysis can have any name, but the names have to be unique 
@@ -112,11 +252,11 @@ peak_calling:
                 nomodel: ''
 ```
 
-##### (_optional_) IDR
+#### (_optional_) IDR
 
 Assuming that the some samples are (biological/technical) replicates, in order to measure the consistency between them use the irreproducible discovery rate (IDR)  "Li, Q., Brown, J. B., Huang, H., & Bickel, P. J. (2011). Measuring reproducibility of high-throughput experiments. The annals of applied statistics, 5(3), 1752-1779.", which is in general a good (but very stringent) quality control.
 
-```
+```yaml
 idr:
     # idr analysis can have any name, but the names have to be unique 
     ChIP_IDR:
@@ -125,7 +265,7 @@ idr:
         ChIP2: Peaks2
 ```
 
-##### (_optional_) Hub
+#### (_optional_) Hub
 
 In the _hub_ section the general layout of a [UCSC Track Hubs](https://genome.ucsc.edu/goldenpath/help/hgTrackHubHelp.html#Intro) is described with some minimal items. The track hub is generated from the processed data and allows the visual inspection of results at a UCSC genome browser (for supported genomes). 
 
@@ -142,7 +282,7 @@ The required items to define the hub are the following:
 
 This is a small example how this could look like:
 
-```
+```yaml
 hub:
     name: Pix_Hub
     shortLabel: Pix_Short
@@ -166,11 +306,11 @@ hub:
             long_label: Tracks1_long
 ```
 
-##### (_optional_) Feature Combination
+#### (_optional_) Feature Combination
 
 To find the combination of enriched binding regions, which is shared among a set of *peak calling* and/or *idr* analysis results, define a feature in the *feature_combination* section. Only items defined in the *peak_calling* and *idr* sections can be used here.  
 
-```
+```yaml
 feature_combination:
     # features can have any name, but the names have to be unique
     Feature1:
@@ -218,7 +358,7 @@ The `execution` section in the settings file allows the user to specify whether 
 
 The settings file could look like this:
 
-```
+```yaml
 locations:
   input-dir: in/reads/
   output-dir: out/
