@@ -8,16 +8,16 @@ locations:
 general:
   assembly:
   params:
-    extend:
-    scale_bw:
+    extend: 0
+    scale_bw: 'no'
     bowtie2:
-        k:
+        k: 1
     idr:
-        idr-threshold:
+        idr-threshold: 0.1
     macs2:
         g:
-        keep-dup:
-        q:
+        keep-dup: auto
+        q: 0.05
     extract_signal:
         expand_peak:
         bin_num:

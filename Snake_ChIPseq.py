@@ -93,9 +93,6 @@ PEAK_NAME_LIST = {}
 # names for markdown chunks which will be knit
 # current names: ChIPQC, Extract_Signal_Annotation, Peak_Statistics, Annotate_Peaks
 # ---------------------------------------------------------------------------- #
-# config defaults
-if not ('extend' in PARAMS.keys()):
-    PARAMS['extend'] = 0
 
 
 # Constructs the genome index prefix name
