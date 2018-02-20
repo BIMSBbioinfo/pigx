@@ -18,7 +18,9 @@ def RunRscript(input, output, params, path_script, script):
     output_dump = json.dumps(dict(output.items()),sort_keys=True,
                        separators=(",",":"), ensure_ascii=True)
 
-    cmd = " ".join(['nice -19',str(params.Rscript), os.path.join(path_script, script),
+    cmd = " ".join(['nice -19',str(params.Rscript),
+                    config['tools']['Rscript']['args'],
+                    os.path.join(path_script, script),
                     "--basedir", path_script,
                     "--input",  "{input_dump:q}",
                     "--output", "{output_dump:q}",

@@ -44,3 +44,4 @@ tools:
     executable: @JAVA@
   Rscript:
     executable: @RSCRIPT@
+    args: "--vanilla"
