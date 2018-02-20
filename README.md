@@ -18,9 +18,19 @@ The sample sheet is a file in yaml format describing the experiment. It has mult
  - (_optional_) _hub_ describes the general layout of a UCSC hub that can be created from the processed data and allows the visual inspection of results at a UCSC genome browser ([see here for details](#hub))
  - (_optional_) *feature_combination* defines for a list of *peak calling* and/or *idr* analysis the combination of regions shared among this list ([see here for details](#feature_combination))
 
+
+| section | required | description |
+|---------|----------|-------------|
+| _samples_ | yes | describes the mapping of samples, specifying read file names and library type (_single_/_paired_) ([see here for details](#samples)) |
+| *peak_calling*  | yes | defines which samples will be used to detect regions of enriched binding ( multiple combinations and variations are possible, [see here for details](#peak_calling) ) |
+| _idr_ | no | specifies pairs of *peak calling* analysis that are compared to determine the reproducibilty of the general experiment ([see here for details](#idr)) |
+| _hub_ | no | describes the general layout of a UCSC hub that can be created from the processed data and allows the visual inspection of results at a UCSC genome browser ([see here for details](#hub)) |
+| *feature_combination* | no | defines for a list of *peak calling* and/or *idr* analysis the combination of regions shared among this list ([see here for details](#feature_combination)) |
+
+
 #### Sample Sheet configuration
 
-##### samples
+##### Samples
 
 The samples used for any subsequent analysis are defined in the _samples_ section. 
 
@@ -46,22 +56,23 @@ samples:
         library: paired
 ```
 
-##### peak_calling
+##### Peak Calling
 
-The previously defined samples are used for subsequent peak calling analysis to detect regions of enriched binding. In this section any number of comparisons can be defined, while multiple combinations and variations are possible. In terms of peak calling the **ChIP** (also called treatment) is the sample in which we want to detect enriched regions compared to the **Cont(rol)** (or background) sample. Each analysis can be run with a unique set of parameters and default parameters for all analysis can be defined in the [settings file](###Settings-File) , check available parameters and description [here](https://github.com/taoliu/MACS).
+The previously defined samples are used for subsequent peak calling analysis to detect regions of enriched binding. In this section any number of comparisons can be defined, while multiple combinations and variations are possible. In terms of peak calling the **ChIP** (also called treatment) is the sample in which we want to detect enriched regions compared to the **Cont(rol)** (or background) sample. Each analysis can be run with a unique set of parameters and default parameters for all analysis can be defined in the [settings file](#settings-file) , check available parameters and description [here](https://github.com/taoliu/MACS).
 For more information have a look at the publication for the software we are using "Zhang et al. Model-based Analysis of ChIP-Seq (MACS). Genome Biol (2008) vol. 9 (9) pp. R137".  
 
 ```
 # define peak calling analysis
 peak_calling:
     # analysis can have any name, but the names have to be unique 
-    Peaks1:
+    Peaks1: 
         # sample(s) to be used as treatment sample 
         ChIP: ChIP1
         # sample(s) to be used as control sample
         Cont: Cont1
         params:
             macs2:
+                # each analysis can be adjusted independently
                 # add/modify available parameters of the analysis
                 nomodel: ''
                 extsize: 300
@@ -105,7 +116,7 @@ peak_calling:
                 nomodel: ''
 ```
 
-##### (_optional_) idr
+##### (_optional_) IDR
 
 Assuming that the some samples are (biological/technical) replicates, in order to measure the consistency between them use the irreproducible discovery rate (IDR)  "Li, Q., Brown, J. B., Huang, H., & Bickel, P. J. (2011). Measuring reproducibility of high-throughput experiments. The annals of applied statistics, 5(3), 1752-1779.", which is in general a good (but very stringent) quality control.
 
@@ -118,7 +129,7 @@ idr:
         ChIP2: Peaks2
 ```
 
-##### (_optional_) hub
+##### (_optional_) Hub
 
 In the _hub_ section the general layout of a [UCSC Track Hubs](https://genome.ucsc.edu/goldenpath/help/hgTrackHubHelp.html#Intro) is described with some minimal arguments. The track hub is generated from the processed data and allows the visual inspection of results at a UCSC genome browser (for supported genomes). 
 
@@ -164,7 +175,7 @@ hub:
                 type: bigWig
 ```
 
-##### (_optional_) feature_combination
+##### (_optional_) Feature Combination
 
 To find the combination of enriched binding regions, which is shared among a set of *peak calling* and/or *idr* analysis results, define a feature in the *feature_combination* section. Only items defined in the *peak_calling* and *idr* sections can be used here.  
 
@@ -185,6 +196,68 @@ feature_combination:
 ```
 
 ### Settings File
+
+The settings file is a file in yaml format specifying general settings. It has the following sections: 
+ - _locations_ which are required and optional:
+     + (_required_) directory of the input files (`fastq` files)
+     + + (_required_) output directory for the pipeline
+    + (_required_) path to the reference genome in `fasta` format 
+    + (_optional_) directory containing pre-built mapping indices for the  given reference genome (created with `bowtie2-build`)
+    + (_optional_) location of a `GTF` file with genome annotations for the  given reference genome
+- _general_ settings which apply to all analysis (unless adjusted in single analysis):
+    + 
+     + 
+    -    
+- Organism (for GO-term analysis using `gProfileR`)
+- Differential Expression analyses to be run
+  - Which samples to compare (by `sample_type` in the sample sheet)
+  - Which covariates to include in the DE analysis (from additional columns in the sample sheet)
+
+In order to get started, enter `pigx-rnaseq --init-settings my_settings.yaml`. This will create a file called `my_settings.yaml` with the default structure. The file will look like this:
+
+```
+locations:
+  input-dir: in/reads/
+  output-dir: out/
+  genome-file: genome/my_genome.fa
+  index-dir:
+  gff-file: genome/mm_chr19.gtf
+
+general:
+  assembly: hg19
+  params:
+    extend: 200
+    scale_bw: 'yes'
+    bowtie2:
+        k: 1
+    idr:
+        idr-threshold: 0.1
+    macs2:
+        g: hs
+        keep-dup: auto
+        q: 0.05
+    extract_signal:
+        expand_peak: 200
+        bin_num: 20
+
+execution:
+  submit-to-cluster: no
+  rules:
+    __default__:
+      queue: all.q
+      memory: 8G
+    bowtie2:
+      queue: all.q
+      memory: 16G
+
+```
+
+### Execution
+
+The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
+
+
+
 
 ## Reports
 
