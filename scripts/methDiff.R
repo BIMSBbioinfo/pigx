@@ -75,7 +75,6 @@ sink(out, type = "message")
 
 ## Differential methylation report
 
-saveRDS(argsL, "~/argsL.RDS")
 ## load libraries
 library("methylKit")
 
