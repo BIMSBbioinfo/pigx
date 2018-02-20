@@ -12,12 +12,6 @@ easy and reproducible analsys of ChIP-seq data.
 ### Sample Sheet
 
 The sample sheet is a file in yaml format describing the experiment. It has multiple sections: 
- - _samples_  describes the mapping of samples, specifying read file names and library type (_single_/_paired_) 
- - *peak_calling* defines which samples will be used to detect regions of enriched binding ( multiple combinations and variations are possible, [see here for details](#peak_calling) )
- - (_optional_) _idr_ specifies pairs of *peak calling* analysis that are compared to determine the reproducibilty of the general experiment ([see here for details](#idr))
- - (_optional_) _hub_ describes the general layout of a UCSC hub that can be created from the processed data and allows the visual inspection of results at a UCSC genome browser ([see here for details](#hub))
- - (_optional_) *feature_combination* defines for a list of *peak calling* and/or *idr* analysis the combination of regions shared among this list ([see here for details](#feature_combination))
-
 
 | section | required | description |
 |---------|----------|-------------|
@@ -131,19 +125,27 @@ idr:
 
 ##### (_optional_) Hub
 
-In the _hub_ section the general layout of a [UCSC Track Hubs](https://genome.ucsc.edu/goldenpath/help/hgTrackHubHelp.html#Intro) is described with some minimal arguments. The track hub is generated from the processed data and allows the visual inspection of results at a UCSC genome browser (for supported genomes). 
+In the _hub_ section the general layout of a [UCSC Track Hubs](https://genome.ucsc.edu/goldenpath/help/hgTrackHubHelp.html#Intro) is described with some minimal items. The track hub is generated from the processed data and allows the visual inspection of results at a UCSC genome browser (for supported genomes). 
+
+The required items to define the hub are the following:
+
+| item    | example | description |
+|---------|----------|-------------|
+| name    | Pix_Hub | name of the hub directory |
+| shortLabel    | Pix_Short | short name of hub is displayed as name above track groups |
+| longLabel    | Pix_Hub_Long | descriptive longer label for hub is displayed as hub description |
+| email    | my.mail[at]domain.com | whom to contact for questions about the hub or data |
+| descriptionUrl    | pix_hub.html | URL to HTML page with a description of the hub's contents |
+| super_tracks    | see below | specification of hub layout (track groups, tracks) |
+
+This is a small example how this could look like:
 
 ```
 hub:
-    # name of the hub directory
     name: Pix_Hub
-    # short name of hub is displayed as name above track groups 
     shortLabel: Pix_Short
-    # descriptive longer label for hub is displayed as hub description
     longLabel: Pix_Hub_Long
-    # whom to contact for questions
     email: vedran.franke@mdc-berlin.de
-    # URL to HTML page with a description of the hub's contents
     descriptionUrl: pix_hub.html
     super_tracks:
         # track groups can have any name, but the names have to be unique 
@@ -160,19 +162,6 @@ hub:
             # descriptive longer label for track group is
             # displayed as description in track settings
             long_label: Tracks1_long
-        Tracks2:
-            track21:
-                name: Peaks2
-                type: macs
-            track22:
-                name: ChIP2
-                type: bigWig
-            track23:
-                name: Peaks3
-                type: macs
-            track24:
-                name: ChIPpe
-                type: bigWig
 ```
 
 ##### (_optional_) Feature Combination
@@ -198,22 +187,34 @@ feature_combination:
 ### Settings File
 
 The settings file is a file in yaml format specifying general settings. It has the following sections: 
- - _locations_ which are required and optional:
-     + (_required_) directory of the input files (`fastq` files)
-     + + (_required_) output directory for the pipeline
-    + (_required_) path to the reference genome in `fasta` format 
-    + (_optional_) directory containing pre-built mapping indices for the  given reference genome (created with `bowtie2-build`)
-    + (_optional_) location of a `GTF` file with genome annotations for the  given reference genome
-- _general_ settings which apply to all analysis (unless adjusted in single analysis):
-    + 
-     + 
-    -    
-- Organism (for GO-term analysis using `gProfileR`)
-- Differential Expression analyses to be run
-  - Which samples to compare (by `sample_type` in the sample sheet)
-  - Which covariates to include in the DE analysis (from additional columns in the sample sheet)
 
-In order to get started, enter `pigx-rnaseq --init-settings my_settings.yaml`. This will create a file called `my_settings.yaml` with the default structure. The file will look like this:
+#### Locations
+
+Defines paths to be used in the pipeline, some of the items are required and some optional (can stay blank): 
+
+| item    | required | description |
+|---------|----------|-------------|
+| _input-dir_ | yes | directory of the input files (`fastq` files) |
+| _output-dir_    | yes | output directory for the pipeline |
+| _genome-file_    | yes | path to the reference genome in `fasta` forma |
+| _index-dir_    | no | directory containing pre-built mapping indices for the  given reference genome (created with `bowtie2-build`) |
+| _gff-file_    | no | location of a `GTF` file with genome annotations for the  given reference genome |
+
+#### General
+
+These are settings which apply to all analysis (unless adjusted in single analysis):
+
+| item    | required | description |
+|---------|----------|-------------|
+| _assembly_ | yes | version of reference genome (e.g. hg19,mm9, ...) |
+| _params_    | no | list of default parameters for tools and scripts (for tools check respective manual for available parameters) |
+
+#### Execution
+
+The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
+
+
+The settings.file will look like this:
 
 ```
 locations:
@@ -252,9 +253,6 @@ execution:
 
 ```
 
-### Execution
-
-The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
 
 
 
