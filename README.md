@@ -11,7 +11,7 @@ easy and reproducible analsys of ChIP-seq data.
 
 ### Sample Sheet
 
-The sample sheet is a file in yaml format describing the experiment. It has multiple sections: 
+The sample sheet is a file in yaml format describing the experiment. It has following sections: 
 
 | section | required | description |
 |---------|----------|-------------|
@@ -23,6 +23,8 @@ The sample sheet is a file in yaml format describing the experiment. It has mult
 
 
 #### Sample Sheet configuration
+
+The creation of the sample sheet is straight forward considering the following snippets as template and put them into one file. Comments and examples within the snippets provide guidance of what is possible and what to take care of.
 
 ##### Samples
 
@@ -214,7 +216,7 @@ These are settings which apply to all analysis (unless adjusted in single analys
 The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
 
 
-The settings.file will look like this:
+The settings file could look like this:
 
 ```
 locations:
