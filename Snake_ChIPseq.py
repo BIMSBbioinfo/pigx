@@ -149,7 +149,7 @@ INDEX_PREFIX_PATH  = os.path.join(set_default('index-dir', prefix_default, confi
 # FASTQC output files
 FASTQC_DICT = {}
 for i in NAMES:
-    for fqfile in lookup('name', wc.name, ['Reads', 'Reads2']:
+    for fqfile in lookup('name', wc.name, ['Reads', 'Reads2']):
         prefix  = fqfile
         prefix  = re.sub('.fq.*'   , '', prefix)
         prefix  = re.sub('.fastq.*', '', prefix)
