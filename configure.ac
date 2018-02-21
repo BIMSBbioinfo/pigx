@@ -10,10 +10,10 @@ dnl We need sed for version checks
 AC_PROG_SED
 
 dnl Load Python support for Automake and ensure we have a Python
-dnl interpreter for at least version 3.5.  This sets the "PYTHON"
+dnl interpreter for at least version 3.6.  This sets the "PYTHON"
 dnl variable.
 dnl https://www.gnu.org/software/automake/manual/html_node/Python.html
-AM_PATH_PYTHON([3.5])
+AM_PATH_PYTHON([3.6])
 AX_PYTHON_MODULE([yaml], "required")
 
 pipelines=""
