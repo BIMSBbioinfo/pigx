@@ -103,7 +103,7 @@ plotDesc <- list('nGene' = c('Sample',
 
 cellStatsPlots <- lapply(names(plotDesc), function(y){
   p <- plotCellStats(df = as.data.frame(colData(sce)), 
-                x = 'sample_id',
+                x = 'sample_name',
                 y = y, 
                 label_x = plotDesc[[y]][1], 
                 label_y = plotDesc[[y]][2],
