@@ -14,8 +14,8 @@ general:
       - ['0', '1']
       - ['0', '2']
     annotation:
-      CpGfile:    genome/cpgIslandExt.hg19.bed.gz
-      refGenfile: genome/refGene.hg19.bed.gz
+      CpGfile:          pigx_work/refGenome/cpgIslandExt.hg19.bed.gz 
+      refGenes_bedfile: pigx_work/refGenome/refGene.hg19.bed.gz
       webfetch:   no
 
 execution:
@@ -23,6 +23,4 @@ execution:
   jobs: 6
   nice: 19
   cluster:
-    stack: 128M
-    queue: all.q
     contact-email: none

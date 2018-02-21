@@ -156,7 +156,7 @@ An example sample sheet is provided in tests/sample_sheet.csv and contains
 the following:
 
 ```
-Read1,Read2,SampleID,ReadType,Treatment
+Read1,Read2,SampleID,Protocol,Treatment
 PE_1.fq.gz,PE_2.fq.gz,PEsample,WGBS,0
 SE_techrep1.fq.gz,,SEsample,WGBS,1
 SE_techrep2.fq.gz,,SEsample_v2,WGBS,2
