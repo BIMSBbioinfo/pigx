@@ -20,7 +20,7 @@ rule bam2bigWig:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bw")
     params:
         extend   = PARAMS['export_bigwig']['extend'],
-        scale    = PARAMS['scale_bw'],
+        scale    = PARAMS['export_bigwig']['scale_bw'],
         Rscript  = SOFTWARE['Rscript']['executable']
     message:"""
         Making bigWig:
