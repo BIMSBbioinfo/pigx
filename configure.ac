@@ -47,8 +47,8 @@ if test "x$enable_crispr" = "xyes"; then
 fi
 
 AC_ARG_ENABLE([scrnaseq],
-   AS_HELP_STRING([--enable-scrnaseq], [Build the single cell RNAseq pipeline.]))
-if test "x$enable_scrnaseq" = "xyes"; then
+   AS_HELP_STRING([--disable-scrnaseq], [Do not build the single cell RNAseq pipeline.]))
+if test "x$enable_scrnaseq" != "xno"; then
   AC_CONFIG_SUBDIRS([pipelines/scrnaseq])
   pipelines="$pipelines scrnaseq"
 fi
