@@ -58,6 +58,16 @@ library(crosstalk)
 library(gProfileR)
 library(rtracklayer)
 library(SummarizedExperiment)
+
+##change default color pallette for ggplot 
+# Color-blind friendly palette with black: See http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+#update ggplot function
+ggplot <- function(...) ggplot2::ggplot(...) + 
+  scale_fill_manual(values = cbbPalette) + 
+  scale_color_manual(values = cbbPalette)
+
 ```
 
 # Description
