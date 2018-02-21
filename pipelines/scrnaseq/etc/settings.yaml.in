@@ -1,0 +1,47 @@
+locations:
+  output-dir: output/
+  reads-dir: reads/
+  sample-sheet: sample_sheet.csv
+  metadata: metaData.tsv
+  tempdir:
+
+annotation:
+  primary:
+    genome:
+      name: hg19
+      fasta: hg19_chr19.10094960.25108012.fa
+    gtf: hg19_chr19.10094960.25108012.gtf
+  # The secondary annotation is optional
+  secondary:
+
+covariates: 'time, replicate'
+
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    missing-file-timeout: 120
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: none
+  rules:
+    __default__:
+      threads: 1
+      memory: 8G
+
+tools:
+  picard:
+    executable: @PICARDJAR@
+  droptools:
+    executable: @DROPSEQJAR@
+    genes_per_cell: 10
+    num_core_barcodes: 10
+  star:
+    executable: @STAR@
+  java:
+    executable: @JAVA@
+  Rscript:
+    executable: @RSCRIPT@
+    args: "--vanilla"

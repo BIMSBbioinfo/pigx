@@ -1,0 +1,364 @@
+---
+title: "PiGx-scRNAseq Report"
+author: "BIMSB Bioinformatics Platform"
+date: "`r date()`"
+output:
+  html_document:
+    df_print: paged
+params:
+  covariates: time, replicate
+  outFile: test.scRNA.html
+  sceRdsFile: /data/local/buyar/pigx/scrna/integrate_report/results_test4/Mapped/hg38.SingleCellExperiment.RDS
+  workdir: .
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+library(cowplot)
+library(DT)
+library(SingleCellExperiment)
+library(data.table)
+library(dplyr)
+library(pheatmap)
+```
+
+# Description
+
+PiGx scRNAseq 
+
+This report was generated with PiGx-scRNAseq version 0.0.1.
+
+# Input Settings
+```{r printInputSettings}
+
+sceRdsFile <- params$sceRdsFile
+workdir <- params$workdir
+outFile <- params$outFile
+covariates <- gsub(' ', '', unlist(strsplit(x = params$covariates, split = ',')))
+
+inputParameterDesc <- c('RDS format file containing a SingleCellExperiment object',
+                     'Working directory',
+                     'Path to HTML report output',
+                     'Covariates to use when plotting (PCA and t-SNE)'
+                     )
+inputParameterValues <- c(sceRdsFile,
+                          workdir, 
+                          outFile, 
+                          paste0(covariates, collapse = ', '))
+inputSettings <- data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = length(inputParameterValues),
+                         dom = 't'))
+```
+
+
+## Content Summary of the SingleCellExperiment Object
+
+
+First a pre-generated SingleCellExperiment object is read.
+
+This object must minimally have the following `assays`: 
+
+  - cnts (row read counts matrix per gene X cell) 
+  - cpm (`cnts` object normalized into counts per million in log2 scale) 
+  - scale (centered and scaled version of `cpm`)
+
+And the following `reduced dimension` datasets:
+
+  - PCA: Principle Component Analysis values for each cell (at least top 10 components)
+  - TSNE: t-SNE analysis values of for each cell (at least top 2 components)
+
+```{r read-sce-object}
+sce <- readRDS(file = sceRdsFile)
+print(sce)
+```
+
+# Results
+
+```{r cell-stats}
+plotCellStats <- function(df, x, y, label_x, label_y, title) {
+  p <- ggplot(df, aes_string(x=x, y=y)) +
+  geom_boxplot() +
+  labs(x = label_x, y = label_y, title = title) + 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
+  return(p)
+}
+
+plotDesc <- list('nGene' = c('Sample', 
+                          'Number of detected genes', 
+                          'Number of detected genes per cell'), 
+              'max_gene' = c('Sample',
+                             'Maximum gene expression per cell',
+                             'Maximum gene expression'),
+              'mean_expr' = c('Sample',
+                              'Average gene expression',
+                              'Average gene expression per cell\nfor genes with >0 UMI'))
+
+cellStatsPlots <- lapply(names(plotDesc), function(y){
+  p <- plotCellStats(df = as.data.frame(colData(sce)), 
+                x = 'sample_id',
+                y = y, 
+                label_x = plotDesc[[y]][1], 
+                label_y = plotDesc[[y]][2],
+                title = plotDesc[[y]][3])
+  return(p)
+})
+names(cellStatsPlots) <- paste(lapply(plotDesc, function(x) x[2]))
+```
+
+## Cell Statistics {.tabset}
+
+```{r cellStatsPlots, results='asis', echo = FALSE}
+for (i in 1:length(cellStatsPlots)) {
+  cat("### ",names(cellStatsPlots)[i],"\n")
+  print(cellStatsPlots[[i]])
+  cat('\n\n')
+}
+```
+
+## Cell Composition
+
+```{r definePlotPCAFunction, include=TRUE, fig.width=35, fig.height=5}
+reducedDimPlot <- function(df, dim1, dim2, title = NULL, color_by = NULL, gradient = FALSE) {
+  p <- ggplot2::ggplot(df, aes_string(x = dim1, y = dim2)) +
+    geom_point(aes_string(color = color_by), size = 0.5, alpha = 0.5) +
+    labs(title = title)
+  
+  if (gradient == TRUE) {
+    p <- p + scale_color_gradient2(midpoint = 3.3)
+  }
+  return(p)
+}
+```
+
+```{r CellComposition-PCA}
+colData(sce)$log10nGene <- log10(colData(sce)$nGene)
+gradientList <- c('log10nGene')
+covariateList <- c(covariates, gradientList)
+if('CellCyclePhase' %in% colnames(colData(sce))) {
+  covariateList <- c(covariateList, 'CellCyclePhase')  
+}
+
+pcaData <- as.data.table(cbind(colData(sce), sce@reducedDims$PCA))
+
+pcaPlotList <- lapply(covariateList, function(cov) {
+  pL<- lapply(paste0('PC', c(2:8)), function(pc) {
+  myTitle <- paste('PC1 vs', pc)
+  reducedDimPlot(df = pcaData, 
+                 dim1 = 'PC1', 
+                 dim2 = pc, 
+                 title = myTitle, 
+                 color_by = cov, 
+                 gradient = cov %in% gradientList)
+  })
+  names(pL) <- paste0('PC1 vs PC',c(2:8))
+  return(pL)
+  }
+)
+names(pcaPlotList) <- covariateList
+```
+
+
+```{r pcaPlotList, results='asis', echo = FALSE}
+for(cov in names(pcaPlotList)) {
+  cat("### PCA - Colored by",cov," {.tabset} \n")
+  for (i in 1:length(pcaPlotList[[cov]])) {
+    cat("#### ",names(pcaPlotList[[cov]])[i],"\n")
+    print(pcaPlotList[[cov]][[i]])
+    cat('\n\n')
+  }
+}
+```
+
+
+```{r CellComposition-TSNE}
+tsneData <- as.data.table(cbind(colData(sce), sce@reducedDims$TSNE))
+
+tsnePlotList <- lapply(covariateList, function(cov) {
+  reducedDimPlot(df = tsneData, dim1 = 'V1', dim2 = 'V2', title = 'tSNE_1 vs tSNE_2', color_by = cov)
+})
+names(tsnePlotList) <- covariateList
+```
+
+### t-SNE - colored by different covariates {.tabset}
+
+```{r tsnePlotList, results='asis', echo = FALSE}
+for (i in 1:length(tsnePlotList)) {
+  cat("#### t-SNE - Colored by ",names(tsnePlotList)[[i]],"\n")
+  print(tsnePlotList[[i]])
+  cat('\n\n')
+}
+```
+
+## Gene Exploration
+
+```{r Genes_PCA_contribution}
+plotPCAContribution = function(sce, pc, n = 20){
+  p = attr(sce@reducedDims$PCA, 'gene.loadings')  %>%
+    as.data.frame() %>%
+    mutate(gene_id = rownames(.)) %>%
+    mutate_(X = pc)  %>%
+    arrange(-abs(X)) %>%
+    head(n=n) %>%
+    arrange(X) %>%
+    mutate(gene_id = factor(gene_id, levels=gene_id)) %>%
+    ggplot(aes_string(x = pc, y = 'gene_id')) +
+    geom_point() +
+    ylab('Gene Id')+
+    ggtitle(paste('Top',n,'genes for', pc)) + theme_bw()
+    return(p)
+}
+
+pcaContributionPlots <- lapply(paste0('PC', 1:8), function(pc) {
+  plotPCAContribution(sce = sce, pc = pc, n = 20)
+})
+names(pcaContributionPlots) <- paste0('PC', 1:8)
+```
+
+### Top Genes Contributing to Principle Components {.tabset}
+```{r top_PCA_Genes, results='asis'}
+for (i in 1:length(pcaContributionPlots)) {
+  cat("#### ",names(pcaContributionPlots)[[i]],"\n")
+  print(pcaContributionPlots[[i]])
+  cat('\n\n')
+}
+```
+
+```{r Genes_PCA_contribution_Heatmap}
+plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20){
+  M <- attr(sce@reducedDims$PCA, 'gene.loadings')
+  if(n > nrow(M)) {
+    n <- nrow(M)
+  }
+  topGenes <- names(sort(x = M[,pc], decreasing = TRUE))[1:n]
+  
+  if(ncol(sce) < cellCount) {
+    cellCount <- ncol(sce)
+  }
+  select <- sample(1:ncol(sce), cellCount)
+  exprMatrix <- assay(sce, 'scale')[match(topGenes, rowData(sce)$Genes),select]
+
+  annotationDf <- as.data.frame(colData(sce)[select,covariateList])
+  rownames(annotationDf) <- colData(sce)[select,]$cell_id
+  rownames(exprMatrix) <- topGenes
+  colnames(exprMatrix) <- rownames(annotationDf)
+  p <- pheatmap::pheatmap(mat = exprMatrix, 
+                     show_rownames = TRUE, 
+                     annotation_col = annotationDf, 
+                     show_colnames = FALSE)
+  filename <- file.path(workdir, paste0("heatmap", pc, '.png'))
+  png(filename = filename, width = 800, height = 500, units = 'px')
+  grid::grid.newpage()
+  grid::grid.draw(p$gtable)
+  dev.off()
+  return(filename)
+}
+
+pcaContributorHeatmaps <- lapply(paste0('PC', 1:8), function(pc) {
+  plotPCAcontributorsHeatmap(workdir = workdir, sce = sce, pc = pc, n = 20, cellCount = 100)
+})
+names(pcaContributorHeatmaps) <- paste0('PC', 1:8)
+```
+
+### Heatmaps of Top Genes Contributing to Principle Components {.tabset}
+```{r top_PCA_Genes_Heatmaps, results='asis'}
+for (i in 1:length(pcaContributorHeatmaps)) {
+  cat("#### ",names(pcaContributorHeatmaps)[[i]],"\n")
+  cat(paste0("![](",pcaContributorHeatmaps[[i]],")"))
+  cat('\n\n')
+}
+```
+
+
+```{r define-projectGeneExpression}
+plotGeneExpressionOnPCA <- function(sce, geneIds, assay.type = 'scale', dim1, dim2, reducedDimType = 'PCA') {
+  geneIds <- intersect(geneIds, rowData(sce)$Genes)
+  if(length(geneIds) > 0){
+    #find indices of given genes in the rowData
+    select <- match(geneIds, rowData(sce)$Genes)
+    #subset assay matrix for the selected genes
+    assayData <- assay(sce, assay.type)[select,]
+    rownames(assayData) <- geneIds
+    dt <- cbind(as.data.table(reducedDim(sce, reducedDimType)[,c(dim1, dim2)]), 
+                as.data.table(t(assayData)))
+    mdt <- reshape2::melt(dt, id.vars = 1:2)
+    
+    p <- ggplot2::ggplot(mdt, aes_string(x = colnames(mdt)[1], 
+                                         y = colnames(mdt)[2])) + 
+      geom_point(aes(color = value), size = 0.2, alpha = 0.5) + 
+      facet_wrap(~ variable, ncol = 4) + 
+      theme(axis.text.x = element_text(angle = 90),  
+            strip.text = element_text(size = 10)) + 
+      scale_color_gradient(low = 'grey', high = 'blue')
+    return(p)
+  } else{
+    stop("None of the provided gene ids match the gene ids 
+         in the SingleCellExperiment object")
+  }
+}
+
+highlyVariableGenes <- rowData(sce)[order(rowData(sce)$fitted_variability, decreasing = T),][1:20,]$Genes
+
+```
+
+```{r compute-projectGeneExpression-PCA}
+myPlotList <- list('PC1_vs_PC2'  = 1:2, 
+                   'PC3_vs_PC4'  = 3:4,
+                   'PC5_vs_PC6'  = 5:6, 
+                   'PC7_vs_PC8'  = 7:8)
+
+geneProjectionPlots <- lapply(myPlotList, function(x) {
+  plotGeneExpressionOnPCA(sce = sce, 
+                          geneIds = highlyVariableGenes, 
+                          assay.type = 'scale', 
+                          reducedDimType = 'PCA',
+                          dim1 = x[1], dim2 = x[2])
+}) 
+names(geneProjectionPlots) <- names(myPlotList)
+```
+
+### Project Highly Variable Genes on PCA {.tabset}
+
+```{r print-projectGeneExpression-PCA, results='asis'}
+for (i in 1:length(geneProjectionPlots)) {
+  cat("#### ",names(geneProjectionPlots)[[i]],"\n")
+  print(geneProjectionPlots[[i]])
+  cat('\n\n')
+}
+```
+
+```{r compute-projectGeneExpression-TSNE}
+myPlotList <- list('tSNE-1 vs tSNE-2'  = 1:2) 
+        
+
+geneProjectionPlots <- lapply(myPlotList, function(x) {
+  plotGeneExpressionOnPCA(sce = sce, 
+                          geneIds = highlyVariableGenes, 
+                          assay.type = 'scale', 
+                          reducedDimType = 'TSNE',
+                          dim1 = x[1], dim2 = x[2])
+}) 
+names(geneProjectionPlots) <- names(myPlotList)
+```
+
+### Project Highly Variable Genes on TSNE {.tabset}
+
+```{r print-projectGeneExpression-TSNE, results='asis'}
+for (i in 1:length(geneProjectionPlots)) {
+  cat("#### ",names(geneProjectionPlots)[[i]],"\n")
+  print(geneProjectionPlots[[i]])
+  cat('\n\n')
+}
+```
+
+# Session Information
+```{r sessionInfo}
+sessionInfo()
+```

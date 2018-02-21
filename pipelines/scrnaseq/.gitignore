@@ -1,3 +1,17 @@
 .DS_Store
 *.snakemake.*
 *.Rproj.*
+*~
+
+# generated files
+configure
+config.log
+config.status
+pigx-scrnaseq
+Makefile.in
+Makefile
+autom4te.cache/
+etc/settings.yaml
+test.sh
+config.json
+.snakemake

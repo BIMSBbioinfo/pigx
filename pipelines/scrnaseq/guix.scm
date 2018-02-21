@@ -15,11 +15,12 @@
 ;;;  $ guix package --with-source=pigx_scrnaseq-0.0.1.tar.gz -f guix.scm
 ;;;
 ;;; This environment file was developed for Guix version
-;;; v0.13.0-4757-ga0837294a
+;;; 0.14.0.1850-7c8f2
 
 (use-modules (guix packages)
              (guix licenses)
              (guix download)
+             (guix git-download)
              (guix build-system ant)
              (guix build-system gnu)
              (gnu packages)
@@ -64,34 +65,70 @@
        #:jdk ,icedtea-8
        #:make-flags
        (list (string-append "-Dpicard.executable.dir="
-			    (assoc-ref %build-inputs "java-picard") "/share/java/"))
+                            (assoc-ref %build-inputs "java-picard")
+                            "/share/java/"))
        #:phases
        (modify-phases %standard-phases
+         (add-after 'unpack 'record-references
+	   (lambda* (#:key outputs #:allow-other-keys)
+	     (substitute* "build.xml"
+	      (("to=\"lib/")
+	       (string-append "to=\"" (assoc-ref outputs "out") "/share/java/dropseq-tools/")))
+	     #t))
          ;; There is no installation target
          (replace 'install
            (lambda* (#:key inputs outputs #:allow-other-keys)
              (let* ((out     (assoc-ref outputs "out"))
                     (bin     (string-append out "/bin"))
-                    (share   (string-append out "/share/dropseq-tools/"))
-                    (scripts (list "CreateIntervalsFiles"
-				   "ConvertToRefFlat"
-				   "GatherGeneGCLength"
-				   "GatherReadQualityMetrics")))
+                    (share   (string-append out "/share/java/dropseq-tools/"))
+                    (scripts (list "BAMTagHistogram"
+                                   "BAMTagofTagCounts"
+                                   "BaseDistributionAtReadPosition"
+                                   "CollapseBarcodesInPlace"
+                                   "CollapseTagWithContext"
+                                   "ConvertToRefFlat"
+                                   "CreateIntervalsFiles"
+                                   "DetectBeadSynthesisErrors"
+                                   "DigitalExpression"
+                                   "Drop-seq_alignment.sh"
+                                   "FilterBAM"
+                                   "FilterBAMByTag"
+                                   "GatherGeneGCLength"
+                                   "GatherMolecularBarcodeDistributionByGene"
+                                   "GatherReadQualityMetrics"
+                                   "PolyATrimmer"
+                                   "ReduceGTF"
+                                   "SelectCellsByNumTranscripts"
+                                   "SingleCellRnaSeqMetricsCollector"
+                                   "TagBamWithReadSequenceExtended"
+                                   "TagReadWithGeneExon"
+                                   "TagReadWithInterval"
+                                   "TrimStartingSequence"
+                                   "ValidateReference")))
                (for-each mkdir-p (list bin share))
-	       (install-file "dist/dropseq.jar" share)
-	       (for-each (lambda (script)
-			   (chmod script #o555)
-			   (install-file script bin))
-			 scripts)
-	       (substitute* (map (lambda (script)
-				   (string-append bin "/" script))
-				 scripts)
-		 (("^java") (which "java"))
-		 (("jar_deploy_dir=.*")
-		  (string-append "jar_deploy_dir=" share "\n")))))))))
+               (install-file "dist/dropseq.jar" share)
+
+	       ;; FIXME: we don't have packages for all of these jars,
+	       ;; so we just install the pre-built jars.
+	       (for-each (lambda (jar)
+			   (install-file jar share))
+			 (find-files "jar/lib" ".jar$"))
+
+               (for-each (lambda (script)
+                           (chmod script #o555)
+                           (install-file script bin))
+                         scripts)
+               (substitute* (map (lambda (script)
+                                   (string-append bin "/" script))
+                                 scripts)
+                 (("^java") (which "java"))
+                 (("jar_deploy_dir=.*")
+                  (string-append "jar_deploy_dir=" share "\n"))))
+             #t)))))
     (inputs
-     `(("java" ,icedtea-8)
-       ("java-picard" ,java-picard)
+     `(("java" ,icedtea-8)))
+    (propagated-inputs
+     `(("java-picard" ,java-picard)
        ("java-log4j-1.2" ,java-log4j-1.2-api)
        ("java-commons-math3" ,java-commons-math3)
        ("java-commons-jexl2" ,java-commons-jexl-2)
@@ -112,9 +149,90 @@
      `(("unzip" ,unzip)
        ("java-testng" ,java-testng)))
     (home-page "http://mccarrolllab.com/dropseq/")
-    (synopsis "TODO")
-    (description "TODO")
+    (synopsis "Tools for Drop-seq analyses")
+    (description "Drop-seq is a technology to enable biologists to
+analyze RNA expression genome-wide in thousands of individual cells at
+once.  This package provides tools to perform Drop-seq analyses.")
     (license expat)))
+
+(define-public fastqc
+  (package
+    (name "fastqc")
+    (version "0.11.5")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (string-append "http://www.bioinformatics.babraham.ac.uk/"
+                           "projects/fastqc/fastqc_v"
+                           version "_source.zip"))
+       (sha256
+        (base32
+         "18rrlkhcrxvvvlapch4dpj6xc6mpayzys8qfppybi8jrpgx5cc5f"))))
+    (build-system ant-build-system)
+    (arguments
+     `(#:tests? #f ; there are no tests
+       #:build-target "build"
+       #:phases
+       (modify-phases %standard-phases
+         ;; There is no installation target
+         (replace 'install
+           (lambda* (#:key inputs outputs #:allow-other-keys)
+             (let* ((out   (assoc-ref outputs "out"))
+                    (bin   (string-append out "/bin"))
+                    (share (string-append out "/share/fastqc/"))
+                    (exe   (string-append share "/fastqc")))
+               (for-each mkdir-p (list bin share))
+               (copy-recursively "bin" share)
+               (substitute* exe
+                 (("my \\$java_bin = 'java';")
+                  (string-append "my $java_bin = '"
+                                 (assoc-ref inputs "java")
+                                 "/bin/java';")))
+               (chmod exe #o555)
+               (symlink exe (string-append bin "/fastqc"))
+               #t))))))
+    (inputs
+     `(("java" ,icedtea)
+       ("perl" ,perl)))  ; needed for the wrapper script
+    (native-inputs
+     `(("unzip" ,unzip)))
+    (home-page "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/")
+    (synopsis "Quality control tool for high throughput sequence data")
+    (description
+     "FastQC aims to provide a simple way to do some quality control
+checks on raw sequence data coming from high throughput sequencing
+pipelines.  It provides a modular set of analyses which you can use to
+give a quick impression of whether your data has any problems of which
+you should be aware before doing any further analysis.
+
+The main functions of FastQC are:
+
+@itemize
+@item Import of data from BAM, SAM or FastQ files (any variant);
+@item Providing a quick overview to tell you in which areas there may
+  be problems;
+@item Summary graphs and tables to quickly assess your data;
+@item Export of results to an HTML based permanent report;
+@item Offline operation to allow automated generation of reports
+  without running the interactive application.
+@end itemize\n")
+    (license gpl3+)))
+
+(define old-r-dropbead
+  (let ((commit "41f27229371ad0addeb9996f5ce5ca5d86c07549")
+        (revision "1"))
+    (package (inherit r-dropbead)
+      (name "old-r-dropbead")
+      (version (string-append "0-" revision "." (string-take commit 7)))
+      (source
+       (origin (method git-fetch)
+               (uri (git-reference
+                     (url "https://github.com/rajewsky-lab/dropbead.git")
+                     (commit commit)))
+               (file-name (string-append "r-dropbead-" version "-checkout"))
+               (sha256
+                (base32
+                 "1mw4nm8bq5ia4wia56dv48h8806s74bghgp8i0gh6f4q3j983adw")))))))
 
 (define %pigx-scrnaseq-version
   (symbol->string (with-input-from-file "VERSION" read)))
@@ -126,33 +244,77 @@
     (source (string-append (getcwd) "/pigx_scrnaseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
-     `(#:tests? #f ; requires network access
+     `(#:configure-flags
+       (list (string-append "PICARDJAR=" (assoc-ref %build-inputs "java-picard")
+			    "/share/java/picard.jar")
+	     (string-append "DROPSEQJAR=" (assoc-ref %build-inputs "dropseq-tools")
+			    "/share/java/dropseq-tools/dropseq.jar"))
        #:phases
        (modify-phases %standard-phases
+         (add-after 'unpack 'set-CLASSPATH
+           (lambda* (#:key inputs #:allow-other-keys)
+             (setenv "CLASSPATH" (string-append (assoc-ref inputs "java-picard")
+                                                "/share/java/picard.jar:"
+                                                (assoc-ref inputs "dropseq-tools")
+                                                "/share/java/dropseq-tools/dropseq.jar"))
+             #t))
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
            (lambda* (#:key inputs outputs #:allow-other-keys)
              (let ((out (assoc-ref outputs "out")))
                (wrap-program (string-append out "/bin/pigx-scrnaseq")
                  `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))
-                 `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))))
+                 `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))
+                 `("CLASSPATH"   ":" = (,(getenv "CLASSPATH")))))
              #t)))))
     (native-inputs
      `(("autoconf" ,autoconf)
-       ("automake" ,automake)))
+       ("automake" ,automake)
+       ("javac" ,icedtea-8 "jdk")))
     (inputs
      `(("dropseq-tools" ,dropseq-tools)
+       ("fastqc" ,fastqc)
+       ("java-picard" ,java-picard)
+       ("java" ,icedtea-8)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
        ("python-pandas" ,python-pandas)
        ("python-numpy" ,python-numpy)
+       ("python-loompy" ,python-loompy)
        ("ghc-pandoc" ,ghc-pandoc)
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("snakemake" ,snakemake)
-))
+       ("star" ,star)
+       ("r-minimal" ,r-minimal)
+       ("r-argparser" ,r-argparser)
+       ("r-cowplot" ,r-cowplot)
+       ("r-data-table" ,r-data-table)
+       ("r-delayedarray" ,r-delayedarray)
+       ("r-delayedmatrixstats" ,r-delayedmatrixstats)
+       ("r-dplyr" ,r-dplyr)
+       ("r-dropbead" ,old-r-dropbead)
+       ("r-dt" ,r-dt)
+       ("r-genomicalignments" ,r-genomicalignments)
+       ("r-genomicfiles" ,r-genomicfiles)
+       ("r-genomicranges" ,r-genomicranges)
+       ("r-ggplot2" ,r-ggplot2)
+       ("r-hdf5array" ,r-hdf5array)
+       ("r-pheatmap" ,r-pheatmap)
+       ("r-rmarkdown" ,r-rmarkdown)
+       ("r-rsamtools" ,r-rsamtools)
+       ("r-rtracklayer" ,r-rtracklayer)
+       ("r-rtsne" ,r-rtsne)
+       ("r-scater" ,r-scater)
+       ("r-scran" ,r-scran)
+       ("r-singlecellexperiment" ,r-singlecellexperiment)
+       ("r-stringr" ,r-stringr)
+       ("r-yaml" ,r-yaml)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_scrnaseq/")
-    (synopsis "TODO")
-    (description "TODO")
+    (synopsis "Analysis pipeline for single-cell RNA sequencing experiments")
+    (description "PiGX scRNAseq is an analysis pipeline for preprocessing and quality control for single cell
+RNA sequencing experiments.  The inputs are read files from the sequencing experiment, and a configuration
+file which describes the experiment.  It produces processed files for downstream analysis and interactive
+quality reports.  The pipeline is designed to work with UMI based methods.")
     (license gpl3+)))
 
 pigx-scrnaseq
