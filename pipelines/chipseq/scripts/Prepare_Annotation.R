@@ -3,6 +3,7 @@ options = commandArgs(trailingOnly=TRUE)
 source(file.path(options[2],'/Argument_Parser.R'))
 argv = Parse_Arguments('Prepare_Annotation')
 
+
 # ---------------------------------------------------------------------------- #
 Prepare_Annotation = function(
     gtf_path=NULL,
@@ -21,7 +22,12 @@ Prepare_Annotation = function(
 
     annotation = ReadGTFAnnotation(gtf_path)
 
-    annotation$genomic_annotation = GTFGetAnnotation(annotation$gtf)
+    # selects the genomic regions used for the profiles
+    annotation$full_annotation    = GTFGetAnnotation(annotation$gtf)
+
+    # selects the genomic regions used for annotation
+    annotation$genomic_annotation = annotation$full_annotation[c('tss','tts','exon','intron')]
+
 
     # --------------------------------------------------------------- #
     message('RDS ...')

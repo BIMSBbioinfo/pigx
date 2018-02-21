@@ -1,6 +1,10 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+182002
+[*] Put default settings in etc/settings.yaml.in, do not set them in Snake_ChIPseq.py.
+[*] Introduce section 'export_bigwig' in settings with parameters 'extend' and 'scale_bw'. 
+
 181701
 [*] Adjusted code to settings.yaml and sample_sheet.yaml. The pipeline now works witwo yaml files.
 [*] Custom function for calling Rscript + Rscript parser for yaml like arguments

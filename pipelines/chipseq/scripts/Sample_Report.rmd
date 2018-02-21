@@ -1,61 +1,238 @@
 ---
-title: "ChIP-seq Sample Report"
+title: "Quality control of ChIP-seq data"
+author: "PigX-chipseq"
+header-includes:
+  - \usepackage{comment}
 output:
   html_document:
     highlight: kate
     theme: spacelab
     toc: yes
     toc_float: yes
-always_allow_html: yes
 
-output:
-  html_document: default
-  
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = paste0(substr(inputFile,1,nchar(inputFile)-4),paste0('_',format(Sys.time(), "%y%m%d")),'.html')) })
+
+
 params:
-    annotation: '../Data/Annotation.rds'
-    path_peaks: '../Data/Peaks1_qsort.narrowPeak'
-    path_bw:    '../Data/ChIP1.bw'
-    
+    analysis_path: NULL
+    analysis_names: NULL
+    report_chunks: NULL
+    script_path: NULL
+
+
 ---
-
 ```{r setup, include=FALSE, cache=FALSE, fig.height=10, fig.width=10}
-knitr::opts_chunk$set(echo     = FALSE, 
-                      cache    = FALSE, 
-                      messages = FALSE, 
-                      warning  = FALSE,
-                      autodep  = TRUE, 
-                      error    = FALSE)
+# file = '/home/vfranke/Projects/pigx_chipseq/scripts/Sample_Report.rmd'
+# setwd(dirname(file))
+# file = basename(file)
+# outfile = paste(stringr::str_replace(file, '.rmd',''), format(Sys.time(), "%y%m%d"),'html', sep='.')
+# rmarkdown::render(file, output_format='html_document', output_file = outfile)
+knitr::opts_chunk$set(echo       = FALSE,
+                      cache      = FALSE,
+                      messages   = FALSE,
+                      warning    = FALSE,
+                      autodep    = TRUE,
+                      error      = FALSE,
+                      eval       = TRUE)
+```
 
+```{r test_input, include=FALSE}
+# checks whether the allowed analysis chunks are passed to the script
+.allowed_analysis_names = params$report_chunks
+set_analysis = setdiff(params$analysis_names, .allowed_analysis_names)
+if(length(set_analysis))
+  stop('The current analysis are not supported:', set_analysis)
+
+ncat = function(text)cat(paste0('\n',text),'\n')
+```
+
+```{r test_data, include=FALSE, eval=FALSE}
+params=list();
+params$analysis_path = '/home/vfranke/Projects/pigx_chipseq/Tests/out/Analysis'
+params$script_path = 'scripts'
+params$analysis_names = c('Extract_Signal_Annotation','Peak_Statistics','Annotate_Peaks','ChIPQC')
+set_analysis = params$analysis_names
 ```
 
 
 ```{r libraries, include=FALSE}
-library(GenomicRanges)
-library(data.table)
-library(rtracklayer)
-library(genomation)
+suppressPackageStartupMessages(library(GenomicRanges))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(genomation))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(heatmaply))
+suppressPackageStartupMessages(library(plotly))
 ```
 
-```{r input, include=FALSE}
-source('../scripts/Prepare_Annotation.R')
-annotation = list(
-        gtf = '../Data/mm9.chr19.gtf.gz',
-        cpg_island = '../Data/mm9.chr19.cpg.bed')
-prepare_Annotation(annotation, outpath='../Data/Annotation.rds', scriptdir = '../scripts/')
-annot = readRDS('../Data/Annotation.rds')
+```{r source, include=FALSE}
+source(file.path(params$script_path, 'Functions_Sample_Report.R'))
+```
+
+```{r input, include=FALSE, message=TRUE}
+rds_files = get_RDS_Input_files(params$analysis_path)
+
+
+# some sections of the pipeline are conditional. Because of that, the
+# document looks at which sections were executed and parses only this input
+# analysis_ind contains an index which says which chunks should be included
+# in the markdown
+analysis_ind = setNames(.allowed_analysis_names %in% params$analysis_names, .allowed_analysis_names)
+if(length(set_analysis) == 0)
+  set_analysis = .allowed_analysis_names
+lstats = lapply(setNames(set_analysis, set_analysis),
+               function(x){
+                 message(x)
+                 match.fun(paste('format', x, sep='_'))(subset(rds_files, type==x))
+                 })
+```
+
+```{r check, include=TRUE, message=TRUE}
+print(analysis_ind)
 ```
 
 
-# Genomic Distribution
+# Sample Correlation
+```{r Sample_Correlation, include=TRUE, fig.align='center'}
+dcor = cor(lstats$ChIPQC$norm.count, method='spearman')
+heatmaply(dcor, margins = c(40, 40),
+          k_col = 2, k_row = 2,
+          limits = c(-1,1))
+
+```
+
+---
+
+# Cross Correlation
+```{r Cross_Correlation, include=TRUE, fig.align='center'}
+g = lstats$ChIPQC$shift_average %>%
+  ggplot(aes(shift, strand_correlation, color=sample_name)) +
+  geom_line() +
+  xlab('Read shift') +
+  ylab('Pearson correlation') +
+  ggtitle('Inter strand correlation coefficient')
+ggplotly(g)
+```
+
+---
+
+# GC Content
+```{r GC_Content, include=TRUE, fig.align='center'}
+g = lstats$ChIPQC$GC %>%
+  ggplot(aes(GC, counts, color=sample_name)) +
+  geom_point(alpha = .5) +
+  xlab('GC content') +
+  ylab('Normalized read count')
+ggplotly(g)
+```
+
+---
 
 
-# Signal Distribution Around Genomic Features
+```{r Read_Distribution_in_Genomic_Features_Header, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
+ncat('# Read Distribution in Genomic Features')
+ncat('## Signal profiles around genomic features')
+```
+
+```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation']}
+tab = lstats$Extract_Signal_Annotation$profiles
+genomic_locations = unique(tab$genomic_location)
+for(i in seq(genomic_locations)){
+  location = genomic_locations[i]
+  ncat(paste('###',location))
+  g = tab %>%
+    dplyr::filter(genomic_location==location)  %>%
+    ggplot(aes(position, value, color=sample_name)) +
+    geom_line() +
+    xlab('Relative position') +
+    ylab('Signal Value')
+  print(g)
+  cat('\n')
+}
+```
 
 
-# Peak Comparison
+## Signal profiles around genomic features {.tabset .tabset-fade .tabset-pills}
+# ```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center'}
+# lsml = lstats$Extract_Signal_Annotation$lsml
+# geonmic_locations = unique(names(lsml))
+# for(i in seq(geonmic_locations)){
+#   location = geonmic_locations[i]
+#   sml = lsml[[location]]
+#   cat('\n###', location, '\n')
+#     multiHeatMatrix(sml)
+#   cat('\n')
+# }
+# ```
+
+---
 
 
-# Peak Combination Statistics
 
-# 
+`r if(analysis_ind['Peak_Statistics']) {"\\begin{comment}"}`
+# Peak Statistics
+
+## Frequency of reads in peaks
+```{r Peak_Statistics_Freq_Reads_In_Peaks, include=TRUE, fig.align='center'}
+g = lstats$Peak_Statistics$peaks_sample                          %>%
+  dplyr::select(-bed_file, -bw_files, -bam_file)                 %>%
+  tidyr::gather(sample_cnt, value, -sample_name, -bam_name, -sample_id, -peak_number, -library, -mapped_total)                         %>%
+  mutate(sample_cnt = str_replace(sample_cnt, '.sorted.bam','')) %>%
+  mutate(value      = round(value*(1e6/mapped_total)))           %>%
+  dplyr::filter(bam_name == sample_cnt)                          %>%
+  ggplot(aes(bam_name, value, group=sample_name)) +
+  geom_bar(stat='identity')                       +
+  xlab('Sample name')                             +
+  ylab('Number of reads in peaks')
+ggplotly(g)
+```
+
+## Signal Profiles around the peak {.tabset .tabset-fade .tabset-pills}
+```{r Peak_Signal_Profiles, include=TRUE, fig.align='center'}
+g = lstats$Peak_Statistics$peak_profiles  %>%
+  ggplot(aes(position, mean, color=bw_name, group=peak)) +
+  geom_line() +
+  xlab('Position around peak') +
+  ylab('Normalized signal')
+ggplotly(g)
+```
+
+---
+
+`r if(analysis_ind['Peak_Statistics']) {"\\end{comment}"}`
+
+
+
+
+`r if(analysis_ind['Annotate_Peaks']) {"\\begin{comment}"}`
+# Peak Distribution in Genomic Features
+
+## Number of peaks per sample in genomic features
+```{r Peak_Number_in_Genomic_Features, include=TRUE, fig.align='center'}
+g = lstats$Annotate_Peaks    %>%
+  arrange(desc(peak_number)) %>%
+  ggplot(aes(sample_name, counts, color=annot)) +
+  geom_bar(stat='identity') +
+  xlab('Sample name') +
+  ylab('Number of peaks')
+ggplotly(g)
+```
+
+## Distribution of peaks in genomic features
+```{r Peak_Distribution_in_Genomic_Features, include=TRUE, fig.align='center'}
+g = lstats$Annotate_Peaks    %>%
+  arrange(desc(peak_number)) %>%
+  ggplot(aes(sample_name, freq, color=annot)) +
+  geom_bar(stat='identity') +
+  xlab('Sample name') +
+  ylab('Peak frequency')
+ggplotly(g)
+```
+
+---
+
+`r if(analysis_ind['Annotate_Peaks']) {"\\end{comment}"}`
+
 

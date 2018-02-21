@@ -12,3 +12,8 @@ autom4te.cache/
 etc/settings.yaml
 .guix-profile
 .snakemake
+run/
+Tests/out
+Tests/test.sh
+.DS_Store
+config.json
