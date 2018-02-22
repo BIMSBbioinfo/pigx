@@ -21,7 +21,6 @@ dist_pkglibexec_scripts_SCRIPTS =		\
   scripts/Make_UCSC_HUB.R				\
   scripts/Prepare_Annotation.R			\
   scripts/Sample_Report.rmd				\
-  scripts/SampleSheetParser.py       \
   scripts/SnakeFunctions.py
 
 pkglibexec_rulesdir = $(pkglibexecdir)/Rules

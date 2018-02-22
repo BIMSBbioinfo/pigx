@@ -6,10 +6,10 @@ import re
 import sys
 import yaml
 import xlrd
+import csv
 
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
-include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SampleSheetParser.py')
 
 localrules: makelinks
 
