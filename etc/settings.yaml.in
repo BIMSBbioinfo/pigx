@@ -145,7 +145,7 @@ tools:
         args: ""
     Rscript:
         executable: @RSCRIPT@
-        args: ""
+        args: "--vanilla"
     samtools:
         executable: @SAMTOOLS@
         args: ""
