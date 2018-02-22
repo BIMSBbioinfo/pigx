@@ -113,6 +113,15 @@ parser.add_argument('--unlock', dest='unlock', action='store_true',
                     help="""\
 Recover after a snakemake crash.""")
 
+parser.add_argument('--verbose', dest='verbose', action='store_true',
+                    help="""\
+Print supp info on job execution.""")
+
+parser.add_argument('--printshellcmds', dest='printshellcmds', action='store_true',
+                    help="""\
+Print commands being executed by snakemake.""")
+
+
 args = parser.parse_args()
 
 
@@ -505,6 +514,10 @@ else:
         command.append("--reason")
     if args.unlock:
         command.append("--unlock")
+    if args.verbose:
+        command.append("--verbose")
+    if args.printshellcmds:
+        command.append("--printshellcmds")
     if args.target == 'help':
         command.append("help")
     subprocess.run(command)
