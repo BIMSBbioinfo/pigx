@@ -625,6 +625,8 @@ rule diffmeth_report:
         diffmeth_dir = DIR_diffmeth,
         treatment = lambda wc: str(wc.treatment).replace('vs', '_'),
         assembly    = ASSEMBLY,
+        qvalue=float(config['general']['differential-methylation']['qvalue']),
+        difference=float(config['general']['differential-methylation']['difference']),
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
         CpGfile     = config['general']['differential-methylation']['annotation']['CpGfile'],
