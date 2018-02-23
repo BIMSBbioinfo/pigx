@@ -10,6 +10,7 @@ general:
     minimum-quality: 10
   differential-methylation:
     cores: 1
+    qvalue: 0.05
     treatment-groups:
       - ['0', '1']
       - ['0', '2']

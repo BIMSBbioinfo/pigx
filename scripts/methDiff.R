@@ -78,7 +78,6 @@ sink(out, type = "message")
 
 ## load libraries
 library("methylKit")
-#saveRDS(argsL, '~/methdiffargsL.RDS')
 
 input     <- argsL$inputfiles
 sampleids <- argsL$sampleids
@@ -138,8 +137,6 @@ meth.unite=unite(methRawList.obj, destrand=FALSE)
 
 meth.unite.nonempty = nrow(meth.unite)>1
 if(!meth.unite.nonempty) print("There are no bases with coverage in all samples")
-
-#saveRDS(list(methRawList.obj,meth.unite,meth.diffmeth ), "~/params.RDS")
 
 if(nrow(meth.unite)>1){
   
