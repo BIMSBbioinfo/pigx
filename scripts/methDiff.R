@@ -1,6 +1,8 @@
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017, 2018 Bren Osberg <Brendan.Osberg@mdc-berlin.de>
+# Copyright © 2017, 2018 Katarzyna Wreczycka <katwre@gmail.com>
 #
 # This file is part of the PiGx BSseq Pipeline.
 #
@@ -53,9 +55,111 @@ if("--help" %in% args) {
   q(save="no")
 }
 
-## Parse arguments (we expect the form --arg=value)
-parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
+#===================================================================
+# Define functions:
+#===================================================================
+
+parseArgs     <- function(x) strsplit(sub("^--", "", x), "=")
 parseArgsList <- function(x) strsplit(as.character(x), " ")
+
+#-------------------------------------------------------------------
+#' Combine multiple methylRaw objects into a methylRawList object
+#'
+#' @param list.of.methylRaw a list of methylRaw objects from the methylKit package
+#' @param treatment a numeric vector indicating treaments
+combine2methylRawList <- function(list.of.methylRaw, treatment, min.cov) {
+
+  ## check if treatment has same length as number of inputs
+  if(length(list.of.methylRaw)!=length(treatment))
+    stop("Treatment vector doesnt have the same length as list of methylRaw objects.")
+
+  ## check if input is really of type methylRaw
+  if(!all(sapply(list.of.methylRaw, function(x) class(x)=="methylRaw")))
+    stop("Input objects are not methylRaw objects.")
+
+  ## remove data beyond min coverage
+  list.of.methylRaw.mincov = lapply(1:length(list.of.methylRaw), function(i){
+    #which.gtmincov = which( getData(rds.objs[[i]])$coverage >= min.cov )
+    which.gtmincov = which( rds.objs[[i]][[5]] >= min.cov )
+    rds.objs[[i]][which.gtmincov,]
+    })
+
+  ## merge
+  mrl <- new("methylRawList", list.of.methylRaw.mincov)
+  mrl@treatment <- treatment
+  mrl
+}
+
+#-------------------------------------------------------------------
+create.empty.methylDiff = function(sampleids, assembly, context, treatment){
+    new("methylDiff",
+        sample.ids = sampleids,
+        assembly = assembly,
+        context = context,
+        treatment=treatment,
+        # strand.aware is set to FALSe by defualt in methylKit@1.3.3
+        destranded=FALSE,
+        resolution="base"
+       )
+}
+
+#-------------------------------------------------------------------
+#' Export windows to a BED file
+#'
+#' The windows are color coded based on their score (methylation or differential
+#' methylation value).
+#'
+#' @param windows \code{\link[GenomicRanges]{GRanges}} object with information about
+#' differentially methylated regions
+#' @param filename name of the output data
+#' @param trackLine UCSC browser trackline
+#' @param colramp color scale to be used in the BED display
+#' defaults to gray,green, darkgreen scale.
+#'
+#' @return A BED files with the differentially methylated regions
+#' which can be visualized in the UCSC browser
+#'
+#' @seealso \code{\link{methylKit::methSeg2bed}}
+#'
+#' @export
+#' @docType methods
+#' @rdname meth2bed
+meth2bed<-function(windows,filename,
+                   trackLine="track name='meth windows' description='meth windows' itemRgb=On",
+                   colramp=colorRamp(c("gray","green", "darkgreen"))
+){
+
+  range01 <- function(x){(x-min(x)+1)/(max(x)-min(x)+1)}
+
+  if(class(windows)!="GRanges"){
+    windows=as(windows, "GRanges")
+  }
+
+  ## case if only one line is exported
+  if(is.null(colramp) | length(windows)==1){
+    trackLine <- gsub(pattern = "itemRgb=On",replacement = "",x = trackLine)
+  } else {
+    require(rtracklayer)
+    ramp <- colramp
+    score(windows)=range01(windows$meth.diff)
+    mcols(windows)$itemRgb= rgb(ramp(score(windows)), maxColorValue = 255)
+  }
+
+  strand(windows)="*"
+  score(windows)=range01(windows$meth.diff)
+
+  if(is.null(trackLine)){
+
+    export.bed(windows,filename)
+  }else{
+    export.bed(windows,filename,
+               trackLine=as(trackLine, "BasicTrackLine"))
+  }
+}
+
+#===================================================================
+
+## Parse arguments (we expect the form --arg=value)
 
 argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 
@@ -99,33 +203,6 @@ qvalue <- as.numeric(argsL$qvalue)
 ### Find differentially methylated cytosines
 
 
-#' Combine multiple methylRaw objects into a methylRawList object
-#' 
-#' @param list.of.methylRaw a list of methylRaw objects from the methylKit package
-#' @param treatment a numeric vector indicating treaments
-combine2methylRawList <- function(list.of.methylRaw, treatment, min.cov) {
-  
-  ## check if treatment has same length as number of inputs 
-  if(length(list.of.methylRaw)!=length(treatment))
-    stop("Treatment vector doesnt have the same length as list of methylRaw objects.")
-  
-  ## check if input is really of type methylRaw 
-  if(!all(sapply(list.of.methylRaw, function(x) class(x)=="methylRaw")))
-    stop("Input objects are not methylRaw objects.")
-  
-  ## remove data beyond min coverage
-  list.of.methylRaw.mincov = lapply(1:length(list.of.methylRaw), function(i){
-    #which.gtmincov = which( getData(rds.objs[[i]])$coverage >= min.cov )
-    which.gtmincov = which( rds.objs[[i]][[5]] >= min.cov )
-    rds.objs[[i]][which.gtmincov,]
-    })
-
-  ## merge
-  mrl <- new("methylRawList", list.of.methylRaw.mincov)
-  mrl@treatment <- treatment
-  mrl
-}
-
 # Read input files
 inputfiles = paste0(workdir, input)
 rds.objs = lapply(inputfiles, readRDS)
@@ -163,17 +240,6 @@ if(nrow(meth.unite)>1){
                                        qvalue=qvalue)
   
 }else{
-  create.empty.methylDiff = function(sampleids, assembly, context, treatment){
-    new("methylDiff",
-        sample.ids = sampleids, 
-        assembly = assembly,
-        context = context,
-        treatment=treatment,
-        # strand.aware is set to FALSe by defualt in methylKit@1.3.3
-        destranded=FALSE, 
-        resolution="base"
-    )
-  }
   methylDiff.obj = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
   methylDiff.obj.hypo = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
   methylDiff.obj.hyper = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
@@ -192,58 +258,6 @@ meth.unite.or.methylDiff.nonempty = meth.unite.nonempty | methylDiff.nonempty
 
 ### Export differentially methylated cytosines
 
-#' Export windows to a BED file
-#' 
-#' The windows are color coded based on their score (methylation or differential
-#' methylation value).
-#' 
-#' @param windows \code{\link[GenomicRanges]{GRanges}} object with information about
-#' differentially methylated regions
-#' @param filename name of the output data
-#' @param trackLine UCSC browser trackline
-#' @param colramp color scale to be used in the BED display
-#' defaults to gray,green, darkgreen scale.
-#' 
-#' @return A BED files with the differentially methylated regions
-#' which can be visualized in the UCSC browser 
-#' 
-#' @seealso \code{\link{methylKit::methSeg2bed}}
-#' 
-#' @export
-#' @docType methods
-#' @rdname meth2bed
-meth2bed<-function(windows,filename,
-                   trackLine="track name='meth windows' description='meth windows' itemRgb=On",
-                   colramp=colorRamp(c("gray","green", "darkgreen"))
-){
-  
-  range01 <- function(x){(x-min(x)+1)/(max(x)-min(x)+1)}
-  
-  if(class(windows)!="GRanges"){
-    windows=as(windows, "GRanges")
-  }
-  
-  ## case if only one line is exported
-  if(is.null(colramp) | length(windows)==1){
-    trackLine <- gsub(pattern = "itemRgb=On",replacement = "",x = trackLine)
-  } else {
-    require(rtracklayer)
-    ramp <- colramp
-    score(windows)=range01(windows$meth.diff)
-    mcols(windows)$itemRgb= rgb(ramp(score(windows)), maxColorValue = 255)     
-  }
-  
-  strand(windows)="*"
-  score(windows)=range01(windows$meth.diff)
-  
-  if(is.null(trackLine)){
-    
-    export.bed(windows,filename)
-  }else{
-    export.bed(windows,filename,
-               trackLine=as(trackLine, "BasicTrackLine"))
-  }
-}
 
 
 # Export differentially methylated cytosines to a bed file
