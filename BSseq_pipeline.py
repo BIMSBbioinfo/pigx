@@ -629,7 +629,7 @@ rule diffmeth_report:
         difference=float(config['general']['differential-methylation']['difference']),
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
-        CpGfile     = config['general']['differential-methylation']['annotation']['CpGfile'],
+        cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:

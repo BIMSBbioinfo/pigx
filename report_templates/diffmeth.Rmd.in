@@ -25,7 +25,7 @@ params:
   genome_dir: ''
   scripts_dir: ''
   AnnotateDiffMeth: TRUE
-  CpGfile:      ''
+  cpgIsland_bedfile:  ''
   refGenes_bedfile:   ''
   webfetch:     ''
   treatment: ''
@@ -44,7 +44,7 @@ knitr::opts_knit$set(progress = FALSE)
 DiffMeth          <- params$DiffMeth
 AnnotateDiffMeth  <- params$AnnotateDiffMeth
 
-CpGfile           <- params$CpGfile
+cpgIsland_bedfile       <- params$cpgIsland_bedfile
 refGenes_bedfile        <- params$refGenes_bedfile
 webfetch          <- params$webfetch
 chrom_seqlengths <- params$chrom_seqlengths
@@ -227,7 +227,7 @@ fetched.refgenes <- lookupBedFile(type = "refGene",
 fetch_refgen_success <- ( fetched.refgenes != '')
 
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
-                              filename =  paste0(out_dir,"/",CpGfile),
+                              filename =  paste0(out_dir,"/",cpgIsland_bedfile),
                               assembly = assembly,
                               webfetch = webfetch )
 

@@ -34,7 +34,7 @@ params:
   genome_dir: ''
   scripts_dir: ''
   AnnotateDiffMeth: TRUE
-  CpGfile:      ''
+  cpgIsland_bedfile:  ''
   refGenes_bedfile:   ''
   webfetch:     ''
 ---
