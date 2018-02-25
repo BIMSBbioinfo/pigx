@@ -45,9 +45,13 @@ Sinfo <- Seqinfo(seqnames   = as.character(seqdat_temp[,1]),
                  genome     = assembly)
 
 
-G1          = as(m1 , "GRanges")            # convert it to a GRanges object
-seqinfo(G1) = Sinfo
+G1            <- as(m1 , "GRanges")            # convert it to a GRanges object
 
+seqlevels(G1) <- seqlevels(Sinfo)              # ensure the full set of seqnames 
+                                               # from the ref-genome are included
+                                               # (even if this data set is low-
+                                               # coverage and missing chrom's)
+seqinfo(G1)   <- Sinfo
 G1$score = G1$numCs/G1$coverage
 
 G1$coverage = NULL
