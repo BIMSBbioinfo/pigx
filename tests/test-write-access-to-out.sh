@@ -23,7 +23,7 @@ general:
     treatment-groups: []
 EOF
 cat <<EOF > samplesheet.csv
-Read1,Read2,SampleID,ReadType,Treatment
+Read1,Read2,SampleID,Protocol,Treatment
 EOF
 
 # run the pipeline
