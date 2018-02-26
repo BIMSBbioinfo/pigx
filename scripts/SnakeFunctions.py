@@ -64,8 +64,10 @@ def join_params(app, app_params, params_set):
 def get_macs2_suffix(name, dictionary):
     sample = dictionary[name]
     suffix = 'narrowPeak'
-    if 'macs2' in set(sample.keys()):
-        if 'broad' in set(sample['macs2'].keys()):
+
+    if not sample == None:
+        if 'macs2' in set(sample.keys()):
+            if 'broad' in set(sample['macs2'].keys()):
                 suffix = 'broadPeak'
     return(suffix)
 
