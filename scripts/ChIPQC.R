@@ -68,7 +68,6 @@ ChIPQC = function(
     cnt_factor = ifelse(library_type == 'single', 1, 2)
     mapped.total = mapped.total/cnt_factor
 
-
     chr_lengths = scanBamHeader(bamfile)[[1]]$targets
     chr_lengths = sort(chr_lengths, decreasing=TRUE)
     use_longest_chr = TRUE
