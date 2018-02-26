@@ -34,7 +34,7 @@ Extend_Regions = function(
     g = makeGRangesFromDataFrame(as.data.frame(f))
     cov = coverage(g)
 
-    if(scale_index == 'yes' || scale_index)
+    if(scale_index == 'yes' || scale_index == TRUE)
         cov = round(cov * (scale_factor/nrow(f)),2)
 
     export.bw(cov, outpath)
