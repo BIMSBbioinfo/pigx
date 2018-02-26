@@ -37,8 +37,9 @@ rule macs2:
     """
     run:
         params_macs = params.params_macs
-        if 'macs2' in CUSTOM_PARAMS[params.name].keys():
-            params_macs.update(CUSTOM_PARAMS[params.name]['macs2'])
+        if not CUSTOM_PARAMS[params.name] == None:
+            if 'macs2' in CUSTOM_PARAMS[params.name].keys():
+                params_macs.update(CUSTOM_PARAMS[params.name]['macs2'])
 
         # checks whether the control samples are specified
         samples = ''
