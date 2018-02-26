@@ -21,7 +21,7 @@ general:
         q: 0.05
     extract_signal:
         expand_peak:
-        bin_num:
+        number_of_bins: 50
 
 execution:
   submit-to-cluster: no
@@ -46,7 +46,7 @@ execution:
       threads:   1
       memory:    16G
     bedTobigBed:
-      threads:   1 
+      threads:   1
       memory:    8G
     bowtie2:
       threads:   2
@@ -76,25 +76,25 @@ execution:
       threads:   1
       memory:    1G
     link_annotation:
-      threads:   1 
+      threads:   1
       memory:    16G
     make_ucsc_hub:
-      threads:   1 
+      threads:   1
       memory:    8G
     samtools_sort:
       threads:   4
       memory:    16G
     samtools_index:
-      threads:   1 
+      threads:   1
       memory:    8G
     macs2:
-      threads:   1 
+      threads:   1
       memory:    16G
     prepare_annotation:
-      threads:   1 
+      threads:   1
       memory:    16G
     sort_peak:
-      threads:   1 
+      threads:   1
       memory:    8G
 
 tools:
