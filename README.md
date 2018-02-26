@@ -192,8 +192,8 @@ general:
       - ['0', '1']
       - ['0', '2']
     annotation:
-      CpGfile:    genome/cpgIslandExt.hg19.bed.gz
-      refGenfile: genome/refGene.hg19.bed.gz
+      cpgIsland_bedfile: genome/cpgIslandExt.hg19.bed.gz
+      refGenes_bedfile:  genome/refGene.hg19.bed.gz
       webfetch:   no
 
 execution:
@@ -251,8 +251,8 @@ general:
     treatment-groups:
       - ['0', '1']
     annotation:
-      CpGfile:    genome/cpgIslandExt.hg19.bed.gz
-      refGenfile: genome/refGene.hg19.bed.gz
+      cpgIsland_bedfile: genome/cpgIslandExt.hg19.bed.gz
+      refGenes_bedfile:  genome/refGene.hg19.bed.gz
       webfetch:   no
 ```
 

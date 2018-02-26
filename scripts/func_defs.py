@@ -180,9 +180,9 @@ def diffmeth_input_function(wc):
   for sampleid in sampleids:
     fqname = config["SAMPLES"][sampleid]['fastq_name']
     if len(fqname)==1:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.deduped.sorted_CpG.txt")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.deduped.sorted_methylRaw.RDS")]
     elif len(fqname)==2:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.deduped.sorted_CpG.txt")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS")]
     inputfiles.append(inputfile)
 
   inputfiles = list(sum(inputfiles, []))

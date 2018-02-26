@@ -10,11 +10,13 @@ general:
     minimum-quality: 10
   differential-methylation:
     cores: 1
+    qvalue: 0.01
+    difference: 25
     treatment-groups:
       - []
     annotation:
-      CpGfile:    "pigx_work/refGenome/cpgIslandExt.hg19.bed.gz"
-      refGenes_bedfile: "pigx_work/refGenome/refGene.hg19.bed.gz"
+      cpgIsland_bedfile: "pigx_work/refGenome/cpgIslandExt.hg19.bed.gz"
+      refGenes_bedfile:  "pigx_work/refGenome/refGene.hg19.bed.gz"
       webfetch:   no
 
 execution:
