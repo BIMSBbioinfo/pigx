@@ -40,6 +40,8 @@ for param_set in custom_param_names:
         sample_set = SAMPLE_SHEET[param_set][sample_name]
         if isinstance(sample_set, dict) and 'params' in set(sample_set.keys()):
             CUSTOM_PARAMS[sample_name] = sample_set['params']
+        else:
+            CUSTOM_PARAMS[sample_name] = None
 
 # ---------------------------------------------------------------------------- #
 # Variable definition
@@ -149,6 +151,7 @@ BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
 
+
 COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + ChIPQC + BOWTIE2_STATS
 
 
@@ -179,13 +182,13 @@ if peak_index:
             MACS    = MACS  + [os.path.join(PATH_PEAK,  name, name + "_peaks." + suffix)]
             QSORT   = QSORT + [os.path.join(PATH_PEAK,  name, name + "_qsort.bed" )]
             PEAK_NAME_LIST[name] = QSORT[-1]
-        
+
         # ------------------------------------------------------------------------ #
         PEAK_STATISTICS = [os.path.join(PATH_RDS, "Peak_Statistics.rds")]
 
         include: os.path.join(RULES_PATH, 'Peak_Calling.py')
         include: os.path.join(RULES_PATH, 'Peak_Statistics.py')
-        
+
         COMMAND = COMMAND + MACS + QSORT + PEAK_STATISTICS
 
 # # ----------------------------------------------------------------------------- #
@@ -217,7 +220,7 @@ if gtf_index:
     PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
 
     EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
-    
+
     # ------------------------------------------------------------------------ #
     # Formats the annotation + extracts signal profiles around pre-specified annotation regions
     include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
@@ -242,9 +245,7 @@ if 'feature_combination' in set(SAMPLE_SHEET.keys()):
 
 # ----------------------------------------------------------------------------- #
 # REPORT INPUT
-REPORT         = [os.path.join(PATH_REPORTS, 'ChIP_Seq_Report.html')]
-# REPORT_CHUNKS  = ['EXTRACT_SIGNAL_ANNOTATION','PEAK_STATISTICS','ANNOTATE_PEAKS','ChIPQC']
-# This lines convert the analysis code chunks from SNAKEMAKE rule language to R language
+SUMMARIZED_DATA_FOR_REPORT = [os.path.join(PATH_ANALYSIS, 'Summarized_Data_For_Report.RDS')]
 REPORT_CHUNKS  = {'EXTRACT_SIGNAL_ANNOTATION':'Extract_Signal_Annotation','PEAK_STATISTICS':'Peak_Statistics','ANNOTATE_PEAKS':'Annotate_Peaks','ChIPQC':'ChIPQC'}
 REPORT_INPUT   = []
 ANALISYS_NAMES = []
@@ -253,9 +254,15 @@ for i in REPORT_CHUNKS.keys():
         REPORT_INPUT   = REPORT_INPUT   + globals()[i]
         ANALISYS_NAMES = ANALISYS_NAMES + [i]
 
+
+REPORT         = [os.path.join(PATH_REPORTS, 'ChIP_Seq_Report.html')]
+# REPORT_CHUNKS  = ['EXTRACT_SIGNAL_ANNOTATION','PEAK_STATISTICS','ANNOTATE_PEAKS','ChIPQC']
+# This lines convert the analysis code chunks from SNAKEMAKE rule language to R language
+
 ANALISYS_NAMES = [REPORT_CHUNKS[i] for i in ANALISYS_NAMES]
+include: os.path.join(RULES_PATH, 'Summarize_Data_For_Report.py')
 include: os.path.join(RULES_PATH, 'Knit_Report.py')
-COMMAND = COMMAND + REPORT
+COMMAND = COMMAND + SUMMARIZED_DATA_FOR_REPORT + REPORT
 # ----------------------------------------------------------------------------- #
 rule all:
     input:
