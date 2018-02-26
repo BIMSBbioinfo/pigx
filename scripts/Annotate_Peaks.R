@@ -30,21 +30,28 @@ Annotate_Peaks = function(
       stop(paste(paste(names(arglist)[arg.ind], collapse=','),'not defined'))
 
     # --------------------------------------------------------------- #
-    library(data.table)
-    library(stringr)
-    library(genomation)
+    suppressPackageStartupMessages(library(data.table))
+    suppressPackageStartupMessages(library(stringr))
+    suppressPackageStartupMessages(library(genomation))
+    suppressPackageStartupMessages(library(GenomicRanges))
     source(file.path(scriptdir, 'Functions_Helper.R'), local=TRUE)
 
     # --------------------------------------------------------------- #
-    message('Annotation ...')
-        annot = readRDS(annotation)
+    if(file.info(peaks_path)$size > 0){
+       
+        
+        message('Annotation ...')
+            annot = readRDS(annotation)
+        
+        message('Reading peaks ...')    
+            peaks  = readGeneric(peaks_path)
+    
+        message('Annotating peaks ...')      
+            peaks$annot = AnnotateRanges(peaks, annot$genomic_annotation)
+    }else{
+       peaks = list()
 
-    message('Reading peaks ...')
-        peaks  = readGeneric(peaks_path)
-
-    message('Annotating peaks ...')
-        peaks$annot = AnnotateRanges(peaks, annot$genomic_annotation)
-
+    }
     message('Saving annotated peaks ...')
         saveRDS(peaks, outfile)
 
