@@ -11,25 +11,26 @@ Knit_Report = function(
     analysis_names  = NULL,
     report_chunks   = NULL,
     script_path     = NULL,
+    infile,
     outfile,
     logo,
-    selfContained = TRUE, 
+    selfContained = TRUE,
     quiet         = FALSE
 ){
-    
+
     suppressPackageStartupMessages(library(htmlwidgets))
     suppressPackageStartupMessages(library(rmarkdown))
     workdir = dirname(outfile)
     tempdir = file.path(workdir,'Temp')
     htmlwidgets::setWidgetIdSeed(1234)
     rmarkdown::render(
-        input             = report_template, 
+        input             = report_template,
         output_dir        = workdir,
         intermediates_dir = tempdir,
         clean             = TRUE,
         output_file       = outfile,
         output_format     = rmarkdown::html_document(
-            code_folding    = 'hide', 
+            code_folding    = 'hide',
             depth           = 2,
             toc             = TRUE,
             toc_float       = TRUE,
@@ -40,10 +41,11 @@ Knit_Report = function(
         params = list(analysis_path  = analysis_path,
                       analysis_names = analysis_names,
                       report_chunks  = report_chunks,
-                      script_path    = script_path),
+                      script_path    = script_path,
+                      infile         = infile),
         quiet = quiet
     )
-    
+
     if(dir.exists(tempdir)) {
         unlink(tempdir, recursive = TRUE)
     }
@@ -57,5 +59,6 @@ Knit_Report(
     analysis_names  = argv$params[['analysis_names']],
     report_chunks   = argv$params[['report_chunks']],
     script_path     = argv$params[['script_path']],
+    infile          = argv$input[['infile']],
     outfile         = argv$output[['outfile']]
 )
