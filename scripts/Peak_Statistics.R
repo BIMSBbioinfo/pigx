@@ -74,8 +74,11 @@ Peak_Statistics = function(
 
   # ------------------------------------------------------------------------- #
   message('Counting reads ...')
-    peaks     = GRangesList(lapply(peaks_uniq$bed_file, readGeneric))
-    names(peaks) = peaks_uniq$sample_name
+    peaks     = lapply(peaks_uniq$bed_file,
+      function(x)try(readGeneric(x), silent=TRUE))
+    peaks_ind = sapply(peaks, function(x)class(x)=='GRanges')
+    peaks = GRangesList(peaks[peaks_ind])
+    names(peaks) = peaks_uniq$sample_name[peaks_ind]
     cnts = lapply(c('single', 'paired'), function(x){
         bam_files        = BamFileList(unique(subset(peaks_sheet, library==x)$bam_file))
         summarizeOverlaps(peaks, bam_files, singleEnd = x == 'single', ignore.strand=TRUE)
