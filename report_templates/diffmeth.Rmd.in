@@ -41,6 +41,10 @@ knitr::opts_knit$set(progress = FALSE)
 
 ```{r chunk_eval_options}
 
+hyper.col    = "magenta"
+hypo.col     = "darkolivegreen4"
+Nbreaks_hist = 100
+
 DiffMeth          <- params$DiffMeth
 AnnotateDiffMeth  <- params$AnnotateDiffMeth
 
@@ -360,10 +364,33 @@ myseqinfo.st = keepStandardChromosomes(myseqinfo)
 
 source(paste0(params$scripts_dir, "ideoDMC.R"))
 ideoDMC_hyper_hypo(methylDiff.obj.hyper, methylDiff.obj.hypo, chrom.length = seqlengths( myseqinfo.st ),
-       circos = FALSE, title = "Differential methylation", hyper.col = "magenta", hypo.col = "green")
+       circos = FALSE, title = "Differential methylation", hyper.col = hyper.col, hypo.col = hypo.col)
 
 }
 
+```
+
+Below is a histogram of (statistically significant) differential CpG methylation.
+```{r plot.methdiff.histogram, eval=AnnotateDiffMeth}
+
+methdiff_hist <- hist(methylDiff.obj$meth.diff, 
+                      breaks = Nbreaks_hist,
+                      plot   = FALSE)
+
+plot( methdiff_hist$mids,methdiff_hist$density,
+      pch    = ".",
+      xlim   = c(-100,100),
+      ylim   = c(0, max(methdiff_hist$density ) ),
+      yaxt = "n",
+      main   = "Relative CpG methylation",
+      xlab   = "% methylation difference \n[treatment - control]",
+      ylab   = "Frequency")
+lines( methdiff_hist$mids[1:(Nbreaks_hist/2)], methdiff_hist$density[1:(Nbreaks_hist/2)],
+       col = hypo.col,
+       lw  = 3)
+lines( methdiff_hist$mids[(Nbreaks_hist/2):Nbreaks_hist], methdiff_hist$density[(Nbreaks_hist/2):Nbreaks_hist],
+       col = hyper.col,
+       lw  = 3)
 ```
 
 
