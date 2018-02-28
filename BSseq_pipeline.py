@@ -529,25 +529,27 @@ rule diffmeth:
     input:  
         inputfiles  = diffmeth_input_function
     output: 
-        methylDiff_file  = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.RDS'),
-        methylDiff_hyper_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
-        bedfile     = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.bed')
+        methylDiff_file        = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethnonsig.RDS"),
+        bedfile                = os.path.join(DIR_diffmeth, '{treatment}.sorted_diffmeth.bed')
     params:
         workdir     = WORKDIR,
+        scripts_dir = DIR_scripts,
         inputfiles  = diffmeth_input_function,
         sampleids   = lambda wc: get_sampleids_from_treatment(wc.treatment),
-        methylDiff_file      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = ASSEMBLY,
-        qvalue = float(config['general']['differential-methylation']['qvalue']),
-        difference = float(config['general']['differential-methylation']['difference']),
         treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
+        assembly    = ASSEMBLY,
+        qvalue      = float(config['general']['differential-methylation']['qvalue']),
+        difference  = float(config['general']['differential-methylation']['difference']),
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         cores       = int(config['general']['differential-methylation']['cores']),
-        scripts_dir = DIR_scripts
+        methylDiff_file        = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethnonsig.RDS"),
+        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed")
     log:
         os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
     message: fmt("Calculating differential methylation.")
@@ -555,15 +557,16 @@ rule diffmeth:
         nice('Rscript', ['{DIR_scripts}/methDiff.R',
                          '--inputfiles="{params.inputfiles}"',
                          '--sampleids="{params.sampleids}"',
-                         '--methylDiff_file={params.methylDiff_file}',
-                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
-                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
+                         '--treatment="{params.treatment}"',
                          '--assembly={params.assembly}',
                          '--qvalue={params.qvalue}',
                          '--difference={params.difference}',
-                         '--treatment="{params.treatment}"',
                          '--mincov={params.mincov}',
                          '--cores={params.cores}',
+                         '--methylDiff_file={params.methylDiff_file}',
+                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
+                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
+                         '--methylDiff_nonsig_file={params.methylDiff_nonsig_file}',
                          '--outBed={params.outBed}',
                          '--logFile={log}'])
 
@@ -619,18 +622,18 @@ rule diffmeth_report:
     output:
         report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
     params:
-        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
         source_dir  = config['locations']['input-dir'],
-        out_dir     = config['locations']['output-dir'],
-        diffmeth_dir = DIR_diffmeth,
-        treatment = lambda wc: str(wc.treatment).replace('vs', '_'),
-        assembly    = ASSEMBLY,
-        qvalue=float(config['general']['differential-methylation']['qvalue']),
-        difference=float(config['general']['differential-methylation']['difference']),
-        genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
+        diffmeth_dir = DIR_diffmeth,
+        genome_dir  = config['locations']['genome-dir'],
+        out_dir     = config['locations']['output-dir'],
         cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
+        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        assembly    = ASSEMBLY,
+        treatment = lambda wc: str(wc.treatment).replace('vs', '_'),
+        qvalue     = float(config['general']['differential-methylation']['qvalue']),
+        difference = float(config['general']['differential-methylation']['difference']),
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
         os.path.join(DIR_final,"diffmeth-report.{treatment}.log")
