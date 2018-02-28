@@ -103,16 +103,19 @@ treatmentpair = params$treatment
 assembly = params$assembly
 
 outputdir = paste(params$out_dir, params$diffmeth_dir, sep="/")
-methylDiff_file    <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.RDS')
-methylDiff_hyper_file    <- paste0(outputdir, treatmentpair,'.sorted_diffmethhyper.RDS')
+methylDiff_file        <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.RDS')
+methylDiff_hyper_file  <- paste0(outputdir, treatmentpair,'.sorted_diffmethhyper.RDS')
 methylDiff_hypo_file   <- paste0(outputdir, treatmentpair,'.sorted_diffmethhypo.RDS')
-methylDiffBed    <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.bed')
+methylDiff_nonsig_file <- paste0(outputdir, treatmentpair,'.sorted_diffmethnonsig.RDS')
+
+methylDiffBed          <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.bed')
 ```
 
 ```{r DiffMeth.load, eval=DiffMeth}
-methylDiff.obj <- readRDS(methylDiff_file)
-methylDiff.obj.hypo <- readRDS(methylDiff_hypo_file)
-methylDiff.obj.hyper <- readRDS(methylDiff_hyper_file)
+methylDiff.obj        <- readRDS(methylDiff_file)
+methylDiff.obj.hyper  <- readRDS(methylDiff_hyper_file)
+methylDiff.obj.hypo   <- readRDS(methylDiff_hypo_file)
+methylDiff.obj.nonsig <- readRDS(methylDiff_nonsig_file)
 
 sampleids <- methylDiff.obj@sample.ids
 treatment <- getTreatment(methylDiff.obj)
@@ -212,9 +215,10 @@ cat('### Preprocessing\n')
 
 ```{r AnnotateDiffMeth.convert, eval=AnnotateDiffMeth}
 # Convert a methylDiff object to a GRanges object
-GRanges.diffmeth = as(methylDiff.obj, "GRanges")
-GRanges.diffmeth.hypo = as(methylDiff.obj.hypo, "GRanges")
-GRanges.diffmeth.hyper = as(methylDiff.obj.hyper, "GRanges")
+GRanges.diffmeth        = as(methylDiff.obj, "GRanges")
+GRanges.diffmeth.hyper  = as(methylDiff.obj.hyper, "GRanges")
+GRanges.diffmeth.hypo   = as(methylDiff.obj.hypo, "GRanges")
+GRanges.diffmeth.nonsig = as(methylDiff.obj.nonsig, "GRanges")
 
 ```
 
@@ -370,12 +374,19 @@ ideoDMC_hyper_hypo(methylDiff.obj.hyper, methylDiff.obj.hypo, chrom.length = seq
 
 ```
 
-Below is a histogram of (statistically significant) differential CpG methylation.
+Below is a histogram of (statistically significant) differential CpG
+methylation, alongside CpG sites without statistically significant 
+differences in methylation --each are normalized independently, as the 
+latter are generally far more numerous than the former).
+
 ```{r plot.methdiff.histogram, eval=AnnotateDiffMeth}
 
-methdiff_hist <- hist(methylDiff.obj$meth.diff, 
-                      breaks = Nbreaks_hist,
-                      plot   = FALSE)
+methdiff_hist   <- hist( methylDiff.obj$meth.diff,
+                         breaks = Nbreaks_hist,
+                         plot   = FALSE )
+methdiff_nonsig <- hist( methylDiff.obj$meth.diff,
+                         breaks = Nbreaks_hist,
+                         plot   = FALSE )
 
 plot( methdiff_hist$mids,methdiff_hist$density,
       pch    = ".",
@@ -391,6 +402,19 @@ lines( methdiff_hist$mids[1:(Nbreaks_hist/2)], methdiff_hist$density[1:(Nbreaks_
 lines( methdiff_hist$mids[(Nbreaks_hist/2):Nbreaks_hist], methdiff_hist$density[(Nbreaks_hist/2):Nbreaks_hist],
        col = hyper.col,
        lw  = 3)
+
+par(new=TRUE)
+plot( methdiff_nonsig$mids,
+      methdiff_nonsig$density,
+      pch  =".",
+      yaxt = "n",
+      ylab ="",
+      xlab ="",
+      col  ="black" )
+lines( methdiff_nonsig$mids, methdiff_nonsig$density,
+       col = "black",
+       lw  = 3  )
+
 ```
 
 

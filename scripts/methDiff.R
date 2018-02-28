@@ -280,10 +280,8 @@ meth2bed(windows = methylDiff.obj,
          colramp=colorRamp(c("gray","green", "darkgreen")),
          filename = output) 
 
-methylDiff.obj.nonsig="testing"
 # Save output of differential methylation calling into a RDS files
 saveRDS(methylDiff.obj,        methylDiff_file)
 saveRDS(methylDiff.obj.hypo,   methylDiff_hypo_file)
 saveRDS(methylDiff.obj.hyper,  methylDiff_hyper_file)
 saveRDS(methylDiff.obj.nonsig, methylDiff_nonsig_file)
-
