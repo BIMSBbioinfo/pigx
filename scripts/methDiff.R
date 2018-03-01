@@ -242,10 +242,13 @@ if(nrow(meth.unite)>1){
                                       qvalue=qvalue)
  
   # Gather the remainder (not statistically significant), by picking 
-  # the ones that _aren't_ in the abovel lists:
+  # the ones that _aren't_ in the abovel lists; then purge data for disk space
   siglist               <- findOverlaps( as(methylDiff.obj,"GRanges") , as(meth.unite,"GRanges")  )
   methylDiff.obj.nonsig <- meth.unite[ is.na(match( c(1:nrow(meth.unite)), subjectHits(siglist) ) ) ]
-
+  methylDiff.obj.nonsig$meth.diff  <-  100*( (methylDiff.obj.nonsig$numCs2/methylDiff.obj.nonsig$coverage2) - (methylDiff.obj.nonsig$numCs1/methylDiff.obj.nonsig$coverage1) ) 
+  methylDiff.obj.nonsig$coverage1  <- NULL; methylDiff.obj.nonsig$numCs1  <- NULL; methylDiff.obj.nonsig$numTs1  <- NULL
+  methylDiff.obj.nonsig$coverage2  <- NULL; methylDiff.obj.nonsig$numCs2  <- NULL; methylDiff.obj.nonsig$numTs2  <- NULL
+ 
 }else{
   methylDiff.obj        = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
   methylDiff.obj.hyper  = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)

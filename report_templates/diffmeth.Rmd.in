@@ -41,9 +41,9 @@ knitr::opts_knit$set(progress = FALSE)
 
 ```{r chunk_eval_options}
 
-hyper.col    = "magenta"
-hypo.col     = "darkolivegreen4"
-Nbreaks_hist = 100
+hyper.col     = "magenta"
+hypo.col      = "darkolivegreen4"
+hist_breakset = seq(-101,101,2)
 
 DiffMeth          <- params$DiffMeth
 AnnotateDiffMeth  <- params$AnnotateDiffMeth
@@ -382,11 +382,12 @@ latter are generally far more numerous than the former).
 ```{r plot.methdiff.histogram, eval=AnnotateDiffMeth}
 
 methdiff_hist   <- hist( methylDiff.obj$meth.diff,
-                         breaks = Nbreaks_hist,
+                         breaks = hist_breakset,
                          plot   = FALSE )
-methdiff_nonsig <- hist( methylDiff.obj$meth.diff,
-                         breaks = Nbreaks_hist,
+methdiff_nonsig <- hist( methylDiff.obj.nonsig$meth.diff,
+                         breaks = hist_breakset,
                          plot   = FALSE )
+Nbreaks_hist=length(hist_breakset)
 
 plot( methdiff_hist$mids,methdiff_hist$density,
       pch    = ".",
@@ -407,6 +408,8 @@ par(new=TRUE)
 plot( methdiff_nonsig$mids,
       methdiff_nonsig$density,
       pch  =".",
+      xaxt = "n",
+      xlim = c(-100,100),
       yaxt = "n",
       ylab ="",
       xlab ="",
@@ -414,6 +417,7 @@ plot( methdiff_nonsig$mids,
 lines( methdiff_nonsig$mids, methdiff_nonsig$density,
        col = "black",
        lw  = 3  )
+lines( c(0,0), c(0, max(methdiff_nonsig$density) ), lw=2, lty=3, col=rgb(0,0,0,alpha=0.5)  )
 
 ```
 
