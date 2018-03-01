@@ -134,6 +134,10 @@ optional arguments:
                                           fresh.
   --reason                                Print the reason why a rule is executed.
   --unlock                                Recover after a snakemake crash.
+  --verbose                               Print supplementary info on job execution.
+  --printshellcmds                        Explicitly print commands being executed by snakemake to standard out.
+
+
 
 This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 ```

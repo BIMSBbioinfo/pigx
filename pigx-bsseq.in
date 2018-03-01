@@ -115,7 +115,7 @@ Recover after a snakemake crash.""")
 
 parser.add_argument('--verbose', dest='verbose', action='store_true',
                     help="""\
-Print supp info on job execution.""")
+Print supplementary info on job execution.""")
 
 parser.add_argument('--printshellcmds', dest='printshellcmds', action='store_true',
                     help="""\
