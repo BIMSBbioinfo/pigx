@@ -8,8 +8,8 @@ rule peak_statistics:
     output:
         outfile    = os.path.join(PATH_RDS, "Peak_Statistics.rds")
     params:
-        threads         = 1,
-        mem             = '8G',
+        threads         = 16,
+        mem             = '16G',
         config          = SAMPLE_SHEET,
         path_mapped     = PATH_MAPPED,
         path_peak       = PATH_PEAK,
