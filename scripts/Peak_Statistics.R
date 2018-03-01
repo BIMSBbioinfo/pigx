@@ -72,17 +72,28 @@ Peak_Statistics = function(
     dplyr::rename(mapped_total = value)   %>%
     dplyr::rename(bam_name = sample_name)
 
-  # ------------------------------------------------------------------------- #
-  message('Counting reads ...')
+  # -------------------------------------------------------------------------- #
+  message('Reading peaks ...')
     peaks     = lapply(peaks_uniq$bed_file,
       function(x)try(readGeneric(x), silent=TRUE))
     peaks_ind = sapply(peaks, function(x)class(x)=='GRanges')
     peaks = GRangesList(peaks[peaks_ind])
     names(peaks) = peaks_uniq$sample_name[peaks_ind]
+
+    # -------------------------------------------------------------------------- #
+  
+  message('Counting reads ...')
     cnts = lapply(c('single', 'paired'), function(x){
-        bam_files        = BamFileList(unique(subset(peaks_sheet, library==x)$bam_file))
-        summarizeOverlaps(peaks, bam_files, singleEnd = x == 'single', ignore.strand=TRUE)
+        
+        sub = subset(peaks_sheet, library==x)
+        if(nrow(sub) > 0){
+            bam_files  = BamFileList(unique(sub$bam_file),  yieldSize = 100000)
+            summarizeOverlaps(peaks, bam_files, singleEnd = x == 'single', ignore.strand=TRUE)
+        }else{
+            NULL
+        }
       })
+    cnts   = cnts[sapply(cnts, function(x)!is.null(x))] 
     cntmat = as.data.frame(do.call(cbind, lapply(cnts, function(x)assays(x)[[1]]))) %>%
       mutate(sample_name = names(peaks)) %>%
       merge(x=peaks_sheet) %>%
@@ -158,4 +169,5 @@ Peak_Statistics(
   path_peak    = argv$params[['path_peak']],
   peaks_resize = argv$params[['peaks_resize']],
   ncores       = argv$params[['threads']]
+  
 )
