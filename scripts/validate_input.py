@@ -17,7 +17,7 @@ def read_config_file(path):
     return config
 
 def validate_config(config):
-        
+
     # Check that all locations exist
     for loc in config['locations']:
         if (not loc == 'output-dir') and config['locations'][loc] and (not (os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
@@ -36,21 +36,21 @@ def validate_config(config):
     if len(unsupported) > 0:
         raise Exception("ERROR: Samples with scRNA-seq methods {} cannot be processed with this pipeline. Please remove them from the sample sheet file".format(unsupported))
 
-    samples = {}        
-    # Check that reads files exist; sample names are unique to each row; 
+    samples = {}
+    # Check that reads files exist; sample names are unique to each row;
     for row in sample_sheet:
         sample = row['sample_name']
         if sample in samples:
             raise Exception('ERROR: sample_name "{}" is not unique. Replace it with a unique name in the sample_sheet.'.format(sample))
         else:
             samples[sample] = 1
-                         
+
         filenames = [row['barcode'], row['reads']]
         for filename in filenames:
             fullpath = os.path.join(config['locations']['reads-dir'], filename)
             if not os.path.isfile(fullpath):
                 raise Exception('ERROR: missing reads file: {}'.format(fullpath))
-                    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
