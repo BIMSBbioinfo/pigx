@@ -334,7 +334,11 @@ saveRDS(object = sce, file =  paste0(outFile, '.intermediate.RDS'))
 
 message(date()," Computing t-SNE")
 #4.7 get t-SNE results
-sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')
+sce <- scater::runTSNE(object           = sce, 
+                       components       = 2, 
+                       use_dimred       = 'PCA', 
+                       rand_seed        = 1, 
+                       check_duplicates = FALSE)
 
 saveRDS(object = sce, file =  paste0(outFile, '.intermediate.RDS'))
 
