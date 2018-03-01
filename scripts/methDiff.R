@@ -182,22 +182,24 @@ sink(out, type = "message")
 
 ## load libraries
 library("methylKit")
+workdir   <- argsL$workdir
 
 input     <- argsL$inputfiles
 sampleids <- argsL$sampleids
-output    <- argsL$outBed
-methylDiff_file   <- argsL$methylDiff_file
-methylDiff_hyper_file    <- argsL$methylDiff_hyper_file
-methylDiff_hypo_file   <- argsL$methylDiff_hypo_file
-assembly  <- argsL$assembly
 treatment <- as.numeric(argsL$treatment)
-mincov    <- as.numeric(argsL$mincov)
-workdir   <- argsL$workdir
-cores     <- as.numeric(argsL$cores)
+assembly  <- argsL$assembly
+
+qvalue     <- as.numeric(argsL$qvalue)
 difference <- as.numeric(argsL$difference)
-qvalue <- as.numeric(argsL$qvalue)
+mincov     <- as.numeric(argsL$mincov)
+cores      <- as.numeric(argsL$cores)
 
+methylDiff_file        <- argsL$methylDiff_file
+methylDiff_hyper_file  <- argsL$methylDiff_hyper_file
+methylDiff_hypo_file   <- argsL$methylDiff_hypo_file
+methylDiff_nonsig_file <- argsL$methylDiff_nonsig_file
 
+output    <- argsL$outBed
 
 
 ### Find differentially methylated cytosines
@@ -228,21 +230,30 @@ if(nrow(meth.unite)>1){
                                  difference=difference,
                                  type="all",
                                  qvalue=qvalue)
-  # Get hypo-methylated
-  methylDiff.obj.hypo = getMethylDiff(meth.diffmeth,
-                                      difference=difference,
-                                      type="hypo",
-                                      qvalue=qvalue)
   # Get hyper-methylated
   methylDiff.obj.hyper = getMethylDiff(meth.diffmeth,
                                        difference=difference,
                                        type="hyper",
                                        qvalue=qvalue)
-  
+  # Get hypo-methylated
+  methylDiff.obj.hypo = getMethylDiff(meth.diffmeth,
+                                      difference=difference,
+                                      type="hypo",
+                                      qvalue=qvalue)
+ 
+  # Gather the remainder (not statistically significant), by picking 
+  # the ones that _aren't_ in the abovel lists; then purge data for disk space
+  siglist               <- findOverlaps( as(methylDiff.obj,"GRanges") , as(meth.unite,"GRanges")  )
+  methylDiff.obj.nonsig <- meth.unite[ is.na(match( c(1:nrow(meth.unite)), subjectHits(siglist) ) ) ]
+  methylDiff.obj.nonsig$meth.diff  <-  100*( (methylDiff.obj.nonsig$numCs2/methylDiff.obj.nonsig$coverage2) - (methylDiff.obj.nonsig$numCs1/methylDiff.obj.nonsig$coverage1) ) 
+  methylDiff.obj.nonsig$coverage1  <- NULL; methylDiff.obj.nonsig$numCs1  <- NULL; methylDiff.obj.nonsig$numTs1  <- NULL
+  methylDiff.obj.nonsig$coverage2  <- NULL; methylDiff.obj.nonsig$numCs2  <- NULL; methylDiff.obj.nonsig$numTs2  <- NULL
+ 
 }else{
-  methylDiff.obj = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
-  methylDiff.obj.hypo = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
-  methylDiff.obj.hyper = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
+  methylDiff.obj        = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
+  methylDiff.obj.hyper  = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
+  methylDiff.obj.hypo   = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
+  methylDiff.obj.nonsig = create.empty.methylDiff(meth.unite@sample.ids, assembly, context, treatment)
   }
 
 
@@ -272,9 +283,8 @@ meth2bed(windows = methylDiff.obj,
          colramp=colorRamp(c("gray","green", "darkgreen")),
          filename = output) 
 
-
 # Save output of differential methylation calling into a RDS files
-saveRDS(methylDiff.obj, methylDiff_file)
-saveRDS(methylDiff.obj.hypo, methylDiff_hypo_file)
-saveRDS(methylDiff.obj.hyper, methylDiff_hyper_file)
-
+saveRDS(methylDiff.obj,        methylDiff_file)
+saveRDS(methylDiff.obj.hypo,   methylDiff_hypo_file)
+saveRDS(methylDiff.obj.hyper,  methylDiff_hyper_file)
+saveRDS(methylDiff.obj.nonsig, methylDiff_nonsig_file)

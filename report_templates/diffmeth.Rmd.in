@@ -14,23 +14,23 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 bibliography: reports.bib
 link-citations: yes
 params:
-  MethCall: TRUE
-  chrom_seqlengths: ''
   source_dir: ''
-  out_dir:    ''
-  diffmeth_dir: ''
-  assembly: ''
-  DiffMeth: TRUE
-  methylDiff_files: list()
-  genome_dir: ''
   scripts_dir: ''
-  AnnotateDiffMeth: TRUE
+  diffmeth_dir: ''
+  genome_dir: ''
+  out_dir:    ''
   cpgIsland_bedfile:  ''
   refGenes_bedfile:   ''
-  webfetch:     ''
+  chrom_seqlengths: ''
+  assembly: ''
   treatment: ''
   qvalue: 0.01
   difference: 25
+  methylDiff_files: list()
+  webfetch:     ''
+  AnnotateDiffMeth: TRUE
+  DiffMeth: TRUE
+  MethCall: TRUE
 ---
 
 ```{r global_options, include=FALSE}
@@ -40,6 +40,10 @@ knitr::opts_knit$set(progress = FALSE)
 
 
 ```{r chunk_eval_options}
+
+hyper.col     = "magenta"
+hypo.col      = "darkolivegreen4"
+hist_breakset = seq(-101,101,2)
 
 DiffMeth          <- params$DiffMeth
 AnnotateDiffMeth  <- params$AnnotateDiffMeth
@@ -99,16 +103,19 @@ treatmentpair = params$treatment
 assembly = params$assembly
 
 outputdir = paste(params$out_dir, params$diffmeth_dir, sep="/")
-methylDiff_file    <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.RDS')
-methylDiff_hyper_file    <- paste0(outputdir, treatmentpair,'.sorted_diffmethhyper.RDS')
+methylDiff_file        <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.RDS')
+methylDiff_hyper_file  <- paste0(outputdir, treatmentpair,'.sorted_diffmethhyper.RDS')
 methylDiff_hypo_file   <- paste0(outputdir, treatmentpair,'.sorted_diffmethhypo.RDS')
-methylDiffBed    <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.bed')
+methylDiff_nonsig_file <- paste0(outputdir, treatmentpair,'.sorted_diffmethnonsig.RDS')
+
+methylDiffBed          <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.bed')
 ```
 
 ```{r DiffMeth.load, eval=DiffMeth}
-methylDiff.obj <- readRDS(methylDiff_file)
-methylDiff.obj.hypo <- readRDS(methylDiff_hypo_file)
-methylDiff.obj.hyper <- readRDS(methylDiff_hyper_file)
+methylDiff.obj        <- readRDS(methylDiff_file)
+methylDiff.obj.hyper  <- readRDS(methylDiff_hyper_file)
+methylDiff.obj.hypo   <- readRDS(methylDiff_hypo_file)
+methylDiff.obj.nonsig <- readRDS(methylDiff_nonsig_file)
 
 sampleids <- methylDiff.obj@sample.ids
 treatment <- getTreatment(methylDiff.obj)
@@ -208,9 +215,10 @@ cat('### Preprocessing\n')
 
 ```{r AnnotateDiffMeth.convert, eval=AnnotateDiffMeth}
 # Convert a methylDiff object to a GRanges object
-GRanges.diffmeth = as(methylDiff.obj, "GRanges")
-GRanges.diffmeth.hypo = as(methylDiff.obj.hypo, "GRanges")
-GRanges.diffmeth.hyper = as(methylDiff.obj.hyper, "GRanges")
+GRanges.diffmeth        = as(methylDiff.obj, "GRanges")
+GRanges.diffmeth.hyper  = as(methylDiff.obj.hyper, "GRanges")
+GRanges.diffmeth.hypo   = as(methylDiff.obj.hypo, "GRanges")
+GRanges.diffmeth.nonsig = as(methylDiff.obj.nonsig, "GRanges")
 
 ```
 
@@ -360,9 +368,56 @@ myseqinfo.st = keepStandardChromosomes(myseqinfo)
 
 source(paste0(params$scripts_dir, "ideoDMC.R"))
 ideoDMC_hyper_hypo(methylDiff.obj.hyper, methylDiff.obj.hypo, chrom.length = seqlengths( myseqinfo.st ),
-       circos = FALSE, title = "Differential methylation", hyper.col = "magenta", hypo.col = "green")
+       circos = FALSE, title = "Differential methylation", hyper.col = hyper.col, hypo.col = hypo.col)
 
 }
+
+```
+
+Below is a histogram of (statistically significant) differential CpG
+methylation, alongside CpG sites without statistically significant 
+differences in methylation --each are normalized independently, as the 
+latter are generally far more numerous than the former).
+
+```{r plot.methdiff.histogram, eval=AnnotateDiffMeth}
+
+methdiff_hist   <- hist( methylDiff.obj$meth.diff,
+                         breaks = hist_breakset,
+                         plot   = FALSE )
+methdiff_nonsig <- hist( methylDiff.obj.nonsig$meth.diff,
+                         breaks = hist_breakset,
+                         plot   = FALSE )
+Nbreaks_hist=length(hist_breakset)
+
+plot( methdiff_hist$mids,methdiff_hist$density,
+      pch    = ".",
+      xlim   = c(-100,100),
+      ylim   = c(0, max(methdiff_hist$density ) ),
+      yaxt = "n",
+      main   = "Relative CpG methylation",
+      xlab   = "% methylation difference \n[treatment - control]",
+      ylab   = "Frequency")
+lines( methdiff_hist$mids[1:(Nbreaks_hist/2)], methdiff_hist$density[1:(Nbreaks_hist/2)],
+       col = hypo.col,
+       lw  = 3)
+lines( methdiff_hist$mids[(Nbreaks_hist/2):Nbreaks_hist], methdiff_hist$density[(Nbreaks_hist/2):Nbreaks_hist],
+       col = hyper.col,
+       lw  = 3)
+
+par(new=TRUE)
+plot( methdiff_nonsig$mids,
+      methdiff_nonsig$density,
+      pch  =".",
+      xaxt = "n",
+      xlim = c(-100,100),
+      yaxt = "n",
+      ylab ="",
+      xlab ="",
+      col  ="black" )
+lines( methdiff_nonsig$mids, methdiff_nonsig$density,
+       col = "black",
+       lw  = 3  )
+lines( c(0,0), c(0, max(methdiff_nonsig$density) ), lw=2, lty=3, col=rgb(0,0,0,alpha=0.5)  )
 
 ```
 
