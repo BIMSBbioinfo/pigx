@@ -145,6 +145,7 @@ setMethod("AnnotateRanges",signature("GRanges","GRangesList"),
 # ---------------------------------------------------------------------------- #
 GTFGetAnnotation = function(
   g,
+  width_params = list(
   tss_width            = 1000,
   tts_width            = 1000,
   tss_wide_width       = 10000,
@@ -154,7 +155,7 @@ GTFGetAnnotation = function(
   tts_body_upstream    = 10000,
   tts_body_downstream  = 1000,
   splicing_donor_width = 200,
-  splicing_accep_width = 200
+  splicing_accep_width = 200)
 ){
 
     g.exon = g[g$type=='exon']
@@ -162,42 +163,42 @@ GTFGetAnnotation = function(
 
     #------------------------------------------------------------------------- #
     gene = unlist(range(split(g.exon, g.exon$gene_id)))
-    tss  = promoters(gene, downstream=tss_width/2, upstream=tss_width/2)
-    tts  = promoters(resize(gene, width=1, fix='end'), downstream=tts_width/2,
-                    upstream=tts_width/2)
+    tss  = promoters(gene, downstream=width_params$tss_width/2, upstream=width_params$tss_width/2)
+    tts  = promoters(resize(gene, width=1, fix='end'), downstream=width_params$tts_width/2,
+                    upstream=width_params$tts_width/2)
     intron = GenomicRanges::setdiff(gene, exon)
 
     #------------------------------------------------------------------------- #
     tss_body = gene
     tss_body = resize(tss_body, width=1, fix='start')
-    tss_body = resize(tss_body, width=tss_body_upstream, fix='end')
-    tss_body = resize(tss_body, width=width(tss_body)+tss_body_downstream, fix='start')
+    tss_body = resize(tss_body, width=width_params$tss_body_upstream, fix='end')
+    tss_body = resize(tss_body, width=width(tss_body)+width_params$tss_body_downstream, fix='start')
 
     #------------------------------------------------------------------------- #
     tss_wide = gene
     tss_wide = resize(tss_wide, width = 1, fix='start')
-    tss_wide = resize(tss_body, width = tss_wide_width, fix='center')
+    tss_wide = resize(tss_body, width = width_params$tss_wide_width, fix='center')
 
     #------------------------------------------------------------------------- #
     tts_body = gene
     tts_body = resize(tts_body, width=1, fix='end')
-    tts_body = resize(tts_body, width=tts_body_upstream, fix='end')
-    tts_body = resize(tts_body, width=width(tts_body)+tts_body_downstream, fix='start')
+    tts_body = resize(tts_body, width=width_params$tts_body_upstream, fix='end')
+    tts_body = resize(tts_body, width=width(tts_body)+width_params$tts_body_downstream, fix='start')
 
     #------------------------------------------------------------------------- #
     tts_wide = gene
     tts_wide = resize(tts_body, width = 1,     fix='end')
-    tts_wide = resize(tts_wide, width = tts_wide_width, fix='center')
+    tts_wide = resize(tts_wide, width = width_params$tts_wide_width, fix='center')
 
     #------------------------------------------------------------------------- #
     splicing_donor    = exon
     splicing_donor    = resize(splicing_donor, width = 1,   fix='end')
-    splicing_donor    = resize(splicing_donor, width = splicing_donor_width, fix='center')
+    splicing_donor    = resize(splicing_donor, width = width_params$splicing_donor_width, fix='center')
 
     #------------------------------------------------------------------------- #
     splicing_acceptor = exon
     splicing_acceptor = resize(splicing_acceptor, width = 1,   fix='start')
-    splicing_acceptor = resize(splicing_acceptor, width = splicing_accep_width, fix='center')
+    splicing_acceptor = resize(splicing_acceptor, width = width_params$splicing_accep_width, fix='center')
 
     values(exon) = NULL
     gl = list(tss      = tss,

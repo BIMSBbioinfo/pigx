@@ -136,6 +136,39 @@ for i in NAMES:
 # RULE ALL
 # Default output files from the pipeline
 
+
+# ---------------------------------------------------------------------------- #
+# width extension parameters for annotation construction
+DEFALUT_WIDTH_PARAMS = {
+'tss_width':            1000,
+'tts_width':            1000,
+'tss_wide_width':       10000,
+'tts_wide_width':       10000,
+'tss_body_upstream':    1000,
+'tss_body_downstream':  10000,
+'tts_body_upstream':    10000,
+'tts_body_downstream':  1000,
+'splicing_donor_width': 200,
+'splicing_accep_width': 200}
+
+# checks whether the width_params are set, if not
+# they are set to DEFALUT_WIDTH_PARAMS
+if not 'width_params' in set(PARAMS.keys()):
+    PARAMS['width_params'] = DEFALUT_WIDTH_PARAMS
+else:
+    width_params = PARAMS['width_params']
+    if(len(width_params.keys())):
+        PARAMS['width_params'] = DEFALUT_WIDTH_PARAMS
+    else:
+        for i in DEFALUT_WIDTH_PARAMS.keys():
+            if not i in set(width_params.keys()):
+                width_params[i] = DEFALUT_WIDTH_PARAMS[i]
+
+        PARAMS['width_params'] = width_params
+
+# ---------------------------------------------------------------------------- #
+        
+
 COMMAND         = []
 GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']

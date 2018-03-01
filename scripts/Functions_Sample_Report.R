@@ -32,7 +32,8 @@ format_Annotate_Peaks = function(tab){
         name = tab$name[i]
         message(name)
         granges = readRDS(tab$file[i])
-        ld[[name]] = data.frame(sample_name=name, annot=granges$annot)
+        if(length(granges) > 0)
+            ld[[name]] = data.frame(sample_name=name, annot=granges$annot)
     }
     dd = as.data.frame(do.call(rbind, ld)) %>%
         group_by(sample_name, annot)       %>%

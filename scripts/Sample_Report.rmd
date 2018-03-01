@@ -14,11 +14,12 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = e
 
 
 params:
-    analysis_path: NULL
+    analysis_path:  NULL
     analysis_names: NULL
-    report_chunks: NULL
-    script_path: NULL
-    infile: NULL
+    report_chunks:  NULL
+    script_path:    NULL
+    infile:         NULL
+    width_params:   NULL
 
 
 ---
@@ -100,7 +101,7 @@ lstats = readRDS(infile)
 
 
 # Sample Correlation
-```{r Sample_Correlation, include=TRUE, fig.align='center'}
+```{r Sample_Correlation, include=TRUE, fig.align='center', message=FALSE, warning=FALSE}
 dcor = cor(lstats$ChIPQC$norm.count, method='spearman')
 heatmaply(dcor,
           k_col = 2, k_row = 2,
@@ -111,27 +112,36 @@ heatmaply(dcor,
 
 ---
 
-# Cross Correlation
+# Cross Correlation  {.tabset}
 ```{r Cross_Correlation, include=TRUE, fig.align='center'}
-g = lstats$ChIPQC$shift_correlation %>%
-  ggplot(aes(shift, strand_correlation, color=sample_name)) +
-  geom_line() +
-  xlab('Read shift') +
-  ylab('Pearson correlation') +
-  ggtitle('Inter strand correlation coefficient')
-print(g)
+for(sample in unique(lstats$ChIPQC$shift_correlation$sample_name)){
+    g = lstats$ChIPQC$shift_correlation %>%
+        dplyr::filter(sample_name %in% sample) %>%
+        ggplot(aes(shift, strand_correlation, color=sample_name)) +
+        geom_line() +
+        xlab('Read shift') +
+        ylab('Pearson correlation') +
+        ggtitle('Inter strand correlation coefficient') +
+        ggtitle(sample)
+    print(g)
+}
 ```
 
 ---
 
-# GC Content
+# GC Content {.tabset}
 ```{r GC_Content, include=TRUE, fig.align='center'}
-g = lstats$ChIPQC$GC %>%
-  ggplot(aes(GC, counts, color=sample_name)) +
-  geom_point(alpha = .5) +
-  xlab('GC content') +
-  ylab('Normalized read count')
-print(g)
+for(sample in unique(lstats$ChIPQC$GC$sample_name)){
+    g = lstats$ChIPQC$GC %>%
+        dplyr::filter(sample_name %in% sample) %>%
+        ggplot(aes(GC, counts)) +
+            geom_hex(alpha = .5) +
+            xlab('GC content') +
+            ylab('Normalized read count') +
+            scale_y_log10() +
+            ggtitle(sample)
+    print(g)
+}
 ```
 
 ---
@@ -142,10 +152,10 @@ ncat('# Read Distribution in Genomic Features')
 ```
 
 ```{r Read_Distribution_in_Genomic_Features_Header2, include=analysis_ind['Extract_Signal_Annotation'], fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
-ncat('## Signal profiles around genomic features')
+ncat('## Signal profiles around genomic features {.tabset}')
 ```
 
-```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
+```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'} 
 tab = lstats$Extract_Signal_Annotation$profiles
 genomic_locations = unique(tab$genomic_location)
 for(i in seq(genomic_locations)){
@@ -208,7 +218,7 @@ ncat('## Signal Profiles around the peak')
 ```{r Peak_Signal_Profiles, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center'}
 g = lstats$Peak_Statistics$peak_profiles  %>%
   ggplot(aes(position, mean, color=bw_name, group=peak)) +
-  geom_line() +
+  geom_path() +
   xlab('Position around peak') +
   ylab('Normalized signal')
 print(g)
