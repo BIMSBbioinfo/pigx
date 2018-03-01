@@ -19,7 +19,7 @@ def RunRscript(input, output, params, path_script, script):
                        separators=(",",":"), ensure_ascii=True)
 
     cmd = " ".join(['nice -19',str(params.Rscript),
-                    config['tools']['Rscript']['args'],
+                    # config['tools']['Rscript']['args'],
                     os.path.join(path_script, script),
                     "--basedir", path_script,
                     "--input",  "{input_dump:q}",
