@@ -14,7 +14,6 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 bibliography: reports.bib
 link-citations: yes
 params:
-  MethCall: TRUE
   Samplename: ''
   chrom_seqlengths: ''
   source_dir: ''
@@ -23,20 +22,21 @@ params:
   assembly: ''
   mincov:   10
   minqual:  20
+  TSS_plotlength: 5000
   methCallRDS: ''
-  Segmentation: TRUE
-  methSegBed: ''
   methSegGR: ''
+  methSegBed: ''
   methSegPng: ''
-  AnnotateSegments: TRUE
-  DiffMeth: TRUE
-  methylDiff_files: list()
   genome_dir: ''
   scripts_dir: ''
-  AnnotateDiffMeth: TRUE
-  cpgIsland_bedfile:  ''
   refGenes_bedfile:   ''
   webfetch:     ''
+  methylDiff_files: list()
+  MethCall: TRUE
+  AnnotateDiffMeth: TRUE
+  AnnotateSegments: TRUE
+  DiffMeth: TRUE
+  Segmentation: TRUE
 ---
 
 ```{r global_options, include=FALSE}
@@ -105,7 +105,7 @@ cat('## Methylation Calling\n')
 ```
 
 ```{r MethCall.load_libraries, results='hide', include=FALSE, eval=MethCall}
-
+  library("genomation")
   library("methylKit")
 ```
 
@@ -255,8 +255,8 @@ cat('For the given sample, there were insufficient segments detected to perform 
 
 ```
 
-```{r Segmentation.load_and_segment, eval=Segmentation}
-
+```{r Segmentation.load_and_segment, eval=FALSE}
+    ## omit this section; the tables were MASSIVE, and bloated the report.
     res.gr = readRDS(methSegGR)
 
     ## convert to data.frame
@@ -348,14 +348,14 @@ fetch_refgen_success <- ( fetched.refgenes != '')
 
 ## now we parse the gene features
 if( fetch_refgen_success ) {
-  print( paste( "In this run, the reference gene set was obtained with webfetch =", webfetch) )
+  cat( paste( "Reference gene set was obtained with webfetch =", webfetch) )
   if( !webfetch )
-    {print("This implies that the bed file was found locally.") }
+    {cat('\n This implies that the bed file was found locally.') }
   if( webfetch && !originally_present_refgen)
-    { print("Downloaded from remote server.") }
+    { cat('\n Downloaded from remote server.') }
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
   } else { 
-  print( paste(" Failed to find Reference gene file ", refGenes_bedfile, ", with webfetch =", webfetch, "; this section omitted.") )  
+  cat( paste(" Failed to find Reference gene file ", refGenes_bedfile, ", with webfetch =", webfetch, "; this section omitted.") )
   }
 ```
 
@@ -379,7 +379,7 @@ if( fetch_refgen_success )
 ```
 
 ```{r AnnotateSegments.text2, results='asis', eval=AnnotateSegments}
-cat('Here, we plot the average methylation per segment group and the overlap with gene features.\n')
+cat('Here, we plot the average methylation per segment group and the overlap with gene features for the input reference gene set.\n')
 ```
 
 ```{r AnnotateSegments.plot,  eval=AnnotateSegments}
@@ -404,6 +404,42 @@ if( fetch_refgen_success )
           xlab = "Segment")
   legend("bottomright",legend = rownames(annot.gene.mat),fill = grey(seq.int(0,1,length.out = ncol(annot.gene.mat))))
   }
+
+```
+
+
+```{r plot_methylation_near_TSSs, eval = fetch_refgen_success }
+TSS_plotlength  <- params$TSS_plotlength
+
+ymin = 0
+ymax = 100
+
+gene_features   <- readTranscriptFeatures(refGenes_bedfile)
+TSS_exact       <- gene_features$TSSes
+TSS_proximal    <- resize(TSS_exact, width=TSS_plotlength, fix='center')
+
+sample_methylome_gr          <-  as(methRaw, "GRanges")
+sample_methylome_gr$methfrac <-  sample_methylome_gr$numCs/sample_methylome_gr$coverage
+
+TSSprox_scoremat_noweight = genomation::ScoreMatrix( sample_methylome_gr,
+                                                     TSS_proximal,
+                                                     strand.aware=TRUE,
+                                                     is.noCovNA=TRUE,
+                                                     weight.col='methfrac')
+TSSprox_methprofile_noweight = colMeans(TSSprox_scoremat_noweight, na.rm=TRUE)
+
+plot( seq(TSSprox_methprofile_noweight)-0.5*TSS_plotlength , 100*TSSprox_methprofile_noweight,
+      xlab = "distance from TSS (in direction of transcription)[bp]",
+      xlim = c(-0.5*TSS_plotlength, 0.5*TSS_plotlength),
+      ylab = "<methylation %>",
+      ylim = c(ymin, ymax),
+      main = paste( params$Samplename, "Promoter methylation"),
+      type = "n"
+      )
+lines( seq(TSSprox_methprofile_noweight)-0.5*TSS_plotlength ,100*TSSprox_methprofile_noweight,
+       xlim = c(-0.5*TSS_plotlength, 0.5*TSS_plotlength),
+       ylim = c(ymin, ymax)
+)
 
 ```
 
