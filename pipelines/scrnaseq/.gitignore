@@ -15,3 +15,5 @@ etc/settings.yaml
 test.sh
 config.json
 .snakemake
+tests/out
+run/

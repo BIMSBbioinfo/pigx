@@ -1,3 +1,4 @@
+# ---------------------------------------------------------------------------- #
 #Author: BU
 #Date: February, 2018
 #This script takes a loom file, imports it into singleCellExperiment object. 
@@ -9,7 +10,7 @@
 #Finally, it saves everything as a single SingleCellExperiment object in .RDS format, 
 #   which should be the starting point for creating an HTML Report of the whole experiment.
 
-
+# ---------------------------------------------------------------------------- #
 #1. Collect arguments
 args <- commandArgs(TRUE)
 
@@ -27,7 +28,7 @@ ready for reporting.
 
 Arguments:
 --loomFile Path to .loom file from the scRNA-seq experiment
---metaDataFile Experiment meta data file in tsv format (minimally with mappings between cell ids and sample  ids)
+--Experiment meta data file in tsv format (minimally with mappings between cell ids and sample  ids)
 --genomeBuild Genome build version (e.g. hg38, mm10)
 --outFile Path to the writing location of the output .RDS file 
 
@@ -40,6 +41,7 @@ if("--help" %in% args) {
   q(save="no")
 }
 
+# ---------------------------------------------------------------------------- #
 ## Parse arguments (we expect the form --arg=value)
 #parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
 parseArgs <- function(x) {
@@ -61,9 +63,9 @@ if(!("loomFile" %in% argsDF$V1)) {
   stop("Missing argument: loomFile. Provide the path to .loom file")
 }
 
-if(!("metaDataFile" %in% argsDF$V1)) {
+if(!("sample_sheet" %in% argsDF$V1)) {
   cat(help_command, "\n")
-  stop("Missing argument: metaDataFile Provide the path to meta data file")
+  stop("Missing argument: sample_sheet Provide the path to meta data file")
 }
 
 if(!("genomeBuild" %in% argsDF$V1)) {
@@ -76,11 +78,12 @@ if(!("outFile" %in% argsDF$V1)) {
   stop("Missing argument: outFile. Provide the path to the output RDS file")
 }
 
-loomFile = argsL$loomFile
-metaDataFile = argsL$metaDataFile
-genomeBuild = argsL$genomeBuild
-outFile = argsL$outFile
+loomFile     = argsL$loomFile
+sample_sheet = argsL$sample_sheet
+genomeBuild  = argsL$genomeBuild
+outFile      = argsL$outFile
 
+# ---------------------------------------------------------------------------- #
 #2. load libraries
 library(HDF5Array)
 library(SingleCellExperiment)
@@ -91,7 +94,7 @@ library(DelayedArray)
 library(data.table)
 
 #3. Define functions
-
+# ---------------------------------------------------------------------------- #
 #' Import a loom file into SingleCellExperiment object
 #' 
 #' This function was borrowed from the script 'make-data.R' in the repository 
@@ -142,6 +145,7 @@ loom2sce <- function(path) {
   return(sce)
 }
 
+# ---------------------------------------------------------------------------- #
 #' Given a DelayedMatrix object (genes on the row, cells on the column),
 #' calculate counts per million
 #'
@@ -153,6 +157,7 @@ getCPM <- function(dm) {
   return(log2(cpm+1))
 }
 
+# ---------------------------------------------------------------------------- #
 #' Given a DelayedMatrix object (genes on the row, cells on the column), scale the 
 #' matrix values 
 #' 
@@ -168,6 +173,7 @@ scaleDM <- function(dm) {
   return(scdm)
 }
 
+# ---------------------------------------------------------------------------- #
 #' runPrComp 
 #' 
 #' run stats::prcomp to obtain PCA rotations and loadings
@@ -202,6 +208,7 @@ runPrComp <- function(x, features = NULL, center = FALSE, scale = FALSE, ncompon
   return(x)
 }
 
+# ---------------------------------------------------------------------------- #
 #' Given a DelayedMatrix object (genes on the row, cells on the column), 
 #' calculate basic statistics and return a DataFrame object
 #' 
@@ -246,14 +253,16 @@ getCellStats <- function(m) {
 
 #4. start analysis
 
+# ---------------------------------------------------------------------------- #
 #4.1 import loom into SingleCellExperiment object
 message(date()," Importing loom file into SingleCellExperiment object")
 sce <- loom2sce(path = loomFile)
 
 #4.1.1 Subset the sce object, remove cells that don't exist in the metaDataFile
-warning(date()," Removing cells that don't exist in the meta data file",metaDataFile)
-cellMetaData <- data.table::fread(metaDataFile)
-sce <- sce[,colData(sce)$cell_id %in% cellMetaData$cell_id]
+# warning(date()," Removing cells that don't exist in the meta data file",metaDataFile)
+sample_sheet <- data.table::fread(sample_sheet)
+
+#sce <- sce[,colData(sce)$cell_id %in% cellMetaData$cell_id]
 
 #4.1.2 remove cells with zero expression for all genes 
 warning(date()," Removing cells with zero expression for all genes")
@@ -266,9 +275,12 @@ if(length(zeros) > 0){
 
 message(date()," Updating colData")
 #4.1.1 update colData with additional meta data
+colData(sce)$sample_name = sub('_[ACGT]+$','',colData(sce)$cell_id)
+
 colData(sce) <- merge(colData(sce), 
-                      DataFrame(cellMetaData),
-                      by = 'cell_id')
+                     DataFrame(sample_sheet),
+                     by   = 'sample_name',
+                     sort = FALSE)
 
 #count matrix
 counts <- assays(sce)[[1]]
@@ -322,7 +334,11 @@ saveRDS(object = sce, file =  paste0(outFile, '.intermediate.RDS'))
 
 message(date()," Computing t-SNE")
 #4.7 get t-SNE results
-sce <- scater::runTSNE(object = sce, ncomponents = 2, use_dimred = 'PCA')
+sce <- scater::runTSNE(object           = sce, 
+                       components       = 2, 
+                       use_dimred       = 'PCA', 
+                       rand_seed        = 1, 
+                       check_duplicates = FALSE)
 
 saveRDS(object = sce, file =  paste0(outFile, '.intermediate.RDS'))
 

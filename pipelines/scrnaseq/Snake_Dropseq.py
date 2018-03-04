@@ -34,20 +34,18 @@ COVARIATES = config['covariates']
 
 # ----------------------------------------------------------------------------- #
 # PATHS
-OUTPUT_DIR = config['locations']['output-dir']
-PATH_FASTQ = config['locations']['reads-dir']
-TEMPDIR    = config['locations']['tempdir']
-PATH_ANNOTATION = os.path.join(OUTPUT_DIR, 'Annotation')
-PATH_MAPPED   = os.path.join(OUTPUT_DIR, 'Mapped')
-PATH_LOG      = os.path.join(OUTPUT_DIR, 'Log')
-SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
-PATH_RSCRIPT = SOFTWARE['Rscript']['executable']
+OUTPUT_DIR        = config['locations']['output-dir']
+PATH_FASTQ        = config['locations']['reads-dir']
+TEMPDIR           = config['locations']['tempdir']
+PATH_ANNOTATION   = os.path.join(OUTPUT_DIR, 'Annotation')
+PATH_MAPPED       = os.path.join(OUTPUT_DIR, 'Mapped')
+PATH_LOG          = os.path.join(OUTPUT_DIR, 'Log')
+PATH_SAMPLE_SHEET = config['locations']['sample-sheet']
+PATH_RSCRIPT      = SOFTWARE['Rscript']['executable']
 
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
 PATH_GTF_PRIMARY        = config['annotation']['primary']['gtf']
-PATH_META_DATA          = config['locations']['metadata']
-
 
 GENOME_NAME_MIX = None
 if config['annotation']['secondary']:
@@ -60,7 +58,7 @@ if config['annotation']['secondary']:
     REFERENCE_NAMES = REFERENCE_NAMES + [GENOME_NAME_MIX]
 
 ## Load sample sheet
-with open(SAMPLE_SHEET_FILE, 'r') as fp:
+with open(PATH_SAMPLE_SHEET, 'r') as fp:
   rows =  [row for row in csv.reader(fp, delimiter=',')]
   header = rows[0]; rows = rows[1:]
   SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
@@ -940,7 +938,7 @@ rule convert_loom_to_singleCellExperiment:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.Rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --metaDataFile={PATH_META_DATA} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
+    shell: "{params.Rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sample_sheet={PATH_SAMPLE_SHEET} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
