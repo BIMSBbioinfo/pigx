@@ -38,14 +38,14 @@ three steps:
    `sample_sheet.csv`.  To generate a sample sheet template for any
    pipeline run this command:
 
-       pigx [pipeline] --init-sample-sheet
+       pigx [pipeline] --init=sample-sheet
 
 - **Tweak the default settings.** Specify input and output
    directories, and override defaults by providing a `settings.yaml`.
    To generate a template for this file for any pipeline run this
    command:
 
-       pigx [pipeline] --init-settings
+       pigx [pipeline] --init=settings
 
 - **Run the pipeline!** Here's a simple example to run the RNAseq
    pipeline when the settings file and the sample sheet are in the
