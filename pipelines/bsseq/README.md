@@ -192,8 +192,8 @@ general:
       - ['0', '1']
       - ['0', '2']
     annotation:
-      CpGfile:    genome/cpgIslandExt.hg19.bed.gz
-      refGenfile: genome/refGene.hg19.bed.gz
+      cpgIsland_bedfile: genome/cpgIslandExt.hg19.bed.gz
+      refGenes_bedfile:  genome/refGene.hg19.bed.gz
       webfetch:   no
 
 execution:
@@ -251,8 +251,8 @@ general:
     treatment-groups:
       - ['0', '1']
     annotation:
-      CpGfile:    genome/cpgIslandExt.hg19.bed.gz
-      refGenfile: genome/refGene.hg19.bed.gz
+      cpgIsland_bedfile: genome/cpgIslandExt.hg19.bed.gz
+      refGenes_bedfile:  genome/refGene.hg19.bed.gz
       webfetch:   no
 ```
 
@@ -262,7 +262,7 @@ general:
 | methylation-calling:minimum-coverage | integer: Minimum read coverage to be included in the methylKit objects. Defaults to 1. Any methylated base/region in the with fewer hits than this value will be ignored.
 | methylation-calling:minimum-quality | integer: Minimum phred quality score to call a methylation status for a base.  Defaults to 10.
 | differential-methylation:cores | integer: Denotes how many cores should be employed in parallel differential methylation calculations
-| differential-methylation:treatment-groups | Array of strings indicating which groups (the "Treatment" column in the sample sheet) ought to be compared against one-another in differential methylation. If differential methylation is to be omitted, remove this variable entirely from the settings file.
+| differential-methylation:treatment-groups | Array of strings indicating which groups (the "Treatment" column in the sample sheet) ought to be compared against one-another in differential methylation. The index corresponding to the control group must be entered first, followed by the 'treatment' under consideration. If differential methylation is to be omitted, remove this variable entirely from the settings file.
 | differential-methylation:annotation | Annotation files for differential methylation, based on CpG islands and reference genes respectively.  
 | webfetch   | Boolean: Should pigx download these annotation files from the internet if they are not found in the locations specified? (if `no`, then these sections are simply ommitted.)
 

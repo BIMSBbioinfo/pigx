@@ -21,6 +21,7 @@ dist_pkglibexec_scripts_SCRIPTS =	\
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\
   report_templates/index.Rmd						\
+  report_templates/diffmeth.Rmd						\
   report_templates/pigx_bsseq_logo.html				\
   report_templates/reports.bib
 

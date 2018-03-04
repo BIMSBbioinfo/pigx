@@ -10,11 +10,13 @@ general:
     minimum-quality: 10
   differential-methylation:
     cores: 1
+    qvalue: 0.01
+    difference: 25
     treatment-groups:
       - []
     annotation:
-      CpGfile:    "pigx_work/refGenome/cpgIslandExt.hg19.bed.gz"
-      refGenes_bedfile: "pigx_work/refGenome/refGene.hg19.bed.gz"
+      cpgIsland_bedfile: "pigx_work/refGenome/cpgIslandExt.hg19.bed.gz"
+      refGenes_bedfile:  "pigx_work/refGenome/refGene.hg19.bed.gz"
       webfetch:   no
 
 execution:
@@ -38,6 +40,9 @@ execution:
     bismark_genome_preparation:
       threads: 2 
       memory: 19G
+    diffmeth:
+      threads: 1
+      memory: 30G
 
 tools:
   fastqc:
@@ -70,4 +75,4 @@ tools:
     args: ""
   Rscript:
     executable: @RSCRIPT@
-    args: ""
+    args: "--vanilla"

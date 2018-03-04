@@ -125,7 +125,12 @@ targets = {
     
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["general"]["differential-methylation"]["treatment-groups"]]
+        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
+    },
+    
+    'diffmeth-report': {
+        'description': "Produce a comprehensive report for differential methylation.",
+        'files':[ [DIR_final+"diffmeth-report."+"vs".join(x)+".html"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
     },
 
     'final-report': {
@@ -134,14 +139,19 @@ targets = {
     }
 }
 
+TREAT_GROUPS=config["general"]["differential-methylation"]["treatment-groups"]
+if TREAT_GROUPS:
+  selected_targets_default = ['final-report', 'diffmeth-report', 'bigwig']
+else:
+  selected_targets_default = ['final-report', 'bigwig']
+
 # Selected output files from the above set.
-selected_targets = config['execution']['target'] or ['final-report','bigwig']
+selected_targets = config['execution']['target'] or selected_targets_default
 
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
 from itertools import chain
 OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
-
 
 # ==============================================================================================================
 #
@@ -150,7 +160,7 @@ OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['file
 # rules are separated by "==" bars into pairs for paired-end and single-end (subdivided by smaller "--" dividers)
 # ===============================================================================================================
 
-
+
 rule all:
     input:
         OUTPUT_FILES
@@ -519,23 +529,27 @@ rule diffmeth:
     input:  
         inputfiles  = diffmeth_input_function
     output: 
-        methylDiff_file  = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.RDS'),
-        methylDiff_hyper_file  = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
-        bedfile     = os.path.join(DIR_diffmeth,'{treatment}.sorted_diffmeth.bed')
+        methylDiff_file        = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethnonsig.RDS"),
+        bedfile                = os.path.join(DIR_diffmeth, '{treatment}.sorted_diffmeth.bed')
     params:
         workdir     = WORKDIR,
+        scripts_dir = DIR_scripts,
         inputfiles  = diffmeth_input_function,
         sampleids   = lambda wc: get_sampleids_from_treatment(wc.treatment),
-        methylDiff_file      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmethhypo.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed"),
-        assembly    = ASSEMBLY,
         treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
+        assembly    = ASSEMBLY,
+        qvalue      = float(config['general']['differential-methylation']['qvalue']),
+        difference  = float(config['general']['differential-methylation']['difference']),
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         cores       = int(config['general']['differential-methylation']['cores']),
-        scripts_dir = DIR_scripts
+        methylDiff_file        = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethnonsig.RDS"),
+        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed")
     log:
         os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
     message: fmt("Calculating differential methylation.")
@@ -543,13 +557,16 @@ rule diffmeth:
         nice('Rscript', ['{DIR_scripts}/methDiff.R',
                          '--inputfiles="{params.inputfiles}"',
                          '--sampleids="{params.sampleids}"',
+                         '--treatment="{params.treatment}"',
+                         '--assembly={params.assembly}',
+                         '--qvalue={params.qvalue}',
+                         '--difference={params.difference}',
+                         '--mincov={params.mincov}',
+                         '--cores={params.cores}',
                          '--methylDiff_file={params.methylDiff_file}',
                          '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
                          '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
-                         '--assembly={params.assembly}',
-                         '--treatment="{params.treatment}"',
-                         '--mincov={params.mincov}',
-                         '--cores={params.cores}',
+                         '--methylDiff_nonsig_file={params.methylDiff_nonsig_file}',
                          '--outBed={params.outBed}',
                          '--logFile={log}'])
 
@@ -585,10 +602,8 @@ rule final_report:
         methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
         methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
         methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png"),
-        methylDiff_files      = lambda wc: [ os.path.join(WORKDIR,rds) for rds in finalReportDiffMeth_input(wc.prefix)],
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
-        CpGfile     = config['general']['differential-methylation']['annotation']['CpGfile'],
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
@@ -596,3 +611,33 @@ rule final_report:
     message: fmt("Compiling final report.")
     run:
         generateReport(input, output, params, log, "")
+
+
+## Final Report for diff. meth.
+rule diffmeth_report:
+    input:
+        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.sorted_diffmeth.bed',
+        template      = os.path.join(DIR_templates,"diffmeth.Rmd"),
+        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+    output:
+        report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
+    params:
+        source_dir  = config['locations']['input-dir'],
+        scripts_dir = DIR_scripts,
+        diffmeth_dir = DIR_diffmeth,
+        genome_dir  = config['locations']['genome-dir'],
+        out_dir     = config['locations']['output-dir'],
+        cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
+        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
+        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        assembly    = ASSEMBLY,
+        treatment = lambda wc: str(wc.treatment).replace('vs', '_'),
+        qvalue     = float(config['general']['differential-methylation']['qvalue']),
+        difference = float(config['general']['differential-methylation']['difference']),
+        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
+    log:
+        os.path.join(DIR_final,"diffmeth-report.{treatment}.log")
+    message: fmt("Compiling differential methylation report " + "for treatment " + "{wildcards.treatment}")
+    run:
+        generateReport(input, output, params, log, "")
+
