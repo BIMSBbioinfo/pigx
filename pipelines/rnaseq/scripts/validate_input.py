@@ -23,6 +23,13 @@ def validate_config(config):
             raise Exception("ERROR: The following necessary directory/file does not exist: {} ({})".format(config['locations'][loc], loc))
 
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
+    
+    # Check if the required fields are found in the sample sheet
+    required_fields = set(['name', 'reads', 'reads2', 'sample_type'])
+    not_found = required_fields.difference(set(sample_sheet[0].keys()))
+    if len(not_found) > 0:
+        raise Exception("ERROR: Required field(s) {} could not be found in the sample sheet file '{}'".format(not_found, config['locations']['sample-sheet']))
+
     # Check that requested analyses make sense
     if 'DEanalyses' in config:
         for analysis in config['DEanalyses']:
@@ -31,14 +38,23 @@ def validate_config(config):
                 if not any(row['sample_type'] == group for row in sample_sheet):
                     raise Exception('ERROR: no samples in sample sheet have sample type {}, specified in analysis {}.'.format(group, analysis))
 
-    # Check that reads files exist
+    # Check that reads files exist; sample names are unique to each row; 
+    samples = {}        
+
     for row in sample_sheet:
+        sample = row['name']
+        if sample in samples:
+            raise Exception('ERROR: name "{}" is not unique. Replace it with a unique name in the sample_sheet.'.format(sample))
+        else:
+            samples[sample] = 1
+                   
         filenames = [row['reads'], row['reads2']] if row['reads2'] else [row['reads']]
         for filename in filenames:
             fullpath = os.path.join(config['locations']['reads-dir'], filename)
             if not os.path.isfile(fullpath):
                 raise Exception('ERROR: missing reads file: {}'.format(fullpath))
 
+                    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
