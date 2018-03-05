@@ -5,6 +5,26 @@ argv = Parse_Arguments('Knit_Report')
 
 
 # ---------------------------------------------------------------------------- #
+#' Knit_Report
+#'
+#' @param report_template rmd file template
+#' @param analysis_path 
+#' @param analysis_names 
+#' @param report_chunks a vector which defines which parts of the report will be
+#' knit
+#' @param script_path locations of function files
+#' @param width_params a list of parameters which define the width of annotation regions
+#' @param infile snakemake input files - defines the dependency tree for the report
+#' these are basically all files that are created in the pipeline
+#' @param outfile name of the output report
+#' @param logo 
+#' @param selfContained an indicator on whether to create a self contained report
+#' @param quiet knitr parameter
+#'
+#' @return
+#' @export
+#'
+#' @examples
 Knit_Report = function(
     report_template = NULL,
     analysis_path   = NULL,
