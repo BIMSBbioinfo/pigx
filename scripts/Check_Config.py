@@ -33,6 +33,10 @@ def check_settings(settings_dict, message):
     if (locations_dict['genome-file'] == None) and (locations_dict['index-dir'] == None):
         message = message + "\t" + "neither genome nor index are specified\n"
 
+    # sets obligatory gff
+    if (locations_dict['gff-file'] == None):
+        message = message + "\t" + "GFF annotation file is not specified"
+
     # checks whether the locations files exist if they are specified
     for location in sorted(list(set(locations_dict.keys()))):
         message = check_file_exists(locations_dict, location, message)
