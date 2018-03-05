@@ -4,7 +4,8 @@ rule chipqc:
         bamfile              = os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam"),
         index                = os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"),
         logfile              = rules.parse_bowite2_log.output.outfile,
-        nucleotide_frequency = rules.extract_nucleotide_frequency.output.outfile
+        nucleotide_frequency = rules.extract_nucleotide_frequency.output.outfile,
+        annotation           = rules.prepare_annotation.output.outfile
     output:
         outfile  = os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds")
     params:
