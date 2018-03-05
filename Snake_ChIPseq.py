@@ -166,9 +166,8 @@ else:
 
         PARAMS['width_params'] = width_params
 
-# ---------------------------------------------------------------------------- #
-        
 
+# ---------------------------------------------------------------------------- #
 COMMAND         = []
 GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
@@ -183,23 +182,34 @@ ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), nam
 BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
+COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + BOWTIE2_STATS
 
-
-COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + ChIPQC + BOWTIE2_STATS
-
-
-# ----------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
 # include rules
 include: os.path.join(RULES_PATH, 'Mapping.py')
 include: os.path.join(RULES_PATH, 'Parse_Bowtie2log.py')
 include: os.path.join(RULES_PATH, 'FastQC.py')
 include: os.path.join(RULES_PATH, 'MultiQC.py')
-include: os.path.join(RULES_PATH, 'ChIPQC.py')
 include: os.path.join(RULES_PATH, 'BamToBigWig.py')
 
+# ---------------------------------------------------------------------------- #
+# Formats the annotation + extracts signal profiles around pre-specified annotation regions
+include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
+include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
 
-# ----------------------------------------------------------------------------- #
-# ----------------------------------------------------------------------------- #
+LINK_ANNOTATION           = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
+PREPARE_ANNOTATION        = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
+EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
+
+COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + EXTRACT_SIGNAL_ANNOTATION
+
+# ---------------------------------------------------------------------------- #
+# does the chipqc
+include: os.path.join(RULES_PATH, 'ChIPQC.py')
+COMMAND = COMMAND + ChIPQC
+
+# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
 # CONDITIONAL OUTPUT FILES
 
 peak_index = 'peak_calling' in set(SAMPLE_SHEET.keys())
@@ -248,22 +258,10 @@ if 'hub' in set(SAMPLE_SHEET.keys()):
 
 # ---------------------------------------------------------------------------- #
 gtf_index = type(ANNOTATION) is str
-if gtf_index:
-    LINK_ANNOTATION    = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
-    PREPARE_ANNOTATION = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
-
-    EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
-
-    # ------------------------------------------------------------------------ #
-    # Formats the annotation + extracts signal profiles around pre-specified annotation regions
-    include: os.path.join(RULES_PATH, 'Prepare_Annotation.py')
-    include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
-    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + EXTRACT_SIGNAL_ANNOTATION
-
-    if peak_index:
-        ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds'), name=PEAK_NAMES)
-        include: os.path.join(RULES_PATH, 'Annotate_Peaks.py')
-        COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS
+if peak_index:
+    ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds'), name=PEAK_NAMES)
+    include: os.path.join(RULES_PATH, 'Annotate_Peaks.py')
+    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS
 
 # ---------------------------------------------------------------------------- #
 if 'feature_combination' in set(SAMPLE_SHEET.keys()):

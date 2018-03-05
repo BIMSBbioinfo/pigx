@@ -32,6 +32,7 @@ ChIPQC = function(
     bamfile              = NULL,
     logfile              = NULL,
     nucleotide_frequency = NULL,
+    annotation           = NULL,
     outfile              = NULL,
     scriptdir            = NULL,
     sample_sheet         = NULL,
@@ -49,11 +50,14 @@ ChIPQC = function(
         stop(paste(paste(names(arglist)[arg.ind], collapse=','),'not defined'))
 
     # ------------------------------------------------------------------------ #
+    suppressPackageStartupMessages(require(dplyr))
     suppressPackageStartupMessages(require(Rsamtools))
     suppressPackageStartupMessages(require(GenomicRanges))
     suppressPackageStartupMessages(require(GenomicAlignments))
     source(file.path(scriptdir, 'ChIPQC_Functions.R'))
+    source(file.path(scriptdir, 'Functions_Helper.R'))
     # ------------------------------------------------------------------------ #
+    annotation = readRDS(annotation)$genomic_annotation
 
     # check for library type - determines the reading function
     library_type = sample_sheet$samples[[sample_name]]$library
@@ -116,47 +120,41 @@ ChIPQC = function(
 
         if(library_type == 'paired')
             temp  = unlist(range(grglist(readGAlignmentPairs(bamfile, param=Param))))
-        #
-        # if(length(temp) == 0){
-        #
-        #     setnames = c('Chr_SSD','SSDBL','PosAny','NegAny')
-        #     for(i in setnames){
-        #         v = 0; names(v) =  chrname
-        #         lout[[i]] = c(lout[[i]], v)
-        #     }
-        #     emptyChr_SSD = 0
-        #
-        #     ShiftMattemp = matrix(rep(0,(shiftWindowEnd-shiftWindowStart)+1),ncol=1)
-        #     colnames(ShiftMattemp) = names(chr_lengths)[k]
-        #     lout[['ShiftMat']] = cbind(lout[['ShiftMat']],ShiftMattemp)
-        #
-        # }else{
-            if(k == 1){
-                lout$readlength= width(temp)[1:(min(length(temp),1000))]
-            }
-            Sample_GIT = GNCList(granges(temp, use.mcols=TRUE, use.names=TRUE))
-            lout$Cov   = coverage(Sample_GIT,width=unname(chr_lengths[k]))
 
-            lout = Append_List_Element(lout, 'CovHist', list(colSums(table_RleList(lout$Cov))))
-            lout = Append_List_Element(lout, 'SSD', sd(lout$Cov)[chrname])
+        if(k == 1){
+            lout$readlength= width(temp)[1:(min(length(temp),1000))]
+        }
 
-            PosCoverage = coverage(Sample_GIT[strand(Sample_GIT)=="+"],width=unname(chr_lengths[k]))[[chrname]]
-            NegCoverage = coverage(Sample_GIT[strand(Sample_GIT)=="-"],width=unname(chr_lengths[k]))[[chrname]]
+        granges    = granges(temp, use.mcols=TRUE, use.names=TRUE)
+        Sample_GIT = GNCList(granges)
+        lout$Cov   = coverage(Sample_GIT,width=unname(chr_lengths[k]))
 
-            lout = Append_List_Element(lout, 'PosAny', sum(runLength((PosCoverage[PosCoverage > 1]))))
-            lout = Append_List_Element(lout, 'NegAny', sum(runLength((NegCoverage[NegCoverage > 1]))))
+        lout = Append_List_Element(lout, 'CovHist', list(colSums(table_RleList(lout$Cov))))
+        lout = Append_List_Element(lout, 'SSD', sd(lout$Cov)[chrname])
 
-            ShiftsTemp = shiftApply(seq(shift_window),PosCoverage,NegCoverage,RleSumAny)
-            lout = Append_List_Element(lout, 'ShiftMat', setNames(list(ShiftsTemp), chrname))
+        PosCoverage = coverage(Sample_GIT[strand(Sample_GIT)=="+"],width=unname(chr_lengths[k]))[[chrname]]
+        NegCoverage = coverage(Sample_GIT[strand(Sample_GIT)=="-"],width=unname(chr_lengths[k]))[[chrname]]
 
-            ShiftsCorTemp = shiftApply(seq(shift_window),PosCoverage,NegCoverage,cor)
-            lout = Append_List_Element(lout, 'ShiftMatCor', setNames(list(ShiftsCorTemp), chrname))
+        lout = Append_List_Element(lout, 'PosAny', sum(runLength((PosCoverage[PosCoverage > 1]))))
+        lout = Append_List_Element(lout, 'NegAny', sum(runLength((NegCoverage[NegCoverage > 1]))))
 
-            # }
+        ShiftsTemp = shiftApply(seq(shift_window),PosCoverage,NegCoverage,RleSumAny)
+        lout = Append_List_Element(lout, 'ShiftMat', setNames(list(ShiftsTemp), chrname))
+
+        ShiftsCorTemp = shiftApply(seq(shift_window),PosCoverage,NegCoverage,cor)
+        lout = Append_List_Element(lout, 'ShiftMatCor', setNames(list(ShiftsCorTemp), chrname))
+
+        lout$annot = data.frame(annot = AnnotateRanges(temp, annotation)) %>%
+              group_by(annot) %>%
+              summarize(N = n()) %>%
+              mutate(total = sum(N)) %>%
+              mutate(freq  = round(N/total,3)) %>%
+              dplyr::select(annot, freq) %>%
+              mutate(sample_name = sample_name)
+
     }
 
     lsum = Summarize_Statistics_List(lout)
-
 
     tilling_windows = readRDS(nucleotide_frequency)
     cnts = summarizeOverlaps(tilling_windows, bamfile)
@@ -175,6 +173,7 @@ ChIPQC(
   bamfile              = argv$input[['bamfile']],
   logfile              = argv$input[['logfile']],
   nucleotide_frequency = argv$input[['nucleotide_frequency']],
+  annotation           = argv$input[['annotation']],
   outfile              = argv$output[['outfile']],
   scriptdir            = argv$params[['scriptdir']],
   sample_sheet         = argv$params[['sample_sheet']],

@@ -94,14 +94,29 @@ if(length(set_analysis) == 0)
   set_analysis = params$analysis_names
 
 # this loads in the data
-
-lstats = list()
+# infile = '/data/local/Projects/pigx/pigx_chipseq/Data/Analyzed/Analysis/Summarized_Data_For_Report.RDS'
+# lstats = list()
 lstats = readRDS(infile)
+
 ```
 
+```{r variables, include=FALSE, message=FALSE}
+number_of_samples = ncol(lstats$ChIPQC$norm.count)
+
+
+# ---------------------------------------------------------------------------- #
+# Figure sizes
+sample_correlation_width  = number_of_samples + 5
+sample_correlation_height = number_of_samples
+
+# ---------------------------------------------------------------------------- #
+# coordinates
+
+
+```
 
 # Sample Correlation
-```{r Sample_Correlation, include=TRUE, fig.align='center', message=FALSE, warning=FALSE}
+```{r Sample_Correlation, include=TRUE, fig.align='center', message=FALSE, warning=FALSE, fig.width=sample_correlation_width, sample_correlation_height}
 dcor = cor(lstats$ChIPQC$norm.count, method='spearman')
 heatmaply(dcor,
           k_col = 2, k_row = 2,
@@ -144,29 +159,64 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
 }
 ```
 
+# Read Distribution in Genomic Features
+
+```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center'}
+g = lstats$ChIPQC$Annotation %>%
+    ggplot(aes(x = sample_name, y=freq, fill=annot)) +
+        geom_bar(stat='identity') +
+        xlab('Sample') +
+        ylab('Frequency of reads in genomic annotation') +
+        scale_fill_discrete(name = 'Annotation') +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+print(g)
+
+```
+
+
 ---
 
 
-```{r Read_Distribution_in_Genomic_Features_Header, include=analysis_ind['Extract_Signal_Annotation'], fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
-ncat('# Read Distribution in Genomic Features')
-```
 
 ```{r Read_Distribution_in_Genomic_Features_Header2, include=analysis_ind['Extract_Signal_Annotation'], fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
 ncat('## Signal profiles around genomic features {.tabset}')
 ```
 
-```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'} 
+```{r Signal_profiles_in_genomic_features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
 tab = lstats$Extract_Signal_Annotation$profiles
 genomic_locations = unique(tab$genomic_location)
+
+genomic_coordinates = lapply(genomic_locations, function(x){
+    
+    if(x %in% c('tss', 'tts','tss_wide','tts_wide', 'splicing_donor', 'splicing_accep')){
+        w = round(width_params[[paste(x, 'width', sep='_')]]/2)
+        v = c(-w, 0, +w)
+    }
+    if(x %in% c('exon','intron','gene')){
+        v = c(0,100)
+    }
+    if(x %in% c('tss_body', 'tts_body')){
+        up   = width_params[[paste(x, 'upstream',   sep='_')]]
+        down = width_params[[paste(x, 'downstream', sep='_')]]
+        v = c(-up,down)
+    }
+    v
+})
+
 for(i in seq(genomic_locations)){
   location = genomic_locations[i]
+  coordinates = genomic_coordinates[[location]]
   ncat(paste('###',location))
   g = tab %>%
     dplyr::filter(genomic_location==location)  %>%
     ggplot(aes(position, value, color=sample_name)) +
     geom_line() +
     xlab('Relative position') +
-    ylab('Signal Value')
+    ylab('Signal Value') +
+    scale_y_continuous(breaks=coordinates)
+  
+    if(coordinates[2] == 0)
+        g = g + geom_vline(xintercept = 0, linetype=2, size=1)
   print(g)
   cat('\n')
 }

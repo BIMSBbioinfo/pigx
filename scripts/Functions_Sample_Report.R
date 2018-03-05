@@ -90,6 +90,9 @@ format_ChIPQC = function(tab){
     })) %>%
     mutate(window=NULL)
 
+
+    message('Annotation ...')
+    lout$Annotation = do.call(rbind, lapply(lres, '[[','annot'))
     #
     # lout$readlength = do.call(rbind,lapply(names(lres), function(x){
     #     tibble(sample_name = x, readlength = lres[[x]]$readlength)
