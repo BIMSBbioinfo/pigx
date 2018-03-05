@@ -12,7 +12,7 @@ rule knit_report:
             # report chunks are parts of the analysis that are implemented
             report_chunks   = list(REPORT_CHUNKS.values()),
             # width params define the look of the profile plots
-            width_params    = PARAMS['width_params']
+            width_params    = PARAMS['width_params'],
             threads         = 1,
             mem             = '32G',
             script_path     = SCRIPT_PATH,
