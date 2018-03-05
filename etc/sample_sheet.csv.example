@@ -1,0 +1,7 @@
+name,reads,reads2,sample_type
+HBR_Rep1,HBR_Rep1.read1.fastq.gz,HBR_Rep1.read2.fastq.gz,HBR
+HBR_Rep2,HBR_Rep2.read1.fastq.gz,HBR_Rep2.read2.fastq.gz,HBR
+HBR_Rep3,HBR_Rep3.read1.fastq.gz,HBR_Rep3.read2.fastq.gz,HBR
+UHR_Rep1,UHR_Rep1.read1.fastq.gz,UHR_Rep1.read2.fastq.gz,UHR
+UHR_Rep2,UHR_Rep2.read1.fastq.gz,UHR_Rep2.read2.fastq.gz,UHR
+UHR_Rep3,UHR_Rep3.read1.fastq.gz,UHR_Rep3.read2.fastq.gz,UHR

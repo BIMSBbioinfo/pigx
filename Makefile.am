@@ -16,6 +16,7 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/validate_input.py
 
 dist_pkgdata_DATA =									\
+  etc/sample_sheet.csv.example								\
   etc/settings.yaml									\
   etc/pretty.txt									\
   images/Logo_PiGx.png
