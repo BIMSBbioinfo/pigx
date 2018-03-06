@@ -45,13 +45,13 @@ Extract_Signal_Annotation = function(
     message('Extract Profiles ...')
         nams = names(annot)
         lsml = lapply(setNames(nams, nams), function(x)
-            ScoreMatrixBin(wig, annot[[x]], bin.num = bin.num, strand.aware=TRUE))
+            sml = ScoreMatrixBin(wig, annot[[x]], bin.num = bin.num, strand.aware=TRUE))
 
 
     message('Summarize Profiles ...')
         sample_name = str_replace(basename(wig),'.bw','')
         profiles = lapply(names(lsml), function(x){
-              dat = lsml[[x]]
+              dat = genomation::scaleScoreMatrixList(lsml[[x]])
               dm  = colMeans(dat)
               d = tibble(genomic_location = x,
                          sample_name      = sample_name,
