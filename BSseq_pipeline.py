@@ -30,8 +30,8 @@ DIR_diffmeth    = '10_differential_methylation/'
 DIR_seg         = '09_segmentation/'
 DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
-DIR_sorted      = '06_sorting/'
-DIR_deduped     = '05_deduplication/'
+DIR_deduped     = '06_deduplication/'
+DIR_sorted      = '05_sorting/'
 DIR_mapped      = '04_mapping/'
 DIR_posttrim_QC = '03_posttrimming_QC/'
 DIR_trimmed     = '02_trimming/'
@@ -97,14 +97,14 @@ targets = {
         'files': files_for_sample(list_files_bismark)
     },
 
-    'deduplication': {
-        'description': "Deduplicate bam files.",
-        'files': files_for_sample(list_files_dedupe)
-    },
-
     'sorting': {
         'description': "Sort bam files.",
         'files': files_for_sample(list_files_sortbam)
+    },
+
+    'deduplication': {
+        'description': "Deduplicate bam files.",
+        'files': files_for_sample(list_files_dedupe)
     },
 
      # TODO: had to add this part to call bam_methCall for diff meth rule
@@ -159,7 +159,7 @@ OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['file
 #
 # rules are separated by "==" bars into pairs for paired-end and single-end (subdivided by smaller "--" dividers)
 # ===============================================================================================================
-
+
 
 rule all:
     input:
@@ -192,6 +192,8 @@ onsuccess:
             for name in generated:
                 print("  - {}".format(name))
 
+
+
 # ==========================================================================================
 # export a bigwig file
  
@@ -214,7 +216,7 @@ rule export_bigwig_pe:
 rule export_bigwig_se:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.deduped.sorted_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.sorted.deduped_methylRaw.RDS")
     output:
         bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw") 
     message: fmt("exporting bigwig files from single-end stream.")
@@ -225,35 +227,16 @@ rule export_bigwig_se:
                          ASSEMBLY,
                          "{output}"])
 
-# ==========================================================================================
-# sort the bam file:
 
-rule sortbam_se:
-    input:
-        DIR_deduped+"{sample}_se_bt2.deduped.bam"
-    output:
-        DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
-    message: fmt("Sorting bam file {input}")
-    shell:
-        nice('samtools', ["sort", "{input}", "-o {output}"])
-#-----------------------
-rule sortbam_pe:
-    input:
-        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
-    output:
-        DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
-    message: fmt("Sorting bam file {input}")
-    shell:
-        nice('samtools', ["sort", "{input}", "-o {output}"])
-
+
 # ==========================================================================================
 # deduplicate the bam file:
 
 rule deduplication_se:
     input:
-        DIR_mapped+"{sample}_trimmed_bismark_bt2.bam"
+        DIR_sorted+"{sample}_se_bt2.sorted.bam"
     output:
-        DIR_deduped+"{sample}_se_bt2.deduped.bam"
+        DIR_deduped+"{sample}_se_bt2.sorted.deduped.bam"
     params:
         bam="--bam ",
         sampath="--samtools_path " + tool('samtools')
@@ -262,18 +245,44 @@ rule deduplication_se:
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
         nice('samtools', ["rmdup", "{input}", "{output}"], "{log}")
+
 #-----------------------
 rule deduplication_pe:
     input:
-        DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam"
+        DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
     output:
-        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
+        DIR_deduped+"{sample}_1_val_1_bt2.sorted.deduped.bam"
     log:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
-        nice('samtools', ["fixmate", "{input}", "{output}"], "{log}")
+        nice('samtools', [" markdup -r ", "{input}", "{output}"], "{log}")
 
+
+
+# ==========================================================================================
+# sort the bam file:
+
+rule sortbam_se:
+    input:
+        DIR_mapped+"{sample}_trimmed_bismark_bt2.bam"
+    output:
+        DIR_sorted+"{sample}_se_bt2.sorted.bam"
+    message: fmt("Sorting bam file {input}")
+    shell:
+        nice('samtools', ["sort", "{input}", "-o {output}"])
+
+#-----------------------
+rule sortbam_pe:
+    input:
+        DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam"
+    output:
+        DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
+    message: fmt("Sorting bam file {input}")
+    shell:
+        nice('samtools', ["sort", " -n {input} ", " -o {output} ", " | fixmate - - ", " | sort - -o {output} "  ])
+
+
 # ==========================================================================================
 # align and map:
 bismark_cores = str(config['tools']['bismark']['cores'])
@@ -331,6 +340,7 @@ rule bismark_align_and_map_pe:
         nice('bismark', ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
 
 
+
 # ==========================================================================================
 # generate reference genome:
 
@@ -351,6 +361,8 @@ rule bismark_genome_preparation:
     shell:
         nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
 
+
+
 # ==========================================================================================
 # create a csv file tabulating the lengths of the chromosomes in the reference genome:
 
@@ -368,6 +380,7 @@ rule tabulate_seqlengths:
         nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])
 
 
+
 # ==========================================================================================
 # post-trimming quality control
 
@@ -404,6 +417,7 @@ rule fastqc_after_trimming_pe:
     shell:
         nice('fastqc', ["{params}", "{input}"], "{log}")
 
+
 # ==========================================================================================
 # trim the reads
 
@@ -448,6 +462,7 @@ rule trim_reads_pe:
     shell:
         nice('trim-galore', ["{params}", "{input.files}"], "{log}")
 
+
 # ==========================================================================================
 # raw quality control
 
@@ -470,7 +485,9 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
 
 # Rules to be applied after mapping reads with Bismark
 
-## Bam processing
+# ==========================================================================================
+# Bam processing:
+
 rule bam_methCall:
     input:
         bamfile     = os.path.join(DIR_sorted,"{prefix}.sorted.bam")
@@ -498,7 +515,9 @@ rule bam_methCall:
                          "--logFile={log}"])
 
 
-## Segmentation
+# ==========================================================================================
+# Segmentation:
+
 rule methseg:
     ## paths inside input and output should be relative
     input:
@@ -523,7 +542,9 @@ rule methseg:
                          "--logFile={log}"])
 
 
-## Differential methylation
+# ==========================================================================================
+# Differential methylation
+
 rule diffmeth:
     ## paths inside input and output should be relative
     input:  
@@ -571,13 +592,9 @@ rule diffmeth:
                          '--logFile={log}'])
 
 
-### note that Final report can only be generated 
-### if one of the intermediate has been genereted,
-### so make sure that at least one has been run already
-### right now ensured with 'rules.methseg_annotation.output' as input
+# ==========================================================================================
+# Final Report
 
-
-## Final Report
 rule final_report:
     input:  
         rules.bam_methCall.output,
@@ -614,7 +631,9 @@ rule final_report:
         generateReport(input, output, params, log, "")
 
 
-## Final Report for diff. meth.
+# ==========================================================================================
+# Final Report for diff. meth.
+
 rule diffmeth_report:
     input:
         lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.sorted_diffmeth.bed',
