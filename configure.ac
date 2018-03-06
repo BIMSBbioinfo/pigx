@@ -71,7 +71,7 @@ AC_ARG_ENABLE([samtools-version-check],
   AS_HELP_STRING([--disable-samtools-version-check], [Do not check the Samtools version.]),
   [AC_MSG_NOTICE([Skipping Samtools version check.  Be careful!])],
   [dnl
-SAMTOOLS_VERSION_MIN=1.3
+SAMTOOLS_VERSION_MIN=1.7
 SAMTOOLS_VERSION=$([$SAMTOOLS --version | $SED 's/^samtools //;q'])
 AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
