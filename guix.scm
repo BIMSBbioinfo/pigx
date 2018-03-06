@@ -28,11 +28,102 @@
              (gnu packages bioinformatics)
              (gnu packages compression)
              (gnu packages cran)
+             (gnu packages curl)
              (gnu packages haskell)
              (gnu packages java)
+             (gnu packages ncurses)
              (gnu packages perl)
+             (gnu packages pkg-config)
              (gnu packages python)
+             (gnu packages tls)
              (gnu packages web))
+
+(define-public my/htslib
+  (package
+    (name "htslib")
+    (version "1.7")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append
+                    "https://github.com/samtools/htslib/releases/download/"
+                    version "/htslib-" version ".tar.bz2"))
+              (sha256
+               (base32
+                "1il6i2p84b0y9c93dhvzzki1ifw9bvapm2mvpr0xvb2nq8jlwgdy"))))
+    (build-system gnu-build-system)
+    (inputs
+     `(("openssl" ,openssl)
+       ("curl" ,curl)
+       ("zlib" ,zlib)))
+    (native-inputs
+     `(("perl" ,perl)))
+    (home-page "http://www.htslib.org")
+    (synopsis "C library for reading/writing high-throughput sequencing data")
+    (description
+     "HTSlib is a C library for reading/writing high-throughput sequencing
+data.  It also provides the @command{bgzip}, @command{htsfile}, and
+@command{tabix} utilities.")
+    ;; Files under cram/ are released under the modified BSD license;
+    ;; the rest is released under the Expat license
+    (license (list expat bsd-3))))
+
+(define-public my/samtools
+  (package
+    (name "samtools")
+    (version "1.7")
+    (source
+     (origin
+       (method url-fetch)
+       (uri
+        (string-append "mirror://sourceforge/samtools/samtools/"
+                       version "/samtools-" version ".tar.bz2"))
+       (sha256
+        (base32
+         "18acyqysbxpydlc44lqv2hpp57l06bs9a3yqmcvjk8va2xrrdc77"))))
+    (build-system gnu-build-system)
+    (arguments
+     `(#:modules ((ice-9 ftw)
+                  (ice-9 regex)
+                  (guix build gnu-build-system)
+                  (guix build utils))
+       #:make-flags (list (string-append "prefix=" (assoc-ref %outputs "out")))
+       #:configure-flags (list "--with-ncurses" "--with-htslib=system")
+       #:phases
+       (modify-phases %standard-phases
+         (add-after 'unpack 'patch-tests
+           (lambda _
+             (substitute* "test/test.pl"
+               ;; The test script calls out to /bin/bash
+               (("/bin/bash") (which "bash")))
+             #t))
+         (add-after 'install 'install-library
+           (lambda* (#:key outputs #:allow-other-keys)
+             (let ((lib (string-append (assoc-ref outputs "out") "/lib")))
+               (install-file "libbam.a" lib)
+               #t)))
+         (add-after 'install 'install-headers
+           (lambda* (#:key outputs #:allow-other-keys)
+             (let ((include (string-append (assoc-ref outputs "out")
+                                           "/include/samtools/")))
+               (for-each (lambda (file)
+                           (install-file file include))
+                         (scandir "." (lambda (name) (string-match "\\.h$" name))))
+               #t))))))
+    (native-inputs `(("pkg-config" ,pkg-config)))
+    (inputs
+     `(("htslib" ,my/htslib)
+       ("ncurses" ,ncurses)
+       ("perl" ,perl)
+       ("python" ,python)
+       ("zlib" ,zlib)))
+    (home-page "http://samtools.sourceforge.net")
+    (synopsis "Utilities to efficiently manipulate nucleotide sequence alignments")
+    (description
+     "Samtools implements various utilities for post-processing nucleotide
+sequence alignments in the SAM, BAM, and CRAM formats, including indexing,
+variant calling (in conjunction with bcftools), and a simple alignment
+viewer.")
+    (license expat)))
 
 (define %pigx-bsseq-version
   (symbol->string (with-input-from-file "VERSION" read)))
@@ -87,7 +178,7 @@
        ("bowtie" ,bowtie)
        ("trim-galore" ,trim-galore)
        ("cutadapt" ,cutadapt)
-       ("samtools" ,samtools)))
+       ("samtools" ,my/samtools)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_bsseq/")
     (synopsis "Bisulfite sequencing pipeline from fastq to methylation reports")
     (description "PiGx BSseq is a data processing pipeline for raw fastq
