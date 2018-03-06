@@ -1,6 +1,6 @@
 ---
 title: "Quality control of ChIP-seq data"
-author: "PigX-chipseq"
+author: "PigX ChIP-seq"
 header-includes:
   - \usepackage{comment}
 output:
@@ -50,17 +50,6 @@ if(length(set_analysis))
 ncat = function(text)cat(paste0('\n',text),'\n')
 ```
 
-```{r test_data, include=FALSE, eval=FALSE}
-# params=list();
-# params$analysis_path = '/home/vfranke/Projects/pigx_chipseq/Tests/out/Analysis'
-# params$script_path = 'scripts'
-# params$analysis_names = c('Extract_Signal_Annotation','Peak_Statistics','Annotate_Peaks','ChIPQC')
-# set_analysis = params$analysis_names
-# params=list()
-# params$analysis_names = c('Extract_Signal_Annotation','ChIPQC')
-# params$analysis_path  = '/data/local/Projects/pigx/pigx_chipseq/Data/Analyzed/Analysis/RDS'
-```
-
 
 ```{r libraries, include=FALSE}
 suppressPackageStartupMessages(library(GenomicRanges))
@@ -93,59 +82,105 @@ names(analysis_ind) = params$report_chunks
 if(length(set_analysis) == 0)
   set_analysis = params$analysis_names
 
-# this loads in the data
-# infile = '/data/local/Projects/pigx/pigx_chipseq/Data/Analyzed/Analysis/Summarized_Data_For_Report.RDS'
-# lstats = list()
-lstats = readRDS(infile)
+al = params
+saveRDS(al, 'Sample_Report_Params.rds')
 
+# params = readRDS('Sample_Report_Params.rds')
+
+lstats = readRDS(params$infile)
 ```
 
 ```{r variables, include=FALSE, message=FALSE}
 number_of_samples = ncol(lstats$ChIPQC$norm.count)
 
-
 # ---------------------------------------------------------------------------- #
 # Figure sizes
-sample_correlation_width  = number_of_samples + 5
-sample_correlation_height = number_of_samples
-
-# ---------------------------------------------------------------------------- #
-# coordinates
-
+scale_factor = .6
+sample_correlation_width  = number_of_samples*scale_factor + 2
+sample_correlation_height = number_of_samples*scale_factor
 
 ```
 
 # Sample Correlation
-```{r Sample_Correlation, include=TRUE, fig.align='center', message=FALSE, warning=FALSE, fig.width=sample_correlation_width, sample_correlation_height}
+```{r Sample_Correlation, include=TRUE, fig.align='center', message=FALSE, warning=FALSE, fig.width=sample_correlation_width, fig.height=sample_correlation_height, warning=FALSE, message=FALSE}
 dcor = cor(lstats$ChIPQC$norm.count, method='spearman')
+margin_size = max(nchar(rownames(dcor))) * 10
 heatmaply(dcor,
           k_col = 2, k_row = 2,
           limits = c(-1,1),
-          margins = c(100,100,40,40))
+          margins = c(margin_size,margin_size,40,40))
 
 ```
 
 ---
 
-# Cross Correlation  {.tabset}
-```{r Cross_Correlation, include=TRUE, fig.align='center'}
-for(sample in unique(lstats$ChIPQC$shift_correlation$sample_name)){
-    g = lstats$ChIPQC$shift_correlation %>%
-        dplyr::filter(sample_name %in% sample) %>%
-        ggplot(aes(shift, strand_correlation, color=sample_name)) +
-        geom_line() +
-        xlab('Read shift') +
-        ylab('Pearson correlation') +
-        ggtitle('Inter strand correlation coefficient') +
-        ggtitle(sample)
-    print(g)
-}
+# Inter Strand Cross Correlation
+```{r Cross_Correlation, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE,fig.width=10}
+cc = lstats$ChIPQC$shift_correlation %>%
+    mutate(shift = shift*10) %>%
+    tidyr::spread(shift, strand_correlation, fill=0) %>%
+    as.data.frame()
+rownames(cc) = cc$sample_name
+cc$sample_name = NULL
+margin_left = max(nchar(rownames(cc)))*10
+```
+
+```{r Cross_Correlation_Plot, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE}
+heatmaply(cc,
+          xlab   = 'Read Shift',
+          ylab   = 'Sample',
+          k_col  = 2, k_row = 2,
+          limits = c(-1,1),
+          colors = c('royalblue4','white','darkred'),
+          Colv   = FALSE, 
+          column_text_angle = 90,
+          margins = c(150, margin_left, 0, 0),
+          colorbar_xanchor = 'middle',
+          colorbar_yanchor = 'bottom')
+
 ```
 
 ---
 
-# GC Content {.tabset}
-```{r GC_Content, include=TRUE, fig.align='center'}
+# GC Content Vs Number of Reads
+
+```{r GC_Content, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE}
+gc_heat = lstats$ChIPQC$GC %>%
+    mutate(GC = cut(GC, seq(0,max(GC), 0.05), include.lowest = TRUE)) %>%
+    group_by(sample_name, GC) %>%
+    summarize(counts = sum(counts)) %>%
+    mutate(counts = round(log10(counts+1),2)) %>%
+    tidyr::spread(GC, counts, fill = 0) %>%
+    as.data.frame()
+rownames(gc_heat) = gc_heat$sample_name
+gc_heat$sample_name = NULL
+
+gc = lstats$ChIPQC$GC %>%
+    group_by(sample_name, GC) %>%
+    summarize(counts = sum(counts)) %>%
+    mutate(counts = round(log10(counts+1),2)) %>%
+    tidyr::spread(GC, counts, fill = 0) %>%
+    as.data.frame()
+rownames(gc) = gc$sample_name
+gc$sample_name = NULL
+gc_fig_width = nrow(gc)*0.5
+```
+
+```{r GC_Content_Plot, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = gc_fig_width, warning=FALSE, message=FALSE}
+heatmaply(gc_heat,
+          xlab   = 'GC content',
+          ylab   = 'Sample',
+          k_col  = 2, k_row = 2,
+          colors = c('white','darkred'),
+          margin = c(150, margin_left, 0, 0),
+          Colv   = FALSE)
+```
+
+
+
+
+```{r GC_Content_Per sample, include=TRUE, fig.align='center'}
+gl = list()
 for(sample in unique(lstats$ChIPQC$GC$sample_name)){
     g = lstats$ChIPQC$GC %>%
         dplyr::filter(sample_name %in% sample) %>%
@@ -155,7 +190,17 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
             ylab('Normalized read count') +
             scale_y_log10() +
             ggtitle(sample)
-    print(g)
+    gl[[sample]] = g
+}
+```
+
+# Per Sample GC Content Vs Number of Reads {.tabset}
+
+```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', result='asis'}
+for(sample in names(gl)){
+    cat(paste('##',sample,'\n'))
+    print(gl[[sample]])
+    cat(' \n\n')
 }
 ```
 
@@ -163,14 +208,22 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
 
 ```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center'}
 g = lstats$ChIPQC$Annotation %>%
+    mutate(annot = case_when(
+      annot == 'None' ~ 'intergenic',
+      TRUE ~ as.character(annot)
+    )) %>%
     ggplot(aes(x = sample_name, y=freq, fill=annot)) +
         geom_bar(stat='identity') +
         xlab('Sample') +
         ylab('Frequency of reads in genomic annotation') +
-        scale_fill_discrete(name = 'Annotation') +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
-print(g)
+        scale_fill_brewer(name = 'Annotation', palette='Set2') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+read_distribution_width = length(unique(lstats$ChIPQC$Annotation$sample_name))*0.5
+```
+
+```{r Read_Distribution_in_Genomic_Features_Plot, include=TRUE, fig.align='center', fig.width=read_distribution_width}
+print(g)
 ```
 
 
@@ -186,19 +239,29 @@ ncat('## Signal profiles around genomic features {.tabset}')
 tab = lstats$Extract_Signal_Annotation$profiles
 genomic_locations = unique(tab$genomic_location)
 
-genomic_coordinates = lapply(genomic_locations, function(x){
+genomic_coordinates = lapply(setNames(genomic_locations,genomic_locations), function(x){
     
+    v = list()
+    if(x == 'splicing_acceptor')
+        x = 'splicing_accep'
     if(x %in% c('tss', 'tts','tss_wide','tts_wide', 'splicing_donor', 'splicing_accep')){
-        w = round(width_params[[paste(x, 'width', sep='_')]]/2)
-        v = c(-w, 0, +w)
+        w   = round(width_params[[paste(x, 'width', sep='_')]]/2)
+        pos = max(tab$position)
+        v$labels = c(-w, 0, +w)
+        v$breaks = c(0, floor(pos)/2, pos)
     }
     if(x %in% c('exon','intron','gene')){
-        v = c(0,100)
+        pos = max(tab$position)
+        v$labels = c(0,100)
+        v$breaks = c(0, pos)
     }
     if(x %in% c('tss_body', 'tts_body')){
         up   = width_params[[paste(x, 'upstream',   sep='_')]]
         down = width_params[[paste(x, 'downstream', sep='_')]]
-        v = c(-up,down)
+        pos = max(tab$position)
+        v$labels = c(-up,down)
+        v$breaks = c(0, pos)
+        
     }
     v
 })
@@ -213,28 +276,17 @@ for(i in seq(genomic_locations)){
     geom_line() +
     xlab('Relative position') +
     ylab('Signal Value') +
-    scale_y_continuous(breaks=coordinates)
+    scale_x_continuous(breaks = coordinates$breaks, 
+                       labels = as.character(coordinates$labels)) +
+      theme_bw()
   
-    if(coordinates[2] == 0)
-        g = g + geom_vline(xintercept = 0, linetype=2, size=1)
+    if(length(coordinates$breaks) == 3)
+        g = g + geom_vline(xintercept = coordinates$breaks[2], linetype=2)
+  
   print(g)
   cat('\n')
 }
 ```
-
-
-<!-- ## Signal profiles around genomic features {.tabset .tabset-fade .tabset-pills}
-# ```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center'}
-# lsml = lstats$Extract_Signal_Annotation$lsml
-# geonmic_locations = unique(names(lsml))
-# for(i in seq(geonmic_locations)){
-#   location = geonmic_locations[i]
-#   sml = lsml[[location]]
-#   cat('\n###', location, '\n')
-#     multiHeatMatrix(sml)
-#   cat('\n')
-# }
-# ``` -->
 
 ---
 
@@ -248,29 +300,25 @@ ncat('## Frequency of reads in peaks')
 ```
 
 ```{r Peak_Statistics_Freq_Reads_In_Peaks, include=FALSE, eval=analysis_ind['Peak_Statistics'], fig.align='center'}
-g = lstats$Peak_Statistics$peaks_sample                          %>%
+dd = lstats$Peak_Statistics$peaks_sample                          %>%
   dplyr::select(-bed_file, -bw_files, -bam_file)                 %>%
   tidyr::gather(sample_cnt, value, -sample_name, -bam_name, -sample_id, -peak_number, -library, -mapped_total)                         %>%
   mutate(sample_cnt = str_replace(sample_cnt, '.sorted.bam','')) %>%
-  mutate(value      = round(value*(1e6/mapped_total)))           %>%
+  mutate(value      = round(value/mapped_total,2))              
+
+dd %>%
   dplyr::filter(bam_name == sample_cnt)                          %>%
-  ggplot(aes(bam_name, value, group=sample_name)) +
-  geom_bar(stat='identity')                       +
-  xlab('Sample name')                             +
-  ylab('Number of reads in peaks')
-print(g)
+  ggplot(aes(bam_name, value, fill=sample_name)) +
+  geom_bar(stat='identity', position='dodge') +
+  xlab('Peak name')                           +
+  ylab('Percentage of reads in peaks') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_discrete('Sample')
+
+number_of_peaks = length(unique(dd$sample_name))*0.5+2
 ```
 
-```{r Peak_Statistics_Header3, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis'}
-ncat('## Signal Profiles around the peak')
-```
-
-```{r Peak_Signal_Profiles, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center'}
-g = lstats$Peak_Statistics$peak_profiles  %>%
-  ggplot(aes(position, mean, color=bw_name, group=peak)) +
-  geom_path() +
-  xlab('Position around peak') +
-  ylab('Normalized signal')
+```{r Peak_Statistics_Header3, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis', fig.width=number_of_peaks}
 print(g)
 ```
 
@@ -281,7 +329,6 @@ print(g)
 ncat('# Peak Distribution in Genomic Features')
 ```
 
-
 ```{r Peak_Number_Header2, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', results='asis'}
 ncat('## Number of peaks per sample in genomic features')
 ```
@@ -289,28 +336,29 @@ ncat('## Number of peaks per sample in genomic features')
 
 ```{r Peak_Number_in_Genomic_Features, include=FALSE, eval=analysis_ind['Annotate_Peaks'], fig.align='center'}
 g = lstats$Annotate_Peaks    %>%
-  arrange(desc(peak_number)) %>%
-  ggplot(aes(sample_name, counts, color=annot)) +
+    mutate(annot = case_when(
+      annot == 'none' ~ 'intergenic',
+      TRUE ~ as.character(annot)
+    )) %>%
+  group_by(sample_name) %>%
+  mutate(n = sum(counts)) %>%
+  arrange(desc(-n)) %>%
+  ungroup() %>%
+  mutate(sample_name = factor(sample_name, ordered=TRUE, levels=unique(sample_name))) %>%
+  ggplot(aes(sample_name, counts, fill=annot)) +
   geom_bar(stat='identity') +
   xlab('Sample name') +
-  ylab('Number of peaks')
+  ylab('Number of peaks') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(name='Annotation', palette='Set2')
+
+peak_number_width = length(unique(lstats$Annotate_Peaks$sample_name))*0.5+4
+```
+
+```{r Peak_Number_in_Genomic_Features_Plot, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', fig.width=peak_number_width}
 print(g)
 ```
 
 
-
-```{r Peak_Number_Header3, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', results='asis'}
-ncat('## Distribution of peaks in genomic features')
-```
-
-```{r Peak_Distribution_in_Genomic_Features, include=FALSE, eval=analysis_ind['Annotate_Peaks'], fig.align='center'}
-g = lstats$Annotate_Peaks    %>%
-  arrange(desc(peak_number)) %>%
-  ggplot(aes(sample_name, freq, color=annot)) +
-  geom_bar(stat='identity') +
-  xlab('Sample name') +
-  ylab('Peak frequency')
-print(g)
-```
 
 ---
