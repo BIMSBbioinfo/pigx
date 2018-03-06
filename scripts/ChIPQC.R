@@ -138,10 +138,10 @@ ChIPQC = function(
         lout = Append_List_Element(lout, 'PosAny', sum(runLength((PosCoverage[PosCoverage > 1]))))
         lout = Append_List_Element(lout, 'NegAny', sum(runLength((NegCoverage[NegCoverage > 1]))))
 
-        ShiftsTemp = shiftApply(seq(shift_window),PosCoverage,NegCoverage,RleSumAny)
+        ShiftsTemp = shiftApply(seq(1, shift_window, 10),PosCoverage,NegCoverage,RleSumAny)
         lout = Append_List_Element(lout, 'ShiftMat', setNames(list(ShiftsTemp), chrname))
 
-        ShiftsCorTemp = shiftApply(seq(shift_window),PosCoverage,NegCoverage,cor)
+        ShiftsCorTemp = shiftApply(seq(1,shift_window, 10),PosCoverage,NegCoverage,cor)
         lout = Append_List_Element(lout, 'ShiftMatCor', setNames(list(ShiftsCorTemp), chrname))
 
         lout$annot = data.frame(annot = AnnotateRanges(temp, annotation)) %>%
