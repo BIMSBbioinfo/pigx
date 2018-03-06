@@ -57,7 +57,7 @@ format_ChIPQC = function(tab){
     message('GC ...')
       lout$GC = do.call(rbind, lapply(names(lres), function(x){
           dat = lres[[x]]$tilling_windows
-          tibble(sample_name = x, GC = dat$GC, counts = dat$samplecounts[[2]])
+          tibble(sample_name = x, GC = dat$G + dat$C, counts = dat$samplecounts[[2]])
       }))
 
     message('Shift Correlation ...')
@@ -84,7 +84,7 @@ format_ChIPQC = function(tab){
     message('Normalized Counts ...')
     lout$norm.counts = Reduce(left_join, lapply(names(lres), function(x){
         cnts = lres[[x]]$tilling_windows$samplecounts[[2]]
-        tab = tibble(window = seq(cnts), counts = cnts)
+        tab  = tibble(window = seq(cnts), counts = cnts)
         colnames(tab)[2] = x
         tab
     })) %>%
