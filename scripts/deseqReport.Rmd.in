@@ -287,7 +287,10 @@ invisible(dev.off())
 ```{r computePCAplots} 
 plotGroups <- c(covariates, 'AnalysisGroup', 'group')
 pcaPlots <- lapply(plotGroups, function(g) {
-  DESeq2::plotPCA(object = vsd, intgroup = g) + geom_label_repel(label = rownames(colData(vsd)), size = 3)
+  df <- DESeq2::plotPCA(object = vsd, intgroup = g, returnData = TRUE) 
+  ggplot(df, aes(x = PC1, y = PC2)) + 
+    geom_point(aes_string(color = g)) + 
+    geom_label_repel(aes(label = name), size = 3)
 })
 #save image to folder
 pdf(file = file.path(imagesDir, 'pcaPlots.pdf'))
