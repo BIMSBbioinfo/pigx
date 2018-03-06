@@ -162,7 +162,7 @@ def parse_samples(lines):
     It returns a dictionary required for the config file.
     """
     sreader = csv.reader(lines, delimiter=',')
-    all_rows = [row for row in sreader]
+    all_rows = [row for row in sreader if row]
   
     header = all_rows[0]
     rows   = all_rows[1:]
