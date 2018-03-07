@@ -28,7 +28,8 @@ ready for reporting.
 
 Arguments:
 --loomFile Path to .loom file from the scRNA-seq experiment
---Experiment meta data file in tsv format (minimally with mappings between cell ids and sample  ids)
+--sampleSheetFile Sample Sheet file used to initiate the pipeline
+--gtfFile GTF genome annotation file used as input to the pipeline 
 --genomeBuild Genome build version (e.g. hg38, mm10)
 --outFile Path to the writing location of the output .RDS file 
 
@@ -63,9 +64,14 @@ if(!("loomFile" %in% argsDF$V1)) {
   stop("Missing argument: loomFile. Provide the path to .loom file")
 }
 
-if(!("sample_sheet" %in% argsDF$V1)) {
+if(!("sampleSheetFile" %in% argsDF$V1)) {
   cat(help_command, "\n")
-  stop("Missing argument: sample_sheet Provide the path to meta data file")
+  stop("Missing argument: sampleSheetFile. Provide the path to sampleSheetFile file")
+}
+
+if(!("gtfFile" %in% argsDF$V1)) {
+  cat(help_command, "\n")
+  stop("Missing argument: gtfFile Provide the path to gtfFile file")
 }
 
 if(!("genomeBuild" %in% argsDF$V1)) {
@@ -79,7 +85,8 @@ if(!("outFile" %in% argsDF$V1)) {
 }
 
 loomFile     = argsL$loomFile
-sample_sheet = argsL$sample_sheet
+sampleSheetFile = argsL$sampleSheetFile
+gtfFile = argsL$gtfFile
 genomeBuild  = argsL$genomeBuild
 outFile      = argsL$outFile
 
@@ -92,6 +99,7 @@ library(scran)
 library(DelayedMatrixStats)
 library(DelayedArray)
 library(data.table)
+library(rtracklayer)
 
 #3. Define functions
 # ---------------------------------------------------------------------------- #
@@ -260,9 +268,7 @@ sce <- loom2sce(path = loomFile)
 
 #4.1.1 Subset the sce object, remove cells that don't exist in the metaDataFile
 # warning(date()," Removing cells that don't exist in the meta data file",metaDataFile)
-sample_sheet <- data.table::fread(sample_sheet)
-
-#sce <- sce[,colData(sce)$cell_id %in% cellMetaData$cell_id]
+sample_sheet <- data.table::fread(sampleSheetFile)
 
 #4.1.2 remove cells with zero expression for all genes 
 warning(date()," Removing cells with zero expression for all genes")
@@ -373,6 +379,13 @@ if(skipCycleScore == FALSE) {
             the gene id namespace found in the SingleCellExperiment object")
   }
 }
+
+# 4.8 Map gene ids to gene names and update rowData 
+#read mappings from the gtf file
+message(date()," Importing GTF data to map gene ids to gene names")
+gtf <- rtracklayer::import.gff(gtfFile, format = 'gtf')
+#update rowData slot with gene name column
+rowData(sce)$geneName <- gtf[match(rowData(sce)$Genes, gtf$gene_id),]$gene_name
 
 #5 save SingleCellExperiment object in .RDS format
 saveRDS(object = sce, file = outFile)
