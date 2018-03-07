@@ -35,7 +35,7 @@ ChIPQC = function(
     annotation           = NULL,
     outfile              = NULL,
     scriptdir            = NULL,
-    sample_sheet         = NULL,
+    library_type         = NULL,
     sample_name          = NULL,
     use_longest_chr      = NULL,
     shift_window         = 400
@@ -60,7 +60,6 @@ ChIPQC = function(
     annotation = readRDS(annotation)$genomic_annotation
 
     # check for library type - determines the reading function
-    library_type = sample_sheet$samples[[sample_name]]$library
     if(!library_type %in% c('single','paired'))
       stop('supported library types are single or paired')
 
@@ -176,7 +175,7 @@ ChIPQC(
   annotation           = argv$input[['annotation']],
   outfile              = argv$output[['outfile']],
   scriptdir            = argv$params[['scriptdir']],
-  sample_sheet         = argv$params[['sample_sheet']],
+  library_type         = argv$params[['library_type']],
   sample_name          = argv$params[['sample_name']],
   use_longest_chr      = argv$params[['use_longest_chr']]
 )

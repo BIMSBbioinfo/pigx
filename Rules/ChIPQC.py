@@ -11,7 +11,7 @@ rule chipqc:
     params:
         use_longest_chr = 'TRUE',
         sample_name     = "{name}",
-        sample_sheet    = SAMPLE_SHEET,
+        library_type    = get_library_type,
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable']
     log:
