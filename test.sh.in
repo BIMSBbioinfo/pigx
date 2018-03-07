@@ -31,11 +31,3 @@ then
   echo "ERROR: could not find report for STAR"
   exit 1
 fi
-
-message=$(./pigx-rnaseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv 2>&1 >/dev/null | tail -n1)
-
-if test "$message" != "Nothing to be done."
-then
-   echo "ERROR: pipeline should not process files a second time"
-   exit 1
-fi
