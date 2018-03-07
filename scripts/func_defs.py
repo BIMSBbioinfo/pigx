@@ -87,9 +87,9 @@ def list_files_sortbam(files, sampleID):
 def bam_processing(files, sampleID):
     PATH = DIR_methcall
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_methylRaw.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted.deduped_methylRaw.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS"] #---- paired end
 
 def bigwig_exporting(files, sampleID):
     PATH = DIR_bigwig
@@ -101,16 +101,16 @@ def bigwig_exporting(files, sampleID):
 def methSeg(files, sampleID):
     PATH = DIR_seg
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_segments_gr.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted.deduped_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_segments_gr.RDS"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_meth_segments_gr.RDS"] #---- paired end
         
 def list_final_reports(files, sampleID):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted.deduped_"+ASSEMBLY+"_final.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_"+ASSEMBLY+"_final.html"] #---- paired end
 
 
 
@@ -180,9 +180,9 @@ def diffmeth_input_function(wc):
   for sampleid in sampleids:
     fqname = config["SAMPLES"][sampleid]['fastq_name']
     if len(fqname)==1:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.deduped.sorted_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.sorted.deduped_methylRaw.RDS")]
     elif len(fqname)==2:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS")]
     inputfiles.append(inputfile)
 
   inputfiles = list(sum(inputfiles, []))
