@@ -119,7 +119,43 @@ The main functions of FastQC are:
 written purely in R with no external dependencies.  It is useful with the
 Rscript front-end and facilitates turning an R script into an executable
 script.")
-    (license gpl3+)))
+     gpl3+)))
+
+;; FIXME: has to be removed after guixr pull
+(define-public r-heatmaply
+ (package
+   (name "r-heatmaply")
+   (version "0.14.1")
+   (source
+     (origin
+       (method url-fetch)
+       (uri (cran-uri "heatmaply" version))
+       (sha256
+         (base32
+           "03p2caclhfgqgpx3wwck5h06jy3mxgs05gjmwkb7hmwghkjh41jc"))))
+   (build-system r-build-system)
+   (propagated-inputs
+     `(("r-assertthat" ,r-assertthat)
+       ("r-colorspace" ,r-colorspace)
+       ("r-dendextend" ,r-dendextend)
+       ("r-ggplot2" ,r-ggplot2)
+       ("r-gplots" ,r-gplots)
+       ("r-htmlwidgets" ,r-htmlwidgets)
+       ("r-magrittr" ,r-magrittr)
+       ("r-plotly" ,r-plotly)
+       ("r-rcolorbrewer" ,r-rcolorbrewer)
+       ("r-reshape2" ,r-reshape2)
+       ("r-scales" ,r-scales)
+       ("r-seriation" ,r-seriation)
+       ("r-viridis" ,r-viridis)
+       ("r-webshot" ,r-webshot)))
+   (home-page
+     "https://cran.r-project.org/package=heatmaply")
+   (synopsis
+     "Interactive Cluster Heat Maps Using 'plotly'")
+   (description
+     "Create interactive cluster 'heatmaps' that can be saved as a stand- alone HTML file, embedded in 'R Markdown' documents or in a 'Shiny' app, and available in the 'RStudio' viewer pane.  Hover the mouse pointer over a cell to show details or drag a rectangle to zoom.  A 'heatmap' is a popular graphical method for visualizing high-dimensional data, in which a table of numbers are encoded as a grid of colored cells.  The rows and columns of the matrix are ordered to highlight patterns and are often accompanied by 'dendrograms'. 'Heatmaps' are used in many fields for visualizing observations, correlations, missing values patterns, and more.  Interactive 'heatmaps' allow the inspection of specific value by hovering the mouse over a cell, as well as zooming into a region of the 'heatmap' by dragging a rectangle around the relevant area.  This work is based on the 'ggplot2' and 'plotly.js' engine.  It produces similar 'heatmaps' as 'heatmap.2' or 'd3heatmap', with the advantage of speed ('plotly.js' is able to handle larger size matrix), the ability to zoom from the 'dendrogram' panes, and the placing of factor variables in the sides of the 'heatmap'.")
+   (license #f)))
 
 (define %pigx-chipseq-version
   (symbol->string (with-input-from-file "VERSION" read)))
