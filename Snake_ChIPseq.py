@@ -156,15 +156,14 @@ INDEX_PREFIX_PATH  = os.path.join(set_default('index-dir', prefix_default, confi
 # FASTQC output files
 FASTQ_FILES = flatten([[sample['Read'], sample['Read2']] for sample in SAMPLE_SHEET])
 FASTQC_DICT = {}
-for i in NAMES:
-    for fqfile in FASTQ_FILES:
-        if not fqfile == '':
-            prefix  = fqfile
-            prefix  = re.sub('.fq.*'   , '', prefix)
-            prefix  = re.sub('.fastq.*', '', prefix)
-            fastqc  = os.path.join(PATH_QC, i, prefix + "_fastqc.zip")
-            FASTQC_DICT[prefix]  =  {'fastq'  : os.path.join(PATH_FASTQ, fqfile),
-                                     'fastqc' : fastqc}
+for fqfile in FASTQ_FILES:
+    if not fqfile == '':
+        prefix  = fqfile
+        prefix  = re.sub('.fq.*'   , '', prefix)
+        prefix  = re.sub('.fastq.*', '', prefix)
+        fastqc  = os.path.join(PATH_QC, i, prefix + "_fastqc.zip")
+        FASTQC_DICT[prefix]  =  {'fastq'  : os.path.join(PATH_FASTQ, fqfile),
+                                 'fastqc' : fastqc}
     # ---------------------------------------------------------------------------- #
 # RULE ALL
 # Default output files from the pipeline
