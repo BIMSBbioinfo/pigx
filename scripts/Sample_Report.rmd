@@ -82,9 +82,8 @@ names(analysis_ind) = params$report_chunks
 if(length(set_analysis) == 0)
   set_analysis = params$analysis_names
 
-al = params
-saveRDS(al, 'Sample_Report_Params.rds')
-
+# al = params
+# saveRDS(al, 'Sample_Report_Params.rds')
 # params = readRDS('Sample_Report_Params.rds')
 
 lstats = readRDS(params$infile)
@@ -196,7 +195,7 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
 
 # Per Sample GC Content Vs Number of Reads {.tabset}
 
-```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', result='asis'}
+```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', result='asis', eval=TRUE}
 for(sample in names(gl)){
     cat(paste('##',sample,'\n'))
     print(gl[[sample]])
