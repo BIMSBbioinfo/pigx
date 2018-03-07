@@ -2,7 +2,6 @@ locations:
   output-dir: out/
   reads-dir: sample_data/reads/
   sample-sheet: sample_sheet.csv
-  metadata: metaData.tsv
 
 annotation:
   primary:
