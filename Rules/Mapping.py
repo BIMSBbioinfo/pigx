@@ -127,6 +127,8 @@ rule bowtie2:
             output: {output.bamfile}
     """
     run:
+        print(input.infile)
+        print(params.library)
         genome = input.genome.replace('.1.bt2','')
         if params.library in ['single','SINGLE']:
             map_args =  '-U ' + input.infile[0]

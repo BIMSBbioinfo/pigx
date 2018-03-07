@@ -7,9 +7,14 @@ import sys
 import yaml
 import xlrd
 import csv
+import inspect
 
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
+
+# ---------------------------------------------------------------------------- #
+# check settings and sample_sheet validity
+validate_config(config)
 
 localrules: makelinks
 
@@ -26,13 +31,14 @@ if SAMPLE_SHEET_FILE.endswith('.xlsx'):
     with xlrd.open_workbook(file_name) as book:
         sheet = book.sheet_by_index(0)
         rows = [sheet.row_values(r) for r in range(0, sheet.nrows)]
+        header = rows[0]; rows = rows[1:]
+        SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
 elif SAMPLE_SHEET_FILE.endswith('.csv'):
     with open(SAMPLE_SHEET_FILE, 'r') as fp:
-        rows = [row for row in csv.reader(fp, delimiter=',')]
+        SAMPLE_SHEET = [row for row in csv.DictReader(fp, skipinitialspace=True)]
 else:
     raise InputError('File format of the sample_sheet has to be: csv or excel table (xls,xlsx).')
-header = rows[0]; rows = rows[1:]
-SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
+
 
 # Convenience function to access fields of sample sheet columns that
 # match the predicate.  The predicate may be a string.
@@ -45,9 +51,7 @@ def lookup(column, predicate, fields=[]):
 
 
 
-# ---------------------------------------------------------------------------- #
-# check settings and sample_sheet validity
-validate_config(config, SAMPLE_SHEET)
+
 
 # ---------------------------------------------------------------------------- #
 # Software executables
@@ -57,11 +61,14 @@ SOFTWARE = config['tools']
 # Per sample software parameters:
 # Loops throug the sample sheet and extracts per sample software parameters
 # Flattens all samples with custom parameters into one dict - sample names must be unique
-custom_param_names = sorted(list(set(SAMPLE_SHEET.keys()) - set(['samples', 'hub'])))
+custom_param_names = sorted(list(set(config.keys()) -
+                     set(['locations', 'general',
+                          'execution', 'tools',
+                          'hub'])))
 CUSTOM_PARAMS = dict()
 for param_set in custom_param_names:
-    for sample_name in SAMPLE_SHEET[param_set].keys():
-        sample_set = SAMPLE_SHEET[param_set][sample_name]
+    for sample_name in config[param_set].keys():
+        sample_set = config[param_set][sample_name]
         if isinstance(sample_set, dict) and 'params' in set(sample_set.keys()):
             CUSTOM_PARAMS[sample_name] = sample_set['params']
         else:
@@ -79,7 +86,7 @@ ANNOTATION   = config['locations']['gff-file']
 
 # Sample name definition
 PEAK_NAMES   = []
-NAMES = [line['name'] for line in SAMPLE_SHEET]
+NAMES = [line['SampleName'] for line in SAMPLE_SHEET]
 
 # Directory structure definition
 OUTPUT_DIR      = config['locations']['output-dir']
@@ -147,16 +154,18 @@ INDEX_PREFIX_PATH  = os.path.join(set_default('index-dir', prefix_default, confi
 # ---------------------------------------------------------------------------- #
 # due to the iditotic namig scheme in FASTQC the next lines construct
 # FASTQC output files
+FASTQ_FILES = flatten([[sample['Read'], sample['Read2']] for sample in SAMPLE_SHEET])
 FASTQC_DICT = {}
 for i in NAMES:
-    for fqfile in lookup('name', wc.name, ['Reads', 'Reads2']):
-        prefix  = fqfile
-        prefix  = re.sub('.fq.*'   , '', prefix)
-        prefix  = re.sub('.fastq.*', '', prefix)
-        fastqc  = os.path.join(PATH_QC, i, prefix + "_fastqc.zip")
-        FASTQC_DICT[prefix]  =  {'fastq'  : os.path.join(PATH_FASTQ, fqfile),
-                                 'fastqc' : fastqc}
-# ---------------------------------------------------------------------------- #
+    for fqfile in FASTQ_FILES:
+        if not fqfile == '':
+            prefix  = fqfile
+            prefix  = re.sub('.fq.*'   , '', prefix)
+            prefix  = re.sub('.fastq.*', '', prefix)
+            fastqc  = os.path.join(PATH_QC, i, prefix + "_fastqc.zip")
+            FASTQC_DICT[prefix]  =  {'fastq'  : os.path.join(PATH_FASTQ, fqfile),
+                                     'fastqc' : fastqc}
+    # ---------------------------------------------------------------------------- #
 # RULE ALL
 # Default output files from the pipeline
 

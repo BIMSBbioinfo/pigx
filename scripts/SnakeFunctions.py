@@ -6,19 +6,21 @@ import sys
 
 # ---------------------------------------------------------------------------- #
 def get_fastq_input(wc):
-    samps = lookup('name', wc.name, ['Reads', 'Reads2'])
+    samps = lookup('SampleName', wc.name, ['Read', 'Read2'])
 
     if type(samps) is str:
         samps = [samps]
 
-    infiles = [os.path.join(PATH_FASTQ, i) for i in samps]
+    infiles = [os.path.join(PATH_FASTQ, i) for i in samps if i]
     return(infiles)
 
 # ---------------------------------------------------------------------------- #
 def get_library_type(wc):
-    lib = ["paired" if len(files) == 2
-            else "single"
-            for files in lookup('name', wc.name, ['Reads', 'Reads2'])]
+    files = [file for file in lookup('SampleName', wc.name, ['Read', 'Read2']) if file]
+    if len(files) == 2:
+        lib = "paired"
+    else:
+        lib = "single"
     return(lib)
 
 # ---------------------------------------------------------------------------- #
