@@ -1,7 +1,7 @@
 ---
 title: "PiGx: BS-seq"
-output: 
-  html_notebook: 
+output:
+  html_notebook:
     toc:        TRUE
     toc_float:  TRUE
     theme:      "lumen"
@@ -103,12 +103,12 @@ treatmentpair = params$treatment
 assembly = params$assembly
 
 outputdir = paste(params$out_dir, params$diffmeth_dir, sep="/")
-methylDiff_file        <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.RDS')
-methylDiff_hyper_file  <- paste0(outputdir, treatmentpair,'.sorted_diffmethhyper.RDS')
-methylDiff_hypo_file   <- paste0(outputdir, treatmentpair,'.sorted_diffmethhypo.RDS')
-methylDiff_nonsig_file <- paste0(outputdir, treatmentpair,'.sorted_diffmethnonsig.RDS')
+methylDiff_file        <- paste0(outputdir, treatmentpair,'.deduped_diffmeth.RDS')
+methylDiff_hyper_file  <- paste0(outputdir, treatmentpair,'.deduped_diffmethhyper.RDS')
+methylDiff_hypo_file   <- paste0(outputdir, treatmentpair,'.deduped_diffmethhypo.RDS')
+methylDiff_nonsig_file <- paste0(outputdir, treatmentpair,'.deduped_diffmethnonsig.RDS')
 
-methylDiffBed          <- paste0(outputdir, treatmentpair,'.sorted_diffmeth.bed')
+methylDiffBed          <- paste0(outputdir, treatmentpair,'.deduped_diffmeth.bed')
 ```
 
 ```{r DiffMeth.load, eval=DiffMeth}
@@ -358,7 +358,7 @@ cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n')
 
 if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
 
-seqdat_temp    = read.csv(paste0(out_dir,"/",chrom_seqlengths), 
+seqdat_temp    = read.csv(paste0(out_dir,"/",chrom_seqlengths),
                           sep="\t", header=FALSE, stringsAsFactors=FALSE)
 chr.len        = seqdat_temp[,2]
 names(chr.len) = seqdat_temp[,1]
@@ -375,8 +375,8 @@ ideoDMC_hyper_hypo(methylDiff.obj.hyper, methylDiff.obj.hypo, chrom.length = seq
 ```
 
 Below is a histogram of (statistically significant) differential CpG
-methylation, alongside CpG sites without statistically significant 
-differences in methylation --each are normalized independently, as the 
+methylation, alongside CpG sites without statistically significant
+differences in methylation --each are normalized independently, as the
 latter are generally far more numerous than the former).
 
 ```{r plot.methdiff.histogram, eval=AnnotateDiffMeth}

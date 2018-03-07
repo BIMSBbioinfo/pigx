@@ -97,14 +97,14 @@ def bigwig_exporting(files, sampleID):
         return  PATH+sampleID+"_se.bw" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_pe.bw"] #---- paired end
-        
+
 def methSeg(files, sampleID):
     PATH = DIR_seg
     if len(files) == 1:
         return  PATH+sampleID+"_se_bt2.sorted.deduped_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_meth_segments_gr.RDS"] #---- paired end
-        
+
 def list_final_reports(files, sampleID):
     PATH = DIR_final
     if len(files) == 1:
@@ -129,7 +129,7 @@ def get_fastq_name(full_name):
     elif(find_pe_inx>=0):
      output=full_name[:find_pe_inx]
     else:
-     print("Sth went wrong")
+     print("Unable to infer Sample fastq name from Snakemake-generated string.")
 
     return(output)
 
@@ -148,17 +148,17 @@ def diff_meth_input(wc):
       name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
       mylist.append(DIR_annot + name_of_dir)
   return(mylist)
-  
+
 def finalReportDiffMeth_input(prefix):
   sampleid = get_fastq_name(prefix)
   sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
   treatment_of_sampleid = sample_treatments_dict[ sampleid ]
   treatments = ["_".join(pair) for pair in config["general"]["differential-methylation"]["treatment-groups"] if treatment_of_sampleid in pair]
   outList = []
-  if treatments: 
-      outList  = [ "{}{}.sorted_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
-      outList += [ "{}{}.sorted_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
-  
+  if treatments:
+      outList  = [ "{}{}.deduped_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
+      outList += [ "{}{}.deduped_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
+
   return  outList
 
 def get_sampleids_from_treatment(treatment):
