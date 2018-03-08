@@ -29,7 +29,7 @@ The pipeline was heavily influenced by the [Dropseq](http://mccarrolllab.com/dro
 
 ## PiGx - scRNA-seq workflow
 
-![PiGx scRNAseq workflow](./figures/pigx-scrnaseq.svg)
+![PiGx scRNAseq workflow](./images/pigx-scrnaseq.svg)
 _Figure 1: An overview of the PiGx scRNA-seq workflow_
 
 # Install
