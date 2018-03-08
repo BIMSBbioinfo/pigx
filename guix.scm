@@ -15,7 +15,7 @@
 ;;;  $ guix package --with-source=pigx_scrnaseq-0.0.1.tar.gz -f guix.scm
 ;;;
 ;;; This environment file was developed for Guix version
-;;; 0.14.0.1850-7c8f2
+;;; v0.14.0-3089-g84c195e50
 
 (use-modules (guix packages)
              (guix licenses)
@@ -35,22 +35,6 @@
              (gnu packages perl)
              (gnu packages python)
              (gnu packages web))
-
-(define old-r-dropbead
-  (let ((commit "41f27229371ad0addeb9996f5ce5ca5d86c07549")
-        (revision "1"))
-    (package (inherit r-dropbead)
-      (name "old-r-dropbead")
-      (version (string-append "0-" revision "." (string-take commit 7)))
-      (source
-       (origin (method git-fetch)
-               (uri (git-reference
-                     (url "https://github.com/rajewsky-lab/dropbead.git")
-                     (commit commit)))
-               (file-name (string-append "r-dropbead-" version "-checkout"))
-               (sha256
-                (base32
-                 "1mw4nm8bq5ia4wia56dv48h8806s74bghgp8i0gh6f4q3j983adw")))))))
 
 (define %pigx-scrnaseq-version
   (symbol->string (with-input-from-file "VERSION" read)))
@@ -110,7 +94,7 @@
        ("r-delayedarray" ,r-delayedarray)
        ("r-delayedmatrixstats" ,r-delayedmatrixstats)
        ("r-dplyr" ,r-dplyr)
-       ("r-dropbead" ,old-r-dropbead)
+       ("r-dropbead" ,r-dropbead)
        ("r-dt" ,r-dt)
        ("r-genomicalignments" ,r-genomicalignments)
        ("r-genomicfiles" ,r-genomicfiles)
