@@ -164,6 +164,7 @@ READ_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_
 
 # ----------------------------------------------------------------------------- #
 # DOWNSTREAM statistics
+# IMPORTANT - STILL NOT IMPLEMENTED
 DOWNSTREAM_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 
@@ -188,7 +189,7 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS + DOWNSTREAM_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
 
 # ----------------------------------------------------------------------------- #
 rule all:
@@ -373,7 +374,7 @@ rule gtf_to_refflat:
                 output : {output}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log} 
+        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
     """
 
 
@@ -821,7 +822,7 @@ rule get_umi_matrix:
             reads_cutoff = yaml.load(stream)['reads_cutoff']
 
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-       
+
         command = ' '.join([
         tool,
         'O=' + output.outfile,
@@ -862,7 +863,7 @@ rule get_reads_matrix:
             reads_cutoff = yaml.load(stream)['reads_cutoff']
 
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-        
+
         command = ' '.join([
         tool,
         'O=' + output.outfile,
@@ -872,7 +873,7 @@ rule get_reads_matrix:
         'OUTPUT_READS_INSTEAD=T'
         ])
         shell(command)
-        
+
 # ----------------------------------------------------------------------------- #
 rule extract_downstream_statistics:
     input:
@@ -952,7 +953,7 @@ rule convert_loom_to_singleCellExperiment:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.Rscript} {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sample_sheet={PATH_SAMPLE_SHEET} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
+    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sampleSheetFile={PATH_SAMPLE_SHEET} --gtfFile={PATH_GTF_PRIMARY} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -960,8 +961,7 @@ rule convert_loom_to_singleCellExperiment:
 rule report:
     input:
         infile        = os.path.abspath(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")),
-        read_stats    = READ_STATISTICS,
-        down_stats    = DOWNSTREAM_STATISTICS
+        read_stats    = READ_STATISTICS
     output:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
     params:
@@ -977,7 +977,7 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.Rscript} {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} --path_mapped='{params.path_mapped}' &> {log.log}"
+    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} --path_mapped='{params.path_mapped}' &> {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
