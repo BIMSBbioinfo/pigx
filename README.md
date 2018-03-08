@@ -300,17 +300,24 @@ Structure of analysis results:
 |   `-- unaligned_tagged_Molecular.bam_summary.txt
 ```
 
--- Sample1.fastq.bam - contains merged barcode and sequence fq files
--- Sample1_genome_name.**bw** - bigWig file constructed from selected cells. Files with **m/p**.bw contain strand separated signal
--- Sample1_genome_name_**BAMTagHistogram** - Number of reads in coressponding to each cell barcode.
--- Sample1_genome_name_UMI.Matrix.**txt/loom** - UMI based digital expression matrix in txt and loom format
--- Sample1_genome_name_READS.Matrix.txt - Read count digital expression matrix
--- Sample1_genome_name_ReadCutoff.yaml - contains the UMI threshold for selecting high quality cells (obtained using [dropbead](https://github.com/rajewsky-lab/dropbead)). The corresponding .png file visualizes the UMI curve and the threshold.
--- star_gene_exon_tagged.bam - mapped and annotated reads. Each read is tagged by annotation based on it's mapping location.
--- Sample1_genome_name_**ReadStatistics/Downstream**.txt - quality control statistics used in the html report. They contain values such as number of reads in Exons/Introns, 
 
-# Detailed pipeline description
+#### Description of relevant output files:
 
+- Sample1.fastq.bam - contains merged barcode and sequence fq files
+
+- Sample1_genome_name.**bw** - bigWig file constructed from selected cells. Files with **m/p**.bw contain strand separated signal
+
+- Sample1_genome_name_**BAMTagHistogram** - Number of reads in coressponding to each cell barcode.
+
+- Sample1_genome_name_UMI.Matrix.**txt/loom** - UMI based digital expression matrix in txt and loom format
+
+- Sample1_genome_name_READS.Matrix.txt - Read count digital expression matrix
+
+- Sample1_genome_name_ReadCutoff.yaml - contains the UMI threshold for selecting high quality cells (obtained using [dropbead](https://github.com/rajewsky-lab/dropbead)). The corresponding .png file visualizes the UMI curve and the threshold.
+
+- star_gene_exon_tagged.bam - mapped and annotated reads. Each read is tagged by annotation based on it's mapping location.
+
+- Sample1_genome_name_**ReadStatistics/Downstream**.txt - quality control statistics used in the html report. They contain values such as number of reads in Exons/Introns.
 
 # Downstream analysis
 
