@@ -210,7 +210,6 @@ pcaPlotList <- lapply(covariateList, function(cov) {
   })
 names(pL) <- paste0('PC1 vs PC',c(2:5))
 
->>>>>>> Downstream statistics
   return(pL)
   }
 )
@@ -231,11 +230,8 @@ for(cov in names(pcaPlotList)) {
 
 
 ```{r CellComposition-TSNE}
-<<<<<<< HEAD
-tsneData <- as.data.table(cbind(colData(sce), reducedDim(sce, 'TSNE')))
-=======
-tsneData = as.data.table(cbind(colData(sce), sce@reducedDims$TSNE))
->>>>>>> Downstream statistics
+
+tsneData = as.data.table(cbind(colData(sce), reducedDim(sce, 'TSNE')))
 
 tsnePlotList = lapply(covariateList, function(cov) {
   reducedDimPlot(df = tsneData, dim1 = 'V1', dim2 = 'V2', title = 'tSNE_1 vs tSNE_2', color_by = cov)
@@ -273,17 +269,11 @@ plotPCAContribution = function(sce, pc, n = 20){
     return(p)
 }
 
-<<<<<<< HEAD
+
 pcaContributionPlots <- lapply(paste0('PC', 1:5), function(pc) {
   plotPCAContribution(sce = sce, pc = pc, n = 20)
 })
 names(pcaContributionPlots) <- paste0('PC', 1:5)
-=======
-pcaContributionPlots = lapply(paste0('PC', 1:8), function(pc) {
-  plotPCAContribution(sce = sce, pc = pc, n = 20)
-})
-names(pcaContributionPlots) = paste0('PC', 1:8)
->>>>>>> Downstream statistics
 ```
 
 ### Top Genes Contributing to Principle Components {.tabset}
@@ -297,11 +287,8 @@ for (i in 1:length(pcaContributionPlots)) {
 
 ```{r Genes_PCA_contribution_Heatmap}
 plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20){
-<<<<<<< HEAD
   M <- attr(reducedDim(sce, 'PCA'), 'gene.loadings')
-=======
-  M = attr(sce@reducedDims$PCA, 'gene.loadings')
->>>>>>> Downstream statistics
+
   if(n > nrow(M)) {
     n = nrow(M)
   }
@@ -310,7 +297,7 @@ plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20)
   if(ncol(sce) < cellCount) {
     cellCount = ncol(sce)
   }
-<<<<<<< HEAD
+
   select <- sample(1:ncol(sce), cellCount)
   exprMatrix <- assay(sce, 'scale')[match(topGenes, rowData(sce)$Genes),select]
 
@@ -319,16 +306,6 @@ plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20)
   rownames(exprMatrix) <- rowData(sce)[match(topGenes, rowData(sce)$Genes),]$geneName
   colnames(exprMatrix) <- rownames(annotationDf)
   p <- pheatmap::pheatmap(mat = exprMatrix,
-=======
-  select = sample(1:ncol(sce), cellCount)
-  exprMatrix = assay(sce, 'scale')[match(topGenes, rowData(sce)$Genes),select]
-
-  annotationDf = as.data.frame(colData(sce)[select,covariateList])
-  rownames(annotationDf) = colData(sce)[select,]$cell_id
-  rownames(exprMatrix) = topGenes
-  colnames(exprMatrix) = rownames(annotationDf)
-  p = pheatmap::pheatmap(mat = exprMatrix,
->>>>>>> Downstream statistics
                      show_rownames = TRUE,
                      annotation_col = annotationDf,
                      show_colnames = FALSE)
@@ -340,17 +317,10 @@ plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20)
   return(filename)
 }
 
-<<<<<<< HEAD
 pcaContributorHeatmaps <- lapply(paste0('PC', 1:5), function(pc) {
   plotPCAcontributorsHeatmap(workdir = workdir, sce = sce, pc = pc, n = 20, cellCount = 100)
 })
 names(pcaContributorHeatmaps) <- paste0('PC', 1:5)
-=======
-pcaContributorHeatmaps = lapply(paste0('PC', 1:8), function(pc) {
-  plotPCAcontributorsHeatmap(workdir = workdir, sce = sce, pc = pc, n = 20, cellCount = 100)
-})
-names(pcaContributorHeatmaps) = paste0('PC', 1:8)
->>>>>>> Downstream statistics
 ```
 
 ### Heatmaps of Top Genes Contributing to Principle Components {.tabset}
@@ -364,7 +334,6 @@ for (i in 1:length(pcaContributorHeatmaps)) {
 
 
 ```{r define-projectGeneExpression}
-<<<<<<< HEAD
 plotGeneExpressionOnPCA <- function(sce, geneNames, assay.type = 'scale', dim1, dim2, reducedDimType = 'PCA') {
   geneNames <- intersect(geneNames, rowData(sce)$geneName)
   if(length(geneNames) > 0){
@@ -374,17 +343,6 @@ plotGeneExpressionOnPCA <- function(sce, geneNames, assay.type = 'scale', dim1, 
     assayData <- assay(sce, assay.type)[select,]
     rownames(assayData) <- geneNames
     dt <- cbind(as.data.table(reducedDim(sce, reducedDimType)[,c(dim1, dim2)]),
-=======
-plotGeneExpressionOnPCA = function(sce, geneIds, assay.type = 'scale', dim1, dim2, reducedDimType = 'PCA') {
-  geneIds = intersect(geneIds, rowData(sce)$Genes)
-  if(length(geneIds) > 0){
-    #find indices of given genes in the rowData
-    select = match(geneIds, rowData(sce)$Genes)
-    #subset assay matrix for the selected genes
-    assayData = assay(sce, assay.type)[select,]
-    rownames(assayData) = geneIds
-    dt = cbind(as.data.table(reducedDim(sce, reducedDimType)[,c(dim1, dim2)]),
->>>>>>> Downstream statistics
                 as.data.table(t(assayData)))
     mdt = reshape2::melt(dt, id.vars = 1:2)
 
@@ -402,12 +360,7 @@ plotGeneExpressionOnPCA = function(sce, geneIds, assay.type = 'scale', dim1, dim
   }
 }
 
-<<<<<<< HEAD
 highlyVariableGenes <- rowData(sce)[order(rowData(sce)$fitted_variability, decreasing = T),][1:20,]$geneName
-=======
-highlyVariableGenes = rowData(sce)[order(rowData(sce)$fitted_variability, decreasing = T),][1:20,]$Genes
->>>>>>> Downstream statistics
-
 ```
 
 ```{r compute-projectGeneExpression-PCA}
