@@ -25,7 +25,7 @@ Find_Absolute_Read_Cutoff = function(
     png(str_replace(outfile,'yaml','png'), width=400, height=300)
       p = plotCumulativeFractionOfReads(reads_by_cell,
                                     cutoff = cutoff,
-                                    draw.infl.point = TRUE)
+                                    draw.knee.point = TRUE)
       print(p)
     dev.off()
 
