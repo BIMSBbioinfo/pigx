@@ -37,7 +37,7 @@
                 (img (@ (alt "decoration")
                         (class "end-decoration")
                         (src "images/end.svg")))
-                (p "Made by the Akalin lab at the Berlin Institute of Medical Systems Biology in 2018"))))))
+                (p "Made by the Akalin lab with love at the Berlin Institute of Medical Systems Biology in 2018"))))))
 
 (define default-theme
   (theme #:name "Default"
