@@ -6,10 +6,10 @@
 library(rmarkdown)
 
 #1. Collect arguments
-args <- commandArgs(TRUE)
+args = commandArgs(TRUE)
 ## Default setting when no arguments passed
 if(length(args) == 0) {
-  args <- c("--help")
+  args = c("--help")
 }
 help_command = "
 renderReport.R: Run scrnaReport.Rmd script to render an HTML report
@@ -36,19 +36,19 @@ if("--help" %in% args) {
 }
 
 ## Parse arguments (we expect the form --arg=value)
-parseArgs <- function(x) {
-  myArgs <- unlist(strsplit(x, "--"))
-  myArgs <- myArgs[myArgs != '']
+parseArgs = function(x) {
+  myArgs = unlist(strsplit(x, "--"))
+  myArgs = myArgs[myArgs != '']
   #when no values are provided for the argument
-  myArgs <- gsub(pattern = "=$", replacement = "= ", x = myArgs)
-  myArgs <- as.data.frame(do.call(rbind, strsplit(myArgs, "=")))
-  myArgs$V2 <- gsub(' ', '', myArgs$V2)
+  myArgs = gsub(pattern = "=$", replacement = "= ", x = myArgs)
+  myArgs = as.data.frame(do.call(rbind, strsplit(myArgs, "=")))
+  myArgs$V2 = gsub(' ', '', myArgs$V2)
   return(myArgs)
 }
 
-argsDF <- parseArgs(args)
-argsL <- as.list(as.character(argsDF$V2))
-names(argsL) <- argsDF$V1
+argsDF = parseArgs(args)
+argsL = as.list(as.character(argsDF$V2))
+names(argsL) = argsDF$V1
 
 if(!("reportFile" %in% argsDF$V1)) {
   cat(help_command, "\n")
@@ -63,31 +63,33 @@ if(!("sceRdsFile" %in% argsDF$V1)) {
 
 if(!("covariates" %in% argsDF$V1)) {
   cat(help_command, "\n")
-  covariates <- 'sample_id'
+  covariates = 'sample_id'
   warning("No covariates provided. Will use 'sample_id' as the only covariate when plotting PCA/t-SNE\n")
 } else {
-  covariates <- argsL$covariates
+  covariates = argsL$covariates
 }
 
 if(!("prefix" %in% argsDF$V1)) {
   cat(help_command, "\n")
-  prefix <- 'PiGx'
+  prefix = 'PiGx'
   warning("No prefix provided. Will use '",prefix,"' as the prefix to output files\n")
 } else {
-  prefix <- argsL$prefix
+  prefix = argsL$prefix
 }
 
 if(!("workdir" %in% argsDF$V1)) {
-  workdir <- getwd()
+  workdir = getwd()
   warning("No output folder provided. Setting working directory to current directory:\n",workdir,"\n")
 } else {
-  workdir <- argsL$workdir
+  workdir = argsL$workdir
   cat("setting working directory to ",workdir,"\n")
 }
 
-reportFile <- argsL$reportFile
-sceRdsFile <- argsL$sceRdsFile
-  
+reportFile  = argsL$reportFile
+sceRdsFile  = argsL$sceRdsFile
+path_mapped = argsL$path_mapped
+
+# ---------------------------------------------------------------------------- #
 #2. Define report rendering function
 #' runReport
 #' 
@@ -104,13 +106,14 @@ sceRdsFile <- argsL$sceRdsFile
 #' @return An html generated using rmarkdown/knitr/pandoc that contains
 #'   interactive figures, tables, and text that provide an overview of the
 #'   experiment
-runReport <- function(reportFile, 
+runReport = function(reportFile, 
                       sceRdsFile, 
                       covariates, 
                       workdir = getwd(),
-                      prefix = 'PiGx') {
+                      prefix = 'PiGx',
+                      path_mapped = path_mapped) {
   
-  outFile <- paste0(prefix, '.scRNA-Seq.report.html')
+  outFile = paste0(prefix, '.scRNA-Seq.report.html')
   
   htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
@@ -128,10 +131,11 @@ runReport <- function(reportFile,
       number_sections = TRUE
     ),
     output_options = list(self_contained = selfContained),
-    params = list(sceRdsFile = sceRdsFile,
-                  covariates = covariates, 
-                  outFile = outFile,
-                  workdir = workdir),
+    params = list(sceRdsFile  = sceRdsFile,
+                  covariates  = covariates, 
+                  outFile     = outFile,
+                  workdir     = workdir,
+                  path_mapped = path_mapped),
     quiet = FALSE
   )
   
@@ -140,10 +144,12 @@ runReport <- function(reportFile,
   }
 }
 
-runReport(reportFile = reportFile, 
-          sceRdsFile = sceRdsFile, 
-          covariates = covariates,
-          workdir = workdir,
-          prefix = prefix)
+# ---------------------------------------------------------------------------- #
+runReport(reportFile  = reportFile, 
+          sceRdsFile  = sceRdsFile, 
+          covariates  = covariates,
+          workdir     = workdir,
+          prefix      = prefix,
+          path_mapped = path_mapped)
 
 

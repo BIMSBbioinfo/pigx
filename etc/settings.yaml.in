@@ -13,7 +13,7 @@ annotation:
   # The secondary annotation is optional
   secondary:
 
-covariates: 'time, replicate'
+covariates: 'replicate'
 
 execution:
   submit-to-cluster: no
