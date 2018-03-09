@@ -30,8 +30,8 @@ DIR_diffmeth    = '10_differential_methylation/'
 DIR_seg         = '09_segmentation/'
 DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
-DIR_sorted      = '06_sorting/'
-DIR_deduped     = '05_deduplication/'
+DIR_deduped     = '06_deduplication/'
+DIR_sorted      = '05_sorting/'
 DIR_mapped      = '04_mapping/'
 DIR_posttrim_QC = '03_posttrimming_QC/'
 DIR_trimmed     = '02_trimming/'
@@ -97,14 +97,14 @@ targets = {
         'files': files_for_sample(list_files_bismark)
     },
 
-    'deduplication': {
-        'description': "Deduplicate bam files.",
-        'files': files_for_sample(list_files_dedupe)
-    },
-
     'sorting': {
         'description': "Sort bam files.",
         'files': files_for_sample(list_files_sortbam)
+    },
+
+    'deduplication': {
+        'description': "Deduplicate bam files.",
+        'files': files_for_sample(list_files_dedupe)
     },
 
      # TODO: had to add this part to call bam_methCall for diff meth rule
@@ -115,19 +115,19 @@ targets = {
 
     'bigwig': {
         'description': "export bigwig files to separate folder for visualization",
-        'files': files_for_sample(bigwig_exporting) 
+        'files': files_for_sample(bigwig_exporting)
     },
- 
+
     'segmentation': {
         'description': "Segmentation of the methylation signal.",
         'files': files_for_sample(methSeg)
     },
-    
+
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ DIR_diffmeth+"_".join(x)+".sorted_diffmeth.RDS" for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
+        'files': [ [DIR_diffmeth+"_".join(x)+".deduped_diffmeth.RDS"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
     },
-    
+
     'diffmeth-report': {
         'description': "Produce a comprehensive report for differential methylation.",
         'files':[ [DIR_final+"diffmeth-report."+"vs".join(x)+".html"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
@@ -155,11 +155,12 @@ OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['file
 
 # ==============================================================================================================
 #
-#                                         BEGIN RULES    
+#                                         BEGIN RULES
 #
 # rules are separated by "==" bars into pairs for paired-end and single-end (subdivided by smaller "--" dividers)
+# rules are (generally) presented in hierarchical order of dependency (i.e. last to first)
 # ===============================================================================================================
-
+
 
 rule all:
     input:
@@ -192,15 +193,171 @@ onsuccess:
             for name in generated:
                 print("  - {}".format(name))
 
+
 # ==========================================================================================
-# export a bigwig file
- 
+# Generate the final report for individual samples:
+
+rule final_report:
+    input:
+        lambda wc: finalReportDiffMeth_input(wc.prefix),
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
+        callFile    = os.path.join(DIR_methcall,"{prefix}.deduped_CpG.txt"),
+        grfile      = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments.bed"),
+        template            = os.path.join(DIR_templates,"index.Rmd"),
+        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+    output:
+        report        = os.path.join(DIR_final, "{prefix}.deduped_{assembly}_final.html")
+    params:
+        ## absolute path to bamfiles
+        Samplename  = lambda wc: get_fastq_name( wc.prefix ),
+        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        source_dir  = config['locations']['input-dir'],
+        out_dir     = config['locations']['output-dir'],
+        inBam       = os.path.join(DIR_sorted,"{prefix}.deduped.bam"),
+        assembly    = ASSEMBLY,
+        mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual        = int(config['general']['methylation-calling']['minimum-quality']),
+        TSS_plotlength = int(config['general']['reports']['TSS_plotlength']),
+        ## absolute path to output folder in working dir
+        methCallRDS     = os.path.join(WORKDIR,DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
+        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.bed"),
+        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.png"),
+        genome_dir  = config['locations']['genome-dir'],
+        scripts_dir = DIR_scripts,
+        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
+        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
+    log:
+        os.path.join(DIR_final,"{prefix}.deduped_{assembly}_final.log")
+    message: fmt("Compiling final report.")
+    run:
+        generateReport(input, output, params, log, "")
+
+
+
+
+# ==========================================================================================
+# Generate the final report for differential methylation between pairs of samples:
+
+rule diffmeth_report:
+    input:
+        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.deduped_diffmeth.bed',
+        template      = os.path.join(DIR_templates,"diffmeth.Rmd"),
+        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+    output:
+        report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
+    params:
+        source_dir  = config['locations']['input-dir'],
+        scripts_dir = DIR_scripts,
+        diffmeth_dir = DIR_diffmeth,
+        genome_dir  = config['locations']['genome-dir'],
+        out_dir     = config['locations']['output-dir'],
+        cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
+        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
+        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        assembly    = ASSEMBLY,
+        treatment = lambda wc: str(wc.treatment).replace('vs', '_'),
+        qvalue     = float(config['general']['differential-methylation']['qvalue']),
+        difference = float(config['general']['differential-methylation']['difference']),
+        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
+    log:
+        os.path.join(DIR_final,"diffmeth-report.{treatment}.log")
+    message: fmt("Compiling differential methylation report " + "for treatment " + "{wildcards.treatment}")
+    run:
+        generateReport(input, output, params, log, "")
+
+
+# ==========================================================================================
+# Perform differential methylation analysis:
+
+rule diffmeth:
+    ## paths inside input and output should be relative
+    input:
+        inputfiles  = diffmeth_input_function
+    output:
+        methylDiff_file        = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmethnonsig.RDS"),
+        bedfile                = os.path.join(DIR_diffmeth, '{treatment}.deduped_diffmeth.bed')
+    params:
+        workdir     = WORKDIR,
+        scripts_dir = DIR_scripts,
+        inputfiles  = diffmeth_input_function,
+        sampleids   = lambda wc: get_sampleids_from_treatment(wc.treatment),
+        treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
+        assembly    = ASSEMBLY,
+        qvalue      = float(config['general']['differential-methylation']['qvalue']),
+        difference  = float(config['general']['differential-methylation']['difference']),
+        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
+        cores       = int(config['general']['differential-methylation']['cores']),
+        methylDiff_file        = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmethnonsig.RDS"),
+        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.deduped_diffmeth.bed")
+    log:
+        os.path.join(DIR_diffmeth+"{treatment}.deduped_diffmeth.log")
+    message: fmt("Calculating differential methylation.")
+    shell:
+        nice('Rscript', ['{DIR_scripts}/methDiff.R',
+                         '--inputfiles="{params.inputfiles}"',
+                         '--sampleids="{params.sampleids}"',
+                         '--treatment="{params.treatment}"',
+                         '--assembly={params.assembly}',
+                         '--qvalue={params.qvalue}',
+                         '--difference={params.difference}',
+                         '--mincov={params.mincov}',
+                         '--cores={params.cores}',
+                         '--methylDiff_file={params.methylDiff_file}',
+                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
+                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
+                         '--methylDiff_nonsig_file={params.methylDiff_nonsig_file}',
+                         '--outBed={params.outBed}',
+                         '--logFile={log}'])
+
+
+
+
+# ==========================================================================================
+# Perform segmentation on the methylome:
+
+rule methseg:
+    ## paths inside input and output should be relative
+    input:
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS")
+    output:
+        grfile      = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments.bed")
+    params:
+        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
+        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.bed"),
+        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.png")
+    log:
+        os.path.join(DIR_seg,"{prefix}.deduped_meth_segments.log")
+    message: fmt("Segmenting methylation profile for {input.rdsfile}.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/methSeg.R",
+                         "--rds={params.methCallRDS}",
+                         "--grds={params.methSegGR}",
+                         "--outBed={params.methSegBed}",
+                         "--png={params.methSegPng}",
+                         "--logFile={log}"])
+
+
+
+
+# ==========================================================================================
+# Export a bigwig file:
+
 rule export_bigwig_pe:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}_1_val_1_bt2.deduped.sorted_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_1_val_1_bt2.sorted.deduped_methylRaw.RDS")
     output:
-        bw         = os.path.join(DIR_bigwig,   "{prefix}_pe.bw") 
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_pe.bw")
     message: fmt("exporting bigwig files from paired-end stream.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_bw.R",
@@ -214,9 +371,9 @@ rule export_bigwig_pe:
 rule export_bigwig_se:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.deduped.sorted_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.sorted.deduped_methylRaw.RDS")
     output:
-        bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw") 
+        bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw")
     message: fmt("exporting bigwig files from single-end stream.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_bw.R",
@@ -225,35 +382,46 @@ rule export_bigwig_se:
                          ASSEMBLY,
                          "{output}"])
 
-# ==========================================================================================
-# sort the bam file:
 
-rule sortbam_se:
-    input:
-        DIR_deduped+"{sample}_se_bt2.deduped.bam"
-    output:
-        DIR_sorted+"{sample}_se_bt2.deduped.sorted.bam"
-    message: fmt("Sorting bam file {input}")
-    shell:
-        nice('samtools', ["sort", "{input}", "-o {output}"])
-#-----------------------
-rule sortbam_pe:
-    input:
-        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
-    output:
-        DIR_sorted+"{sample}_1_val_1_bt2.deduped.sorted.bam"
-    message: fmt("Sorting bam file {input}")
-    shell:
-        nice('samtools', ["sort", "{input}", "-o {output}"])
-
+
 # ==========================================================================================
-# deduplicate the bam file:
+# Process bam files into methyl-called formats:
+
+rule bam_methCall:
+    input:
+        bamfile     = os.path.join(DIR_deduped,"{prefix}.deduped.bam")
+    output:
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
+        callFile    = os.path.join(DIR_methcall,"{prefix}.deduped_CpG.txt")
+    params:
+        ## absolute path to bamfiles
+        inBam       = os.path.join(WORKDIR,DIR_deduped,"{prefix}.deduped.bam"),
+        assembly    = ASSEMBLY,
+        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual     = int(config['general']['methylation-calling']['minimum-quality']),
+        ## absolute path to output folder in working dir
+        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.deduped_methylRaw.RDS")
+    log:
+        os.path.join(DIR_methcall,"{prefix}.deduped_meth_calls.log")
+    message: fmt("Extract methylation calls from bam file.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/methCall.R",
+                         "--inBam={params.inBam}",
+                         "--assembly={params.assembly}",
+                         "--mincov={params.mincov}",
+                         "--minqual={params.minqual}",
+                         "--rds={params.rds}",
+                         "--logFile={log}"])
+
+
+# ==========================================================================================
+# Deduplicate aligned reads from the bam file:
 
 rule deduplication_se:
     input:
-        DIR_mapped+"{sample}_trimmed_bismark_bt2.bam"
+        DIR_sorted+"{sample}_se_bt2.sorted.bam"
     output:
-        DIR_deduped+"{sample}_se_bt2.deduped.bam"
+        DIR_deduped+"{sample}_se_bt2.sorted.deduped.bam"
     params:
         bam="--bam ",
         sampath="--samtools_path " + tool('samtools')
@@ -261,21 +429,48 @@ rule deduplication_se:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
-        nice('samtools', ["rmdup", "{input}", "{output}"], "{log}")
+        nice('samtools', [" markdup -rs ", "{input}", "{output}"], "{log}")
+
 #-----------------------
 rule deduplication_pe:
     input:
-        DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam"
+        DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
     output:
-        DIR_deduped+"{sample}_1_val_1_bt2.deduped.bam"
+        DIR_deduped+"{sample}_1_val_1_bt2.sorted.deduped.bam"
     log:
         DIR_deduped+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
-        nice('samtools', ["fixmate", "{input}", "{output}"], "{log}")
+        nice('samtools', [" markdup -r ", "{input}", "{output}"], "{log}")
 
+
+
 # ==========================================================================================
-# align and map:
+# Sort the bam file by position (and carry out mate-flagging in paired-end case):
+
+rule sortbam_se:
+    input:
+        DIR_mapped+"{sample}_trimmed_bismark_bt2.bam"
+    output:
+        DIR_sorted+"{sample}_se_bt2.sorted.bam"
+    message: fmt("Sorting bam file {input}")
+    shell:
+        nice('samtools', ["sort", "{input}", "-o {output}"])
+
+#-----------------------
+rule sortbam_pe:
+    input:
+        DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam"
+    output:
+        DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
+    message: fmt("Sorting bam file {input}")
+    shell:
+        nice('samtools', ["sort -n ", " {input} ", " | samtools fixmate -m  - - ", " | samtools sort -o {output} "  ])
+
+
+# ==========================================================================================
+# Align and map reads to the reference genome:
+
 bismark_cores = str(config['tools']['bismark']['cores'])
 
 rule bismark_align_and_map_se:
@@ -331,8 +526,9 @@ rule bismark_align_and_map_pe:
         nice('bismark', ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
 
 
+
 # ==========================================================================================
-# generate reference genome:
+# Generate methyl-converted version of the reference genome, if necessary:
 
 rule bismark_genome_preparation:
     input:
@@ -351,8 +547,10 @@ rule bismark_genome_preparation:
     shell:
         nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
 
+
+
 # ==========================================================================================
-# create a csv file tabulating the lengths of the chromosomes in the reference genome:
+# Create a csv file tabulating the lengths of the chromosomes in the reference genome:
 
 rule tabulate_seqlengths:
     input:
@@ -368,8 +566,9 @@ rule tabulate_seqlengths:
         nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])
 
 
+
 # ==========================================================================================
-# post-trimming quality control
+# Carry out post-trimming quality control
 
 rule fastqc_after_trimming_se:
     input:
@@ -404,8 +603,9 @@ rule fastqc_after_trimming_pe:
     shell:
         nice('fastqc', ["{params}", "{input}"], "{log}")
 
+
 # ==========================================================================================
-# trim the reads
+# Trim the reads for adapter-ends and quality
 
 rule trim_reads_se:
     input:
@@ -448,8 +648,9 @@ rule trim_reads_pe:
     shell:
         nice('trim-galore', ["{params}", "{input.files}"], "{log}")
 
+
 # ==========================================================================================
-# raw quality control
+# Perform quality control on raw data
 
 rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
     input:
@@ -466,179 +667,4 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
     shell:
         nice('fastqc', ["{params}", "{input}"], "{log}")
 
-
-
-# Rules to be applied after mapping reads with Bismark
-
-## Bam processing
-rule bam_methCall:
-    input:
-        bamfile     = os.path.join(DIR_sorted,"{prefix}.sorted.bam")
-    output:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
-        callFile    = os.path.join(DIR_methcall,"{prefix}.sorted_CpG.txt")
-    params:
-        ## absolute path to bamfiles
-        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.sorted.bam"),
-        assembly    = ASSEMBLY,
-        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
-        minqual     = int(config['general']['methylation-calling']['minimum-quality']),
-        ## absolute path to output folder in working dir
-        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
-    log:
-        os.path.join(DIR_methcall,"{prefix}.sorted_meth_calls.log")
-    message: fmt("Extract methylation calls from bam file.")
-    shell:
-        nice('Rscript', ["{DIR_scripts}/methCall.R",
-                         "--inBam={params.inBam}",
-                         "--assembly={params.assembly}",
-                         "--mincov={params.mincov}",
-                         "--minqual={params.minqual}",
-                         "--rds={params.rds}",
-                         "--logFile={log}"])
-
-
-## Segmentation
-rule methseg:
-    ## paths inside input and output should be relative
-    input:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}.sorted_methylRaw.RDS")
-    output: 
-        grfile      = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.bed")
-    params:
-        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
-        methSegGR        = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        methSegPng         = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png")
-    log:
-        os.path.join(DIR_seg,"{prefix}.sorted_meth_segments.log")
-    message: fmt("Segmenting methylation profile for {input.rdsfile}.")
-    shell:
-        nice('Rscript', ["{DIR_scripts}/methSeg.R",
-                         "--rds={params.methCallRDS}",
-                         "--grds={params.methSegGR}",
-                         "--outBed={params.methSegBed}",
-                         "--png={params.methSegPng}",
-                         "--logFile={log}"])
-
-
-## Differential methylation
-rule diffmeth:
-    ## paths inside input and output should be relative
-    input:  
-        inputfiles  = diffmeth_input_function
-    output: 
-        methylDiff_file        = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethhypo.RDS"),
-        methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}.sorted_diffmethnonsig.RDS"),
-        bedfile                = os.path.join(DIR_diffmeth, '{treatment}.sorted_diffmeth.bed')
-    params:
-        workdir     = WORKDIR,
-        scripts_dir = DIR_scripts,
-        inputfiles  = diffmeth_input_function,
-        sampleids   = lambda wc: get_sampleids_from_treatment(wc.treatment),
-        treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
-        assembly    = ASSEMBLY,
-        qvalue      = float(config['general']['differential-methylation']['qvalue']),
-        difference  = float(config['general']['differential-methylation']['difference']),
-        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
-        cores       = int(config['general']['differential-methylation']['cores']),
-        methylDiff_file        = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethhypo.RDS"),
-        methylDiff_nonsig_file = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.sorted_diffmethnonsig.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.sorted_diffmeth.bed")
-    log:
-        os.path.join(DIR_diffmeth+"{treatment}.sorted_diffmeth.log")
-    message: fmt("Calculating differential methylation.")
-    shell:
-        nice('Rscript', ['{DIR_scripts}/methDiff.R',
-                         '--inputfiles="{params.inputfiles}"',
-                         '--sampleids="{params.sampleids}"',
-                         '--treatment="{params.treatment}"',
-                         '--assembly={params.assembly}',
-                         '--qvalue={params.qvalue}',
-                         '--difference={params.difference}',
-                         '--mincov={params.mincov}',
-                         '--cores={params.cores}',
-                         '--methylDiff_file={params.methylDiff_file}',
-                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
-                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
-                         '--methylDiff_nonsig_file={params.methylDiff_nonsig_file}',
-                         '--outBed={params.outBed}',
-                         '--logFile={log}'])
-
-
-### note that Final report can only be generated 
-### if one of the intermediate has been genereted,
-### so make sure that at least one has been run already
-### right now ensured with 'rules.methseg_annotation.output' as input
-
-
-## Final Report
-rule final_report:
-    input:  
-        rules.bam_methCall.output,
-        rules.methseg.output,
-        lambda wc: finalReportDiffMeth_input(wc.prefix),
-        template      = os.path.join(DIR_templates,"index.Rmd"),
-        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
-    output: 
-        report        = os.path.join(DIR_final, "{prefix}.sorted_{assembly}_final.html")
-    params:
-        ## absolute path to bamfiles
-        Samplename  = lambda wc: get_fastq_name( wc.prefix ),
-        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        source_dir  = config['locations']['input-dir'],
-        out_dir     = config['locations']['output-dir'],
-        inBam       = os.path.join(DIR_sorted,"{prefix}.sorted.bam"),
-        assembly    = ASSEMBLY,
-        mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
-        minqual        = int(config['general']['methylation-calling']['minimum-quality']),
-        TSS_plotlength = int(config['general']['reports']['TSS_plotlength']),
-        ## absolute path to output folder in working dir
-        methCallRDS     = os.path.join(WORKDIR,DIR_methcall,"{prefix}.sorted_methylRaw.RDS"),
-        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.bed"),
-        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}.sorted_meth_segments.png"),
-        genome_dir  = config['locations']['genome-dir'],
-        scripts_dir = DIR_scripts,
-        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
-        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
-    log:
-        os.path.join(DIR_final,"{prefix}.sorted_{assembly}_final.log")
-    message: fmt("Compiling final report.")
-    run:
-        generateReport(input, output, params, log, "")
-
-
-## Final Report for diff. meth.
-rule diffmeth_report:
-    input:
-        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.sorted_diffmeth.bed',
-        template      = os.path.join(DIR_templates,"diffmeth.Rmd"),
-        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
-    output:
-        report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
-    params:
-        source_dir  = config['locations']['input-dir'],
-        scripts_dir = DIR_scripts,
-        diffmeth_dir = DIR_diffmeth,
-        genome_dir  = config['locations']['genome-dir'],
-        out_dir     = config['locations']['output-dir'],
-        cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
-        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
-        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        assembly    = ASSEMBLY,
-        treatment = lambda wc: str(wc.treatment).replace('vs', '_'),
-        qvalue     = float(config['general']['differential-methylation']['qvalue']),
-        difference = float(config['general']['differential-methylation']['difference']),
-        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
-    log:
-        os.path.join(DIR_final,"diffmeth-report.{treatment}.log")
-    message: fmt("Compiling differential methylation report " + "for treatment " + "{wildcards.treatment}")
-    run:
-        generateReport(input, output, params, log, "")
 

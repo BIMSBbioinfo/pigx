@@ -15,7 +15,7 @@ chmod -R +w ${srcdir}/tests
 ./pigx-bsseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
 
 for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
-    if ! test -f "${srcdir}/tests/out/Final_Reports/${base}.deduped.sorted_hg19_final.html"
+    if ! test -f "${srcdir}/tests/out/Final_Reports/${base}.sorted.deduped_hg19_final.html"
     then
         echo "ERROR: could not find report for ${base}"
         exit 1
