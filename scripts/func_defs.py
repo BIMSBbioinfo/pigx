@@ -129,7 +129,7 @@ def get_fastq_name(full_name):
     elif(find_pe_inx>=0):
      output=full_name[:find_pe_inx]
     else:
-     print("Unable to infer Sample fastq name from Snakemake-generated string.")
+     bail("Unable to infer sample fastq name; cannot find trimming string in filename. \nHave the files been trimmed for adapter sequence and quality?")
 
     return(output)
 
