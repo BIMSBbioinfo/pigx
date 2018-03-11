@@ -15,7 +15,7 @@
 ;;;  $ guix package --with-source=pigx_bsseq-0.0.1.tar.gz -f guix.scm
 ;;;
 ;;; This environment file was developed for Guix version
-;;; TODO
+;;; v0.14.0-3177-gbcddf30af
 
 (use-modules (guix packages)
              (guix licenses)
