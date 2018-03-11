@@ -28,13 +28,6 @@ AS_IF([test -z "$DROPSEQJAR"],dnl
              AC_MSG_NOTICE([Using the Dropseq tools from here: $DROPSEQJAR.]),dnl
              AC_MSG_ERROR([Could not find Dropseq tools at $DROPSEQJAR.]))])
 
-AC_CHECK_CLASSPATH
-AX_PROG_JAVAC
-AX_PROG_JAVA
-AX_CHECK_RQRD_CLASS(picard.cmdline.PicardCommandLine)
-AX_CHECK_RQRD_CLASS(org.broadinstitute.dropseqrna.cmdline.DropSeqMain)
-
-
 dnl Load Python support for Automake and ensure we have a Python
 dnl interpreter for at least version 3.6.  This sets the "PYTHON"
 dnl variable.
@@ -71,6 +64,8 @@ find_or_override_prog([STAR],            [STAR])
 
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
+find_or_override_prog([JAVA],            [java])
+
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),

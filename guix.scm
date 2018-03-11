@@ -71,8 +71,7 @@
              #t)))))
     (native-inputs
      `(("autoconf" ,autoconf)
-       ("automake" ,automake)
-       ("javac" ,icedtea-8 "jdk")))
+       ("automake" ,automake)))
     (inputs
      `(("dropseq-tools" ,dropseq-tools)
        ("fastqc" ,fastqc)
