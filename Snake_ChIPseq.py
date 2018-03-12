@@ -27,12 +27,15 @@ REPORT_TEMPLATE   = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
 # read the sample sheet
 
 ## Load sample sheet
+# either from excel file
 if SAMPLE_SHEET_FILE.endswith('.xlsx'):
     with xlrd.open_workbook(file_name) as book:
+        # assume that the first book is the sample sheet
         sheet = book.sheet_by_index(0)
         rows = [sheet.row_values(r) for r in range(0, sheet.nrows)]
         header = rows[0]; rows = rows[1:]
         SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
+# or from csv file
 elif SAMPLE_SHEET_FILE.endswith('.csv'):
     with open(SAMPLE_SHEET_FILE, 'r') as fp:
         SAMPLE_SHEET = [row for row in csv.DictReader(fp, skipinitialspace=True)]

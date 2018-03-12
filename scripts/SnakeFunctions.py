@@ -5,6 +5,7 @@ import os
 import sys
 
 # ---------------------------------------------------------------------------- #
+# given a sample name returns fastq location(s)
 def get_fastq_input(wc):
     samps = lookup('SampleName', wc.name, ['Read', 'Read2'])
 
@@ -15,6 +16,7 @@ def get_fastq_input(wc):
     return(infiles)
 
 # ---------------------------------------------------------------------------- #
+# given a sample name returns library type, depending on number of fastq files
 def get_library_type(wc):
     files = [file for file in lookup('SampleName', wc.name, ['Read', 'Read2']) if file]
     if len(files) == 2:
