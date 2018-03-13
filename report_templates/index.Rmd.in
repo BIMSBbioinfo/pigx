@@ -118,12 +118,6 @@ minqual   <- params$minqual
 methCallRDS   <- params$methCallRDS
 ```
 
-```{r MethCall.print_params_in, results='asis',eval=MethCall}
-cat('### Parameters\n')
-
-cat('**Input parameters:**\n')
-```
-
 ```{r MethCall.print_params_in2, eval=MethCall}
 
 paramsDesc <- c( "Minimum Coverage",
@@ -272,7 +266,7 @@ cat('We export the above regions to a *BED* file, which can be loaded into any g
 ```{r AnnotateSegmentsHeader, results='asis', eval=AnnotateSegments}
 cat('## Annotation of Segments\n')
 
-cat('The annotation of the identified regions with genomic features allows a better understanding and characterization of detected regions.\n')
+cat('The annotation of the identified regions with genomic features allows for a better understanding and characterization of detected regions.\n')
 ```
 
 ```{r AnnotateSegments.load_libraries, results='hide', include=FALSE, eval=AnnotateSegments}
@@ -285,8 +279,7 @@ cat('The annotation of the identified regions with genomic features allows a bet
 
 ```{r AnnotateSegmentsDescription, results='asis',eval=AnnotateSegments}
 
-cat('Pigx first searches for a reference gene set for the given genome assembly in the path specified in the settings file. Upon failure to find such a file in this location, Pigx allows the user to query the UCSC table browser directly to fetch the reference gene set using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009], when the option `webfetch` is set to `True` (in the settings file). When this option is set to `False`, and the reference gene files are not found, the corresponding sections are simply omitted from this report. 
-
+cat('Pigx first searches for a reference gene set for the given genome assembly in the path specified in the settings file. Upon failure to find such a file in this location, Pigx allows the user to query the UCSC table browser directly to fetch the reference gene set using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009], when the option `webfetch` (in the settings file) is set to `True` -or, equivalently, `yes`. When this option is set to `False` --or `no`--, and the reference gene files are not found, the corresponding sections are simply omitted from this report. 
 Upon acquiring the reference genes, we can determine different features (e.g. promoter, exon, intron)  intrinsic to each gene,  using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014] --likewise, for CpG islands and shores.\n')
 ```
 
@@ -400,12 +393,15 @@ lines( seq(TSSprox_methprofile_noweight)-0.5*TSS_plotlength ,100*TSSprox_methpro
        ylim = c(ymin, ymax)
 )
 
-cat('This report concludes with a summary of the session parameters used in the generation of the data conveyed here. Thank you for using PiGx')
 ```
 
 
 
 ## Session Information
+```{r SessionInfo_conclusion, results='asis'}
+cat('This report concludes with a summary of the session parameters used in the generation of the data conveyed here. Thank you for using PiGx')
+```
+
 
 ```{r SessionInfo}
 sessionInfo()
