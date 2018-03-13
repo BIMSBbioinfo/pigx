@@ -30,12 +30,18 @@ Find_Absolute_Read_Cutoff = function(
     dev.off()
 
 
+    cutoff = min(cutoff, nrow(reads_by_cell))
   message('Print output yaml ...')
     infl_point = estimateCellNumber(reads_by_cell[,1], max.cells=cutoff)
+    if(length(infl_point) == 0){
+      message('knee cell selection did not succeed: including all cells')
+      infl_point = min(reads_by_cell[,1])
+    }
     lout       = list(reads_cutoff = reads_by_cell[infl_point,1])
     cat(as.yaml(lout), file=outfile)
 
 }
+
 
 # -------------------------------------------------------------------------- #
 Find_Absolute_Read_Cutoff(
