@@ -59,7 +59,7 @@ parser = argparse.ArgumentParser(description=description,
 parser.add_argument('-v', '--version', action='version',
                     version=version)
 
-parser.add_argument('samplesheet',
+parser.add_argument('sample_sheet',
                     help="""\
 The sample sheet containing sample data in CSV format.\
 """)
@@ -114,8 +114,8 @@ def bail(msg):
     exit(1)
 
 
-def generate_config(configfile, samplesheet, settingsfile):
-    """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
+def generate_config(configfile, sample_sheet, settingsfile):
+    """Generate a new configuration file CONFIGFILE using SAMPLE_SHEET and
 SETTINGSFILE as inputs."""
     dirs = {}
     if os.getenv('PIGX_UNINSTALLED'):
@@ -166,7 +166,7 @@ SETTINGSFILE as inputs."""
     settings['locations'].update(dirs['locations'])
 
     # Resolve relative paths in the locations section
-    root = path.dirname(samplesheet)
+    root = path.dirname(sample_sheet)
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
     for key in settings['locations']:
@@ -182,7 +182,7 @@ SETTINGSFILE as inputs."""
                 settings['annotation'][annotation]['genome']['fasta'] = path.normpath(path.join(here, root, settings['annotation'][annotation]['genome']['fasta']))
 
     # Record the location of the sample sheet.
-    settings['locations']['sample-sheet'] = path.abspath(samplesheet)
+    settings['locations']['sample-sheet'] = path.abspath(sample_sheet)
 
     # Write the config file
     with open(configfile, 'w') as outfile:
@@ -269,7 +269,7 @@ def display_logo():
 
 # Run snakemake!
 generate_config(args.configfile,
-                args.samplesheet,
+                args.sample_sheet,
                 args.settings)
 
 config = json.load(open(args.configfile, 'r'))
