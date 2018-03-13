@@ -66,7 +66,6 @@
        ("r-genomation" ,r-genomation)
        ("r-genomicranges" ,r-genomicranges)
        ("r-rtracklayer" ,r-rtracklayer)
-       ("r-rcas" ,r-rcas)
        ("r-stringr" ,r-stringr)
        ("r-jsonlite" ,r-jsonlite)
        ("r-heatmaply" ,r-heatmaply)
