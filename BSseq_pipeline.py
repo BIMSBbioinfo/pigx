@@ -214,7 +214,7 @@ rule final_report:
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
         source_dir  = config['locations']['input-dir'],
         out_dir     = config['locations']['output-dir'],
-        inBam       = os.path.join(DIR_sorted,"{prefix}.deduped.bam"),
+        inBam       = os.path.join(WORKDIR, DIR_deduped,"{prefix}.deduped.bam"),
         assembly    = ASSEMBLY,
         mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual        = int(config['general']['methylation-calling']['minimum-quality']),
@@ -238,13 +238,13 @@ rule final_report:
 
 
 # ==========================================================================================
-# Generate the final report for differential methylation between pairs of samples:
+# Generate the final report for differential methylation between pairs of treatment values:
 
 rule diffmeth_report:
     input:
         lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.deduped_diffmeth.bed',
-        template      = os.path.join(DIR_templates,"diffmeth.Rmd"),
-        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+        template          = os.path.join(DIR_templates,"diffmeth.Rmd"),
+        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
         report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
     params:

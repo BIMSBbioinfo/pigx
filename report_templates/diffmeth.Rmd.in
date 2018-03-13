@@ -88,7 +88,7 @@ if(!length(params$methylDiff_files) == 0 ) {
 ```{r DiffMethHeader, results='asis', eval=DiffMeth}
 cat('## Calling Differentially Methylated Cytosines\n')
 
-cat('For each set of samples specified in a treatment vector from the settings file, the ratio of methylation is calculated across the genome. Logistic regression is then applied to model the log-odds of observing this ratio, by chance, in any given location (p-value) as well as the probability of observing *somewhere* within the genome (q-value). The resulting probabilities are then tabulated below.\n')
+cat('For each treatment vector specified in the  settings file, the ratio of methylation between the control (i.e. the first entry), and the treatment (i.e. the second entry) is calculated across the genome. Logistic regression is then applied to model the log-odds probability of observing this ratio, by chance, in any given location (p-value) as well as the probability of observing it *somewhere* within the genome (q-value). The resulting probabilities are then tabulated below.\n')
 
 cat('After q-value calculation, differentially methylated bases are extracted based on q-value and percent methylation difference cutoffs. Here we select bases that have q-value < 0.01 and percent methylation difference larger than 25%. Futhermore, we calculate hyper-methylated or hypo-methylated bases.\n')
 
@@ -122,9 +122,9 @@ treatment <- getTreatment(methylDiff.obj)
 ```
 
 ```{r DiffMeth.print_params_in, results='asis', eval=DiffMeth}
-cat('### Parameters\n')
 
-cat('**Input parameters:**\n')
+cat( paste('Input files were taken from the source directory: ', params$source_dir))
+cat( ' and were compared based on parameters described in the following table. Here each sample is denoted with a **sample.id** that consists of the original sample ID appended with suffixes denoting operations that were carried out in the course of the pipeline (e.g. sorting, deduplication, alignment using bowtie-2 (bt2), etc.) ')
 ```
 
 ```{r DiffMeth.print_params_in2, eval=DiffMeth}
@@ -141,16 +141,16 @@ knitr::kable(inputParams)
 ```
 
 ```{r DiffMeth.print_params_out, results='asis', eval=DiffMeth}
-cat('**Output parameters:**\n')
+cat('**Output files:**\n')
 ```
 
 ```{r DiffMeth.print_params_out2, eval=DiffMeth}
 
 paramsDesc   <- c("BEDfile", "RDSfile (diff. methyl. Cs)","RDSfile_hyper (hyper-methyl. Cs)","RDSfile_hypo (hypo-methyl. Cs)")
 paramsValues <-  gsub( out_dir, "[out]", c(methylDiffBed, methylDiff_file, methylDiff_hyper_file, methylDiff_hypo_file) )
-outputParams <- data.frame(Parameters = paramsDesc,
-                          Values = paramsValues,
-                          stringsAsFactors = FALSE)
+outputParams <- data.frame( Format   = paramsDesc,
+                            Location = paramsValues,
+                            stringsAsFactors = FALSE)
 knitr::kable(outputParams)
 
 ```
@@ -169,7 +169,7 @@ if(!methylDiff.nonempty) {
 
 cat('### Export Differentially Methylated Cytosines\n')
 
-cat('Finally we export the regions to a *BED* file, which can be loaded into any genome browser like [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
+cat('We export differentially-methylated CpG sites to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
 ```
 
 
@@ -186,12 +186,6 @@ cat('## Annotation of Differentially Methylated Cytosines\n')
     library("ggplot2")
 ```
 
-```{r AnnotateDiffMeth.print_params_in, results='asis', eval=AnnotateDiffMeth}
-cat('### Parameters\n')
-
-cat('**Input parameters:**\n')
-```
-
 ```{r AnnotateDiffMeth.print_params_in2, eval=AnnotateDiffMeth}
 
 paramsDesc <- c("Input RDS Data (diff. methyl. Cs)",
@@ -201,16 +195,16 @@ paramsDesc <- c("Input RDS Data (diff. methyl. Cs)",
 
 paramsValues <-  c(gsub( out_dir, "[out]", c(methylDiff_file, methylDiff_hyper_file, methylDiff_hypo_file) ),
                    assembly)
-inputParams <- data.frame(Parameters = paramsDesc,
-                          Values = paramsValues,
-                          stringsAsFactors = FALSE)
+inputParams <- data.frame( Format   = paramsDesc,
+                           Location = paramsValues,
+                           stringsAsFactors = FALSE)
 
 knitr::kable(inputParams)
 
 ```
 
 ```{r AnnotateDiffMeth.prepr, results='asis', eval=AnnotateDiffMeth}
-cat('### Preprocessing\n')
+cat('A summary of these findings is presented below:')
 ```
 
 ```{r AnnotateDiffMeth.convert, eval=AnnotateDiffMeth}
@@ -220,10 +214,6 @@ GRanges.diffmeth.hyper  = as(methylDiff.obj.hyper, "GRanges")
 GRanges.diffmeth.hypo   = as(methylDiff.obj.hypo, "GRanges")
 GRanges.diffmeth.nonsig = as(methylDiff.obj.nonsig, "GRanges")
 
-```
-
-```{r AnnotateDiffMethDescription, results='asis', eval=AnnotateDiffMeth}
-cat('Annotation of differential methylation can also be performed, using the same reference reference gene set and CpG island locations specified in the Annotation section above.\n')
 ```
 
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
@@ -278,12 +268,6 @@ if(length(GRanges.diffmeth.hypo)!=0){
 }
 ```
 
-```{r AnnotateDiffMeth.annotation_descr,results='asis',eval=AnnotateDiffMeth}
-cat('### Annotation\n')
-
-cat('Show overlap percentage of differentially methylated bases with gene features, CpG islands and shores.\n')
-```
-
 ```{r AnnotateDiffMeth.annotation,  eval=AnnotateDiffMeth}
 
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
@@ -317,16 +301,11 @@ if( (fetched.cpgi != '') & length(GRanges.diffmeth)!=0){
                        main="Differential methylation annotation")
 }
 
-
 ```
 
-```{r AnnotateDiffMeth.plot_descr, results='asis', eval=AnnotateDiffMeth}
-cat('### Distance to the nearest TSSs\n')
-
-cat('Show the distance of differentially methylated cytosines to TSSs of the nearest genes.\n')
-```
 
 ```{r AnnotateDiffMeth.plot, eval=AnnotateDiffMeth}
+cat('### Distribution of differential methylation')
 
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
   {
