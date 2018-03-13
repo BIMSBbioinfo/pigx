@@ -208,6 +208,7 @@ GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
 BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
+LIB_TYPE        = { sample:get_library_type(sample) for sample in NAMES}
 CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
 TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
 NUCLEOTIDE_FREQ = [GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']

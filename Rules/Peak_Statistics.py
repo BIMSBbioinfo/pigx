@@ -10,7 +10,8 @@ rule peak_statistics:
     params:
         threads         = 16,
         mem             = '16G',
-        config          = SAMPLE_SHEET,
+        peak_dict       = config['peak_calling'],
+        lib_type_dict   = LIB_TYPE,
         path_mapped     = PATH_MAPPED,
         path_peak       = PATH_PEAK,
         scriptdir       = SCRIPT_PATH,

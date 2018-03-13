@@ -5,14 +5,15 @@ argv = Parse_Arguments('Peak_Statistics')
 
 
 #
-# config = yaml::yaml.load_file('Tests/sample_sheet.yaml')
+# peak_dict = yaml::yaml.load_file('Tests/sample_sheet.yaml')
 # scriptdir = 'scripts'
 # path_mapped = 'Tests/out/Mapped'
 # path_peaks = 'Tests/out/Peaks'
 # ---------------------------------------------------------------------------- #
 Peak_Statistics = function(
   readnumber   = NULL,
-  config       = NULL,
+  peak_dict    = NULL,
+  lib_type_dict= NULL,
   outfile      = NULL,
   scriptdir    = NULL,
   path_mapped  = NULL,
@@ -48,8 +49,8 @@ Peak_Statistics = function(
    print(path_mapped)
     peaks_sheet = do.call(rbind, lapply(c('ChIP', 'Cont'), function(x){
         tibble(
-            sample_name = names(config$peak_calling),
-            bam_name    = lapply(config$peak_calling, '[[', x)) %>%
+            sample_name = names(peak_dict),
+            bam_name    = lapply(peak_dict, '[[', x)) %>%
             dplyr::filter(!sapply(bam_name, is.null))           %>%
             unnest(bam_name)
         })) %>%
@@ -58,7 +59,7 @@ Peak_Statistics = function(
     mutate(sample_id = paste(sample_name, bam_name, sep='_'))                   %>%
     mutate(bw_files  = str_replace(bam_file,'sorted.bam','bw'))                 %>%
     as.data.frame()
-    peaks_sheet$library = unlist(lapply(config$sample, '[[', 'library')[peaks_sheet$bam_name])
+    peaks_sheet$library = unlist(lib_type_dict[peaks_sheet$bam_name])
 
 
   peaks_uniq = peaks_sheet %>%
@@ -163,7 +164,8 @@ MergeStats = function(d1, d2){
 Peak_Statistics(
   readnumber   = argv$input[['readnumber']],
   outfile      = argv$output[['outfile']],
-  config       = argv$params[['config']],
+  peak_dict    = argv$params[['peak_dict']],
+  lib_type_dict= argv$params[['lib_type_dict']],
   scriptdir    = argv$params[['scriptdir']],
   path_mapped  = argv$params[['path_mapped']],
   path_peak    = argv$params[['path_peak']],
