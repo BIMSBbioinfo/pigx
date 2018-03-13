@@ -6,8 +6,8 @@ import sys
 
 # ---------------------------------------------------------------------------- #
 # given a sample name returns fastq location(s)
-def get_fastq_input(wc):
-    samps = lookup('SampleName', wc.name, ['Read', 'Read2'])
+def get_fastq_input(name):
+    samps = lookup('SampleName', name, ['Read', 'Read2'])
 
     if type(samps) is str:
         samps = [samps]
@@ -17,8 +17,8 @@ def get_fastq_input(wc):
 
 # ---------------------------------------------------------------------------- #
 # given a sample name returns library type, depending on number of fastq files
-def get_library_type(wc):
-    files = [file for file in lookup('SampleName', wc.name, ['Read', 'Read2']) if file]
+def get_library_type(name):
+    files = [file for file in lookup('SampleName', name, ['Read', 'Read2']) if file]
     if len(files) == 2:
         lib = "paired"
     else:

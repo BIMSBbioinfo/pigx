@@ -108,7 +108,7 @@ rule extract_nucleotide_frequency:
 #----------------------------------------------------------------------------- #
 rule bowtie2:
     input:
-        infile = get_fastq_input,
+        infile = lambda wc: get_fastq_input(wc.name),
         genome = rules.bowtie2_build.output.outfile
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
@@ -116,7 +116,7 @@ rule bowtie2:
         threads        = config['execution']['rules']['bowtie2']['threads'],
         bowtie2        = SOFTWARE['bowtie2']['executable'],
         samtools       = SOFTWARE['samtools']['executable'],
-        library        = get_library_type,
+        library        = lambda wc: get_library_type(wc.name),
         params_bowtie2 = PARAMS['bowtie2']
     log:
         log = os.path.join(PATH_LOG, "{name}.bowtie2.log")
