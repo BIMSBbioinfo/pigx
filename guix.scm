@@ -78,7 +78,7 @@
        ("python-xlrd" ,python-xlrd)
        ("python-magic" ,python-magic)
        ("python-sh" ,python-sh)
-       ("snakemake" ,snakemake)
+       ("trim-galore" ,trim-galore)
        ("macs" ,macs)
        ("multiqc" ,multiqc)
        ("perl" ,perl)

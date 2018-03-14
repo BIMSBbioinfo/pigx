@@ -39,6 +39,7 @@ AS_IF([test -z "$$1"],dnl
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([PERL],            [perl])
 find_or_override_prog([IDR],             [idr])
+find_or_override_prog([TRIMGALORE],      [trim_galore])
 find_or_override_prog([MACS2],           [macs2])
 find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])
