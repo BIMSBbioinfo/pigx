@@ -174,7 +174,7 @@ for i in NAMES:
 
 # ---------------------------------------------------------------------------- #
 # width extension parameters for annotation construction
-DEFALUT_WIDTH_PARAMS = {
+DEFAULT_WIDTH_PARAMS = {
 'tss_width':            1000,
 'tts_width':            1000,
 'tss_wide_width':       10000,
@@ -187,17 +187,17 @@ DEFALUT_WIDTH_PARAMS = {
 'splicing_accep_width': 200}
 
 # checks whether the width_params are set, if not
-# they are set to DEFALUT_WIDTH_PARAMS
+# they are set to DEFAULT_WIDTH_PARAMS
 if not 'width_params' in set(PARAMS.keys()):
-    PARAMS['width_params'] = DEFALUT_WIDTH_PARAMS
+    PARAMS['width_params'] = DEFAULT_WIDTH_PARAMS
 else:
     width_params = PARAMS['width_params']
     if(len(width_params.keys())):
-        PARAMS['width_params'] = DEFALUT_WIDTH_PARAMS
+        PARAMS['width_params'] = DEFAULT_WIDTH_PARAMS
     else:
-        for i in DEFALUT_WIDTH_PARAMS.keys():
+        for i in DEFAULT_WIDTH_PARAMS.keys():
             if not i in set(width_params.keys()):
-                width_params[i] = DEFALUT_WIDTH_PARAMS[i]
+                width_params[i] = DEFAULT_WIDTH_PARAMS[i]
 
         PARAMS['width_params'] = width_params
 

@@ -18,8 +18,46 @@ rule link_genome:
         """
     run:
         import os
-        os.symlink(str(input.genome), str(output.outfile))
+        import magic as mg
+        import sh as sh
+        import zipfile
+
+        # ------------------------------------------------#
+        # prevents errors during linking
+        def trylink(infile, outfile):
+            if os.path.exists(outfile):
+                os.remove(outfile)
+            try:
+                os.symlink(infile, outfile)
+            except:
+                "Symbolic link exists"
+                
+        # ------------------------------------------------#            
+        # checks whether the input file is zipped, if zipped
+        # unzips the file
+        infile = str(input.genome)
+        outfile = str(output.outfile)
         
+        # this is necessary because the [g]unzip command
+        # dies if the existing file is in the directory
+        # necessary if the reference gets updated
+        if os.path.exists(outfile):
+            os.remove(outfile)
+        
+        genome_file_type = mg.from_file(infile, mime=True)
+
+        if genome_file_type.find('gzip') > 0:
+            outfile = outfile + '.gz'
+            sh.cp(infile, outfile)
+            sh.gunzip(outfile)
+                  
+        elif genome_file_type == 'text/plain':
+            trylink(infile, outfile)
+            
+        else:
+            os.sys.exit('Unknow input genome file format')
+
+
 # ---------------------------------------------------------------------------- #
 rule bowtie2_build:
     input:
