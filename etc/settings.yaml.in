@@ -14,6 +14,7 @@ execution:
     stack: 128M
     queue: all
     contact-email: none
+    args: ''    
   rules:
     __default__:
       threads: 1
