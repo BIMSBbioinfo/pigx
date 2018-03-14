@@ -29,6 +29,7 @@ execution:
     missing-file-timeout: 120
     stack: 128M
     contact-email: none
+    args: ''
   rules:
     __default__:
       threads: 1
