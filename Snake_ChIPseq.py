@@ -60,7 +60,6 @@ def lookup(column, predicate, fields=[]):
 # Software executables
 SOFTWARE = config['tools']
 
-
 # Per sample software parameters:
 # Loops throug the sample sheet and extracts per sample software parameters
 # Flattens all samples with custom parameters into one dict - sample names must be unique

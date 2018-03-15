@@ -76,7 +76,7 @@ rule bowtie2_build:
                 output: {output.outfile}
         """
     shell:"""
-        {params.bowtie2_build} {input.genome} {params.prefix} 2> {log}
+        {params.bowtie2_build} {input.genome} {params.prefix} >> {log} 2>&1 
     """
 
 # ---------------------------------------------------------------------------- #
@@ -165,8 +165,6 @@ rule bowtie2:
             output: {output.bamfile}
     """
     run:
-        print(input.infile)
-        print(params.library)
         genome = input.genome.replace('.1.bt2','')
         if params.library in ['single','SINGLE']:
             map_args =  '-U ' + input.infile[0]
