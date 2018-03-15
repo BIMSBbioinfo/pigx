@@ -44,3 +44,17 @@ tools:
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla"
+
+# ---------------------------------------------------------------------------- #
+# HARDCODED adapter parameters
+# This variable extands the pipeline to various technologies. It defines
+# The locations of cell and UMI adapters in fastq1
+# Currently supprorted technologies are dropseq and chromium10x
+adapter_parameters:
+  dropseq:
+    cell_barcode:
+    umi_barcode:
+    
+  chromium10x:
+    cell_barcode:
+    umi_barcode:

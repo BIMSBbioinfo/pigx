@@ -22,7 +22,6 @@ include: os.path.join(PATH_SCRIPT, 'Accessory_Functions.py')
 include: os.path.join(PATH_SCRIPT, 'validate_input.py')
 validate_config(config)
 
-
 # ----------------------------------------------------------------------------- #
 # Software parameters
 SOFTWARE = config['tools']
@@ -31,6 +30,11 @@ SOFTWARE = config['tools']
 GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
 REFERENCE_NAMES = [GENOME_NAME_PRIMARY]
 COVARIATES = config['covariates']
+
+# ----------------------------------------------------------------------------- #
+# adapter locations
+ADAPTER_PARAMETERS = config[adapter_parameters]
+
 
 # ----------------------------------------------------------------------------- #
 # PATHS
@@ -417,15 +421,14 @@ rule tag_cells:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cell.bam"))
     params:
         summary   = os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cellular.bam_summary.txt"),
-        droptools = SOFTWARE['droptools']['executable'],
-        java      = SOFTWARE['java']['executable'],
-        app_name  = 'TagBamWithReadSequenceExtended',
-        threads   = 8,
-        mem       = '35G',
-        tempdir   = TEMPDIR,
-        base_min  = 1,
-        base_max  = 12,
-        base_qual = 10,
+        droptools  = SOFTWARE['droptools']['executable'],
+        java       = SOFTWARE['java']['executable'],
+        app_name   = 'TagBamWithReadSequenceExtended',
+        method     = SAMPLE_SHEET['{name}']['method'],
+        threads    = 8,
+        mem        = '35G',
+        tempdir    = TEMPDIR,
+        base_qual  = 10,
         barcoded_read = 1,
         discard_read  = 'false'
     log:
@@ -433,11 +436,13 @@ rule tag_cells:
 
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+        
+        adapter_params = ADAPTER_PARAMETERS[params.method]['cell_barcode']
 
         command = ' '.join([
         tool,
         'SUMMARY='       + str(params.summary),
-        'BASE_RANGE='    + "-".join([str(params.base_min),str(params.base_max)]),
+        'BASE_RANGE='    + "-".join([str(adapter_params.base_min),str(adapter_params.base_max)]),
         'BASE_QUALITY='  + str(params.base_qual),
         'BARCODED_READ=' + str(params.barcoded_read),
         'DISCARD_READ='  + str(params.discard_read),
@@ -459,11 +464,10 @@ rule tag_molecules:
         droptools = SOFTWARE['droptools']['executable'],
         java      = SOFTWARE['java']['executable'],
         app_name  = 'TagBamWithReadSequenceExtended',
+        method     = SAMPLE_SHEET['{name}']['method'],
         threads   = 8,
         mem       = '35G',
         tempdir   = TEMPDIR,
-        base_min  = 13,
-        base_max  = 20,
         base_qual = 10,
         barcoded_read = 1,
         discard_read  = 'true'
@@ -473,11 +477,12 @@ rule tag_molecules:
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
 
+        adapter_params = ADAPTER_PARAMETERS[params.method]['umi_barcode']
 
         command = ' '.join([
         tool,
         'SUMMARY='       + params.summary,
-        'BASE_RANGE='    + "-".join([str(params.base_min),str(params.base_max)]),
+        'BASE_RANGE='    + "-".join([str(adapter_params.base_min),str(adapter_params.base_max)]),
         'BASE_QUALITY='  + str(params.base_qual),
         'BARCODED_READ=' + str(params.barcoded_read),
         'DISCARD_READ='  + str(params.discard_read),
