@@ -112,7 +112,7 @@ To run the pipeline, you will also need the appropriate genome sequence in fasta
 gtf format.
 
 ```sh
-$ pigx-rscnaseq [options] sample_sheet.csv -s settings.yaml
+$ pigx-scrnaseq [options] sample_sheet.csv -s settings.yaml
 ```
 
 To see all available options type the `--help` option
