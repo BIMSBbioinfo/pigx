@@ -33,7 +33,7 @@ COVARIATES = config['covariates']
 
 # ----------------------------------------------------------------------------- #
 # adapter locations
-ADAPTER_PARAMETERS = config[adapter_parameters]
+ADAPTER_PARAMETERS = config['adapter_parameters']
 
 
 # ----------------------------------------------------------------------------- #
@@ -81,10 +81,10 @@ SAMPLE_NAMES = [line['sample_name'] for line in SAMPLE_SHEET]
 # ----------------------------------------------------------------------------- #
 # check for compatible technology methods
 methods = set(ADAPTER_PARAMETERS.keys())
-for i in SAMPLE_SHEET.keys():
-    method = SAMPLE_SHEET[i]['method']
+for sample in SAMPLE_SHEET:
+    method = sample['method']
     if not method in methods:
-        message = 'Sample sheet contains unknown method:' + i + '\n'
+        message = 'Sample sheet contains unknown method:' + sample + '\n'
         message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
         sys.exit(message)
 
@@ -435,7 +435,7 @@ rule tag_cells:
         droptools  = SOFTWARE['droptools']['executable'],
         java       = SOFTWARE['java']['executable'],
         app_name   = 'TagBamWithReadSequenceExtended',
-        method     = SAMPLE_SHEET['{name}']['method'],
+        name       = '{name}',
         threads    = 8,
         mem        = '35G',
         tempdir    = TEMPDIR,
@@ -448,12 +448,14 @@ rule tag_cells:
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
         
-        adapter_params = ADAPTER_PARAMETERS[params.method]['cell_barcode']
+        # fetches method from the sample_sheet
+        method = lookup('sample_name', params.name, ['method'])[0]
+        adapter_params = ADAPTER_PARAMETERS[method]['cell_barcode']
 
         command = ' '.join([
         tool,
         'SUMMARY='       + str(params.summary),
-        'BASE_RANGE='    + "-".join([str(adapter_params.base_min),str(adapter_params.base_max)]),
+        'BASE_RANGE='    + "-".join([str(adapter_params['base_min']),str(adapter_params['base_max'])]),
         'BASE_QUALITY='  + str(params.base_qual),
         'BARCODED_READ=' + str(params.barcoded_read),
         'DISCARD_READ='  + str(params.discard_read),
@@ -475,7 +477,7 @@ rule tag_molecules:
         droptools = SOFTWARE['droptools']['executable'],
         java      = SOFTWARE['java']['executable'],
         app_name  = 'TagBamWithReadSequenceExtended',
-        method     = SAMPLE_SHEET['{name}']['method'],
+        name      = '{name}',
         threads   = 8,
         mem       = '35G',
         tempdir   = TEMPDIR,
@@ -488,12 +490,13 @@ rule tag_molecules:
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
 
-        adapter_params = ADAPTER_PARAMETERS[params.method]['umi_barcode']
+        method = lookup('sample_name', params.name, ['method'])[0]
+        adapter_params = ADAPTER_PARAMETERS[method]['umi_barcode']
 
         command = ' '.join([
         tool,
         'SUMMARY='       + params.summary,
-        'BASE_RANGE='    + "-".join([str(adapter_params.base_min),str(adapter_params.base_max)]),
+        'BASE_RANGE='    + "-".join([str(adapter_params['base_min']),str(adapter_params['base_max'])]),
         'BASE_QUALITY='  + str(params.base_qual),
         'BARCODED_READ=' + str(params.barcoded_read),
         'DISCARD_READ='  + str(params.discard_read),
