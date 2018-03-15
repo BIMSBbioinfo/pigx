@@ -1,6 +1,10 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+
+181503
+[*]. enable trimming
+
 181303
 [*] Move samplesheet To csv file
 [*] detect library type from input, extension for paired end data to be automatically determined from the pairs
@@ -147,7 +151,6 @@ Initial commit
 []. Add peak QC
 []. Run multiqc
 
-[]. enable trimming
 []. rewrite fastqc to go through each individual file
 
 
