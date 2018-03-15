@@ -15,7 +15,7 @@ PiGX ChIPseq is an analysis pipeline for preprocessing, peak calling and reporti
 
 ## What does it do
 
-- ??? Trim reads using trim-galore ??? 
+- Trim reads using trim-galore 
 - Quality control reads using fastQC and multiQC
 - Map reads to genome using Bowtie2
 - Call peaks for multiple combinations of samples using MACS2
@@ -76,12 +76,18 @@ installed:
     - ggplot2
     - ggrepel
     - plotly
+    - rmarkdown
 - python
     - snakemake
     - pyyaml
+    - wrapper
+    - pytest
+    - xlrd
+    - magic
 - pandoc
 - fastqc
 - multiqc
+- trim-galore
 - bowtie
 - macs2
 - idr
