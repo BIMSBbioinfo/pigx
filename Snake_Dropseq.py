@@ -79,6 +79,17 @@ def lookup(column, predicate, fields=[]):
 SAMPLE_NAMES = [line['sample_name'] for line in SAMPLE_SHEET]
 
 # ----------------------------------------------------------------------------- #
+# check for compatible technology methods
+methods = set(ADAPTER_PARAMETERS.keys())
+for i in SAMPLE_SHEET.keys():
+    method = SAMPLE_SHEET[i]['method']
+    if not method in methods:
+        message = 'Sample sheet contains unknown method:' + i + '\n'
+        message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
+        sys.exit(message)
+
+
+# ----------------------------------------------------------------------------- #
 # sets the temporrary directory to default in the working directory if the tempdir does not exist
 if TEMPDIR == None:
     if "TMPDIR" in os.environ.keys():
