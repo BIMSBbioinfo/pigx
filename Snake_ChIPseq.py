@@ -94,6 +94,7 @@ NAMES = [line['SampleName'] for line in SAMPLE_SHEET]
 # Directory structure definition
 OUTPUT_DIR      = config['locations']['output-dir']
 # PATH_FASTQ      = os.path.join(OUTPUT_DIR, 'Fastq')
+PATH_TRIMMED    = os.path.join(OUTPUT_DIR, 'Trimmed')
 PATH_MAPPED     = os.path.join(OUTPUT_DIR, 'Mapped/Bowtie')
 PATH_QC         = os.path.join(OUTPUT_DIR, 'FastQC')
 PATH_INDEX      = os.path.join(OUTPUT_DIR, 'Bowtie2_Index')
@@ -167,7 +168,19 @@ for i in NAMES:
             fastqc  = os.path.join(PATH_QC, i, prefix + "_fastqc.zip")
             FASTQC_DICT[prefix]  =  {'fastq'  : os.path.join(PATH_FASTQ, fqfile),
                                      'fastqc' : fastqc}
-        # ---------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------- #
+# due to the different names for trimmmed output files next lines construct
+# Trim Galore output files
+TRIM_GALORE_DICT = {}
+for name in NAMES:
+    fqfiles = [file for file in lookup('SampleName',name,['Read','Read2']) if file]
+    if len(fqfiles) == 2:
+        TRIM_GALORE_DICT[name] = [expand(os.path.join(PATH_TRIMMED,name, "{name}_{read}.fastq.gz"),name=name,read=["R1","R2"])]
+    else:    
+        TRIM_GALORE_DICT[name] = [expand(os.path.join(PATH_TRIMMED,name, "{name}_R.fastq.gz"),name=name)]
+
+# ---------------------------------------------------------------------------- #
 # RULE ALL
 # Default output files from the pipeline
 
@@ -206,6 +219,7 @@ else:
 COMMAND         = []
 GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
+TRIMMING        = [flatten(TRIM_GALORE_DICT.values())] 
 BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
 LIB_TYPE        = { sample:get_library_type(sample) for sample in NAMES}
@@ -222,6 +236,7 @@ COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE
 
 # ---------------------------------------------------------------------------- #
 # include rules
+include: os.path.join(RULES_PATH, 'Trimming.py')
 include: os.path.join(RULES_PATH, 'Mapping.py')
 include: os.path.join(RULES_PATH, 'Parse_Bowtie2log.py')
 include: os.path.join(RULES_PATH, 'FastQC.py')
