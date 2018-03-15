@@ -122,6 +122,14 @@ def generate_config(configfile, sample_sheet, settingsfile, dirs):
 SETTINGSFILE as inputs.  Use the locations in DIRS to find default
 settings.
     """
+    if not os.path.isfile(settingsfile):
+      message = 'settings.yaml file not found'
+      sys.exit(message)
+
+    if not os.path.isfile(sample_sheet):
+      message = 'sample_sheet file not found'
+      sys.exit(message)
+
     # Load defaults
     if os.getenv('PIGX_UNINSTALLED'):
         where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
