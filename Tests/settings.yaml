@@ -1,7 +1,7 @@
 locations:
   input-dir: in/
   output-dir: out/
-  genome-file: genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz
+  genome-file: genome/genome_subset_mm9_chr1_13590945_17791527.fa
   index-dir:
   gff-file: genome/mm_chr19.gtf
 
