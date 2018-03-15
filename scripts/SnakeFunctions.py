@@ -4,16 +4,32 @@ import re
 import os
 import sys
 
+
+# ---------------------------------------------------------------------------- #
+# given a fastq file strips of either of the following extensions:
+# "fastq.gz","fastq","fq.gz","fq" 
+# this is required for parsing trim galore output
+def replace_fastq_ext(fqfile,replacement):
+    p = re.compile('.f(ast)*q(\.gz)*')
+    repl = p.sub(replacement,fqfile)
+    return(repl)
+
 # ---------------------------------------------------------------------------- #
 # given a sample name returns fastq location(s)
 def get_fastq_input(name):
     samps = lookup('SampleName', name, ['Read', 'Read2'])
-
-    if type(samps) is str:
-        samps = [samps]
-
     infiles = [os.path.join(PATH_FASTQ, i) for i in samps if i]
     return(infiles)
+
+# ---------------------------------------------------------------------------- #
+# given a sample name returns fastq location(s)
+def get_trimmed_input(name):
+    fqfiles = [file for file in lookup('SampleName',name,['Read','Read2']) if file]
+    if len(fqfiles) == 2:
+        trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_{}.fastq.gz".format(name,read)) for read in ["R1","R2"]]
+    else:    
+        trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_R.fastq.gz".format(name))]
+    return(trimmed_files)
 
 # ---------------------------------------------------------------------------- #
 # given a sample name returns library type, depending on number of fastq files

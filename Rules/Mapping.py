@@ -146,7 +146,7 @@ rule extract_nucleotide_frequency:
 #----------------------------------------------------------------------------- #
 rule bowtie2:
     input:
-        infile = lambda wc: get_fastq_input(wc.name),
+        infile = lambda wc: get_trimmed_input(wc.name),
         genome = rules.bowtie2_build.output.outfile
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")

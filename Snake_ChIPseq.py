@@ -174,11 +174,7 @@ for i in NAMES:
 # Trim Galore output files
 TRIM_GALORE_DICT = {}
 for name in NAMES:
-    fqfiles = [file for file in lookup('SampleName',name,['Read','Read2']) if file]
-    if len(fqfiles) == 2:
-        TRIM_GALORE_DICT[name] = [expand(os.path.join(PATH_TRIMMED,name, "{name}_{read}.fastq.gz"),name=name,read=["R1","R2"])]
-    else:    
-        TRIM_GALORE_DICT[name] = [expand(os.path.join(PATH_TRIMMED,name, "{name}_R.fastq.gz"),name=name)]
+    TRIM_GALORE_DICT[name] = get_trimmed_input(name) 
 
 # ---------------------------------------------------------------------------- #
 # RULE ALL
@@ -232,7 +228,7 @@ ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), nam
 BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
-COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + BOWTIE2_STATS
+COMMAND = GENOME_FASTA + INDEX + TRIMMING + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + BOWTIE2_STATS
 
 # ---------------------------------------------------------------------------- #
 # include rules
