@@ -57,7 +57,10 @@ required dependencies are installed and then follow these steps after
 unpacking the latest release tarball:
 
 ```sh
-./configure --prefix=/some/where
+./configure                         \
+    --prefix=/some/where            \
+    DROPSEQJAR=/path/to/dropseq.jar \
+    PICARDJAR=/path/to/picard.jar
 make install
 ```
 
