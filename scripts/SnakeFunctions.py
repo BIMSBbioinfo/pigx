@@ -128,3 +128,21 @@ def RunRscript(input, output, params, script):
                     "--params", "{params_dump:q}"])
 
     shell(cmd)
+
+# ---------------------------------------------------------------------------- #
+# checks fasta header for spaces
+def check_fasta_header(genome_file, message):
+    import re
+    import sys
+
+    file = open(genome_file, "r")
+
+    print('Checking fasta headers for spaces')
+    for line in file:
+         if re.search('^>', line):
+            print(line)
+            if re.search('[\s-[\r\n]]', line):
+                message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
+                return(message)
+                
+    return(message)

@@ -125,6 +125,9 @@ TRACK_PATHS = {
 # Collects the locations of all peaks
 PEAK_NAME_LIST = {}
 
+# ---------------------------------------------------------------------------- #
+# Checks genome fasta header for proper formatting (no whitespace)
+check_fasta_header(GENOME_ORIG)
 
 # names for markdown chunks which will be knit
 # current names: ChIPQC, Extract_Signal_Annotation, Peak_Statistics, Annotate_Peaks

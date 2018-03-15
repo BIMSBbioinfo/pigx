@@ -14,8 +14,6 @@ import csv
 # ---------------------------------------------------------------------------- #
 def validate_config(config):
 
-
-
     sample_sheet_dict = read_sample_sheet(config['locations']['sample-sheet'])
 
     message = ''
@@ -66,11 +64,15 @@ def check_settings(sample_sheet_dict, config, message):
     message = check_params(config, params_list, message)
 
     # ---------------------------------------------------------------------------- #
-    # checks for index or genome specification
+    # checks for index or genome specification - obligatory
     locations_dict = config['locations']
-    if (locations_dict['genome-file'] == None) and (locations_dict['index-dir'] == None):
-        message = message + "\t" + "neither genome nor index are specified\n"
-    
+    if locations_dict['genome-file'] == None:
+        message = message + "\t" + "genome fasta is not specified\n"
+     
+    else:   
+        # checks for whitespaces in the genome fasta header
+        message = check_fasta_header(locations_dict['genome-file'], message)
+         
     # sets obligatory gff
     if (locations_dict['gff-file'] == None):
         message = message + "\t" + "GFF annotation file is not specified"
@@ -79,8 +81,7 @@ def check_settings(sample_sheet_dict, config, message):
     for location in sorted(list(set(locations_dict.keys()))):
         message = check_file_exists(locations_dict, location, message)
 
-    return(message)
-
+   
     # ---------------------------------------------------------------------------- #
     # checks for ChIP and Cont specifications
     peak_calling_desciptors = ['ChIP', 'Cont']
