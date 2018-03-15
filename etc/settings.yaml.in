@@ -167,3 +167,6 @@ tools:
     bedToBigBed:
         executable: @BEDTOBIGBED@
         args: ""
+    trim_galore: 
+        executable: @TRIMGALORE@
+        args: ""

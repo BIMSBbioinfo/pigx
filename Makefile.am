@@ -24,21 +24,22 @@ dist_pkglibexec_scripts_SCRIPTS =		\
   scripts/SnakeFunctions.py
 
 pkglibexec_rulesdir = $(pkglibexecdir)/Rules
-dist_pkglibexec_rules_SCRIPTS =   \
-  Rules/Annotate_Peaks.py       \
-  Rules/BamToBigWig.py          \
-  Rules/ChIPQC.py           \
-  Rules/Extract_Signal_Annotation.py  \
-  Rules/FastQC.py           \
-  Rules/Feature_Combination.py      \
-  Rules/IDR.py              \
-  Rules/Knit_Report.py           \
-  Rules/Mapping.py            \
-  Rules/MultiQC.py            \
-  Rules/Parse_Bowtie2log.py            \
-  Rules/Peak_Calling.py         \
-  Rules/Peak_Statistics.py         \
-  Rules/Prepare_Annotation.py     \
+dist_pkglibexec_rules_SCRIPTS =   		\
+  Rules/Annotate_Peaks.py       		\
+  Rules/BamToBigWig.py          		\
+  Rules/ChIPQC.py           			\
+  Rules/Extract_Signal_Annotation.py  	\
+  Rules/FastQC.py           			\
+  Rules/Feature_Combination.py      	\
+  Rules/IDR.py              			\
+  Rules/Knit_Report.py           		\
+  Rules/Mapping.py            			\
+  Rules/MultiQC.py            			\
+  Rules/Parse_Bowtie2log.py            	\
+  Rules/Peak_Calling.py         		\
+  Rules/Peak_Statistics.py         		\
+  Rules/Prepare_Annotation.py     		\
+  Rules/Trimming.py                		\
   Rules/UCSC_Hub.py
 
 dist_pkgdata_DATA =						\
