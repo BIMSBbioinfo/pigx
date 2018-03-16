@@ -77,7 +77,6 @@
        ("python-pytest" ,python-pytest)
        ("python-xlrd" ,python-xlrd)
        ("python-magic" ,python-magic)
-       ("python-sh" ,python-sh)
        ("trim-galore" ,trim-galore)
        ("macs" ,macs)
        ("multiqc" ,multiqc)
