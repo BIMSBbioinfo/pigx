@@ -40,13 +40,13 @@ defaults defaults, and select the pipeline.
 To generate a settings file template for any pipeline:
 
 ```sh
-pigx [pipeline] --init-settings my-settings.yaml
+pigx [pipeline] --init=settings
 ```
 
 To generate a sample sheet template for any pipeline:
 
 ```sh
-pigx [pipeline] --init-sample-sheet my-sample-sheet.csv
+pigx [pipeline] --init=sample-sheet
 ```
 
 Here's a simple example to run the RNAseq pipeline:
@@ -60,10 +60,10 @@ To see all available options run `pigx --help`.
 
 # Install
 
-Pre-built binaries for PiGx are (soon) available through GNU Guix, the
+Pre-built binaries for PiGx are available through GNU Guix, the
 functional package manager for reproducible, user-controlled software
 management.  Install the complete pipeline bundle with the following
-command: 
+command:
 
 ```sh
 guix package -i pigx

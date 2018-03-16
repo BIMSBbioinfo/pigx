@@ -48,10 +48,10 @@ three steps:
        pigx [pipeline] --init=settings
 
 - **Run the pipeline!** Here's a simple example to run the RNAseq
-   pipeline when the settings file and the sample sheet are in the
-   current working directory:
+   pipeline when the sample sheet `sample_sheet.csv` is in the current
+   working directory:
 
-       pigx rnaseq
+       pigx rnaseq -s settings.yaml
 
 That's it!  After some time you'll get a bunch of reports that you can
 view in your browser.
@@ -62,7 +62,7 @@ online documentation](http://bioinformatics.mdc-berlin.de/pigx_docs).
 
 # Get it
 
-Pre-built binaries for PiGx are (soon) available through [GNU
+Pre-built binaries for PiGx are available through [GNU
 Guix](https://gnu.org/software/guix), the functional package manager
 for reproducible, user-controlled software management.  Install the
 complete pipeline bundle with the following command:
