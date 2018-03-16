@@ -208,8 +208,10 @@ def check_fasta_header(genome_file, message):
         file = open(genome_file, "r")
     
     for line in file:
-         line = str(line.decode('utf-8'))
-         if re.search('^>', line):
+        if not isinstance(line, str):
+            line = str(line.decode('utf-8'))
+
+        if re.search('^>', line):
             if re.search('[ \t]', line):
                 message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
                 return(message)
