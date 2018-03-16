@@ -4,6 +4,8 @@ set -e
 set -u
 
 chmod +w ${srcdir}/Tests
+rm -rf ${srcdir}/Tests/out
+
 
 ${builddir}/pigx-chipseq -s ${srcdir}/Tests/settings.yaml ${srcdir}/Tests/sample_sheet.csv
 
