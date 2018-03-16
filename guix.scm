@@ -43,14 +43,14 @@
     (source (string-append (getcwd) "/pigx_rnaseq-" version ".tar.gz"))
     (build-system gnu-build-system)
     (arguments
-     `(#:tests? #f ; requires network access
+     `(#:parallel-tests? #f ; not supported
        #:phases
        (modify-phases %standard-phases
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
            (lambda* (#:key inputs outputs #:allow-other-keys)
              (let ((out (assoc-ref outputs "out")))
-               (wrap-program (string-append out "/bin/pigx-bsseq")
+               (wrap-program (string-append out "/bin/pigx-rnaseq")
                  `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))
                  `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))))
              #t)))))
