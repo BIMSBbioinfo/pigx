@@ -14,6 +14,7 @@ execution:
     stack: 128M
     queue: all
     contact-email: none
+    args: ''    
   rules:
     __default__:
       threads: 1
@@ -31,7 +32,9 @@ execution:
       threads: 8
       memory: 4G
 
-organism: hsapiens
+#organism is needed for GO term analysis. Leave it empty if not interested in GO analysis.
+#Otherwise provide a string with the initial of genus and the species name (e.g. hsapiens, mmusculus, dmelanogaster, celegans)
+organism: ''
 
 #DEanalyses:
   #names of analyses can be anything but they have to be unique for each combination of case control group comparisons.

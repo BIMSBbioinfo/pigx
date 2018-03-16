@@ -5,4 +5,4 @@ locations:
   cdna-fasta: sample_data/sample.cdna.fasta
   gtf-file: sample_data/sample.gtf
 
-organism: hsapiens
+organism: ''

@@ -5,7 +5,7 @@ locations:
   cdna-fasta: sample_data/sample.cdna.fasta
   gtf-file: sample_data/sample.gtf
 
-organism: hsapiens
+organism: ''
 
 DEanalyses:
   #names of analyses can be anything but they have to be unique for each combination of case control group comparisons.
@@ -14,3 +14,4 @@ DEanalyses:
     case_sample_groups: "HBR"
     control_sample_groups: "UHR"
     covariates: ''
+

@@ -31,10 +31,11 @@ PiGX RNAseq is an analysis pipeline for preprocessing and reporting for RNA sequ
 
 # Install
 
-At this time there are no ready-made packages for this pipeline, so
-you need to install PiGx from source.
+You can install this pipeline with all its dependencies using GNU Guix:
 
-You can find the [latest
+    guix package -i pigx-rnaseq
+
+You can also install it from source manually.  You can find the [latest
 release](https://github.com/BIMSBbioinfo/pigx_rnaseq/releases/latest)
 here.  PiGx uses the GNU build system.  Please make sure that all
 required dependencies are installed and then follow these steps after

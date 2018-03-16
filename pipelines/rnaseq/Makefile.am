@@ -16,6 +16,7 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/validate_input.py
 
 dist_pkgdata_DATA =									\
+  etc/sample_sheet.csv.example								\
   etc/settings.yaml									\
   etc/pretty.txt									\
   images/Logo_PiGx.png
@@ -309,4 +310,4 @@ clean-local:
 CLEANFILES = $(nodist_bin_SCRIPTS) config.json		
 # Build docker image with Guix
 docker: dist
-	guix pack -e '(load "guix.scm")' --with-source=pigx_rnaseq-$(VERSION).tar.gz -f docker -S /bin=bin -S /lib=lib -S /share=share glibc-utf8-locales tzdata coreutils
+	guix pack -C none -e '(load "guix.scm")' --with-source=pigx_rnaseq-$(VERSION).tar.gz -f docker -S /bin=bin -S /lib=lib -S /share=share glibc-utf8-locales tzdata coreutils bash
