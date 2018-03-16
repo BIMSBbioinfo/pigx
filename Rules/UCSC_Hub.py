@@ -55,6 +55,6 @@ rule bedTobigBed:
         '-type=bed3+' + str(ncol),
         input.peaks,
         input.chrlen,
-        output.outfile
+        output.outfile,
         '2>',log.log])
         shell(command)
