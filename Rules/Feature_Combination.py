@@ -17,7 +17,7 @@ rule feature_combination:
         scriptdir   = SCRIPT_PATH,
         Rscript     = SOFTWARE['Rscript']['executable']
     log:
-        log = os.path.join(PATH_LOG, '{name}_feature_combination.log')
+        logfile = os.path.join(PATH_LOG, '{name}_feature_combination.log')
     message:
         """
             Running: feature_combination:
@@ -25,4 +25,4 @@ rule feature_combination:
                 output:     {output.outfile}
             """
     run:
-        RunRscript(input, output, params, 'Feature_Combination.R')
+        RunRscript(input, output, params, log.logfile, 'Feature_Combination.R')

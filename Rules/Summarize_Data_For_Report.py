@@ -15,10 +15,10 @@ rule summarize_data_for_report:
             script_path     = SCRIPT_PATH,
             Rscript         = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'Summarize_Data_For_Report.log')
+            logfile = os.path.join(PATH_LOG, 'Summarize_Data_For_Report.log')
         message:"""
                 Running: Summarize_Data_For_Report:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Summarize_Data_For_Report.R')
+            RunRscript(input, output, params, log.logfile, 'Summarize_Data_For_Report.R')

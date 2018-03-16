@@ -157,7 +157,7 @@ def flatten(l):
 
 
 # ---------------------------------------------------------------------------- #
-def RunRscript(input, output, params, script):
+def RunRscript(input, output, params, logfile, script):
 
     # if isinstance(input, list):
     #     input = dict(zip(input, input))
@@ -176,7 +176,9 @@ def RunRscript(input, output, params, script):
                     "--basedir", SCRIPT_PATH,
                     "--input",  "{input_dump:q}",
                     "--output", "{output_dump:q}",
-                    "--params", "{params_dump:q}"])
+                    "--params", "{params_dump:q}",
+                    " 2> ", logfile,
+                    " 1>&2" ])
 
     shell(cmd)
 

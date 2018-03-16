@@ -11,7 +11,14 @@
 
 ## Summary
 
-PiGX ChIPseq is an analysis pipeline for preprocessing, peak calling and reporting for ChIP sequencing experiments. It is easy to use and produces high quality reports. The inputs are reads files from the sequencing experiment, and a configuration file which describes the experiment. In addition to quality control of the experiment, the pipeline enables to set up multiple peak calling analysis and allows the generation of a UCSC track hub in an easily configurable manner.
+PiGX ChIPseq (pipelines in genomics for Chromatin Immunoprecipitation
+Sequencing) is an analysis pipeline for preprocessing, peak calling and
+reporting for ChIP sequencing experiments. It is easy to use and produces high
+quality reports. The inputs are reads files from the sequencing experiment, and
+a configuration file that describes the experiment. In addition to quality
+control of the experiment, the pipeline enables multiple peak calling
+analysis and allows the generation of a UCSC track hub in an easily
+configurable manner.
 
 ## What does it do
 

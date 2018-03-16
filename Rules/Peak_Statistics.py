@@ -18,11 +18,11 @@ rule peak_statistics:
         Rscript         = SOFTWARE['Rscript']['executable'],
         peaks_resize    = 500
     log:
-        log = os.path.join(PATH_LOG, 'Peak_Statistics.log')
+        logfile = os.path.join(PATH_LOG, 'Peak_Statistics.log')
     message:
         """
             Running: peak_statistics:
                 output:  {output.outfile}
             """
     run:
-        RunRscript(input, output, params, 'Peak_Statistics.R')
+        RunRscript(input, output, params, log.logfile, 'Peak_Statistics.R')

@@ -8,8 +8,10 @@ rule bam2bed:
     params:
         extend   = PARAMS['export_bigwig']['extend'],
         bamToBed = SOFTWARE['bamToBed']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, 'bam2bed.log')
     shell: """
-        {params.bamToBed} -i {input.file} > {output.outfile}
+        {params.bamToBed} -i {input.file} > {output.outfile} 2> {log.logfile}
     """
 
 rule bam2bigWig:
@@ -22,6 +24,8 @@ rule bam2bigWig:
         extend   = PARAMS['export_bigwig']['extend'],
         scale    = PARAMS['export_bigwig']['scale_bw'],
         Rscript  = SOFTWARE['Rscript']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, 'bam2bigWig.log')
     message:"""
         Making bigWig:
             input : {input.file}
@@ -29,7 +33,7 @@ rule bam2bigWig:
             scale:  {params.scale}
     """
     run:
-        RunRscript(input, output, params, 'BigWigExtend.R')
+        RunRscript(input, output, params, log.logfile, 'BigWigExtend.R')
 
 # ----------------------------------------------------------------------------- #
 rule makelinks:

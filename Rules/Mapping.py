@@ -9,7 +9,7 @@ rule link_genome:
         threads = 1,
         mem     = '1G',
     log:
-        os.path.join(PATH_LOG, "link_genome.log")
+        logfile = os.path.join(PATH_LOG, "link_genome.log")
     message:
         """
             Linking genome fasta:
@@ -116,13 +116,13 @@ rule construct_genomic_windows:
             scriptdir = SCRIPT_PATH,
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
+            logfile = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
         message:"""
                 Running: construct_genomic_windows:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'ConstructGenomicWindows.R')
+            RunRscript(input, output, params, log.logfile, 'ConstructGenomicWindows.R')
             
 #----------------------------------------------------------------------------- #
 rule extract_nucleotide_frequency:
@@ -137,13 +137,13 @@ rule extract_nucleotide_frequency:
             scriptdir = SCRIPT_PATH,
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
+            logfile = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
         message:"""
                 Running: extract_nucleotide_frequency:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Extract_Nucleotide_Frequency.R')
+            RunRscript(input, output, params, log.logfile, 'Extract_Nucleotide_Frequency.R')
 
 #----------------------------------------------------------------------------- #
 rule bowtie2:
@@ -159,7 +159,7 @@ rule bowtie2:
         library        = lambda wc: get_library_type(wc.name),
         params_bowtie2 = PARAMS['bowtie2']
     log:
-        log = os.path.join(PATH_LOG, "{name}.bowtie2.log")
+        logfile = os.path.join(PATH_LOG, "{name}.bowtie2.log")
     message:"""
         Mapping with bowtie2:
             sample: {input.infile}
@@ -180,7 +180,7 @@ rule bowtie2:
         '-x', genome,
         map_args,
         join_params("bowtie2", PARAMS, params.params_bowtie2),
-        '2>',log.log,
+        '2>',log.logfile,
         '|', params.samtools,'view -bhS >', output.bamfile
         ])
         shell(command)

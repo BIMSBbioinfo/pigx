@@ -24,11 +24,11 @@ rule prepare_annotation:
             width_params = PARAMS['width_params'],
             Rscript      = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'prepare_annotation.log')
+            logfile = os.path.join(PATH_LOG, 'prepare_annotation.log')
         message:"""
                 Running: prepare_annotation:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Prepare_Annotation.R')
+            RunRscript(input, output, params, log.logfile, 'Prepare_Annotation.R')
 
