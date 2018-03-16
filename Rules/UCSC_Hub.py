@@ -36,6 +36,8 @@ rule bedTobigBed:
     params:
         name        = '{name}',
         bedToBigBed = SOFTWARE['bedToBigBed']['executable']
+    log:
+        log = os.path.join(PATH_LOG, "{name}.bedtobigbed.log")
     message:"""
             bedToBigBed:
                 input : {input}
@@ -54,5 +56,5 @@ rule bedTobigBed:
         input.peaks,
         input.chrlen,
         output.outfile
-        ])
+        '2>',log.log])
         shell(command)
