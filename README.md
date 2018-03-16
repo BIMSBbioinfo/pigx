@@ -39,10 +39,12 @@ configurable manner.
 
 # Install
 
-At this time there are no ready-made packages for this pipeline, so
-you need to install PiGx from source.
+You can install this pipeline with all its dependencies using GNU Guix:
 
-You can find the [latest
+    guix package -i pigx-chipseq
+
+You can also install it from source manually.  You can find the
+[latest
 release](https://github.com/BIMSBbioinfo/pigx_chipseq/releases/latest)
 here.  PiGx uses the GNU build system.  Please make sure that all
 required dependencies are installed and then follow these steps after
