@@ -11,7 +11,7 @@
 
 ## Summary
 
-PiGX ChIPseq (pipelines in genomics for Chromatin Immunoprecipitation
+PiGx ChIPseq (pipelines in genomics for Chromatin Immunoprecipitation
 Sequencing) is an analysis pipeline for preprocessing, peak calling and
 reporting for ChIP sequencing experiments. It is easy to use and produces high
 quality reports. The inputs are reads files from the sequencing experiment, and
