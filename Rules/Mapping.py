@@ -156,7 +156,7 @@ rule bowtie2:
         threads        = config['execution']['rules']['bowtie2']['threads'],
         bowtie2        = SOFTWARE['bowtie2']['executable'],
         samtools       = SOFTWARE['samtools']['executable'],
-        library        = lambda wc: LIB_TYPE[wc.name],
+        library        = lambda wc: get_library_type(wc.name),
         params_bowtie2 = PARAMS['bowtie2']
     log:
         log = os.path.join(PATH_LOG, "{name}.bowtie2.log")
