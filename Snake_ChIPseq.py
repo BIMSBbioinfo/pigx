@@ -93,7 +93,7 @@ NAMES = [line['SampleName'] for line in SAMPLE_SHEET]
 # Directory structure definition
 OUTPUT_DIR      = config['locations']['output-dir']
 # PATH_FASTQ      = os.path.join(OUTPUT_DIR, 'Fastq')
-PATH_TRIMMED    = os.path.join(OUTPUT_DIR, 'Trimmed')
+PATH_TRIMMED    = os.path.join(OUTPUT_DIR, 'Trimmed/Trim_Galore')
 PATH_MAPPED     = os.path.join(OUTPUT_DIR, 'Mapped/Bowtie')
 PATH_QC         = os.path.join(OUTPUT_DIR, 'FastQC')
 PATH_INDEX      = os.path.join(OUTPUT_DIR, 'Bowtie2_Index')
