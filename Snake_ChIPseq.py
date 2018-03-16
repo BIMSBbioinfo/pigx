@@ -9,50 +9,38 @@ import xlrd
 import csv
 import inspect
 
+# ---------------------------------------------------------------------------- #
+# GLOBAL VARIABLES:
+# IMPORTANT defines the compulsory column names for the sample sheet
+# if you want to add the compulsory columns for the sample sheet, do it here
+STRUCTURE_VARIABLES = {
+'SAMPLE_SHEET_COLUMN_NAMES' : ['SampleName', 'Read', 'Read2'],
+
+# defines the allowed execution parameters list for the config file
+'SETTING_SUBSECTIONS'       : ['locations', 'general', 'execution', 'tools', 'peak_calling', 'idr', 'hub', 'feature_combination'],
+
+# sets the obligatory files for the pipeline
+'OBLIGATORY_FILES'          : ['genome-file','gff-file']
+}
+
+
+# ---------------------------------------------------------------------------- #
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
+localrules: makelinks
+# ---------------------------------------------------------------------------- #
+# reads in the sample sheet
+# SAMPLE_SHEET is a hardcoded global variable name - it can not change
+SAMPLE_SHEET = read_SAMPLE_SHEET(config)
+
+# check settings and sample_sheet validity
+validate_config(config, SAMPLE_SHEET, STRUCTURE_VARIABLES)
 
 # ---------------------------------------------------------------------------- #
-# check settings and sample_sheet validity
-validate_config(config)
-
-localrules: makelinks
-
 SCRIPT_PATH       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 RULES_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'Rules/')
-SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 REPORT_TEMPLATE   = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
-
-# ---------------------------------------------------------------------------- #
-# read the sample sheet
-
-## Load sample sheet
-# either from excel file
-if SAMPLE_SHEET_FILE.endswith('.xlsx'):
-    with xlrd.open_workbook(file_name) as book:
-        # assume that the first book is the sample sheet
-        sheet = book.sheet_by_index(0)
-        rows = [sheet.row_values(r) for r in range(0, sheet.nrows)]
-        header = rows[0]; rows = rows[1:]
-        SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
-# or from csv file
-elif SAMPLE_SHEET_FILE.endswith('.csv'):
-    with open(SAMPLE_SHEET_FILE, 'r') as fp:
-        SAMPLE_SHEET = [row for row in csv.DictReader(fp, skipinitialspace=True)]
-else:
-    raise InputError('File format of the sample_sheet has to be: csv or excel table (xls,xlsx).')
-
-
-# Convenience function to access fields of sample sheet columns that
-# match the predicate.  The predicate may be a string.
-def lookup(column, predicate, fields=[]):
-    if inspect.isfunction(predicate):
-        records = [line for line in SAMPLE_SHEET if predicate(line[column])]
-    else:
-        records = [line for line in SAMPLE_SHEET if line[column]==predicate]
-    return [record[field] for record in records for field in fields]
-
-
+LIB_TYPE          = dict(zip([i['SampleName'] for i in SAMPLE_SHEET],[i['library_type'] for i in SAMPLE_SHEET]))
 
 
 
@@ -125,9 +113,7 @@ TRACK_PATHS = {
 # Collects the locations of all peaks
 PEAK_NAME_LIST = {}
 
-# ---------------------------------------------------------------------------- #
-# Checks genome fasta header for proper formatting (no whitespace)
-check_fasta_header(GENOME_ORIG)
+
 
 # names for markdown chunks which will be knit
 # current names: ChIPQC, Extract_Signal_Annotation, Peak_Statistics, Annotate_Peaks

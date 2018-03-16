@@ -6,19 +6,15 @@ from itertools import chain
 import xlrd
 import csv
 
-
-
-
-
-
 # ---------------------------------------------------------------------------- #
-def validate_config(config):
-
-    sample_sheet_dict = read_sample_sheet(config['locations']['sample-sheet'])
+# config dict of dicts
+# sample_sheet_dict - list of dicts
+# sample_sheet_column_names - list of allowed column names for sample sheet
+def validate_config(config, sample_sheet_dict, structure_variables):
 
     message = ''
-    message = check_settings(sample_sheet_dict, config, message)
-    message = check_sample_sheet(sample_sheet_dict, config, message)
+    message = check_settings(sample_sheet_dict, config, structure_variables , message)
+    message = check_sample_sheet(sample_sheet_dict, config,  structure_variables, message)
 
     if len(message) > 0:
         message = 'ERROR: Config file is not properly formated:\n' + message
@@ -27,22 +23,14 @@ def validate_config(config):
     return(0)
 
 
-
-def read_sample_sheet(path):
-    with open(path, 'r') as fp:
-        sample_sheet = [row for row in csv.DictReader(fp, skipinitialspace=True)]
-    return sample_sheet
-
-
 # ---------------------------------------------------------------------------- #
 # checks the proper structure of the sample_sheet file
 # ---------------------------------------------------------------------------- #
-def check_sample_sheet(sample_sheet_dict, config, message):
+def check_sample_sheet(sample_sheet_dict, config, structure_variables, message):
 
-    sample_desciptors = set(['SampleName', 'Read', 'Read2'])
-    
+    sample_sheet_column_names = set(structure_variables['SAMPLE_SHEET_COLUMN_NAMES'])
     if len(sample_sheet_dict) > 0:
-        not_found = sample_desciptors.difference(set(sample_sheet_dict[0].keys()))
+        not_found = sample_sheet_column_names.difference(set(sample_sheet_dict[0].keys()))
         if(len(not_found) > 0):
             message = message + "\t required columns " + str(not_found) + " were not found in sample sheet: " + config['locations']['sample-sheet'] + "\n"
     else:
@@ -54,33 +42,29 @@ def check_sample_sheet(sample_sheet_dict, config, message):
 # ---------------------------------------------------------------------------- #
 # checks the proper structure of the settings file
 # ---------------------------------------------------------------------------- #
-def check_settings(sample_sheet_dict, config, message):
-
+def check_settings(sample_sheet_dict, config, structure_variables, message):
 
     # ---------------------------------------------------------------------------- #
     # checks for proper top level config categories
-    params_list = ['locations', 'general', 'execution', 'tools',
-                   'peak_calling', 'idr', 'hub', 'feature_combination']
-    message = check_params(config, params_list, message)
+    message = check_params(config, structure_variables['SETTING_SUBSECTIONS'], message)
 
     # ---------------------------------------------------------------------------- #
+    # sets obligatory genome files
     # checks for index or genome specification - obligatory
     locations_dict = config['locations']
-    if locations_dict['genome-file'] == None:
-        message = message + "\t" + "genome fasta is not specified\n"
-     
-    else:   
-        # checks for whitespaces in the genome fasta header
-        message = check_fasta_header(locations_dict['genome-file'], message)
-         
-    # sets obligatory gff
-    if (locations_dict['gff-file'] == None):
-        message = message + "\t" + "GFF annotation file is not specified"
-
+    for obligatory_file in structure_variables['OBLIGATORY_FILES']:
+        if locations_dict[obligatory_file] == None:
+            message = message + "\t" + obligatory_file + " is not specified\n"
+    
+          
     # checks whether the locations files exist if they are specified
     for location in sorted(list(set(locations_dict.keys()))):
         message = check_file_exists(locations_dict, location, message)
 
+
+    # ---------------------------------------------------------------------------- #    
+    # checks whether the fasta header contains whitespaces
+    message = check_fasta_header(locations_dict['genome-file'], message)
    
     # ---------------------------------------------------------------------------- #
     # checks for ChIP and Cont specifications
@@ -167,18 +151,23 @@ def check_sample_exists(sample_sheet_dict, config, message=''):
     locations_dict = config['locations']
     if not locations_dict['input-dir']:
         message = message + "\tfastq input directory is not specified\n"
+        
+    elif not os.path.isdir(locations_dict['input-dir']):
+        message = message + "\tfastq input directory does not exist\n"
+    
     else:
         input_dir = locations_dict['input-dir']
-        if sample_sheet_dict:
-            files = [[sample_dict['Read'],
-                      sample_dict['Read2']]
-                     for sample_dict in
-                     sample_sheet_dict]
-            files = list(itertools.chain(*files))
-            for file in files:
-                if not os.path.isfile(os.path.join(input_dir, file)):
-                    message = message + '\t' + file + ": file does not exist\n"
+        for sample_dict in sample_sheet_dict:
+            files = []
+            if sample_dict['library_type'] == 'single':
+                files = [sample_dict['Read']]
+                
+            elif sample_dict['library_type'] == 'paired':
+                files = [sample_dict['Read'], sample_dict['Read2']]
 
+                for file in files:
+                    if not os.path.isfile(os.path.join(input_dir, file)):
+                        message = message + '\t' + file + ": file does not exist\n"
     return(message)
 
 # ---------------------------------------------------------------------------- #
