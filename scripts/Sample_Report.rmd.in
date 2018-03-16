@@ -23,6 +23,9 @@ params:
 
 
 ---
+
+This report was generated with PiGx ChIPseq version @VERSION@.
+
 ```{r setup, include=FALSE, cache=FALSE, fig.height=10, fig.width=10}
 # file = '/home/vfranke/Projects/pigx_chipseq/scripts/Sample_Report.rmd'
 # setwd(dirname(file))

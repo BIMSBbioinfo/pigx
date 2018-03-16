@@ -18,6 +18,8 @@ params:
     
 ---
 
+This report was generated with PiGx ChIPseq version @VERSION@.
+
 ```{r setup, include=FALSE, cache=FALSE, fig.height=10, fig.width=10}
 knitr::opts_chunk$set(echo     = FALSE, 
                       cache    = FALSE, 
