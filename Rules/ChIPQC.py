@@ -11,7 +11,7 @@ rule chipqc:
     params:
         use_longest_chr = 'TRUE',
         sample_name     = "{name}",
-        library_type    = lambda wc: get_library_type(wc.name),
+        library_type    = lambda wc: LIB_TYPE[wc.name],
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable']
     log:

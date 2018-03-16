@@ -175,6 +175,11 @@ TRIM_GALORE_DICT = {}
 for name in NAMES:
     TRIM_GALORE_DICT[name] = get_trimmed_input(name) 
 
+# defines for any sample the library type based on the number of reads
+LIB_TYPE        = {}
+for name in NAMES:
+    LIB_TYPE[name] = get_library_type(sample) 
+
 # ---------------------------------------------------------------------------- #
 # RULE ALL
 # Default output files from the pipeline
@@ -217,7 +222,6 @@ INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
 TRIMMING        = [flatten(TRIM_GALORE_DICT.values())] 
 BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
-LIB_TYPE        = { sample:get_library_type(sample) for sample in NAMES}
 CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
 TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
 NUCLEOTIDE_FREQ = [GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']
