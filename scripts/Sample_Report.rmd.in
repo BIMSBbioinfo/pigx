@@ -104,6 +104,11 @@ sample_correlation_height = number_of_samples*scale_factor
 ```
 
 # Sample Correlation
+
+The following figure shows clustering of normalized ChIP signal,
+quantified in 1 kb bins.
+The color scale represents spearman correlation coefficient. The samples should cluster based on their biological function, and not based on batch effects or latent variables.
+
 ```{r Sample_Correlation, include=TRUE, fig.align='center', message=FALSE, warning=FALSE, fig.width=sample_correlation_width, fig.height=sample_correlation_height, warning=FALSE, message=FALSE}
 dcor = cor(lstats$ChIPQC$norm.count, method='spearman')
 margin_size = max(nchar(rownames(dcor))) * 10
@@ -117,6 +122,10 @@ heatmaply(dcor,
 ---
 
 # Inter Strand Cross Correlation
+
+Inter strand cross-correlation show the correlation of ChIP signal between Watson and Crick strands. The coverage vectors are firstly shifted by the designated amount and correlation coefficient is calculated from the resulting vectors.
+If the DNA shearing, chromatin immunoprecipitation, and fragment selection were succesfull, the maximum value of the, per sample, distribution should correspond to the average fragment length.
+
 ```{r Cross_Correlation, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE,fig.width=10}
 cc = lstats$ChIPQC$shift_correlation %>%
     mutate(shift = shift*10) %>%
@@ -134,7 +143,7 @@ heatmaply(cc,
           k_col  = 2, k_row = 2,
           limits = c(-1,1),
           colors = c('royalblue4','white','darkred'),
-          Colv   = FALSE, 
+          Colv   = FALSE,
           column_text_angle = 90,
           margins = c(150, margin_left, 0, 0),
           colorbar_xanchor = 'middle',
@@ -145,6 +154,9 @@ heatmaply(cc,
 ---
 
 # GC Content Vs Number of Reads
+
+The figure shows the dependence of read counts on the GC content,
+quantified over 1 kb bins. The plot is a diagnostic for proper fragment selection and PCR amplification.
 
 ```{r GC_Content, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE}
 gc_heat = lstats$ChIPQC$GC %>%
@@ -181,6 +193,7 @@ heatmaply(gc_heat,
 
 
 
+
 ```{r GC_Content_Per sample, include=TRUE, fig.align='center'}
 gl = list()
 for(sample in unique(lstats$ChIPQC$GC$sample_name)){
@@ -196,7 +209,11 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
 }
 ```
 
+
+
 # Per Sample GC Content Vs Number of Reads {.tabset}
+
+The following sets of plots show, for each sample the dependence of read counts on the GC content.
 
 ```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', result='asis', eval=TRUE}
 for(sample in names(gl)){
@@ -207,6 +224,10 @@ for(sample in names(gl)){
 ```
 
 # Read Distribution in Genomic Features
+
+Following plots show the distribution of reads over functional genomic features.
+The distribution should correspond to the known biological priors
+(i.e. H3k4me3 should show an increase of reads in the TSS region)
 
 ```{r Read_Distribution_in_Genomic_Features, include=TRUE, fig.align='center'}
 g = lstats$ChIPQC$Annotation %>%
@@ -235,6 +256,9 @@ print(g)
 
 ```{r Read_Distribution_in_Genomic_Features_Header2, include=analysis_ind['Extract_Signal_Annotation'], fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
 ncat('## Signal profiles around genomic features {.tabset}')
+
+message = 'The following sets of plots show the positional distribution of ChIP signal around sets of genomic features. The figures are not intended for hypothesis formation, and interpretation, rather, they should be used only for quality control. The profiles should look similar to the profiles from published experiments. For proper biological interpretation, the data should be analyzed in more detail, with corresponding statistical methods.'
+ncat(message)
 ```
 
 ```{r Signal_profiles_in_genomic_features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
@@ -242,7 +266,7 @@ tab = lstats$Extract_Signal_Annotation$profiles
 genomic_locations = unique(tab$genomic_location)
 
 genomic_coordinates = lapply(setNames(genomic_locations,genomic_locations), function(x){
-    
+
     v = list()
     if(x == 'splicing_acceptor')
         x = 'splicing_accep'
@@ -263,7 +287,7 @@ genomic_coordinates = lapply(setNames(genomic_locations,genomic_locations), func
         pos = max(tab$position)
         v$labels = c(-up,down)
         v$breaks = c(0, pos)
-        
+
     }
     v
 })
@@ -278,13 +302,13 @@ for(i in seq(genomic_locations)){
     geom_line() +
     xlab('Relative position') +
     ylab('Signal Value') +
-    scale_x_continuous(breaks = coordinates$breaks, 
+    scale_x_continuous(breaks = coordinates$breaks,
                        labels = as.character(coordinates$labels)) +
       theme_bw()
-  
+
     if(length(coordinates$breaks) == 3)
         g = g + geom_vline(xintercept = coordinates$breaks[2], linetype=2)
-  
+
   print(g)
   cat('\n')
 }
@@ -295,6 +319,10 @@ for(i in seq(genomic_locations)){
 
 ```{r Peak_Statistics_Header, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis'}
 ncat('# Peak Statistics')
+
+message  = 'Frequency of reads in peaks is a read out of ChIP efficiency. For mamallian genomes an enrichment > 5% is considered as mediocre, an enrichment >10% is considered good, and >20% excellent. The samples should also be checked by looking at the signal profiles in the genome browser.'
+
+ncat(message)
 ```
 
 ```{r Peak_Statistics_Header2, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis'}
@@ -329,6 +357,12 @@ print(g)
 
 ```{r Peak_Number_Header, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', results='asis'}
 ncat('# Peak Distribution in Genomic Features')
+
+message  = 'The following sets of plots show the peak distribution in functional genomic features. The peaks are annotated in a hierarchical procedure based on the following order: TSS > TTS > Exon > Intron > Intergenic.'
+
+ncat(message)
+
+
 ```
 
 ```{r Peak_Number_Header2, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', results='asis'}
