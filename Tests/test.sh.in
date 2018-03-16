@@ -5,9 +5,9 @@ set -u
 
 chmod +w ${srcdir}/Tests
 
-${builddir}/pigx-chipseq -s ${srcdir}/Tests/settings.yaml ${srcdir}/Tests/sample_sheet.yaml
+${builddir}/pigx-chipseq -s ${srcdir}/Tests/settings.yaml ${srcdir}/Tests/sample_sheet.csv
 
-if $?
+if ! test -f "${srcdir}/Tests/out/Reports/ChIP_Seq_Report.html"
 then
   echo "ERROR: the pipeline failed with an unspecified error"
   exit 1
