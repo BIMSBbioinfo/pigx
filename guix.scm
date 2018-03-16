@@ -53,21 +53,13 @@
 			    "/share/java/dropseq-tools/dropseq.jar"))
        #:phases
        (modify-phases %standard-phases
-         (add-after 'unpack 'set-CLASSPATH
-           (lambda* (#:key inputs #:allow-other-keys)
-             (setenv "CLASSPATH" (string-append (assoc-ref inputs "java-picard")
-                                                "/share/java/picard.jar:"
-                                                (assoc-ref inputs "dropseq-tools")
-                                                "/share/java/dropseq-tools/dropseq.jar"))
-             #t))
          (add-after 'install 'wrap-executable
            ;; Make sure the executable finds all R modules.
            (lambda* (#:key inputs outputs #:allow-other-keys)
              (let ((out (assoc-ref outputs "out")))
                (wrap-program (string-append out "/bin/pigx-scrnaseq")
                  `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))
-                 `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))
-                 `("CLASSPATH"   ":" = (,(getenv "CLASSPATH")))))
+                 `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))))
              #t)))))
     (native-inputs
      `(("autoconf" ,autoconf)
