@@ -15,7 +15,7 @@
 PiGx BSseq is a data processing pipeline for raw fastq read data of bisulfite experiments; it produces reports on aggregate methylation and coverage and can be used to produce information on differential methylation and segmentation. It was first developed by the Akalin group at MDC in Berlin in 2017.
 
 The figure below provides a schematic of the process.
-![](images/pipelineIO_BSseq.png )
+![](images/pigx-bsseq_workflow.png )
 
 
 # Install
@@ -134,6 +134,10 @@ optional arguments:
                                           fresh.
   --reason                                Print the reason why a rule is executed.
   --unlock                                Recover after a snakemake crash.
+  --verbose                               Print supplementary info on job execution.
+  --printshellcmds                        Explicitly print commands being executed by snakemake to standard out.
+
+
 
 This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 ```

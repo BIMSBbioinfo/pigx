@@ -8,6 +8,8 @@ general:
   methylation-calling:
     minimum-coverage: 10
     minimum-quality: 10
+  reports:
+    TSS_plotlength: 5000
   differential-methylation:
     cores: 1
     qvalue: 0.01
@@ -27,6 +29,7 @@ execution:
     missing-file-timeout: 120
     stack: 128M
     contact-email: none
+    args: ''
   rules:
     __default__:
       threads: 1
@@ -43,6 +46,9 @@ execution:
     diffmeth:
       threads: 1
       memory: 30G
+    final_report:
+      threads: 1
+      memory: 20G
 
 tools:
   fastqc:

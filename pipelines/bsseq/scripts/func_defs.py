@@ -69,27 +69,27 @@ def list_files_bismark(files, sampleID):
 def list_files_dedupe(files, sampleID):
     PATH = DIR_deduped
     if len(files) == 1:
-        return [PATH+sampleID+"_se_bt2.deduped.bam"] #---- single end
+        return [PATH+sampleID+"_se_bt2.sorted.deduped.bam"] #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.bam"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped.bam"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def list_files_sortbam(files, sampleID):
     PATH = DIR_sorted
     if len(files) == 1:
-        return [PATH+sampleID+"_se_bt2.deduped.sorted.bam"] #---- single end
+        return [PATH+sampleID+"_se_bt2.sorted.bam"] #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted.bam"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.bam"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def bam_processing(files, sampleID):
     PATH = DIR_methcall
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_methylRaw.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted.deduped_methylRaw.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS"] #---- paired end
 
 def bigwig_exporting(files, sampleID):
     PATH = DIR_bigwig
@@ -97,20 +97,20 @@ def bigwig_exporting(files, sampleID):
         return  PATH+sampleID+"_se.bw" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_pe.bw"] #---- paired end
-        
+
 def methSeg(files, sampleID):
     PATH = DIR_seg
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_meth_segments_gr.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted.deduped_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_meth_segments_gr.RDS"] #---- paired end
-        
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_meth_segments_gr.RDS"] #---- paired end
+
 def list_final_reports(files, sampleID):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.deduped.sorted_"+ASSEMBLY+"_final.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted.deduped_"+ASSEMBLY+"_final.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.deduped.sorted_"+ASSEMBLY+"_final.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_"+ASSEMBLY+"_final.html"] #---- paired end
 
 
 
@@ -129,7 +129,7 @@ def get_fastq_name(full_name):
     elif(find_pe_inx>=0):
      output=full_name[:find_pe_inx]
     else:
-     print("Sth went wrong")
+     bail("Unable to infer sample fastq name; cannot find trimming string in filename. \nHave the files been trimmed for adapter sequence and quality?")
 
     return(output)
 
@@ -148,17 +148,17 @@ def diff_meth_input(wc):
       name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
       mylist.append(DIR_annot + name_of_dir)
   return(mylist)
-  
+
 def finalReportDiffMeth_input(prefix):
   sampleid = get_fastq_name(prefix)
   sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
   treatment_of_sampleid = sample_treatments_dict[ sampleid ]
   treatments = ["_".join(pair) for pair in config["general"]["differential-methylation"]["treatment-groups"] if treatment_of_sampleid in pair]
   outList = []
-  if treatments: 
-      outList  = [ "{}{}.sorted_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
-      outList += [ "{}{}.sorted_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
-  
+  if treatments:
+      outList  = [ "{}{}.deduped_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
+      outList += [ "{}{}.deduped_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
+
   return  outList
 
 def get_sampleids_from_treatment(treatment):
@@ -180,9 +180,9 @@ def diffmeth_input_function(wc):
   for sampleid in sampleids:
     fqname = config["SAMPLES"][sampleid]['fastq_name']
     if len(fqname)==1:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.deduped.sorted_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.sorted.deduped_methylRaw.RDS")]
     elif len(fqname)==2:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.deduped.sorted_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS")]
     inputfiles.append(inputfile)
 
   inputfiles = list(sum(inputfiles, []))

@@ -14,7 +14,6 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 bibliography: reports.bib
 link-citations: yes
 params:
-  MethCall: TRUE
   Samplename: ''
   chrom_seqlengths: ''
   source_dir: ''
@@ -23,20 +22,21 @@ params:
   assembly: ''
   mincov:   10
   minqual:  20
+  TSS_plotlength: 5000
   methCallRDS: ''
-  Segmentation: TRUE
-  methSegBed: ''
   methSegGR: ''
+  methSegBed: ''
   methSegPng: ''
-  AnnotateSegments: TRUE
-  DiffMeth: TRUE
-  methylDiff_files: list()
   genome_dir: ''
   scripts_dir: ''
-  AnnotateDiffMeth: TRUE
-  cpgIsland_bedfile:  ''
   refGenes_bedfile:   ''
   webfetch:     ''
+  methylDiff_files: list()
+  MethCall: TRUE
+  AnnotateDiffMeth: TRUE
+  AnnotateSegments: TRUE
+  DiffMeth: TRUE
+  Segmentation: TRUE
 ---
 
 ```{r global_options, include=FALSE}
@@ -74,14 +74,14 @@ It was first developed by the Akalin group at MDC in Berlin in 2017.
 
 This report was generated with PiGx BSseq version @VERSION@.
 
-The results were saved to the output directory listed in the following table; for the remainder of this report, this path will be referred to as '[out]'.
+The results of this pipeline were saved to the output directory listed in the following table; for the remainder of this report, this path will be referred to as '[out]'.
   
  
 ```{r Reporttoplevel_HEADER, eval=TRUE}
 
 basic_paramsDesc <- c("Sample ID",
             "Source directory",
-            "Output directory",
+            "Output directory ([out]) ",
             "Reference genome assembly"
             )
 
@@ -102,10 +102,11 @@ knitr::kable(basic_inputParams)
 
 ```{r MethCallHeader, results='asis', eval=MethCall} 
 cat('## Methylation Calling\n')
+cat('The following table(s) lists some of the basic parameters under which the pipeline calculations were performed as well as output files that may be of interest to the user for further analysis.')
 ```
 
 ```{r MethCall.load_libraries, results='hide', include=FALSE, eval=MethCall}
-
+  library("genomation")
   library("methylKit")
 ```
 
@@ -117,20 +118,12 @@ minqual   <- params$minqual
 methCallRDS   <- params$methCallRDS
 ```
 
-```{r MethCall.print_params_in, results='asis',eval=MethCall}
-cat('### Parameters\n')
-
-cat('**Input parameters:**\n')
-```
-
 ```{r MethCall.print_params_in2, eval=MethCall}
 
-paramsDesc <- c( "Bam file",
-                 "Minimum Coverage",
+paramsDesc <- c( "Minimum Coverage",
                  "Minimim Mapping Quality")
 
-paramsValues <- c( paste0("[out]/",params$inBam),
-                   params$mincov,
+paramsValues <- c( params$mincov,
                    params$minqual)
 
 inputParams <- data.frame(Parameters = paramsDesc,
@@ -142,13 +135,16 @@ knitr::kable(inputParams)
 ```
 
 ```{r MethCall.print_params_out, results='asis',eval=MethCall}
-cat('**Output parameters:**\n')
+cat('**Output files:**\n')
 ```
 
 ```{r MethCall.print_params_out2, eval=MethCall}
 
-inputParams <- data.frame(Parameters = "MethylRaw Object",
-                          Values      = gsub( params$out_dir, "[out]",  params$methCallRDS),
+inputParams <- data.frame( Format     = c( "MethylRaw Object",
+                                           "Bam file"),
+                           location   = c( gsub( params$out_dir, "[out]",  params$methCallRDS),
+                                           gsub( params$out_dir, "[out]", params$inBam)
+                                         ),
                           stringsAsFactors = FALSE)
 #params
 #datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
@@ -201,24 +197,9 @@ cat('Segmentation based on methylation provides a way to compress information on
   library("DT")
 ```
 
-```{r Segmentation.print_params_in, results='asis', eval=Segmentation}
-cat('### Parameters\n')
-
-cat('**Input parameters:**\n')
-```
-
-```{r Segmentation.print_params_in2, eval=Segmentation}
-
-inputParams <- data.frame(Parameters = "MethylRaw Object",
-                          Values     = gsub( params$out_dir, "[out]",  methCallRDS),
-                          stringsAsFactors = FALSE)
-#params
-#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
-knitr::kable(inputParams)
-```
 
 ```{r Segmentation.print_params_out, results='asis', eval=Segmentation}
-cat('**Output parameters:**\n')
+cat('**Output files:**\n')
 ```
 
 ```{r Segmentation.print_params_out2, eval=Segmentation}
@@ -229,8 +210,8 @@ paramsDesc <- c("Segments (BED)",
 paramsValues <- c(methSegBed,
                   methSegGR)
 
-inputParams <- data.frame(Parameters = paramsDesc,
-                          Values     = gsub( params$out_dir, "[out]", paramsValues),
+inputParams <- data.frame( format   = paramsDesc,
+                           location = gsub( params$out_dir, "[out]", paramsValues),
                           stringsAsFactors = FALSE)
 #params
 #datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
@@ -245,7 +226,7 @@ cat('Segmentation of the methylation profile is done using the methSeg() functio
 
 ```{r SegmentationDiagnostics, results='asis', eval= pngFile_exists  }
 
-cat('![Diagnostic Plot of the Segmentation](',pngFile,')')
+cat('![Various  diagnostic plots of the segmentation profile observed](',pngFile,')')
 
 ```
 
@@ -255,8 +236,8 @@ cat('For the given sample, there were insufficient segments detected to perform 
 
 ```
 
-```{r Segmentation.load_and_segment, eval=Segmentation}
-
+```{r Segmentation.load_and_segment, eval=FALSE}
+    ## omit this section; the tables were MASSIVE, and bloated the report.
     res.gr = readRDS(methSegGR)
 
     ## convert to data.frame
@@ -285,7 +266,7 @@ cat('We export the above regions to a *BED* file, which can be loaded into any g
 ```{r AnnotateSegmentsHeader, results='asis', eval=AnnotateSegments}
 cat('## Annotation of Segments\n')
 
-cat('The annotation of the identified regions with genomic features allows a better understanding and characterization of detected regions.\n')
+cat('The annotation of the identified regions with genomic features allows for a better understanding and characterization of detected regions.\n')
 ```
 
 ```{r AnnotateSegments.load_libraries, results='hide', include=FALSE, eval=AnnotateSegments}
@@ -295,44 +276,13 @@ cat('The annotation of the identified regions with genomic features allows a bet
 
 ```
 
-```{r AnnotateSegments.print_params_in, results="asis", eval=AnnotateSegments}
-cat('### Parameters\n')
-
-cat('**Input parameters:**\n')
-```
-
-```{r AnnotateSegments.print_params_in2, eval=AnnotateSegments}
-
-paramsDesc <- c("Segments (GRanges)",
-                "Genome Assembly")
-
-paramsValues <- c(params$methSegGR,
-                  params$assembly)
-
-inputParams <- data.frame(Parameters =  paramsDesc,
-                          Values     =  gsub( params$out_dir, "[out]", paramsValues),
-                          stringsAsFactors = FALSE)
-#params
-#datatable(inputParams,options = list(dom = 't'),rownames = FALSE)
-knitr::kable(inputParams)
-```
 
 ```{r AnnotateSegmentsDescription, results='asis',eval=AnnotateSegments}
 
-
-
-cat('### Preprocessing\n')
-
-cat('Pigx first searches for a reference gene set for the given genome assembly in the path specified in the settings file. Upon failure to find such a file in this location, Pigx allows the user to query the UCSC table browser directly to fetch the reference gene set using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009], when the option `webfetch` is set to `True`. When this option is set to `False`, and the reference gene files are not found, the corresponding sections are simply omitted from this report. 
-
-Upon acquiring the reference genes, we can determine different features intrinsic to each gene, such as promoter, exon or intron using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014] and appropriately for CpG islands and shores.\n')
+cat('Pigx first searches for a reference gene set for the given genome assembly in the path specified in the settings file. Upon failure to find such a file in this location, Pigx allows the user to query the UCSC table browser directly to fetch the reference gene set using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009], when the option `webfetch` (in the settings file) is set to `True` -or, equivalently, `yes`. When this option is set to `False` --or `no`--, and the reference gene files are not found, the corresponding sections are simply omitted from this report. 
+Upon acquiring the reference genes, we can determine different features (e.g. promoter, exon, intron)  intrinsic to each gene,  using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014] --likewise, for CpG islands and shores.\n')
 ```
 
-```{r AnnotateSegments.annotation, results='asis', eval=AnnotateSegments}
-cat('### Annotation\n')
-
-cat('Regionally (de-)methylated segments can now be compared with gene features.\n')
-```
 
 ```{r AnnotateSegments.fetchRefgene, eval=AnnotateSegments}
 originally_present_refgen = file.exists(refGenes_bedfile)
@@ -344,18 +294,18 @@ fetched.refgenes <- lookupBedFile(type      = "refGene",
 fetch_refgen_success <- ( fetched.refgenes != '')
 ```
 
-```{r AnnotateSegments.readRefGene, eval=AnnotateSegments}
+```{r AnnotateSegments.readRefGene,  results='asis', eval=AnnotateSegments}
 
 ## now we parse the gene features
 if( fetch_refgen_success ) {
-  print( paste( "In this run, the reference gene set was obtained with webfetch =", webfetch) )
+  cat( paste( "In this particular execution of the pipeline, the reference gene set was obtained, while the option webfetch was set to =", webfetch) )
   if( !webfetch )
-    {print("This implies that the bed file was found locally.") }
+    {cat('; this implies that the .bed file was found locally on the machine.') }
   if( webfetch && !originally_present_refgen)
-    { print("Downloaded from remote server.") }
+    { cat('\n since the reference gene file was not originally present, this implies that it was downloaded remotely from the UCSC server.') }
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
   } else { 
-  print( paste(" Failed to find Reference gene file ", refGenes_bedfile, ", with webfetch =", webfetch, "; this section omitted.") )  
+  cat( paste(" In this particular execution of the pipeline, PiGx failed to find the reference gene file ", refGenes_bedfile, ", while the option webfetch was set to =", webfetch, ". Thus, the corresponding section was omitted.") )
   }
 ```
 
@@ -379,7 +329,7 @@ if( fetch_refgen_success )
 ```
 
 ```{r AnnotateSegments.text2, results='asis', eval=AnnotateSegments}
-cat('Here, we plot the average methylation per segment group and the overlap with gene features.\n')
+cat('Here, we plot the average methylation per segment group and the overlap with gene features for the input reference gene set.\n')
 ```
 
 ```{r AnnotateSegments.plot,  eval=AnnotateSegments}
@@ -407,7 +357,51 @@ if( fetch_refgen_success )
 
 ```
 
+
+```{r plot_methylation_near_TSSs, results='asis', eval = fetch_refgen_success }
+TSS_plotlength  <- params$TSS_plotlength
+
+cat('Finally, we consider the average methylation over the promoter regions in reference gene set provided. In this case, all CpG sites with coverage above threshold are weighted equally and aligned to the transcription start site (TSS) in the direction of transcription.\n')
+
+ymin = 0
+ymax = 100
+
+gene_features   <- readTranscriptFeatures(refGenes_bedfile)
+TSS_exact       <- gene_features$TSSes
+TSS_proximal    <- resize(TSS_exact, width=TSS_plotlength, fix='center')
+
+sample_methylome_gr          <-  as(methRaw, "GRanges")
+sample_methylome_gr$methfrac <-  sample_methylome_gr$numCs/sample_methylome_gr$coverage
+
+TSSprox_scoremat_noweight = genomation::ScoreMatrix( sample_methylome_gr,
+                                                     TSS_proximal,
+                                                     strand.aware=TRUE,
+                                                     is.noCovNA=TRUE,
+                                                     weight.col='methfrac')
+TSSprox_methprofile_noweight = colMeans(TSSprox_scoremat_noweight, na.rm=TRUE)
+
+plot( seq(TSSprox_methprofile_noweight)-0.5*TSS_plotlength , 100*TSSprox_methprofile_noweight,
+      xlab = "distance from TSS (in direction of transcription)[bp]",
+      xlim = c(-0.5*TSS_plotlength, 0.5*TSS_plotlength),
+      ylab = "<methylation %>",
+      ylim = c(ymin, ymax),
+      main = paste( params$Samplename, "Promoter methylation"),
+      type = "n"
+      )
+lines( seq(TSSprox_methprofile_noweight)-0.5*TSS_plotlength ,100*TSSprox_methprofile_noweight,
+       xlim = c(-0.5*TSS_plotlength, 0.5*TSS_plotlength),
+       ylim = c(ymin, ymax)
+)
+
+```
+
+
+
 ## Session Information
+```{r SessionInfo_conclusion, results='asis'}
+cat('This report concludes with a summary of the session parameters used in the generation of the data conveyed here. Thank you for using PiGx')
+```
+
 
 ```{r SessionInfo}
 sessionInfo()

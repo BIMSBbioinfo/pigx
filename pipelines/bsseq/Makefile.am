@@ -26,6 +26,7 @@ dist_pkgdata_report_templates_SCRIPTS = 			\
   report_templates/reports.bib
 
 dist_pkgdata_DATA =					\
+  etc/sample_sheet.csv.example				\
   etc/settings.yaml					\
   etc/pretty.txt 					\
   etc/CONTENTS.txt					
