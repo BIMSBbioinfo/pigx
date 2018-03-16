@@ -8,9 +8,8 @@ rule link_annotation:
                 Running: link_annotation:
                     output: {output.outfile}
             """
-        shell:"""
-            ln -s {input.annotation} {output.outfile}
-        """
+        run:
+            os.symlink(input.annotation, output.outfile)
 
 
 #----------------------------------------------------------------------------- #

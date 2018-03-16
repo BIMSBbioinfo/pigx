@@ -41,6 +41,5 @@ rule makelinks:
         file = os.path.join(PATH_MAPPED, "{name}", "{name}" + '.bw')
     output:
         os.path.join(PATH_BW, "{name}.bw")
-    shell: """
-        ln -s {input.file} {output}
-    """
+    run:
+        os.symlink(input.file, output)
