@@ -31,6 +31,7 @@
 import os
 import sys
 import argparse
+import shutil
 
 description = """\
 PiGx Pipelines.
@@ -66,90 +67,38 @@ parser.add_argument('pipeline',
 The pipeline to run.  The following pipelines are available:@pipelines@\
 """)
 
-parser.add_argument('samplesheet',
+parser.add_argument('arguments', nargs=argparse.REMAINDER,
                     help="""\
-The sample sheet containing sample data in CSV format.\
+Arguments to the selected pipeline.  Run "pigx [pipeline] --help" to see
+list of supported arguments.
 """)
-
-parser.add_argument('-s', '--settings', dest='settings',
-                    help='A YAML file for settings that deviate from the defaults.')
-
-parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
-                    help="""\
-The config file used for calling the underlying snakemake process.  By
-default the file 'config.json' is dynamically created from the sample
-sheet and the settings file.
-""")
-
-parser.add_argument('--target', dest='target', default='final-report',
-                    help="""\
-Stop when the named target is completed instead of running the whole
-pipeline.  The default target is "final-report".  Pass "--target=help"
-to describe all available targets.""")
-
-parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
-                    help="""\
-Only show what work would be performed.  Do not actually run the
-pipeline.""")
-
-parser.add_argument('--graph', dest='graph', action='store_true',
-                    help="""\
-Output a graph in Graphviz dot format showing the relations between
-rules of this pipeline.""")
-
-parser.add_argument('--force', dest='force', action='store_true',
-                    help="""\
-Force the execution of rules, even though the outputs are considered
-fresh.""")
 
 args = parser.parse_args()
 
 
 
+if os.getenv('PIGX_PATH'):
+    pipeline_script = shutil.which("pigx-" + args.pipeline, path=os.getenv('PIGX_PATH'))
+else:
+    scripts = {
+        "bsseq"   : "@PIGX_BSSEQ@",
+        "rnaseq"  : "@PIGX_RNASEQ@",
+        "chipseq" : "@PIGX_CHIPSEQ@",
+        "scrnaseq": "@PIGX_SCRNASEQ@",
+        "crispr"  : "@PIGX_CRISPR@"
+    }
+    pipeline_script = scripts.get(args.pipeline)
+
 pipelines = "@pipelines@".split()
-if args.pipeline not in pipelines:
-  print("Pipeline not available: {}".format(args.pipeline), file=sys.stderr)
-  exit(1)
+if args.pipeline not in pipelines or not pipeline_script:
+    print("Pipeline not available: {}\nTry setting PIGX_PATH.".format(args.pipeline), file=sys.stderr)
+    exit(1)
 
-# TODO: this is the quick and dirty version to get to a point where we
-# can just call the individual pipeline's driver scripts.  Eventually,
-# this script should do the heavy lifting for all pipelines, but this
-# requires changes in the pipelines.
-
-dirs = {}
-if os.getenv('PIGX_UNINSTALLED'):
-    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
-    dirs['locations'] = {
-        'prefix'       : here,
-        'exec_prefix'  : os.path.join(here, 'pipelines', args.pipeline),
-        'libexecdir'   : here,
-        'pkglibexecdir': here,
-        'datarootdir'  : here,
-        'pkgdatadir'   : here
-    }
-    bin = dirs['locations']['exec_prefix']
-else:
-    # Expand and store autoconf directory variables
-    prefix = '@prefix@'
-    exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
-    libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
-    pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
-    datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
-    pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
-
-    dirs['locations'] = {
-        'prefix'       : '@prefix@',
-        'exec_prefix'  : exec_prefix,
-        'libexecdir'   : libexecdir,
-        'pkglibexecdir': pkglibexecdir,
-        'datarootdir'  : datarootdir,
-        'pkgdatadir'   : pkgdatadir
-    }
-    bin = os.path.join(dirs['locations']['exec_prefix'], 'bin')
-
-pipeline_script = os.path.join(bin, "pigx-"+args.pipeline)
 if os.path.isfile(pipeline_script) and os.access(pipeline_script, os.X_OK):
-  os.execv("@PYTHON@", ["", pipeline_script] + sys.argv[2:])
+    # TODO: we're assuming that pipeline_script is a shell wrapper,
+    # because that's what Guix does, but it could just as well be a
+    # plain Python script.
+    os.execv("@SHELL@", ["pigx", pipeline_script] + args.arguments)
 else:
-  print("Cannot execute {}.".format(pipeline_script), file=sys.stderr)
-  exit(1)
+    print("Cannot execute {}.".format(pipeline_script), file=sys.stderr)
+    exit(1)
