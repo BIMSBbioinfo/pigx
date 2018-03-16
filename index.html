@@ -12,11 +12,11 @@ three steps:</p><ul><li><p><strong>Describe your samples.</strong> Describe all 
 pipeline run this command:</p><pre><code> pigx [pipeline] --init=sample-sheet</code></pre></li><li><p><strong>Tweak the default settings.</strong> Specify input and output
 directories, and override defaults by providing a <code>settings.yaml</code>.
 To generate a template for this file for any pipeline run this
-command:</p><pre><code> pigx [pipeline] --init=settings</code></pre></li><li><p><strong>Run the pipeline!</strong> Here&apos;s a simple example to run the RNAseq
-pipeline when the settings file and the sample sheet are in the
-current working directory:</p><pre><code> pigx rnaseq</code></pre></li></ul><p>That&apos;s it!  After some time you&apos;ll get a bunch of reports that you can
+command:</p><pre><code> pigx [pipeline] --init=settings</code></pre></li><li><p><strong>Run the pipeline!</strong> Here's a simple example to run the RNAseq
+pipeline when the sample sheet <code>sample_sheet.csv</code> is in the current
+working directory:</p><pre><code> pigx rnaseq -s settings.yaml</code></pre></li></ul><p>That's it!  After some time you'll get a bunch of reports that you can
 view in your browser.</p><p>For more detailed information about each of the pipelines <a href="http://bioinformatics.mdc-berlin.de/pigx_docs">see the
-online documentation</a>.</p><h1>Get it</h1><p>Pre-built binaries for PiGx are (soon) available through <a href="https://gnu.org/software/guix">GNU
+online documentation</a>.</p><h1>Get it</h1><p>Pre-built binaries for PiGx are available through <a href="https://gnu.org/software/guix">GNU
 Guix</a>, the functional package manager
 for reproducible, user-controlled software management.  Install the
 complete pipeline bundle with the following command:</p><pre><code class="language-sh">guix package -i pigx</code></pre><p>PiGx is <a href="https://www.fsf.org/about/what-is-free-software">free
