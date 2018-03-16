@@ -13,7 +13,7 @@ annotation:
   # The secondary annotation is optional
   secondary:
 
-covariates: 'time, replicate'
+covariates: 'replicate'
 
 execution:
   submit-to-cluster: no
@@ -44,3 +44,26 @@ tools:
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla"
+
+# ---------------------------------------------------------------------------- #
+# HARDCODED adapter parameters
+# This variable extands the pipeline to various technologies. It defines
+# The locations of cell and UMI adapters in fastq1
+# Currently supprorted technologies are dropseq and chromium10x
+# base_min/max define the position of the adapters in the fastq file
+adapter_parameters:
+  dropseq:
+    cell_barcode:
+      base_min: 1
+      base_max: 12
+    umi_barcode:
+      base_min: 13
+      base_max: 20
+
+  chromium10x:
+    cell_barcode:
+      base_min: 1
+      base_max: 16
+    umi_barcode:
+      base_min: 17
+      base_max: 26

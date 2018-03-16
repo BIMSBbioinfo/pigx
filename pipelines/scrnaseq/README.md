@@ -11,13 +11,15 @@
 
 -----------
 
-## Summary
+
+# Introduction
 
 PiGX scRNAseq is an analysis pipeline for preprocessing and quality control for single cell RNA sequencing experiments. 
 The inputs are read files from the sequencing experiment, and a configuration file which describes the experiment. 
 It produces processed files for downstream analysis and interactive quality reports. 
 The pipeline is designed to work with UMI based methods. It currently supports all methods which output paired
 adapter - read files.
+The pipeline was heavily influenced by the [Dropseq](http://mccarrolllab.com/dropseq/) pipeline from the McCaroll lab.
 
 
 ## What does it do
@@ -38,19 +40,29 @@ adapter - read files.
 - Quality control report
 - SingleCellExperiment object with pre-calculated statistics and dimensionallity reductions
 
+## PiGx - scRNA-seq workflow
+
+![PiGx scRNAseq workflow](./images/pigx-scrnaseq.svg)
+_Figure 1: An overview of the PiGx scRNA-seq workflow_
+
 # Install
 
-At this time there are no ready-made packages for this pipeline, so
-you need to install PiGx from source.
+You can install this pipeline and all of its dependencies through GNU
+Guix:
 
-You can find the [latest
+    guix package -i pigx-scrnaseq
+
+You can also install it manually from source.  You can find the [latest
 release](https://github.com/BIMSBbioinfo/pigx_scrnaseq/releases/latest)
 here.  PiGx uses the GNU build system.  Please make sure that all
 required dependencies are installed and then follow these steps after
 unpacking the latest release tarball:
 
 ```sh
-./configure --prefix=/some/where
+./configure                         \
+    --prefix=/some/where            \
+    DROPSEQJAR=/path/to/dropseq.jar \
+    PICARDJAR=/path/to/picard.jar
 make install
 ```
 
@@ -102,7 +114,7 @@ To run the pipeline, you will also need the appropriate genome sequence in fasta
 gtf format.
 
 ```sh
-$ pigx-rscnaseq [options] sample_sheet.csv -s settings.yaml
+$ pigx-scrnaseq [options] sample_sheet.csv -s settings.yaml
 ```
 
 To see all available options type the `--help` option
@@ -160,7 +172,7 @@ The sample sheet is a tabular file describing the experiment. The table has the 
 - _reads2_ - fastq file containing the **sequenced reads**
   - location of these files is specified in `settings.yaml`
 - _library_ - sequencing platform on which the experiment was performed (i.e. dropseq)
-- _covariates_ - variables which describe the samples
+- _covariates_ - variables which describe the samples. For example: replicate, time, hour post infection, tissue ...
 
 Additional columns may be included which may be used as covariates in the differential expression analysis (sex, age, different treatments).
 
@@ -173,16 +185,19 @@ The settings file is a _YAML_ file which specifies:
   - The location of the output directory
   - The location of the `fasta` file with the reference genome (must be prepared by the user)
   - The location of a `GTF` file with genome annotations
-- Organism name
+- Genome assembly name (i.e. mm10)
+
+- covariates 
 
 In order to get started, enter `pigx-scrnaseq --init-settings my_settings.yaml`. This will create a file called `my_settings.yaml` with the default structure. The file will look like this:
 
-```
+```yaml
 locations:
   output-dir: out/
   reads-dir: sample_data/reads/
-  metadata: metaData.tsv
   tempdir:
+
+covariates: 'covariate1, covariate2, ...'
 
 annotation:
   primary:
@@ -209,19 +224,111 @@ that you have at least 30Gb of disk space per 100 milion sequenced reads.
 The location of the temporary directory can be controlled using the tempdir: variable in the settings.yaml.
 By default the tempdir is set to **/tmp**.
 
+**Important:** please make sure that the temporary directory has adequate free space
 
-# Output structure description
+
+# Output directory structure
+The output directory structure should look like the following tree
+
+```
+|-- Annotation
+|   `-- genome_name (i.e. mm10)
+|       `-- STAR_INDEX
+|-- Log
+|-- Mapped
+|   |-- Sample_1
+|   |   `-- genome_name
+|   |-- Sample_2
+|   |   `-- genome_name
+|   |-- Sample_3
+|   |   `-- genome_name
+|   `-- Sample_4
+|       `-- genome_name
+```
+
+### Annotation
+
+Contains pre-processed fasta and gtf file, along with the STAR genome index.
+The genome fasta file is processed into a dict header.
+The gtf file has gene_names replaced with gene_id.
+
+**Important**: We sincerely advise that you check that the gtf file corresponds to the same organism
+and genome version as the genome fasta files.
+The chromosome names have to completely correspond between the two files.
+
+We encourage users to use both the genome annotation and the fasta file from the [ENSEMBL](https://www.ensembl.org/info/data/ftp/index.html) database.
+
+### Log
+
+Contains execution logs for every step of the pipeline.
+
+### Mapped
+
+The **Mapped** folder contains per sample processed single cell samples.
+Additionally, it contains a [loom](http://linnarssonlab.org/loompy/) file with merged expression values from all experiments,
+an RDS file with a saved [SingleCellExperiment](https://bioconductor.org/packages/release/bioc/html/SingleCellExperiment.html) object, and a quality control report in the html format.
+
+#### Mapped/Sample1
+
+Analaysis results for each sample are done in a separate subdirectory under **Mapped**.
+Structure of analysis results:
 
 
-# Detailed pipeline description
+```
+|-- Sample1.fastq.bam
+|-- Sample1_1_fastqc.html
+|-- Sample1_1_fastqc.zip
+|-- Sample1_2_fastqc.html
+|-- Sample1_2_fastqc.zip
+|-- genome_name
+|   |-- adapter_trimming_report.txt
+|   |-- Sample1_genome_name.bw
+|   |-- Sample1_genome_name.m.bw
+|   |-- Sample1_genome_name.p.bw
+|   |-- Sample1_genome_name_BAMTagHistogram.txt
+|   |-- Sample1_genome_name_DownstreamStatistics.txt
+|   |-- Sample1_genome_name_READS.Matrix.txt
+|   |-- Sample1_genome_name_ReadCutoff.png
+|   |-- Sample1_genome_name_ReadCutoff.yaml
+|   |-- Sample1_genome_name_ReadStatistics.txt
+|   |-- Sample1_genome_name_Summary.txt
+|   |-- Sample1_genome_name_UMI.Matrix.loom
+|   |-- Sample1_genome_name_UMI.Matrix.txt
+|   |-- polyA_trimming_report.txt
+|   |-- star.Log.final.out
+|   |-- star.Log.out
+|   |-- star.Log.progress.out
+|   |-- star.SJ.out.tab
+|   |-- star_gene_exon_tagged.bai
+|   |-- star_gene_exon_tagged.bam
+|   |-- unaligned_tagged_Cellular.bam_summary.txt
+|   `-- unaligned_tagged_Molecular.bam_summary.txt
+```
 
+
+#### Description of relevant output files:
+
+- Sample1.fastq.bam - contains merged barcode and sequence fq files
+
+- Sample1_genome_name.**bw** - bigWig file constructed from selected cells. Files with **m/p**.bw contain strand separated signal
+
+- Sample1_genome_name_**BAMTagHistogram** - Number of reads in coressponding to each cell barcode.
+
+- Sample1_genome_name_UMI.Matrix.**txt/loom** - UMI based digital expression matrix in txt and loom format
+
+- Sample1_genome_name_READS.Matrix.txt - Read count digital expression matrix
+
+- Sample1_genome_name_ReadCutoff.yaml - contains the UMI threshold for selecting high quality cells (obtained using [dropbead](https://github.com/rajewsky-lab/dropbead)). The corresponding .png file visualizes the UMI curve and the threshold.
+
+- star_gene_exon_tagged.bam - mapped and annotated reads. Each read is tagged by annotation based on it's mapping location.
+
+- Sample1_genome_name_**ReadStatistics/Downstream**.txt - quality control statistics used in the html report. They contain values such as number of reads in Exons/Introns.
 
 # Downstream analysis
 
+The combined expression data are subsequently processed into a [SingleCellExperiment](https://bioconductor.org/packages/release/bioc/html/SingleCellExperiment.html) object. SingleCellExperiment is a Bioconductor class for storing expression values, along with the cell, and gene data, and experimental meta data in a single container. It is constructed on top of hdf5  file based arrays  (Pagès 2017), which enables exploration even on systems with limited memory capacity. 
+During the object construction, the pipeline performs expression normalization, dimensionallity reduction, identification of significantly variable genes, assigns the cells to the steps of the cell cycle, and calculates the quality statistics. The SingleCellExperiment object contains all of the necessary data needed for further exploration. The object connects the pigx-pipeline with the Bioconductor single cell computing environment, and enables integration with state of the art statistical, and machine learning mehods ([scran](https://bioconductor.org/packages/release/bioc/html/scran.html), [zinbwave](https://bioconductor.org/packages/release/bioc/html/zinbwave.html), [netSmooth](https://github.com/BIMSBbioinfo/netSmooth), [iSEE](https://github.com/csoneson/iSEE).
 
-# Advanced usage
-
-## Mixed species experiments
 
 ### Cluster Execution
 
