@@ -1,6 +1,12 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+181603
+[*]. Add peak QC
+[*]. Run multiqc
+[*]. Add test genome data (genome subset)
+[*]. add check for gzipped bowtie reference
+[*]. the pipeline does not work without app params - change config check
 
 181503
 [*]. enable trimming
@@ -114,8 +120,6 @@ Initial commit
 
 [#]. enable sample specific parameter deposition - works for macs
 [#]. write tests
-[]. the pipeline does not work without app params - change config check
-[]. add check for gzipped bowtie reference
 []. write markdown
         - Sample Specific
 
@@ -148,13 +152,9 @@ Initial commit
 
 
 ## Additional
-[]. Add peak QC
-[]. Run multiqc
-
 []. rewrite fastqc to go through each individual file
 
 
-[]. Add test genome data (genome subset)
 []. Set default for genome name if genome specified but genome name is not
 []. Delete temporary files - bed and bedGraph files
 []. Sample specific read extension
