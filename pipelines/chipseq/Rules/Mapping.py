@@ -18,8 +18,46 @@ rule link_genome:
         """
     run:
         import os
-        os.symlink(str(input.genome), str(output.outfile))
+        import magic as mg
+        import sh as sh
+        import zipfile
+
+        # ------------------------------------------------#
+        # prevents errors during linking
+        def trylink(infile, outfile):
+            if os.path.exists(outfile):
+                os.remove(outfile)
+            try:
+                os.symlink(infile, outfile)
+            except:
+                "Symbolic link exists"
+                
+        # ------------------------------------------------#            
+        # checks whether the input file is zipped, if zipped
+        # unzips the file
+        infile = str(input.genome)
+        outfile = str(output.outfile)
         
+        # this is necessary because the [g]unzip command
+        # dies if the existing file is in the directory
+        # necessary if the reference gets updated
+        if os.path.exists(outfile):
+            os.remove(outfile)
+        
+        genome_file_type = mg.from_file(infile, mime=True)
+
+        if genome_file_type.find('gzip') > 0:
+            outfile = outfile + '.gz'
+            sh.cp(infile, outfile)
+            sh.gunzip(outfile)
+                  
+        elif genome_file_type == 'text/plain':
+            trylink(infile, outfile)
+            
+        else:
+            os.sys.exit('Unknow input genome file format')
+
+
 # ---------------------------------------------------------------------------- #
 rule bowtie2_build:
     input:
@@ -108,7 +146,7 @@ rule extract_nucleotide_frequency:
 #----------------------------------------------------------------------------- #
 rule bowtie2:
     input:
-        infile = get_fastq_input,
+        infile = lambda wc: get_fastq_input(wc.name),
         genome = rules.bowtie2_build.output.outfile
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
@@ -116,7 +154,7 @@ rule bowtie2:
         threads        = config['execution']['rules']['bowtie2']['threads'],
         bowtie2        = SOFTWARE['bowtie2']['executable'],
         samtools       = SOFTWARE['samtools']['executable'],
-        library        = get_library_type,
+        library        = lambda wc: get_library_type(wc.name),
         params_bowtie2 = PARAMS['bowtie2']
     log:
         log = os.path.join(PATH_LOG, "{name}.bowtie2.log")
@@ -127,6 +165,8 @@ rule bowtie2:
             output: {output.bamfile}
     """
     run:
+        print(input.infile)
+        print(params.library)
         genome = input.genome.replace('.1.bt2','')
         if params.library in ['single','SINGLE']:
             map_args =  '-U ' + input.infile[0]

@@ -32,7 +32,8 @@ format_Annotate_Peaks = function(tab){
         name = tab$name[i]
         message(name)
         granges = readRDS(tab$file[i])
-        ld[[name]] = data.frame(sample_name=name, annot=granges$annot)
+        if(length(granges) > 0)
+            ld[[name]] = data.frame(sample_name=name, annot=granges$annot)
     }
     dd = as.data.frame(do.call(rbind, ld)) %>%
         group_by(sample_name, annot)       %>%
@@ -56,7 +57,7 @@ format_ChIPQC = function(tab){
     message('GC ...')
       lout$GC = do.call(rbind, lapply(names(lres), function(x){
           dat = lres[[x]]$tilling_windows
-          tibble(sample_name = x, GC = dat$GC, counts = dat$samplecounts[[2]])
+          tibble(sample_name = x, GC = dat$G + dat$C, counts = dat$samplecounts[[2]])
       }))
 
     message('Shift Correlation ...')
@@ -83,12 +84,15 @@ format_ChIPQC = function(tab){
     message('Normalized Counts ...')
     lout$norm.counts = Reduce(left_join, lapply(names(lres), function(x){
         cnts = lres[[x]]$tilling_windows$samplecounts[[2]]
-        tab = tibble(window = seq(cnts), counts = cnts)
+        tab  = tibble(window = seq(cnts), counts = cnts)
         colnames(tab)[2] = x
         tab
     })) %>%
     mutate(window=NULL)
 
+
+    message('Annotation ...')
+    lout$Annotation = do.call(rbind, lapply(lres, '[[','annot'))
     #
     # lout$readlength = do.call(rbind,lapply(names(lres), function(x){
     #     tibble(sample_name = x, readlength = lres[[x]]$readlength)

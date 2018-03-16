@@ -4,13 +4,14 @@ rule chipqc:
         bamfile              = os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam"),
         index                = os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"),
         logfile              = rules.parse_bowite2_log.output.outfile,
-        nucleotide_frequency = rules.extract_nucleotide_frequency.output.outfile
+        nucleotide_frequency = rules.extract_nucleotide_frequency.output.outfile,
+        annotation           = rules.prepare_annotation.output.outfile
     output:
         outfile  = os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds")
     params:
         use_longest_chr = 'TRUE',
         sample_name     = "{name}",
-        sample_sheet    = SAMPLE_SHEET,
+        library_type    = lambda wc: get_library_type(wc.name),
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable']
     log:

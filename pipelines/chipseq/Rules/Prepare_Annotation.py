@@ -20,8 +20,9 @@ rule prepare_annotation:
         output:
             outfile = os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')
         params:
-            scriptdir = SCRIPT_PATH,
-            Rscript   = SOFTWARE['Rscript']['executable']
+            scriptdir    = SCRIPT_PATH,
+            width_params = PARAMS['width_params'],
+            Rscript      = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'prepare_annotation.log')
         message:"""

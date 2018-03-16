@@ -6,9 +6,10 @@ argv = Parse_Arguments('Prepare_Annotation')
 
 # ---------------------------------------------------------------------------- #
 Prepare_Annotation = function(
-    gtf_path=NULL,
-    outfile,
-    scriptdir
+    gtf_path     = NULL,
+    outfile      = NULL,
+    scriptdir    = './scripts',
+    width_params
 ){
 
     suppressPackageStartupMessages(library('genomation'))
@@ -23,7 +24,8 @@ Prepare_Annotation = function(
     annotation = ReadGTFAnnotation(gtf_path)
 
     # selects the genomic regions used for the profiles
-    annotation$full_annotation    = GTFGetAnnotation(annotation$gtf)
+    annotation$full_annotation    = GTFGetAnnotation(annotation$gtf, 
+                                                     width_params=width_params)
 
     # selects the genomic regions used for annotation
     annotation$genomic_annotation = annotation$full_annotation[c('tss','tts','exon','intron')]
@@ -38,7 +40,8 @@ Prepare_Annotation = function(
 # ---------------------------------------------------------------------------- #
 # function call
 Prepare_Annotation(
-    gtf_path  = argv$input[['gtf_path']],
-    outfile   = argv$output[['outfile']],
-    scriptdir = argv$params[['scriptdir']]
+    gtf_path     = argv$input[['gtf_path']],
+    outfile      = argv$output[['outfile']],
+    scriptdir    = argv$params[['scriptdir']],
+    width_params = argv$params[['width_params']]
 )

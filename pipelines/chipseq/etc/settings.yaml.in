@@ -21,7 +21,18 @@ general:
         q: 0.05
     extract_signal:
         expand_peak:
-        bin_num:
+        number_of_bins: 50
+    width_params:
+       tss_width: 1000
+       tts_width: 1000
+       tss_wide_width: 10000
+       tts_wide_width: 10000
+       tss_body_upstream: 1000
+       tss_body_downstream: 10000
+       tts_body_upstream: 10000
+       tts_body_downstream: 1000
+       splicing_donor_width: 200
+       splicing_accep_width: 200
 
 execution:
   submit-to-cluster: no
@@ -32,6 +43,7 @@ execution:
     memory: 8G
     stack: 128M
     contact-email: none
+    args: ''    
   rules:
     __default__:
       threads:   1
@@ -46,7 +58,7 @@ execution:
       threads:   1
       memory:    16G
     bedTobigBed:
-      threads:   1 
+      threads:   1
       memory:    8G
     bowtie2:
       threads:   2
@@ -76,25 +88,25 @@ execution:
       threads:   1
       memory:    1G
     link_annotation:
-      threads:   1 
+      threads:   1
       memory:    16G
     make_ucsc_hub:
-      threads:   1 
+      threads:   1
       memory:    8G
     samtools_sort:
       threads:   4
       memory:    16G
     samtools_index:
-      threads:   1 
+      threads:   1
       memory:    8G
     macs2:
-      threads:   1 
+      threads:   1
       memory:    16G
     prepare_annotation:
-      threads:   1 
+      threads:   1
       memory:    16G
     sort_peak:
-      threads:   1 
+      threads:   1
       memory:    8G
 
 tools:

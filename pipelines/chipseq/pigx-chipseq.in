@@ -59,13 +59,16 @@ parser = argparse.ArgumentParser(description=description,
 parser.add_argument('-v', '--version', action='version',
                     version=version)
 
-parser.add_argument('samplesheet',
+parser.add_argument('sample_sheet', nargs='?', default='sample_sheet.csv',
                     help="""\
 The sample sheet containing sample data in CSV format.\
 """)
 
-parser.add_argument('-s', '--settings', dest='settings', required=True,
-                    help='A YAML file for settings that deviate from the defaults.')
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('--init', dest='init', choices=['settings', 'sample-sheet', 'both'], const='both', nargs='?',
+                   help='Generate a template SETTINGS file, a SAMPLE-SHEET.  Leave empty for both.')
+group.add_argument('-s', '--settings', dest='settings',
+                   help='A YAML file for settings that deviate from the defaults.')
 
 parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
                     help="""\
@@ -114,38 +117,11 @@ def bail(msg):
     exit(1)
 
 
-def generate_config(configfile, samplesheet, settingsfile):
-    """Generate a new configuration file CONFIGFILE using SAMPLESHEET and
-SETTINGSFILE as inputs."""
-    dirs = {}
-    if os.getenv('PIGX_UNINSTALLED'):
-        here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
-        dirs['locations'] = {
-            'prefix'       : here,
-            'exec_prefix'  : here,
-            'libexecdir'   : here,
-            'pkglibexecdir': here,
-            'datarootdir'  : here,
-            'pkgdatadir'   : here
-        }
-    else:
-        # Expand and store autoconf directory variables
-        prefix = '@prefix@'
-        exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
-        libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
-        pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
-        datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
-        pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
-
-        dirs['locations'] = {
-            'prefix'       : '@prefix@',
-            'exec_prefix'  : exec_prefix,
-            'libexecdir'   : libexecdir,
-            'pkglibexecdir': pkglibexecdir,
-            'datarootdir'  : datarootdir,
-            'pkgdatadir'   : pkgdatadir
-        }
-
+def generate_config(configfile, sample_sheet, settingsfile, dirs):
+    """Generate a new configuration file CONFIGFILE using SAMPLE_SHEET and
+SETTINGSFILE as inputs.  Use the locations in DIRS to find default
+settings.
+    """
     # Load defaults
     if os.getenv('PIGX_UNINSTALLED'):
         where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
@@ -166,7 +142,7 @@ SETTINGSFILE as inputs."""
     settings['locations'].update(dirs['locations'])
 
     # Resolve relative paths in the locations section
-    root = path.dirname(samplesheet)
+    root = path.dirname(sample_sheet)
     here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
 
     for key in settings['locations']:
@@ -174,7 +150,7 @@ SETTINGSFILE as inputs."""
             settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
 
     # Record the location of the sample sheet.
-    settings['locations']['sample-sheet'] = path.abspath(samplesheet)
+    settings['locations']['sample-sheet'] = path.abspath(sample_sheet)
 
     # Write the config file
     with open(configfile, 'w') as outfile:
@@ -286,10 +262,72 @@ def display_logo():
 
 
 
+# Determine locations
+dirs = {}
+if os.getenv('PIGX_UNINSTALLED'):
+    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+    dirs['locations'] = {
+        'prefix'       : here,
+        'exec_prefix'  : here,
+        'libexecdir'   : here,
+        'pkglibexecdir': here,
+        'datarootdir'  : here,
+        'pkgdatadir'   : here
+    }
+else:
+    # Expand and store autoconf directory variables
+    prefix = '@prefix@'
+    exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
+    libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
+    pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
+    datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
+    pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+
+    dirs['locations'] = {
+        'prefix'       : '@prefix@',
+        'exec_prefix'  : exec_prefix,
+        'libexecdir'   : libexecdir,
+        'pkglibexecdir': pkglibexecdir,
+        'datarootdir'  : datarootdir,
+        'pkgdatadir'   : pkgdatadir
+    }
+
+# Init?
+if args.init:
+    init_settings = False
+    init_sample_sheet = False
+    if os.getenv('PIGX_UNINSTALLED'):
+        base = os.getcwd() + '/etc/'
+    else:
+        base = dirs['locations']['pkgdatadir']
+
+    if args.init == 'both':
+        init_settings = True
+        init_sample_sheet = True
+
+    if args.init == 'settings' or init_settings:
+        name = 'settings.yaml'
+        if path.exists(name):
+            print('Refusing to overwrite existing {}.'.format(name))
+        else:
+            with open(name, 'w') as outfile:
+                with open(path.join(base, name), 'r') as infile:
+                    for line in infile:
+                        outfile.write('# ' + line)
+            print('Generated {} template.'.format(name))
+
+    if args.init == 'sample-sheet' or init_sample_sheet:
+        # FIXME: this feature is not implemented in this pipeline,
+        # as it expects a YAML file for the sample sheet.
+        print('Sorry, sample sheet initialization has not been implemented for this pipeline.  Skipping.')
+
+    exit(0)
+
 # Run snakemake!
 generate_config(args.configfile,
-                args.samplesheet,
-                args.settings)
+                args.sample_sheet,
+                args.settings,
+                dirs)
 
 config = json.load(open(args.configfile, 'r'))
 
@@ -331,6 +369,8 @@ if config['execution']['submit-to-cluster']:
         else:
             raise
     qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    if config['execution']['cluster']['args']:
+        qsub += " " + config['execution']['cluster']['args']
     command += [
         "--cluster-config={}".format(cluster_config_file),
         "--cluster={}".format(qsub),

@@ -16,6 +16,9 @@ dnl https://www.gnu.org/software/automake/manual/html_node/Python.html
 AM_PATH_PYTHON([3.5])
 
 AX_PYTHON_MODULE([yaml], "required")
+AX_PYTHON_MODULE([pytest], "required")
+AX_PYTHON_MODULE([xlrd], "required")
+AX_PYTHON_MODULE([magic], "required")
 
 dnl Check for required programmes and store their full path in the
 dnl given variables.  The variables are used to substitute
@@ -60,9 +63,12 @@ AX_R_PACKAGE([data.table])
 AX_R_PACKAGE([jsonlite])
 AX_R_PACKAGE([genomation])
 AX_R_PACKAGE([GenomicRanges])
-AX_R_PACKAGE([RCAS])
 AX_R_PACKAGE([rtracklayer])
 AX_R_PACKAGE([stringr])
+AX_R_PACKAGE([chipseq])
+AX_R_PACKAGE([heatmaply])
+AX_R_PACKAGE([ggplot2])
+AX_R_PACKAGE([plotly])
   ])
 
 

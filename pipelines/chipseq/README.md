@@ -151,46 +151,102 @@ This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 
 ## Input Parameters
 
+The pipeline requires two files as input to specify the [samples](#sample-sheet)  and the design of the [analysis](#settings-file).  
+
 ### Sample Sheet
 
-The sample sheet is a file in yaml format describing the experiment. It has following sections: 
+The samples used for any subsequent analysis are defined in the _sample sheet_ section. 
+
+| SampleName | Read | Read2 |
+|------|-------|--------|
+
+- SampleName is the name for the sample
+- _Read/Read2_ are the fastq file names of paired end reads
+  - the location of these files is specified in `settings.yaml`
+  - for single-end data, leave the Read2 column in place, but have it empty
+
+### Settings File
+
+The settings file is a file in yaml format specifying general settings and the details of the analysis. It has the following **required** sections: 
+
+#### Locations
+
+Defines paths to be used in the pipeline, some of the items are required and some optional (can stay blank): 
+
+| item    | required | description |
+|---------|----------|-------------|
+| _input-dir_ | yes | directory of the input files (`fastq` files) |
+| _output-dir_    | yes | output directory for the pipeline |
+| _genome-file_    | yes | path to the reference genome in `fasta` forma |
+| _index-dir_    | no | directory containing pre-built mapping indices for the  given reference genome (created with `bowtie2-build`) |
+| _gff-file_    | no | location of a `GTF` file with genome annotations for the  given reference genome |
+
+#### General
+
+These are settings which apply to all analysis (unless adjusted in single analysis):
+
+| item    | required | description |
+|---------|----------|-------------|
+| _assembly_ | yes | version of reference genome (e.g. hg19,mm9, ...) |
+| _params_    | no | list of default parameters for tools and scripts (for tools check respective manual for available parameters) |
+
+#### Execution
+
+The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
+
+
+A minimal settings file could look like this, but please consider that no analysis will be performed without adding [analysis information](#analysis-sections) :
+
+```yaml
+locations:
+  input-dir: in/reads/
+  output-dir: out/
+  genome-file: genome/my_genome.fa
+  index-dir:
+  gff-file: genome/mm_chr19.gtf
+
+general:
+  assembly: hg19
+  params:
+    extend: 200
+    scale_bw: 'yes'
+    bowtie2:
+        k: 1
+    idr:
+        idr-threshold: 0.1
+    macs2:
+        g: hs
+        keep-dup: auto
+        q: 0.05
+    extract_signal:
+        expand_peak: 200
+        bin_num: 20
+
+execution:
+  submit-to-cluster: no
+  rules:
+    __default__:
+      queue: all.q
+      memory: 8G
+    bowtie2:
+      queue: all.q
+      memory: 16G
+
+```
+
+### Analysis Sections
+
+The analysis part of the setting file describes the experiment. It has following sections: 
 
 | section | required | description |
 |---------|----------|-------------|
-| _samples_ | yes | describes the mapping of samples, specifying read file names and library type (_single_/_paired_) ([see here for details](#samples)) |
-| *peak_calling*  | yes | defines which samples will be used to detect regions of enriched binding ( multiple combinations and variations are possible, [see here for details](#peak_calling) ) |
-| _idr_ | no | specifies pairs of *peak calling* analysis that are compared to determine the reproducibilty of the general experiment ([see here for details](#idr)) |
-| _hub_ | no | describes the general layout of a UCSC hub that can be created from the processed data and allows the visual inspection of results at a UCSC genome browser ([see here for details](#hub)) |
-| *feature_combination* | no | defines for a list of *peak calling* and/or *idr* analysis the combination of regions shared among this list ([see here for details](#feature_combination)) |
+| *peak_calling*  | yes | defines which samples will be used to detect regions of enriched binding ( multiple combinations and variations are possible, [see here for details](#peak-calling) ) |
+| _idr_ | no | specifies pairs of *peak calling* analysis that are compared to determine the reproducibilty of the general experiment ([see here for details](#optionalidr)) |
+| _hub_ | no | describes the general layout of a UCSC hub that can be created from the processed data and allows the visual inspection of results at a UCSC genome browser ([see here for details](#optional-hub)) |
+| *feature_combination* | no | defines for a list of *peak calling* and/or *idr* analysis the combination of regions shared among this list ([see here for details](#optional-feature-combination)) |
 
 
-The creation of the sample sheet is straight forward considering the following snippets as template and put them into one file. Comments and examples within the snippets provide guidance of what is possible and what to take care of.
-
-#### Samples
-
-The samples used for any subsequent analysis are defined in the _samples_ section. 
-
-```yaml
-# define mapping
-samples:
-    # samples can have any name, but the names have to be unique
-    ChIP1: 
-        fastq:
-            # file names of raw data in fastq format, either gzipped or not 
-            - ChIP.fq.gz
-        # map reads in single-end mode
-        library: single
-    Cont1:
-        fastq:
-            - Cont.fq.gz
-        library: single
-    ChIPpe:
-        fastq:
-            - ChIPpe_R1.fq.gz
-            - ChIPpe_R2.fq.gz
-        # map reads in paired-end mode
-        library: paired
-```
+The creation of these sections is straight forward considering the following snippets as template. Comments and examples within the snippets provide guidance of what is possible and what to take care of.
 
 #### Peak Calling
 
@@ -325,79 +381,6 @@ feature_combination:
         - ChIP_IDR
         - Peaks5
 ```
-
-### Settings File
-
-The settings file is a file in yaml format specifying general settings. It has the following sections: 
-
-#### Locations
-
-Defines paths to be used in the pipeline, some of the items are required and some optional (can stay blank): 
-
-| item    | required | description |
-|---------|----------|-------------|
-| _input-dir_ | yes | directory of the input files (`fastq` files) |
-| _output-dir_    | yes | output directory for the pipeline |
-| _genome-file_    | yes | path to the reference genome in `fasta` forma |
-| _index-dir_    | no | directory containing pre-built mapping indices for the  given reference genome (created with `bowtie2-build`) |
-| _gff-file_    | no | location of a `GTF` file with genome annotations for the  given reference genome |
-
-#### General
-
-These are settings which apply to all analysis (unless adjusted in single analysis):
-
-| item    | required | description |
-|---------|----------|-------------|
-| _assembly_ | yes | version of reference genome (e.g. hg19,mm9, ...) |
-| _params_    | no | list of default parameters for tools and scripts (for tools check respective manual for available parameters) |
-
-#### Execution
-
-The `execution` section in the settings file allows the user to specify whether the pipeline is to be submitted to a cluster, or run locally, and the degree of parallelism. For a full list of possible parameters, see `etc/settings.yaml`.
-
-
-The settings file could look like this:
-
-```yaml
-locations:
-  input-dir: in/reads/
-  output-dir: out/
-  genome-file: genome/my_genome.fa
-  index-dir:
-  gff-file: genome/mm_chr19.gtf
-
-general:
-  assembly: hg19
-  params:
-    extend: 200
-    scale_bw: 'yes'
-    bowtie2:
-        k: 1
-    idr:
-        idr-threshold: 0.1
-    macs2:
-        g: hs
-        keep-dup: auto
-        q: 0.05
-    extract_signal:
-        expand_peak: 200
-        bin_num: 20
-
-execution:
-  submit-to-cluster: no
-  rules:
-    __default__:
-      queue: all.q
-      memory: 8G
-    bowtie2:
-      queue: all.q
-      memory: 16G
-
-```
-
-
-
-
 
 ## Reports
 

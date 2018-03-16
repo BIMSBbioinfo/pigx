@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------------- #
 rule knit_report:
         input:
-            REPORT_INPUT
+            infile = rules.summarize_data_for_report.output.outfile
         output:
             outfile    = REPORT
         params:
@@ -11,14 +11,17 @@ rule knit_report:
             analysis_names  = ANALISYS_NAMES,
             # report chunks are parts of the analysis that are implemented
             report_chunks   = list(REPORT_CHUNKS.values()),
+            # width params define the look of the profile plots
+            width_params    = PARAMS['width_params'],
             threads         = 1,
-            mem             = '16G',
+            mem             = '32G',
             script_path     = SCRIPT_PATH,
             Rscript         = SOFTWARE['Rscript']['executable']
         log:
             log = os.path.join(PATH_LOG, 'knit_report.log')
         message:"""
                 Running: knit_report:
+                    input:  {input.infile}
                     output: {output.outfile}
             """
         run:

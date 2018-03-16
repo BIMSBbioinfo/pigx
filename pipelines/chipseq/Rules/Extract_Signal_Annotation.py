@@ -7,9 +7,9 @@ rule extract_signal_annotation:
             outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds')
         params:
             peakname       = '{name}',
-            number_of_bins = 40,
             scriptdir      = SCRIPT_PATH,
-            Rscript        = SOFTWARE['Rscript']['executable']
+            Rscript        = SOFTWARE['Rscript']['executable'],
+            number_of_bins = PARAMS['extract_signal']['number_of_bins']
         log:
             log = os.path.join(PATH_LOG, '{name}.extract_signal_annotation.log')
         message:"""

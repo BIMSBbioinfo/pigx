@@ -5,18 +5,24 @@ import os
 import sys
 
 # ---------------------------------------------------------------------------- #
-def get_fastq_input(wc):
-    samps = SAMPLE_SHEET['samples'][wc.name]['fastq']
+# given a sample name returns fastq location(s)
+def get_fastq_input(name):
+    samps = lookup('SampleName', name, ['Read', 'Read2'])
 
     if type(samps) is str:
         samps = [samps]
 
-    infiles = [os.path.join(PATH_FASTQ, i) for i in samps]
+    infiles = [os.path.join(PATH_FASTQ, i) for i in samps if i]
     return(infiles)
 
 # ---------------------------------------------------------------------------- #
-def get_library_type(wc):
-    lib = SAMPLE_SHEET['samples'][wc.name]['library']
+# given a sample name returns library type, depending on number of fastq files
+def get_library_type(name):
+    files = [file for file in lookup('SampleName', name, ['Read', 'Read2']) if file]
+    if len(files) == 2:
+        lib = "paired"
+    else:
+        lib = "single"
     return(lib)
 
 # ---------------------------------------------------------------------------- #
@@ -64,8 +70,10 @@ def join_params(app, app_params, params_set):
 def get_macs2_suffix(name, dictionary):
     sample = dictionary[name]
     suffix = 'narrowPeak'
-    if 'macs2' in set(sample.keys()):
-        if 'broad' in set(sample['macs2'].keys()):
+
+    if not sample == None:
+        if 'macs2' in set(sample.keys()):
+            if 'broad' in set(sample['macs2'].keys()):
                 suffix = 'broadPeak'
     return(suffix)
 

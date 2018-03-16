@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 def get_feature_combination_infiles(wc):
     infiles = []
-    for file in SAMPLE_SHEET['feature_combination'][wc.name]:
+    for file in config['feature_combination'][wc.name]:
         infiles = infiles + [PEAK_NAME_LIST[file]]
 
     infiles = dict(zip(infiles, infiles))

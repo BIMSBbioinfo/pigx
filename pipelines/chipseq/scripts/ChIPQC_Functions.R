@@ -72,5 +72,8 @@ Summarize_Statistics_List = function(
     message('readlength ...')
         lsum$readlength = lout$readlength
 
+    message('Annotation ...')
+        lsum$annot = lout$annot
+
     return(lsum)
 }

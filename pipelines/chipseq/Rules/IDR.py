@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------- #
 def get_sample_idr(wc):
-    name = SAMPLE_SHEET['idr'][wc.name]
+    name = config['idr'][wc.name]
     samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_qsort.bed') for i in name.values()]))
     return(samps)
 

@@ -2,13 +2,13 @@
 def get_files_macs(wc):
     paths = {}
 
-    chip = SAMPLE_SHEET['peak_calling'][wc.name]['ChIP']
+    chip = config['peak_calling'][wc.name]['ChIP']
     if isinstance(chip,str):
         chip = [chip]
     chips = [os.path.join(PATH_MAPPED, i, i + '.sorted.bam') for i in chip]
     paths['ChIP'] = chips
 
-    cont = SAMPLE_SHEET['peak_calling'][wc.name]['Cont']
+    cont = config['peak_calling'][wc.name]['Cont']
     if not cont == None:
         if isinstance(cont,str):
             cont = [cont]
@@ -37,8 +37,9 @@ rule macs2:
     """
     run:
         params_macs = params.params_macs
-        if 'macs2' in CUSTOM_PARAMS[params.name].keys():
-            params_macs.update(CUSTOM_PARAMS[params.name]['macs2'])
+        if not CUSTOM_PARAMS[params.name] == None:
+            if 'macs2' in CUSTOM_PARAMS[params.name].keys():
+                params_macs.update(CUSTOM_PARAMS[params.name]['macs2'])
 
         # checks whether the control samples are specified
         samples = ''
