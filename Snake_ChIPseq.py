@@ -165,11 +165,6 @@ TRIM_GALORE_DICT = {}
 for name in NAMES:
     TRIM_GALORE_DICT[name] = get_trimmed_input(name) 
 
-# defines for any sample the library type based on the number of reads
-LIB_TYPE        = {}
-for name in NAMES:
-    LIB_TYPE[name] = get_library_type(sample) 
-
 # ---------------------------------------------------------------------------- #
 # RULE ALL
 # Default output files from the pipeline
