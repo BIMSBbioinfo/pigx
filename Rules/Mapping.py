@@ -19,8 +19,7 @@ rule link_genome:
     run:
         import os
         import magic as mg
-        import sh as sh
-        import zipfile
+        import gzip
 
         # ------------------------------------------------#
         # prevents errors during linking
@@ -46,10 +45,15 @@ rule link_genome:
         
         genome_file_type = mg.from_file(infile, mime=True)
 
+        # this is ugly piece of code
         if genome_file_type.find('gzip') > 0:
-            outfile = outfile + '.gz'
-            sh.cp(infile, outfile)
-            sh.gunzip(outfile)
+
+            with gzip.open(infile, 'r') as file:
+                with open(outfile, 'w') as out:
+                    for line in file:
+                        out.write(str(line.decode('utf-8')))
+                        
+             
                   
         elif genome_file_type == 'text/plain':
             trylink(infile, outfile)
