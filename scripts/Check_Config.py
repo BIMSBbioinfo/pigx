@@ -10,7 +10,9 @@ import csv
 # config dict of dicts
 # sample_sheet_dict - list of dicts
 # sample_sheet_column_names - list of allowed column names for sample sheet
-def validate_config(config, sample_sheet_dict, structure_variables):
+def validate_config(config, structure_variables):
+
+    sample_sheet_dict = read_SAMPLE_SHEET(config)
 
     message = ''
     message = check_settings(sample_sheet_dict, config, structure_variables , message)
@@ -190,3 +192,26 @@ def flatten(l):
         else:
             out.append(item)
     return out
+    
+# ---------------------------------------------------------------------------- #
+# checks fasta header for spaces
+def check_fasta_header(genome_file, message):
+    import re
+    import sys
+    import magic as mg
+    import gzip
+    
+    genome_file_type = mg.from_file(genome_file, mime=True)
+    if genome_file_type.find('gzip') > 0:
+        file = gzip.open(genome_file, 'r')
+    else:
+        file = open(genome_file, "r")
+    
+    for line in file:
+         line = str(line.decode('utf-8'))
+         if re.search('^>', line):
+            if re.search('[ \t]', line):
+                message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
+                return(message)
+                
+    return(message)

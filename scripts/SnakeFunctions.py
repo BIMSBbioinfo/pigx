@@ -19,7 +19,7 @@ def lookup(column, predicate, fields=[]):
 # uses global variable SAMPLE_SHEET
 def get_library_type(name):
     library_type = lookup('SampleName', name, ['library_type']) 
-    return(library_type)
+    return(library_type[0])
 
 # ---------------------------------------------------------------------------- #
 # function which reads the sample sheet from a csv/xlsx file
@@ -180,26 +180,4 @@ def RunRscript(input, output, params, script):
 
     shell(cmd)
 
-# ---------------------------------------------------------------------------- #
-# checks fasta header for spaces
-def check_fasta_header(genome_file, message):
-    import re
-    import sys
-    import magic as mg
-    import gzip
-    
-    genome_file_type = mg.from_file(genome_file, mime=True)
-    if genome_file_type.find('gzip') > 0:
-        file = gzip.open(genome_file, 'r')
-    else:
-        file = open(genome_file, "r")
 
-    print('Checking fasta headers for spaces')
-    for line in file:
-         line = str(line.decode('utf-8'))
-         if re.search('^>', line):
-            if re.search('[ \t]', line):
-                message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
-                return(message)
-                
-    return(message)

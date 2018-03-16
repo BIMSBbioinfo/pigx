@@ -20,7 +20,10 @@ STRUCTURE_VARIABLES = {
 'SETTING_SUBSECTIONS'       : ['locations', 'general', 'execution', 'tools', 'peak_calling', 'idr', 'hub', 'feature_combination'],
 
 # sets the obligatory files for the pipeline
-'OBLIGATORY_FILES'          : ['genome-file','gff-file']
+'OBLIGATORY_FILES'          : ['genome-file','gff-file'],
+
+# obligatory names for report chunks
+'REPORT_CHUNKS' : {'EXTRACT_SIGNAL_ANNOTATION':'Extract_Signal_Annotation','PEAK_STATISTICS':'Peak_Statistics','ANNOTATE_PEAKS':'Annotate_Peaks','ChIPQC':'ChIPQC'}
 }
 
 
@@ -31,17 +34,15 @@ localrules: makelinks
 # ---------------------------------------------------------------------------- #
 # reads in the sample sheet
 # SAMPLE_SHEET is a hardcoded global variable name - it can not change
-SAMPLE_SHEET = read_SAMPLE_SHEET(config)
-
 # check settings and sample_sheet validity
-validate_config(config, SAMPLE_SHEET, STRUCTURE_VARIABLES)
+validate_config(config, STRUCTURE_VARIABLES)
 
+SAMPLE_SHEET = read_SAMPLE_SHEET(config)
 # ---------------------------------------------------------------------------- #
 SCRIPT_PATH       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 RULES_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'Rules/')
 REPORT_TEMPLATE   = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
 LIB_TYPE          = dict(zip([i['SampleName'] for i in SAMPLE_SHEET],[i['library_type'] for i in SAMPLE_SHEET]))
-
 
 
 # ---------------------------------------------------------------------------- #
@@ -316,7 +317,7 @@ if 'feature_combination' in set(config.keys()):
 # ----------------------------------------------------------------------------- #
 # REPORT INPUT
 SUMMARIZED_DATA_FOR_REPORT = [os.path.join(PATH_ANALYSIS, 'Summarized_Data_For_Report.RDS')]
-REPORT_CHUNKS  = {'EXTRACT_SIGNAL_ANNOTATION':'Extract_Signal_Annotation','PEAK_STATISTICS':'Peak_Statistics','ANNOTATE_PEAKS':'Annotate_Peaks','ChIPQC':'ChIPQC'}
+REPORT_CHUNKS  = STRUCTURE_VARIABLES['REPORT_CHUNKS']
 REPORT_INPUT   = []
 ANALISYS_NAMES = []
 for i in REPORT_CHUNKS.keys():
