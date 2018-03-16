@@ -52,8 +52,6 @@ rule link_genome:
                 with open(outfile, 'w') as out:
                     for line in file:
                         out.write(str(line.decode('utf-8')))
-                        
-             
                   
         elif genome_file_type == 'text/plain':
             trylink(infile, outfile)
