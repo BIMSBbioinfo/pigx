@@ -1,6 +1,6 @@
 ---
 title: "Quality control of ChIP-seq data"
-author: "PigX ChIP-seq"
+author: "PiGx ChIP-seq"
 header-includes:
   - \usepackage{comment}
 output:
