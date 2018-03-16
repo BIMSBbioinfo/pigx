@@ -32,6 +32,7 @@ dist_pkglibexec_scripts_SCRIPTS =		\
   scripts/Summarize_Data_For_Report.R
 
 pkglibexec_rulesdir = $(pkglibexecdir)/Rules
+
 dist_pkglibexec_rules_SCRIPTS =   		\
   Rules/Annotate_Peaks.py       		\
   Rules/BamToBigWig.py          		\
@@ -63,7 +64,7 @@ TESTS = \
 EXTRA_DIST =												\
   Tests/sample_sheet.csv									\
   Tests/settings.yaml										\
-  Tests/genome/genome_subset_mm9_chr1_13590945_17791527.fa	\
+  Tests/genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz	\
   Tests/genome/mm_chr19.gtf									\
   Tests/in/ChIP.fq.gz										\
   Tests/in/ChIP_1.fq.gz										\
