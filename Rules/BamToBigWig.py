@@ -40,6 +40,6 @@ rule makelinks:
     input:
         file = os.path.join(PATH_MAPPED, "{name}", "{name}" + '.bw')
     output:
-        os.path.join(PATH_BW, "{name}.bw")
+        outfile = os.path.join(PATH_BW, "{name}.bw")
     run:
-        os.symlink(input.file, output)
+        os.symlink(input.file, output.outfile)
