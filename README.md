@@ -397,6 +397,66 @@ feature_combination:
         - Peaks5
 ```
 
-## Reports
+## Output Folder Structure
 
+---
+|-- Analysis
+|-- Annotation
+|-- BigWig
+|-- Bowtie2_Index
+|-- FastQC
+|-- Log
+|-- Mapped
+|-- Peaks
+|-- Reports
+|-- Trimmed
+|-- UCSC_HUB
+---
+
+### Analysis
+
+Contains RDS files with intermediary analysis steps. RDS are binary files which efficiently 
+store R objects.
+
+### Annotation
+
+Formatted GTF annotation.
+
+### BigWig
+
+Symbolic links to the bigWig signal files.
+
+### Bowtie2_Index
+
+Processed genme file along with the Bowtie2_Index
+
+### FastQC
+
+FastQC sequencing quality report
+
+### Log 
+
+Detailed output from execution of each step of the pipeline.
+
+### Mapped
+
+Mapped reads in .bam format, and corresponding bigWig files.
+
+### Peaks
+
+Peaks called with MACS2. Depending on the parameters, contains either narrowPeak or 
+broadPeak format. **sample_qsort.bed** contains uniformly processed peaks, sorted by
+their corresponding p value.
+
+### Reports
+
+Contains MultiQC and ChIP quality reports in html format.
+
+### Trimmed
+
+Trimgalore adaptor and quality trimmed files.
+
+### UCSC_Hub
+
+Contains a completely formatted UCSC hub, with track descriptions, peaks and bigWig tracks.
 
