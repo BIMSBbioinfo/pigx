@@ -65,7 +65,9 @@
      `(("autoconf" ,autoconf)
        ("automake" ,automake)))
     (inputs
-     `(("dropseq-tools" ,dropseq-tools)
+     `(("coreutils" ,coreutils)
+       ("perl" ,perl)
+       ("dropseq-tools" ,dropseq-tools)
        ("fastqc" ,fastqc)
        ("java-picard" ,java-picard)
        ("java" ,icedtea-8)

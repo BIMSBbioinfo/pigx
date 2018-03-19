@@ -253,7 +253,9 @@ if GENOME_SECONDARY_IND:
             threads=1,
             mem='4G',
             genome_name_primary   = GENOME_NAME_PRIMARY,
-            genome_name_secondary = GENOME_NAME_SECONDARY
+            genome_name_secondary = GENOME_NAME_SECONDARY,
+            perl = SOFTWARE['perl']['executable'],
+            cat =  SOFTWARE['cat']['executable']
         message:
             """
                 Combining fasta files:
@@ -262,8 +264,8 @@ if GENOME_SECONDARY_IND:
                     output: {output.outfile}
             """
         shell:"""
-            cat {input.primary}   | perl -pe 's|^>|>{params.genome_name_primary}|' >     {output.outfile}
-            cat {input.secondary} | perl -pe 's|^>|>{params.genome_name_secondary}|' >> {output.outfile}
+            {params.cat} {input.primary}   | {params.perl} -pe 's|^>|>{params.genome_name_primary}|' >     {output.outfile}
+            {params.cat} {input.secondary} | {params.perl} -pe 's|^>|>{params.genome_name_secondary}|' >> {output.outfile}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -305,7 +307,9 @@ if GENOME_SECONDARY_IND:
             threads=1,
             mem='4G',
             genome_name_primary   = GENOME_NAME_PRIMARY,
-            genome_name_secondary = GENOME_NAME_SECONDARY
+            genome_name_secondary = GENOME_NAME_SECONDARY,
+            perl = SOFTWARE['perl']['executable'],
+            cat = SOFTWARE['cat']['executable'],
         message:
             """
                 Combining gtf files:
@@ -314,8 +318,8 @@ if GENOME_SECONDARY_IND:
                     output: {output.outfile}
             """
         shell:"""
-            cat {input.primary}   | perl -pe 's|^|{params.genome_name_primary}|' > {output.outfile}
-            cat {input.secondary} | perl -pe 's|^|{params.genome_name_secondary}|' >> {output.outfile}
+            {params.cat} {input.primary}   | {params.perl} -pe 's|^|{params.genome_name_primary}|' > {output.outfile}
+            {params.cat} {input.secondary} | {params.perl} -pe 's|^|{params.genome_name_secondary}|' >> {output.outfile}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -927,6 +931,8 @@ rule convert_matrix_from_txt_to_loom:
         gtf           = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf']))
     output:
         outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom')
+    params:
+        python = SOFTWARE['python']['executable']
     log:
         log = os.path.join(PATH_LOG, "{name}.{genome}.convert2loom.log")
     message: """
@@ -934,7 +940,7 @@ rule convert_matrix_from_txt_to_loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "python {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
+    shell: "{params.python} {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -945,7 +951,9 @@ rule combine_UMI_matrices_into_loom:
     output:
         outfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
     params:
-         tmpfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp")
+         tmpfile = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp"),
+         python  = SOFTWARE['python']['executable'],
+         rm      = SOFTWARE['rm']['executable']
     log:
         log = os.path.join(PATH_LOG, "{genome}.combine_looms.log")
     message: """
@@ -953,7 +961,7 @@ rule combine_UMI_matrices_into_loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "echo {input.infile} > {params.tmpfile}; python {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; rm {params.tmpfile} &> {log.log}"
+    shell: "echo {input.infile} > {params.tmpfile}; {params.python} {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; {params.rm} {params.tmpfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -1030,7 +1038,8 @@ rule fastqc:
         outpath = os.path.join(PATH_MAPPED, "{name}"),
         threads = 1,
         mem     = '16G',
-        java    = SOFTWARE['java']['executable']
+        java    = SOFTWARE['java']['executable'],
+        fastqc  = SOFTWARE['fastqc']['executable']
     log:
         log = os.path.join(PATH_LOG, "{name}.fastqc.log")
     message: """
@@ -1040,6 +1049,6 @@ rule fastqc:
                 output: {output.outfile}
             """
     shell:"""
-        fastqc -j {params.java} -t {params.threads} -o {params.outpath} {input.barcode} {input.reads} 2> {log.log}
+        {params.fastqc} -j {params.java} -t {params.threads} -o {params.outpath} {input.barcode} {input.reads} 2> {log.log}
         touch {output.outfile}
     """

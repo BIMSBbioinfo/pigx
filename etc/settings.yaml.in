@@ -37,10 +37,20 @@ tools:
     executable: @DROPSEQJAR@
     genes_per_cell: 10
     num_core_barcodes: 10
+  fastqc:
+    executable: @FASTQC@
   star:
     executable: @STAR@
   java:
     executable: @JAVA@
+  perl:
+    executable: @PERL@
+  python:
+    executable: @PYTHON@
+  cat:
+    executable: @CAT@
+  rm:
+    executable: @RM@
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla"
