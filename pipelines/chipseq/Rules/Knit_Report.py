@@ -18,11 +18,11 @@ rule knit_report:
             script_path     = SCRIPT_PATH,
             Rscript         = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'knit_report.log')
+            logfile = os.path.join(PATH_LOG, 'knit_report.log')
         message:"""
                 Running: knit_report:
                     input:  {input.infile}
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Knit_Report.R')
+            RunRscript(input, output, params, log.logfile, 'Knit_Report.R')

@@ -29,7 +29,7 @@ rule macs2:
         macs2       = SOFTWARE['macs2']['executable'],
         params_macs = PARAMS['macs2']
     log:
-        log = os.path.join(PATH_LOG, '{name}.macs.log')
+        logfile = os.path.join(PATH_LOG, '{name}.macs.log')
     message:"""
         Running macs2:
             sample: {params.name}
@@ -37,9 +37,10 @@ rule macs2:
     """
     run:
         params_macs = params.params_macs
-        if not CUSTOM_PARAMS[params.name] == None:
-            if 'macs2' in CUSTOM_PARAMS[params.name].keys():
-                params_macs.update(CUSTOM_PARAMS[params.name]['macs2'])
+        if params.name in set(CUSTOM_PARAMS.keys()):
+            if not CUSTOM_PARAMS[params.name] == None:
+                if 'macs2' in CUSTOM_PARAMS[params.name].keys():
+                    params_macs.update(CUSTOM_PARAMS[params.name]['macs2'])
 
         # checks whether the control samples are specified
         samples = ''
@@ -54,7 +55,7 @@ rule macs2:
         '--outdir', params.outpath,
         '-n', params.name,
         join_params("macs2", PARAMS, params_macs),
-        '2>', log.log
+        '2>', log.logfile
         ])
         shell(command)
 

@@ -9,57 +9,45 @@ import xlrd
 import csv
 import inspect
 
+# ---------------------------------------------------------------------------- #
+# GLOBAL VARIABLES:
+# IMPORTANT defines the compulsory column names for the sample sheet
+# if you want to add the compulsory columns for the sample sheet, do it here
+STRUCTURE_VARIABLES = {
+'SAMPLE_SHEET_COLUMN_NAMES' : ['SampleName', 'Read', 'Read2'],
+
+# defines the allowed execution parameters list for the config file
+'SETTING_SUBSECTIONS'       : ['locations', 'general', 'execution', 'tools', 'peak_calling', 'idr', 'hub', 'feature_combination'],
+
+# sets the obligatory files for the pipeline
+'OBLIGATORY_FILES'          : ['genome-file','gff-file'],
+
+# obligatory names for report chunks
+'REPORT_CHUNKS' : {'EXTRACT_SIGNAL_ANNOTATION':'Extract_Signal_Annotation','PEAK_STATISTICS':'Peak_Statistics','ANNOTATE_PEAKS':'Annotate_Peaks','ChIPQC':'ChIPQC'}
+}
+
+
+# ---------------------------------------------------------------------------- #
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/SnakeFunctions.py')
 include: os.path.join(config['locations']['pkglibexecdir'], 'scripts/Check_Config.py')
-
-# ---------------------------------------------------------------------------- #
-# check settings and sample_sheet validity
-validate_config(config)
-
 localrules: makelinks
+# ---------------------------------------------------------------------------- #
+# reads in the sample sheet
+# SAMPLE_SHEET is a hardcoded global variable name - it can not change
+# check settings and sample_sheet validity
+validate_config(config, STRUCTURE_VARIABLES)
 
+SAMPLE_SHEET = read_SAMPLE_SHEET(config)
+# ---------------------------------------------------------------------------- #
 SCRIPT_PATH       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 RULES_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'Rules/')
-SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 REPORT_TEMPLATE   = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
-
-# ---------------------------------------------------------------------------- #
-# read the sample sheet
-
-## Load sample sheet
-# either from excel file
-if SAMPLE_SHEET_FILE.endswith('.xlsx'):
-    with xlrd.open_workbook(file_name) as book:
-        # assume that the first book is the sample sheet
-        sheet = book.sheet_by_index(0)
-        rows = [sheet.row_values(r) for r in range(0, sheet.nrows)]
-        header = rows[0]; rows = rows[1:]
-        SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
-# or from csv file
-elif SAMPLE_SHEET_FILE.endswith('.csv'):
-    with open(SAMPLE_SHEET_FILE, 'r') as fp:
-        SAMPLE_SHEET = [row for row in csv.DictReader(fp, skipinitialspace=True)]
-else:
-    raise InputError('File format of the sample_sheet has to be: csv or excel table (xls,xlsx).')
-
-
-# Convenience function to access fields of sample sheet columns that
-# match the predicate.  The predicate may be a string.
-def lookup(column, predicate, fields=[]):
-    if inspect.isfunction(predicate):
-        records = [line for line in SAMPLE_SHEET if predicate(line[column])]
-    else:
-        records = [line for line in SAMPLE_SHEET if line[column]==predicate]
-    return [record[field] for record in records for field in fields]
-
-
-
+LIB_TYPE          = dict(zip([i['SampleName'] for i in SAMPLE_SHEET],[i['library_type'] for i in SAMPLE_SHEET]))
 
 
 # ---------------------------------------------------------------------------- #
 # Software executables
 SOFTWARE = config['tools']
-
 
 # Per sample software parameters:
 # Loops throug the sample sheet and extracts per sample software parameters
@@ -94,6 +82,7 @@ NAMES = [line['SampleName'] for line in SAMPLE_SHEET]
 # Directory structure definition
 OUTPUT_DIR      = config['locations']['output-dir']
 # PATH_FASTQ      = os.path.join(OUTPUT_DIR, 'Fastq')
+PATH_TRIMMED    = os.path.join(OUTPUT_DIR, 'Trimmed/Trim_Galore')
 PATH_MAPPED     = os.path.join(OUTPUT_DIR, 'Mapped/Bowtie')
 PATH_QC         = os.path.join(OUTPUT_DIR, 'FastQC')
 PATH_INDEX      = os.path.join(OUTPUT_DIR, 'Bowtie2_Index')
@@ -124,6 +113,7 @@ TRACK_PATHS = {
 
 # Collects the locations of all peaks
 PEAK_NAME_LIST = {}
+
 
 
 # names for markdown chunks which will be knit
@@ -167,7 +157,15 @@ for i in NAMES:
             fastqc  = os.path.join(PATH_QC, i, prefix + "_fastqc.zip")
             FASTQC_DICT[prefix]  =  {'fastq'  : os.path.join(PATH_FASTQ, fqfile),
                                      'fastqc' : fastqc}
-        # ---------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------- #
+# due to the different names for trimmmed output files next lines construct
+# Trim Galore output files
+TRIM_GALORE_DICT = {}
+for name in NAMES:
+    TRIM_GALORE_DICT[name] = get_trimmed_input(name) 
+
+# ---------------------------------------------------------------------------- #
 # RULE ALL
 # Default output files from the pipeline
 
@@ -206,9 +204,9 @@ else:
 COMMAND         = []
 GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
+TRIMMING        = [flatten(TRIM_GALORE_DICT.values())] 
 BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
-LIB_TYPE        = { sample:get_library_type(sample) for sample in NAMES}
 CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
 TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
 NUCLEOTIDE_FREQ = [GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']
@@ -218,10 +216,11 @@ ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), nam
 BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
-COMMAND = GENOME_FASTA + INDEX + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + BOWTIE2_STATS
+COMMAND = GENOME_FASTA + INDEX + TRIMMING + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + BOWTIE2_STATS
 
 # ---------------------------------------------------------------------------- #
 # include rules
+include: os.path.join(RULES_PATH, 'Trimming.py')
 include: os.path.join(RULES_PATH, 'Mapping.py')
 include: os.path.join(RULES_PATH, 'Parse_Bowtie2log.py')
 include: os.path.join(RULES_PATH, 'FastQC.py')
@@ -313,7 +312,7 @@ if 'feature_combination' in set(config.keys()):
 # ----------------------------------------------------------------------------- #
 # REPORT INPUT
 SUMMARIZED_DATA_FOR_REPORT = [os.path.join(PATH_ANALYSIS, 'Summarized_Data_For_Report.RDS')]
-REPORT_CHUNKS  = {'EXTRACT_SIGNAL_ANNOTATION':'Extract_Signal_Annotation','PEAK_STATISTICS':'Peak_Statistics','ANNOTATE_PEAKS':'Annotate_Peaks','ChIPQC':'ChIPQC'}
+REPORT_CHUNKS  = STRUCTURE_VARIABLES['REPORT_CHUNKS']
 REPORT_INPUT   = []
 ANALISYS_NAMES = []
 for i in REPORT_CHUNKS.keys():

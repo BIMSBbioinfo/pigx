@@ -11,7 +11,7 @@ rule extract_signal_annotation:
             Rscript        = SOFTWARE['Rscript']['executable'],
             number_of_bins = PARAMS['extract_signal']['number_of_bins']
         log:
-            log = os.path.join(PATH_LOG, '{name}.extract_signal_annotation.log')
+            logfile = os.path.join(PATH_LOG, '{name}.extract_signal_annotation.log')
         message:"""
                 Running: extract_signal_annotation:
                     annot:  {input.annotation}
@@ -19,4 +19,4 @@ rule extract_signal_annotation:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Extract_Signal_Annotation.R')
+            RunRscript(input, output, params, log.logfile, 'Extract_Signal_Annotation.R')

@@ -12,13 +12,13 @@ rule make_ucsc_hub:
             path_hub    = os.path.join(PATH_HUB, HUB_NAME),
             Rscript     = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'UCSC_HUB.log')
+            logfile = os.path.join(PATH_LOG, 'UCSC_HUB.log')
         message:"""
                 Running: UCSC_HUB:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Make_UCSC_HUB.R')
+            RunRscript(input, output, params, log.logfile, 'Make_UCSC_HUB.R')
 
 
 # ----------------------------------------------------------------------------- #
@@ -36,6 +36,8 @@ rule bedTobigBed:
     params:
         name        = '{name}',
         bedToBigBed = SOFTWARE['bedToBigBed']['executable']
+    log:
+        log = os.path.join(PATH_LOG, "{name}.bedtobigbed.log")
     message:"""
             bedToBigBed:
                 input : {input}
@@ -53,6 +55,6 @@ rule bedTobigBed:
         '-type=bed3+' + str(ncol),
         input.peaks,
         input.chrlen,
-        output.outfile
-        ])
+        output.outfile,
+        '2>',log.log])
         shell(command)

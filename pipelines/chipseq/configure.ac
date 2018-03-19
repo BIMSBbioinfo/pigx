@@ -39,6 +39,7 @@ AS_IF([test -z "$$1"],dnl
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([PERL],            [perl])
 find_or_override_prog([IDR],             [idr])
+find_or_override_prog([TRIMGALORE],      [trim_galore])
 find_or_override_prog([MACS2],           [macs2])
 find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])
@@ -84,6 +85,8 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
   ])
 
 AC_CONFIG_FILES([etc/settings.yaml
+                 scripts/Sample_Report.rmd
+                 scripts/ChipQC.rmd
                  Makefile])
 AC_CONFIG_FILES([Tests/test.sh], [chmod +x Tests/test.sh])
 AC_CONFIG_FILES([pigx-chipseq], [chmod +x pigx-chipseq])

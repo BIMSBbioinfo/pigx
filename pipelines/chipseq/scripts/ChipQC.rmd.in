@@ -1,0 +1,83 @@
+---
+title: "ChIP-seq Sample Report"
+output:
+  html_document:
+    highlight: kate
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+always_allow_html: yes
+
+output:
+  html_document: default
+  
+params:
+    annotation: '../Data/Annotation.rds'
+    path_peaks: '../Data/Peaks1_qsort.narrowPeak'
+    path_bw:    '../Data/ChIP1.bw'
+    
+---
+
+This report was generated with PiGx ChIPseq version @VERSION@.
+
+```{r setup, include=FALSE, cache=FALSE, fig.height=10, fig.width=10}
+knitr::opts_chunk$set(echo     = FALSE, 
+                      cache    = FALSE, 
+                      messages = FALSE, 
+                      warning  = FALSE,
+                      autodep  = TRUE, 
+                      error    = FALSE)
+
+```
+
+
+```{r libraries, include=FALSE}
+library(GenomicRanges)
+library(data.table)
+library(rtracklayer)
+library(genomation)
+```
+
+```{r input, include=FALSE}
+source('../scripts/Prepare_Annotation.R')
+annotation = list(
+        gtf = '../Data/mm9.chr19.gtf.gz',
+        cpg_island = '../Data/mm9.chr19.cpg.bed')
+prepare_Annotation(annotation, outpath='../Data/Annotation.rds', scriptdir = '../scripts/')
+annot = readRDS('../Data/Annotation.rds')
+```
+
+
+# Genomic Distribution
+  ChIPQCreport(experiment,
+                 reportName = prefix,
+                 reportFolder = paste0(wDir,prefix,"_report"))
+
+# Signal Distribution Around Genomic Features
+
+
+    metrics = QCmetrics(experiment)
+    metrics = metrics[,!colnames(metrics) %in% c("ReadLenCC","RIBL","Map%","Filt%","ReadLen")]
+    allMetadata = QCmetadata(experiment)
+    metadata = allMetadata[,c("ID","Tissue","Factor","Condition","Replicate")]
+    summaryTable <- merge(metadata,metrics,by.x=1,by.y=0,all=TRUE)
+    write.table(summaryTable,file = paste0(wDir,prefix,"_QCmetrics.txt"),
+                quote = FALSE,sep = "\t")
+
+# Peak Comparison
+
+
+# Peak Combination Statistics
+
+# 
+
+  
+  
+  
+  plotCoverageHist(experiment,facetBy=c("Tissue","Factor"))
+    plotCC(experiment)
+    plotPeakProfile(experiment,facetBy = c("Tissue","Factor"))
+    plotRap(experiment)
+    plotCorHeatmap(experiment,attributes = c("Tissue,Factor"))
+    plotPrincomp(experiment,attributes = c("Tissue","Factor"),
+                 "Replicate",dotSize=1)

@@ -11,7 +11,7 @@ rule annotate_peaks:
             scriptdir   = SCRIPT_PATH,
             Rscript     = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'prepare_annotation.log')
+            logfile = os.path.join(PATH_LOG, 'prepare_annotation.log')
         message:"""
                 Running: annotate_peaks:
                     annot: {input.annotation}
@@ -19,4 +19,4 @@ rule annotate_peaks:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Annotate_Peaks.R')
+            RunRscript(input, output, params, log.logfile, 'Annotate_Peaks.R')

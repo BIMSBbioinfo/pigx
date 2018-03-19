@@ -19,6 +19,7 @@ general:
         g: hs
         keep-dup: auto
         q: 0.05
+        nomodel: ''
     extract_signal:
         expand_peak: 200
         bin_num: 20
@@ -39,10 +40,6 @@ peak_calling:
     Peaks1:
         ChIP: ChIP1
         Cont: Cont1
-        params:
-            macs2:
-                nomodel: ''
-                extsize: 300
     Peaks2:
         ChIP: ChIP2
         Cont: Cont2

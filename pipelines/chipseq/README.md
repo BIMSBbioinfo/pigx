@@ -11,11 +11,18 @@
 
 ## Summary
 
-PiGX ChIPseq is an analysis pipeline for preprocessing, peak calling and reporting for ChIP sequencing experiments. It is easy to use and produces high quality reports. The inputs are reads files from the sequencing experiment, and a configuration file which describes the experiment. In addition to quality control of the experiment, the pipeline enables to set up multiple peak calling analysis and allows the generation of a UCSC track hub in an easily configurable manner.
+PiGx ChIPseq (pipelines in genomics for Chromatin Immunoprecipitation
+Sequencing) is an analysis pipeline for preprocessing, peak calling and
+reporting for ChIP sequencing experiments. It is easy to use and produces high
+quality reports. The inputs are reads files from the sequencing experiment, and
+a configuration file that describes the experiment. In addition to quality
+control of the experiment, the pipeline enables multiple peak calling
+analysis and allows the generation of a UCSC track hub in an easily
+configurable manner.
 
 ## What does it do
 
-- ??? Trim reads using trim-galore ??? 
+- Trim reads using trim-galore 
 - Quality control reads using fastQC and multiQC
 - Map reads to genome using Bowtie2
 - Call peaks for multiple combinations of samples using MACS2
@@ -32,10 +39,12 @@ PiGX ChIPseq is an analysis pipeline for preprocessing, peak calling and reporti
 
 # Install
 
-At this time there are no ready-made packages for this pipeline, so
-you need to install PiGx from source.
+You can install this pipeline with all its dependencies using GNU Guix:
 
-You can find the [latest
+    guix package -i pigx-chipseq
+
+You can also install it from source manually.  You can find the
+[latest
 release](https://github.com/BIMSBbioinfo/pigx_chipseq/releases/latest)
 here.  PiGx uses the GNU build system.  Please make sure that all
 required dependencies are installed and then follow these steps after
@@ -76,12 +85,18 @@ installed:
     - ggplot2
     - ggrepel
     - plotly
+    - rmarkdown
 - python
     - snakemake
     - pyyaml
+    - wrapper
+    - pytest
+    - xlrd
+    - magic
 - pandoc
 - fastqc
 - multiqc
+- trim-galore
 - bowtie
 - macs2
 - idr
@@ -329,22 +344,22 @@ The required items to define the hub are the following:
 
 | item    | example | description |
 |---------|----------|-------------|
-| name    | Pix_Hub | name of the hub directory |
-| shortLabel    | Pix_Short | short name of hub is displayed as name above track groups |
-| longLabel    | Pix_Hub_Long | descriptive longer label for hub is displayed as hub description |
+| name    | PiGx_Hub | name of the hub directory |
+| shortLabel    | PiGx_Short | short name of hub is displayed as name above track groups |
+| longLabel    | PiGx_Hub_Long | descriptive longer label for hub is displayed as hub description |
 | email    | my.mail[at]domain.com | whom to contact for questions about the hub or data |
-| descriptionUrl    | pix_hub.html | URL to HTML page with a description of the hub's contents |
+| descriptionUrl    | pigx_hub.html | URL to HTML page with a description of the hub's contents |
 | super_tracks    | see below | specification of hub layout (track groups, tracks) |
 
 This is a small example how this could look like:
 
 ```yaml
 hub:
-    name: Pix_Hub
-    shortLabel: Pix_Short
-    longLabel: Pix_Hub_Long
-    email: vedran.franke@mdc-berlin.de
-    descriptionUrl: pix_hub.html
+    name: PiGx_Hub
+    shortLabel: PiGx_Short
+    longLabel: PiGx_Hub_Long
+    email: my.mail@domain.com
+    descriptionUrl: pigx_hub.html
     super_tracks:
         # track groups can have any name, but the names have to be unique 
         Tracks1:
@@ -382,6 +397,66 @@ feature_combination:
         - Peaks5
 ```
 
-## Reports
+## Output Folder Structure
 
+```
+|-- Analysis
+|-- Annotation
+|-- BigWig
+|-- Bowtie2_Index
+|-- FastQC
+|-- Log
+|-- Mapped
+|-- Peaks
+|-- Reports
+|-- Trimmed
+|-- UCSC_HUB
+```
+
+#### Analysis
+
+Contains RDS files with intermediary analysis steps. RDS are binary files which efficiently 
+store R objects.
+
+#### Annotation
+
+Formatted GTF annotation.
+
+#### BigWig
+
+Symbolic links to the bigWig signal files.
+
+#### Bowtie2_Index
+
+Processed genme file along with the Bowtie2_Index
+
+#### FastQC
+
+FastQC sequencing quality report
+
+#### Log 
+
+Detailed output from execution of each step of the pipeline.
+
+#### Mapped
+
+Mapped reads in .bam format, and corresponding bigWig files.
+
+#### Peaks
+
+Peaks called with MACS2. Depending on the parameters, contains either narrowPeak or 
+broadPeak format. **sample_qsort.bed** contains uniformly processed peaks, sorted by
+their corresponding p value.
+
+#### Reports
+
+Contains MultiQC and ChIP quality reports in html format.
+
+#### Trimmed
+
+Trimgalore adaptor and quality trimmed files.
+
+#### UCSC_Hub
+
+Contains a completely formatted UCSC hub, with track descriptions, peaks and bigWig tracks.
 

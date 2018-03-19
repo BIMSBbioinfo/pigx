@@ -15,7 +15,7 @@ rule chipqc:
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable']
     log:
-        log = os.path.join(PATH_LOG, '{name}_ChIPQC.log')
+        logfile = os.path.join(PATH_LOG, '{name}_ChIPQC.log')
     message:
         """
             Running: ChIPQC:
@@ -23,4 +23,4 @@ rule chipqc:
                 output:  {output.outfile}
             """
     run:
-        RunRscript(input, output, params, 'ChIPQC.R')
+        RunRscript(input, output, params, log.logfile, 'ChIPQC.R')

@@ -9,7 +9,7 @@ rule link_genome:
         threads = 1,
         mem     = '1G',
     log:
-        os.path.join(PATH_LOG, "link_genome.log")
+        logfile = os.path.join(PATH_LOG, "link_genome.log")
     message:
         """
             Linking genome fasta:
@@ -19,8 +19,7 @@ rule link_genome:
     run:
         import os
         import magic as mg
-        import sh as sh
-        import zipfile
+        import gzip
 
         # ------------------------------------------------#
         # prevents errors during linking
@@ -46,10 +45,13 @@ rule link_genome:
         
         genome_file_type = mg.from_file(infile, mime=True)
 
+        # this is ugly piece of code
         if genome_file_type.find('gzip') > 0:
-            outfile = outfile + '.gz'
-            sh.cp(infile, outfile)
-            sh.gunzip(outfile)
+
+            with gzip.open(infile, 'r') as file:
+                with open(outfile, 'w') as out:
+                    for line in file:
+                        out.write(str(line.decode('utf-8')))
                   
         elif genome_file_type == 'text/plain':
             trylink(infile, outfile)
@@ -76,7 +78,7 @@ rule bowtie2_build:
                 output: {output.outfile}
         """
     shell:"""
-        {params.bowtie2_build} {input.genome} {params.prefix} 2> {log}
+        {params.bowtie2_build} {input.genome} {params.prefix} >> {log} 2>&1 
     """
 
 # ---------------------------------------------------------------------------- #
@@ -114,13 +116,13 @@ rule construct_genomic_windows:
             scriptdir = SCRIPT_PATH,
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
+            logfile = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
         message:"""
                 Running: construct_genomic_windows:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'ConstructGenomicWindows.R')
+            RunRscript(input, output, params, log.logfile, 'ConstructGenomicWindows.R')
             
 #----------------------------------------------------------------------------- #
 rule extract_nucleotide_frequency:
@@ -135,18 +137,18 @@ rule extract_nucleotide_frequency:
             scriptdir = SCRIPT_PATH,
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
-            log = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
+            logfile = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
         message:"""
                 Running: extract_nucleotide_frequency:
                     output: {output.outfile}
             """
         run:
-            RunRscript(input, output, params, 'Extract_Nucleotide_Frequency.R')
+            RunRscript(input, output, params, log.logfile, 'Extract_Nucleotide_Frequency.R')
 
 #----------------------------------------------------------------------------- #
 rule bowtie2:
     input:
-        infile = lambda wc: get_fastq_input(wc.name),
+        infile = lambda wc: get_trimmed_input(wc.name),
         genome = rules.bowtie2_build.output.outfile
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
@@ -157,7 +159,7 @@ rule bowtie2:
         library        = lambda wc: get_library_type(wc.name),
         params_bowtie2 = PARAMS['bowtie2']
     log:
-        log = os.path.join(PATH_LOG, "{name}.bowtie2.log")
+        logfile = os.path.join(PATH_LOG, "{name}.bowtie2.log")
     message:"""
         Mapping with bowtie2:
             sample: {input.infile}
@@ -165,8 +167,6 @@ rule bowtie2:
             output: {output.bamfile}
     """
     run:
-        print(input.infile)
-        print(params.library)
         genome = input.genome.replace('.1.bt2','')
         if params.library in ['single','SINGLE']:
             map_args =  '-U ' + input.infile[0]
@@ -180,7 +180,7 @@ rule bowtie2:
         '-x', genome,
         map_args,
         join_params("bowtie2", PARAMS, params.params_bowtie2),
-        '2>',log.log,
+        '2>',log.logfile,
         '|', params.samtools,'view -bhS >', output.bamfile
         ])
         shell(command)
