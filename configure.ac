@@ -37,7 +37,7 @@ if test "x$enable_rnaseq" != "xno"; then
   if test "x$enable_bundle" = "xyes"; then
     AC_CONFIG_SUBDIRS([pipelines/rnaseq])
   else
-    AC_PATH_PROG([PIGX_CHIPSEQ], [pigx-rnaseq])
+    AC_PATH_PROG([PIGX_RNASEQ], [pigx-rnaseq])
   fi
   pipelines="$pipelines rnaseq"
 fi
