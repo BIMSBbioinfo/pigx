@@ -344,22 +344,22 @@ The required items to define the hub are the following:
 
 | item    | example | description |
 |---------|----------|-------------|
-| name    | Pix_Hub | name of the hub directory |
-| shortLabel    | Pix_Short | short name of hub is displayed as name above track groups |
-| longLabel    | Pix_Hub_Long | descriptive longer label for hub is displayed as hub description |
+| name    | PiGx_Hub | name of the hub directory |
+| shortLabel    | PiGx_Short | short name of hub is displayed as name above track groups |
+| longLabel    | PiGx_Hub_Long | descriptive longer label for hub is displayed as hub description |
 | email    | my.mail[at]domain.com | whom to contact for questions about the hub or data |
-| descriptionUrl    | pix_hub.html | URL to HTML page with a description of the hub's contents |
+| descriptionUrl    | pigx_hub.html | URL to HTML page with a description of the hub's contents |
 | super_tracks    | see below | specification of hub layout (track groups, tracks) |
 
 This is a small example how this could look like:
 
 ```yaml
 hub:
-    name: Pix_Hub
-    shortLabel: Pix_Short
-    longLabel: Pix_Hub_Long
-    email: vedran.franke@mdc-berlin.de
-    descriptionUrl: pix_hub.html
+    name: PiGx_Hub
+    shortLabel: PiGx_Short
+    longLabel: PiGx_Hub_Long
+    email: my.mail@domain.com
+    descriptionUrl: pigx_hub.html
     super_tracks:
         # track groups can have any name, but the names have to be unique 
         Tracks1:
