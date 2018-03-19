@@ -20,11 +20,16 @@ The figure below provides a schematic of the process.
 
 # Install
 
-PiGx BSseq uses the GNU build system.  If you want to install PiGx BSseq from
-source (here you can find the [latest release
-here](https://github.com/BIMSBbioinfo/pigx_bsseq/releases/latest)), please make
-sure that all required dependencies are installed and then follow these steps
-after unpacking the latest release tarball:
+You can install this pipeline with all its dependencies using GNU Guix:
+
+    guix package -i pigx-bsseq
+
+You can also install it from source manually.  PiGx BSseq uses the GNU
+build system.  If you want to install PiGx BSseq from source (you can
+find the [latest release
+here](https://github.com/BIMSBbioinfo/pigx_bsseq/releases/latest)),
+please make sure that all required dependencies are installed and then
+follow these steps after unpacking the latest release tarball:
 
 ```sh
 ./configure --prefix=/some/where
@@ -73,13 +78,9 @@ configuration time.
 
 ## Installation of dependencies via Guix
 
-
-You can install PiGx BSseq through Guix (TODO: add details here after release).
-
-Run the `configure` script to probe your environment for tools needed by the
-pipeline.  Rather than installing  all packages manually, we generally
-recommend using [GNU Guix](https://gnu.org/s/guix).  The following command
-spawns a sub-shell in which all dependencies are available:
+Rather than installing all required packages manually, we generally
+recommend using [GNU Guix](https://gnu.org/s/guix).  The following
+command spawns a sub-shell in which all dependencies are available:
 
 ```sh
 guix environment -l guix.scm
