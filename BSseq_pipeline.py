@@ -558,9 +558,9 @@ rule tabulate_seqlengths:
     output:
         seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
     params:
-        chromlines = " | grep Sequence ",
-        chromcols  = " | cut -f2,3     ",
-        seqnames   = " | sed \"s/_CT_converted//g\" "
+        chromlines = " | " + tool('grep') + " Sequence ",
+        chromcols  = " | " + tool('cut') + " -f2,3     ",
+        seqnames   = " | " + tool('sed') + " \"s/_CT_converted//g\" "
     message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
     shell:
         nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])

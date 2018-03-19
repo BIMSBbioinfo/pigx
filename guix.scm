@@ -71,7 +71,10 @@
        ("automake" ,automake)
        ("tzdata" ,tzdata)))
     (inputs
-     `(("r-minimal" ,r-minimal)
+     `(("coreutils" ,coreutils)
+       ("sed" ,sed)
+       ("grep" ,grep)
+       ("r-minimal" ,r-minimal)
        ("r-annotationhub" ,r-annotationhub)
        ("r-dt" ,r-dt)
        ("r-genomation" ,r-genomation)
