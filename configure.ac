@@ -58,6 +58,7 @@ find_or_override_prog([BOWTIE2_BUILD],   [bowtie2-build])
 find_or_override_prog([BOWTIE2_INSPECT], [bowtie2-inspect])
 find_or_override_prog([BEDTOBIGBED],     [bedToBigBed])
 find_or_override_prog([BAMTOBED],        [bamToBed])
+find_or_override_prog([MULTIQC],         [multiqc])
 
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])

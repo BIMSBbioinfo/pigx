@@ -286,6 +286,9 @@ tools:
     trim_galore: 
         executable: @TRIMGALORE@
         args: ""
+    multiqc:
+        executable: @MULTIQC@
+        args: ""
     grep:
         executable: @GREP@
         args: ""
