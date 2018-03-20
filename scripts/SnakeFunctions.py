@@ -36,20 +36,23 @@ def read_SAMPLE_SHEET(config):
     
     SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
     ## Load sample sheet
-    # either from excel file
-    if SAMPLE_SHEET_FILE.endswith('.xlsx'):
-        with xlrd.open_workbook(file_name) as book:
-            # assume that the first book is the sample sheet
-            sheet = book.sheet_by_index(0)
-            rows = [sheet.row_values(r) for r in range(0, sheet.nrows)]
-            header = rows[0]; rows = rows[1:]
-            SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
-    # or from csv file
-    elif SAMPLE_SHEET_FILE.endswith('.csv'):
-        with open(SAMPLE_SHEET_FILE, 'r') as fp:
-            SAMPLE_SHEET = [row for row in csv.DictReader(fp, skipinitialspace=True)]
+    if SAMPLE_SHEET_FILE.endswith(('.csv','.xlsx','.xls')):
+        # either from excel file
+        if SAMPLE_SHEET_FILE.endswith(('.xlsx','.xls')):
+            with xlrd.open_workbook(SAMPLE_SHEET_FILE) as book:
+                # assume that the first book is the sample sheet
+                sheet = book.sheet_by_index(0)
+                rows = [sheet.row_values(r) for r in range(0, sheet.nrows)]
+        # or from csv file
+        elif SAMPLE_SHEET_FILE.endswith('.csv'):
+            with open(SAMPLE_SHEET_FILE, 'r') as fp:
+                rows = [row for row in csv.reader(fp, delimiter=',')]
+        # in both cases we need to strip leading or trailing whitespaces
+        rows = [list(map(str.strip, row)) for row in rows]
+        header = rows[0]; rows = rows[1:]
+        SAMPLE_SHEET = [OrderedDict(zip(header, row)) for row in rows if row]
     else:
-        raise InputError('File format of the sample_sheet has to be: csv or excel table     (xls,xlsx).')
+        sys.exit('ERROR: File format of the sample_sheet has to be: csv or excel table (xls,xlsx).\n')
 
     # Goes through the sample sheet, and defines the library type based on 
     # the existence of one or two Read input files
