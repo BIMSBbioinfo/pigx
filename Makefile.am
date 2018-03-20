@@ -53,7 +53,7 @@ dist_pkglibexec_rules_SCRIPTS =   		\
   Rules/UCSC_Hub.py
 
 dist_pkgdata_DATA =						\
-  etc/settings.yaml.in					\
+  etc/settings.yaml						\
   etc/pretty.txt						\
   etc/sample_sheet.csv.example  
 
