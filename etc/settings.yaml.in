@@ -1,3 +1,6 @@
+## ~~~~~~~~~~~~~~~~~~~~~~~~~LOCATIONS~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## This section needs to be adjusted to the planned analysis.   #
+## ------------------------------------------------------------ #
 locations:
   input-dir: in/
   output-dir: out/
@@ -5,6 +8,10 @@ locations:
   index-dir:
   gff-file:
 
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~GENERAL~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## This section needs to be adjusted to the planned analysis.   #
+## ------------------------------------------------------------ #
 general:
   assembly:
   params:
@@ -34,6 +41,112 @@ general:
        splicing_donor_width: 200
        splicing_accep_width: 200
 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~ANALYSIS~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## This section needs to be adjusted to the planned analysis.   #
+## ------------------------------------------------------------ #
+## define peak calling analysis
+## ChIP and Cont are hardcoded and must exist in the config file
+#peak_calling:
+#    # analysis can have any name, but the names have to be unique 
+#    Peaks1: 
+#        # sample(s) to be used as treatment sample 
+#        ChIP: ChIP1
+#        # sample(s) to be used as control sample
+#        Cont: Cont1
+#        params:
+#            macs2:
+#                # each analysis can be adjusted independently
+#                # add/modify available parameters of the analysis
+#                nomodel: ''
+#                extsize: 300
+#    Peaks2:
+#        ChIP: ChIP2
+#        Cont: Cont2
+#        params:
+#            macs2:
+#                # each analysis can be adjusted independently
+#                nomodel: ''
+#                extsize: 147
+#    Peaks4:
+#        ChIP:
+#            # multiple samples can be used as treatment
+#            - ChIP1
+#            - ChIP2
+#        Cont:
+#            # multiple samples can be used as control
+#            - Cont1
+#            - Cont2
+#        params:
+#            macs2:
+#                nomodel: ''
+#
+#    Peaks5:
+#        # the number of samples per group can differ 
+#        ChIP: ChIP2
+#        Cont:
+#            - Cont1
+#            - Cont2
+#        params:
+#            macs2:
+#                nomodel: ''
+#
+#    Peaks6:
+#        # analysis can be performed without control
+#        ChIP: ChIP1
+#        Cont:
+#        params:
+#            macs2:
+#                nomodel: ''
+#
+## ------------------------------------------------------------ #
+#idr:
+#    # idr analysis can have any name, but the names have to be unique 
+#    ChIP_IDR:
+#        # define the pair of samples, add more combinations for more replicates
+#        ChIP1: Peaks1
+#        ChIP2: Peaks2
+## ------------------------------------------------------------ #
+#hub:
+#    name: PiGx_Hub
+#    shortLabel: PiGx_Short
+#    longLabel: PiGx_Hub_Long
+#    email: my.mail@domain.com
+#    descriptionUrl: pigx_hub.html
+#    super_tracks:
+#        # track groups can have any name, but the names have to be unique 
+#        Tracks1:
+#            # tracks can have any name, but the names have to be unique 
+#            track11:
+#                # to add peaks as a track, define "type: macs" 
+#                name: Peaks1
+#                type: macs
+#            track12:
+#                # to add coverage signal as a track, define "type: bigwig"
+#                name: ChIP1
+#                type: bigWig
+#            # descriptive longer label for track group is
+#            # displayed as description in track settings
+#            long_label: Tracks1_long
+## ------------------------------------------------------------ #
+#feature_combination:
+#    # features can have any name, but the names have to be unique
+#    Feature1:
+#        # define feature based on only one result
+#        - ChIP_IDR
+#    Feature2:
+#        # define feature based on more than one result
+#        - Peaks6
+#        - Peaks5
+#    Feature3:
+#        # define feature based on different analysis types
+#        - ChIP_IDR
+#        - Peaks5
+
+
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~EXECUTION~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## This section should only be adjusted by advanced users.      #
+## ------------------------------------------------------------ #
 execution:
   submit-to-cluster: no
   jobs: 6
@@ -109,6 +222,9 @@ execution:
       threads:   1
       memory:    8G
 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~TOOLS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## This section should only be adjusted by advanced users.      #
+## ------------------------------------------------------------ #
 tools:
     fastqc:
         executable: @FASTQC@
