@@ -6,7 +6,7 @@ locations:
   gff-file: genome/mm_chr19.gtf
 
 general:
-  assembly: hg19
+  assembly: mm9
   params:
     export_bigwig:
         extend: 200
@@ -16,7 +16,7 @@ general:
     idr:
         idr-threshold: 0.1
     macs2:
-        g: hs
+        g: mm
         keep-dup: auto
         q: 0.05
         nomodel: ''
