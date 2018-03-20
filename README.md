@@ -180,6 +180,15 @@ The samples used for any subsequent analysis are defined in the _sample sheet_ s
   - the location of these files is specified in `settings.yaml`
   - for single-end data, leave the Read2 column in place, but have it empty
 
+#### Technical Replicates
+
+The current sample sheet does not support multiple technical replicates for one sample, so replicates need to be combined prior to running the pipeline.   
+This could be done by concatenating the respective files (for uncompressed or compressed files):
+
+```sh
+cat sample_tecrep1.fq.gz sample_tecrep2.fq.gz [..] > sample.fq.gz
+```
+
 ### Settings File
 
 The settings file is a file in yaml format specifying general settings and the details of the analysis. It has the following **required** sections: 
