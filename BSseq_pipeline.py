@@ -465,7 +465,7 @@ rule sortbam_pe:
         DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice('samtools', ["sort -n ", " {input} ", " | samtools fixmate -m  - - ", " | samtools sort -o {output} "  ])
+        nice('samtools', ["sort -n ", " {input} ", " | ", tools('samtools'), " fixmate -m  - - ", " | ", tools('samtools'), " sort -o {output} " ])
 
 
 # ==========================================================================================
