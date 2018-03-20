@@ -89,7 +89,9 @@ rule index_to_chrlen:
             outfile = GENOME_PREFIX_PATH + '.chrlen.txt'
         params:
             prefix  = GENOME_PREFIX_PATH,
-            bowtie2_inspect = SOFTWARE['bowtie2-inspect']['executable']
+            bowtie2_inspect = SOFTWARE['bowtie2-inspect']['executable'],
+            grep = SOFTWARE['grep']['executable'],
+            cut = SOFTWARE['cut']['executable']
         log:
             os.path.join(PATH_LOG, "index_to_chrlen.log")
         message:
@@ -99,7 +101,7 @@ rule index_to_chrlen:
                     output: {output.outfile}
             """
         shell:"""
-            {params.bowtie2_inspect} -s {params.prefix} | grep Sequence | cut -f2,3 > {output.outfile} 2> {log}
+            {params.bowtie2_inspect} -s {params.prefix} | {params.grep} Sequence | {params.cut} -f2,3 > {output.outfile} 2> {log}
         """
 
 

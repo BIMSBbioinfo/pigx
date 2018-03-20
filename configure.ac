@@ -9,6 +9,9 @@ AM_SILENT_RULES([yes])
 dnl We need sed for version checks
 AC_PROG_SED
 
+dnl needed for some rules
+AC_PROG_GREP
+
 dnl Load Python support for Automake and ensure we have a Python
 dnl interpreter for at least version 3.5.  This sets the "PYTHON"
 dnl variable.
@@ -35,6 +38,11 @@ AS_IF([test -z "$$1"],dnl
       fi
       ],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
+
+dnl These GNU coreutils are used at runtime
+find_or_override_prog([CUT],             [cut])
+find_or_override_prog([SORT],            [sort])
+find_or_override_prog([MV],              [mv])
 
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([PERL],            [perl])
