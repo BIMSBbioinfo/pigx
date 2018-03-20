@@ -53,22 +53,31 @@ organism: ''
 tools:
   gunzip:
     executable: @GUNZIP@
+    args: ""
   fastqc:
     executable: @FASTQC@
+    args: ""
   multiqc:
     executable: @MULTIQC@
+    args: ""
   star:
     executable: @STAR@
+    args: ""
   trim-galore:
     executable: @TRIMGALORE@
+    args: ""
   bedtools:
     executable: @BEDTOOLS@
+    args: ""
   samtools:
     executable: @SAMTOOLS@
+    args: ""
   htseq-count:
     executable: @HTSEQ_COUNT@
+    args: ""
   salmon:
     executable: @SALMON@
-  R:
-    Rscript: @RSCRIPT@
-    executable: @R@
+    args: ""
+  Rscript:
+    executable: @RSCRIPT@
+    args: "--vanilla"
