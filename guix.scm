@@ -59,7 +59,9 @@
      `(("autoconf" ,autoconf)
        ("automake" ,automake)))
     (inputs
-     `(("r-minimal" ,r-minimal)
+     `(("grep" ,grep)
+       ("coreutils" ,coreutils)
+       ("r-minimal" ,r-minimal)
        ("r-argparser" ,r-argparser)
        ("r-chipseq" ,r-chipseq)
        ("r-data-table" ,r-data-table)
