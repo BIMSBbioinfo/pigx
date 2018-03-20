@@ -15,9 +15,12 @@ def validate_config(config, structure_variables):
     sample_sheet_dict = read_SAMPLE_SHEET(config)
 
     message = ''
-    message = check_settings(sample_sheet_dict, config, structure_variables , message)
     message = check_sample_sheet(sample_sheet_dict, config,  structure_variables, message)
+    if len(message) > 0:
+        message = 'ERROR: Sample Sheet is not properly formated:\n' + message
+        sys.exit(message)
 
+    message = check_settings(sample_sheet_dict, config, structure_variables , message)
     if len(message) > 0:
         message = 'ERROR: Config file is not properly formated:\n' + message
         sys.exit(message)
