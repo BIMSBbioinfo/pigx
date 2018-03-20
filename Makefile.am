@@ -53,8 +53,9 @@ dist_pkglibexec_rules_SCRIPTS =   		\
   Rules/UCSC_Hub.py
 
 dist_pkgdata_DATA =						\
-  etc/settings.yaml						\
-  etc/pretty.txt						
+  etc/settings.yaml.in					\
+  etc/pretty.txt						\
+  etc/sample_sheet.csv.example  
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1 SOURCE_DATE_EPOCH=1
 
