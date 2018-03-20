@@ -62,7 +62,7 @@ def toolArgs(name):
 
 def tool(name):
     cmd = config['tools'][name]['executable']
-    return cmd + " " toolArgs(name)
+    return cmd + " " + toolArgs(name)
 
 FASTQC_EXEC  = tool('fastqc')
 MULTIQC_EXEC = tool('multiqc')
