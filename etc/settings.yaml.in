@@ -51,6 +51,8 @@ organism: ''
     #covariates: '' 
 
 tools:
+  gunzip:
+    executable: @GUNZIP@
   fastqc:
     executable: @FASTQC@
   multiqc:

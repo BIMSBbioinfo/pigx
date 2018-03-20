@@ -62,6 +62,7 @@ TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
 BEDTOOLS_EXEC    = config['tools']['bedtools']['executable']
 SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
 HTSEQ_COUNT_EXEC = config['tools']['htseq-count']['executable']
+GUNZIP_EXEC      = config['tools']['gunzip']['executable']
 RSCRIPT_EXEC     = config['tools']['R']['Rscript']
 
 STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
@@ -273,7 +274,7 @@ rule star_map:
   params:
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_'),
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40 --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
+  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40 --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
 
 rule salmon_index: 
   input:
