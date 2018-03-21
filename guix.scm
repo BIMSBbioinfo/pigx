@@ -23,6 +23,7 @@
              (guix build-system gnu)
              (gnu packages)
              (gnu packages autotools)
+             (gnu packages base)
              (gnu packages statistics)
              (gnu packages bioinformatics)
              (gnu packages compression)
