@@ -38,7 +38,8 @@ ChIPQC = function(
     library_type         = NULL,
     sample_name          = NULL,
     use_longest_chr      = NULL,
-    shift_window         = 400
+    shift_window         = 400,
+    threads              = 1
 ){
 
     # ------------------------------------------------------------------------ #
@@ -54,8 +55,10 @@ ChIPQC = function(
     suppressPackageStartupMessages(require(Rsamtools))
     suppressPackageStartupMessages(require(GenomicRanges))
     suppressPackageStartupMessages(require(GenomicAlignments))
+    suppressPackageStartupMessages(require(BiocParallel))    
     source(file.path(scriptdir, 'ChIPQC_Functions.R'))
     source(file.path(scriptdir, 'Functions_Helper.R'))
+    register(MulticoreParam(workers = threads))
     # ------------------------------------------------------------------------ #
     annotation = readRDS(annotation)$genomic_annotation
 
@@ -177,5 +180,6 @@ ChIPQC(
   scriptdir            = argv$params[['scriptdir']],
   library_type         = argv$params[['library_type']],
   sample_name          = argv$params[['sample_name']],
-  use_longest_chr      = argv$params[['use_longest_chr']]
+  use_longest_chr      = argv$params[['use_longest_chr']],
+  threads              = argv$params[['threads']]
 )
