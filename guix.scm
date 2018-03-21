@@ -103,8 +103,14 @@
        ("bedtools" ,bedtools)
        ("kentutils" ,kentutils)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_chipseq/")
-    (synopsis "TODO")
-    (description "TODO")
+    (synopsis "Analysis pipeline for ChIP sequencing experiments")
+    (description "PiGX ChIPseq is an analysis pipeline for preprocessing, peak
+calling and reporting for ChIP sequencing experiments.  It is easy to use and
+produces high quality reports.  The inputs are reads files from the sequencing
+experiment, and a configuration file which describes the experiment.  In
+addition to quality control of the experiment, the pipeline enables to set up
+multiple peak calling analysis and allows the generation of a UCSC track hub
+in an easily configurable manner.")
     (license gpl3+)))
 
 pigx-chipseq
