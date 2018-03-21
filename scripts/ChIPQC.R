@@ -54,8 +54,10 @@ ChIPQC = function(
     suppressPackageStartupMessages(require(Rsamtools))
     suppressPackageStartupMessages(require(GenomicRanges))
     suppressPackageStartupMessages(require(GenomicAlignments))
+    suppressPackageStartupMessages(require(BiocParallel))    
     source(file.path(scriptdir, 'ChIPQC_Functions.R'))
     source(file.path(scriptdir, 'Functions_Helper.R'))
+    register(MulticoreParam(workers = 1))
     # ------------------------------------------------------------------------ #
     annotation = readRDS(annotation)$genomic_annotation
 
