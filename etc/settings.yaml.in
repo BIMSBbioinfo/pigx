@@ -29,6 +29,8 @@ general:
     extract_signal:
         expand_peak:
         number_of_bins: 50
+    peak_statistics:
+        resize: 500
     width_params:
        tss_width: 1000
        tts_width: 1000
@@ -200,24 +202,36 @@ execution:
     index_to_chrlen:
       threads:   1
       memory:    1G
+    knit_report:
+      threads:   1
+      memory:    32G
     link_annotation:
+      threads:   1
+      memory:    16G
+    link_genome:
+      threads:   1
+      memory:    1G  
+    macs2:
       threads:   1
       memory:    16G
     make_ucsc_hub:
       threads:   1
       memory:    8G
-    samtools_sort:
-      threads:   4
+    peak_statistics:
+      threads:   16
+      memory:    16G 
+    prepare_annotation:
+      threads:   1
       memory:    16G
     samtools_index:
       threads:   1
       memory:    8G
-    macs2:
-      threads:   1
+    samtools_sort:
+      threads:   4
       memory:    16G
-    prepare_annotation:
+    summarize_data_for_report:
       threads:   1
-      memory:    16G
+      memory:    32G
     sort_peak:
       threads:   1
       memory:    8G
