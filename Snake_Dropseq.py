@@ -330,11 +330,12 @@ rule fasta_dict:
     output:
         os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict')
     params:
-        picard  = SOFTWARE['picard']['executable'],
-        java    = SOFTWARE['java']['executable'],
-        threads = 1,
-        mem     = '2G',
-        tempdir = TEMPDIR
+        picard   = SOFTWARE['picard']['executable'],
+        java     = SOFTWARE['java']['executable'],
+        threads  = 1,
+        mem      = '2G',
+        tempdir  = TEMPDIR,
+        app_name = 'CreateSequenceDictionary'
     log:
         os.path.join(PATH_LOG, '{genome}.fasta_dict.log')
     message:
@@ -343,9 +344,16 @@ rule fasta_dict:
                 input  : {input}
                 output : {output}
         """
-    shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} CreateSequenceDictionary R={input} O={output} 2> {log}
-    """
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'R=' + str(input),
+        'O=' + str(output),
+        '2>' + str(log.log)
+        ])
+        shell(command)
 
 # ----------------------------------------------------------------------------- #
 # changes the gene_name field in the GTF file to the gene_id
@@ -382,7 +390,8 @@ rule gtf_to_refflat:
         mem       = '30G',
         java      = SOFTWARE['java']['executable'] ,
         droptools = SOFTWARE['droptools']['executable'],
-        tempdir   = TEMPDIR
+        tempdir   = TEMPDIR,
+        app_name  = 'ConvertToRefFlat'
     log:
         os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
     message:"""
@@ -392,9 +401,17 @@ rule gtf_to_refflat:
                     gtf  : {input.gtf}
                 output : {output}
         """
-    shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} ConvertToRefFlat  O={output} ANNOTATIONS_FILE={input.gtf} SEQUENCE_DICTIONARY={input.dict} 2> {log}
-    """
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'ANNOTATIONS_FILE='     + str(input.gtf),
+        'SEQUENCE_DICTIONARY='  + str(input.dict),
+        'O=' + str(output.outfile),
+        '2>' + str(log.log)
+        ])
+        shell(command)
 
 
 # # ----------------------------------------------------------------------------- #
@@ -410,12 +427,13 @@ rule merge_fastq_to_bam:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
     params:
-        name    = '{name}',
-        picard  = SOFTWARE['picard']['executable'],
-        java    = SOFTWARE['java']['executable'],
-        threads = 1,
-        mem     = '2G',
-        tempdir = TEMPDIR
+        name     = '{name}',
+        picard   = SOFTWARE['picard']['executable'],
+        java     = SOFTWARE['java']['executable'],
+        threads  = 1,
+        mem      = '2G',
+        tempdir  = TEMPDIR,
+        app_name = 'FastqToSam'
     log:
         os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
     message:"""
@@ -425,9 +443,20 @@ rule merge_fastq_to_bam:
                     reads   : {input.reads}
                 output : {output}
         """
-    shell: """
-    {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.picard} FastqToSam O={output} F1={input.barcode} F2={input.reads} QUALITY_FORMAT=Standard SAMPLE_NAME={params.name} SORT_ORDER=queryname 2> {log}
-    """
+    run:    
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'O='  + str(output.outfile),
+        'F1=' + str(input.barcode),
+        'F2=' + str(input.reads),
+        'QUALITY_FORMAT=Standard',
+        'SAMPLE_NAME=' + params.name,
+        'SORT_ORDER='  + queryname,
+        '2>' + str(log.log)
+        ])
+        shell(command)
 # ----------------------------------------------------------------------------- #
 rule tag_cells:
     input:
@@ -780,15 +809,27 @@ rule bam_tag_histogram:
         mem       = '64G',
         java      = SOFTWARE['java']['executable'],
         droptools = SOFTWARE['droptools']['executable'],
-        tempdir   = TEMPDIR
+        tempdir   = TEMPDIR,
+        app_name  = 'BAMTagHistogram'
     message: """
             BamTagHistogram:
                 input:  {input.infile}
                 output: {output.outfile}
         """
     shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -Xmx{params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
+        {params.java} -XX:ParallelGCThreads={params.threads} -
+        {params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
 	"""
+	run:
+	    tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+
+        command = ' '.join([
+        tool,
+        'O=' + str(output.outfile),
+        'I=' + str(input.infile),
+        'TAG=XC'
+        ])
+        shell(command)
 
 
 # ----------------------------------------------------------------------------- #
@@ -848,7 +889,7 @@ rule get_umi_matrix:
 
         command = ' '.join([
         tool,
-        'O=' + output.outfile,
+        'O=' + str(output.outfile),
         'I=' + str(input.infile),
         'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
 #         'MIN_NUM_GENES_PER_CELL=' + str(params.genes_per_cell),
@@ -889,7 +930,7 @@ rule get_reads_matrix:
 
         command = ' '.join([
         tool,
-        'O=' + output.outfile,
+        'O=' + str(output.outfile),
         'I=' + str(input.infile),
         'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
         'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff),
