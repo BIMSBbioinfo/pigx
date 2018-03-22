@@ -326,9 +326,9 @@ if GENOME_SECONDARY_IND:
 
 rule fasta_dict:
     input:
-        os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta')
+        infile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta')
     output:
-        os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict')
+        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict')
     params:
         picard   = SOFTWARE['picard']['executable'],
         java     = SOFTWARE['java']['executable'],
@@ -337,7 +337,7 @@ rule fasta_dict:
         tempdir  = TEMPDIR,
         app_name = 'CreateSequenceDictionary'
     log:
-        os.path.join(PATH_LOG, '{genome}.fasta_dict.log')
+        log = os.path.join(PATH_LOG, '{genome}.fasta_dict.log')
     message:
         """
             Fasta dict:
@@ -349,8 +349,8 @@ rule fasta_dict:
 
         command = ' '.join([
         tool,
-        'R=' + str(input),
-        'O=' + str(output),
+        'R=' + str(input.infile),
+        'O=' + str(output.outfile),
         '2>' + str(log.log)
         ])
         shell(command)
@@ -384,7 +384,7 @@ rule gtf_to_refflat:
         dict = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict'),
         gtf  = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
     output:
-        os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
+        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
     params:
         threads   = 1,
         mem       = '30G',
@@ -393,7 +393,7 @@ rule gtf_to_refflat:
         tempdir   = TEMPDIR,
         app_name  = 'ConvertToRefFlat'
     log:
-        os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
+        log = os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
     message:"""
             GTF To refFlat:
                 input
@@ -435,7 +435,7 @@ rule merge_fastq_to_bam:
         tempdir  = TEMPDIR,
         app_name = 'FastqToSam'
     log:
-        os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
+        log = os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
     message:"""
             Merge fastq barcode and reads:
                 input:
@@ -452,8 +452,8 @@ rule merge_fastq_to_bam:
         'F1=' + str(input.barcode),
         'F2=' + str(input.reads),
         'QUALITY_FORMAT=Standard',
-        'SAMPLE_NAME=' + params.name,
-        'SORT_ORDER='  + queryname,
+        'SAMPLE_NAME=' + str(params.name),
+        'SORT_ORDER=queryname',
         '2>' + str(log.log)
         ])
         shell(command)
@@ -713,7 +713,7 @@ rule merge_bam:
         mapped    = rules.sort_aligned.output.outfile,
         unmapped  = rules.trim_polya.output.outfile,
         reference = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta'),
-        dict      = rules.fasta_dict.output
+        dict      = rules.fasta_dict.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","merged.bam"))
     params:
@@ -816,12 +816,8 @@ rule bam_tag_histogram:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell:"""
-        {params.java} -XX:ParallelGCThreads={params.threads} -
-        {params.mem} -Djava.io.tmpdir={params.tempdir} -jar {params.droptools} BAMTagHistogram O={output.outfile} I={input.infile} TAG='XC'
-	"""
-	run:
-	    tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
+    run:
+        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
 
         command = ' '.join([
         tool,
