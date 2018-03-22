@@ -6,8 +6,8 @@ rule link_genome:
         outfile = GENOME_FASTA
     params:
         prefix  = GENOME_PREFIX_PATH,
-        threads = 1,
-        mem     = '1G',
+        threads = config['execution']['rules']['link_genome']['threads'],
+        mem     = config['execution']['rules']['link_genome']['memory'],
     log:
         logfile = os.path.join(PATH_LOG, "link_genome.log")
     message:

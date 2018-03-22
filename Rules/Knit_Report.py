@@ -14,8 +14,8 @@ rule knit_report:
             # width params define the look of the profile plots
             width_params    = PARAMS['width_params'],
             logo            = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png"), 
-            threads         = 1,
-            mem             = '32G',
+            threads         = config['execution']['rules']['knit_report']['threads'],
+            mem             = config['execution']['rules']['chipqc']['memory'],
             script_path     = SCRIPT_PATH,
             Rscript         = SOFTWARE['Rscript']['executable']
         log:
