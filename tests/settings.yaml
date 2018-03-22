@@ -9,3 +9,6 @@ annotation:
       name: hg19
       fasta: sample_data/hg19_chr19.10094960.25108012.fa
     gtf: sample_data/hg19_chr19.10094960.25108012.gtf
+
+execution:
+  submit-to-cluster: no
