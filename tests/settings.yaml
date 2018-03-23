@@ -2,6 +2,7 @@ locations:
   output-dir: out/
   reads-dir: sample_data/reads/
   sample-sheet: sample_sheet.csv
+  tempdir:
 
 annotation:
   primary:
@@ -9,3 +10,6 @@ annotation:
       name: hg19
       fasta: sample_data/hg19_chr19.10094960.25108012.fa
     gtf: sample_data/hg19_chr19.10094960.25108012.gtf
+
+execution:
+  submit-to-cluster: no

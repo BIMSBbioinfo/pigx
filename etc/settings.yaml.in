@@ -21,14 +21,91 @@ execution:
   nice: 19
   cluster:
     missing-file-timeout: 120
-    memory: 8G
     stack: 128M
-    queue: all
     contact-email: none
+    args: ''
   rules:
     __default__:
       threads: 1
       memory: 8G
+    link_primary_annotation:
+      threads: 1
+      memory: 4G
+    combine_reference:
+      threads: 1
+      memory: 4G
+    make_star_reference:
+      threads:  8
+      memory: 40G
+    combine_gtf:
+      threads: 1,
+      memory: 4G
+    fasta_dict:
+      threads:  1
+      memory: 2G
+    change_gtf_id:
+      threads:  1
+      memory: 4G
+    gtf_to_refflat:
+      threads:  1
+      memory: 30G
+    merge_fastq_to_bam:
+      threads:  1
+      memory: 2G
+    tag_cells:
+      threads:  8
+      memory: 35G
+    tag_molecules:
+      threads:  8
+      memory: 35G
+    filter_bam:
+      threads:  1
+      memory: 10G
+    trim_starting_sequence:
+      threads:  1
+      memory: 10G
+    trim_polya:
+      threads:  1
+      memory: 10G
+    sam_to_fastq:
+      threads:  1
+      memory: 10G
+    map_star:
+      threads:  4
+      memory: 32G
+    sort_aligned:
+      threads:  1
+      memory: 5G
+    merge_bam:
+      threads:  1
+      memory: 5G
+    tag_with_gene_exon:
+      threads:  1
+      memory: 5G
+    extract_read_statistics:
+      threads:  1
+      memory: 8G
+    bam_tag_histogram:
+      threads:  1
+      memory: 64G
+    find_absolute_read_cutoff:
+      threads:  1
+      memory: 8G
+    get_umi_matrix:
+      threads:  1
+      memory: 8G
+    get_reads_matrix:
+      threads:  1
+      memory:  8G
+    extract_downstream_statistics:
+      threads:  1
+      memory: 8G
+    bam_to_BigWig:
+      threads:  1
+      memory: 16G
+    fastqc:
+      threads:  1
+      memory: 16G
 
 tools:
   picard:
