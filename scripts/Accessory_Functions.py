@@ -12,7 +12,7 @@ def java_tool(java, threads, mem, tempdir, tool_path, tool_name, java_heap_diffe
     else:
         mem_size = mem_size - java_heap_difference
     
-    mem_reduced = str(mem) + mem_suffix
+    mem_reduced = str(mem_size) + mem_suffix
 
     tool = ' '.join([
         java,
