@@ -20,9 +20,35 @@ params:
     script_path:    NULL
     infile:         NULL
     width_params:   NULL
-
+    logo:           NULL
 
 ---
+
+<style>
+#logo
+{
+    position: relative;
+}
+#logo img {
+    /*position: relative;*/
+    top: 25px;
+    /*right: 0px;*/
+    left: 50px;
+    position: fixed;
+    width: 125px;
+    }
+body
+{
+    position: absolute;
+    top: 150px;
+}
+</style>
+
+<div id="logo" align="top">
+```{r echo=FALSE}
+knitr::include_graphics(params$logo)
+```
+</div>
 
 This report was generated with PiGx ChIPseq version @VERSION@.
 

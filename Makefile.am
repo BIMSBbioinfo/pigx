@@ -55,7 +55,8 @@ dist_pkglibexec_rules_SCRIPTS =   		\
 dist_pkgdata_DATA =						\
   etc/settings.yaml						\
   etc/pretty.txt						\
-  etc/sample_sheet.csv.example  
+  etc/sample_sheet.csv.example  		\
+  images/Logo_PiGx.png
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1 SOURCE_DATE_EPOCH=1
 
