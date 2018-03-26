@@ -16,8 +16,8 @@ general:
   assembly:
   params:
     export_bigwig:
-        extend: 0
-        scale_bw: 'no'
+        extend: 200
+        scale_bw: 'yes'
     bowtie2:
         k: 1
     idr:
