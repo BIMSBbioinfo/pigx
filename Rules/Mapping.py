@@ -88,7 +88,7 @@ rule index_to_chrlen:
         output:
             outfile = GENOME_PREFIX_PATH + '.chrlen.txt'
         params:
-            prefix  = GENOME_PREFIX_PATH,
+            prefix  = INDEX_PREFIX_PATH,
             bowtie2_inspect = SOFTWARE['bowtie2-inspect']['executable'],
             grep = SOFTWARE['grep']['executable'],
             cut = SOFTWARE['cut']['executable']
