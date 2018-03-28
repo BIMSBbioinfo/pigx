@@ -16,7 +16,7 @@ rule peak_statistics:
         path_peak       = PATH_PEAK,
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable'],
-        peaks_resize    = config['general']['params']['peak_statistics']
+        peaks_resize    = config['general']['params']['peak_statistics']['resize']
     log:
         logfile = os.path.join(PATH_LOG, 'Peak_Statistics.log')
     message:
