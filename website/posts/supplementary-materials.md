@@ -20,45 +20,23 @@ the ChIP-seq datasets from Hon. et al [can be accessed here](http://bimsbstatic.
 
 ## PiGx RNA-seq
 
-The supplementary results for the RNA-seq pipeline from the analysis
-of the RNA-seq datasets from Hon. et al consist of seven zipped
-folders. Each folder contains the differential expression analysis
-results as listed in Table S1. For each differential expression
-analysis folder, there are three distinct HTML report files (files
-ending with `.deseq.report.html`) generated using
+Below are links for the HTML reports for each differential expression 
+analysis performed using STAR-based gene counts for the use-case 
+RNA-seq datasets:
 
-- STAR-based gene counts,
+- [tet2_diff_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day3.html)
 
-- Salmon-based gene counts,
+- [tet2_diff_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day6.html)
 
-- Salmon-based transcript counts.
+- [tet2_vs_WT_day0](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day0.html)
 
-For each HTML file, there are two supporting tab-separated
-files:
+- [tet2_vs_WT_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day3.html)
 
-- The full table of DESeq2 differential expression statistics for each
-  gene/transcript (files ending with `.deseq_results.tsv`),
+- [tet2_vs_WT_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day6.html)
 
-- The full table of normalized counts (using DESeq2 variance
-  stabilizing transformation) (files ending with
-  `.normalized_counts.tsv`).
+- [WT_diff_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day3.html)
 
-Below are links for the supplementary files for each differential
-expression analysis performed for the use-case RNA-seq datasets:
-
-- [tet2_diff_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day3.tgz)
-
-- [tet2_diff_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day6.tgz)
-
-- [tet2_vs_WT_day0](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day0.tgz)
-
-- [tet2_vs_WT_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day3.tgz)
-
-- [tet2_vs_WT_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day6.tgz)
-
-- [WT_diff_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day3.tgz)
-
-- [WT_diff_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day6.tgz)
+- [WT_diff_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day6.html)
 
 
 ## PiGx BS-seq
