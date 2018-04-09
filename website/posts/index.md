@@ -21,6 +21,8 @@ pipelines:
   for the analysis of sequence mutations in CRISPR-CAS9 targeted
   amplicon sequencing data
 
+###### BUTTONS HERE
+
 All pipelines are easily configured with a simple sample sheet and a
 descriptive settings file.  The result is a set of comprehensive,
 interactive HTML reports with interesting findings about your samples.

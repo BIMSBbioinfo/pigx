@@ -53,17 +53,23 @@ Each HTML document represents a stand-alone summary of some the key
 findings for the given sample, along with a description of the key
 operations carried out by the pipeline.
 
-PiGx BS-seq Analysis Title
-Download Link
-[Tet2 deletion (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2_se_bt2.sorted.deduped_mm10_canon_final.html)
-[Wild-type (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_canon_final.html)
-[Differential methylation, biological replicate 1, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
-[Tet2 deletion (biological replicate 2) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2-brep2_se_bt2.sorted.deduped_mm10_canon_final.html)
-[Wild type (biological replicate 2) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT-brep2_se_bt2.sorted.deduped_mm10_canon_final.html)
-[Differential methylation, biological replicate 2, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.4vs5.html)
-[Tet2 deletion (day 3) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2-day3_se_bt2.sorted.deduped_mm10_canon_final.html)
-[Wild type (day 3) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT-day3_se_bt2.sorted.deduped_mm10_canon_final.html)
-[Differential methylation, day 3, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.2vs3.html)
+- [Tet2 deletion (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2_se_bt2.sorted.deduped_mm10_canon_final.html)
+
+- [Wild-type (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_canon_final.html)
+
+- [Differential methylation, biological replicate 1, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
+
+- [Tet2 deletion (biological replicate 2) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2-brep2_se_bt2.sorted.deduped_mm10_canon_final.html)
+
+- [Wild type (biological replicate 2) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT-brep2_se_bt2.sorted.deduped_mm10_canon_final.html)
+
+- [Differential methylation, biological replicate 2, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.4vs5.html)
+
+- [Tet2 deletion (day 3) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2-day3_se_bt2.sorted.deduped_mm10_canon_final.html)
+
+- [Wild type (day 3) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT-day3_se_bt2.sorted.deduped_mm10_canon_final.html)
+
+- [Differential methylation, day 3, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.2vs3.html)
 
 
 # About PiGx
