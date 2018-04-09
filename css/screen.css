@@ -369,3 +369,38 @@ img.end-decoration {
             overflow: hidden;
             object-fit: contain;
             display: inline-block; }
+
+@keyframes buttons {
+    from {
+        background-color: transparent;
+        color: #333;
+    }
+    to {
+        background-color: #ff3807;
+        color: white;
+    }
+}
+
+#buttons {
+    text-align: center; }
+a.button-big {
+    border-color: #ff3807;
+    border-radius: 6px;
+    border-style: solid;
+    border-width: 5px;
+    text-align: center;
+    line-height: 2em;
+    color: #333;
+    vertical-align: middle;
+    text-decoration: none;
+    padding: .3em 2em;
+    margin: 1em;
+    display: inline-block;
+    font-family: "droid sans", sans-serif;
+}
+a.button-big:hover {
+    background-color: #ff3807;
+    color: white;
+    animation-name: buttons;
+    animation-duration: 0.25s; }
+    
