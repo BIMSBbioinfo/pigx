@@ -1,4 +1,4 @@
-title: PiGx: Supplementary Materials
+title: Supplementary Materials
 ---
 
 These are supplementary files for the PiGx paper.

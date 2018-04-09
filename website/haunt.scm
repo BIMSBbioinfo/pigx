@@ -114,7 +114,7 @@
                                            (href "http://bioinformatics.mdc-berlin.de/pigx_docs/"))
                                         "Documentation")
                                      (a (@ (class "button-big button-light")
-                                           (href "/pigx/pigx-supplementary-materials.html"))
+                                           (href "/pigx/supplementary-materials.html"))
                                         "Sample Reports")))
                               (#t tree))))
                     (*text* . ,(lambda (sym text) text))
