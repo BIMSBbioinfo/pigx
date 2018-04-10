@@ -237,18 +237,6 @@ heatmaply(gc_heat,
 ncat('## GC Content Distribution Per Sample {.tabset}')
 ```
 
-The following sets of plots show, for each sample the dependence of read counts on the GC content.
-
-```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', results='asis', eval=TRUE}
-for(sample in names(gl)){
-    ncat(paste('###',sample))
-    print(gl[[sample]])
-    cat('\n')
-}
-```
-
-
-
 # Per Sample GC Content Vs Number of Reads {.tabset}
 
 The following sets of plots show, for each sample the dependence of read counts on the GC content.
