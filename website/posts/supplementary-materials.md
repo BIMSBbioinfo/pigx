@@ -42,12 +42,8 @@ RNA-seq datasets:
 ## PiGx BS-seq
 
 The supplementary results for the BS-seq pipeline from the analysis of
-the RNA-seq datasets from Hon. et al consist of 9 reports in HTML
-format; We have highlighted the most important figures from the second
-biological replicate in the study (as used in the original study), and
-for completeness, we include here the same reports for the first
-biological replicate, as well as the post-maturation data from
-labelled “day 3”.
+the RNA-seq datasets from Hon. et al consist of three reports in HTML
+format; We have highlighted the most important figures from the study.
 
 Each HTML document represents a stand-alone summary of some the key
 findings for the given sample, along with a description of the key
@@ -57,20 +53,7 @@ operations carried out by the pipeline.
 
 - [Wild-type (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_canon_final.html)
 
-- [Differential methylation, biological replicate 1, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
-
-- [Tet2 deletion (biological replicate 2) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2-brep2_se_bt2.sorted.deduped_mm10_canon_final.html)
-
-- [Wild type (biological replicate 2) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT-brep2_se_bt2.sorted.deduped_mm10_canon_final.html)
-
-- [Differential methylation, biological replicate 2, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.4vs5.html)
-
-- [Tet2 deletion (day 3) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2-day3_se_bt2.sorted.deduped_mm10_canon_final.html)
-
-- [Wild type (day 3) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT-day3_se_bt2.sorted.deduped_mm10_canon_final.html)
-
-- [Differential methylation, day 3, (tet2-/-)  - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.2vs3.html)
-
+- [Differential methylation, biological replicate 1, (tet2-/-) - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
 
 # About PiGx
 
