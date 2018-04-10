@@ -221,6 +221,13 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
 }
 ```
 
+heatmaply(gc_heat,
+          xlab   = 'GC content',
+          ylab   = 'Sample',
+          k_col  = 2, k_row = 2,
+          colors = c('white','darkred'),
+          margin = c(150, margin_left, 0, 0),
+          Colv   = FALSE)
 
 
 ```{r GC_Content_Plot_Header, include=TRUE, fig.align='center', results='asis'}
