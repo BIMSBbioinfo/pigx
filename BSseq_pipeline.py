@@ -199,7 +199,6 @@ onsuccess:
 
 rule final_report:
     input:
-        lambda wc: finalReportDiffMeth_input(wc.prefix),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
         callFile    = os.path.join(DIR_methcall,"{prefix}.deduped_CpG.txt"),
         grfile      = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
