@@ -399,6 +399,6 @@ else:
         command.append("--reason")
     if args.unlock:
         command.append("--unlock")
-    if args.target == 'help':
+    if 'help' in args.target:
         command.append("help")
     subprocess.run(command)
