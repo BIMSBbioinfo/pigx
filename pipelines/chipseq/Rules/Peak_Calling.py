@@ -70,11 +70,14 @@ rule sort_peak:
         get_macs_output
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_qsort.bed")
+    params:
+        sort = SOFTWARE['sort']['executable'],
+        cut  = SOFTWARE['cut']['executable']
     message:"""
             Sorting peak:
                 input : {input}
                 output: {output}
         """
     shell:"""
-        sort -r -k9 -n {input} | cut -f1-9 > {output.outfile}
+        {params.sort} -r -k9 -n {input} | {params.cut} -f1-9 > {output.outfile}
     """

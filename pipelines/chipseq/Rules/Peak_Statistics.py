@@ -8,15 +8,15 @@ rule peak_statistics:
     output:
         outfile    = os.path.join(PATH_RDS, "Peak_Statistics.rds")
     params:
-        threads         = 16,
-        mem             = '16G',
+        threads         = config['execution']['rules']['peak_statistics']['threads'],
+        mem             = config['execution']['rules']['peak_statistics']['memory'],
         peak_dict       = config['peak_calling'],
         lib_type_dict   = LIB_TYPE,
         path_mapped     = PATH_MAPPED,
         path_peak       = PATH_PEAK,
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable'],
-        peaks_resize    = 500
+        peaks_resize    = config['general']['params']['peak_statistics']['resize']
     log:
         logfile = os.path.join(PATH_LOG, 'Peak_Statistics.log')
     message:

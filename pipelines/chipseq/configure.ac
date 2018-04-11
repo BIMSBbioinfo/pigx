@@ -9,6 +9,9 @@ AM_SILENT_RULES([yes])
 dnl We need sed for version checks
 AC_PROG_SED
 
+dnl needed for some rules
+AC_PROG_GREP
+
 dnl Load Python support for Automake and ensure we have a Python
 dnl interpreter for at least version 3.5.  This sets the "PYTHON"
 dnl variable.
@@ -36,6 +39,11 @@ AS_IF([test -z "$$1"],dnl
       ],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
 
+dnl These GNU coreutils are used at runtime
+find_or_override_prog([CUT],             [cut])
+find_or_override_prog([SORT],            [sort])
+find_or_override_prog([MV],              [mv])
+
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([PERL],            [perl])
 find_or_override_prog([IDR],             [idr])
@@ -50,6 +58,7 @@ find_or_override_prog([BOWTIE2_BUILD],   [bowtie2-build])
 find_or_override_prog([BOWTIE2_INSPECT], [bowtie2-inspect])
 find_or_override_prog([BEDTOBIGBED],     [bedToBigBed])
 find_or_override_prog([BAMTOBED],        [bamToBed])
+find_or_override_prog([MULTIQC],         [multiqc])
 
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
@@ -60,12 +69,22 @@ AC_ARG_ENABLE([r-packages-check],
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
 AX_R_PACKAGE([argparser])
+AX_R_PACKAGE([BiocParallel])
+AX_R_PACKAGE([Biostrings])
 AX_R_PACKAGE([data.table])
+AX_R_PACKAGE([dplyr])
+AX_R_PACKAGE([htmlwidgets])
 AX_R_PACKAGE([jsonlite])
 AX_R_PACKAGE([genomation])
+AX_R_PACKAGE([GenomicAlignments])
 AX_R_PACKAGE([GenomicRanges])
+AX_R_PACKAGE([Rsamtools])
+AX_R_PACKAGE([rmarkdown])
 AX_R_PACKAGE([rtracklayer])
+AX_R_PACKAGE([S4Vectors])
 AX_R_PACKAGE([stringr])
+AX_R_PACKAGE([tibble])
+AX_R_PACKAGE([tidyr])
 AX_R_PACKAGE([chipseq])
 AX_R_PACKAGE([heatmaply])
 AX_R_PACKAGE([ggplot2])

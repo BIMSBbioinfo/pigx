@@ -317,10 +317,12 @@ if args.init:
             print('Generated {} template.'.format(name))
 
     if args.init == 'sample-sheet' or init_sample_sheet:
-        # FIXME: this feature is not implemented in this pipeline,
-        # as it expects a YAML file for the sample sheet.
-        print('Sorry, sample sheet initialization has not been implemented for this pipeline.  Skipping.')
-
+        name = 'sample_sheet.csv'
+        if path.exists(name):
+            print('Refusing to overwrite existing sample_sheet.csv.')
+        else:
+            shutil.copy(path.join(base, name + '.example'), name)
+            print('Generated {} template.'.format(name))
     exit(0)
 
 # Run snakemake!

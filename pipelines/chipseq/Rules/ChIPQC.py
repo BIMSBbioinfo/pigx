@@ -13,7 +13,8 @@ rule chipqc:
         sample_name     = "{name}",
         library_type    = lambda wc: get_library_type(wc.name),
         scriptdir       = SCRIPT_PATH,
-        Rscript         = SOFTWARE['Rscript']['executable']
+        Rscript         = SOFTWARE['Rscript']['executable'],
+        threads         = config['execution']['rules']['chipqc']['threads']
     log:
         logfile = os.path.join(PATH_LOG, '{name}_ChIPQC.log')
     message:

@@ -63,7 +63,8 @@ Knit_Report = function(
                       analysis_names = analysis_names,
                       report_chunks  = report_chunks,
                       script_path    = script_path,
-                      infile         = infile),
+                      infile         = infile,
+                      logo           = logo),
         quiet = quiet
     )
 
@@ -81,6 +82,7 @@ Knit_Report(
     report_chunks   = argv$params[['report_chunks']],
     script_path     = argv$params[['script_path']],
     width_params    = argv$params[['width_params']],
+    logo            = argv$params[['logo']],
     infile          = argv$input[['infile']],
     outfile         = argv$output[['outfile']]
 )

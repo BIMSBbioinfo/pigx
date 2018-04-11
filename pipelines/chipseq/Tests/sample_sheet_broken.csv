@@ -1,0 +1,8 @@
+Sample , Read, Read2
+ChIP1, ChIP.fq.gz,
+Cont1, Cont.fq.gz,
+ChIP2, ChIP.fq.gz,
+Cont2, Cont.fq.gz,
+ChIPpe, ChIPpe_R1.fq.gz, ChIPpe_R2.fq.gz
+
+

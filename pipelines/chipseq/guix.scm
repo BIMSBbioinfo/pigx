@@ -23,6 +23,7 @@
              (guix build-system gnu)
              (gnu packages)
              (gnu packages autotools)
+             (gnu packages base)
              (gnu packages statistics)
              (gnu packages bioinformatics)
              (gnu packages compression)
@@ -59,16 +60,27 @@
      `(("autoconf" ,autoconf)
        ("automake" ,automake)))
     (inputs
-     `(("r-minimal" ,r-minimal)
+     `(("grep" ,grep)
+       ("coreutils" ,coreutils)
+       ("r-minimal" ,r-minimal)
        ("r-argparser" ,r-argparser)
+       ("r-biocparallel" ,r-biocparallel)
+       ("r-biostrings" ,r-biostrings)
        ("r-chipseq" ,r-chipseq)
        ("r-data-table" ,r-data-table)
+       ("r-dplyr" ,r-dplyr)
        ("r-genomation" ,r-genomation)
+       ("r-genomicalignments" ,r-genomicalignments)
        ("r-genomicranges" ,r-genomicranges)
+       ("r-rsamtools" ,r-rsamtools)
        ("r-rtracklayer" ,r-rtracklayer)
+       ("r-s4vectors" ,r-s4vectors)
        ("r-stringr" ,r-stringr)
+       ("r-tibble" ,r-tibble)
+       ("r-tidyr" ,r-tidyr)
        ("r-jsonlite" ,r-jsonlite)
        ("r-heatmaply" ,r-heatmaply)
+       ("r-htmlwidgets" ,r-htmlwidgets)
        ("r-ggplot2" ,r-ggplot2)
        ("r-plotly" ,r-plotly)
        ("r-rmarkdown" ,r-rmarkdown)
@@ -81,8 +93,8 @@
        ("macs" ,macs)
        ("multiqc" ,multiqc)
        ("perl" ,perl)
-       ("ghc-pandoc" ,ghc-pandoc)
-       ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
+       ("ghc-pandoc" ,ghc-pandoc-1)
+       ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc-with-pandoc-1)
        ("fastqc" ,fastqc)
        ("bowtie" ,bowtie)
        ("idr" ,idr)
@@ -91,8 +103,14 @@
        ("bedtools" ,bedtools)
        ("kentutils" ,kentutils)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_chipseq/")
-    (synopsis "TODO")
-    (description "TODO")
+    (synopsis "Analysis pipeline for ChIP sequencing experiments")
+    (description "PiGX ChIPseq is an analysis pipeline for preprocessing, peak
+calling and reporting for ChIP sequencing experiments.  It is easy to use and
+produces high quality reports.  The inputs are reads files from the sequencing
+experiment, and a configuration file which describes the experiment.  In
+addition to quality control of the experiment, the pipeline enables to set up
+multiple peak calling analysis and allows the generation of a UCSC track hub
+in an easily configurable manner.")
     (license gpl3+)))
 
 pigx-chipseq

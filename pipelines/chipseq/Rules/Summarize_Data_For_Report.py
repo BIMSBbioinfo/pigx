@@ -10,8 +10,8 @@ rule summarize_data_for_report:
             analysis_names  = ANALISYS_NAMES,
             # report chunks are parts of the analysis that are implemented
             report_chunks   = list(REPORT_CHUNKS.values()),
-            threads         = 1,
-            mem             = '32G',
+            threads         = config['execution']['rules']['summarize_data_for_report']['threads'],
+            mem             = config['execution']['rules']['summarize_data_for_report']['memory'],
             script_path     = SCRIPT_PATH,
             Rscript         = SOFTWARE['Rscript']['executable']
         log:
