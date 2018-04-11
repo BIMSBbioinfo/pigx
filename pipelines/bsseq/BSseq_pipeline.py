@@ -199,7 +199,6 @@ onsuccess:
 
 rule final_report:
     input:
-        lambda wc: finalReportDiffMeth_input(wc.prefix),
         rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
         callFile    = os.path.join(DIR_methcall,"{prefix}.deduped_CpG.txt"),
         grfile      = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
@@ -465,7 +464,7 @@ rule sortbam_pe:
         DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
     message: fmt("Sorting bam file {input}")
     shell:
-        nice('samtools', ["sort -n ", " {input} ", " | samtools fixmate -m  - - ", " | samtools sort -o {output} "  ])
+        nice('samtools', ["sort -n ", " {input} ", " | ", tool('samtools'), " fixmate -m  - - ", " | ", tool('samtools'), " sort -o {output} " ])
 
 
 # ==========================================================================================
@@ -558,9 +557,9 @@ rule tabulate_seqlengths:
     output:
         seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
     params:
-        chromlines = " | grep Sequence ",
-        chromcols  = " | cut -f2,3     ",
-        seqnames   = " | sed \"s/_CT_converted//g\" "
+        chromlines = " | " + tool('grep') + " Sequence ",
+        chromcols  = " | " + tool('cut') + " -f2,3     ",
+        seqnames   = " | " + tool('sed') + " \"s/_CT_converted//g\" "
     message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
     shell:
         nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])

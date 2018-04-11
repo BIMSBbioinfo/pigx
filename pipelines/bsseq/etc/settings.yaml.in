@@ -82,3 +82,12 @@ tools:
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla"
+  cut:
+    executable: @CUT@
+    args: ""
+  sed:
+    executable: @SED@
+    args: ""
+  grep:
+    executable: @GREP@
+    args: ""

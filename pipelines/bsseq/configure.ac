@@ -6,8 +6,9 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([gnu color-tests tar-pax -Wall -Wno-portability foreign])
 AM_SILENT_RULES([yes])
 
-dnl We need sed for version checks
+dnl We need sed for version checks and for the pipeline
 AC_PROG_SED
+AC_PROG_GREP
 
 dnl Load Python support for Automake and ensure we have a Python
 dnl interpreter for at least version 3.5.  This sets the "PYTHON"
@@ -33,6 +34,7 @@ AS_IF([test -z "$$1"],dnl
       ],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
 
+find_or_override_prog([CUT],             [cut])
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])
