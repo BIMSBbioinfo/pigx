@@ -54,15 +54,26 @@ HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
 SALMON_DIR        = os.path.join(OUTPUT_DIR, 'salmon_output')
 PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
 
-FASTQC_EXEC  = config['tools']['fastqc']['executable']
-MULTIQC_EXEC = config['tools']['multiqc']['executable']
-STAR_EXEC    = config['tools']['star']['executable']
-SALMON_EXEC  = config['tools']['salmon']['executable']
-TRIM_GALORE_EXEC = config['tools']['trim-galore']['executable']
-BEDTOOLS_EXEC    = config['tools']['bedtools']['executable']
-SAMTOOLS_EXEC    = config['tools']['samtools']['executable']
-HTSEQ_COUNT_EXEC = config['tools']['htseq-count']['executable']
-RSCRIPT_EXEC     = config['tools']['R']['Rscript']
+def toolArgs(name):
+    if 'args' in config['tools'][name]:
+        return config['tools'][name]['args']
+    else:
+        return ""
+
+def tool(name):
+    cmd = config['tools'][name]['executable']
+    return cmd + " " + toolArgs(name)
+
+FASTQC_EXEC  = tool('fastqc')
+MULTIQC_EXEC = tool('multiqc')
+STAR_EXEC    = tool('star')
+SALMON_EXEC  = tool('salmon')
+TRIM_GALORE_EXEC = tool('trim-galore')
+BEDTOOLS_EXEC    = tool('bedtools')
+SAMTOOLS_EXEC    = tool('samtools')
+HTSEQ_COUNT_EXEC = tool('htseq-count')
+GUNZIP_EXEC      = tool('gunzip')
+RSCRIPT_EXEC     = tool('Rscript')
 
 STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
 SALMON_INDEX_THREADS = config['execution']['rules']['salmon_index']['threads']
@@ -273,7 +284,7 @@ rule star_map:
   params:
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_'),
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand 'gunzip -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40 --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
+  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40 --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
 
 rule salmon_index: 
   input:

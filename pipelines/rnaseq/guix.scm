@@ -58,7 +58,8 @@
      `(("autoconf" ,autoconf)
        ("automake" ,automake)))
     (inputs
-     `(("snakemake" ,snakemake)
+     `(("gzip" ,gzip)
+       ("snakemake" ,snakemake)
        ("fastqc" ,fastqc)
        ("multiqc" ,multiqc)
        ("star" ,star)
