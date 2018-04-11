@@ -165,7 +165,6 @@ def RunRscript(input, output, params, logfile, script):
     # if isinstance(input, list):
     #     input = dict(zip(input, input))
 
-    print(input.items())
     params_dump = json.dumps(dict(params.items()),sort_keys=True,
                        separators=(",",":"), ensure_ascii=True)
     input_dump  = json.dumps(dict(input.items()),sort_keys=True,
