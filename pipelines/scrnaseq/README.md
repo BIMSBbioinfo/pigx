@@ -77,6 +77,15 @@ of all variables and options.
 You can prepare a suitable environment with Conda or with [GNU
 Guix](https://gnu.org/s/guix).  
 
+The pipeline currently depends on two external java programs, which can be found on the
+following links:
+
+1. [Picard tools](https://github.com/broadinstitute/picard/releases/tag/2.18.0)
+
+2. [Dropseq tools](http://mccarrolllab.com/download/1276/)
+
+During the configure step path to the **.jar** files needs to be provided.
+
 ## Via Conda
 
 - Download pigx_scrnaseq source code 

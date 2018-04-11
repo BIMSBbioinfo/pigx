@@ -1,6 +1,8 @@
 NEWS:
 
-
+v0.0.3:
+  * captured more tools at configure time
+  * remove obsolete file
 
 171207:
    [*]. bigWig files for selected cells
