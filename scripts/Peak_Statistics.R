@@ -123,7 +123,6 @@ Peak_Statistics = function(
 
     lout = list(
       peaks_sample      = cntmat,
-      score_matrix_list = lms,
       peak_profiles     = dms
       )
     saveRDS(lout, outfile)

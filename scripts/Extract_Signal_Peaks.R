@@ -58,7 +58,7 @@ Extract_Signal_Peaks = function(
     message('Sumarize Profiles ...')
         profiles = data.table(
             sample  = peakname,
-            signal = rowMeans(x))
+            signal = rowMeans(sml))
 
 
     lout = list(
