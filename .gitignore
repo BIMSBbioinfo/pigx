@@ -25,3 +25,4 @@ pigx_chipseq-*.tar.gz
 pigx_chipseq-*.tar.gz.asc
 pigx_chipseq-*.tar.gz.sig
 pigx_chipseq-*/
+.Rproj.user
