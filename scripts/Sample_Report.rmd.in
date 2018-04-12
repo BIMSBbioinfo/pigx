@@ -121,13 +121,15 @@ lstats = readRDS(params$infile)
 ```{r variables, include=FALSE, message=FALSE}
 number_of_samples = ncol(lstats$ChIPQC$norm.count)
 
-# sets the default for the Peak_Statistics_Header3
-number_of_peaks   = 0
 # ---------------------------------------------------------------------------- #
 # Figure sizes
 scale_factor = .6
 sample_correlation_width  = number_of_samples*scale_factor + 2
 sample_correlation_height = number_of_samples*scale_factor
+
+# sets the default for the Peak_Statistics_Header3
+number_of_peaks     = 10
+peak_number_width   = 100
 
 ```
 
@@ -248,19 +250,6 @@ for(sample in names(gl)){
 }
 ```
 
-
-
-# Per Sample GC Content Vs Number of Reads {.tabset}
-
-The following sets of plots show, for each sample the dependence of read counts on the GC content.
-
-```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', result='asis', eval=TRUE}
-for(sample in names(gl)){
-    cat(paste('##',sample,'\n'))
-    print(gl[[sample]])
-    cat(' \n\n')
-}
-```
 
 # Read Distribution in Genomic Features
 
