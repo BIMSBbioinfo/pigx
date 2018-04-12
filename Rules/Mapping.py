@@ -196,13 +196,15 @@ rule samtools_sort:
     params:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_sort.log")
     message:"""
             Sorting mapped reads:
                 input: {input}
                 output: {output}
         """
     shell: """
-        {params.samtools} sort --threads {params.threads} -o {output} {input}
+        {params.samtools} sort --threads {params.threads} -o {output} {input} 2> {log}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -213,9 +215,11 @@ rule samtools_index:
         os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai")
     params:
         samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_index.log")
     message:"""
         Indexing bam file:\n
             input: {input}
     """
     shell:
-        "{params.samtools} index {input}"
+        "{params.samtools} index {input} 2> {log}"
