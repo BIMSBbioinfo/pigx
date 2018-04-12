@@ -121,6 +121,8 @@ lstats = readRDS(params$infile)
 ```{r variables, include=FALSE, message=FALSE}
 number_of_samples = ncol(lstats$ChIPQC$norm.count)
 
+# sets the default for the Peak_Statistics_Header3
+number_of_peaks   = 0
 # ---------------------------------------------------------------------------- #
 # Figure sizes
 scale_factor = .6
@@ -181,6 +183,9 @@ heatmaply(cc,
 
 # GC Content Vs Number of Reads
 
+The figure shows the dependence of read counts on the GC content,
+quantified over 1 kb bins. The plot is a diagnostic for proper fragment selection and PCR amplification.
+
 ```{r GC_Content, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE}
 gc_heat = lstats$ChIPQC$GC %>%
     mutate(GC = cut(GC, seq(0,max(GC), 0.05), include.lowest = TRUE)) %>%
@@ -219,23 +224,22 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
 ```
 
 
-The figure shows the dependence of read counts on the GC content,
-quantified over 1 kb bins. The plot is a diagnostic for proper fragment selection and PCR amplification.
-
-```{r GC_Content_Plot, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = gc_fig_width, warning=FALSE, message=FALSE}
-heatmaply(gc_heat,
-          xlab   = 'GC content',
-          ylab   = 'Sample',
-          k_col  = 2, k_row = 2,
-          colors = c('white','darkred'),
-          margin = c(150, margin_left, 0, 0),
-          Colv   = FALSE)
-```
-
 
 ```{r GC_Content_Plot_Header, include=TRUE, fig.align='center', results='asis'}
 ncat('## GC Content Distribution Per Sample {.tabset}')
 ```
+
+The following sets of plots show, for each sample the dependence of read counts on the GC content.
+
+```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', results='asis', eval=TRUE}
+for(sample in names(gl)){
+    ncat(paste('###',sample))
+    print(gl[[sample]])
+    cat('\n')
+}
+```
+
+
 
 # Per Sample GC Content Vs Number of Reads {.tabset}
 
