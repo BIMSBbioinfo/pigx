@@ -96,7 +96,7 @@ rule index_to_chrlen:
             os.path.join(PATH_LOG, "index_to_chrlen.log")
         message:
             """
-                Constructing bowtie2 index:
+                Extracting chromosome lengths from index:
                     input : {params.prefix}
                     output: {output.outfile}
             """
