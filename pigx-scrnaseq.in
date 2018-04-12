@@ -421,6 +421,6 @@ else:
         command.append("--verbose")
     if args.printshellcmds:
         command.append("--printshellcmds")
-    if 'help' in args.target:
+    if args.target and 'help' in args.target:
         command.append("help")
     subprocess.run(command)
