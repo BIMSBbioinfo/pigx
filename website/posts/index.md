@@ -61,6 +61,11 @@ view in your browser.
 For more detailed information about each of the pipelines [see the
 online documentation](http://bioinformatics.mdc-berlin.de/pigx_docs).
 
+If you have further questions that are not answered in the
+documentation, or if you think you found an error in the pipelines,
+please send email to the [user mailing
+list](mailto:pigx@googlegroups.com) or use the [web
+forum](https://groups.google.com/forum/#!forum/pigx/).
 
 # Get it
 
