@@ -1,0 +1,16 @@
+amplicons:
+  dpy-10:
+    fasta: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/amplicons/amplicon_dpy-10.fa
+    cutsites: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/cutsites/sgRNA_cutsites_dpy-10.txt
+  lin-41: 
+    fasta: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/amplicons/amplicon_lin-41.fa
+    cutsites: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/cutsites/sgRNA_cutsites_lin-41.txt
+
+sample_sheet: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/sample_sheet.csv
+
+reads-dir: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/reads
+output-dir: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/output
+
+adapters: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/adapters/TruSeq2-SE.fa
+
+nodeN: 4
