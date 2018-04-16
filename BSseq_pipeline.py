@@ -126,7 +126,7 @@ targets = {
     'diffmeth': {
         'description': "Perform differential methylation calling.",
         'files': [ [DIR_diffmeth+"_".join(x)+
-                    dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(x)[0]]['Protocol']) + "_diffmeth.RDS"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
+                    dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(x[0])[0]]['Protocol']) + "_diffmeth.RDS"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
     },
 
     'diffmeth-report': {
@@ -242,7 +242,7 @@ rule final_report:
 
 rule diffmeth_report:
     input:
-        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment)[0]]['Protocol']) + '_diffmeth.bed',
+        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmeth.bed',
         template          = os.path.join(DIR_templates,"diffmeth.Rmd"),
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
