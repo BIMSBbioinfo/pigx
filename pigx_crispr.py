@@ -8,13 +8,17 @@ import csv
 import inspect
 
 
-AMPLICONS = config.get('amplicons', {})
-AMPLICONS_FASTA = [AMPLICONS[amp]['fasta'] for amp in AMPLICONS.keys()]
-READS_DIR = config['reads-dir']
-OUTPUT_DIR = config['output-dir']
-SRC_DIR = config['source-dir']
-print('SRC_DIR:',SRC_DIR)
+# tools
+RSCRIPT = config['tools']['Rscript']
 
+# input locations
+SRC_DIR = config['source-dir']
+READS_DIR = config['reads-dir']
+ADAPTERS = config['adapters']
+SAMPLE_SHEET_FILE = config['sample_sheet']
+
+#output locations
+OUTPUT_DIR = config['output-dir']
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
@@ -23,10 +27,9 @@ MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'aln')
 BEDGRAPH_DIR      = os.path.join(OUTPUT_DIR, 'bedgraph')
 BBMAP_INDEX_DIR   = os.path.join(OUTPUT_DIR, 'bbmap_indexes') 
 
-SAMPLE_SHEET_FILE = config['sample_sheet']
-
+#other parameters
+AMPLICONS = config.get('amplicons', {})
 nodeN = config['nodeN']
-ADAPTERS = config['adapters']
 
 
 ## Load sample sheet
@@ -47,27 +50,42 @@ def lookup(column, predicate, fields=[]):
 SAMPLES = [line['sample_name'] for line in SAMPLE_SHEET]
 print('SAMPLES', SAMPLES)
 
-def reads_input(args):
-  sample = args[0]
+def reads_input(wc):
+  sample = wc.sample
   return [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads']) if f]
 
-def get_amplicon_fasta(args):
-  amp = args[0]
-  print("looking for ",amp)
-  return [AMPLICONS[amp]['fasta']]
+def get_amplicon_file(wc, file_type):
+    path = AMPLICONS[wc.amplicon][file_type]
+    print("returning amplicon file:",path)
+    return(path)
+
+def get_output_file_list(DIR, ext):
+    paths = list()
+    for sample in SAMPLES:
+        amplicon = lookup('sample_name', sample, ['amplicon'])[0]
+        paths.append(os.path.join(DIR, amplicon, ".".join([sample, ext])))
+    print("Returning",paths)
+    return(paths)
+
 
 rule all:
     input:
-        #expand(os.path.join(OUTPUT_DIR, "fastqc", "{sample}_fastqc.html"), sample = SAMPLES),
-        expand(os.path.join(MAPPED_READS_DIR, "mpileup", "{sample}.mpileup.counts.tsv"), sample = SAMPLES),
+        #get_output_file_list(FASTQC_DIR, "fastqc.done"),
+        get_output_file_list(MAPPED_READS_DIR, "sam"),
+        get_output_file_list(MAPPED_READS_DIR, "bam"), 
+        get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.tsv"),                  
+        get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
+        get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())
-        #expand(os.path.join(MAPPED_READS_DIR, "{sample}.rmdup.bam"), sample = SAMPLES)
 
 rule fastqc:
-    input: reads_input
-    output: os.path.join(OUTPUT_DIR, "fastqc", "{sample}_fastqc.html")
-    log: os.path.join(LOG_DIR, 'fastqc_{sample}.log')
-    shell: "fastqc -o {FASTQC_DIR} {input} >> {log} 2>&1"
+    input: reads_input      
+    output: os.path.join(FASTQC_DIR, "{amplicon}", "{sample}.fastqc.done")
+    params:
+        outdir=os.path.join(FASTQC_DIR, "{amplicon}"), 
+        outfile=os.path.join(FASTQC_DIR, "{amplicon}", "{sample}.fastqc.done")
+    log: os.path.join(LOG_DIR, "{amplicon}", "{sample}.fastqc.log")
+    shell: "fastqc -o {params.outdir} {input} >> {log} 2>&1; touch {params.outfile}"
 
 #rule trimmomatic:
 #    input:
@@ -79,47 +97,83 @@ rule fastqc:
 #       ILLUMINACLIP:{adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
 
 rule bbmap_indexgenome:
-    input: get_amplicon_fasta
+    input: lambda wildcards: get_amplicon_file(wildcards, 'fasta')
     output: os.path.join(BBMAP_INDEX_DIR, "{amplicon}")
-    #params: 
-     #   path=os.path.join(BBMAP_INDEX_DIR, "{wildcards.amplicon}")
     log: os.path.join(LOG_DIR, 'bbmap_index_{amplicon}.log')
-#    shell: "bbmap.sh ref={input} path={params.path} >> {log} 2>&1"
     shell: "bbmap.sh ref={input} path={output} >> {log} 2>&1"
 
 rule bbmap_map:
     input: 
         reads = reads_input,
-        ref = lambda wildcards: os.path.join(BBMAP_INDEX_DIR, lookup('sample_name', wildcards[0], ['amplicon'])[0])
+        ref = lambda wildcards: os.path.join(BBMAP_INDEX_DIR, lookup('sample_name', wildcards.sample, ['amplicon'])[0])
     output:
-        os.path.join(MAPPED_READS_DIR, "{sample}.sam")
-    log: os.path.join(LOG_DIR, 'bbmap_{sample}.log')
+        os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
+    log: os.path.join(LOG_DIR, "{amplicon}", "bbmap_{sample}.log")
     shell:
         "bbmap.sh path={input.ref} in={input.reads} outm={output} t={nodeN} sam=1.3 >> {log} 2>&1"
 
 rule samtools_sam2bam:
-    input: os.path.join(MAPPED_READS_DIR, "{sample}.sam")
-    output: os.path.join(MAPPED_READS_DIR, "{sample}.bam")
-    log: os.path.join(LOG_DIR, 'sam2bam_{sample}.log')
+    input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
+    output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
+    log: os.path.join(LOG_DIR, "{amplicon}", "sam2bam_{sample}.log")
     shell:
         "samtools view -bh {input} | samtools sort | samtools rmdup -s - {output} >> {log} 2>&1"
 
 rule samtools_mpileup:
-    input: os.path.join(MAPPED_READS_DIR, "{sample}.bam")
-    output: os.path.join(MAPPED_READS_DIR, "mpileup", "{sample}.mpileup.tsv")
-    log: os.path.join(LOG_DIR, 'mpileup_{sample}.log')
+    input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
+    output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
+    log: os.path.join(LOG_DIR, "{amplicon}", "mpileup_{sample}.log")
     shell: "samtools mpileup {input} -o {output} >> {log} 2>&1"
 
 rule parse_mpileup:
-    input: os.path.join(MAPPED_READS_DIR, "mpileup", "{sample}.mpileup.tsv")
-    output: os.path.join(MAPPED_READS_DIR, "mpileup", "{sample}.mpileup.counts.tsv")
-    log: os.path.join(LOG_DIR, 'parse_mpileup.{sample}.log')
+    input: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
+    output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv")
+    log: os.path.join(LOG_DIR, "{amplicon}", 'parse_mpileup.{sample}.log')
     params:
         script=os.path.join(SRC_DIR, "src", "parse_mpileup.py")
     shell: "python {params.script} {input} > {output} 2> {log}"
+
+
+rule extractDeletionProfiles:
+    input: 
+        bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam"),
+        mpileupOutput = os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv"), 
+        parsedMpileupOutput = os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv"),
+        cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
+    output: 
+        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.deletionScores.bedgraph")
+    params:
+        outdir=os.path.join(BEDGRAPH_DIR, "{amplicon}"),
+        sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
+        script=os.path.join(SRC_DIR, "src", "extractDeletionProfiles.R")
+    log: os.path.join(LOG_DIR, "{amplicon}", "mpileup_{sample}.log")
+    shell: "{RSCRIPT} {params.script} {input.bamFile} {input.mpileupOutput} {input.parsedMpileupOutput} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} >> {log} 2>&1"
+        
+
+#bamFile <- args[1]
+#mpileupOutput <- args[2]
+#parseMpileupOutput <- args[3]
+#sampleName <- args[4]
+#outDir <- args[5]
+#cutSitesFile <- args[6] #path to sgRNA cutting sites for the target genome.
+#sgRNA_list <- args[7] # comma separated list of sgRNAs that were used for the given sample.
+
+        
+### extract per base deletion scores and write them into a bedgraph file
+#mkdir bedgraph
+#Rscript ${scriptsFolder}/extractDeletionProfiles.R \
+#${dedupedBamFile} \
+#`pwd`/mpileup/${sampleName}.mpileup.tsv \
+#`pwd`/mpileup/${sampleName}.mpileup.counts.tsv \
+#${sampleName} \
+#`pwd`/bedgraph \
+#${cutSitesFile} \
+#${sampleInfoFile}
 #
+### extract deletion coordinates
+#mkdir bed
+#Rscript ${scriptsFolder}/extractDeletionCoordsFromBam.R ${dedupedBamFile} ${sampleName} `pwd`/bed
 #
-##rule extractPerBaseDeletionScores
 #
 ##rule getDeletions
 #

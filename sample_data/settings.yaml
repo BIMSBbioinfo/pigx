@@ -15,3 +15,6 @@ source-dir: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/
 adapters: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/adapters/TruSeq2-SE.fa
 
 nodeN: 4
+
+tools:
+    Rscript: /usr/bin/Rscript
