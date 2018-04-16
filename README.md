@@ -475,3 +475,8 @@ Trimgalore adaptor and quality trimmed files.
 
 Contains a completely formatted UCSC hub, with track descriptions, peaks and bigWig tracks.
 
+
+# Questions
+If you have further questions please e-mail:
+pigx@googlegroups.com or use the web form to ask questions
+https://groups.google.com/forum/#!forum/pigx/
