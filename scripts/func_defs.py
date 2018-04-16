@@ -78,7 +78,7 @@ def list_files_bismark(files, sampleID, protocol):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def list_files_dedupe(files, sampleID, protocol):
-    PATH = DIR_deduped
+    PATH = DIR_sorted
     if len(files) == 1:
         return [PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bam"] #---- single end
     elif len(files) == 2:

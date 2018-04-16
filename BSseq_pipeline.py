@@ -30,7 +30,6 @@ DIR_diffmeth    = '10_differential_methylation/'
 DIR_seg         = '09_segmentation/'
 DIR_bigwig      = '08_bigwig_files/'
 DIR_methcall    = '07_methyl_calls/'
-DIR_deduped     = '06_deduplication/'
 DIR_sorted      = '05_sorting/'
 DIR_mapped      = '04_mapping/'
 DIR_posttrim_QC = '03_posttrimming_QC/'
@@ -214,7 +213,7 @@ rule final_report:
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
         source_dir  = config['locations']['input-dir'],
         out_dir     = config['locations']['output-dir'],
-        inBam       = os.path.join(WORKDIR, DIR_deduped,"{prefix}.bam"),
+        inBam       = os.path.join(WORKDIR, DIR_sorted,"{prefix}.bam"),
         assembly    = ASSEMBLY,
         mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual        = int(config['general']['methylation-calling']['minimum-quality']),
@@ -389,13 +388,13 @@ rule export_bigwig_se:
 
 rule bam_methCall:
     input:
-        bamfile     = os.path.join(DIR_deduped,"{prefix}.bam")
+        bamfile     = os.path.join(DIR_sorted,"{prefix}.bam")
     output:
         rdsfile     = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS"),
         callFile    = os.path.join(DIR_methcall,"{prefix}_CpG.txt")
     params:
         ## absolute path to bamfiles
-        inBam       = os.path.join(WORKDIR,DIR_deduped,"{prefix}.bam"),
+        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.bam"),
         assembly    = ASSEMBLY,
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
@@ -421,12 +420,12 @@ rule deduplication_se:
     input:
         DIR_sorted+"{sample}_se_bt2.sorted.bam"
     output:
-        DIR_deduped+"{sample}_se_bt2.sorted.deduped.bam"
+        DIR_sorted+"{sample}_se_bt2.sorted.deduped.bam"
     params:
         bam="--bam ",
         sampath="--samtools_path " + tool('samtools')
     log:
-        DIR_deduped+"{sample}_deduplication.log"
+        DIR_sorted+"{sample}_deduplication.log"
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
         nice('samtools', [" markdup -rs ", "{input}", "{output}"], "{log}")
@@ -436,9 +435,9 @@ rule deduplication_pe:
     input:
         DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
     output:
-        DIR_deduped+"{sample}_1_val_1_bt2.sorted.deduped.bam"
+        DIR_sorted+"{sample}_1_val_1_bt2.sorted.deduped.bam"
     log:
-        DIR_deduped+"{sample}_deduplication.log"
+        DIR_sorted+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
         nice('samtools', [" markdup -r ", "{input}", "{output}"], "{log}")
