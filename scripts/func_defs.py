@@ -23,6 +23,14 @@
 import os
 from glob import glob
 
+def dedupe_tag(protocol):
+    if protocol.upper() == "WGBS":
+        return ".deduped"
+    else if protocol.upper() == "RRBS":
+        return ""
+    else:
+        raise Exception("=== ERROR: unexpected protocol ===")
+
 def files_for_sample(proc):
     return [ expand(proc(config['SAMPLES'][sample]['files'],
                          config['SAMPLES'][sample]['SampleID'],
