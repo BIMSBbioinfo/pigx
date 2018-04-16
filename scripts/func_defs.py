@@ -147,32 +147,6 @@ def get_fastq_name(full_name):
 SAMPLE_IDS = list(config["SAMPLES"].keys())
 SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 
-def diff_meth_input(wc):
-  sample = wc.prefix
-  sampleid = get_fastq_name(sample)
-  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
-  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
-
-  mylist = []
-  for x in config["general"]["differential-methylation"]["treatment-groups"]:
-    if treatment_of_sampleid in x:
-      name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
-      mylist.append(DIR_annot + name_of_dir)
-  return(mylist)
-
-def finalReportDiffMeth_input(prefix):
-  sampleid = get_fastq_name(prefix)
-  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
-  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
-  protocol = config["SAMPLES"][sampleid]['Protocol']
-  treatments = ["_".join(pair) for pair in config["general"]["differential-methylation"]["treatment-groups"] if treatment_of_sampleid in pair]
-  outList = []
-  if treatments:
-      outList  = [ "{}{}" + dedupe_tag(protocol) + "_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
-      outList += [ "{}{}" + dedupe_tag(protocol) + "_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
-
-  return  outList
-
 def get_sampleids_from_treatment(treatment):
   treatments = treatment.split("_")
   sampleids_list = []
