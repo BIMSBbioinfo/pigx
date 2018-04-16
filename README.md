@@ -73,15 +73,21 @@ installed:
 
 - R
     - argparser
+    - biocparallel
+    - biostrings
     - chipseq
     - data.table
+    - dyplr
     - genomation
+    - genomicalignments
     - genomicranges
+    - rsamtools
     - rtracklayer
-    - rcas
+    - s4vectors
     - stringr
     - jsonlite
     - heatmaply
+    - htmlwidgets
     - ggplot2
     - ggrepel
     - plotly
