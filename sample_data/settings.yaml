@@ -10,6 +10,7 @@ sample_sheet: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sa
 
 reads-dir: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/reads
 output-dir: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/output
+source-dir: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/
 
 adapters: /data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/adapters/TruSeq2-SE.fa
 
