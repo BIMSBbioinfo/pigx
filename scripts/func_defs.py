@@ -115,6 +115,8 @@ def methSeg(files, sampleID, protocol):
         return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def list_final_reports(files, sampleID, protocol):
     PATH = DIR_final
@@ -122,6 +124,8 @@ def list_final_reports(files, sampleID, protocol):
         return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
 
