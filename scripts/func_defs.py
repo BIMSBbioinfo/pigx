@@ -80,9 +80,9 @@ def list_files_bismark(files, sampleID, protocol):
 def list_files_dedupe(files, sampleID, protocol):
     PATH = DIR_deduped
     if len(files) == 1:
-        return [PATH+sampleID+"_se_bt2.sorted.deduped.bam"] #---- single end
+        return [PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bam"] #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped.bam"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".bam"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
@@ -98,9 +98,9 @@ def list_files_sortbam(files, sampleID, protocol):
 def bam_processing(files, sampleID, protocol):
     PATH = DIR_methcall
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted.deduped_methylRaw.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS"] #---- paired end
 
 def bigwig_exporting(files, sampleID, protocol):
     PATH = DIR_bigwig
@@ -112,16 +112,16 @@ def bigwig_exporting(files, sampleID, protocol):
 def methSeg(files, sampleID, protocol):
     PATH = DIR_seg
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted.deduped_meth_segments_gr.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_meth_segments_gr.RDS"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS"] #---- paired end
 
 def list_final_reports(files, sampleID, protocol):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted.deduped_"+ASSEMBLY+"_final.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_"+ASSEMBLY+"_final.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"] #---- paired end
 
 
 
@@ -164,11 +164,12 @@ def finalReportDiffMeth_input(prefix):
   sampleid = get_fastq_name(prefix)
   sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
   treatment_of_sampleid = sample_treatments_dict[ sampleid ]
+  protocol = config["SAMPLES"][sampleid]['Protocol']
   treatments = ["_".join(pair) for pair in config["general"]["differential-methylation"]["treatment-groups"] if treatment_of_sampleid in pair]
   outList = []
   if treatments:
-      outList  = [ "{}{}.deduped_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
-      outList += [ "{}{}.deduped_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
+      outList  = [ "{}{}" + dedupe_tag(protocol) + "_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
+      outList += [ "{}{}" + dedupe_tag(protocol) + "_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
 
   return  outList
 
@@ -190,10 +191,11 @@ def diffmeth_input_function(wc):
   inputfiles = []
   for sampleid in sampleids:
     fqname = config["SAMPLES"][sampleid]['fastq_name']
+    protocol = config["SAMPLES"][sampleid]['Protocol']
     if len(fqname)==1:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.sorted.deduped_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
     elif len(fqname)==2:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
     inputfiles.append(inputfile)
 
   inputfiles = list(sum(inputfiles, []))
