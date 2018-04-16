@@ -26,7 +26,7 @@ from glob import glob
 def dedupe_tag(protocol):
     if protocol.upper() == "WGBS":
         return ".deduped"
-    else if protocol.upper() == "RRBS":
+    elif protocol.upper() == "RRBS":
         return ""
     else:
         raise Exception("=== ERROR: unexpected protocol ===")
