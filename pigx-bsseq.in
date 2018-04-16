@@ -179,6 +179,8 @@ def parse_samples(lines):
     # Create a dictionary with all params, keys are samples ids
     outputdict = {}
     for row in rows:
+        if ( len(row) != 5 ):
+            bail("Invalid row format in Samplesheet. Each row should have five columns.")
         files = list(filter(None, row[0:2]))
         if not files:
             raise Exception("Each sample has to have an entry in at least one of the columns 'Read1' or 'Read2'.")
