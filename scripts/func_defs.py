@@ -103,7 +103,7 @@ def bam_processing(files, sampleID, protocol):
         return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS"] #---- paired end
 
 def bigwig_exporting(files, sampleID, protocol):
-    PATH = DIR_bigwig
+    PATH = os.path.join(config['locations']['output-dir'], DIR_bigwig )
     if len(files) == 1:
         return  PATH+sampleID+"_se.bw" #---- single end
     elif len(files) == 2:
