@@ -24,9 +24,12 @@ import os
 from glob import glob
 
 def files_for_sample(proc):
-    return [ expand(proc(config['SAMPLES'][sample]['files'], config['SAMPLES'][sample]['SampleID'])) for sample in config['SAMPLES'] ]
+    return [ expand(proc(config['SAMPLES'][sample]['files'],
+                         config['SAMPLES'][sample]['SampleID'],
+                         config['SAMPLES'][sample]['Protocol']))
+             for sample in config['SAMPLES'] ]
 
-def list_files_rawQC(files, sampleID):
+def list_files_rawQC(files, sampleID, protocol):
     PATH = DIR_rawqc
     if len(files) == 1:
         return [PATH+sampleID+"_fastqc.html"] #---- single end
@@ -36,7 +39,7 @@ def list_files_rawQC(files, sampleID):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_TG(files, sampleID):
+def list_files_TG(files, sampleID, protocol):
     PATH = DIR_trimmed
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed.fq.gz"] #---- single end
@@ -46,7 +49,7 @@ def list_files_TG(files, sampleID):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_posttrim_QC(files, sampleID):
+def list_files_posttrim_QC(files, sampleID, protocol):
     PATH = DIR_posttrim_QC
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed_fastqc.html" ] #---- single end
@@ -55,7 +58,7 @@ def list_files_posttrim_QC(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_bismark(files, sampleID):
+def list_files_bismark(files, sampleID, protocol):
     PATH = DIR_mapped
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed_bismark_bt2_SE_report.txt",
@@ -66,7 +69,7 @@ def list_files_bismark(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_dedupe(files, sampleID):
+def list_files_dedupe(files, sampleID, protocol):
     PATH = DIR_deduped
     if len(files) == 1:
         return [PATH+sampleID+"_se_bt2.sorted.deduped.bam"] #---- single end
@@ -75,7 +78,7 @@ def list_files_dedupe(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_sortbam(files, sampleID):
+def list_files_sortbam(files, sampleID, protocol):
     PATH = DIR_sorted
     if len(files) == 1:
         return [PATH+sampleID+"_se_bt2.sorted.bam"] #---- single end
@@ -84,28 +87,28 @@ def list_files_sortbam(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def bam_processing(files, sampleID):
+def bam_processing(files, sampleID, protocol):
     PATH = DIR_methcall
     if len(files) == 1:
         return  PATH+sampleID+"_se_bt2.sorted.deduped_methylRaw.RDS" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS"] #---- paired end
 
-def bigwig_exporting(files, sampleID):
+def bigwig_exporting(files, sampleID, protocol):
     PATH = DIR_bigwig
     if len(files) == 1:
         return  PATH+sampleID+"_se.bw" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_pe.bw"] #---- paired end
 
-def methSeg(files, sampleID):
+def methSeg(files, sampleID, protocol):
     PATH = DIR_seg
     if len(files) == 1:
         return  PATH+sampleID+"_se_bt2.sorted.deduped_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_meth_segments_gr.RDS"] #---- paired end
 
-def list_final_reports(files, sampleID):
+def list_final_reports(files, sampleID, protocol):
     PATH = DIR_final
     if len(files) == 1:
         return  PATH+sampleID+"_se_bt2.sorted.deduped_"+ASSEMBLY+"_final.html" #---- single end
