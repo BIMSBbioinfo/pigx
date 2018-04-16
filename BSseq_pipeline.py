@@ -125,7 +125,8 @@ targets = {
 
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ [DIR_diffmeth+"_".join(x)+".deduped_diffmeth.RDS"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
+        'files': [ [DIR_diffmeth+"_".join(x)+
+                    dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(x)[0]]['Protocol']) + "_diffmeth.RDS"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
     },
 
     'diffmeth-report': {
@@ -199,36 +200,36 @@ onsuccess:
 
 rule final_report:
     input:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
-        callFile    = os.path.join(DIR_methcall,"{prefix}.deduped_CpG.txt"),
-        grfile      = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments.bed"),
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS"),
+        callFile    = os.path.join(DIR_methcall,"{prefix}_CpG.txt"),
+        grfile      = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}_meth_segments.bed"),
         template            = os.path.join(DIR_templates,"index.Rmd"),
         chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
-        report        = os.path.join(DIR_final, "{prefix}.deduped_{assembly}_final.html")
+        report        = os.path.join(DIR_final, "{prefix}_{assembly}_final.html")
     params:
         ## absolute path to bamfiles
         Samplename  = lambda wc: get_fastq_name( wc.prefix ),
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
         source_dir  = config['locations']['input-dir'],
         out_dir     = config['locations']['output-dir'],
-        inBam       = os.path.join(WORKDIR, DIR_deduped,"{prefix}.deduped.bam"),
+        inBam       = os.path.join(WORKDIR, DIR_deduped,"{prefix}.bam"),
         assembly    = ASSEMBLY,
         mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual        = int(config['general']['methylation-calling']['minimum-quality']),
         TSS_plotlength = int(config['general']['reports']['TSS_plotlength']),
         ## absolute path to output folder in working dir
-        methCallRDS     = os.path.join(WORKDIR,DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
-        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.bed"),
-        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.png"),
+        methCallRDS     = os.path.join(WORKDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
+        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.bed"),
+        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.png"),
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
-        os.path.join(DIR_final,"{prefix}.deduped_{assembly}_final.log")
+        os.path.join(DIR_final,"{prefix}_{assembly}_final.log")
     message: fmt("Compiling final report.")
     run:
         generateReport(input, output, params, log, "")
@@ -241,7 +242,7 @@ rule final_report:
 
 rule diffmeth_report:
     input:
-        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + '.deduped_diffmeth.bed',
+        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment)[0]]['Protocol']) + '_diffmeth.bed',
         template          = os.path.join(DIR_templates,"diffmeth.Rmd"),
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
@@ -275,11 +276,11 @@ rule diffmeth:
     input:
         inputfiles  = diffmeth_input_function
     output:
-        methylDiff_file        = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmethhypo.RDS"),
-        methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}.deduped_diffmethnonsig.RDS"),
-        bedfile                = os.path.join(DIR_diffmeth, '{treatment}.deduped_diffmeth.bed')
+        methylDiff_file        = os.path.join(DIR_diffmeth, "{treatment}_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(DIR_diffmeth, "{treatment}_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(DIR_diffmeth, "{treatment}_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}_diffmethnonsig.RDS"),
+        bedfile                = os.path.join(DIR_diffmeth, '{treatment}_diffmeth.bed')
     params:
         workdir     = WORKDIR,
         scripts_dir = DIR_scripts,
@@ -291,13 +292,13 @@ rule diffmeth:
         difference  = float(config['general']['differential-methylation']['difference']),
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         cores       = int(config['general']['differential-methylation']['cores']),
-        methylDiff_file        = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmethhypo.RDS"),
-        methylDiff_nonsig_file = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}.deduped_diffmethnonsig.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}.deduped_diffmeth.bed")
+        methylDiff_file        = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmethnonsig.RDS"),
+        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}_diffmeth.bed")
     log:
-        os.path.join(DIR_diffmeth+"{treatment}.deduped_diffmeth.log")
+        os.path.join(DIR_diffmeth+"{treatment}_diffmeth.log")
     message: fmt("Calculating differential methylation.")
     shell:
         nice('Rscript', ['{DIR_scripts}/methDiff.R',
@@ -325,17 +326,17 @@ rule diffmeth:
 rule methseg:
     ## paths inside input and output should be relative
     input:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS")
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS")
     output:
-        grfile      = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}.deduped_meth_segments.bed")
+        grfile      = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        bedfile     = os.path.join(DIR_seg,"{prefix}_meth_segments.bed")
     params:
-        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
-        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.bed"),
-        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}.deduped_meth_segments.png")
+        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
+        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.bed"),
+        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.png")
     log:
-        os.path.join(DIR_seg,"{prefix}.deduped_meth_segments.log")
+        os.path.join(DIR_seg,"{prefix}_meth_segments.log")
     message: fmt("Segmenting methylation profile for {input.rdsfile}.")
     shell:
         nice('Rscript', ["{DIR_scripts}/methSeg.R",
@@ -354,7 +355,7 @@ rule methseg:
 rule export_bigwig_pe:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}_1_val_1_bt2.sorted.deduped_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_methylRaw.RDS")
     output:
         bw         = os.path.join(DIR_bigwig,   "{prefix}_pe.bw")
     message: fmt("exporting bigwig files from paired-end stream.")
@@ -370,7 +371,7 @@ rule export_bigwig_pe:
 rule export_bigwig_se:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}_se_bt2.sorted.deduped_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{prefix}_methylRaw.RDS")
     output:
         bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw")
     message: fmt("exporting bigwig files from single-end stream.")
@@ -388,20 +389,20 @@ rule export_bigwig_se:
 
 rule bam_methCall:
     input:
-        bamfile     = os.path.join(DIR_deduped,"{prefix}.deduped.bam")
+        bamfile     = os.path.join(DIR_deduped,"{prefix}.bam")
     output:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}.deduped_methylRaw.RDS"),
-        callFile    = os.path.join(DIR_methcall,"{prefix}.deduped_CpG.txt")
+        rdsfile     = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS"),
+        callFile    = os.path.join(DIR_methcall,"{prefix}_CpG.txt")
     params:
         ## absolute path to bamfiles
-        inBam       = os.path.join(WORKDIR,DIR_deduped,"{prefix}.deduped.bam"),
+        inBam       = os.path.join(WORKDIR,DIR_deduped,"{prefix}.bam"),
         assembly    = ASSEMBLY,
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
         ## absolute path to output folder in working dir
-        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}.deduped_methylRaw.RDS")
+        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}_methylRaw.RDS")
     log:
-        os.path.join(DIR_methcall,"{prefix}.deduped_meth_calls.log")
+        os.path.join(DIR_methcall,"{prefix}_meth_calls.log")
     message: fmt("Extract methylation calls from bam file.")
     shell:
         nice('Rscript', ["{DIR_scripts}/methCall.R",
