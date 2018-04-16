@@ -231,8 +231,6 @@ def maybe_copy(source, target_dir):
 def prepare_links():
     os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work'),
                 exist_ok=True)
-    maybe_copy(config['locations']['pkglibexecdir'] + '/scripts/ChipQC.rmd',
-               path.join(config['locations']['output-dir'], 'pigx_work'))
     maybe_copy(config['locations']['pkglibexecdir'] + '/scripts/Sample_Report.rmd',
                path.join(config['locations']['output-dir'], 'pigx_work'))
 
