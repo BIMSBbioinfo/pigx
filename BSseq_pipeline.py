@@ -26,15 +26,15 @@ WORKDIR = os.getcwd() + "/"                         #--- current work dir (impor
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 DIR_templates = os.path.join(config['locations']['output-dir'], 'pigx_work/report_templates/')
 
-DIR_diffmeth    = '10_differential_methylation/'
-DIR_seg         = '09_segmentation/'
-DIR_bigwig      = '08_bigwig_files/'
-DIR_methcall    = '07_methyl_calls/'
-DIR_sorted      = '05_sorting/'
-DIR_mapped      = '04_mapping/'
-DIR_posttrim_QC = '03_posttrimming_QC/'
-DIR_trimmed     = '02_trimming/'
-DIR_rawqc       = '01_raw_QC/'
+DIR_diffmeth    =  os.path.join(config['locations']['output-dir'], '09_differential_methylation/' )
+DIR_seg         =  os.path.join(config['locations']['output-dir'], '08_segmentation/' )
+DIR_bigwig      =  os.path.join(config['locations']['output-dir'], '07_bigwig_files/')
+DIR_methcall    =  os.path.join(config['locations']['output-dir'], '06_methyl_calls/' )
+DIR_sorted      =  os.path.join(config['locations']['output-dir'], '05_sorting_deduplication/' )
+DIR_mapped      =  os.path.join(config['locations']['output-dir'], '04_mapping/' )
+DIR_posttrim_QC =  os.path.join(config['locations']['output-dir'], '03_posttrimming_QC/' )
+DIR_trimmed     =  os.path.join(config['locations']['output-dir'], '02_trimming/' )
+DIR_rawqc       =  os.path.join(config['locations']['output-dir'], '01_raw_QC/' )
 
 DIR_final       = os.path.join(config['locations']['output-dir'], "Final_Reports/")
 
@@ -354,9 +354,9 @@ rule methseg:
 rule export_bigwig_pe:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{bigwigpe_prefix}_methylRaw.RDS")
     output:
-        bw         = os.path.join(DIR_bigwig,   "{prefix}_pe.bw")
+        bw         = os.path.join(DIR_bigwig,   "{bigwigpe_prefix}_pe.bw")
     message: fmt("exporting bigwig files from paired-end stream.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_bw.R",
@@ -364,15 +364,13 @@ rule export_bigwig_pe:
                          "{input.seqlengths}",
                          ASSEMBLY,
                          "{output}"])
-
 #-----------------------
-
 rule export_bigwig_se:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{prefix}_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{bigwigse_prefix}_methylRaw.RDS")
     output:
-        bw         = os.path.join(DIR_bigwig,   "{prefix}_se.bw")
+        bw         = os.path.join(DIR_bigwig,   "{bigwigse_prefix}_se.bw")
     message: fmt("exporting bigwig files from single-end stream.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_bw.R",
@@ -380,8 +378,6 @@ rule export_bigwig_se:
                          "{input.seqlengths}",
                          ASSEMBLY,
                          "{output}"])
-
-
 
 # ==========================================================================================
 # Process bam files into methyl-called formats:
