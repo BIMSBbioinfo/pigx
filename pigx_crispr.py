@@ -25,7 +25,8 @@ FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'aln')
 BEDGRAPH_DIR      = os.path.join(OUTPUT_DIR, 'bedgraph')
-BBMAP_INDEX_DIR   = os.path.join(OUTPUT_DIR, 'bbmap_indexes') 
+BBMAP_INDEX_DIR   = os.path.join(OUTPUT_DIR, 'bbmap_indexes')
+BED_DIR           = os.path.join(OUTPUT_DIR, 'bed') 
 
 #other parameters
 AMPLICONS = config.get('amplicons', {})
@@ -56,7 +57,6 @@ def reads_input(wc):
 
 def get_amplicon_file(wc, file_type):
     path = AMPLICONS[wc.amplicon][file_type]
-    print("returning amplicon file:",path)
     return(path)
 
 def get_output_file_list(DIR, ext):
@@ -64,7 +64,6 @@ def get_output_file_list(DIR, ext):
     for sample in SAMPLES:
         amplicon = lookup('sample_name', sample, ['amplicon'])[0]
         paths.append(os.path.join(DIR, amplicon, ".".join([sample, ext])))
-    print("Returning",paths)
     return(paths)
 
 
@@ -73,9 +72,11 @@ rule all:
         #get_output_file_list(FASTQC_DIR, "fastqc.done"),
         get_output_file_list(MAPPED_READS_DIR, "sam"),
         get_output_file_list(MAPPED_READS_DIR, "bam"), 
+        get_output_file_list(MAPPED_READS_DIR, "bam.bai"),                     
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.tsv"),                  
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
         get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
+        get_output_file_list(BED_DIR, "deletions.95th_percentile.BED"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())
 
 rule fastqc:
@@ -125,6 +126,12 @@ rule samtools_mpileup:
     log: os.path.join(LOG_DIR, "{amplicon}", "mpileup_{sample}.log")
     shell: "samtools mpileup {input} -o {output} >> {log} 2>&1"
 
+rule samtools_indexbam:
+    input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
+    output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai")
+    log: os.path.join(LOG_DIR, "{amplicon}", "samtools_index_{sample}.log")
+    shell: "samtools index {input} >> {log} 2>&1"
+    
 rule parse_mpileup:
     input: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
     output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv")
@@ -146,35 +153,17 @@ rule extractDeletionProfiles:
         outdir=os.path.join(BEDGRAPH_DIR, "{amplicon}"),
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
         script=os.path.join(SRC_DIR, "src", "extractDeletionProfiles.R")
-    log: os.path.join(LOG_DIR, "{amplicon}", "mpileup_{sample}.log")
+    log: os.path.join(LOG_DIR, "{amplicon}", "extractDeletionProfiles_{sample}.log")
     shell: "{RSCRIPT} {params.script} {input.bamFile} {input.mpileupOutput} {input.parsedMpileupOutput} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} >> {log} 2>&1"
         
-
-#bamFile <- args[1]
-#mpileupOutput <- args[2]
-#parseMpileupOutput <- args[3]
-#sampleName <- args[4]
-#outDir <- args[5]
-#cutSitesFile <- args[6] #path to sgRNA cutting sites for the target genome.
-#sgRNA_list <- args[7] # comma separated list of sgRNAs that were used for the given sample.
-
-        
-### extract per base deletion scores and write them into a bedgraph file
-#mkdir bedgraph
-#Rscript ${scriptsFolder}/extractDeletionProfiles.R \
-#${dedupedBamFile} \
-#`pwd`/mpileup/${sampleName}.mpileup.tsv \
-#`pwd`/mpileup/${sampleName}.mpileup.counts.tsv \
-#${sampleName} \
-#`pwd`/bedgraph \
-#${cutSitesFile} \
-#${sampleInfoFile}
-#
-### extract deletion coordinates
-#mkdir bed
-#Rscript ${scriptsFolder}/extractDeletionCoordsFromBam.R ${dedupedBamFile} ${sampleName} `pwd`/bed
-#
-#
-##rule getDeletions
-#
-##rule report
+rule extractDeletionCoordinates:
+    input:
+        bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
+    params:
+        outdir = os.path.join(BED_DIR, "{amplicon}"),
+        script=os.path.join(SRC_DIR, "src", "extractDeletionCoordinates.R")
+    output:
+        os.path.join(BED_DIR, "{amplicon}", "{sample}.deletions.95th_percentile.BED")
+    log: os.path.join(LOG_DIR, "{amplicon}", "extractDeletionCoordinates_{sample}.log")
+    shell:
+        "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} >> {log} 2>&1"
