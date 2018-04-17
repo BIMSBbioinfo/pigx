@@ -164,7 +164,7 @@ def parse_samples(lines):
     sreader = csv.reader(lines, delimiter=',')
     all_rows = [row for row in sreader if row]
   
-    header = all_rows[0]
+    header = list(map(lambda x: x.strip(), all_rows[0] ))
     rows   = all_rows[1:]
     minimal_header = ['Read1', 'Read2', 'SampleID', 'Protocol', 'Treatment']
   
