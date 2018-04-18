@@ -152,6 +152,8 @@ SAMPLE_IDS = list(config["SAMPLES"].keys())
 SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 
 def get_sampleids_from_treatment(treatment):
+  treatment = treatment.replace(".deduped", "")
+
   treatments = treatment.split("_")
   sampleids_list = []
   for t in treatments:
@@ -164,7 +166,8 @@ def get_sampleids_from_treatment(treatment):
 # For only CpG context
 def diffmeth_input_function(wc):
   treatments = wc.treatment
-  sampleids = get_sampleids_from_treatment(treatments)
+  treatments = treatments.replace(".deduped", "")
+  sampleids  = get_sampleids_from_treatment(treatments)
 
   inputfiles = []
   for sampleid in sampleids:
@@ -241,3 +244,4 @@ def validate_config(config):
 
     if not len(fasta) + len(fa) == 1 :
         bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))
+

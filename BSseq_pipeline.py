@@ -153,6 +153,9 @@ selected_targets = config['execution']['target'] or selected_targets_default
 from itertools import chain
 OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
 
+
+# print(OUTPUT_FILES) # when uncommented, this can be useful for debugging.
+
 # ==============================================================================================================
 #
 #                                         BEGIN RULES
@@ -241,9 +244,13 @@ rule final_report:
 
 rule diffmeth_report:
     input:
-        lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmeth.bed',
-        template          = os.path.join(DIR_templates,"diffmeth.Rmd"),
-        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+        bedfile            = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmeth.bed',
+        RDSdiffFile        = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmeth.RDS',
+        RDSdiffFile_hyper  = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmethhyper.RDS',
+        RDSdiffFile_hypo   = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmethhypo.RDS',
+        RDSdiffFile_nonsig = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmethnonsig.RDS',
+        template           = os.path.join(DIR_templates,"diffmeth.Rmd"),
+        chrom_seqlengths   = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
         report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
     params:
@@ -256,10 +263,15 @@ rule diffmeth_report:
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
         assembly    = ASSEMBLY,
-        treatment = lambda wc: str(wc.treatment).replace('vs', '_'),
+        treatment  = lambda wc: str(wc.treatment).replace('vs', '_'),
         qvalue     = float(config['general']['differential-methylation']['qvalue']),
         difference = float(config['general']['differential-methylation']['difference']),
-        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
+        webfetch    = config['general']['differential-methylation']['annotation']['webfetch'],
+        methylDiffBed           = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmeth.bed',
+        methylDiff_file         = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmeth.RDS',
+        methylDiff_hyper_file   = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmethhyper.RDS',
+        methylDiff_hypo_file    = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmethhypo.RDS',
+        methylDiff_nonsig_file  = lambda wc: DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_diffmethnonsig.RDS'
     log:
         os.path.join(DIR_final,"diffmeth-report.{treatment}.log")
     message: fmt("Compiling differential methylation report " + "for treatment " + "{wildcards.treatment}")
