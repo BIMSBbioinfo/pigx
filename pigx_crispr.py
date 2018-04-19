@@ -72,7 +72,8 @@ rule all:
         get_output_file_list(TRIMMED_READS_DIR, "fastq.gz"),
         get_output_file_list(MAPPED_READS_DIR, "sam"),
         get_output_file_list(MAPPED_READS_DIR, "bam"), 
-        get_output_file_list(MAPPED_READS_DIR, "bam.bai"),                     
+        get_output_file_list(MAPPED_READS_DIR, "bam.bai"), 
+        get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt"),
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.tsv"),                  
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
         get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
@@ -130,7 +131,16 @@ rule samtools_indexbam:
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai")
     log: os.path.join(LOG_DIR, "{amplicon}", "samtools_index_{sample}.log")
     shell: "samtools index {input} >> {log} 2>&1"
-    
+
+rule samtools_stats:
+    input: 
+        bamfile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam"),
+        ref = lambda wildcards: get_amplicon_file(wildcards, 'fasta')
+    output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.samtools.stats.txt")
+    log: os.path.join(LOG_DIR, "{amplicon}", "samtools_stats.{sample}.log")
+    shell: "samtools stats --reference {input.ref} {input.bamfile} > {output} 2> {log}"
+
+
 rule parse_mpileup:
     input: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
     output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv")
@@ -142,7 +152,8 @@ rule parse_mpileup:
 rule multiqc:
     input:
         fastqc = get_output_file_list(FASTQC_DIR, "fastqc.done"),
-        trimmomatic = get_output_file_list(TRIMMED_READS_DIR, "fastq.gz")
+        trimmomatic = get_output_file_list(TRIMMED_READS_DIR, "fastq.gz"),
+        samtools = get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt")
     output:
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html")
     params: 
