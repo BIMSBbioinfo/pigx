@@ -61,8 +61,9 @@ delCoords <- delCoords[order(score, decreasing = T)]
 #convert to 0-based index
 delCoords$start <- delCoords$start - 1
 
-# write the coordinates of frequent deletions to a BED file
-outfile <- file.path(outDir, paste0(sampleName, ".deletions.95th_percentile.bed"))
+# write the coordinates of deletions with at least scoreThreshold number of reads. 
+scoreThreshold <- 10
+outfile <- file.path(outDir, paste0(sampleName, ".deletions.bed"))
 writeLines(text = paste0("track name=\"",sampleName," deletions (with read support > ",scoreThreshold,")\" useScore=1"),
            con = outfile)
 write.table(x = unique(delCoords[,c(6,2:5)][score > scoreThreshold]),
