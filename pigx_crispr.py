@@ -49,7 +49,6 @@ def lookup(column, predicate, fields=[]):
   return [record[field] for record in records for field in fields]
 
 SAMPLES = [line['sample_name'] for line in SAMPLE_SHEET]
-print('SAMPLES', SAMPLES)
 
 def reads_input(wc):
   sample = wc.sample
@@ -76,7 +75,7 @@ rule all:
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.tsv"),                  
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
         get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
-        get_output_file_list(BED_DIR, "deletions.95th_percentile.BED"),
+        get_output_file_list(BED_DIR, "deletions.95th_percentile.bed"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())
 
 rule fastqc:
@@ -143,6 +142,7 @@ rule parse_mpileup:
 
 rule extractDeletionProfiles:
     input: 
+        bamIndex = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai"),
         bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam"),
         mpileupOutput = os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv"), 
         parsedMpileupOutput = os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv"),
@@ -158,12 +158,13 @@ rule extractDeletionProfiles:
         
 rule extractDeletionCoordinates:
     input:
+        bamIndex = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai"),
         bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     params:
         outdir = os.path.join(BED_DIR, "{amplicon}"),
         script=os.path.join(SRC_DIR, "src", "extractDeletionCoordinates.R")
     output:
-        os.path.join(BED_DIR, "{amplicon}", "{sample}.deletions.95th_percentile.BED")
+        os.path.join(BED_DIR, "{amplicon}", "{sample}.deletions.95th_percentile.bed")
     log: os.path.join(LOG_DIR, "{amplicon}", "extractDeletionCoordinates_{sample}.log")
     shell:
         "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} >> {log} 2>&1"
