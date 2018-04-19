@@ -62,39 +62,10 @@ delCoords <- delCoords[order(score, decreasing = T)]
 delCoords$start <- delCoords$start - 1
 
 # write the coordinates of frequent deletions to a BED file
-outfile <- file.path(outDir, paste0(sampleName, ".deletions.95th_percentile.BED"))
+outfile <- file.path(outDir, paste0(sampleName, ".deletions.95th_percentile.bed"))
 writeLines(text = paste0("track name=\"",sampleName," deletions (with read support > ",scoreThreshold,")\" useScore=1"),
            con = outfile)
 write.table(x = unique(delCoords[,c(6,2:5)][score > scoreThreshold]),
             file = outfile,
             quote = F, sep = '\t', col.names = F, row.names = F, append = T)
 
-
-setwd('/data/akalin/buyar/collaborations/jonathan/data/180409/annotation/')
-s <- read.table('./sample_info.txt', header = T, sep = '\t')
-s$sgRNAs <- gsub(', *', ':', s$sgRNAs)
-
-samplesheet <- fread('../SampleSheet.bcl2fastq.csv', skip = 17)
-colnames(samplesheet)[1:2] <- c('sample_id', 'sample_name')
-
-readFiles <- dir(path = '../demultiplexed', pattern = '.gz$', full.names = T)
-
-reads <- sapply(samplesheet$sample_name, function(x) {
-  grep(pattern = paste0(x, '_S'), x = readFiles, value = T)
-})
-
-table(lengths(reads))
-
-reads[lengths(reads) > 1]
-
-
-ss <- merge(s[,c('sample_id', 'amplicon', 'sgRNAs')], samplesheet[,c('sample_id', 'sample_name')])
-
-ss$reads <- unlist(reads[match(ss$sample_name, names(reads))])
-
-ss$reads <- basename(ss$reads)
-
-ss <- ss[,c(1,4,5,2,3)]
-colnames(ss)[5] <- 'sgRNA_list'
-
-write.csv(ss, file = './sample_sheet.csv', quote = FALSE, row.names = F)

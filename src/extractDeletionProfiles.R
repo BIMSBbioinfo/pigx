@@ -18,21 +18,22 @@ sgRNA_list <- args[7] # column (:) separated list of sgRNA ids (must match ids i
 
 cat("Running extractDeletionProfiles.R with arguments:",args,"\n")
 #print bedgraph file of deletion ratios per base
+
 printDeletionProfiles <- function (mpileupOutput, parseMpileupOutput, outDir = getwd(), sampleName) {
   bedgraphOutputFile <- file.path(outDir, paste0(sampleName,'.deletionScores.bedgraph'))
   #create a bedgraph file that contains deletion ratios for each base
 
-  dt1 <- fread(mpileupOutput)[,c(2,4)]
-  colnames(dt1) <- c('bp', 'cov')
-  dt2 <- fread(parseMpileupOutput)[,c(1,6)]
-  dt3 <- merge(dt1, dt2, by = 'bp')
+  dt1 <- fread(input = paste0("cut -f 1-4 ",mpileupOutput), header = F)
+  colnames(dt1) <- c('seqname', 'bp', 'base', 'cov')
+  dt2 <- fread(parseMpileupOutput, select = c(1,6))
+  dt3 <- merge(dt1[,c(2,4)], dt2, by = 'bp')
   dt3$sample <- sampleName
 
   #write bedgraph file
   trackDefinition <- paste0("track type=bedGraph name=",sampleName," deletion read support")
   writeLines(text = trackDefinition, con = bedgraphOutputFile)
   deletionScores <- ifelse(dt3$cov > 0, dt3$del/dt3$cov, 0)
-  bg <- data.frame(cbind(fread(mpileupOutput)$V1,
+  bg <- data.frame(cbind(dt1$seqname,
                          dt3$bp, dt3$bp, deletionScores), stringsAsFactors = F)
   #convert to 0-based index
   bg$V2 <- as.numeric(bg$V2) - 1
@@ -164,32 +165,32 @@ write.table(x = cutEfficiencies,
             )
 
 #for the guides that were used for the given sample, draw deletion size histograms
-guides <- gsub(' ', '', unlist(strsplit(x = sgRNA_list, split = ':')))
-
-pdf(file = file.path(outDir, paste0(sampleName, ".deletionSizeHistogram.pdf")))
-for(guide in guides) {
-  x <- cutSites[cutSites$V1 == guide,]
-  cutStart <- as.numeric(x[[2]])
-  cutEnd <- cutStart + 1
-  p1 <- plotDeletionSizeDistributionAtCutSites(sampleName = sampleName,
-                                         guide = guide,
-                                         cutStart = cutStart,
-                                         cutEnd = cutEnd,
-                                         deletions = deletions,
-                                         maxDelSize = 100,
-                                         extend = 3)
-  p2 <- plotDeletionSizeDistributionAtCutSites(sampleName = sampleName,
-                                               guide = guide,
-                                               cutStart = cutStart,
-                                               cutEnd = cutEnd,
-                                               deletions = deletions,
-                                               maxDelSize = 10,
-                                               extend = 3)
-
-  print(p1)
-  print(p2)
-}
-dev.off()
+# guides <- gsub(' ', '', unlist(strsplit(x = sgRNA_list, split = ':')))
+# 
+# pdf(file = file.path(outDir, paste0(sampleName, ".deletionSizeHistogram.pdf")))
+# for(guide in guides) {
+#   x <- cutSites[cutSites$V1 == guide,]
+#   cutStart <- as.numeric(x[[2]])
+#   cutEnd <- cutStart + 1
+#   p1 <- plotDeletionSizeDistributionAtCutSites(sampleName = sampleName,
+#                                          guide = guide,
+#                                          cutStart = cutStart,
+#                                          cutEnd = cutEnd,
+#                                          deletions = deletions,
+#                                          maxDelSize = 100,
+#                                          extend = 3)
+#   p2 <- plotDeletionSizeDistributionAtCutSites(sampleName = sampleName,
+#                                                guide = guide,
+#                                                cutStart = cutStart,
+#                                                cutEnd = cutEnd,
+#                                                deletions = deletions,
+#                                                maxDelSize = 10,
+#                                                extend = 3)
+# 
+#   print(p1)
+#   print(p2)
+# }
+# dev.off()
 
 
 
