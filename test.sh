@@ -15,5 +15,11 @@ snakemake='/home/buyar/.guix-profile/bin/snakemake'
 
 
 ${snakemake} ${additional_args} -p --configfile ${settings}  --snakefile ${snakefile} -j 4 
+
+
+# build DAG of the pipeline
+
+${snakemake} --configfile ${settings} --snakefile ${snakefile} --dag | dot -Tpdf >dag.pdf
+
 #${snakemake} --forceall -p --configfile ${settings}  --snakefile ${snakefile} -j 4 --dryrun
 #	${snakemake} --forceall -p --configfile ${settings}  --snakefile ${snakefile} -j 4
