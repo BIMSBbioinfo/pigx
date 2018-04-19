@@ -77,6 +77,7 @@ rule all:
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
         get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
         get_output_file_list(BED_DIR, "deletions.bed"),
+        os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())
 
 rule fastqc:
@@ -138,6 +139,17 @@ rule parse_mpileup:
         script=os.path.join(SRC_DIR, "src", "parse_mpileup.py")
     shell: "python {params.script} {input} > {output} 2> {log}"
 
+rule multiqc:
+    input:
+        fastqc = get_output_file_list(FASTQC_DIR, "fastqc.done"),
+        trimmomatic = get_output_file_list(TRIMMED_READS_DIR, "fastq.gz")
+    output:
+        os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html")
+    params: 
+        analysis_folder = OUTPUT_DIR,
+        output_folder = os.path.join(OUTPUT_DIR, "multiqc")
+    log: os.path.join(LOG_DIR, 'multiqc.log')
+    shell: "multiqc -o {params.output_folder} {params.analysis_folder} >> {log} 2>&1"
 
 rule extractDeletionProfiles:
     input: 
