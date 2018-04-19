@@ -68,7 +68,8 @@ def get_output_file_list(DIR, ext):
 
 rule all:
     input:
-        #get_output_file_list(FASTQC_DIR, "fastqc.done"),
+        get_output_file_list(FASTQC_DIR, "fastqc.done"),
+        get_output_file_list(TRIMMED_READS_DIR, "fastq.gz"),
         get_output_file_list(MAPPED_READS_DIR, "sam"),
         get_output_file_list(MAPPED_READS_DIR, "bam"), 
         get_output_file_list(MAPPED_READS_DIR, "bam.bai"),                     
@@ -87,14 +88,12 @@ rule fastqc:
     log: os.path.join(LOG_DIR, "{amplicon}", "{sample}.fastqc.log")
     shell: "fastqc -o {params.outdir} {input} >> {log} 2>&1; touch {params.outfile}"
 
-#rule trimmomatic:
-#    input:
-#        "sample_data/raw_reads/{sample}.fastq.gz"
-#    output:
-#        "filtered_reads/{sample}.fastq.gz"
-#    shell:
-#       "trimmomatic SE -threads {nodeN} {input} {output} \
-#       ILLUMINACLIP:{adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
+rule trimmomatic:
+    input: reads_input
+    output: os.path.join(TRIMMED_READS_DIR, "{amplicon}", "{sample}.fastq.gz")
+    log: os.path.join(LOG_DIR, "{amplicon}", "trimmomatic.{sample}.log")
+    shell: "trimmomatic SE -threads {nodeN} {input} {output} \
+       ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 >> {log} 2>&1"
 
 rule bbmap_indexgenome:
     input: lambda wildcards: get_amplicon_file(wildcards, 'fasta')
@@ -104,7 +103,7 @@ rule bbmap_indexgenome:
 
 rule bbmap_map:
     input: 
-        reads = reads_input,
+        reads = os.path.join(TRIMMED_READS_DIR, "{amplicon}", "{sample}.fastq.gz"),
         ref = lambda wildcards: os.path.join(BBMAP_INDEX_DIR, lookup('sample_name', wildcards.sample, ['amplicon'])[0])
     output:
         os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
@@ -116,9 +115,9 @@ rule samtools_sam2bam:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     log: os.path.join(LOG_DIR, "{amplicon}", "sam2bam_{sample}.log")
-    shell:
-        "samtools view -bh {input} | samtools sort | samtools rmdup -s - {output} >> {log} 2>&1"
-
+    shell: "samtools view -bh {input} | samtools sort -o {output} >> {log} 2>&1"
+        #"samtools view -bh {input} | samtools sort | samtools rmdup -s - {output} >> {log} 2>&1"
+                           
 rule samtools_mpileup:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
