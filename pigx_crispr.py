@@ -76,7 +76,7 @@ rule all:
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.tsv"),                  
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
         get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
-        get_output_file_list(BED_DIR, "deletions.95th_percentile.bed"),
+        get_output_file_list(BED_DIR, "deletions.bed"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())
 
 rule fastqc:
@@ -163,7 +163,7 @@ rule extractDeletionCoordinates:
         outdir = os.path.join(BED_DIR, "{amplicon}"),
         script=os.path.join(SRC_DIR, "src", "extractDeletionCoordinates.R")
     output:
-        os.path.join(BED_DIR, "{amplicon}", "{sample}.deletions.95th_percentile.bed")
+        os.path.join(BED_DIR, "{amplicon}", "{sample}.deletions.bed")
     log: os.path.join(LOG_DIR, "{amplicon}", "extractDeletionCoordinates_{sample}.log")
     shell:
         "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} >> {log} 2>&1"
