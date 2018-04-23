@@ -154,8 +154,6 @@ from itertools import chain
 OUTPUT_FILES = list(chain.from_iterable(chain.from_iterable([targets[name]['files'] for name in selected_targets])))
 
 
-# print(OUTPUT_FILES) # when uncommented, this can be useful for debugging.
-
 # ==============================================================================================================
 #
 #                                         BEGIN RULES
