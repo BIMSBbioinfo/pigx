@@ -18,6 +18,7 @@ params:
   chrom_seqlengths: ''
   source_dir: ''
   out_dir:    ''
+  bigwigFile: '' 
   inBam:    ''
   assembly: ''
   mincov:   10
@@ -370,14 +371,16 @@ gene_features   <- readTranscriptFeatures(refGenes_bedfile)
 TSS_exact       <- gene_features$TSSes
 TSS_proximal    <- resize(TSS_exact, width=TSS_plotlength, fix='center')
 
-sample_methylome_gr          <-  as(methRaw, "GRanges")
-sample_methylome_gr$methfrac <-  sample_methylome_gr$numCs/sample_methylome_gr$coverage
+# following lines commented out for efficiency
+# sample_methylome_gr          <-  as(methRaw, "GRanges")
+# sample_methylome_gr$methfrac <-  sample_methylome_gr$numCs/sample_methylome_gr$coverage
+# TSSprox_scoremat_noweight = genomation::ScoreMatrix( sample_methylome_gr,
 
-TSSprox_scoremat_noweight = genomation::ScoreMatrix( sample_methylome_gr,
+TSSprox_scoremat_noweight = genomation::ScoreMatrix( params$bigwigFile,
                                                      TSS_proximal,
                                                      strand.aware=TRUE,
                                                      is.noCovNA=TRUE,
-                                                     weight.col='methfrac')
+                                                     weight.col='score')
 TSSprox_methprofile_noweight = colMeans(TSSprox_scoremat_noweight, na.rm=TRUE)
 
 plot( seq(TSSprox_methprofile_noweight)-0.5*TSS_plotlength , 100*TSSprox_methprofile_noweight,

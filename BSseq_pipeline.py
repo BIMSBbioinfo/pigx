@@ -205,6 +205,7 @@ rule final_report:
         grfile      = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
         bedfile     = os.path.join(DIR_seg,"{prefix}_meth_segments.bed"),
         template            = os.path.join(DIR_templates,"index.Rmd"),
+        bigwigFile          = os.path.join(DIR_bigwig,   "{prefix}.bw"),
         chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
         report        = os.path.join(DIR_final, "{prefix}_{assembly}_final.html")
@@ -214,6 +215,7 @@ rule final_report:
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
         source_dir  = config['locations']['input-dir'],
         out_dir     = OUTDIR,
+        bigwigFile  = os.path.join(DIR_bigwig,   "{prefix}.bw"),
         inBam       = os.path.join(OUTDIR, DIR_sorted,"{prefix}.bam"),
         assembly    = ASSEMBLY,
         mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
