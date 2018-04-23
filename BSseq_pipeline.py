@@ -361,27 +361,13 @@ rule methseg:
 # ==========================================================================================
 # Export a bigwig file:
 
-rule export_bigwig_pe:
+rule export_bigwig:
     input:
         seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{bigwigpe_prefix}_methylRaw.RDS")
+        rdsfile    = os.path.join(DIR_methcall, "{bigwig_prefix}_methylRaw.RDS")
     output:
-        bw         = os.path.join(DIR_bigwig,   "{bigwigpe_prefix}_pe.bw")
-    message: fmt("exporting bigwig files from paired-end stream.")
-    shell:
-        nice('Rscript', ["{DIR_scripts}/export_bw.R",
-                         "{input.rdsfile}",
-                         "{input.seqlengths}",
-                         ASSEMBLY,
-                         "{output}"])
-#-----------------------
-rule export_bigwig_se:
-    input:
-        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{bigwigse_prefix}_methylRaw.RDS")
-    output:
-        bw         = os.path.join(DIR_bigwig,   "{bigwigse_prefix}_se.bw")
-    message: fmt("exporting bigwig files from single-end stream.")
+        bw         = os.path.join(DIR_bigwig,   "{bigwig_prefix}.bw")
+    message: fmt("exporting bigwig files.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_bw.R",
                          "{input.rdsfile}",

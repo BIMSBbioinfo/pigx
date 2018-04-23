@@ -105,9 +105,9 @@ def bam_processing(files, sampleID, protocol):
 def bigwig_exporting(files, sampleID, protocol):
     PATH = os.path.join(config['locations']['output-dir'], DIR_bigwig )
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_se.bw" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bw" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_pe.bw"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".bw"] #---- paired end
 
 def methSeg(files, sampleID, protocol):
     PATH = DIR_seg
