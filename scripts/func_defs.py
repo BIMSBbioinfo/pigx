@@ -163,6 +163,9 @@ def get_sampleids_from_treatment(treatment):
   sampleids_list = list(sum(sampleids_list, []))
   return(sampleids_list)
 
+def makeDiffMethPath(DIR_diffmeth, suffix, wc):
+    return DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_' + suffix
+
 # For only CpG context
 def diffmeth_input_function(wc):
   treatments = wc.treatment
