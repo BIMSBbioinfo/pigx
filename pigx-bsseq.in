@@ -164,7 +164,7 @@ def parse_samples(lines):
     sreader = csv.reader(lines, delimiter=',')
     all_rows = [row for row in sreader if row]
   
-    header = all_rows[0]
+    header = list(map(lambda x: x.strip(), all_rows[0] ))
     rows   = all_rows[1:]
     minimal_header = ['Read1', 'Read2', 'SampleID', 'Protocol', 'Treatment']
   
@@ -179,10 +179,13 @@ def parse_samples(lines):
     # Create a dictionary with all params, keys are samples ids
     outputdict = {}
     for row in rows:
+        if ( len(row) != 5 ):
+            bail("Invalid row format in Samplesheet. Each row should have five columns.")
+        row = list(map(lambda x: x.strip(), row))
         files = list(filter(None, row[0:2]))
         if not files:
             raise Exception("Each sample has to have an entry in at least one of the columns 'Read1' or 'Read2'.")
-      
+
         sampleid_dict = {}
         for idx in range(len(header[2:])):
             try:
