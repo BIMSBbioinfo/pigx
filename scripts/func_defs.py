@@ -148,11 +148,11 @@ def get_fastq_name(full_name):
 
     return(output)
 
-SAMPLE_IDS = list(config["SAMPLES"].keys())
-SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
-
 def get_sampleids_from_treatment(treatment):
   treatment = treatment.replace(".deduped", "")
+
+  SAMPLE_IDS = list(config["SAMPLES"].keys())
+  SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 
   treatments = treatment.split("_")
   sampleids_list = []
