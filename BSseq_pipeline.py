@@ -21,22 +21,22 @@
 import os
 
 #---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
-WORKDIR = os.getcwd() + "/"                         #--- current work dir (important for rmarkdown)
+OUTDIR = config['locations']['output-dir']                      #--- current work dir (important for rmarkdown)
 
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
-DIR_templates = os.path.join(config['locations']['output-dir'], 'pigx_work/report_templates/')
+DIR_templates = os.path.join(OUTDIR, 'pigx_work/report_templates/')
 
-DIR_diffmeth    =  os.path.join(config['locations']['output-dir'], '09_differential_methylation/' )
-DIR_seg         =  os.path.join(config['locations']['output-dir'], '08_segmentation/' )
-DIR_bigwig      =  os.path.join(config['locations']['output-dir'], '07_bigwig_files/')
-DIR_methcall    =  os.path.join(config['locations']['output-dir'], '06_methyl_calls/' )
-DIR_sorted      =  os.path.join(config['locations']['output-dir'], '05_sorting_deduplication/' )
-DIR_mapped      =  os.path.join(config['locations']['output-dir'], '04_mapping/' )
-DIR_posttrim_QC =  os.path.join(config['locations']['output-dir'], '03_posttrimming_QC/' )
-DIR_trimmed     =  os.path.join(config['locations']['output-dir'], '02_trimming/' )
-DIR_rawqc       =  os.path.join(config['locations']['output-dir'], '01_raw_QC/' )
+DIR_diffmeth    =  os.path.join(OUTDIR, '09_differential_methylation/' )
+DIR_seg         =  os.path.join(OUTDIR, '08_segmentation/' )
+DIR_bigwig      =  os.path.join(OUTDIR, '07_bigwig_files/')
+DIR_methcall    =  os.path.join(OUTDIR, '06_methyl_calls/' )
+DIR_sorted      =  os.path.join(OUTDIR, '05_sorting_deduplication/' )
+DIR_mapped      =  os.path.join(OUTDIR, '04_mapping/' )
+DIR_posttrim_QC =  os.path.join(OUTDIR, '03_posttrimming_QC/' )
+DIR_trimmed     =  os.path.join(OUTDIR, '02_trimming/' )
+DIR_rawqc       =  os.path.join(OUTDIR, '01_raw_QC/' )
 
-DIR_final       = os.path.join(config['locations']['output-dir'], "Final_Reports/")
+DIR_final       = os.path.join(OUTDIR, "Final_Reports/")
 
 
 #---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
@@ -215,17 +215,17 @@ rule final_report:
         Samplename  = lambda wc: get_fastq_name( wc.prefix ),
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
         source_dir  = config['locations']['input-dir'],
-        out_dir     = config['locations']['output-dir'],
-        inBam       = os.path.join(WORKDIR, DIR_sorted,"{prefix}.bam"),
+        out_dir     = OUTDIR,
+        inBam       = os.path.join(OUTDIR, DIR_sorted,"{prefix}.bam"),
         assembly    = ASSEMBLY,
         mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual        = int(config['general']['methylation-calling']['minimum-quality']),
         TSS_plotlength = int(config['general']['reports']['TSS_plotlength']),
         ## absolute path to output folder in working dir
-        methCallRDS     = os.path.join(WORKDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
-        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.bed"),
-        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.png"),
+        methCallRDS     = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
+        methSegGR       = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.bed"),
+        methSegPng      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.png"),
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
@@ -258,7 +258,7 @@ rule diffmeth_report:
         scripts_dir = DIR_scripts,
         diffmeth_dir = DIR_diffmeth,
         genome_dir  = config['locations']['genome-dir'],
-        out_dir     = config['locations']['output-dir'],
+        out_dir     = OUTDIR,
         cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
@@ -293,7 +293,7 @@ rule diffmeth:
         methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}_diffmethnonsig.RDS"),
         bedfile                = os.path.join(DIR_diffmeth, '{treatment}_diffmeth.bed')
     params:
-        workdir     = WORKDIR,
+        workdir     = OUTDIR,
         scripts_dir = DIR_scripts,
         inputfiles  = diffmeth_input_function,
         sampleids   = lambda wc: get_sampleids_from_treatment(wc.treatment),
@@ -303,11 +303,11 @@ rule diffmeth:
         difference  = float(config['general']['differential-methylation']['difference']),
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         cores       = int(config['general']['differential-methylation']['cores']),
-        methylDiff_file        = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmethhypo.RDS"),
-        methylDiff_nonsig_file = os.path.join(WORKDIR, DIR_diffmeth, "{treatment}_diffmethnonsig.RDS"),
-        outBed      = os.path.join(WORKDIR,DIR_diffmeth,"{treatment}_diffmeth.bed")
+        methylDiff_file        = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmeth.RDS"),
+        methylDiff_hyper_file  = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmethhyper.RDS"),
+        methylDiff_hypo_file   = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmethhypo.RDS"),
+        methylDiff_nonsig_file = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmethnonsig.RDS"),
+        outBed      = os.path.join(OUTDIR,DIR_diffmeth,"{treatment}_diffmeth.bed")
     log:
         os.path.join(DIR_diffmeth+"{treatment}_diffmeth.log")
     message: fmt("Calculating differential methylation.")
@@ -342,10 +342,10 @@ rule methseg:
         grfile      = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
         bedfile     = os.path.join(DIR_seg,"{prefix}_meth_segments.bed")
     params:
-        methCallRDS = os.path.join(WORKDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
-        methSegGR       = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.bed"),
-        methSegPng      = os.path.join(WORKDIR,DIR_seg,"{prefix}_meth_segments.png")
+        methCallRDS = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
+        methSegGR       = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        methSegBed      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.bed"),
+        methSegPng      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.png")
     log:
         os.path.join(DIR_seg,"{prefix}_meth_segments.log")
     message: fmt("Segmenting methylation profile for {input.rdsfile}.")
@@ -402,12 +402,12 @@ rule bam_methCall:
         callFile    = os.path.join(DIR_methcall,"{prefix}_CpG.txt")
     params:
         ## absolute path to bamfiles
-        inBam       = os.path.join(WORKDIR,DIR_sorted,"{prefix}.bam"),
+        inBam       = os.path.join(OUTDIR,DIR_sorted,"{prefix}.bam"),
         assembly    = ASSEMBLY,
         mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
         minqual     = int(config['general']['methylation-calling']['minimum-quality']),
         ## absolute path to output folder in working dir
-        rds         = os.path.join(WORKDIR,DIR_methcall,"{prefix}_methylRaw.RDS")
+        rds         = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS")
     log:
         os.path.join(DIR_methcall,"{prefix}_meth_calls.log")
     message: fmt("Extract methylation calls from bam file.")
