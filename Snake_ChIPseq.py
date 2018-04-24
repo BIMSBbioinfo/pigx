@@ -205,9 +205,9 @@ else:
 # change the suffix of the output bam file
 
 if PARAMS['bam_filter']['deduplicate']:
-    BAM_SUFFIX =  ".aligned.deduplicated.sorted.bam"
+    BAM_SUFFIX =  ".deduplicated.sorted.bam"
 else:
-    BAM_SUFFIX =  ".aligned.sorted.bam"
+    BAM_SUFFIX =  ".sorted.bam"
 
 
 # ---------------------------------------------------------------------------- #
@@ -255,7 +255,7 @@ targets['export-bw'] = {
 
 targets['multiqc'] = {
         'description': "Get multiQC report based on bowtie2 alignments and fastQC reports.", 
-        'files':
+        'files': 
             FASTQC +  MULTIQC
 }
 

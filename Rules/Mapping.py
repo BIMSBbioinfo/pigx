@@ -192,33 +192,13 @@ rule bowtie2:
         shell(command)
 
 
-#----------------------------------------------------------------------------- #
-rule samtools_extract_aligned:
-    input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
-    output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.bam")
-    params:
-        mapq    = config['general']['params']['bam_filter']['mapq'],
-        threads  = config['execution']['rules']['samtools_filter_aligned']['threads'],
-        samtools = SOFTWARE['samtools']['executable']
-    log:
-        logfile = os.path.join(PATH_LOG, "{name}.samtools_filter_aligned.log")
-    message:"""
-            Extract mapped reads:
-                input: {input}
-                output: {output}
-        """
-    shell: """
-        {params.samtools} view -q {params.mapq} -F4 --threads {params.threads} -o {output} {input} 2> {log}
-    """
 
 #----------------------------------------------------------------------------- #
 rule samtools_deduplicate:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.deduplicated.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.deduplicated.sorted.bam")
     params:
         threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
         samtools = SOFTWARE['samtools']['executable']
@@ -240,9 +220,9 @@ rule samtools_deduplicate:
 #----------------------------------------------------------------------------- #
 rule samtools_sort:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
     params:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
