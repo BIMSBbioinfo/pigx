@@ -20,7 +20,7 @@
 
 import os
 
-#---------------------------     LIST THE OUTPUT DIRECTORIED AND SUBDIRECTORIED TO BE PRODUCED     ------------------------------
+#--- DEFINE OUTPUT DIRECTORIES TO BE PRODUCED 
 OUTDIR = config['locations']['output-dir']                      #--- current work dir (important for rmarkdown)
 
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
@@ -39,7 +39,7 @@ DIR_rawqc       =  os.path.join(OUTDIR, '01_raw_QC/' )
 DIR_final       = os.path.join(OUTDIR, "Final_Reports/")
 
 
-#---------------------------------     DEFINE PATHS AND FILE NAMES:  ----------------------------------
+#--- DEFINE PATHS AND FILE NAMES:
 
 PATHIN     = "pigx_work/input/"           # location of the data files to be imported (script creates symbolic link)
 GENOMEPATH = "pigx_work/refGenome/"       # where the reference genome being mapped to is stored
@@ -49,7 +49,7 @@ ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped 
 include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
 validate_config(config)
 
-#---------------------------     LIST THE OUTPUT FILES TO BE PRODUCED     ------------------------------
+#--- LIST THE OUTPUT FILES TO BE PRODUCED: 
 
 # Below is a mapping of rule names to the expected output files they
 # produce.  The desired output files are specified in
