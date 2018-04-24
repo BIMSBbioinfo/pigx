@@ -191,12 +191,58 @@ rule bowtie2:
         ])
         shell(command)
 
+
 #----------------------------------------------------------------------------- #
-rule samtools_sort:
+rule samtools_extract_aligned:
     input:
         os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.bam")
+    params:
+        mapq    = config['general']['params']['bam_filter']['mapq'],
+        threads  = config['execution']['rules']['samtools_filter_aligned']['threads'],
+        samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_filter_aligned.log")
+    message:"""
+            Extract mapped reads:
+                input: {input}
+                output: {output}
+        """
+    shell: """
+        {params.samtools} view -q {params.mapq} -F4 --threads {params.threads} -o {output} {input} 2> {log}
+    """
+
+#----------------------------------------------------------------------------- #
+rule samtools_deduplicate:
+    input:
+        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.bam")
+    output:
+        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.deduplicated.sorted.bam")
+    params:
+        threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
+        samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_deduplicate.log")
+    message:"""
+            Deduplicating mapped reads:
+                input: {input}
+                output: {output}
+        """
+    shell: """
+        samtools sort --threads {params.threads} -n {input} | \
+        samtools fixmate --threads {params.threads}  -m - - | \
+        samtools sort --threads {params.threads}  - | \
+        samtools markdup --threads {params.threads}  -r -s - {output} \
+        2> {log}
+    """
+
+#----------------------------------------------------------------------------- #
+rule samtools_sort:
+    input:
+        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.bam")
+    output:
+        os.path.join(PATH_MAPPED, "{name}", "{name}.aligned.sorted.bam")
     params:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
@@ -214,9 +260,9 @@ rule samtools_sort:
 # ----------------------------------------------------------------------------- #
 rule samtools_index:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX )
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai")
+        os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai")
     params:
         samtools = SOFTWARE['samtools']['executable']
     log:

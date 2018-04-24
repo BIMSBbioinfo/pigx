@@ -10,6 +10,11 @@ rule trim_galore_pe:
         tmp2 = lambda wildcards: os.path.join(PATH_TRIMMED, wildcards.sample, replace_fastq_ext(os.path.basename(get_fastq_input(wildcards.sample,wildcards.prefix)[1]),'_val_2.fq.gz')),
         trim_galore = SOFTWARE['trim_galore']['executable'],
         mv = SOFTWARE['mv']['executable']
+    message:"""
+        Trimming Fastq files:
+            input : {input}
+            output: {output}
+    """
     log: 
         os.path.join(PATH_LOG, 'trim_galore_{sample}.log')
     shell:
@@ -24,6 +29,11 @@ rule trim_galore_se:
         tmp = lambda wildcards: os.path.join(PATH_TRIMMED, wildcards.sample, replace_fastq_ext(os.path.basename(get_fastq_input(wildcards.sample,wildcards.prefix)[0]),'_trimmed.fq.gz')),
         trim_galore = SOFTWARE['trim_galore']['executable'],
         mv = SOFTWARE['mv']['executable']
+    message:"""
+        Trimming Fastq files:
+            input : {input}
+            output: {output}
+    """
     log: 
         os.path.join(PATH_LOG, 'trim_galore_{sample}.log')
     shell:

@@ -5,14 +5,14 @@ def get_files_macs(wc):
     chip = config['peak_calling'][wc.name]['ChIP']
     if isinstance(chip,str):
         chip = [chip]
-    chips = [os.path.join(PATH_MAPPED, i, i + '.sorted.bam') for i in chip]
+    chips = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX), name = chip)
     paths['ChIP'] = chips
 
     cont = config['peak_calling'][wc.name]['Cont']
     if not cont == None:
         if isinstance(cont,str):
             cont = [cont]
-        cont = [os.path.join(PATH_MAPPED, i, i + '.sorted.bam') for i in cont]
+        cont = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX), name = cont)
         paths['Cont'] = cont
 
     return(paths)

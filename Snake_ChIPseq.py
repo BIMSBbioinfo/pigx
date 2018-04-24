@@ -168,9 +168,6 @@ for name in NAMES:
     TRIM_GALORE_FILES[name] = flatten([TRIM_GALORE_DICT[name][rep]['trimmed'] for rep in TRIM_GALORE_DICT[name].keys()])
 
 
-# ---------------------------------------------------------------------------- #
-# RULE ALL
-# Default output files from the pipeline
 
 
 # ---------------------------------------------------------------------------- #
@@ -203,6 +200,14 @@ else:
         PARAMS['width_params'] = width_params
 
 
+# ---------------------------------------------------------------------------- #
+# check wether deduplication should be performed, if yes
+# change the suffix of the output bam file
+
+if PARAMS['bam_filter']['deduplicate']:
+    BAM_SUFFIX =  ".aligned.deduplicated.sorted.bam"
+else:
+    BAM_SUFFIX =  ".aligned.sorted.bam"
 
 
 # ---------------------------------------------------------------------------- #
@@ -221,8 +226,8 @@ targets = {
 
 GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
-TRIMMING        = [TRIM_GALORE_FILES[i] for i in list(TRIM_GALORE_FILES.keys())] 
-BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
+TRIMMING        = [flatten(TRIM_GALORE_DICT.values())]
+BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
 CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
 TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']

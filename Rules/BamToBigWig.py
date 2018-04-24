@@ -1,15 +1,18 @@
 # ----------------------------------------------------------------------------- #
 rule bam2bed:
     input:
-        file   = os.path.join(PATH_MAPPED, "{name}/{name}.sorted.bam"),
-        chrlen = rules.index_to_chrlen.output.outfile
+        file   = os.path.join(PATH_MAPPED, "{name}/","{name}" + BAM_SUFFIX),
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bed")
     params:
-        extend   = PARAMS['export_bigwig']['extend'],
         bamToBed = SOFTWARE['bamToBed']['executable']
     log:
         logfile = os.path.join(PATH_LOG, 'bam2bed.log')
+    message:"""
+        Converting to Bed:
+            input : {input.file}
+            output: {output.outfile}
+    """
     shell: """
         {params.bamToBed} -i {input.file} > {output.outfile} 2> {log.logfile}
     """
