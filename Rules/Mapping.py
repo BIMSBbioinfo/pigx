@@ -191,14 +191,33 @@ rule bowtie2:
         ])
         shell(command)
 
-
+#----------------------------------------------------------------------------- #
+rule samtools_quality_filter:
+    input:
+        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
+    output:
+        os.path.join(PATH_MAPPED, "{name}", "{name}.q{mapq,\d+}.bam")
+    params:
+        mapq    = config['general']['params']['bam_filter']['mapq'],
+        threads  = config['execution']['rules']['samtools_quality_filter']['threads'],
+        samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_quality_filter.log")
+    message:"""
+            Filter reads by mapping quality:
+                input: {input}
+                output: {output}
+        """
+    shell: """
+        {params.samtools} view -q {params.mapq} -F4 --threads {params.threads} -o {output} {input} 2> {log}
+    """
 
 #----------------------------------------------------------------------------- #
 rule samtools_deduplicate:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.deduplicated.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.deduplicated.sorted.bam")
     params:
         threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
         samtools = SOFTWARE['samtools']['executable']
@@ -220,9 +239,9 @@ rule samtools_deduplicate:
 #----------------------------------------------------------------------------- #
 rule samtools_sort:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.sorted.bam")
     params:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']

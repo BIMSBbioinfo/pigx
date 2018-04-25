@@ -201,13 +201,22 @@ else:
 
 
 # ---------------------------------------------------------------------------- #
-# check wether deduplication should be performed, if yes
+# check wether quality filtering should be performed, if yes
 # change the suffix of the output bam file
 
+BAM_SUFFIX = ''
+
+if PARAMS['bam_filter']['mapq']:
+    if PARAMS['bam_filter']['mapq'] > 0:
+        BAM_SUFFIX = '.q{}'.format(PARAMS['bam_filter']['mapq'])
+        #BAM_SUFFIX = '.qfilter'
+
+# check wether deduplication should be performed, if yes
+# change the suffix of the output bam file
 if PARAMS['bam_filter']['deduplicate']:
-    BAM_SUFFIX =  ".deduplicated.sorted.bam"
+    BAM_SUFFIX = BAM_SUFFIX + ".deduplicated.sorted.bam"
 else:
-    BAM_SUFFIX =  ".sorted.bam"
+    BAM_SUFFIX = BAM_SUFFIX + ".sorted.bam"
 
 
 # ---------------------------------------------------------------------------- #
