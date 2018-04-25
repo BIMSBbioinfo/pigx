@@ -2,6 +2,7 @@ locations:
   reads-dir: /path/to/reads/
   output-dir: /path/to/output/
   genome-fasta: /path/to/genome.fasta
+  cdna-fasta: /path/to/sample.cdna.fasta
   gtf-file: /path/to/sample.gtf
 
 execution:
