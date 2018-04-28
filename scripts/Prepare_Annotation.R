@@ -24,7 +24,7 @@ Prepare_Annotation = function(
     annotation = ReadGTFAnnotation(gtf_path)
 
     # selects the genomic regions used for the profiles
-    annotation$full_annotation    = GTFGetAnnotation(annotation$gtf, 
+    annotation$full_annotation    = GTFGetAnnotation(annotation$gtf,
                                                      width_params=width_params)
 
     # selects the genomic regions used for annotation

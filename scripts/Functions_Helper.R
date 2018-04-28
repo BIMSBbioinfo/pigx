@@ -13,9 +13,9 @@ GtfSelectTranscript = function(gtf){
     suppressPackageStartupMessages(library(GenomicRanges))
     suppressPackageStartupMessages(library(stringr))
     if(!is.null(gtf$exon_id)){
-        gtf = gtf[gtf$exon_id != 'CCDS']
-        gtf = gtf[!str_detect(gtf$exon_id, 'mRNA')]
-        gtf = gtf[!str_detect(gtf$exon_id, 'cdna')]
+        gtf = gtf[which(gtf$exon_id != 'CCDS')]
+        gtf = gtf[which(!str_detect(gtf$exon_id, 'mRNA'))]
+        gtf = gtf[which(!str_detect(gtf$exon_id, 'cdna'))]
     }
    # gtf = keepStandardChromosomes(gtf, pruning.mode='coarse')
 
