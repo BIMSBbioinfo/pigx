@@ -20,6 +20,9 @@ general:
         scale_bw: 'yes'
     bowtie2:
         k: 1
+    bam_filter:
+        mapq: 0
+        deduplicate: no
     idr:
         idr-threshold: 0.1
     macs2:
@@ -217,10 +220,13 @@ execution:
       threads:   1
       memory:    8G
     peak_statistics:
-      threads:   16
+      threads:   4
       memory:    16G 
     prepare_annotation:
       threads:   1
+      memory:    16G
+    samtools_deduplicate:
+      threads:   4
       memory:    16G
     samtools_index:
       threads:   1
@@ -228,6 +234,9 @@ execution:
     samtools_sort:
       threads:   4
       memory:    16G
+    samtools_quality_filter:
+      threads:   1
+      memory:    8G
     summarize_data_for_report:
       threads:   1
       memory:    32G
