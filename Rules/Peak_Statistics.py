@@ -13,6 +13,7 @@ rule peak_statistics:
         peak_dict       = config['peak_calling'],
         lib_type_dict   = LIB_TYPE,
         path_mapped     = PATH_MAPPED,
+        bam_suffix      = BAM_SUFFIX, 
         path_peak       = PATH_PEAK,
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable'],
