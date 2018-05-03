@@ -58,10 +58,11 @@ Peak_Statistics = function(
     merge(.list_BamFiles(path_mapped,bam_suffix), by = 'bam_name') %>%
     merge(.list_qsortPeaks(path_peak), by.x = 'sample_name', by.y='chip_name')  %>%
     mutate(sample_id = paste(sample_name, bam_name, sep='_'))                   %>%
-    mutate(bw_files  = str_replace(bam_file,bam_suffix,'bw'))                 %>%
+    mutate(bw_files  = str_replace(bam_file,bam_suffix,'.bw'))                 %>%
     as.data.frame()
     peaks_sheet$library = unlist(lib_type_dict[peaks_sheet$bam_name])
 
+    print(peaks_sheet)
 
   peaks_uniq = peaks_sheet %>%
     dplyr::select(sample_name, bed_file, library) %>%
