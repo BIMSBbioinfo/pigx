@@ -62,8 +62,6 @@ Peak_Statistics = function(
     as.data.frame()
     peaks_sheet$library = unlist(lib_type_dict[peaks_sheet$bam_name])
 
-    print(peaks_sheet)
-
   peaks_uniq = peaks_sheet %>%
     dplyr::select(sample_name, bed_file, library) %>%
     distinct()
