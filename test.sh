@@ -4,7 +4,7 @@ additional_args=$1
 
 echo "ARGS: ${additional_args}"
 
-SRCDIR="/data/akalin/buyar/collaborations/jonathan/pipeline/pigx_crispr"
+SRCDIR="/data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr"
 
 #echo "Removing previously generated output folder"
 #rm -rf ${SRCDIR}/sample_data/output
