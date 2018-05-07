@@ -154,3 +154,11 @@ adapter_parameters:
     umi_barcode:
       base_min: 17
       base_max: 26
+
+    1cellbio:
+    cell_barcode:
+      base_min: 1
+      base_max: 11
+    umi_barcode:
+      base_min: 12
+      base_max: 25
