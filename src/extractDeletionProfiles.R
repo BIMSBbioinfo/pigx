@@ -108,31 +108,6 @@ calculateGuideCuttingEfficiency <- function(seqName, cutStart, cutEnd, bamFile, 
   return(efficiency)
 }
 
-plotDeletionSizeDistributionAtCutSites <- function(sampleName, guide, cutStart, cutEnd, deletions, extend = 3, maxDelSize = 100) {
-  if(cutEnd < cutStart) {
-    stop("End position of cutting site must be larger than start position\n")
-  }
-  if(cutStart < 0 | cutEnd < 0) {
-    stop("Start/End positions of cutting sites must be positive values")
-  }
-
-  cutStartExt <- cutStart - extend
-  cutEndExt <- cutEnd + extend
-
-  cutSiteDeletions <- readsWithDeletions[
-    (start(readsWithDeletions) >= cutStartExt & start(readsWithDeletions) <= cutEndExt) |
-      (end(readsWithDeletions) >= cutStartExt & end(readsWithDeletions) <= cutEndExt),]
-
-  p <- ggplot(data.frame("width" = width(cutSiteDeletions)), aes(x = width)) +
-    geom_histogram(aes(fill = width %% 3 == 0), binwidth = 1, show.legend = F) + xlim(c(0, maxDelSize+1)) +
-    labs(title = paste0('Deletion size distribution (for deletions <= ',maxDelSize,'bp)'),
-         subtitle = paste0("Sample:",sampleName, "; sgRNA:",guide,"; coords:",cutStart,"-",cutEnd),
-         x = 'Deletion Size (bp)', y = "Count") +
-    theme_bw(base_size = 14)
-
-  return(p)
-}
-
 readsWithDeletions <- getReadsWithDeletions(bamFile = bamFile)
 seqName <- seqnames(seqinfo(readsWithDeletions))[1]
 deletions <- summarizeDeletions(readsWithDeletions)
@@ -164,33 +139,7 @@ write.table(x = cutEfficiencies,
             quote = F, sep = '\t'
             )
 
-#for the guides that were used for the given sample, draw deletion size histograms
-# guides <- gsub(' ', '', unlist(strsplit(x = sgRNA_list, split = ':')))
-# 
-# pdf(file = file.path(outDir, paste0(sampleName, ".deletionSizeHistogram.pdf")))
-# for(guide in guides) {
-#   x <- cutSites[cutSites$V1 == guide,]
-#   cutStart <- as.numeric(x[[2]])
-#   cutEnd <- cutStart + 1
-#   p1 <- plotDeletionSizeDistributionAtCutSites(sampleName = sampleName,
-#                                          guide = guide,
-#                                          cutStart = cutStart,
-#                                          cutEnd = cutEnd,
-#                                          deletions = deletions,
-#                                          maxDelSize = 100,
-#                                          extend = 3)
-#   p2 <- plotDeletionSizeDistributionAtCutSites(sampleName = sampleName,
-#                                                guide = guide,
-#                                                cutStart = cutStart,
-#                                                cutEnd = cutEnd,
-#                                                deletions = deletions,
-#                                                maxDelSize = 10,
-#                                                extend = 3)
-# 
-#   print(p1)
-#   print(p2)
-# }
-# dev.off()
+
 
 
 
