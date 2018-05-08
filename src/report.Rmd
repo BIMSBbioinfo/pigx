@@ -1,0 +1,123 @@
+---
+title: "CRISPR Report"
+output: html_document
+date: '`r date()`'
+params: 
+  sampleSheetFile: ''
+  ampliconFastaFile: ''
+  ampliconName: ''
+  cutSitesFile: ''
+  bedgraphFolder: ''
+  workdir: ''
+  prefix: ''
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+
+library(ggplot2)
+library(ggrepel)
+library(data.table)
+library(rtracklayer)
+library(DT)
+```
+
+# Input Settings
+```{r printInputSettings}
+ampliconFastaFile <- params$ampliconFastaFile
+sampleSheetFile <- params$sampleSheetFile
+bedgraphFolder <- params$bedgraphFolder
+cutSitesFile <- params$cutSitesFile
+prefix <- params$prefix
+workdir <- params$workdir
+
+inputParameterDesc <- c('Amplicon Fasta File',
+                        'Amplicon Name',
+                        'sgRNA Cut Sites File', 
+                     'Experiment Data File',
+                     'bedgraph folder path', 
+                     'Prefix for output files',
+                     'Working directory'
+                     )
+inputParameterValues <- c(ampliconFastaFile,
+                          ampliconName,
+                          cutSitesFile, 
+                          sampleSheetFile,
+                          bedgraphFolder, 
+                          prefix,
+                          workdir)
+inputSettings <- data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = 9,
+                         dom = 't'))
+```
+
+```{r printSampleInformation}
+sampleSheet <- read.csv(sampleSheetFile, stringsAsFactors = F)
+sampleSheet <- sampleSheet[sampleSheet$amplicon == ampliconName,]
+DT::datatable(data = sampleSheet,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         dom = 't'))
+
+cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
+colnames(cutSites) <- c('sgRNA', 'cutSite')
+DT::datatable(data = cutSites)
+```
+
+
+# Deletion Score Profiles 
+
+```{r plotDeletionScores}
+
+plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
+  f <- file.path(bedgraphFolder, paste0(sampleName, '.deletionScores.bedgraph'))
+  dt <- data.table::fread(f, skip = 1, select = c(2,4))
+  colnames(dt) <- c('bp', 'score')
+  dt$sample_name <- sampleName
+  
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == sampleName,]$sgRNA_ids, 
+                     split = ':'))
+  
+  sgRNAs <- merge(data.frame('sgRNA' = sgRNAs, 'sample_name' = sampleName), cutSites, by = 'sgRNA')
+
+  p <- ggplot(dt, aes(x = bp, y = score, group = sample_name)) +
+    geom_line() 
+  if(nrow(sgRNAs) > 0) {
+    p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, color = sgRNA)) + 
+    geom_label_repel(data = sgRNAs, size = 4 , aes(fill = sgRNA, x = cutSite, y = max(dt$score), label = sgRNA)) 
+  }
+  p <- p + scale_color_brewer(palette = 'Set1') + 
+    theme_bw(base_size = 14) + 
+    theme(legend.position = 'none') 
+  return(p)
+}
+
+plots <- lapply(sampleSheet$sample_name, function(sampleName) {
+  plotScores(bedgraphFolder = bedgraphFolder, 
+             sampleName = sampleName, 
+             sampleSheet = sampleSheet, 
+             cutSites = cutSites)
+})
+names(plots) <- sampleSheet$sample_name
+```
+
+
+## Deletion Score Profiles {.tabset}
+
+```{r deletionScorePlot, results='asis', echo = FALSE}
+for (i in 1:length(plots)) {
+  cat("### ",names(plots)[i],"\n")
+  print(plots[[i]])
+  cat('\n\n')
+}
+```
+
+

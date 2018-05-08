@@ -27,6 +27,7 @@ MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'aln')
 BEDGRAPH_DIR      = os.path.join(OUTPUT_DIR, 'bedgraph')
 BBMAP_INDEX_DIR   = os.path.join(OUTPUT_DIR, 'bbmap_indexes')
 BED_DIR           = os.path.join(OUTPUT_DIR, 'bed') 
+REPORT_DIR        = os.path.join(OUTPUT_DIR, 'reports')
 
 #other parameters
 AMPLICONS = config.get('amplicons', {})
@@ -79,7 +80,8 @@ rule all:
         get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
         get_output_file_list(BED_DIR, "deletions.bed"),
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
-        expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())
+        expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
+        expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys())
 
 rule fastqc:
     input: reads_input      
@@ -88,20 +90,20 @@ rule fastqc:
         outdir=os.path.join(FASTQC_DIR, "{amplicon}"), 
         outfile=os.path.join(FASTQC_DIR, "{amplicon}", "{sample}.fastqc.done")
     log: os.path.join(LOG_DIR, "{amplicon}", "{sample}.fastqc.log")
-    shell: "fastqc -o {params.outdir} {input} >> {log} 2>&1; touch {params.outfile}"
+    shell: "fastqc -o {params.outdir} {input} > {log} 2>&1; touch {params.outfile}"
 
 rule trimmomatic:
     input: reads_input
     output: os.path.join(TRIMMED_READS_DIR, "{amplicon}", "{sample}.fastq.gz")
     log: os.path.join(LOG_DIR, "{amplicon}", "trimmomatic.{sample}.log")
     shell: "trimmomatic SE -threads {nodeN} {input} {output} \
-       ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 >> {log} 2>&1"
+       ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 > {log} 2>&1"
 
 rule bbmap_indexgenome:
     input: lambda wildcards: get_amplicon_file(wildcards, 'fasta')
     output: os.path.join(BBMAP_INDEX_DIR, "{amplicon}")
     log: os.path.join(LOG_DIR, 'bbmap_index_{amplicon}.log')
-    shell: "bbmap.sh ref={input} path={output} >> {log} 2>&1"
+    shell: "bbmap.sh ref={input} path={output} > {log} 2>&1"
 
 rule bbmap_map:
     input: 
@@ -111,26 +113,26 @@ rule bbmap_map:
         os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
     log: os.path.join(LOG_DIR, "{amplicon}", "bbmap_{sample}.log")
     shell:
-        "bbmap.sh path={input.ref} in={input.reads} outm={output} t={nodeN} sam=1.3 >> {log} 2>&1"
+        "bbmap.sh path={input.ref} in={input.reads} outm={output} t={nodeN} sam=1.3 > {log} 2>&1"
 
 rule samtools_sam2bam:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     log: os.path.join(LOG_DIR, "{amplicon}", "sam2bam_{sample}.log")
-    shell: "samtools view -bh {input} | samtools sort -o {output} >> {log} 2>&1"
-        #"samtools view -bh {input} | samtools sort | samtools rmdup -s - {output} >> {log} 2>&1"
+    shell: "samtools view -bh {input} | samtools sort -o {output} > {log} 2>&1"
+        #"samtools view -bh {input} | samtools sort | samtools rmdup -s - {output} > {log} 2>&1"
                            
 rule samtools_mpileup:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
     log: os.path.join(LOG_DIR, "{amplicon}", "mpileup_{sample}.log")
-    shell: "samtools mpileup {input} -o {output} >> {log} 2>&1"
+    shell: "samtools mpileup {input} -o {output} > {log} 2>&1"
 
 rule samtools_indexbam:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai")
     log: os.path.join(LOG_DIR, "{amplicon}", "samtools_index_{sample}.log")
-    shell: "samtools index {input} >> {log} 2>&1"
+    shell: "samtools index {input} > {log} 2>&1"
 
 rule samtools_stats:
     input: 
@@ -160,7 +162,7 @@ rule multiqc:
         analysis_folder = OUTPUT_DIR,
         output_folder = os.path.join(OUTPUT_DIR, "multiqc")
     log: os.path.join(LOG_DIR, 'multiqc.log')
-    shell: "multiqc -o {params.output_folder} {params.analysis_folder} >> {log} 2>&1"
+    shell: "multiqc -o {params.output_folder} {params.analysis_folder} > {log} 2>&1"
 
 rule extractDeletionProfiles:
     input: 
@@ -176,7 +178,7 @@ rule extractDeletionProfiles:
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
         script=os.path.join(SRC_DIR, "src", "extractDeletionProfiles.R")
     log: os.path.join(LOG_DIR, "{amplicon}", "extractDeletionProfiles_{sample}.log")
-    shell: "{RSCRIPT} {params.script} {input.bamFile} {input.mpileupOutput} {input.parsedMpileupOutput} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} >> {log} 2>&1"
+    shell: "{RSCRIPT} {params.script} {input.bamFile} {input.mpileupOutput} {input.parsedMpileupOutput} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} > {log} 2>&1"
         
 rule extractDeletionCoordinates:
     input:
@@ -184,9 +186,28 @@ rule extractDeletionCoordinates:
         bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     params:
         outdir = os.path.join(BED_DIR, "{amplicon}"),
-        script=os.path.join(SRC_DIR, "src", "extractDeletionCoordinates.R")
+        script= os.path.join(SRC_DIR, "src", "extractDeletionCoordinates.R")
     output:
         os.path.join(BED_DIR, "{amplicon}", "{sample}.deletions.bed")
     log: os.path.join(LOG_DIR, "{amplicon}", "extractDeletionCoordinates_{sample}.log")
     shell:
-        "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} >> {log} 2>&1"
+        "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} > {log} 2>&1"
+        
+         
+rule report:
+  input:
+    deletionScores = get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph")
+  params:
+    fasta = lambda wildcards: get_amplicon_file(wildcards, 'fasta'),
+    cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
+    reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
+    reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
+    bedgraphFolder = os.path.join(BEDGRAPH_DIR, "{amplicon}")
+  log: os.path.join(LOG_DIR, "{amplicon}.report.log")
+  output:
+    os.path.join(REPORT_DIR, '{amplicon}.report.html')
+  shell:
+    "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --bedgraphFolder={params.bedgraphFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"        
+    
+    
+    
