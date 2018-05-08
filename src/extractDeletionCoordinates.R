@@ -34,24 +34,7 @@ write.table(x = dt[,2],
             file = file.path(outDir, paste0(sampleName,'.deletion.counts.tsv')),
             append = F, quote = F, sep = '\t', row.names = dt$ID, col.names = sampleName)
 
-pdf(file = file.path(outDir, paste0(sampleName,'.deletionSize_readSupport_distribution.pdf')))
 scoreThreshold <- quantile(dt$ReadSupport, c(1:100)/100)[[95]]
-print(ggplot(dt, aes(x = width, y = ReadSupport)) +
-        geom_point(aes(color = ReadSupport > scoreThreshold)) +
-        geom_hline(yintercept = scoreThreshold, color = 'red') +
-        annotate("label",
-                 x = max(dt$width)-100, y = scoreThreshold,
-                 label = paste0('95th\npercentile =',scoreThreshold),
-                 color = 'blue',
-                 alpha = 0.4) +
-        xlim(0, max(dt$width) + 100) +
-        scale_y_log10() + theme(legend.position = 'bottom',
-                                text = element_text(size = 16)) +
-        labs(y = 'Read Support for Each Deletion\n (log10 scale)',
-             x = 'Deletion Size',
-             title = 'Distribution of Read Support per deletion sizes') +
-        scale_color_brewer(palette = 'Set1'))
-dev.off()
 
 delCoords$score <- dt[match(delCoords$ID, dt$ID)]$ReadSupport
 delCoords$seqname <-  as.character(unique(seqnames(aln)))
