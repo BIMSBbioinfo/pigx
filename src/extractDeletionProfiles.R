@@ -21,6 +21,8 @@ cat("Running extractDeletionProfiles.R with arguments:",args,"\n")
 
 printDeletionProfiles <- function (mpileupOutput, parseMpileupOutput, outDir = getwd(), sampleName) {
   bedgraphOutputFile <- file.path(outDir, paste0(sampleName,'.deletionScores.bedgraph'))
+  statsOutputFile <- file.path(outDir, paste0(sampleName,'.coverageStats.tsv'))
+  
   #create a bedgraph file that contains deletion ratios for each base
 
   dt1 <- fread(input = paste0("cut -f 1-4 ",mpileupOutput), header = F)
@@ -42,7 +44,8 @@ printDeletionProfiles <- function (mpileupOutput, parseMpileupOutput, outDir = g
               sep = '\t', quote = F, row.names = F, col.names = F)
 
   dt3$delRatio <- ifelse(dt3$cov > 0, dt3$del/dt3$cov, 0)
-
+  write.table(x = dt3, file = statsOutputFile, append = T,
+              sep = '\t', quote = F, row.names = F, col.names = T)
   return(dt3)
 }
 

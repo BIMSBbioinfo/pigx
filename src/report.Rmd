@@ -21,6 +21,7 @@ library(ggrepel)
 library(data.table)
 library(rtracklayer)
 library(DT)
+library(plotly)
 ```
 
 # Input Settings
@@ -72,31 +73,57 @@ colnames(cutSites) <- c('sgRNA', 'cutSite')
 DT::datatable(data = cutSites)
 ```
 
+# Coverage Profiles 
+```{r coverage profiles}
+# import stats tables 
+dt <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(bedgraphFolder, paste0(sampleName, '.coverageStats.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    return(dt)
+  }
+})))
+#create a matrix of bp versus samples where values are coverage
+dtc <- dcast.data.table(dt, sample ~ bp, value.var = 'cov', fill = 0)
+M <- as.matrix(dtc[,-1])
+rownames(M) <- dtc$sample
+pheatmap::pheatmap(M, 
+                   cluster_rows = nrow(M) > 1, 
+                   cluster_cols = F, 
+                   show_colnames = F, 
+                   main = paste(ampliconName, 'Coverage Profiles'))
+
+ggplot(dt, aes(x = bp, y = cov, group = sample)) + 
+  geom_line(aes(color = sample)) + facet_wrap(~ sample) + 
+  theme_bw() + theme(legend.position = 'bottom') + 
+  labs(x = 'base position', y = 'Number of Reads', title = paste(ampliconName, 'Coverage Profiles'))
+```
 
 # Deletion Score Profiles 
 
 ```{r plotDeletionScores}
 
 plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
-  f <- file.path(bedgraphFolder, paste0(sampleName, '.deletionScores.bedgraph'))
-  dt <- data.table::fread(f, skip = 1, select = c(2,4))
-  colnames(dt) <- c('bp', 'score')
-  dt$sample_name <- sampleName
-  
+  f <- file.path(bedgraphFolder, paste0(sampleName, '.coverageStats.tsv'))
+  dt <- data.table::fread(f)
+
   sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == sampleName,]$sgRNA_ids, 
                      split = ':'))
   
   sgRNAs <- merge(data.frame('sgRNA' = sgRNAs, 'sample_name' = sampleName), cutSites, by = 'sgRNA')
 
-  p <- ggplot(dt, aes(x = bp, y = score, group = sample_name)) +
+  p <- ggplot(dt, aes(x = bp, y = delRatio)) +
     geom_line() 
   if(nrow(sgRNAs) > 0) {
+    y <- rep(max(dt$delRatio), nrow(sgRNAs))
+    y[seq(1,nrow(sgRNAs),2)] <- y[seq(1,nrow(sgRNAs),2)] + max(dt$delRatio)/5
     p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, color = sgRNA)) + 
-    geom_label_repel(data = sgRNAs, size = 4 , aes(fill = sgRNA, x = cutSite, y = max(dt$score), label = sgRNA)) 
+      geom_label_repel(data = sgRNAs, size = 4, mapping = aes(fill = sgRNA, x = cutSite, y = y, label = sgRNA)) 
   }
-  p <- p + scale_color_brewer(palette = 'Set1') + 
+  p <- p + #scale_color_brewer(palette = 'Set1') + 
     theme_bw(base_size = 14) + 
-    theme(legend.position = 'none') 
+    theme(legend.position = 'none') + 
+    scale_y_continuous(labels = scales::percent)
   return(p)
 }
 
@@ -105,10 +132,9 @@ plots <- lapply(sampleSheet$sample_name, function(sampleName) {
              sampleName = sampleName, 
              sampleSheet = sampleSheet, 
              cutSites = cutSites)
-})
+}) 
 names(plots) <- sampleSheet$sample_name
 ```
-
 
 ## Deletion Score Profiles {.tabset}
 

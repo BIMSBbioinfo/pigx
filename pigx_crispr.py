@@ -78,6 +78,7 @@ rule all:
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.tsv"),                  
         get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
         get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
+        get_output_file_list(BEDGRAPH_DIR, "coverageStats.tsv"),
         get_output_file_list(BED_DIR, "deletions.bed"),
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
@@ -172,7 +173,8 @@ rule extractDeletionProfiles:
         parsedMpileupOutput = os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv"),
         cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
     output: 
-        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.deletionScores.bedgraph")
+        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.deletionScores.bedgraph"),
+        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.coverageStats.tsv")
     params:
         outdir=os.path.join(BEDGRAPH_DIR, "{amplicon}"),
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
@@ -196,7 +198,7 @@ rule extractDeletionCoordinates:
          
 rule report:
   input:
-    deletionScores = get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph")
+    deletionStats = get_output_file_list(BEDGRAPH_DIR, "coverageStats.tsv")
   params:
     fasta = lambda wildcards: get_amplicon_file(wildcards, 'fasta'),
     cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
