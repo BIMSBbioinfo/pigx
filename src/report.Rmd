@@ -27,6 +27,7 @@ library(plotly)
 # Input Settings
 ```{r printInputSettings}
 ampliconFastaFile <- params$ampliconFastaFile
+ampliconName <- params$ampliconName
 sampleSheetFile <- params$sampleSheetFile
 bedgraphFolder <- params$bedgraphFolder
 cutSitesFile <- params$cutSitesFile
@@ -71,12 +72,15 @@ DT::datatable(data = sampleSheet,
 cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
 colnames(cutSites) <- c('sgRNA', 'cutSite')
 DT::datatable(data = cutSites)
+
 ```
 
 # Coverage Profiles 
-```{r coverage profiles}
+
+## Coverage as Heatmap
+```{r coverage_heatmap}
 # import stats tables 
-dt <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+coverageStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
   f <- file.path(bedgraphFolder, paste0(sampleName, '.coverageStats.tsv'))
   if(file.exists(f)) {
     dt <- data.table::fread(f)
@@ -84,24 +88,29 @@ dt <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(samp
   }
 })))
 #create a matrix of bp versus samples where values are coverage
-dtc <- dcast.data.table(dt, sample ~ bp, value.var = 'cov', fill = 0)
-M <- as.matrix(dtc[,-1])
-rownames(M) <- dtc$sample
+dt <- dcast.data.table(coverageStats, sample ~ bp, value.var = 'cov', fill = 0)
+M <- as.matrix(dt[,-1])
+rownames(M) <- dt$sample
 pheatmap::pheatmap(M, 
                    cluster_rows = nrow(M) > 1, 
                    cluster_cols = F, 
                    show_colnames = F, 
                    main = paste(ampliconName, 'Coverage Profiles'))
-
-ggplot(dt, aes(x = bp, y = cov, group = sample)) + 
-  geom_line(aes(color = sample)) + facet_wrap(~ sample) + 
-  theme_bw() + theme(legend.position = 'bottom') + 
-  labs(x = 'base position', y = 'Number of Reads', title = paste(ampliconName, 'Coverage Profiles'))
 ```
 
-# Deletion Score Profiles 
+## Coverage as Line Plot
 
-```{r plotDeletionScores}
+```{r coverage-lineplot}
+p <- ggplot(coverageStats, aes(x = bp, y = cov, group = sample)) + 
+  geom_line(aes(color = sample), show.legend = F) +   
+  theme_bw() +  
+  labs(x = 'base position', y = 'Number of Reads', title = paste(ampliconName, 'Coverage Profiles'))
+ggplotly(p)
+```
+
+# Indel Score Profiles 
+
+```{r plotIndelProfiles}
 
 plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
   f <- file.path(bedgraphFolder, paste0(sampleName, '.coverageStats.tsv'))
@@ -112,14 +121,13 @@ plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
   
   sgRNAs <- merge(data.frame('sgRNA' = sgRNAs, 'sample_name' = sampleName), cutSites, by = 'sgRNA')
 
-  p <- ggplot(dt, aes(x = bp, y = delRatio)) +
-    geom_line() 
+  mdt <- melt(dt[,-c('ins', 'del', 'indel', 'cov')], id.vars = c('bp', 'sample'))
+  
+  p <- ggplot(mdt, aes(x = bp, y = value, group = variable)) +
+    geom_line(aes(color = variable)) + labs(title = paste(sampleName, 'Indel Profiles'))
   if(nrow(sgRNAs) > 0) {
-    y <- rep(max(dt$delRatio), nrow(sgRNAs))
-    y[seq(1,nrow(sgRNAs),2)] <- y[seq(1,nrow(sgRNAs),2)] + max(dt$delRatio)/5
     p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, 
-                                           color = sgRNA,
-                                           alpha = 0.8))
+                                           color = sgRNA), linetype = 'dotted')
   }
   p <- p + 
     theme_bw(base_size = 14) + 
@@ -136,9 +144,15 @@ plots <- lapply(sampleSheet$sample_name, function(sampleName) {
 names(plots) <- sampleSheet$sample_name
 ```
 
-## Deletion Score Profiles {.tabset}
+```{r plotIndelProfilesHeader, results = 'asis'}
+if(length(plots) > 10) {
+  cat("## Indel Score Profiles {.tabset .tabset-dropdown}\n\n")
+} else {
+  cat("## Indel Score Profiles {.tabset}\n\n")
+}
+```
 
-```{r deletionScorePlots, include=FALSE}
+```{r plotIndelProfilesPlots, include=FALSE}
 out = NULL
 for (n in names(plots)) {
   p <- ggplotly(plots[[n]])
