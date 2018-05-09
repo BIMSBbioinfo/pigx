@@ -72,9 +72,9 @@ def read_SAMPLE_SHEET(config):
 # ---------------------------------------------------------------------------- #
 # given a sample name returns fastq location(s)
 # uses global variable SAMPLE_SHEET
-def get_fastq_input(name):
-    samps = lookup('SampleName', name, ['Read', 'Read2'])
-    infiles = [os.path.join(PATH_FASTQ, i) for i in samps if i]
+def get_fastq_input(name,prefix):
+    samps = TRIM_GALORE_DICT[name][prefix]['raw']
+    infiles = [os.path.join(PATH_FASTQ, i) for i in flatten(samps) if i]
     return(infiles)
 
 # given a fastq file strips of either of the following extensions:
