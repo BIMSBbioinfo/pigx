@@ -3,7 +3,7 @@ import subprocess
 import re
 import os
 import sys
-
+import itertools
 
 # ---------------------------------------------------------------------------- #
 # uses global variable SAMPLE_SHEET
@@ -52,8 +52,12 @@ def read_SAMPLE_SHEET(config):
     # in both cases we need to strip leading or trailing whitespaces
     rows = [list(map(str.strip, row)) for row in rows]
     header = rows[0]; rows = rows[1:]
+    # we do not want duplicate rows in the sample sheet 
+    rows.sort()
+    rows = list(row for row,_ in itertools.groupby(rows))
+    # then we create a dictionary from header and rows
     SAMPLE_SHEET = [OrderedDict(zip(header, row)) for row in rows if row]
-
+    
     # Goes through the sample sheet, and defines the library type based on 
     # the existence of one or two Read input files
     for input_sample in SAMPLE_SHEET:
