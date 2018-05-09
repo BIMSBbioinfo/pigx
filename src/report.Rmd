@@ -15,7 +15,7 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = params$workdir)
-
+library(knitr)
 library(ggplot2)
 library(ggrepel)
 library(data.table)
@@ -117,12 +117,12 @@ plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
   if(nrow(sgRNAs) > 0) {
     y <- rep(max(dt$delRatio), nrow(sgRNAs))
     y[seq(1,nrow(sgRNAs),2)] <- y[seq(1,nrow(sgRNAs),2)] + max(dt$delRatio)/5
-    p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, color = sgRNA)) + 
-      geom_label_repel(data = sgRNAs, size = 4, mapping = aes(fill = sgRNA, x = cutSite, y = y, label = sgRNA)) 
+    p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, 
+                                           color = sgRNA,
+                                           alpha = 0.8))
   }
-  p <- p + #scale_color_brewer(palette = 'Set1') + 
+  p <- p + 
     theme_bw(base_size = 14) + 
-    theme(legend.position = 'none') + 
     scale_y_continuous(labels = scales::percent)
   return(p)
 }
@@ -132,18 +132,20 @@ plots <- lapply(sampleSheet$sample_name, function(sampleName) {
              sampleName = sampleName, 
              sampleSheet = sampleSheet, 
              cutSites = cutSites)
-}) 
+})
 names(plots) <- sampleSheet$sample_name
 ```
 
 ## Deletion Score Profiles {.tabset}
 
-```{r deletionScorePlot, results='asis', echo = FALSE}
-for (i in 1:length(plots)) {
-  cat("### ",names(plots)[i],"\n")
-  print(plots[[i]])
-  cat('\n\n')
+```{r deletionScorePlots, include=FALSE}
+out = NULL
+for (n in names(plots)) {
+  p <- ggplotly(plots[[n]])
+  out = c(out, knitr::knit_expand(text='### {{n}} \n\n {{p}} \n\n'))
 }
 ```
+
+`r paste(knit(text = out), collapse = '\n')`
 
 
