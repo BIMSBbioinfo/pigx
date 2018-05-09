@@ -30,6 +30,7 @@ runReport <- function(reportFile,
                       ) {
   
   outFile <- paste0(prefix, '.report.html')
+  tabsetDropdown <- file.path(dirname(reportFile), 'tabset-dropdown.html')
   
   htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
@@ -44,7 +45,8 @@ runReport <- function(reportFile,
       toc = TRUE,
       toc_float = TRUE,
       theme = 'lumen',
-      number_sections = TRUE
+      number_sections = TRUE,
+      includes = rmarkdown::includes(after_body = tabsetDropdown)
     ),
     output_options = list(self_contained = TRUE),
     params = list(ampliconFastaFile = ampliconFastaFile,
