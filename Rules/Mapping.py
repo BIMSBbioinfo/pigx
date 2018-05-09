@@ -148,9 +148,13 @@ rule extract_nucleotide_frequency:
             RunRscript(input, output, params, log.logfile, 'Extract_Nucleotide_Frequency.R')
 
 #----------------------------------------------------------------------------- #
+def get_trimmed_files(sample):
+    infiles = TRIM_GALORE_FILES[sample]
+    return(infiles)
+
 rule bowtie2:
     input:
-        infile = lambda wc: get_trimmed_input(wc.name),
+        infile = lambda wc: get_trimmed_files(wc.name),
         genome = rules.bowtie2_build.output.outfile
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
@@ -171,10 +175,10 @@ rule bowtie2:
     run:
         genome = input.genome.replace('.1.bt2','')
         if params.library in ['single','SINGLE']:
-            map_args =  '-U ' + input.infile[0]
+            map_args = '-U {}'.format(','.join(input.infile))
 
         if params.library in ['paired','PAIRED','pair','PAIR']:
-            map_args = '-1 ' + input.infile[0] + ' -2 ' + input.infile[1]
+            map_args = '-1 {} -2 {}'.format(','.join(input.infile[::2]),','.join(input.infile[1::2]))
 
         command = " ".join(
         [params.bowtie2,
