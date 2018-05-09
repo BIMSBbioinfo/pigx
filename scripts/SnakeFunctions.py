@@ -95,33 +95,23 @@ def get_trimming_dict(name):
     fqfiles = [file for file in lookup('SampleName',name,['Read','Read2']) if file]
     lib_type = get_library_type(name)
     trimming_dict = dict()
+    # defaults resemble single end case
     prefix = name
+    num_reps = len(fqfiles)
+    read_ext = ['R']
+    # and get updated if library is paired end
     if ( (len(fqfiles) % 2) == 0 and lib_type == 'paired'):
         num_reps = int(len(fqfiles)/2)
-        for tec_rep in range(num_reps):
-            if num_reps > 1:
-                prefix = "{}_tr{}".format(name,int(tec_rep)+1)
-            trimming_dict[prefix] = dict()
-            trimming_dict[prefix]['trimmed']  = [os.path.join(PATH_TRIMMED,name, "{}_{}.fastq.gz".format(prefix,read)) for read in ["R1","R2"]]
+        read_ext = ['R1','R2']
+    for tec_rep in range(num_reps):
+        if num_reps > 1:
+            prefix = "{}_tr{}".format(name,int(tec_rep)+1)
+        trimming_dict[prefix] = dict()
+        trimming_dict[prefix]['trimmed']  = [os.path.join(PATH_TRIMMED,name, "{}_{}.fastq.gz".format(prefix,read)) for read in read_ext]
+        if lib_type == 'paired':
             trimming_dict[prefix]['raw']      = [fqfiles[tec_rep*2:(tec_rep+1)*2]]
-        if num_reps == 1:
-            trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_{}.fastq.gz".format(name,read)) for read in ["R1","R2"]]
-        else:
-            trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_tr{}_{}.fastq.gz".format(name,int(tec_rep)+1,read)) for tec_rep in range(num_reps) for read in ["R1","R2"]]
-
-    else:    
-        num_reps = len(fqfiles)
-        for tec_rep in range(num_reps):
-            if num_reps > 1:
-                prefix = "{}_tr{}".format(name,int(tec_rep)+1)
-            trimming_dict[prefix] = dict()
-            trimming_dict[prefix]['trimmed']  = [os.path.join(PATH_TRIMMED,name, "{}_R.fastq.gz".format(prefix))]
+        else:    
             trimming_dict[prefix]['raw']      = [fqfiles[tec_rep]]
-        if num_reps == 1:
-            trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_R.fastq.gz".format(name))]
-        else:
-            trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_tr{}_R.fastq.gz".format(name,int(tec_rep)+1)) for tec_rep in range(num_reps)]
-    
     return(trimming_dict)
 
 # ---------------------------------------------------------------------------- #
