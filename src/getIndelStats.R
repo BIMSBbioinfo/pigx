@@ -8,78 +8,91 @@ library(ggplot2)
 args = commandArgs(trailingOnly=TRUE)
 
 bamFile <- args[1]
-mpileupOutput <- args[2]
-parseMpileupOutput <- args[3]
-sampleName <- args[4]
-outDir <- args[5]
-cutSitesFile <- args[6] #path to sgRNA cutting sites for the target genome.
-sgRNA_list <- args[7] # column (:) separated list of sgRNA ids (must match ids in cutSitesFile)
+sampleName <- args[2]
+outDir <- args[3]
+cutSitesFile <- args[4] #path to sgRNA cutting sites for the target genome.
+sgRNA_list <- args[5] # column (:) separated list of sgRNA ids (must match ids in cutSitesFile)
                       # that were used (or desired to be profiles) for the given sample.
 
-cat("Running extractDeletionProfiles.R with arguments:",args,"\n")
+cat("Running getIndelStats with arguments:",args,"\n")
 #print bedgraph file of deletion ratios per base
 
-printIndelStats <- function (mpileupOutput, parseMpileupOutput, outDir = getwd(), sampleName) {
-  deletionScoresFile <- file.path(outDir, paste0(sampleName,'.deletionScores.bedgraph'))
-  insertionScoresFile <- file.path(outDir, paste0(sampleName,'.insertionScores.bedgraph'))
-  statsOutputFile <- file.path(outDir, paste0(sampleName,'.coverageStats.tsv'))
-  
-  #create a bedgraph file that contains deletion ratios for each base
 
-  dt1 <- fread(input = paste0("cut -f 1-4 ",mpileupOutput), header = F)
-  colnames(dt1) <- c('seqname', 'bp', 'base', 'cov')
-  dt2 <- fread(parseMpileupOutput, select = c(1,6,7))
-  dt3 <- merge(dt1[,c(2,4)], dt2, by = 'bp')
-  dt3$sample <- sampleName
-  dt3$indel <- dt3$del + dt3$ins
-
+printBedGraphFile <- function(filepath, 
+                              trackInfo,
+                              scores) {
   #write bedgraph file for deletions
-  trackDefinition <- paste0("track type=bedGraph name=",sampleName," deletion read support")
-  writeLines(text = trackDefinition, con = deletionScoresFile)
-  deletionScores <- ifelse(dt3$cov > 0, dt3$del/dt3$cov, 0)
-  bg <- data.frame(cbind(dt1$seqname,
-                         dt3$bp, dt3$bp, deletionScores), stringsAsFactors = F)
-  #convert to 0-based index
-  bg$V2 <- as.numeric(bg$V2) - 1
-  #bedgraph file
-  write.table(x = bg, file = deletionScoresFile, append = T,
-              sep = '\t', quote = F, row.names = F, col.names = F)
-
-
-  #write bedgraph file for insertions
-  trackDefinition <- paste0("track type=bedGraph name=",sampleName," insertion read support")
-  writeLines(text = trackDefinition, con = insertionScoresFile)
-  insertionScores <- ifelse(dt3$cov > 0, dt3$ins/dt3$cov, 0)
-  bg <- data.frame(cbind(dt1$seqname,
-                         dt3$bp, dt3$bp, insertionScores), stringsAsFactors = F)
-  #convert to 0-based index
-  bg$V2 <- as.numeric(bg$V2) - 1
-  #bedgraph file
-  write.table(x = bg, file = insertionScoresFile, append = T,
-              sep = '\t', quote = F, row.names = F, col.names = F)
+  trackDefinition <- paste0("track type=bedGraph name=",trackInfo)
+  writeLines(text = trackDefinition, con = filepath)
   
-  #coverage stats file
-  dt3$delRatio <- ifelse(dt3$cov > 0, dt3$del/dt3$cov, 0)
-  dt3$insRatio <- ifelse(dt3$cov > 0, dt3$ins/dt3$cov, 0)
-  dt3$indelRatio <- ifelse(dt3$cov > 0, dt3$indel/dt3$cov, 0)
+  #copy base position to have start/end equal to base position
+  scores <- scores[,c(1,2,2,3)] 
+
+  #convert to zero-based index
+  scores$bp <- as.numeric(scores$bp) - 1
   
-  write.table(x = dt3, file = statsOutputFile, append = T,
-              sep = '\t', quote = F, row.names = F, col.names = T)
-  return(dt3)
+  #bedgraph file
+  write.table(x = scores, file = filepath, append = T,
+              sep = '\t', quote = F, row.names = F, col.names = F)
 }
 
-getReadsWithInDels <- function(bamFile) {
+printCoverageStats <- function(bamFile, sampleName, outDir = getwd()) {
   aln <- readGAlignments(bamFile, param = ScanBamParam(what="qname"))
+  
+  indels <- GenomicAlignments::cigarRangesAlongReferenceSpace(cigar = cigar(aln), 
+                                                                       ops = c('I', 'D'),
+                                                                       with.ops = T, pos = start(aln))
+  names(indels) <- mcols(aln)$qname
+  
+  indels <- stack(indels)
+  seqinfo(indels) <- seqinfo(aln)
+  
+  del <- indels[which(names(indels) == 'D')]
+  ins <- indels[which(names(indels) == 'I')]
+  
+  end(ins) <- start(ins)
+  
+  alnCoverage <- GenomicAlignments::coverage(aln)[[1]]
+  
+  delCoverage <- GenomicAlignments::coverage(del)
+  #in case del coverage deosn't cover the whole alignment 
+  #fill in the remaining bases with 0 values
+  delCoverage <- c(delCoverage, rep(0, length(alnCoverage) - length(delCoverage)))
 
-  readsWithInDels <- GenomicAlignments::cigarRangesAlongReferenceSpace(cigar = cigar(aln), 
-                                                                              ops = c('I', 'D'),
-                                                                     with.ops = T, pos = start(aln))
-  names(readsWithInDels) <- mcols(aln)$qname
+  insCoverage <- GenomicAlignments::coverage(ins)
+  #fill in the remaining bases with 0 values
+  insCoverage <- c(insCoverage, rep(0, length(alnCoverage) - length(insCoverage)))
+  
+  indelCoverage <- GenomicAlignments::coverage(indels)
+  #fill in the remaining bases with 0 values
+  indelCoverage <- c(indelCoverage, rep(0, length(alnCoverage) - length(indelCoverage)))
+  
 
-  readsWithInDels <- stack(readsWithInDels)
-  seqinfo(readsWithInDels) <- seqinfo(aln)
-  return(readsWithInDels)
-}
+  df <- data.frame('seqname' = levels(seqnames(aln))[1], 
+                   'sample' = sampleName, 
+                   'bp' = 1:length(alnCoverage), 
+                   'cov' = as.vector(alnCoverage),
+                   'del' = as.vector(delCoverage),
+                   'ins' = as.vector(insCoverage),
+                   'indel' = as.vector(indelCoverage))
+  
+  #add some more stats: 
+  df$delRatio <- ifelse(df$cov > 0, df$del/df$cov, 0)
+  df$insRatio <- ifelse(df$cov > 0, df$ins/df$cov, 0)
+  df$indelRatio <- ifelse(df$cov > 0, df$indel/df$cov, 0)
+
+  #print bedgraph file 
+  indelScoresFile <- file.path(outDir, paste0(sampleName,'.indelScores.bedgraph'))
+  printBedGraphFile(file = indelScoresFile, 
+                    trackInfo = paste(sampleName, 'indel score (insertions + deletions / coverage per base)'), 
+                    scores = df[,c('seqname', 'bp', 'indelRatio')])
+  
+  #print coverage stats to file
+  statsOutputFile <- file.path(outDir, paste0(sampleName,'.coverageStats.tsv'))
+  write.table(x = df, file = statsOutputFile, append = T,
+              sep = '\t', quote = F, row.names = F, col.names = T)
+  return(indels)
+} 
 
 summarizeInDels <- function(readsWithInDels) {
   indelCoords <- data.table::data.table('qname' = as.vector(mcols(readsWithInDels)$name),
@@ -136,11 +149,13 @@ countEventsAtCutSite <- function(seqName, cutStart, cutEnd, bamFile, readsWithIn
   return(stats)
 }
 
-readsWithInDels <- getReadsWithInDels(bamFile = bamFile)
-seqName <- seqnames(seqinfo(readsWithInDels))[1]
-inDels <- summarizeInDels(readsWithInDels)
+readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir)
 
-indelStats <- printIndelStats(mpileupOutput, parseMpileupOutput, outDir, sampleName)
+seqName <- seqnames(seqinfo(readsWithInDels))[1]
+
+#TODO print indels both as raw and as a summary to file.
+#use summarizeIndels function 
+#inDels <- summarizeInDels(readsWithInDels)
 
 cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
 
@@ -171,7 +186,7 @@ cutSiteStats <- do.call(rbind, lapply(1:nrow(cutSites), function(i) {
 
 write.table(x = cutSiteStats,
             file = file.path(outDir, paste0(sampleName, '.indel_stats_at_cutsites.tsv')),
-            quote = F, sep = '\t'
+            quote = F, sep = '\t', row.names = FALSE
             )
 
 

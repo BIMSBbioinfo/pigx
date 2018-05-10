@@ -75,10 +75,7 @@ rule all:
         get_output_file_list(MAPPED_READS_DIR, "bam"), 
         get_output_file_list(MAPPED_READS_DIR, "bam.bai"), 
         get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt"),
-        get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.tsv"),                  
-        get_output_file_list(os.path.join(MAPPED_READS_DIR, "mpileup"), "mpileup.counts.tsv"),  
-        get_output_file_list(BEDGRAPH_DIR, "deletionScores.bedgraph"),
-        get_output_file_list(BEDGRAPH_DIR, "insertionScores.bedgraph"),
+        get_output_file_list(BEDGRAPH_DIR, "indelScores.bedgraph"),
         get_output_file_list(BEDGRAPH_DIR, "coverageStats.tsv"),
         get_output_file_list(BEDGRAPH_DIR, "indel_stats_at_cutsites.tsv"),
         get_output_file_list(BED_DIR, "deletions.bed"),
@@ -125,12 +122,6 @@ rule samtools_sam2bam:
     shell: "samtools view -bh {input} | samtools sort -o {output} > {log} 2>&1"
         #"samtools view -bh {input} | samtools sort | samtools rmdup -s - {output} > {log} 2>&1"
                            
-rule samtools_mpileup:
-    input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
-    output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
-    log: os.path.join(LOG_DIR, "{amplicon}", "mpileup_{sample}.log")
-    shell: "samtools mpileup {input} -o {output} > {log} 2>&1"
-
 rule samtools_indexbam:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai")
@@ -144,15 +135,6 @@ rule samtools_stats:
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.samtools.stats.txt")
     log: os.path.join(LOG_DIR, "{amplicon}", "samtools_stats.{sample}.log")
     shell: "samtools stats --reference {input.ref} {input.bamfile} > {output} 2> {log}"
-
-
-rule parse_mpileup:
-    input: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv")
-    output: os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv")
-    log: os.path.join(LOG_DIR, "{amplicon}", 'parse_mpileup.{sample}.log')
-    params:
-        script=os.path.join(SRC_DIR, "src", "parse_mpileup.py")
-    shell: "python {params.script} {input} > {output} 2> {log}"
 
 rule multiqc:
     input:
@@ -171,12 +153,9 @@ rule getIndelStats:
     input: 
         bamIndex = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai"),
         bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam"),
-        mpileupOutput = os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.tsv"), 
-        parsedMpileupOutput = os.path.join(MAPPED_READS_DIR, "mpileup", "{amplicon}", "{sample}.mpileup.counts.tsv"),
         cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
     output: 
-        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.deletionScores.bedgraph"),
-        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.insertionScores.bedgraph"),
+        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.indelScores.bedgraph"),
         os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.coverageStats.tsv"),
         os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.indel_stats_at_cutsites.tsv") 
     params:
@@ -184,7 +163,7 @@ rule getIndelStats:
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
         script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
     log: os.path.join(LOG_DIR, "{amplicon}", "getIndelStats_{sample}.log")
-    shell: "{RSCRIPT} {params.script} {input.bamFile} {input.mpileupOutput} {input.parsedMpileupOutput} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} > {log} 2>&1"
+    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} > {log} 2>&1"
         
 rule extractDeletionCoordinates:
     input:
