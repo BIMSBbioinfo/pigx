@@ -22,6 +22,7 @@ library(data.table)
 library(rtracklayer)
 library(DT)
 library(plotly)
+library(crosstalk)
 ```
 
 # Input Settings
@@ -101,10 +102,11 @@ pheatmap::pheatmap(M,
 ## Coverage as Line Plot
 
 ```{r coverage-lineplot}
-p <- ggplot(coverageStats, aes(x = bp, y = cov, group = sample)) + 
+p <- ggplot(coverageStats, aes(x = bp, y = cov, group = sample), height = 500) + 
   geom_line(aes(color = sample), show.legend = F) +   
   theme_bw() +  
   labs(x = 'base position', y = 'Number of Reads', title = paste(ampliconName, 'Coverage Profiles'))
+
 ggplotly(p)
 ```
 
@@ -121,10 +123,10 @@ plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
   
   sgRNAs <- merge(data.frame('sgRNA' = sgRNAs, 'sample_name' = sampleName), cutSites, by = 'sgRNA')
 
-  mdt <- melt(dt[,-c('ins', 'del', 'indel', 'cov')], id.vars = c('bp', 'sample'))
+  mdt <- melt(dt[,-c('ins', 'del', 'indel', 'cov')], id.vars = c('bp', 'sample', 'seqname'))
   
   p <- ggplot(mdt, aes(x = bp, y = value, group = variable)) +
-    geom_line(aes(color = variable)) + labs(title = paste(sampleName, 'Indel Profiles'))
+    geom_line(aes(color = variable)) + labs(title = sampleName)
   if(nrow(sgRNAs) > 0) {
     p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, 
                                            color = sgRNA), linetype = 'dotted')
@@ -152,7 +154,7 @@ if(length(plots) > 10) {
 }
 ```
 
-```{r plotIndelProfilesPlots, include=FALSE}
+```{r plotIndelProfilesPlots}
 out = NULL
 for (n in names(plots)) {
   p <- ggplotly(plots[[n]])
@@ -161,5 +163,89 @@ for (n in names(plots)) {
 ```
 
 `r paste(knit(text = out), collapse = '\n')`
+
+# sgRNA efficiencies at cut sites
+```{r cutSiteStats}
+# this is a table for all samples versus all cut sites in the amplicon
+# not all sample x sgRNA combinations are true, 
+# but still they are also computed to serve as a negative control
+cutSiteStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(bedgraphFolder, paste0(sampleName, '.indel_stats_at_cutsites.tsv'))
+  if(file.exists(f)) {
+    dt <- fread(f)
+    return(dt)
+  }
+})))
+
+# match samples to the actual sgRNA guides used in that sample
+sampleGuides <- lapply(sampleSheet$sample_name, function(s) {
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                   split = ':'))
+})
+names(sampleGuides) <- as.character(sampleSheet$sample_name)
+
+cutSiteStats$sampleMatchesGuide <- as.factor(apply(cutSiteStats, 1, function(x) {
+  s <- as.character(x[['sample']])
+  g <- as.character(x[['sgRNA']])
+  return(g %in% sampleGuides[[s]])
+}))
+
+plots <- lapply(as.vector(unique(cutSiteStats$sgRNA)), function(sg) {
+  dt <- cutSiteStats[sgRNA == sg & sampleMatchesGuide == TRUE]
+  if(nrow(dt) > 0) {
+    p <- ggplot(dt, aes(x = sample, y = indelEfficiency)) + 
+      geom_bar(stat = 'identity', aes(fill = sample)) + 
+      labs(title = sg) + coord_flip()
+    return(p)
+  }
+})
+names(plots) <- as.vector(unique(cutSiteStats$sgRNA))
+```
+
+
+```{r plotIndelStatsHeader, results = 'asis'}
+if(length(plots) > 10) {
+  cat("## Indel Stats At Cut Sites {.tabset .tabset-dropdown}\n\n")
+} else {
+  cat("## Indel Stats At Cut Sites {.tabset}\n\n")
+}
+```
+
+```{r plotIndelStatsPlots}
+out = NULL
+for (n in names(plots)) {
+  if(!is.null(plots[[n]])) {
+  p <- ggplotly(plots[[n]])
+  out = c(out, knitr::knit_expand(text='### {{n}} \n\n {{p}} \n\n'))
+  } else {
+    out = c(out, knitr::knit_expand(text='### {{n}} \n\n No indel data found\n\n'))
+  }
+}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+# sgRNA efficiencies at cut sites - version 2
+
+```{r}
+dts <- crosstalk::SharedData$new(cutSiteStats)
+
+bscols(widths = c(4,8),
+  list(
+    filter_checkbox("sampleMatchesGuide", "Own Guide", dts, ~factor(sampleMatchesGuide), inline = TRUE),
+    filter_select( "sgRNA", "Select sgRNA", dts, ~factor(sgRNA), allLevels = FALSE, multiple = FALSE),
+    filter_select( "sample", "Select samples", dts, ~factor(sample), allLevels = FALSE, multiple = TRUE)
+    ),
+  plotly::plot_ly(data = dts,
+                  x = ~ sgRNA,
+                  y = ~ indelEfficiency,
+                  group = ~sgRNA,
+                  color = ~sample,
+                  type = 'bar',
+                  text = ~sample,
+                  height = 500)  %>%
+    layout(showlegend = FALSE, xaxis = list(showticklabels = TRUE), barmode = 'group')
+)
+```
 
 
