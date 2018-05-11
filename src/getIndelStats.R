@@ -113,7 +113,7 @@ summarizeInDels <- function(readsWithInDels) {
 #' @param cutStart expected cutting site start pos for the sgRNA
 #' @param cutEnd expected cutting site end pos for the sgRNA
 #' @param bamFile path to bam file
-#' @param extend (integer, default 5 bp) extend the searching area from cutting
+#' @param extend (integer, default 3 bp) extend the searching area from cutting
 #'   sites in either direction
 countEventsAtCutSite <- function(seqName, cutStart, cutEnd, bamFile, readsWithInDels, extend = 3) {
   if(cutEnd < cutStart) {
