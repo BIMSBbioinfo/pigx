@@ -7,7 +7,7 @@ params:
   ampliconFastaFile: ''
   ampliconName: ''
   cutSitesFile: ''
-  bedgraphFolder: ''
+  indelsFolder: ''
   workdir: ''
   prefix: ''
 ---
@@ -23,6 +23,7 @@ library(rtracklayer)
 library(DT)
 library(plotly)
 library(crosstalk)
+library(stringr)
 ```
 
 # Input Settings
@@ -30,7 +31,7 @@ library(crosstalk)
 ampliconFastaFile <- params$ampliconFastaFile
 ampliconName <- params$ampliconName
 sampleSheetFile <- params$sampleSheetFile
-bedgraphFolder <- params$bedgraphFolder
+indelsFolder <- params$indelsFolder
 cutSitesFile <- params$cutSitesFile
 prefix <- params$prefix
 workdir <- params$workdir
@@ -39,7 +40,7 @@ inputParameterDesc <- c('Amplicon Fasta File',
                         'Amplicon Name',
                         'sgRNA Cut Sites File', 
                      'Experiment Data File',
-                     'bedgraph folder path', 
+                     'indels folder path', 
                      'Prefix for output files',
                      'Working directory'
                      )
@@ -47,7 +48,7 @@ inputParameterValues <- c(ampliconFastaFile,
                           ampliconName,
                           cutSitesFile, 
                           sampleSheetFile,
-                          bedgraphFolder, 
+                          indelsFolder, 
                           prefix,
                           workdir)
 inputSettings <- data.frame(parameters = inputParameterDesc,
@@ -82,7 +83,7 @@ DT::datatable(data = cutSites)
 ```{r coverage_heatmap}
 # import stats tables 
 coverageStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
-  f <- file.path(bedgraphFolder, paste0(sampleName, '.coverageStats.tsv'))
+  f <- file.path(indelsFolder, paste0(sampleName, '.coverageStats.tsv'))
   if(file.exists(f)) {
     dt <- data.table::fread(f)
     return(dt)
@@ -114,8 +115,8 @@ ggplotly(p)
 
 ```{r plotIndelProfiles}
 
-plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
-  f <- file.path(bedgraphFolder, paste0(sampleName, '.coverageStats.tsv'))
+plotScores <- function(indelsFolder, sampleName, sampleSheet, cutSites) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.coverageStats.tsv'))
   dt <- data.table::fread(f)
 
   sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == sampleName,]$sgRNA_ids, 
@@ -138,7 +139,7 @@ plotScores <- function(bedgraphFolder, sampleName, sampleSheet, cutSites) {
 }
 
 plots <- lapply(sampleSheet$sample_name, function(sampleName) {
-  plotScores(bedgraphFolder = bedgraphFolder, 
+  plotScores(indelsFolder = indelsFolder, 
              sampleName = sampleName, 
              sampleSheet = sampleSheet, 
              cutSites = cutSites)
@@ -170,7 +171,7 @@ for (n in names(plots)) {
 # not all sample x sgRNA combinations are true, 
 # but still they are also computed to serve as a negative control
 cutSiteStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
-  f <- file.path(bedgraphFolder, paste0(sampleName, '.indel_stats_at_cutsites.tsv'))
+  f <- file.path(indelsFolder, paste0(sampleName, '.indel_stats_at_cutsites.tsv'))
   if(file.exists(f)) {
     dt <- fread(f)
     return(dt)
@@ -248,4 +249,92 @@ bscols(widths = c(4,8),
 )
 ```
 
+# Indel diversity at cutsites {.tabset}
+
+```{r}
+# indels: a data.table object with minimal columns: start, end, 
+# cutSites: a data.frame/data.table object with minimal columns: sgRNA and cutsite
+# return: data.frame (nrow = nrow(indels), columns are sgRNA ids, 
+#         values are 1 if indel overlaps cutsite, otherwise 0. 
+overlapCutSites <- function(indels, cutSites, extend = 3) {
+  target <- IRanges(start = cutSites$cutSite - extend, 
+                    end = cutSites$cutSite + extend, 
+                    names = cutSites$sgRNA)
+  query <- IRanges(start = indels$start, end = indels$end)
+  
+  startOverlaps <- as.data.table(findOverlaps(start(query), target, type = 'any'))
+  endOverlaps <- as.data.table(findOverlaps(end(query), target, type = 'any'))
+  
+  overlaps <- merge(startOverlaps, endOverlaps, by = c('queryHits', 'subjectHits'), all = TRUE)
+  
+  M <- matrix(data = rep(0, nrow(indels) * length(target)), 
+              nrow = nrow(indels), ncol = length(target))
+  colnames(M) <- names(target)
+
+  M[as.matrix(overlaps)] <- 1
+  
+  return(M)
+}
+
+#import all detected indels (unfiltered) from all samples
+allIndels <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.indels.unfiltered.tsv'))
+  if(file.exists(f)) {
+    dt <- fread(f)
+    return(dt)
+  }
+})))
+
+#summarize indels by read support
+indelSummary <- allIndels[,length(unique(readID)), by = c('seqname', 'sample', 'start', 'end', 'indelType')]
+colnames(indelSummary)[6] <- 'ReadSupport'
+
+dt <- cbind(indelSummary, 
+            overlapCutSites(indels = indelSummary, 
+                            cutSites = cutSites, extend = 3))
+
+mdt <- melt(dt, id.vars = colnames(indelSummary))
+
+#make plots for different score thresholds, facet by samples, guides, and indel types
+supportThresholds <- c(0, 1, 5, 10)
+plots <- lapply(supportThresholds, function(s) {
+  df <- mdt[ReadSupport > s & value == 1,
+            length(seqname), 
+            by = c('sample', 'variable', 'indelType')]
+  if(nrow(df) > 0) {
+    p <- ggplot(data = df, aes(x = sample, y = variable)) + 
+    #geom_point(aes(size = V1)) + 
+    geom_tile(aes(fill = V1)) 
+    if(nrow(df) < 250) {
+      p <- p + 
+        geom_text(aes(label = V1), color = 'white') + facet_wrap(~ indelType, ncol = 1) 
+    }
+    p <- p + theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90), legend.position = 'none')
+    return(p)
+  } else {
+    NULL
+  }
+})
+names(plots) <- paste("Read Support >",supportThresholds)
+```
+
+```{r plotGenotypeDiversity, results='asis', fig.height=8}
+for (i in 1:length(plots)) {
+  cat("## ",names(plots)[i],"\n\n")
+  p <- plots[[i]]
+  if(!is.null(p)) {
+    print(plots[[i]])
+  } else {
+    cat("No genotypes detected")
+  }
+  cat("\n\n")
+}
+```
+
+
+# R Session Information
+```{r}
+print(sessionInfo())
+```
 
