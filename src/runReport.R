@@ -9,8 +9,8 @@
 #' @param ampliconFastaFile Path to the fasta file for the targeted amplicon
 #' @param ampliconName Name of the amplicon (should be same as written
 #' in sampleSheetFile amplicon column, and the header in the fasta file)
-#' @param bedgraphFolder Path to the folder containing bedgraph files output
-#'   from the pipeline
+#' @param indelsFolder Path to the folder containing output of getIndelStats.R
+#' script, which includes bedgraph, bed, and tsv files related to indels
 #' @param cutSitesFile Path to the tab separated two column file containing
 #' cut sites (target sites of the designed sgRNAs)
 #' @param workdir Path to working directory where the output files will be
@@ -24,7 +24,7 @@ runReport <- function(reportFile,
                       ampliconFastaFile,
                       ampliconName, 
                       cutSitesFile,
-                      bedgraphFolder, 
+                      indelsFolder, 
                       workdir,
                       prefix
                       ) {
@@ -52,7 +52,7 @@ runReport <- function(reportFile,
     params = list(ampliconFastaFile = ampliconFastaFile,
                   ampliconName = ampliconName, 
                   sampleSheetFile = sampleSheetFile,
-                  bedgraphFolder = bedgraphFolder, 
+                  indelsFolder = indelsFolder, 
                   cutSitesFile = cutSitesFile,
                   workdir = workdir,
                   prefix = prefix
@@ -88,8 +88,8 @@ pipeline
 in sampleSheetFile amplicon column, and the header in the fasta file)
 --cutSitesFile Path to the tab separated two column file containing
 cut sites (target sites of the designed sgRNAs)
---bedgraphFolder Path to the folder containing bedgraph files output
-from the pipeline
+--indelsFolder Path to the folder containing output of getIndelStats.R
+script, which includes bedgraph, bed, and tsv files related to indels
 --prefix (Optional, default: 'comparison1') Prefix to be attached to the beginning 
 of output files
 --workdir (Optional, default: 'current working directory')
@@ -101,7 +101,7 @@ Rscript runReport.R \\\
 --ampliconFastaFile=./myGene.fasta \\\
 --ampliconName=myGene \\\
 --cutSitesFile=myGene.cutsites.gff \\\
---bedgraphFolder=./bedgraph/ampliconName/ \\\
+--indelsFolder=./indels/ampliconName/ \\\
 --workdir=`pwd` \\\
 --prefix='myGene' \\\
 "
@@ -153,9 +153,9 @@ if(!("cutSitesFile" %in% argsDF$V1)) {
   stop("Missing argument: cutSitesFile Provide path to the cut sites file\n")
 }
 
-if(!("bedgraphFolder" %in% argsDF$V1)) {
+if(!("indelsFolder" %in% argsDF$V1)) {
   cat(help_command, "\n")
-  stop("Missing argument: bedgraphFolder Provide the path to bedgraph output folder\n")
+  stop("Missing argument: indelsFolder Provide the path to indels output folder\n")
 }
 
 if(!("prefix" %in% argsDF$V1)) {
@@ -179,7 +179,7 @@ reportFile = argsL$reportFile
 sampleSheetFile = argsL$sampleSheetFile
 ampliconFastaFile = argsL$ampliconFastaFile
 ampliconName = argsL$ampliconName
-bedgraphFolder = argsL$bedgraphFolder
+indelsFolder = argsL$indelsFolder
 cutSitesFile = argsL$cutSitesFile
 
 runReport(reportFile = reportFile, 
@@ -187,6 +187,6 @@ runReport(reportFile = reportFile,
           ampliconFastaFile = ampliconFastaFile,
           ampliconName = ampliconName, 
           cutSitesFile = cutSitesFile, 
-          bedgraphFolder = bedgraphFolder,
+          indelsFolder = indelsFolder,
           prefix = prefix, 
           workdir = workdir)

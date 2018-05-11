@@ -193,7 +193,7 @@ write.table(x = cutSiteStats,
             quote = F, sep = '\t', row.names = FALSE
             )
 
-#TODO print indels both as raw and as a summary to file.
+#TODO print summarized indels both as raw and as a summary to file.
 #use summarizeIndels function 
 indels <- summarizeInDels(readsWithInDels)
 indels$seqname <- seqName
@@ -220,5 +220,15 @@ printBedFile(outDir = outDir, sampleName = sampleName,
              df = insertions, 
              tracktype = 'insertions')
 
+#write all unfiltered indels to file 
+dt <- cbind(as.data.table(readsWithInDels), as.data.table(mcols(readsWithInDels)))
+dt$seqname <- seqName
+dt$sample <- sampleName
+dt <- dt[,c('seqname', 'sample', 'start', 'end', 'width', 'names', 'name')]
+colnames(dt)[6:7] <- c('indelType', 'readID')
+
+write.table(x = dt,
+            file = file.path(outDir, paste0(sampleName, '.indels.unfiltered.tsv')),
+            quote = F, sep = '\t', col.names = T, row.names = F, append = T)
 
 

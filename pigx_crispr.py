@@ -24,9 +24,8 @@ LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'aln')
-BEDGRAPH_DIR      = os.path.join(OUTPUT_DIR, 'bedgraph')
+INDELS_DIR      = os.path.join(OUTPUT_DIR, 'indels')
 BBMAP_INDEX_DIR   = os.path.join(OUTPUT_DIR, 'bbmap_indexes')
-BED_DIR           = os.path.join(OUTPUT_DIR, 'bed') 
 REPORT_DIR        = os.path.join(OUTPUT_DIR, 'reports')
 
 #other parameters
@@ -75,10 +74,12 @@ rule all:
         get_output_file_list(MAPPED_READS_DIR, "bam"), 
         get_output_file_list(MAPPED_READS_DIR, "bam.bai"), 
         get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt"),
-        get_output_file_list(BEDGRAPH_DIR, "indelScores.bedgraph"),
-        get_output_file_list(BEDGRAPH_DIR, "coverageStats.tsv"),
-        get_output_file_list(BEDGRAPH_DIR, "indel_stats_at_cutsites.tsv"),
-        get_output_file_list(BED_DIR, "deletions.bed"),
+        get_output_file_list(INDELS_DIR, "indelScores.bedgraph"),
+        get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
+        get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
+        get_output_file_list(INDELS_DIR, "deletions.bed"),
+        get_output_file_list(INDELS_DIR, "insertions.bed"),
+        get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
         expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys())
@@ -155,45 +156,36 @@ rule getIndelStats:
         bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam"),
         cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
     output: 
-        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.indelScores.bedgraph"),
-        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.coverageStats.tsv"),
-        os.path.join(BEDGRAPH_DIR, "{amplicon}", "{sample}.indel_stats_at_cutsites.tsv") 
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indelScores.bedgraph"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.coverageStats.tsv"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indel_stats_at_cutsites.tsv"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.deletions.bed"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertions.bed"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indels.unfiltered.tsv")
     params:
-        outdir=os.path.join(BEDGRAPH_DIR, "{amplicon}"),
+        outdir=os.path.join(INDELS_DIR, "{amplicon}"),
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
         script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
     log: os.path.join(LOG_DIR, "{amplicon}", "getIndelStats_{sample}.log")
     shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} > {log} 2>&1"
         
-rule extractDeletionCoordinates:
-    input:
-        bamIndex = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai"),
-        bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
-    params:
-        outdir = os.path.join(BED_DIR, "{amplicon}"),
-        script= os.path.join(SRC_DIR, "src", "extractDeletionCoordinates.R")
-    output:
-        os.path.join(BED_DIR, "{amplicon}", "{sample}.deletions.bed")
-    log: os.path.join(LOG_DIR, "{amplicon}", "extractDeletionCoordinates_{sample}.log")
-    shell:
-        "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} > {log} 2>&1"
-        
-         
+          
 rule report:
   input:
-    coverageStats = get_output_file_list(BEDGRAPH_DIR, "coverageStats.tsv"),
-    cutsiteStats = get_output_file_list(BEDGRAPH_DIR, "indel_stats_at_cutsites.tsv")             
+    coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
+    cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
+    indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")
   params:
     fasta = lambda wildcards: get_amplicon_file(wildcards, 'fasta'),
     cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
     reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
     reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
-    bedgraphFolder = os.path.join(BEDGRAPH_DIR, "{amplicon}")
+    indelsFolder = os.path.join(INDELS_DIR, "{amplicon}")
   log: os.path.join(LOG_DIR, "{amplicon}.report.log")
   output:
     os.path.join(REPORT_DIR, '{amplicon}.report.html')
   shell:
-    "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --bedgraphFolder={params.bedgraphFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"        
+    "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"        
     
     
     
