@@ -45,12 +45,11 @@ printCoverageStats <- function(bamFile, sampleName, outDir = getwd()) {
   names(indels) <- mcols(aln)$qname
   
   indels <- stack(indels)
+  end(indels[which(names(indels) == 'I')]) <- start(indels[which(names(indels) == 'I')]) + 1
   seqinfo(indels) <- seqinfo(aln)
   
   del <- indels[which(names(indels) == 'D')]
   ins <- indels[which(names(indels) == 'I')]
-  
-  end(ins) <- start(ins)
   
   alnCoverage <- GenomicAlignments::coverage(aln)[[1]]
   
@@ -149,13 +148,18 @@ countEventsAtCutSite <- function(seqName, cutStart, cutEnd, bamFile, readsWithIn
   return(stats)
 }
 
+printBedFile <- function(outDir, sampleName, df, tracktype) {
+  outfile <- file.path(outDir, paste0(sampleName, '.', tracktype, ".bed"))
+  writeLines(text = paste0("track name=\"",sampleName," top 100 ",tracktype," useScore=1"),
+             con = outfile)
+  write.table(x = df,
+              file = outfile,
+              quote = F, sep = '\t', col.names = F, row.names = F, append = T)
+}
+
 readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir)
 
 seqName <- seqnames(seqinfo(readsWithInDels))[1]
-
-#TODO print indels both as raw and as a summary to file.
-#use summarizeIndels function 
-#inDels <- summarizeInDels(readsWithInDels)
 
 cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
 
@@ -189,8 +193,32 @@ write.table(x = cutSiteStats,
             quote = F, sep = '\t', row.names = FALSE
             )
 
+#TODO print indels both as raw and as a summary to file.
+#use summarizeIndels function 
+indels <- summarizeInDels(readsWithInDels)
+indels$seqname <- seqName
 
+#print to BED file only top indels based on read support
+#because it doesn't make sense to load every deletion  
+topN <- 100 
 
+#print summarized deletions to BED file
+deletions <- indels[ type == 'D', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
+if(nrow(deletions) > topN) {
+  deletions <- deletions[1:100,]
+}
+printBedFile(outDir = outDir, sampleName = sampleName, 
+             df = deletions, 
+             tracktype = 'deletions')
+
+#print summarized insertions to BED file
+insertions <- indels[ type == 'I', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
+if(nrow(insertions) > topN) {
+  insertions <- insertions[1:100,]
+}
+printBedFile(outDir = outDir, sampleName = sampleName, 
+             df = insertions, 
+             tracktype = 'insertions')
 
 
 
