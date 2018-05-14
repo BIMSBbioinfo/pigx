@@ -57,14 +57,12 @@ DT::datatable(data = inputSettings,
 # Comparisons to make 
 ```{r parse-comparison-table}
 comp <- data.table::fread(comparisonsFile)
-DT::datatable(data = comp, filter = 'bottom')
 if(!ampliconName %in% comp$amplicon) {
   stop("There are no comparisons available for amplicon:",ampliconName,
        "in the file:",comparisonsFile,"\n")
 }
-
 comp <- comp[amplicon %in% ampliconName]
-
+DT::datatable(data = comp, filter = 'bottom')
 ```
 
 # Prepare datasets for comparison 
