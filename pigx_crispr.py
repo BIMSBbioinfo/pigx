@@ -70,24 +70,24 @@ def get_output_file_list(DIR, ext):
 
 rule all:
     input:
-        os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv'),
-        os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv'),
-        get_output_file_list(FASTQC_DIR, "fastqc.done"),
-        get_output_file_list(TRIMMED_READS_DIR, "fastq.gz"),
-        get_output_file_list(MAPPED_READS_DIR, "sam"),
-        get_output_file_list(MAPPED_READS_DIR, "bam"), 
-        get_output_file_list(MAPPED_READS_DIR, "bam.bai"), 
-        get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt"),
-        get_output_file_list(INDELS_DIR, "indelScores.bedgraph"),
-        get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
-        get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
-        get_output_file_list(INDELS_DIR, "deletions.bed"),
-        get_output_file_list(INDELS_DIR, "insertions.bed"),
-        get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
-        os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
-        expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
-        expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys()),
-        expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISONS.keys())
+        ancient(os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv')),
+        ancient(os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv')),
+        ancient(get_output_file_list(FASTQC_DIR, "fastqc.done")),
+        ancient(get_output_file_list(TRIMMED_READS_DIR, "fastq.gz")),
+        #get_output_file_list(MAPPED_READS_DIR, "sam"),
+        ancient(get_output_file_list(MAPPED_READS_DIR, "bam")), 
+        ancient(get_output_file_list(MAPPED_READS_DIR, "bam.bai")), 
+        ancient(get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt")),
+        ancient(get_output_file_list(INDELS_DIR, "indelScores.bedgraph")),
+        ancient(get_output_file_list(INDELS_DIR, "coverageStats.tsv")),
+        ancient(get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv")),
+        ancient(get_output_file_list(INDELS_DIR, "deletions.bed")),
+        ancient(get_output_file_list(INDELS_DIR, "insertions.bed")),
+        ancient(get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")),
+        ancient(os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html")),
+        ancient(expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())),
+        ancient(expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys())),
+        ancient(expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISONS.keys()))
 
 rule get_comparisons:
     output: 
