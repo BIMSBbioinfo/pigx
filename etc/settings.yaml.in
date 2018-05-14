@@ -136,7 +136,7 @@ tools:
 # HARDCODED adapter parameters
 # This variable extands the pipeline to various technologies. It defines
 # The locations of cell and UMI adapters in fastq1
-# Currently supprorted technologies are dropseq and chromium10x
+# Currently supprorted technologies are dropseq, chromium10x, and 1cellbio
 # base_min/max define the position of the adapters in the fastq file
 adapter_parameters:
    dropseq:
