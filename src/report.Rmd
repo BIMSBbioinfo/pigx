@@ -23,7 +23,6 @@ library(rtracklayer)
 library(DT)
 library(plotly)
 library(crosstalk)
-library(stringr)
 ```
 
 # Input Settings
@@ -58,7 +57,7 @@ DT::datatable(data = inputSettings,
               extensions = 'FixedColumns',
               options = list(fixedColumns = TRUE,
                          scrollX = TRUE,
-                         pageLength = 9,
+                         pageLength = nrow(inputSettings),
                          dom = 't'))
 ```
 

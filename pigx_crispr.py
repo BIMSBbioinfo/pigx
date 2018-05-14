@@ -30,8 +30,10 @@ REPORT_DIR        = os.path.join(OUTPUT_DIR, 'reports')
 
 #other parameters
 AMPLICONS = config.get('amplicons', {})
-nodeN = config['nodeN']
 
+COMPARISONS = config.get('comparisons', {})
+
+nodeN = config['nodeN']
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
@@ -64,10 +66,12 @@ def get_output_file_list(DIR, ext):
         amplicon = lookup('sample_name', sample, ['amplicon'])[0]
         paths.append(os.path.join(DIR, amplicon, ".".join([sample, ext])))
     return(paths)
-
+    
 
 rule all:
     input:
+        os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv'),
+        os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv'),
         get_output_file_list(FASTQC_DIR, "fastqc.done"),
         get_output_file_list(TRIMMED_READS_DIR, "fastq.gz"),
         get_output_file_list(MAPPED_READS_DIR, "sam"),
@@ -82,7 +86,30 @@ rule all:
         get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
-        expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys())
+        expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys()),
+        expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISONS.keys())
+
+rule get_comparisons:
+    output: 
+        os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv'),
+        os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv')
+    run:        
+        f1 = open(os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv'), 'w')
+        f1.write('\t'.join(['amplicon', 'comparison', 'case_samples', 'control_samples', '\n']))
+        f1.write(''.join(['\t'.join(['amplicon', 'comparison', 'case_samples', 'control_samples']), '\n']))
+        
+        f2 = open(os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv'), 'w') 
+        f2.write(''.join(['\t'.join(['amplicon', 'comparison', 'sample_series']), '\n']))
+        
+        for amplicon, comp_dict in COMPARISONS.items():
+            for comp, d  in comp_dict.items():
+                if('case_samples' in d.keys() and 'control_samples' in d.keys()):
+                    f1.write(''.join(['\t'.join([amplicon, comp, d['case_samples'], d['control_samples']]), '\n']))
+                if('time_series' in d.keys()):
+                    f2.write(''.join(['\t'.join([amplicon, comp, d['time_series']]), '\n']))
+        f1.close()
+        f2.close()
+
 
 rule fastqc:
     input: reads_input      
@@ -171,21 +198,44 @@ rule getIndelStats:
         
           
 rule report:
-  input:
-    coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
-    cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
-    indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")
-  params:
-    fasta = lambda wildcards: get_amplicon_file(wildcards, 'fasta'),
-    cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
-    reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
-    reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
-    indelsFolder = os.path.join(INDELS_DIR, "{amplicon}")
-  log: os.path.join(LOG_DIR, "{amplicon}.report.log")
-  output:
-    os.path.join(REPORT_DIR, '{amplicon}.report.html')
-  shell:
-    "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"        
+    input:
+        coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
+        cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
+        indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")
+    params:
+      fasta = lambda wildcards: get_amplicon_file(wildcards, 'fasta'),
+      cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
+      reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
+      reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
+      indelsFolder = os.path.join(INDELS_DIR, "{amplicon}")
+    log: os.path.join(LOG_DIR, "{amplicon}.report.log")
+    output:
+        os.path.join(REPORT_DIR, '{amplicon}.report.html')
+    shell:
+        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"        
     
+
+rule report_comparisons:
+    input:
+        coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
+        cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
+        indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
+        comp = os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv')
+    params:
+        reportR = os.path.join(SRC_DIR, "src", "runReport.comparisons.R"),
+        reportRmd = os.path.join(SRC_DIR, "src", "report.comparisons.Rmd"),
+        indelsFolder = os.path.join(INDELS_DIR, "{amplicon}"),
+        outDir = os.path.join(REPORT_DIR, 'comparisons'),
+    log: os.path.join(LOG_DIR, "{amplicon}.report.comparisons.log")
+    output:
+        os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html')
+    shell:
+        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={input.comp} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"        
     
+
+       
+         
+ 
+    
+        
     
