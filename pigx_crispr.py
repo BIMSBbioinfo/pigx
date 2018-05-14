@@ -95,7 +95,6 @@ rule get_comparisons:
         os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv')
     run:        
         f1 = open(os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv'), 'w')
-        f1.write('\t'.join(['amplicon', 'comparison', 'case_samples', 'control_samples', '\n']))
         f1.write(''.join(['\t'.join(['amplicon', 'comparison', 'case_samples', 'control_samples']), '\n']))
         
         f2 = open(os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv'), 'w') 
