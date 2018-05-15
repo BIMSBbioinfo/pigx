@@ -6,7 +6,6 @@ params:
   ampliconName: ''
   indelsFolder: ''
   comparisonsFile: '' 
-  comparisonMode: ''
   workdir: ''
   prefix: ''
 ---
