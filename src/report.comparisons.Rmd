@@ -128,12 +128,15 @@ comparePerBaseScores <- function(coverageStats, caseSample, controlSample, indel
     return(data.frame('bp' = i, 'oddsRatio' = oddsRatio, 'pval' = pVal))
   }))
   
+  results$padj <- p.adjust(results$pval)
+  
   results <- merge(data.frame('bp' = case$bp, 
                         'case' = caseSample, 
                         'control' = controlSample,
+                        'indelType' = indelType,
                         'log2FoldChange' = log2FoldChange, 
-                        'difference' = difference, 
-                        'indelType' = indelType), results, by = 'bp')
+                        'difference' = difference), results, by = 'bp')
+          
   return(results)
 }
 ```
@@ -153,11 +156,15 @@ results <- as.data.frame(do.call(rbind, lapply(comp$comparison, function(x) {
 plots <- lapply(unique(results$comparison), function(x){
   plots <- lapply(unique(results$indelType), function(indelType) {
     df <- results[results$comparison == x & results$indelType == indelType,]
+    
+    #segment the profiles and calculate average p-values in each segment
     segments <- as.data.frame(fastseg::fastseg(df$difference))
-    segments$mean.pval <- sapply(1:nrow(segments), function(i) {
-      mean(df[df$bp >= segments[i, 'start'] & df$bp <= segments[i, 'end'],]$pval)
+    segments$mean.padj <- sapply(1:nrow(segments), function(i) {
+      mean(df[df$bp >= segments[i, 'start'] & df$bp <= segments[i, 'end'],]$padj)
     })
-    segments$label <- gtools::stars.pval(segments$mean.pval)
+    #map p-values to stars for visualisation
+    segments$label <- gtools::stars.pval(segments$mean.padj)
+    
     p <- ggplot(df, aes(x = bp, y = difference)) + 
       geom_point(aes(color = pval < 0.05)) + 
       geom_segment(data = segments, aes(x = start, xend = end, 
