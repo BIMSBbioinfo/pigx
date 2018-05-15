@@ -16,6 +16,7 @@ SRC_DIR = config['source-dir']
 READS_DIR = config['reads-dir']
 ADAPTERS = config['adapters']
 SAMPLE_SHEET_FILE = config['sample_sheet']
+COMPARISONS_FILE = config.get('comparisonsFile', {})
 
 #output locations
 OUTPUT_DIR = config['output-dir']
@@ -30,10 +31,9 @@ REPORT_DIR        = os.path.join(OUTPUT_DIR, 'reports')
 
 #other parameters
 AMPLICONS = config.get('amplicons', {})
-
-COMPARISONS = config.get('comparisons', {})
-
 nodeN = config['nodeN']
+
+
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
@@ -67,47 +67,31 @@ def get_output_file_list(DIR, ext):
         paths.append(os.path.join(DIR, amplicon, ".".join([sample, ext])))
     return(paths)
     
+## Check which amplicons are needed for comparisons are to be made
+with open(COMPARISONS_FILE, 'r') as fp:
+  rows =  [row for row in csv.reader(fp, delimiter='\t')]
+  header = rows[0]; rows = rows[1:]
+  COMPARISONS = [dict(zip(header, row)) for row in rows]
+  COMPARISON_AMPLICONS = [COMPARISONS[i]['amplicon'] for i in range(len(COMPARISONS))]
 
+    
 rule all:
     input:
-        ancient(os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv')),
-        ancient(os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv')),
-        ancient(get_output_file_list(FASTQC_DIR, "fastqc.done")),
-        ancient(get_output_file_list(TRIMMED_READS_DIR, "fastq.gz")),
-        #get_output_file_list(MAPPED_READS_DIR, "sam"),
-        ancient(get_output_file_list(MAPPED_READS_DIR, "bam")), 
-        ancient(get_output_file_list(MAPPED_READS_DIR, "bam.bai")), 
-        ancient(get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt")),
-        ancient(get_output_file_list(INDELS_DIR, "indelScores.bedgraph")),
-        ancient(get_output_file_list(INDELS_DIR, "coverageStats.tsv")),
-        ancient(get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv")),
-        ancient(get_output_file_list(INDELS_DIR, "deletions.bed")),
-        ancient(get_output_file_list(INDELS_DIR, "insertions.bed")),
-        ancient(get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")),
-        ancient(os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html")),
-        ancient(expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys())),
-        ancient(expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys())),
-        ancient(expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISONS.keys()))
-
-rule get_comparisons:
-    output: 
-        os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv'),
-        os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv')
-    run:        
-        f1 = open(os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv'), 'w')
-        f1.write(''.join(['\t'.join(['amplicon', 'comparison', 'case_samples', 'control_samples']), '\n']))
-        
-        f2 = open(os.path.join(OUTPUT_DIR, 'comparisons.time-series.tsv'), 'w') 
-        f2.write(''.join(['\t'.join(['amplicon', 'comparison', 'sample_series']), '\n']))
-        
-        for amplicon, comp_dict in COMPARISONS.items():
-            for comp, d  in comp_dict.items():
-                if('case_samples' in d.keys() and 'control_samples' in d.keys()):
-                    f1.write(''.join(['\t'.join([amplicon, comp, d['case_samples'], d['control_samples']]), '\n']))
-                if('time_series' in d.keys()):
-                    f2.write(''.join(['\t'.join([amplicon, comp, d['time_series']]), '\n']))
-        f1.close()
-        f2.close()
+        get_output_file_list(FASTQC_DIR, "fastqc.done"),
+        get_output_file_list(TRIMMED_READS_DIR, "fastq.gz"),
+        get_output_file_list(MAPPED_READS_DIR, "bam"), 
+        get_output_file_list(MAPPED_READS_DIR, "bam.bai"), 
+        get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt"),
+        get_output_file_list(INDELS_DIR, "indelScores.bedgraph"),
+        get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
+        get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
+        get_output_file_list(INDELS_DIR, "deletions.bed"),
+        get_output_file_list(INDELS_DIR, "insertions.bed"),
+        get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
+        os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
+        expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
+        expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys()),
+        expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISON_AMPLICONS)
 
 
 rule fastqc:
@@ -219,7 +203,7 @@ rule report_comparisons:
         coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
         cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
         indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
-        comp = os.path.join(OUTPUT_DIR, 'comparisons.case-control.tsv')
+        comp = COMPARISONS_FILE
     params:
         reportR = os.path.join(SRC_DIR, "src", "runReport.comparisons.R"),
         reportRmd = os.path.join(SRC_DIR, "src", "report.comparisons.Rmd"),
@@ -229,7 +213,7 @@ rule report_comparisons:
     output:
         os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html')
     shell:
-        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={input.comp} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"        
+        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={COMPARISONS_FILE} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"        
     
 
        

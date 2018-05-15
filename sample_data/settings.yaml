@@ -19,10 +19,4 @@ nodeN: 4
 tools:
     Rscript: /usr/bin/Rscript
 
-comparisons:
-    dpy-10: 
-        c1:
-            case_samples: 'phen_dpy-10_sg1sg2_16'
-            control_samples: 'phen_dpy-10_N2_16'
-        c2:
-            time_series: 'phen_dpy-10_N2_16, phen_dpy-10_sg1sg2_16'
+comparisonsFile: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/comparisons.tsv
