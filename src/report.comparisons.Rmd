@@ -18,6 +18,7 @@ library(ggplot2)
 library(ggrepel)
 library(data.table)
 library(plotly)
+library(knitr)
 ```
 
 The goal of this script is to compare indel scores/frequencies between two sample groups in
@@ -175,13 +176,17 @@ names(plots) <- unique(results$comparison)
 
 ## Significantly Affected Base Positions/Segments 
 
-```{r, results = 'asis'}
-for(c in names(plots)) {
-  cat('### Comparison ',c,' {.tabset} \n\n')
-  for(t in names(plots[[c]])) {
-    cat('#### ',t,'\n\n')
-    print(plots[[c]][[t]])
-    cat("\n\n")
+```{r plotIndelProfilesPlots}
+out = NULL
+for (comparison in names(plots)) {
+  out = c(out, knitr::knit_expand(text='### Comparison {{comparison}} {.tabset} \n\n'))
+  for (indelType in names(plots[[comparison]])) {
+    p <- ggplotly(plots[[comparison]][[indelType]])
+    out = c(out, knitr::knit_expand(text='#### {{indelType}} \n\n {{p}} \n\n'))
   }
 }
 ```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+
