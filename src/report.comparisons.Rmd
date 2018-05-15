@@ -133,6 +133,10 @@ comparePerBaseScores <- function(coverageStats, caseSample, controlSample, indel
   results <- merge(data.frame('bp' = case$bp, 
                         'case' = caseSample, 
                         'control' = controlSample,
+                        'caseScore' = caseScore,
+                        'caseCov' = caseCov, 
+                        'controlScore' = controlScore,
+                        'controlCov' = controlCov,
                         'indelType' = indelType,
                         'log2FoldChange' = log2FoldChange, 
                         'difference' = difference), results, by = 'bp')
@@ -166,7 +170,7 @@ plots <- lapply(unique(results$comparison), function(x){
     segments$label <- gtools::stars.pval(segments$mean.padj)
     
     p <- ggplot(df, aes(x = bp, y = difference)) + 
-      geom_point(aes(color = pval < 0.05)) + 
+      geom_point(aes(color = padj < 0.05)) + 
       geom_segment(data = segments, aes(x = start, xend = end, 
                                         y = seg.mean, yend = seg.mean)) + 
       geom_text(data = segments, aes(x = (start+end)/2, y = seg.mean, 
@@ -179,6 +183,9 @@ plots <- lapply(unique(results$comparison), function(x){
 })
 names(plots) <- unique(results$comparison)
 
+#save stats to file
+statsOutFile <- file.path(workdir, paste0(ampliconName, '.comparison.stats.tsv'))
+write.table(x = results, file = statsOutFile, quote = FALSE, sep = '\t', row.names = FALSE)
 ```
 
 ## Significantly Affected Base Positions/Segments 

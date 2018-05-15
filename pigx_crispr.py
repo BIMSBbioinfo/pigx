@@ -91,7 +91,8 @@ rule all:
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
         expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys()),
-        expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISON_AMPLICONS)
+        expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISON_AMPLICONS),
+        expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv'), amplicon=COMPARISON_AMPLICONS)
 
 
 rule fastqc:
@@ -211,7 +212,8 @@ rule report_comparisons:
         outDir = os.path.join(REPORT_DIR, 'comparisons'),
     log: os.path.join(LOG_DIR, "{amplicon}.report.comparisons.log")
     output:
-        os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html')
+        os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'),
+        os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv')
     shell:
         "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={COMPARISONS_FILE} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"        
     
