@@ -155,10 +155,18 @@ adapter_parameters:
            base_min: 17
            base_max: 26
 
-   1cell8:
+    1cell8:
        cell_barcode:
            base_min: 1
            base_max: 11
        umi_barcode:
            base_min: 12
            base_max: 25
+
+   CEL-Seq2:
+       cell_barcode:
+           base_min: 7
+           base_max: 12
+       umi_barcode:
+           base_min: 1
+           base_max: 6
