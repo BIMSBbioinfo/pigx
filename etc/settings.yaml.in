@@ -155,7 +155,7 @@ adapter_parameters:
            base_min: 17
            base_max: 26
 
-   1cellbio:
+   1cell8:
        cell_barcode:
            base_min: 1
            base_max: 11
