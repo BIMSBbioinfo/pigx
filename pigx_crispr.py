@@ -110,7 +110,7 @@ rule trimmomatic:
     input: reads_input
     output: os.path.join(TRIMMED_READS_DIR, "{amplicon}", "{sample}.fastq.gz")
     log: os.path.join(LOG_DIR, "{amplicon}", "trimmomatic.{sample}.log")
-    shell: "trimmomatic SE -threads {nodeN} {input} {output} \
+    shell: "trimmomatic SE -threads 2 {input} {output} \
        ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 > {log} 2>&1"
 
 rule bbmap_indexgenome:
@@ -127,7 +127,7 @@ rule bbmap_map:
         os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
     log: os.path.join(LOG_DIR, "{amplicon}", "bbmap_{sample}.log")
     shell:
-        "bbmap.sh path={input.ref} in={input.reads} outm={output} t={nodeN} sam=1.3 > {log} 2>&1"
+        "bbmap.sh path={input.ref} in={input.reads} outm={output} t=2 sam=1.3 > {log} 2>&1"
 
 rule samtools_sam2bam:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
