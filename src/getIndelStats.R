@@ -80,11 +80,21 @@ printCoverageStats <- function(bamFile, sampleName, outDir = getwd()) {
   df$insRatio <- ifelse(df$cov > 0, df$ins/df$cov, 0)
   df$indelRatio <- ifelse(df$cov > 0, df$indel/df$cov, 0)
 
-  #print bedgraph file 
+  #print bedgraph file for indels
   indelScoresFile <- file.path(outDir, paste0(sampleName,'.indelScores.bedgraph'))
   printBedGraphFile(file = indelScoresFile, 
                     trackInfo = paste(sampleName, 'indel score (insertions + deletions / coverage per base)'), 
                     scores = df[,c('seqname', 'bp', 'indelRatio')])
+  #print bedgraph file for deletions
+  deletionScoresFile <- file.path(outDir, paste0(sampleName,'.deletionScores.bedgraph'))
+  printBedGraphFile(file = deletionScoresFile, 
+                    trackInfo = paste(sampleName, 'deletion score (deletions / coverage per base)'), 
+                    scores = df[,c('seqname', 'bp', 'delRatio')])
+  #print bedgraph file for insertions
+  insertionScoresFile <- file.path(outDir, paste0(sampleName,'.insertionScores.bedgraph'))
+  printBedGraphFile(file = insertionScoresFile, 
+                    trackInfo = paste(sampleName, 'insertion score (insertions / coverage per base)'), 
+                    scores = df[,c('seqname', 'bp', 'insRatio')])
   
   #print coverage stats to file
   statsOutputFile <- file.path(outDir, paste0(sampleName,'.coverageStats.tsv'))

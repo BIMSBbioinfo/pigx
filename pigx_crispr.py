@@ -83,6 +83,8 @@ rule all:
         get_output_file_list(MAPPED_READS_DIR, "bam.bai"), 
         get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt"),
         get_output_file_list(INDELS_DIR, "indelScores.bedgraph"),
+        get_output_file_list(INDELS_DIR, "deletionScores.bedgraph"),
+        get_output_file_list(INDELS_DIR, "insertionScores.bedgraph"),
         get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
         get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
         get_output_file_list(INDELS_DIR, "deletions.bed"),
@@ -168,6 +170,8 @@ rule getIndelStats:
         cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
     output: 
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indelScores.bedgraph"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.deletionScores.bedgraph"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertionScores.bedgraph"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.coverageStats.tsv"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indel_stats_at_cutsites.tsv"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.deletions.bed"),
