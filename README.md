@@ -188,12 +188,14 @@ The samples used for any subsequent analysis are defined in the _sample sheet_ s
 
 #### Technical Replicates
 
-The current sample sheet does not support multiple technical replicates for one sample, so replicates need to be combined prior to running the pipeline.   
-This could be done by concatenating the respective files (for uncompressed or compressed files):
+The sample sheet offers support for technical replicates, by repeating the sample name (first column) for different input files (second,third column).
+The quality check will be performed for any input file and replicates will be merged during the mapping. 
 
-```sh
-cat sample_tecrep1.fq.gz sample_tecrep2.fq.gz [..] > sample.fq.gz
-```
+
+| SampleName | Read | Read2 |
+|------|-------|--------|
+|ChIPpe| ChIPpe_R1.fq.gz | ChIPpe_R2.fq.gz |
+|ChIPpe| ChIPpe_t2_R1.fq.gz | ChIPpe_t2_R2.fq.gz |
 
 ### Settings File
 
