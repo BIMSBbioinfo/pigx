@@ -19,7 +19,9 @@ general:
         extend: 200
         scale_bw: 'yes'
     bowtie2:
-        k: 1
+        # set k if you want to report at most k alignments per read
+        #k: 4
+        N: 0
     bam_filter:
         mapq: 0
         deduplicate: no
