@@ -162,8 +162,11 @@ for i in NAMES:
 # due to the different names for trimmmed output files next lines construct
 # Trim Galore output files
 TRIM_GALORE_DICT = {}
+TRIM_GALORE_FILES = {}
 for name in NAMES:
-    TRIM_GALORE_DICT[name] = get_trimmed_input(name) 
+    TRIM_GALORE_DICT[name] = get_trimming_dict(name)
+    TRIM_GALORE_FILES[name] = flatten([TRIM_GALORE_DICT[name][rep]['trimmed'] for rep in TRIM_GALORE_DICT[name].keys()])
+
 
 # ---------------------------------------------------------------------------- #
 # RULE ALL
@@ -218,7 +221,7 @@ targets = {
 
 GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
-TRIMMING        = [flatten(TRIM_GALORE_DICT.values())] 
+TRIMMING        = [TRIM_GALORE_FILES[i] for i in list(TRIM_GALORE_FILES.keys())] 
 BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
 CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']

@@ -3,7 +3,7 @@ import subprocess
 import re
 import os
 import sys
-
+import itertools
 
 # ---------------------------------------------------------------------------- #
 # uses global variable SAMPLE_SHEET
@@ -52,8 +52,12 @@ def read_SAMPLE_SHEET(config):
     # in both cases we need to strip leading or trailing whitespaces
     rows = [list(map(str.strip, row)) for row in rows]
     header = rows[0]; rows = rows[1:]
+    # we do not want duplicate rows in the sample sheet 
+    rows.sort()
+    rows = list(row for row,_ in itertools.groupby(rows))
+    # then we create a dictionary from header and rows
     SAMPLE_SHEET = [OrderedDict(zip(header, row)) for row in rows if row]
-
+    
     # Goes through the sample sheet, and defines the library type based on 
     # the existence of one or two Read input files
     for input_sample in SAMPLE_SHEET:
@@ -72,9 +76,9 @@ def read_SAMPLE_SHEET(config):
 # ---------------------------------------------------------------------------- #
 # given a sample name returns fastq location(s)
 # uses global variable SAMPLE_SHEET
-def get_fastq_input(name):
-    samps = lookup('SampleName', name, ['Read', 'Read2'])
-    infiles = [os.path.join(PATH_FASTQ, i) for i in samps if i]
+def get_fastq_input(name,prefix):
+    samps = TRIM_GALORE_DICT[name][prefix]['raw']
+    infiles = [os.path.join(PATH_FASTQ, i) for i in flatten(samps) if i]
     return(infiles)
 
 # given a fastq file strips of either of the following extensions:
@@ -87,13 +91,28 @@ def replace_fastq_ext(fqfile,replacement):
 
 # ---------------------------------------------------------------------------- #
 # given a sample name returns fastq location(s)
-def get_trimmed_input(name):
+def get_trimming_dict(name):
     fqfiles = [file for file in lookup('SampleName',name,['Read','Read2']) if file]
-    if len(fqfiles) == 2:
-        trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_{}.fastq.gz".format(name,read)) for read in ["R1","R2"]]
-    else:    
-        trimmed_files = [os.path.join(PATH_TRIMMED,name, "{}_R.fastq.gz".format(name))]
-    return(trimmed_files)
+    lib_type = get_library_type(name)
+    trimming_dict = dict()
+    # defaults resemble single end case
+    prefix = name
+    num_reps = len(fqfiles)
+    read_ext = ['R']
+    # and get updated if library is paired end
+    if ( (len(fqfiles) % 2) == 0 and lib_type == 'paired'):
+        num_reps = int(len(fqfiles)/2)
+        read_ext = ['R1','R2']
+    for tec_rep in range(num_reps):
+        if num_reps > 1:
+            prefix = "{}_tr{}".format(name,int(tec_rep)+1)
+        trimming_dict[prefix] = dict()
+        trimming_dict[prefix]['trimmed']  = [os.path.join(PATH_TRIMMED,name, "{}_{}.fastq.gz".format(prefix,read)) for read in read_ext]
+        if lib_type == 'paired':
+            trimming_dict[prefix]['raw']      = [fqfiles[tec_rep*2:(tec_rep+1)*2]]
+        else:    
+            trimming_dict[prefix]['raw']      = [fqfiles[tec_rep]]
+    return(trimming_dict)
 
 # ---------------------------------------------------------------------------- #
 # given a config dictionary sets the default value
