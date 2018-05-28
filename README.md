@@ -420,6 +420,20 @@ Folder which contains all **R** and **python** scripts. These scripts are called
 used by the **Snake_Dropseq.py**
    
 
+### Making changes
+
+To make changes or add improvements to the pipeline, follow these steps:
+1. create a new git branch
+2. switch to the branch
+3. make your updates
+4. check whether the updates work by running the following code:
+
+    ./bootstrap.sh && ./configure --prefix=`pwd`/run && make install 
+    
+    ./pigx-scrnaseq tests/sample_sheet.csv -s tests/settings.yaml
+ 
+ 5. check whether there were updates to master. If there were updates, run git pull -r. Again check whether the pipeline works
+ 6. push the changes to the corresponding branch, and open a pull request.
 
  
 ----------------------------------------
