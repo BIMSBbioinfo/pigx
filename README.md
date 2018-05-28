@@ -348,6 +348,79 @@ The `execution` section in the settings file allows the user to specify whether 
 An example can be found in the `tests` directory.  The
 `sample_sheet.csv` file here specifies the following sample data:
 
+# How to contribute?
+
+### Dependencies
+
+#### Guix
+
+The easiest way to install all of the dependencies is through the [guix](https://www.gnu.org/software/guix/download/)
+package management system. 
+Firstly download and install guix to your computer. 
+**guix.scm** file in the root of the project directory contains the description recipe for installing all of the necessary
+tools.
+The following command will install all of the dependencies to the **.guix-profile** folder
+
+    guix environment -l guix.scm --root=`pwd`/.guix-profile
+
+
+### Installing PigX-scRNAseq for development
+
+    # sets up the directory
+    basepath='~/pigx=scrnaseq/development'
+    mkdir -p $basepath; cd $basepath
+
+    # downloads the repository
+    git clone https://github.com/BIMSBbioinfo/pigx_scrnaseq.git
+
+    cd pigx_scrnaseq; mkdir run
+    
+    # uses guix to install all of the dependencies into a separate environment
+    guix environment -l guix.scm --root=`pwd`'./run/.guix-profile'
+    
+    # loads the dependencies into PATH
+    guixr package -p ./run/.guix-profile --search-path="prefix"
+
+    # sets the temporary directory - needed for storing large temporary files
+    export TMPDIR=~/Tmp
+    
+    # installs the pipeline
+    ./bootstrap.sh && ./configure --prefix=`pwd`/run && make install 
+
+    # runs the pipeline on the test data
+    ./pigx-scrnaseq tests/sample_sheet.csv -s tests/settings.yaml
+
+
+### Preparing the environment for the development
+
+To prepare the environment for the development set the following variable:
+
+    export PIGX_UNINSTALLED=1
+    
+If this variable is not set pigx-scrnaseq will execute files in the `./run/bin` folder (pre-installed files),
+and will not react to changes to scripts.
+    
+### Scripts and Executables
+
+#### pigx-scrnaseq
+
+pigx-scrnaseq is the main driver script for the pipeline (user entry point).
+It is constructed from the pigx-scrnaseq.in during the configuration step.
+If you want to update the pigx-scrnaseq, change the pigx-scrnaseq.in, and run the `installs the pipeline`
+step of the developemnt installation, to update the changes.
+
+#### Snake_Dropseq.py
+
+Is the main SnakeMake script which constructs the execution graph and executes the pipeline.
+Any changes to the Snake_Dropseq.py are observed directly upon execution.
+
+#### ./scripts
+
+Folder which contains all **R** and **python** scripts. These scripts are called
+used by the **Snake_Dropseq.py**
+   
+
+
  
 ----------------------------------------
 2018
