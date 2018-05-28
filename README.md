@@ -428,9 +428,9 @@ To make changes or add improvements to the pipeline, follow these steps:
 3. make your updates
 4. check whether the updates work by running the following code:
 
-    ./bootstrap.sh && ./configure --prefix=`pwd`/run && make install 
+       ./bootstrap.sh && ./configure --prefix=`pwd`/run && make install 
     
-    ./pigx-scrnaseq tests/sample_sheet.csv -s tests/settings.yaml
+       ./pigx-scrnaseq tests/sample_sheet.csv -s tests/settings.yaml
  
  5. check whether there were updates to master. If there were updates, run git pull -r. Again check whether the pipeline works
  6. push the changes to the corresponding branch, and open a pull request.
