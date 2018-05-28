@@ -378,9 +378,6 @@ The following command will install all of the dependencies to the **.guix-profil
     # uses guix to install all of the dependencies into a separate environment
     guix environment -l guix.scm --root=`pwd`'./run/.guix-profile'
     
-    # loads the dependencies into PATH
-    guixr package -p ./run/.guix-profile --search-path="prefix"
-
     # sets the temporary directory - needed for storing large temporary files
     export TMPDIR=~/Tmp
     
@@ -399,7 +396,22 @@ To prepare the environment for the development set the following variable:
     
 If this variable is not set pigx-scrnaseq will execute files in the `./run/bin` folder (pre-installed files),
 and will not react to changes to scripts.
+
+### Continuing development
+
+If you already have a pre-installed dependencies, then execute the following commands to setup your environment
+
+    # loads the guix environment.
+    guixr package -p run/.guix-profile --search-path=prefix
+    export PIGX_UNINSTALLED=1
     
+    # runs the pipeline on the test data
+    ./pigx-scrnaseq tests/sample_sheet.csv -s tests/settings.yaml
+   
+
+# loads the dependencies into PATH
+    guixr package -p ./run/.guix-profile --search-path="prefix"
+
 ### Scripts and Executables
 
 #### pigx-scrnaseq
