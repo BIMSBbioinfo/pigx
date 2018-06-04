@@ -127,7 +127,7 @@ names(cellStatsPlots) = paste(lapply(plotDesc, function(x) x[2]))
 
 ### Total number of reads per sample
 
-This plot displays the numbers of mapped reads (in millions) for total (green bars) and uniquely-mapped UMI (orange bars) per each sample.
+The plot displays the numbers of mapped reads (in millions) for total (green bars) and uniquely-mapped UMI (orange bars) for each sample.
 
 ```{r TotalReads, results='asis', echo = FALSE}
 stat_reads %>%
@@ -146,7 +146,7 @@ stat_reads %>%
 
 ### Read Distribution in Genomic Features
 
-This plot displays the numbers of mapped reads (in millions) categorized by annotation (as indicated by the legend) for each sample.
+The plot displays the numbers of mapped reads (in millions) categorized by annotation (as indicated by the legend) for each sample.
 
 ```{r ReadDistribution, results='asis', echo = FALSE}
 stat_reads %>%
@@ -185,7 +185,7 @@ for (i in 1:length(cellStatsPlots)) {
 
 ## Cell Composition
 
-The following plots show the scores obtained through PCA for the pairs of components indicated in the axes. These plots can be used to assess the data structure as well as to detect clusters, trends and outliers. The sample points are colored by the feature indicated in the corresponding title.
+The following plots visualize the cells in the principle component space, for the pairs of components indicated in the axes. These plots can be used to assess the data structure as well as to detect clusters, trends, outliers, and batch effects. The sample points are colored by the feature indicated in the corresponding tab title.
 
 ```{r definePlotPCAFunction, include=TRUE, fig.width=35, fig.height=5}
 reducedDimPlot = function(df, dim1, dim2, title = NULL, color_by = NULL, gradient = FALSE) {
@@ -251,7 +251,7 @@ names(tsnePlotList) = covariateList
 
 ### t-SNE - colored by different covariates {.tabset}
 
-The following plots show the scores obtained through t-SNE analysis for the pairs of components indicated in the axes. These plots can be used to assess the data structure as well as to detect clusters, trends and outliers. The sample points are colored by the feature indicated in the corresponding title.
+The following plots show the scores obtained through t-SNE dimensionality reduction. These plots can be used to assess the data structure as well as to detect clusters, trends, outliers, and batch effects. The sample points are colored by the feature indicated in the corresponding title.
 
 ```{r tsnePlotList, results='asis', echo = FALSE}
 for (i in 1:length(tsnePlotList)) {
@@ -290,7 +290,7 @@ names(pcaContributionPlots) <- paste0('PC', 1:5)
 
 ### Top Genes Contributing to Principle Components {.tabset}
 
-The following plots display the scores of top genes contributing to the given principle components. x-axis indicates the score for the given principle component while y-axis indicates the genes contributing significantly to the component.
+The following plots display the scores of top genes contributing to the given principle components. x-axis indicates the contribution for the given principle component while y-axis indicates the genes contributing significantly to the component.
 
 ```{r top_PCA_Genes, results='asis'}
 for (i in 1:length(pcaContributionPlots)) {
@@ -340,7 +340,7 @@ names(pcaContributorHeatmaps) <- paste0('PC', 1:5)
 
 ### Heatmaps of Top Genes Contributing to Principle Components {.tabset}
 
-The following plots display heatmaps of the expression values of top contributing genes to the given principle component. Columns are cells and rows are the top genes. _CellCyclePhase_ indicates cell cycle phases classified based on gene expression data. _log10nGene_ indicates log10-transformed numbers of genes detected per cell. _replicate_ indicates replicates.
+The following plots display heatmaps of the expression values of top contributing genes to the given principle component. Columns are cells and rows are the top genes. _CellCyclePhase_ indicates cell cycle phases classified based on gene expression data. _log10nGene_ indicates log10-transformed numbers of genes detected per cell. 
 
 ```{r top_PCA_Genes_Heatmaps, results='asis'}
 for (i in 1:length(pcaContributorHeatmaps)) {
