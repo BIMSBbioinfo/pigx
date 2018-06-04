@@ -21,6 +21,7 @@ params:
     infile:         NULL
     width_params:   NULL
     logo:           NULL
+    random_seed:    123
 
 ---
 
@@ -67,6 +68,7 @@ knitr::opts_chunk$set(echo       = FALSE,
                       eval       = TRUE)
 
 
+set.seed(params$random_seed)
 ```
 
 ```{r test_input, include=FALSE}
