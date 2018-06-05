@@ -75,6 +75,8 @@ SAMPLE_SHEET.collapse_technical_replicates(NEW_SAMPLE_SHEET_PATH)
 SAMPLE_NAMES = SAMPLE_SHEET.list_attr('sample_name')
 
 COLLAPSED_REPLICATES = expand(os.path.join(PATH_FASTQ_COLLAPSED, '{sample}' + "_" +'{fq_type}' + '.fastq.gz'), sample = SAMPLE_NAMES, fq_type = ['reads', 'barcode'])
+
+
 # ----------------------------------------------------------------------------- #
 # check for compatible technology methods
 methods = set(ADAPTER_PARAMETERS.keys())
@@ -83,7 +85,6 @@ for method in set(SAMPLE_SHEET.list_attr('method')):
         message = 'Sample sheet contains unknown method:' + method + '\n'
         message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
         sys.exit(message)
-
 
 # ----------------------------------------------------------------------------- #
 # sets the temporrary directory to default in the working directory if the tempdir does not exist
@@ -482,7 +483,7 @@ rule merge_fastq_to_bam:
                     reads   : {input.reads}
                 output : {output}
         """
-    run:    
+    run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
 
         command = ' '.join([
@@ -518,7 +519,7 @@ rule tag_cells:
        log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-        
+
         # fetches method from the sample_sheet
         method = SAMPLE_SHEET.lookup('sample_name', params.name, ['method'])[0]
         adapter_params = ADAPTER_PARAMETERS[method]['cell_barcode']
