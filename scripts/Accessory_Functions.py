@@ -7,8 +7,8 @@ def java_tool(java, threads, mem, tempdir, tool_path, tool_name, java_heap_diffe
     # removes 1 g from java memory heap
     mem_size   = int(float(mem[:-1]))
     mem_suffix = mem[-1]
-    if(mem_size < java_heap_difference):
-        mem_size = mem_size/2
+    if(mem_size <= java_heap_difference):
+        mem_size = java_heap_difference - 1
     else:
         mem_size = mem_size - java_heap_difference
     
