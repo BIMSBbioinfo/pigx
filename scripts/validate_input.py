@@ -43,14 +43,8 @@ def validate_config(config):
     
     # --------------------------------------------------------------------------------- #
     samples = {}
-    # Check that reads files exist; sample names are unique to each row;
+    # Check that reads files exist
     for row in sample_sheet:
-        sample = row['sample_name']
-        if sample in samples:
-            raise Exception('ERROR: sample_name "{}" is not unique. Replace it with a unique name in the sample_sheet.'.format(sample))
-        else:
-            samples[sample] = 1
-
         filenames = [row['barcode'], row['reads']]
         for filename in filenames:
             fullpath = os.path.join(config['locations']['reads-dir'], filename)
