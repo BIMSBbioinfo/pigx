@@ -186,17 +186,6 @@ def check_params(config_dict, params, message):
     return(message)
 
 # ---------------------------------------------------------------------------- #
-# given a list of lists, returns a flattened version
-def flatten(l):
-    out = []
-    for item in l:
-        if isinstance(item, (list, tuple)):
-            out.extend(flatten(item))
-        else:
-            out.append(item)
-    return out
-    
-# ---------------------------------------------------------------------------- #
 # checks fasta header for spaces
 def check_fasta_header(genome_file, message):
     import re
