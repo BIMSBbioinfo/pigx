@@ -45,6 +45,8 @@ ReadGTFAnnotation = function(
     suppressPackageStartupMessages(library(stringr))
     suppressPackageStartupMessages(library(rtracklayer))
 
+    message("Library Path")
+    message(.libPaths())
 
     if(!file.exists(gtf.path))
         stop('the gtf file does not exist')
@@ -159,7 +161,8 @@ GTFGetAnnotation = function(
 ){
 
     g.exon = g[g$type=='exon']
-    exon = unlist(g.exon)
+    exon = g.exon
+    values(exon) = NULL
 
     #------------------------------------------------------------------------- #
     gene = unlist(range(split(g.exon, g.exon$gene_id)))
@@ -200,7 +203,6 @@ GTFGetAnnotation = function(
     splicing_acceptor = resize(splicing_acceptor, width = 1,   fix='start')
     splicing_acceptor = resize(splicing_acceptor, width = width_params$splicing_accep_width, fix='center')
 
-    values(exon) = NULL
     gl = list(tss      = tss,
               tts      = tts,
               exon     = exon,
