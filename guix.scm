@@ -76,6 +76,7 @@
        ("python-pandas" ,python-pandas)
        ("python-numpy" ,python-numpy)
        ("python-loompy" ,python-loompy)
+       ("python-magic", python-magic)
        ("ghc-pandoc" ,ghc-pandoc)
        ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("snakemake" ,snakemake)
