@@ -36,10 +36,15 @@ EXTRA_DIST =										   \
   tests/settings.yaml                                  \
   tests/sample_data/hg19_chr19.10094960.25108012.fa    \
   tests/sample_data/hg19_chr19.10094960.25108012.gtf   \
-  tests/sample_data/reads/HEK_0h_br1_R1.fastq.gz	\
-  tests/sample_data/reads/HEK_0h_br1_R2.fastq.gz	\
   tests/sample_data/reads/HEK_4h_br1_R1.fastq.gz	\
-  tests/sample_data/reads/HEK_4h_br1_R2.fastq.gz
+  tests/sample_data/reads/HEK_4h_br1_R2.fastq.gz   \
+  tests/sample_data/reads/HEK_0h_br1_R1_1.fastq.gz \
+  tests/sample_data/reads/HEK_0h_br1_R2_1.fastq.gz \
+  tests/sample_data/reads/HEK_0h_br1_R1_2.fastq.gz \
+  tests/sample_data/reads/HEK_0h_br1_R2_2.fastq.gz \
+  tests/sample_data/reads/HEK_0h_br1_R1_3.fastq.gz \
+  tests/sample_data/reads/HEK_0h_br1_R2_3.fastq.gz
+
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
 
