@@ -243,7 +243,7 @@ targets['mapping'] = {
 }
 
 targets['export-bw'] = {
-        'description': "Take the bowti2 mapping results in BAM format and create bigWig Tracks.", 
+        'description': "Take the bowtie2 mapping results in BAM format and create bigWig Tracks.", 
         'files':
             BW + LINKS
 }
@@ -379,15 +379,22 @@ include: os.path.join(RULES_PATH, 'Summarize_Data_For_Report.py')
 include: os.path.join(RULES_PATH, 'Knit_Report.py')
 
 targets['final-report'] = {
-'description': "Produce a comprehensive report.  This is the default target.",
+'description': "Produce a comprehensive report.",
 'files': SUMMARIZED_DATA_FOR_REPORT + REPORT
 }
 
-
+# ----------------------------------------------------------------------------- #
+# COMPLETE EXECUTION
+ALL_FILES = list(chain.from_iterable([targets[name]['files'] for name in list(targets.keys())]))
+targets['complete'] = {
+'description': "Run the full pipeline with all available targetds.  This is the default target.",
+'files': ALL_FILES
+}
 # ----------------------------------------------------------------------------- #
 # TARGETTED EXECUTION
 # Selected output files from the above set.
-selected_targets = config['execution']['target'] or ['final-report']
+print(targets['complete']['files'])
+selected_targets = config['execution']['target'] or ['complete']
 
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
