@@ -325,7 +325,7 @@ def prepare_links():
         contents = path.join(where, 'etc/CONTENTS.txt')
     else:
         contents = path.join(config['locations']['pkgdatadir'], 'CONTENTS.txt')
-    shutil.copy(contents, path.join(config['locations']['output-dir'], 'pigx_work/'))
+    shutil.copyfile(contents, path.join(config['locations']['output-dir'], 'pigx_work/CONTENTS.txt'))
 
     # Link the reference genome
     try:
