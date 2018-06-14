@@ -48,7 +48,7 @@ AC_DEFUN([AX_R_PACKAGE], [
 
     if test -n "VERSION"
     then
-      TEST=$( $R --silent --vanilla -e 'if(!(packageDescription("PKG")$Version >= "VERSION")) stop("not found")' 2>/dev/null )
+      TEST=$( $R --silent --vanilla -e 'if(compareVersion(packageDescription("PKG")$Version, "VERSION") < 0) { stop("not found") }' 2>/dev/null )
       AS_IF([test $? -eq 0], [], [
         AC_MSG_RESULT([no])
         AC_MSG_ERROR([You need at least version VERSION of the R package PKG.])
