@@ -103,7 +103,7 @@ if TEMPDIR == None:
 
 # ----------------------------------------------------------------------------- #
 # Create genes GTF
-PATH_GENES_GTF   = os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.genes.gtf')
+PATH_GENES_GTF   = os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.genes.gene_id.gtf')
 
 # ----------------------------------------------------------------------------- #
 # Link primary reference
@@ -123,7 +123,7 @@ if GENOME_SECONDARY_IND:
 
 # ----------------------------------------------------------------------------- #
 # REFFLAT and DICT
-REFFLAT = expand(os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.{type}.refFlat'), type = ['genes', 'gene_id'])
+REFFLAT = expand(os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.{type}.refFlat'), type = ['genes', 'exon'])
 DICT    = [os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.dict')]
 
 if GENOME_SECONDARY_IND: ## THIS ?
@@ -136,7 +136,7 @@ FASTQC = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.fastqc.done"), name=
 
 # ----------------------------------------------------------------------------- #
 # Change reference gene_name to gene_id
-PATH_GTF_PRIMARY_ID = expand(os.path.join(PATH_ANNOTATION_PRIMARY, "{name}.gene_id.gtf"), name=REFERENCE_NAMES)
+PATH_GTF_PRIMARY_ID = expand(os.path.join(PATH_ANNOTATION_PRIMARY, "{name}.exon.gene_id.gtf"), name=REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
 # STAR INDEX
@@ -412,7 +412,7 @@ rule change_gtf_id:
     input:
         infile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf')
     output:
-        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
+        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.exon.gene_id.gtf')
     params:
         threads = config['execution']['rules']['change_gtf_id']['threads'],
         mem     = config['execution']['rules']['change_gtf_id']['memory'],
@@ -433,23 +433,25 @@ rule create_genes_gtf:
 	input:
 		infile = rules.change_gtf_id.output.outfile
 	output:
-		outfile = os.path.join(PATH_ANNOTATION, '{genome}','{genome}.genes.gtf')
+		outfile = os.path.join(PATH_ANNOTATION, '{genome}','{genome}.genes.gene_id.gtf')
 	params:
+		threads  = config['execution']['rules']['extract_read_statistics']['threads'],
+        mem      = config['execution']['rules']['extract_read_statistics']['memory'],
 		Rscript = PATH_RSCRIPT,
 		Script = PATH_SCRIPT
-	message:
-		"""
+	message: """
 			Extracting genes from GTF:
 				input  : {input}
 				output : {output}
 		"""
-	shell: "{params.Rscript} {params.Script}/get_GTF_genes.R --gtfFile={input.infile} --output={output.outfile}"
+	run:
+		RunRscript(input, output, params, params.Script, 'get_GTF_genes.R')
 
 # ----------------------------------------------------------------------------- #
 rule gtf_to_refflat:
     input:
         dict = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict'),
-        gtf  = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.{type}.gtf')
+        gtf  = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.{type}.gene_id.gtf')
     output:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.{type}.refFlat')
     params:
@@ -804,7 +806,7 @@ rule merge_bam:
 rule tag_with_gene_exon:
     input:
         infile    = rules.merge_bam.output.outfile,
-        refflat   = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.refFlat')
+        refflat   = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.exon.refFlat')
     output:
         outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","star_gene_exon_tagged.bam")
     params:
