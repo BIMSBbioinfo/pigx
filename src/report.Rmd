@@ -23,6 +23,7 @@ library(rtracklayer)
 library(DT)
 library(plotly)
 library(crosstalk)
+library(GenomicAlignments)
 ```
 
 # Input Settings
@@ -330,6 +331,56 @@ for (i in 1:length(plots)) {
   cat("\n\n")
 }
 ```
+
+# Per Base Diversity of Deletion {.tabset}
+
+Here we plot the number of unique deletions that overlap each base at varying levels of read support cut-offs. 
+For example, when `MinReadSupportPerDeletion` is set to 10, then we only count deletions that are supported by at least 10 reads. 
+
+```{r perBaseDiversity}
+dt <- indelSummary[indelType == 'D']
+seqlength <- max(coverageStats$bp)
+results <- lapply(unique(dt$sample), function(s) {
+  df <- dt[sample == s]
+  do.call(rbind, lapply(c(0, 1, 5, 10), function(depth) {
+      df <- df[ReadSupport >= depth]
+      message('dim',nrow(df))
+      if(nrow(df) > 0){
+        gr <- GenomicRanges::makeGRangesFromDataFrame(df[ReadSupport >= depth], keep.extra.columns = TRUE)
+        deletionsPerBase <- GenomicAlignments::coverage(gr)[[1]]
+        deletionsPerBase <- c(deletionsPerBase, rep(0, seqlength - length(deletionsPerBase)))
+        result <- data.frame( 
+                       'sample' = s, 
+                       'bp' = 1:seqlength, 
+                       'uniqueDeletions' = as.vector(deletionsPerBase),
+                       'MinReadSupportPerDeletion' = depth)
+        return(result)
+      }
+  }))
+})
+names(results) <- unique(dt$sample)
+
+plots <- lapply(results, function(df) {
+  df$MinReadSupportPerDeletion <- as.factor(df$MinReadSupportPerDeletion)
+  ggplot(df, aes(x = bp, y = uniqueDeletions)) + geom_bar(aes(fill = MinReadSupportPerDeletion), 
+                                                         position = 'dodge', stat= 'identity') 
+})
+
+```
+
+```{r plotDeletionDiversityPerBase}
+out = NULL
+for (n in names(plots)) {
+  if(!is.null(plots[[n]])) {
+  p <- ggplotly(plots[[n]])
+  out = c(out, knitr::knit_expand(text='## {{n}} \n\n {{p}} \n\n'))
+  } else {
+    out = c(out, knitr::knit_expand(text='## {{n}} \n\n No indel data found\n\n'))
+  }
+}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
 
 
 # R Session Information
