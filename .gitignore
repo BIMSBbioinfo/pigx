@@ -2,6 +2,7 @@
 *~
 
 # autoconf generated files
+qsub-template.sh
 configure
 config.status
 config.log
