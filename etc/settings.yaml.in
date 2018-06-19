@@ -315,3 +315,6 @@ tools:
     mv:
         executable: @MV@
         args: ""
+    nice:
+        executable: @NICE@
+        args: "-19"

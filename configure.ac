@@ -43,6 +43,7 @@ dnl These GNU coreutils are used at runtime
 find_or_override_prog([CUT],             [cut])
 find_or_override_prog([SORT],            [sort])
 find_or_override_prog([MV],              [mv])
+find_or_override_prog([NICE],            [nice])
 
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([PERL],            [perl])
