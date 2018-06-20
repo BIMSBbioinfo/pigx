@@ -36,8 +36,36 @@ printBedGraphFile <- function(filepath,
               sep = '\t', quote = F, row.names = F, col.names = F)
 }
 
-printCoverageStats <- function(bamFile, sampleName, outDir = getwd()) {
+# given a BAM file, trim the alignments from both ends if the coverage at the ends are below the
+# percentile value of overall coverage. 
+# remove alignments that are not within the center of the amplicon. The center of the amplicon is 
+# described as the region that is covered by at least the 75th percentile value of coverage distribution. 
+#' @param aln GenomicAlignments object read from a bam file
+#' @param percentile can be a value between 0 and 100
+trimAlignmentEnds <- function(aln, percentile = 75) {
+  #find minimum coverage required 
+  cov <- as.vector(GenomicAlignments::coverage(aln)[[1]])
+  coverageThreshold <- as.numeric(quantile(x = cov, 
+                                probs = c(1:100)/100)[percentile])
+  #find the N terminal and C terminal positions that correspond to the coverageThreshold
+  basesAboveCoverage <- which((cov > coverageThreshold) == TRUE)
+  centerAln <- IRanges::subsetByOverlaps(query = aln, 
+                                      subject = GenomicRanges::GRanges(seqnames = levels(seqnames(aln))[1], 
+                                                                       ranges = IRanges(start = min(basesAboveCoverage), 
+                                                                                        end =  max(basesAboveCoverage))), 
+                                      type = 'within') #overlap type is important
+  return(centerAln)
+}
+
+printCoverageStats <- function(bamFile, sampleName, outDir = getwd(), trimPercentile = NULL) {
+
   aln <- readGAlignments(bamFile, param = ScanBamParam(what="qname"))
+  
+  # trim the ends of the alignments for low coverage regions of the amplicon
+  if(!is.null(trimPercentile)) {
+    message("Trimming alignments with coverage below",trimPercentile,"percentile")
+    aln <- trimAlignmentEnds(aln, percentile = trimPercentile)
+  }
   
   indels <- GenomicAlignments::cigarRangesAlongReferenceSpace(cigar = cigar(aln), 
                                                                        ops = c('I', 'D'),
@@ -167,7 +195,7 @@ printBedFile <- function(outDir, sampleName, df, tracktype) {
               quote = F, sep = '\t', col.names = F, row.names = F, append = T)
 }
 
-readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir)
+readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, trimPercentile = 75)
 
 seqName <- seqnames(seqinfo(readsWithInDels))[1]
 
