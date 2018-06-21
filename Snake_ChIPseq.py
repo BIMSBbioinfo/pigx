@@ -393,7 +393,6 @@ targets['complete'] = {
 # ----------------------------------------------------------------------------- #
 # TARGETTED EXECUTION
 # Selected output files from the above set.
-print(targets['complete']['files'])
 selected_targets = config['execution']['target'] or ['complete']
 
 # FIXME: the list of files must be flattened twice(!).  We should make
