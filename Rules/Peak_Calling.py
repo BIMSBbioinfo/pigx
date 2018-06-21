@@ -20,7 +20,8 @@ def get_files_macs(wc):
 
 rule macs2:
     input:
-        unpack(get_files_macs)
+        unpack(get_files_macs),
+        chrlen = rules.index_to_chrlen.output
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.{class, narrow|broad}Peak")
     params:
@@ -49,9 +50,15 @@ rule macs2:
         if hasattr(input, 'Cont'):
             samples = samples + " ".join([' -c'] + input.Cont)
 
+        # define the genome size based on sum of length of chroms
+        with open(input.chrlen[0]) as f:
+            chrsize = [ int(line[1]) for line in csv.reader(f,delimiter="\t")]
+            gsize = sum( chrsize )
+
         command = " ".join(
         [params.macs2, 'callpeak',
         samples,
+        '--gsize',str(gsize),
         '--outdir', params.outpath,
         '-n', params.name,
         join_params("macs2", PARAMS, params_macs),
