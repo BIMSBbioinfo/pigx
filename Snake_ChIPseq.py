@@ -403,7 +403,10 @@ for selection in selected_targets:
     if not selection in targets.keys():
             wrong_target.append(selection)
     if wrong_target:
-        sys.exit('This is not a supported targed:\n {}'.format(wrong_target))    
+        sys.exit(''.join(
+            ['This is not a supported targed:\n {}\n'.format(wrong_target),
+             'Consider one of these:\n {}\n'.format(list(targets.keys()))] )
+            )    
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 rule all:
