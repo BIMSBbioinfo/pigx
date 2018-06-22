@@ -87,10 +87,6 @@ for method in set(SAMPLE_SHEET.list_attr('method')):
         sys.exit(message)
 
 # ----------------------------------------------------------------------------- #
-# Tags for genes and exons used in get_umi_matrix
-tags = {'gene': 'ZI', 'exon': 'GE'}
-
-# ----------------------------------------------------------------------------- #
 # sets the temporrary directory to default in the working directory if the tempdir does not exist
 if TEMPDIR == None:
     if "TMPDIR" in os.environ.keys():
@@ -102,14 +98,11 @@ if TEMPDIR == None:
 # RULES
 
 # ----------------------------------------------------------------------------- #
-# Create genes GTF
-PATH_GENES_GTF   = os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.genes.gene_id.gtf')
-
-# ----------------------------------------------------------------------------- #
 # Link primary reference
 # TODO : make extension dynamic (to accept both fasta and fasta.gz files)
 LINK_REFERENCE_PRIMARY   = os.path.join(PATH_ANNOTATION_PRIMARY,  GENOME_NAME_PRIMARY + '.fasta')
 LINK_GTF_PRIMARY         = os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.gtf')
+
 
 # ----------------------------------------------------------------------------- #
 # Combine primary and secondary reference genomes
@@ -123,10 +116,10 @@ if GENOME_SECONDARY_IND:
 
 # ----------------------------------------------------------------------------- #
 # REFFLAT and DICT
-REFFLAT = expand(os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.{type}.refFlat'), type = ['genes', 'exon'])
+REFFLAT = [os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.refFlat')]
 DICT    = [os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.dict')]
 
-if GENOME_SECONDARY_IND: ## THIS ?
+if GENOME_SECONDARY_IND:
     REFFLAT = REFFLAT + [os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.refFlat')]
     DICT    = DICT    + [os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.dict')]
 
@@ -136,7 +129,7 @@ FASTQC = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.fastqc.done"), name=
 
 # ----------------------------------------------------------------------------- #
 # Change reference gene_name to gene_id
-PATH_GTF_PRIMARY_ID = expand(os.path.join(PATH_ANNOTATION_PRIMARY, "{name}.exon.gene_id.gtf"), name=REFERENCE_NAMES)
+PATH_GTF_PRIMARY_ID = expand(os.path.join(PATH_ANNOTATION_PRIMARY, "{name}" + "gene_id.gtf"), name=REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
 # STAR INDEX
@@ -165,11 +158,11 @@ FIND_READ_CUTOFF = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}
 READS_MATRIX = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # ----------------------------------------------------------------------------- #
-# UMI matrices
-UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_{type}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES, type = ['exon', 'gene'])
+# UMI matrix
+UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # UMI matrix in loom format
-UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_{type}_UMI.Matrix.loom'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES, type= ['exon', 'gene'])
+UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # Combined UMI matrices in loom format
 COMBINED_UMI_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
@@ -201,13 +194,13 @@ BIGWIG = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.
 
 # ----------------------------------------------------------------------------- #
 RULE_ALL = []
-RULE_ALL = RULE_ALL + [PATH_GENES_GTF, LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
+RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES + COLLAPSED_REPLICATES + PATH_GTF_PRIMARY_ID
-
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
+RULE_ALL = RULE_ALL + COLLAPSED_REPLICATES
 # ----------------------------------------------------------------------------- #
 rule all:
     input:
@@ -261,6 +254,7 @@ rule combine_technical_replicates:
                 gzf.write(unzipped)
                 gzf.close()
                 os.unlink(out_file)
+
 
 # ----------------------------------------------------------------------------- #
 # links the primary annotation to the ./Annotation folder
@@ -412,7 +406,7 @@ rule change_gtf_id:
     input:
         infile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf')
     output:
-        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.exon.gene_id.gtf')
+        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
     params:
         threads = config['execution']['rules']['change_gtf_id']['threads'],
         mem     = config['execution']['rules']['change_gtf_id']['memory'],
@@ -427,33 +421,14 @@ rule change_gtf_id:
     run:
         RunRscript(input, output, params, params.script, 'change_gtf_id.R')
 
-# ----------------------------------------------------------------------------- #
-# Create genes gtf and save to Annotation folder
-rule create_genes_gtf:
-	input:
-		infile = rules.change_gtf_id.output.outfile
-	output:
-		outfile = os.path.join(PATH_ANNOTATION, '{genome}','{genome}.genes.gene_id.gtf')
-	params:
-		threads  = config['execution']['rules']['extract_read_statistics']['threads'],
-        mem      = config['execution']['rules']['extract_read_statistics']['memory'],
-		Rscript = PATH_RSCRIPT,
-		Script = PATH_SCRIPT
-	message: """
-			Extracting genes from GTF:
-				input  : {input}
-				output : {output}
-		"""
-	run:
-		RunRscript(input, output, params, params.Script, 'get_GTF_genes.R')
 
 # ----------------------------------------------------------------------------- #
 rule gtf_to_refflat:
     input:
         dict = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict'),
-        gtf  = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.{type}.gene_id.gtf')
+        gtf  = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
     output:
-        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.{type}.refFlat')
+        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
     params:
         threads   = config['execution']['rules']['gtf_to_refflat']['threads'],
         mem       = config['execution']['rules']['gtf_to_refflat']['memory'],
@@ -462,7 +437,7 @@ rule gtf_to_refflat:
         tempdir   = TEMPDIR,
         app_name  = 'ConvertToRefFlat'
     log:
-        log = os.path.join(PATH_LOG, '{genome}.{type}.gtf_to_refflat.log')
+        log = os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
     message:"""
             GTF To refFlat:
                 input
@@ -482,7 +457,9 @@ rule gtf_to_refflat:
         ])
         shell(command)
 
-# ----------------------------------------------------------------------------- #
+
+# # ----------------------------------------------------------------------------- #
+
 rule merge_fastq_to_bam:
     input:
         reads = rules.combine_technical_replicates.output.reads,
@@ -806,7 +783,7 @@ rule merge_bam:
 rule tag_with_gene_exon:
     input:
         infile    = rules.merge_bam.output.outfile,
-        refflat   = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.exon.refFlat')
+        refflat   = rules.gtf_to_refflat.output
     output:
         outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","star_gene_exon_tagged.bam")
     params:
@@ -831,40 +808,13 @@ rule tag_with_gene_exon:
         'OUTPUT=' + str(output.outfile)
         ])
         shell(command)
-# ----------------------------------------------------------------------------- #
-rule tag_with_gene:
-    input:
-        infile    = rules.tag_with_gene_exon.output.outfile,
-        refflat   = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.genes.refFlat')
-    output:
-        outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","star_tagged_final.bam")
-    params:
-        droptools  = SOFTWARE['droptools']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'TagReadWithGeneExon',
-        threads    = config['execution']['rules']['tag_with_gene_exon']['threads'],
-        mem        = config['execution']['rules']['tag_with_gene_exon']['memory'],
-        tempdir    = TEMPDIR
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_with_gene.log")
 
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
 
-        command = ' '.join([
-        tool,
-        'ANNOTATIONS_FILE=' + str(input.refflat),
-        'TAG=ZI',
-        'CREATE_INDEX=true',
-        'INPUT='  + str(input.infile),
-        'OUTPUT=' + str(output.outfile)
-        ])
-        shell(command)
 
 # ----------------------------------------------------------------------------- #
 rule extract_read_statistics:
     input:
-        bamfile = rules.tag_with_gene.output.outfile
+        bamfile = rules.tag_with_gene_exon.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadStatistics.txt')
     params:
@@ -881,11 +831,14 @@ rule extract_read_statistics:
     run:
         RunRscript(input, output, params, params.script, 'Extract_Read_Statistics.R')
 
+
+
+
 # ----------------------------------------------------------------------------- #
 # calculates the number of reads per cell
 rule bam_tag_histogram:
     input:
-        infile = rules.tag_with_gene.output.outfile
+        infile = rules.tag_with_gene_exon.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt')
     params:
@@ -942,14 +895,13 @@ rule find_absolute_read_cutoff:
 # calculates the UMI matrix
 rule get_umi_matrix:
     input:
-        infile  = rules.tag_with_gene.output,
+        infile        = rules.tag_with_gene_exon.output,
         reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_{type}_UMI.Matrix.txt')
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt')
     params:
         outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        tag 			  = lambda wc: tags[wc.type],
-        outname           = "{name}_{genome}_{type}",
+        outname           = "{name}_{genome}",
         threads           = config['execution']['rules']['get_umi_matrix']['threads'],
         mem               = config['execution']['rules']['get_umi_matrix']['memory'],
         java              = SOFTWARE['java']['executable'] ,
@@ -970,22 +922,23 @@ rule get_umi_matrix:
 
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
 
-        command1 = ' '.join([
+        command = ' '.join([
         tool,
-        'O=' + str(output.outfile_exon),
-        'I=' + str(input.infile_exon),
-        'GENE_EXON_TAG=' + str(params.tag),
+        'O=' + str(output.outfile),
+        'I=' + str(input.infile),
         'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
+#         'MIN_NUM_GENES_PER_CELL=' + str(params.genes_per_cell),
         'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff),
         'OUTPUT_READS_INSTEAD=F'
         ])
+        shell(command)
 
 
 # ----------------------------------------------------------------------------- #
 # calculates the reads matrix - used for PCR duplication estimations
 rule get_reads_matrix:
     input:
-        infile        = rules.tag_with_gene.output,
+        infile        = rules.tag_with_gene_exon.output,
         reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt')
@@ -1050,14 +1003,14 @@ rule extract_downstream_statistics:
 # convert UMI matrix from txt format into one loom format
 rule convert_matrix_from_txt_to_loom:
     input:
-        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_{type}_UMI.Matrix.txt'),
+        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'),
         gtf           = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf']))
     output:
-        outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_{type}_UMI.Matrix.loom')
+        outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom')
     params:
         python = SOFTWARE['python']['executable']
     log:
-        log = os.path.join(PATH_LOG, "{name}.{genome}.{type}.convert2loom.log")
+        log = os.path.join(PATH_LOG, "{name}.{genome}.convert2loom.log")
     message: """
             Convert UMI Matrix from .txt to .loom:
                 input:  {input.infile}
@@ -1070,7 +1023,7 @@ rule convert_matrix_from_txt_to_loom:
 ## combines multiple loom files into one loom file
 rule combine_UMI_matrices_into_loom:
     input:
-        infile        = lambda wildcards: expand(os.path.join(PATH_MAPPED, "{name}", wildcards.genome, '_'.join(["{name}", wildcards.genome, "{type}",'UMI.Matrix.loom'])), name = SAMPLE_NAMES, type = ["exon", "gene"])
+        infile        = lambda wildcards: expand(os.path.join(PATH_MAPPED, "{name}", wildcards.genome, '_'.join(["{name}", wildcards.genome, 'UMI.Matrix.loom'])), name = SAMPLE_NAMES)
     output:
         outfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
     params:
@@ -1132,7 +1085,7 @@ rule report:
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
     input:
-        bamfile            = rules.tag_with_gene.output,
+        bamfile            = rules.tag_with_gene_exon.output,
         cell_cutoff_file   = rules.find_absolute_read_cutoff.output.outfile,
         reads_by_cell_file = rules.bam_tag_histogram.output.outfile
     output:
