@@ -17,3 +17,4 @@ config.json
 .snakemake
 tests/out
 run/
+qsub-template.sh
