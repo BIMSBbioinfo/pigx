@@ -4,7 +4,8 @@ nodist_bin_SCRIPTS = \
   pigx-scrnaseq
 
 dist_pkglibexec_SCRIPTS =			\
-  Snake_Dropseq.py
+  Snake_Dropseq.py \
+  qsub-template.sh
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS =					\
@@ -22,8 +23,7 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/Run_Rscript.py						\
   scripts/Sample_Sheet_Class.py						\
   scripts/scrnaReport.Rmd							\
-  scripts/validate_input.py \
-  qsub-template.sh
+  scripts/validate_input.py 
 
 dist_pkgdata_DATA =					\
   etc/sample_sheet.csv.example		\
