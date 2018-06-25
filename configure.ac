@@ -71,6 +71,18 @@ find_or_override_prog([RSCRIPT],         [Rscript])
 find_or_override_prog([JAVA],            [java])
 
 
+AC_ARG_ENABLE([environment-capture],
+  AS_HELP_STRING([--disable-environment-capture], [Do not capture environment variables.]),
+  [AC_MSG_NOTICE([Environment variables will not be captured.])],
+  [dnl
+AC_MSG_NOTICE([Environment variables will be captured.])
+capture_environment=yes
+AC_ARG_VAR(R_LIBS_SITE, The search path for all R packages)
+AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
+  ])
+
+AC_SUBST([capture_environment])
+
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
@@ -100,7 +112,8 @@ AX_R_PACKAGE([SingleCellExperiment])
   ])
 
 AC_CONFIG_FILES([etc/settings.yaml
-                 Makefile])
+                 Makefile]
+		qsub-template.sh)
 AC_CONFIG_FILES([tests/test.sh], [chmod +x tests/test.sh])
 AC_CONFIG_FILES([pigx-scrnaseq], [chmod +x pigx-scrnaseq])
 AC_OUTPUT
