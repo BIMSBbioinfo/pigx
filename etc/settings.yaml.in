@@ -23,7 +23,6 @@ general:
     idr:
         idr-threshold: 0.1
     macs2:
-        g:
         keep-dup: auto
         q: 0.05
     extract_signal:

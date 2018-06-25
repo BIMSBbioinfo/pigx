@@ -16,7 +16,7 @@ general:
     idr:
         idr-threshold: 0.1
     macs2:
-        g: mm
+        #        g: mm
         keep-dup: auto
         q: 0.05
         nomodel: ''
