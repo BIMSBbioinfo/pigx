@@ -363,9 +363,9 @@ if 'feature_combination' in set(config.keys()):
         FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
                          name = FEATURE_NAMES)
 
-    include: os.path.join(RULES_PATH, 'Feature_Combination.py')
+        include: os.path.join(RULES_PATH, 'Feature_Combination.py')
     
-    targets['feature-combination'] = {
+        targets['feature-combination'] = {
             'description': "Identify overlapping features based on feature_combination section.", 
             'files': FEATURE
             }
