@@ -391,7 +391,7 @@ include: os.path.join(RULES_PATH, 'Summarize_Data_For_Report.py')
 include: os.path.join(RULES_PATH, 'Knit_Report.py')
 
 targets['final-report'] = {
-'description': "Produce a comprehensive report. This is the default target.",
+'description': "Produce a comprehensive report and pan-file quality control report.",
 'files': SUMMARIZED_DATA_FOR_REPORT + REPORT + targets['multiqc']['files']
 }
 
