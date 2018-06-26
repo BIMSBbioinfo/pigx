@@ -238,21 +238,28 @@ locations:
   gff-file: genome/mm_chr19.gtf
 
 general:
-  assembly: hg19
+  assembly: mm9
   params:
-    extend: 200
-    scale_bw: 'yes'
+    export_bigwig:
+        extend: 200
+        scale_bw: 'yes'
     bowtie2:
-        k: 1
+        # set k if you want to report at most k alignments per read
+        k: 4
+        N: 0
+    bam_filter:
+        mapq: 0
+        deduplicate: no
     idr:
         idr-threshold: 0.1
     macs2:
-        g: hs
         keep-dup: auto
         q: 0.05
     extract_signal:
         expand_peak: 200
-        bin_num: 20
+        number_of_bins: 50
+    peak_statistics:
+        resize: 500
 
 execution:
   submit-to-cluster: no
