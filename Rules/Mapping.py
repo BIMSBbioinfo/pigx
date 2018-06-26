@@ -229,9 +229,9 @@ rule samtools_deduplicate:
                 output: {output}
         """
     shell: """
-        {params.samtools} sort --threads {params.threads} -n {input} | \
-        {params.samtools} fixmate --threads {params.threads}  -m - - | \
-        {params.samtools} sort --threads {params.threads}  - | \
+        {params.samtools} sort --threads {params.threads} -n {input} 2> {log}| \
+        {params.samtools} fixmate --threads {params.threads}  -m - - 2> {log}| \
+        {params.samtools} sort --threads {params.threads}  - 2> {log}| \
         {params.samtools} markdup --threads {params.threads}  -r -s - {output} \
         2> {log}
     """
