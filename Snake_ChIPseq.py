@@ -251,9 +251,7 @@ LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 targets['mapping'] = {
         'description': "Produce the bowtie2 mapping results in BAM format.", 
         'files':
-            GENOME_FASTA + INDEX + BOWTIE2 +
-            BOWTIE2_STATS + CHRLEN + TILLING_WINDOWS +
-            NUCLEOTIDE_FREQ
+            BOWTIE2
 }
 
 targets['export-bw'] = {
