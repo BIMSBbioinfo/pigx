@@ -70,7 +70,11 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
     # ---------------------------------------------------------------------------- #    
     # checks whether the fasta header contains whitespaces
     message = check_fasta_header(locations_dict['genome-file'], message)
-   
+
+    # ---------------------------------------------------------------------------- #    
+    # checks whether the general section is properly formatted
+    message = check_general_section(config['general'], message)
+
     # ---------------------------------------------------------------------------- #
     # checks for ChIP and Cont specifications
     peak_calling_desciptors = ['ChIP', 'Cont']
@@ -130,9 +134,6 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
     # checks whether the designated files exist
     message = check_sample_exists(sample_sheet_dict, config, message)
 
-    # checks whether extend is a number
-    # if not (is.number(conig['general']['params']['export_bigwig']['extend'])):
-    #     message = message + "extend must be a number\n"
 
     return(message)
 
@@ -208,4 +209,42 @@ def check_fasta_header(genome_file, message):
                 message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
                 return(message)
                 
+    return(message)
+
+
+# ---------------------------------------------------------------------------- #
+# given a string checks if it is a number
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+# ---------------------------------------------------------------------------- #
+# checks general section for common mistakes 
+def check_general_section(general_dict, message):
+
+    # checks wether assembly is set
+    if not general_dict['assembly']:
+        message = message + "GENERAL: genome assembly is not given\n"
+
+    # checks whether bigwig extend is a number
+    if not (is_number(general_dict['params']['export_bigwig']['extend'])):
+        message = message + "GENERAL PARAMS: export_bigwig: extend must be a number\n"
+
+    # checks whether mapq is a number
+    if not (is_number(general_dict['params']['bam_filter']['mapq'])):
+        message = message + "GENERAL PARAMS: bam_filter: mapq must be a number\n"
+
+    # checks whether idr-threshold is a number
+    if not (is_number(general_dict['params']['idr']['idr-threshold'])):
+        message = message + "GENERAL PARAMS: idr: idr-threshold must be a number\n"
+
+    # checks whether custom scripts get a number
+    for param in ['extract_signal', 'peak_statistics', 'width_params']:
+        for key in general_dict['params'][param].keys():
+            if not (is_number(general_dict['params'][param][key])):
+                message = message + "GENERAL PARAMS: {}: {} must be a number\n".format(param,key)
+
     return(message)
