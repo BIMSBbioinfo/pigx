@@ -1,7 +1,7 @@
 locations:
-  output-dir: out/
+  output-dir: /fast/AG_Akalin/vfranke/pigx/scrnaseq-out
   reads-dir: sample_data/reads/
-  tempdir:
+  tempdir: /fast/AG_Akalin/vfranke/pigx/Tmp
 
 annotation:
   primary:
@@ -47,7 +47,7 @@ execution:
       memory: 10G
     gtf_to_refflat:
       threads:  1
-      memory: 30G
+      memory: 20G
     merge_fastq_to_bam:
       threads:  1
       memory: 16G
@@ -77,7 +77,7 @@ execution:
       memory: 5G
     merge_bam:
       threads: 1
-      memory: 5G
+      memory: 16G
     tag_with_gene_exon:
       threads: 1
       memory: 5G

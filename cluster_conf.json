@@ -70,7 +70,7 @@
         "nthreads": 1
     },
     "gtf_to_refflat": {
-        "MEM": "30G",
+        "MEM": "20G",
         "h_stack": "128M",
         "nthreads": 1
     },
@@ -90,7 +90,7 @@
         "nthreads": 4
     },
     "merge_bam": {
-        "MEM": "5G",
+        "MEM": "16G",
         "h_stack": "128M",
         "nthreads": 1
     },
