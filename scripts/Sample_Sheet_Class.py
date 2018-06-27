@@ -109,10 +109,10 @@ class experiment:
         for sample in sample_sheet:
             method = sample['method']
             if not method in methods:
-                message = 'Sample sheet contains unknown method:' + sample + '\n'
+                message = 'Sample sheet contains unknown method:' + sample['sample_name'] + '\n'
                 message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
                 sys.exit(message)
-        
+        sys.exit('tusam')
         samples = {}
         # Check that reads files exist
         for row in sample_sheet:
