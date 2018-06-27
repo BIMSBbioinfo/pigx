@@ -455,6 +455,7 @@ rule gtf_to_refflat:
         'O=' + str(output.outfile),
         '2>' + str(log.log)
         ])
+        print(command, file=sys.stderr)
         shell(command)
 
 
@@ -496,6 +497,7 @@ rule merge_fastq_to_bam:
         'SORT_ORDER=queryname',
         '2>' + str(log.log)
         ])
+        print(command, file=sys.stderr)
         shell(command)
 # ----------------------------------------------------------------------------- #
 rule tag_cells:
@@ -536,6 +538,7 @@ rule tag_cells:
         'INPUT='  + str(input.infile),
         'OUTPUT=' + str(output.outfile)
         ])
+        print(command, file=sys.stderr)
         shell(command)
 
 # ----------------------------------------------------------------------------- #
@@ -557,7 +560,7 @@ rule tag_molecules:
         barcoded_read = 1,
         discard_read  = 'true'
     log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_molecules.log")
 
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
