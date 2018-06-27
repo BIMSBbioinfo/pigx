@@ -48,7 +48,7 @@ execution:
       memory: 30G
     final_report:
       threads: 1
-      memory: 20G
+      memory: 40G
 
 tools:
   fastqc:
