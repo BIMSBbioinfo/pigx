@@ -9,35 +9,48 @@ Extend_Regions = function(
     outpath,
     extend       = NULL,
     scale_index  = FALSE,
-    scale_factor = 1e6
+    scale_factor = 1e6,
+    chunk_size   = 1e7,
+    library      = 'single'
 ){
 
-    suppressPackageStartupMessages(library(GenomicRanges))
-    suppressPackageStartupMessages(library(data.table))
-    suppressPackageStartupMessages(library(rtracklayer))
+    suppressPackageStartupMessages({
+        library(GenomicRanges)
+        library(GenomicAlignments)
+        library(rtracklayer)
+        library(Rsamtools)
+    })
     if(!is.numeric(extend))
         stop('Extend_Regions: extend parameter needs to be a number')
 
     if(!file.exists(inpath))
         stop('Extend_Regions: input file does not exist')
-
-
-    f = fread(inpath)
-    setnames(f,c('chr','start','end','name','x','strand'))
-    f[strand == '+', end := start[strand == '+'] + as.integer(extend)]
-    f[strand == '-', start := end[strand == '-'] - as.integer(extend)]
-    if(any(f$start < 0)){
-        warning('Removing reads with start < 0')
-        f = f[f$start >= 0]
+    
+    if(library == 'paired'){
+        param   = ScanBamParam(flag=scanBamFlag(isPaired = TRUE, isProperPair=TRUE))
+    }else{
+        param   = ScanBamParam(flag=scanBamFlag(isPaired = FALSE))
     }
-
-    g = makeGRangesFromDataFrame(as.data.frame(f))
-    cov = coverage(g)
-
+    bamfile = BamFile(inpath, yieldSize=chunk_size)
+    open(bamfile)
+    lcov = NULL
+    total = 0
+    while (length(chunk <- readGAlignments(bamfile, param=param))) {
+        gchunk = resize(granges(chunk), width=extend)
+        cov = coverage(gchunk)
+        if(is.null(lcov)){
+            lcov = cov   
+        }else{
+            lcov = lcov + cov
+        }
+        total = total+length(gchunk)
+    }
+    close(bamfile)
+    
     if(scale_index == 'yes' || scale_index == TRUE)
-        cov = round(cov * (scale_factor/nrow(f)),2)
+        lcov = round(lcov * (scale_factor/total),2)
 
-    export.bw(cov, outpath)
+    export.bw(lcov, outpath)
 }
 
 # ---------------------------------------------------------------------------- #
@@ -45,4 +58,6 @@ Extend_Regions(
   inpath        = argv$input[['file']],
   outpath       = argv$output[['outfile']],
   extend        = argv$params[['extend']],
-  scale_index   = argv$params[['scale']])
+  scale_index   = argv$params[['scale']],
+  library       = argv$params[['library']] 
+)

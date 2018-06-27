@@ -1,32 +1,15 @@
 # ----------------------------------------------------------------------------- #
-rule bam2bed:
-    input:
-        file   = os.path.join(PATH_MAPPED, "{name}/","{name}" + BAM_SUFFIX),
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bed")
-    params:
-        bamToBed = SOFTWARE['bamToBed']['executable']
-    log:
-        logfile = os.path.join(PATH_LOG, 'bam2bed.log')
-    message:"""
-        Converting to Bed:
-            input : {input.file}
-            output: {output.outfile}
-    """
-    shell: """
-        {params.bamToBed} -i {input.file} > {output.outfile} 2> {log.logfile}
-    """
-
 rule bam2bigWig:
     input:
-        file    = rules.bam2bed.output.outfile,
+        file    = rules.samtools_sort.output,
         chrlen  = rules.index_to_chrlen.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bw")
     params:
         extend   = PARAMS['export_bigwig']['extend'],
         scale    = PARAMS['export_bigwig']['scale_bw'],
-        Rscript  = SOFTWARE['Rscript']['executable']
+        Rscript  = SOFTWARE['Rscript']['executable'],
+        library  = lambda wc: get_library_type(wc.name)
     log:
         logfile = os.path.join(PATH_LOG, 'bam2bigWig.log')
     message:"""
