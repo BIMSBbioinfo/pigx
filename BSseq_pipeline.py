@@ -254,11 +254,11 @@ rule diffmeth_report:
     output:
         report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
     params:
-        source_dir  = config['locations']['input-dir'],
-        scripts_dir = DIR_scripts,
+        source_dir   = config['locations']['input-dir'],
+        scripts_dir  = DIR_scripts,
         diffmeth_dir = DIR_diffmeth,
-        genome_dir  = config['locations']['genome-dir'],
-        out_dir     = OUTDIR,
+        genome_dir   = config['locations']['genome-dir'],
+        out_dir      = OUTDIR,
         cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
         refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
         chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
@@ -337,15 +337,15 @@ rule diffmeth:
 rule methseg:
     ## paths inside input and output should be relative
     input:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS")
+        rdsfile      = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS")
     output:
-        grfile      = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}_meth_segments.bed")
+        grfile       = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        bedfile      = os.path.join(DIR_seg,"{prefix}_meth_segments.bed")
     params:
-        methCallRDS = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
-        methSegGR       = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.bed"),
-        methSegPng      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.png")
+        methCallRDS  = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
+        methSegGR    = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
+        methSegBed   = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.bed"),
+        methSegPng   = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.png")
     log:
         os.path.join(DIR_seg,"{prefix}_meth_segments.log")
     message: fmt("Segmenting methylation profile for {input.rdsfile}.")
@@ -481,9 +481,9 @@ rule bismark_align_and_map_se:
         outdir = "--output_dir  "+DIR_mapped,
         nucCov = "--nucleotide_coverage",
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
-        useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(tool('samtools')),
-        tempdir     = "--temp_dir " + DIR_mapped,
+        useBowtie2   = "--bowtie2 ",
+        samtools     = "--samtools_path "+ os.path.dirname(tool('samtools')),
+        tempdir      = "--temp_dir " + DIR_mapped,
         cores = "--multicore " + bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_se_mapping.log"
@@ -505,13 +505,13 @@ rule bismark_align_and_map_pe:
     params:
         bismark_args = config['tools']['bismark']['args'],
         genomeFolder = "--genome_folder " + GENOMEPATH,
-        outdir = "--output_dir  "+DIR_mapped,
-        nucCov = "--nucleotide_coverage",
+        outdir       = "--output_dir  "+DIR_mapped,
+        nucCov       = "--nucleotide_coverage",
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
-        useBowtie2  = "--bowtie2 ",
-        samtools    = "--samtools_path "+ os.path.dirname(tool('samtools')),
-        tempdir     = "--temp_dir "+DIR_mapped,
-        cores = "--multicore "+bismark_cores
+        useBowtie2   = "--bowtie2 ",
+        samtools     = "--samtools_path "+ os.path.dirname(tool('samtools')),
+        tempdir      = "--temp_dir "+DIR_mapped,
+        cores        = "--multicore "+bismark_cores
     log:
         DIR_mapped+"{sample}_bismark_pe_mapping.log"
     message: fmt("Mapping paired-end reads to genome {ASSEMBLY}.")
@@ -532,8 +532,8 @@ rule bismark_genome_preparation:
     params:
         bismark_genome_preparation_args = config['tools']['bismark-genome-preparation']['args'],
         pathToBowtie = "--path_to_bowtie "+ os.path.dirname(tool('bowtie2')),
-        useBowtie2 = "--bowtie2 ",
-        verbose = "--verbose "
+        useBowtie2   = "--bowtie2 ",
+        verbose      = "--verbose "
     log:
         'bismark_genome_preparation_'+ASSEMBLY+'.log'
     message: fmt("Converting {ASSEMBLY} Genome into Bisulfite analogue")
@@ -607,11 +607,11 @@ rule trim_reads_se:
     output:
        DIR_trimmed+"{sample}_trimmed.fq.gz" #---- this ALWAYS outputs .fq.qz format.
     params:
-       extra          = config['tools']['trim-galore']['args'],
-       outdir = "--output_dir "+DIR_trimmed,
-       phred = "--phred33",
-       gz = "--gzip",
-       cutadapt = "--path_to_cutadapt " + tool('cutadapt'),
+       extra      = config['tools']['trim-galore']['args'],
+       outdir     = "--output_dir "+DIR_trimmed,
+       phred      = "--phred33",
+       gz         = "--gzip",
+       cutadapt   = "--path_to_cutadapt " + tool('cutadapt'),
     log:
        DIR_trimmed+"{sample}.trimgalore.log"
     message: fmt("Trimming raw single-end read data from {input}")
@@ -653,7 +653,7 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         DIR_rawqc+"{sample}_fastqc.zip"
     params:
         fastqc_args = config['tools']['fastqc']['args'],
-        outdir = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
+        outdir      = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
     log:
         DIR_rawqc+"{sample}_fastqc.log"
     message: fmt("Quality checking raw read data from {input}")
