@@ -22,7 +22,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+if 'yes' == '@capture_environment@':
+    import os, sys
+    os.environ["R_LIBS_SITE"] = "@R_LIBS_SITE@"
+    os.environ["PYTHONPATH"] = "@PYTHONPATH@"
+    # Setting PYTHONPATH does not help with dependencies needed for
+    # this script.
+    for directory in "@PYTHONPATH@".split(":"):
+        try:
+            sys.path.index(directory)
+        except ValueError:
+            sys.path.insert(1, directory)
 
 
 import argparse
@@ -325,7 +335,7 @@ def prepare_links():
         contents = path.join(where, 'etc/CONTENTS.txt')
     else:
         contents = path.join(config['locations']['pkgdatadir'], 'CONTENTS.txt')
-    shutil.copy(contents, path.join(config['locations']['output-dir'], 'pigx_work/'))
+    shutil.copyfile(contents, path.join(config['locations']['output-dir'], 'pigx_work/CONTENTS.txt'))
 
     # Link the reference genome
     try:
@@ -491,12 +501,13 @@ if config['execution']['submit-to-cluster']:
             exit(1)
         else:
             raise
-    qsub = "qsub -V  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
+    qsub = "qsub -v R_LIBS_USER -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
     if config['execution']['cluster']['args']:
         qsub += " " + config['execution']['cluster']['args']
     command += [
         "--cluster-config={}".format(cluster_config_file),
         "--cluster={}".format(qsub),
+        "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
