@@ -327,7 +327,7 @@ rule counts_from_SALMON:
 
 rule index_bam:
   input: rules.star_map.output[0]
-  output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bai')
+  output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam.bai')
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
