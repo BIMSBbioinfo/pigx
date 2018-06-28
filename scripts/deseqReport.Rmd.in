@@ -292,10 +292,15 @@ invisible(dev.off())
 ```{r computePCAplots} 
 plotGroups <- c(covariates, 'AnalysisGroup', 'group')
 pcaPlots <- lapply(plotGroups, function(g) {
-  df <- DESeq2::plotPCA(object = vsd, intgroup = g, returnData = TRUE) 
+  pca <- stats::prcomp(t(vsd.counts), center = TRUE)
+  pcaSummary <- summary(pca)
+  df <- merge(as.data.frame(pca$x), colData, by = 'row.names')
   ggplot(df, aes(x = PC1, y = PC2)) + 
     geom_point(aes_string(color = g)) + 
-    geom_label_repel(aes(label = name), size = 3)
+    geom_label_repel(aes(label = Row.names), size = 3) + 
+    labs(x = paste0('PC1 (',round(pcaSummary$importance[2, 'PC1'] * 100, 1),'%)'), 
+         y = paste0('PC2 (',round(pcaSummary$importance[2, 'PC2'] * 100, 1),'%)')) + 
+    theme_bw()
 })
 #save image to folder
 pdf(file = file.path(imagesDir, 'pcaPlots.pdf'))
