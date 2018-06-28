@@ -441,6 +441,7 @@ if(length(select) > 1) {
 ```
 
 
+
 ```{r results='asis'}
 if(runGO == FALSE) {
   cat("Warning:Skipping GO analysis because `organism` option is not set in settings.yaml file\n")
@@ -453,24 +454,32 @@ if(runGO == FALSE) {
 
 ```{r goAnalysisTitle, eval = runGO, results='asis'}
 cat("# GO Term Enrichment Analysis\n")
-cat("\n The following tables list GO terms for up- and down-regulated genes. GO term analysis was carried out using [g:Profiler](https://cran.r-project.org/web/packages/gProfileR/) R package. Up-regulated genes are defined as those genes with adjusted p-value of less than 0.1 and log2 fold change value of greater than 1. Down-regulated genes are defined as those genes with adjusted p-value of less than 0.1 and log2 fold change of less than -1.")
+cat("\n The following table list GO terms for differentially expressed genes. GO term analysis was carried out using [g:Profiler](https://cran.r-project.org/web/packages/gProfileR/) R package. Differentially expressed genes are defined as those genes with adjusted p-value of less than 0.1.")
 ```
 
 ```{r goAnalysis, eval = runGO}
-genesUp <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 0,]) 
-genesDown <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < 0,]) 
-```
+#filter genes for differential expression
+DEgenes <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1,]) 
 
-```{r goAnalysisTitleUp, eval = runGO, results='asis'}
-cat("## GO Terms for Up-regulated Genes\n")
-```
-
-```{r goAnalysisUp, eval = runGO}
-goUp <- gProfileR::gprofiler(query = genesUp, 
+#search for enriched GO terms within the GO and pathway domains 
+goResults <- gProfileR::gprofiler(query = DEgenes, 
                              organism = organism, 
                              hier_filtering = "none",
-                             significant = TRUE)
-DT::datatable(goUp, 
+                             significant = TRUE, 
+                             src_filter = c('GO', 'KEGG', 'REAC', 'CORUM'))
+#order by p-value
+goResults <- goResults[order(goResults$p.value),]
+
+#save full GO term table to disk 
+goResultsFile <- file.path(workdir, paste0(prefix, '.GOterms.tsv'))
+write.table(x = goResults, 
+            file = goResultsFile, 
+            quote = FALSE, sep = '\t')
+
+#only display top GO terms in the HTML report.
+max <- ifelse(nrow(goResults) > 1000, 1000, nrow(goResults))
+
+DT::datatable(goResults[1:max,], 
         extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
         options = list(fixedColumns = TRUE, 
                        scrollY = 400,
@@ -479,37 +488,13 @@ DT::datatable(goUp,
                        dom = 'Bfrtip',
                        buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
                        columnDefs = list(
-                         list(targets = c(0,1,2,5,9,10,11,13,14), visible = FALSE)
+                         list(targets = c(0,1,2,5,9,11,13,14), visible = FALSE)
                        )
                        ),
         filter = 'bottom'
         )
 ```
 
-```{r goAnalysisTitleDown, eval = runGO, results='asis'}
-cat("## GO Terms for Down-regulated Genes\n")
-```
-
-```{r goAnalysisDown, eval = runGO}
-goDown <- gProfileR::gprofiler(query = genesDown, 
-                               organism = organism, 
-                               hier_filtering = "none", 
-                               significant = TRUE)
-DT::datatable(goDown, 
-        extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
-        options = list(fixedColumns = TRUE, 
-                       scrollY = 400,
-                       scrollX = TRUE,
-                       scroller = TRUE,
-                       dom = 'Bfrtip',
-                       buttons = c('colvis', 'copy', 'print', 'csv','excel', 'pdf'), 
-                       columnDefs = list(
-                         list(targets = c(0,1,2,5,9,10,11,13,14), visible = FALSE)
-                       )
-                       ),
-        filter = 'bottom'
-        )
-```
 
 # Session Information
 ```{r sessionInfo}
