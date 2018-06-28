@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------- #
 rule bam2bigWig:
     input:
-        file    = rules.samtools_sort.output,
+        file    = os.path.join(PATH_MAPPED, "{name}","{name}" + BAM_SUFFIX),
         chrlen  = rules.index_to_chrlen.output.outfile
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bw")
@@ -24,7 +24,7 @@ rule bam2bigWig:
 # ----------------------------------------------------------------------------- #
 rule makelinks:
     input:
-        file = os.path.join(PATH_MAPPED, "{name}", "{name}" + '.bw')
+        file = rules.bam2bigWig.output.outfile
     output:
         outfile = os.path.join(PATH_BW, "{name}.bw")
     run:
