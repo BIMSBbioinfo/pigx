@@ -282,20 +282,25 @@ invisible(dev.off())
 The MA plot gives an overview of the comparison between the two groups in the experiment. The log2 fold change for each gene is plotted on the y axis, against the average expression of that gene on the x axis.
 
 ```{r plot_MA}
-DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
+DESeq2::plotMA(DEtable, main=paste("MA plot"))
 #save image to folder
 pdf(file = file.path(imagesDir, 'MA_plot.pdf'))
-DESeq2::plotMA(DEtable, main=paste("MA plot"), ylim=c(-2,2))
+DESeq2::plotMA(DEtable, main=paste("MA plot"))
 invisible(dev.off())
 ```
 
 ```{r computePCAplots} 
 plotGroups <- c(covariates, 'AnalysisGroup', 'group')
 pcaPlots <- lapply(plotGroups, function(g) {
-  df <- DESeq2::plotPCA(object = vsd, intgroup = g, returnData = TRUE) 
+  pca <- stats::prcomp(t(vsd.counts), center = TRUE)
+  pcaSummary <- summary(pca)
+  df <- merge(as.data.frame(pca$x), colData, by = 'row.names')
   ggplot(df, aes(x = PC1, y = PC2)) + 
     geom_point(aes_string(color = g)) + 
-    geom_label_repel(aes(label = name), size = 3)
+    geom_label_repel(aes(label = Row.names), size = 3) + 
+    labs(x = paste0('PC1 (',round(pcaSummary$importance[2, 'PC1'] * 100, 1),'%)'), 
+         y = paste0('PC2 (',round(pcaSummary$importance[2, 'PC2'] * 100, 1),'%)')) + 
+    theme_bw()
 })
 #save image to folder
 pdf(file = file.path(imagesDir, 'pcaPlots.pdf'))
@@ -323,10 +328,10 @@ The pairwise correlation plot provides a more detailed view of which samples are
 
 ```{r plot_corr}
 M <- stats::cor(vsd.counts)
-corrplot::corrplot(corr = M, order = 'hclust', method = 'ellipse', type = 'lower', tl.srt = 45)
+corrplot::corrplot(corr = M, order = 'hclust', method = 'square', type = 'lower', tl.srt = 45, addCoef.col = 'white')
 #save image to folder
 pdf(file = file.path(imagesDir, 'correlationPlot.pdf'))
-corrplot::corrplot(corr = M, order = 'hclust', method = 'ellipse', type = 'lower', tl.srt = 45)
+corrplot::corrplot(corr = M, order = 'hclust', method = 'square', type = 'lower', tl.srt = 45, addCoef.col = 'white')
 invisible(dev.off())
 ```
 
