@@ -226,7 +226,7 @@ rule combine_technical_replicates:
         import os
         import magic as mg
         import gzip
-        for attr in ['reads', 'barcode']:            
+        for attr in ['reads', 'barcode']:
             out_file = str(output[attr])
             # remove gz from out file if it's there
             if '.gz' in out_file:
