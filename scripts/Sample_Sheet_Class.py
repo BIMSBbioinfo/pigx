@@ -10,7 +10,7 @@ class experiment:
         self.config = config
         self.name = name
         self.SAMPLE_SHEET = []
-    
+
     # ----------------------------------------------------------------------------- #
     def init_SAMPLE_SHEET(self, PATH_SAMPLE_SHEET):
         """Load the SAMPLE_SHEET as csv and set the *SAMPLE_SHEET* attribute"""
@@ -21,9 +21,9 @@ class experiment:
             # removes empty rows from the sample_sheet
             SAMPLE_SHEET = [dict(zip(header, row)) for row in rows if len(row) > 0]
             self.SAMPLE_SHEET = SAMPLE_SHEET
-            
+
         self.validate_sheet_init()
-    
+
     # ----------------------------------------------------------------------------- #
     def lookup(self, column, predicate, fields=[]):
         """Function for fetching elements from the *SAMPLE_SHEET*"""
@@ -33,17 +33,17 @@ class experiment:
             records = [line for line in self.SAMPLE_SHEET if line[column]==predicate]
         return [record[field] for record in records for field in fields]
 
-    # ----------------------------------------------------------------------------- #        
+    # ----------------------------------------------------------------------------- #
     def list_attr(self, attr):
         """Function for listing values for *atrr*"""
         return [line[attr] for line in self.SAMPLE_SHEET]
 
-    # ----------------------------------------------------------------------------- #        
+    # ----------------------------------------------------------------------------- #
     def list_rows(self, column, value):
         records = [line for line in self.SAMPLE_SHEET if line[column]==value]
         return records
- 
-    # ----------------------------------------------------------------------------- #       
+
+    # ----------------------------------------------------------------------------- #
     def collapse_technical_replicates(self, PATH_TO_NEW):
         """Function for collapsing technical replicates"""
         sample_names = set(self.list_attr('sample_name'))
@@ -54,7 +54,7 @@ class experiment:
             barcode = set(self.lookup('sample_name', name, ['barcode']))
             reads = set(self.lookup('sample_name', name, ['reads']))
             to_collapse[name]= {'barcode': barcode, 'reads': reads}
-            collapsed[name] = {'barcode': name + '_barcode.fastq.gz', 
+            collapsed[name] = {'barcode': name + '_barcode.fastq.gz',
                                 'reads': name + '_reads.fastq.gz'}
             tmp.append(self.list_rows('sample_name', name)[0])
             tmp[len(tmp) - 1]['barcode'] = collapsed[name]['barcode']
@@ -69,15 +69,15 @@ class experiment:
             dict_writer.writeheader()
             dict_writer.writerows(data)
 
-    # ----------------------------------------------------------------------------- #            
+    # ----------------------------------------------------------------------------- #
     def fetch_reads(self, sample_name):
         return self.to_collapse[sample_name]['reads']
 
-    # ----------------------------------------------------------------------------- #        
+    # ----------------------------------------------------------------------------- #
     def fetch_barcodes(self, sample_name):
         return self.to_collapse[sample_name]['barcode']
 
-    # ----------------------------------------------------------------------------- #        
+    # ----------------------------------------------------------------------------- #
     def get_fastq_files(self, s_name, slot):
         """Function to get the FASTQ files associated with a sample"""
         if slot == 'reads':
@@ -93,11 +93,11 @@ class experiment:
             barcodes.sort()
             return barcodes
 
-    # ----------------------------------------------------------------------------- #            
+    # ----------------------------------------------------------------------------- #
     def validate_sheet_init(self):
         """Function to validate the sample sheet"""
         sample_sheet = self.SAMPLE_SHEET
-        
+
         # Check if the required fields are found in the sample sheet
         required_fields = set(['sample_name', 'barcode', 'reads', 'method'])
         not_found = required_fields.difference(set(sample_sheet[0].keys()))
@@ -112,7 +112,7 @@ class experiment:
                 message = 'Sample sheet contains unknown method:' + sample['sample_name'] + '\n'
                 message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
                 sys.exit(message)
-        sys.exit('tusam')
+
         samples = {}
         # Check that reads files exist
         for row in sample_sheet:
