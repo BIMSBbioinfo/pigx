@@ -343,6 +343,7 @@ rule genomeCoverage:
 
 rule multiqc:
   input:
+    salmon_output=expand(os.path.join(SALMON_DIR, "{sample}", "quant.sf"), sample = SAMPLES),  
     star_output=expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample=SAMPLES),
     fastqc_output=expand(os.path.join(FASTQC_DIR, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample=SAMPLES),
   output: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
