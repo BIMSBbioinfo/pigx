@@ -52,7 +52,7 @@ execution:
       threads:  1
       memory: 16G
     tag_cells:
-      threads:  4
+      threads:  1
       memory: 10G
     tag_molecules:
       threads: 8
