@@ -1,6 +1,7 @@
 ---
-title: "Quality control of ChIP-seq data"
-author: "PiGx ChIP-seq"
+title: "PiGx-ChIPseq - Quality control of ChIP-seq data Report"
+author: "BIMSB Bioinformatics Platform"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 header-includes:
   - \usepackage{comment}
 output:
@@ -425,6 +426,10 @@ peak_number_width = length(unique(lstats$Annotate_Peaks$sample_name))*0.5+4
 print(g)
 ```
 
-
-
 ---
+
+# Session Information
+```{r sessionInfo}
+sessionInfo()
+```
+
