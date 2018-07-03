@@ -277,6 +277,7 @@ def prepare_links():
     os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
     os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
     os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+    os.environ['PIGX_PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
     os.environ['R_LIBS_USER'] = "/dev/null"
 
 def display_logo():
@@ -401,7 +402,7 @@ if config['execution']['submit-to-cluster']:
             exit(1)
         else:
             raise
-    qsub = "qsub -v R_LIBS_USER -v PATH -v GUIX_LOCPATH -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    qsub = "qsub -v R_LIBS_USER -v PIGX_PATH -v GUIX_LOCPATH -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
     command += [
         "--cluster-config={}".format(cluster_config_file),
         "--cluster={}".format(qsub),
