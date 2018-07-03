@@ -4,7 +4,7 @@
 if [ 'yes' = '@capture_environment@' ]; then
     # Ensure that for tools that are looked up via PATH our preferred
     # variants are used.
-    export PATH="${PIGX_PATH}"
+    export PATH="$PIGX_PATH"
     export R_LIBS_SITE="@R_LIBS_SITE@"
     export PYTHONPATH="@PYTHONPATH@"
 
