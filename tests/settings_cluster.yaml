@@ -1,5 +1,5 @@
 locations:
-  output-dir: /fast/AG_Akalin/vfranke/pigx/scrnaseq-out
+  output-dir: out/
   reads-dir: sample_data/reads/
   tempdir: /fast/AG_Akalin/vfranke/pigx/Tmp
 
