@@ -175,6 +175,7 @@ scaleDM <- function(dm) {
   #center
   #subtract column means from corresponding columns 
   cdm <- t(t(dm) - DelayedMatrixStats::rowMeans2(t(dm))) #centred delayed matrix
+  
   #scale
   #divide the centered columns by their standard deviations
   scdm <- t(t(cdm) / DelayedMatrixStats::rowSds(t(cdm))) #scaled centered delayed matrix
@@ -308,8 +309,8 @@ message(date()," Scaling normalized counts")
 scaled_counts <- round(scaleDM(dm = counts_per_million), 2)
 
 #4.4 save processed assay data
-assays(sce) <- SimpleList("cnts" = counts, 
-                          "cpm" = counts_per_million, 
+assays(sce) <- SimpleList("cnts"  = counts, 
+                          "cpm"   = counts_per_million, 
                           "scale" = scaled_counts)
 
 saveRDS(object = sce, file = paste0(outFile, '.intermediate.RDS'))
@@ -317,7 +318,7 @@ saveRDS(object = sce, file = paste0(outFile, '.intermediate.RDS'))
 
 #4.5 compute gene variability across conditions 
 message(date()," Computing gene variability across cells")
-fit <- scran::trendVar(x = sce, assay.type = 'cpm', use.spikes = FALSE)
+fit    <- scran::trendVar(x = sce, assay.type = 'cpm', use.spikes = FALSE)
 decomp <- scran::decomposeVar(x = sce, fit = fit, assay.type = 'cpm')
 rowData(sce) <- cbind(rowData(sce), 
                       DataFrame('fitted_variability' = decomp$bio))
@@ -364,10 +365,11 @@ if(skipCycleScore == FALSE) {
     
   if(overlap > 0.5) { #require at least 50% overlap in the gene id overlap
     message(date()," Computing cell cycle phase scores")
-    assigned <- scran::cyclone(x = sce, 
+    m = as.matrix(assays(sce)[['cpm']])
+    assigned <- scran::cyclone(x = m, 
                                gene.names = rowData(sce)$Genes, 
-                               assay.type = 'cpm', 
-                               pairs=cc.pairs)
+                               pairs      = cc.pairs, 
+                               iter       = 100)
     phases <- assigned$phases
     phases[is.na(phases)] <- 'unknown'
     colData(sce) <- cbind(colData(sce), 
