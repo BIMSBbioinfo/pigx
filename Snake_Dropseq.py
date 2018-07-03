@@ -1083,7 +1083,7 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} --path_mapped='{params.path_mapped}' &> {log.log}"
+    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} --path_mapped='{params.path_mapped}' 2>&1 {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
