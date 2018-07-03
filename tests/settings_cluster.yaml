@@ -26,22 +26,22 @@ execution:
   rules:
     __default__:
       threads: 1
-      memory: 8G
+      memory: 10G
     link_primary_annotation:
       threads: 1
-      memory: 4G
+      memory: 10G
     combine_reference:
       threads: 1
-      memory: 4G
+      memory: 10GG
     make_star_reference:
       threads:  1
       memory: 20G
     combine_gtf:
       threads: 1,
-      memory: 4G
+      memory: 10GG
     fasta_dict:
       threads: 1
-      memory: 2G
+      memory: 10G
     change_gtf_id:
       threads:  1
       memory: 10G
@@ -56,7 +56,7 @@ execution:
       memory: 10G
     tag_molecules:
       threads: 8
-      memory: 5G
+      memory: 10G
     filter_bam:
       threads:  1
       memory: 10G
@@ -71,34 +71,34 @@ execution:
       memory: 10G
     map_star:
       threads: 4
-      memory: 8G
+      memory: 10G
     sort_aligned:
       threads:  1
-      memory: 5G
+      memory: 10G
     merge_bam:
       threads: 1
       memory: 16G
     tag_with_gene_exon:
       threads: 1
-      memory: 5G
+      memory: 10G
     extract_read_statistics:
       threads: 1
-      memory: 8G
+      memory: 10G
     bam_tag_histogram:
       threads:  1
       memory: 64G
     find_absolute_read_cutoff:
       threads: 1
-      memory: 8G
+      memory: 10G
     get_umi_matrix:
       threads: 1
-      memory: 8G
+      memory: 10G
     get_reads_matrix:
       threads:  1
-      memory:  8G
+      memory: 10G
     extract_downstream_statistics:
       threads: 1
-      memory: 8G
+      memory: 10G
     bam_to_BigWig:
       threads:  1
       memory: 16G
