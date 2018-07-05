@@ -23,10 +23,21 @@
 import os
 from glob import glob
 
-def files_for_sample(proc):
-    return [ expand(proc(config['SAMPLES'][sample]['files'], config['SAMPLES'][sample]['SampleID'])) for sample in config['SAMPLES'] ]
+def dedupe_tag(protocol):
+    if protocol.upper() == "WGBS":
+        return ".deduped"
+    elif protocol.upper() == "RRBS":
+        return ""
+    else:
+        raise Exception("=== ERROR: unexpected protocol ===")
 
-def list_files_rawQC(files, sampleID):
+def files_for_sample(proc):
+    return [ expand(proc(config['SAMPLES'][sample]['files'],
+                         config['SAMPLES'][sample]['SampleID'],
+                         config['SAMPLES'][sample]['Protocol']))
+             for sample in config['SAMPLES'] ]
+
+def list_files_rawQC(files, sampleID, protocol):
     PATH = DIR_rawqc
     if len(files) == 1:
         return [PATH+sampleID+"_fastqc.html"] #---- single end
@@ -36,7 +47,7 @@ def list_files_rawQC(files, sampleID):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_TG(files, sampleID):
+def list_files_TG(files, sampleID, protocol):
     PATH = DIR_trimmed
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed.fq.gz"] #---- single end
@@ -46,7 +57,7 @@ def list_files_TG(files, sampleID):
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
-def list_files_posttrim_QC(files, sampleID):
+def list_files_posttrim_QC(files, sampleID, protocol):
     PATH = DIR_posttrim_QC
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed_fastqc.html" ] #---- single end
@@ -55,7 +66,7 @@ def list_files_posttrim_QC(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_bismark(files, sampleID):
+def list_files_bismark(files, sampleID, protocol):
     PATH = DIR_mapped
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed_bismark_bt2_SE_report.txt",
@@ -66,16 +77,16 @@ def list_files_bismark(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_dedupe(files, sampleID):
-    PATH = DIR_deduped
+def list_files_dedupe(files, sampleID, protocol):
+    PATH = DIR_sorted
     if len(files) == 1:
-        return [PATH+sampleID+"_se_bt2.sorted.deduped.bam"] #---- single end
+        return [PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bam"] #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped.bam"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".bam"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_files_sortbam(files, sampleID):
+def list_files_sortbam(files, sampleID, protocol):
     PATH = DIR_sorted
     if len(files) == 1:
         return [PATH+sampleID+"_se_bt2.sorted.bam"] #---- single end
@@ -84,33 +95,37 @@ def list_files_sortbam(files, sampleID):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def bam_processing(files, sampleID):
+def bam_processing(files, sampleID, protocol):
     PATH = DIR_methcall
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted.deduped_methylRaw.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS"] #---- paired end
 
-def bigwig_exporting(files, sampleID):
-    PATH = DIR_bigwig
+def bigwig_exporting(files, sampleID, protocol):
+    PATH = os.path.join(config['locations']['output-dir'], DIR_bigwig )
     if len(files) == 1:
-        return  PATH+sampleID+"_se.bw" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bw" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_pe.bw"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".bw"] #---- paired end
 
-def methSeg(files, sampleID):
+def methSeg(files, sampleID, protocol):
     PATH = DIR_seg
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted.deduped_meth_segments_gr.RDS" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_meth_segments_gr.RDS"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_final_reports(files, sampleID):
+def list_final_reports(files, sampleID, protocol):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted.deduped_"+ASSEMBLY+"_final.html" #---- single end
+        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html" #---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.deduped_"+ASSEMBLY+"_final.html"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
 
@@ -133,35 +148,12 @@ def get_fastq_name(full_name):
 
     return(output)
 
-SAMPLE_IDS = list(config["SAMPLES"].keys())
-SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
-
-def diff_meth_input(wc):
-  sample = wc.prefix
-  sampleid = get_fastq_name(sample)
-  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
-  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
-
-  mylist = []
-  for x in config["general"]["differential-methylation"]["treatment-groups"]:
-    if treatment_of_sampleid in x:
-      name_of_dir = x[0]+"_"+x[1]+".sorted_"+wc.assembly+"_annotation.diff.meth.nb.html"
-      mylist.append(DIR_annot + name_of_dir)
-  return(mylist)
-
-def finalReportDiffMeth_input(prefix):
-  sampleid = get_fastq_name(prefix)
-  sample_treatments_dict = dict(zip(SAMPLE_IDS, SAMPLE_TREATMENTS))
-  treatment_of_sampleid = sample_treatments_dict[ sampleid ]
-  treatments = ["_".join(pair) for pair in config["general"]["differential-methylation"]["treatment-groups"] if treatment_of_sampleid in pair]
-  outList = []
-  if treatments:
-      outList  = [ "{}{}.deduped_{}.RDS".format(DIR_diffmeth,treat,type) for type in ["diffmeth","diffmethhyper","diffmethhypo"] for treat in treatments]
-      outList += [ "{}{}.deduped_diffmeth.bed".format(DIR_diffmeth,treat,type) for treat in treatments ]
-
-  return  outList
-
 def get_sampleids_from_treatment(treatment):
+  treatment = treatment.replace(".deduped", "")
+
+  SAMPLE_IDS = list(config["SAMPLES"].keys())
+  SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+
   treatments = treatment.split("_")
   sampleids_list = []
   for t in treatments:
@@ -171,18 +163,23 @@ def get_sampleids_from_treatment(treatment):
   sampleids_list = list(sum(sampleids_list, []))
   return(sampleids_list)
 
+def makeDiffMethPath(DIR_diffmeth, suffix, wc):
+    return DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_' + suffix
+
 # For only CpG context
 def diffmeth_input_function(wc):
   treatments = wc.treatment
-  sampleids = get_sampleids_from_treatment(treatments)
+  treatments = treatments.replace(".deduped", "")
+  sampleids  = get_sampleids_from_treatment(treatments)
 
   inputfiles = []
   for sampleid in sampleids:
     fqname = config["SAMPLES"][sampleid]['fastq_name']
+    protocol = config["SAMPLES"][sampleid]['Protocol']
     if len(fqname)==1:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.sorted.deduped_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
     elif len(fqname)==2:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.sorted.deduped_methylRaw.RDS")]
+      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
     inputfiles.append(inputfile)
 
   inputfiles = list(sum(inputfiles, []))
@@ -250,3 +247,4 @@ def validate_config(config):
 
     if not len(fasta) + len(fa) == 1 :
         bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))
+

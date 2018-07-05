@@ -28,6 +28,13 @@ params:
   difference: 25
   methylDiff_files: list()
   webfetch:     ''
+
+  methylDiff_file:          ''
+  methylDiff_hyper_file:    ''
+  methylDiff_hypo_file:     ''
+  methylDiff_nonsig_file:   ''
+  methylDiffBed:            ''
+
   AnnotateDiffMeth: TRUE
   DiffMeth: TRUE
   MethCall: TRUE
@@ -102,13 +109,13 @@ the logistic regression and overdispersion see [@Wreczycka2017].\n')
 treatmentpair = params$treatment
 assembly = params$assembly
 
-outputdir = paste(params$out_dir, params$diffmeth_dir, sep="/")
-methylDiff_file        <- paste0(outputdir, treatmentpair,'.deduped_diffmeth.RDS')
-methylDiff_hyper_file  <- paste0(outputdir, treatmentpair,'.deduped_diffmethhyper.RDS')
-methylDiff_hypo_file   <- paste0(outputdir, treatmentpair,'.deduped_diffmethhypo.RDS')
-methylDiff_nonsig_file <- paste0(outputdir, treatmentpair,'.deduped_diffmethnonsig.RDS')
+outputdir = params$diffmeth_dir
+methylDiff_file         <- params$methylDiff_file
+methylDiff_hyper_file   <- params$methylDiff_hyper_file
+methylDiff_hypo_file    <- params$methylDiff_hypo_file
+methylDiff_nonsig_file  <- params$methylDiff_nonsig_file
 
-methylDiffBed          <- paste0(outputdir, treatmentpair,'.deduped_diffmeth.bed')
+methylDiffBed           <- params$methylDiffBed
 ```
 
 ```{r DiffMeth.load, eval=DiffMeth}
@@ -337,7 +344,7 @@ cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n')
 
 if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
 
-seqdat_temp    = read.csv(paste0(out_dir,"/",chrom_seqlengths),
+seqdat_temp    = read.csv(chrom_seqlengths,
                           sep="\t", header=FALSE, stringsAsFactors=FALSE)
 chr.len        = seqdat_temp[,2]
 names(chr.len) = seqdat_temp[,1]
