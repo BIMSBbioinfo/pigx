@@ -86,9 +86,20 @@ AX_COMPARE_VERSION([$SAMTOOLS_VERSION], [lt], [$SAMTOOLS_VERSION_MIN],
       [AC_MSG_ERROR([Please install Samtools $SAMTOOLS_VERSION_MIN.])])
   ])
 
+AC_ARG_ENABLE([environment-capture],
+  AS_HELP_STRING([--disable-environment-capture], [Do not capture environment variables.]),
+  [AC_MSG_NOTICE([Environment variables will not be captured.])],
+  [dnl
+AC_MSG_NOTICE([Environment variables will be captured.])
+capture_environment=yes
+AC_ARG_VAR(R_LIBS_SITE, The search path for all R packages)
+AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
+  ])
+AC_SUBST([capture_environment])
 AC_CONFIG_FILES([etc/settings.yaml
                  scripts/deseqReport.Rmd
-                 Makefile])
+                 Makefile
+                 qsub-template.sh])
 AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 AC_CONFIG_FILES([tests/test_trim_galore/test.sh], [chmod +x tests/test_trim_galore/test.sh])
 AC_CONFIG_FILES([tests/test_star/test.sh], [chmod +x tests/test_star/test.sh])

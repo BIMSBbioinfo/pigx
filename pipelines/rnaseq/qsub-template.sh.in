@@ -1,0 +1,11 @@
+#!@GNUBASH@
+# properties = {properties}
+
+if [ 'yes' = '@capture_environment@' ]; then
+    export R_LIBS_SITE="@R_LIBS_SITE@"
+    export PYTHONPATH="@PYTHONPATH@"
+fi
+
+env
+
+{exec_job}
