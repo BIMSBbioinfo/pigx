@@ -136,21 +136,37 @@ tools:
 # HARDCODED adapter parameters
 # This variable extands the pipeline to various technologies. It defines
 # The locations of cell and UMI adapters in fastq1
-# Currently supprorted technologies are dropseq and chromium10x
+# Currently supprorted technologies are dropseq, chromium10x, and 1cellbio
 # base_min/max define the position of the adapters in the fastq file
 adapter_parameters:
-  dropseq:
-    cell_barcode:
-      base_min: 1
-      base_max: 12
-    umi_barcode:
-      base_min: 13
-      base_max: 20
+    dropseq:
+        cell_barcode:
+            base_min: 1
+            base_max: 12
+        umi_barcode:
+            base_min: 13
+            base_max: 20
 
-  chromium10x:
-    cell_barcode:
-      base_min: 1
-      base_max: 16
-    umi_barcode:
-      base_min: 17
-      base_max: 26
+    chromium10x:
+        cell_barcode:
+            base_min: 1
+            base_max: 16
+        umi_barcode:
+            base_min: 17
+            base_max: 26
+
+    ICell8:
+        cell_barcode:
+            base_min: 1
+            base_max: 11
+        umi_barcode:
+            base_min: 12
+            base_max: 25
+
+    CEL-Seq2:
+        cell_barcode:
+            base_min: 7
+            base_max: 12
+        umi_barcode:
+            base_min: 1
+            base_max: 6

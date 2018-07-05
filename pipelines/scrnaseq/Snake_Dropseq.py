@@ -21,6 +21,8 @@ include: os.path.join(PATH_SCRIPT, 'Run_Rscript.py')
 include: os.path.join(PATH_SCRIPT, 'Accessory_Functions.py')
 include: os.path.join(PATH_SCRIPT, 'validate_input.py')
 validate_config(config)
+# class for SAMPLE_SHEET
+include: os.path.join(PATH_SCRIPT, 'Sample_Sheet_Class.py')
 
 # ----------------------------------------------------------------------------- #
 # Software parameters
@@ -38,14 +40,15 @@ ADAPTER_PARAMETERS = config['adapter_parameters']
 
 # ----------------------------------------------------------------------------- #
 # PATHS
-OUTPUT_DIR        = config['locations']['output-dir']
-PATH_FASTQ        = config['locations']['reads-dir']
-TEMPDIR           = config['locations']['tempdir']
-PATH_ANNOTATION   = os.path.join(OUTPUT_DIR, 'Annotation')
-PATH_MAPPED       = os.path.join(OUTPUT_DIR, 'Mapped')
-PATH_LOG          = os.path.join(OUTPUT_DIR, 'Log')
-PATH_SAMPLE_SHEET = config['locations']['sample-sheet']
-PATH_RSCRIPT      = SOFTWARE['Rscript']['executable']
+OUTPUT_DIR           = config['locations']['output-dir']
+PATH_FASTQ           = config['locations']['reads-dir']
+TEMPDIR              = config['locations']['tempdir']
+PATH_ANNOTATION      = os.path.join(OUTPUT_DIR, 'Annotation')
+PATH_FASTQ_COLLAPSED = os.path.join(OUTPUT_DIR, 'Collapsed')
+PATH_MAPPED          = os.path.join(OUTPUT_DIR, 'Mapped')
+PATH_LOG             = os.path.join(OUTPUT_DIR, 'Log')
+PATH_SAMPLE_SHEET    = config['locations']['sample-sheet']
+PATH_RSCRIPT         = SOFTWARE['Rscript']['executable']
 
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
@@ -62,32 +65,26 @@ if config['annotation']['secondary']:
     REFERENCE_NAMES = REFERENCE_NAMES + [GENOME_NAME_MIX]
 
 ## Load sample sheet
-with open(PATH_SAMPLE_SHEET, 'r') as fp:
-  rows =  [row for row in csv.reader(fp, delimiter=',')]
-  header = rows[0]; rows = rows[1:]
-  SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
+SAMPLE_SHEET = experiment(config = config)
+SAMPLE_SHEET.init_SAMPLE_SHEET(PATH_SAMPLE_SHEET)
 
-# Convenience function to access fields of sample sheet columns that
-# match the predicate.  The predicate may be a string.
-def lookup(column, predicate, fields=[]):
-  if inspect.isfunction(predicate):
-    records = [line for line in SAMPLE_SHEET if predicate(line[column])]
-  else:
-    records = [line for line in SAMPLE_SHEET if line[column]==predicate]
-  return [record[field] for record in records for field in fields]
+## Merge technical replicates
+NEW_SAMPLE_SHEET_PATH = os.path.join(os.path.dirname(PATH_SAMPLE_SHEET), "updated_sheet.csv")
+SAMPLE_SHEET.collapse_technical_replicates(NEW_SAMPLE_SHEET_PATH)
 
-SAMPLE_NAMES = [line['sample_name'] for line in SAMPLE_SHEET]
+SAMPLE_NAMES = SAMPLE_SHEET.list_attr('sample_name')
+
+COLLAPSED_REPLICATES = expand(os.path.join(PATH_FASTQ_COLLAPSED, '{sample}' + "_" +'{fq_type}' + '.fastq.gz'), sample = SAMPLE_NAMES, fq_type = ['reads', 'barcode'])
+
 
 # ----------------------------------------------------------------------------- #
 # check for compatible technology methods
 methods = set(ADAPTER_PARAMETERS.keys())
-for sample in SAMPLE_SHEET:
-    method = sample['method']
+for method in set(SAMPLE_SHEET.list_attr('method')):
     if not method in methods:
-        message = 'Sample sheet contains unknown method:' + sample + '\n'
+        message = 'Sample sheet contains unknown method:' + method + '\n'
         message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
         sys.exit(message)
-
 
 # ----------------------------------------------------------------------------- #
 # sets the temporrary directory to default in the working directory if the tempdir does not exist
@@ -96,8 +93,6 @@ if TEMPDIR == None:
         TEMPDIR = os.environ['TMPDIR']
     else:
         TEMPDIR = '/tmp'
-
-
 
 # ----------------------------------------------------------------------------- #
 # RULES
@@ -205,11 +200,60 @@ if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
 RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
-
+RULE_ALL = RULE_ALL + COLLAPSED_REPLICATES
 # ----------------------------------------------------------------------------- #
 rule all:
     input:
         RULE_ALL
+
+# ----------------------------------------------------------------------------- #
+def get_all_files(wc):
+   h = { 'reads'   : SAMPLE_SHEET.get_fastq_files(wc.name, 'reads'),
+         'barcode' : SAMPLE_SHEET.get_fastq_files(wc.name, 'barcode')}
+   return(h)
+# Combines technical replicates into FASTQ files in [OUTPUT_DIR]/Collapsed
+rule combine_technical_replicates:
+    input:
+        unpack(get_all_files)
+    output:
+        reads = os.path.join(PATH_FASTQ_COLLAPSED, '{name}'+'_reads.fastq.gz'),
+        barcode = os.path.join(PATH_FASTQ_COLLAPSED, '{name}'+'_barcode.fastq.gz')
+
+    message:"""
+            Merge fastq barcodes and reads with technical replicates.
+        """
+    run:
+        import os
+        import magic as mg
+        import gzip
+        for attr in ['reads', 'barcode']:
+            out_file = str(output[attr])
+            # remove gz from out file if it's there
+            if '.gz' in out_file:
+                out_file = out_file[:-3]
+
+            for in_file in input[attr]:
+                in_file = str(in_file)
+                # determine file type of in_file
+                file_type = mg.from_file(in_file, mime=True)
+                # append content of in_file into out_file
+                if 'gzip' in file_type:
+                    with gzip.open(in_file, 'r') as file:
+                        with open(out_file, 'a+') as out:
+                            for line in file:
+                                out.write(str(line.decode('utf-8')))
+                elif genome_file_type == 'text/plain':
+                    with open(in_file, 'r') as file:
+                        with open(out_file, 'a+') as out:
+                            for line in file:
+                                out.write(str(line.decode('utf-8')))
+                else:
+                    os.sys.exit('Unknown input file format')
+                unzipped = open(out_file, 'rb').read()
+                gzf = gzip.open(out_file+'.gz', 'wb')
+                gzf.write(unzipped)
+                gzf.close()
+                os.unlink(out_file)
 
 
 # ----------------------------------------------------------------------------- #
@@ -411,19 +455,16 @@ rule gtf_to_refflat:
         'O=' + str(output.outfile),
         '2>' + str(log.log)
         ])
+        print(command, file=sys.stderr)
         shell(command)
 
 
 # # ----------------------------------------------------------------------------- #
-def get_fastq_files(wc):
-    h = {'barcode' : os.path.join(PATH_FASTQ, lookup('sample_name', wc.name, ['barcode'])[0]),
-         'reads'   : os.path.join(PATH_FASTQ, lookup('sample_name', wc.name, ['reads'])[0])}
-    return h
-
 
 rule merge_fastq_to_bam:
     input:
-        unpack(get_fastq_files)
+        reads = rules.combine_technical_replicates.output.reads,
+        barcode = rules.combine_technical_replicates.output.barcode
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
     params:
@@ -443,7 +484,7 @@ rule merge_fastq_to_bam:
                     reads   : {input.reads}
                 output : {output}
         """
-    run:    
+    run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
 
         command = ' '.join([
@@ -456,6 +497,7 @@ rule merge_fastq_to_bam:
         'SORT_ORDER=queryname',
         '2>' + str(log.log)
         ])
+        print(command, file=sys.stderr)
         shell(command)
 # ----------------------------------------------------------------------------- #
 rule tag_cells:
@@ -479,9 +521,9 @@ rule tag_cells:
        log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-        
+
         # fetches method from the sample_sheet
-        method = lookup('sample_name', params.name, ['method'])[0]
+        method = SAMPLE_SHEET.lookup('sample_name', params.name, ['method'])[0]
         adapter_params = ADAPTER_PARAMETERS[method]['cell_barcode']
 
         command = ' '.join([
@@ -496,6 +538,7 @@ rule tag_cells:
         'INPUT='  + str(input.infile),
         'OUTPUT=' + str(output.outfile)
         ])
+        print(command, file=sys.stderr)
         shell(command)
 
 # ----------------------------------------------------------------------------- #
@@ -517,12 +560,12 @@ rule tag_molecules:
         barcoded_read = 1,
         discard_read  = 'true'
     log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
+       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_molecules.log")
 
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
 
-        method = lookup('sample_name', params.name, ['method'])[0]
+        method = SAMPLE_SHEET.lookup('sample_name', params.name, ['method'])[0]
         adapter_params = ADAPTER_PARAMETERS[method]['umi_barcode']
 
         command = ' '.join([
@@ -1016,7 +1059,7 @@ rule convert_loom_to_singleCellExperiment:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sampleSheetFile={PATH_SAMPLE_SHEET} --gtfFile={PATH_GTF_PRIMARY} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
+    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sampleSheetFile={NEW_SAMPLE_SHEET_PATH} --gtfFile={PATH_GTF_PRIMARY} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -1040,7 +1083,7 @@ rule report:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} --path_mapped='{params.path_mapped}' &> {log.log}"
+    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} --path_mapped='{params.path_mapped}' 2>&1 {log.log}"
 
 # ----------------------------------------------------------------------------- #
 rule bam_to_BigWig:
@@ -1067,7 +1110,8 @@ rule bam_to_BigWig:
 # ----------------------------------------------------------------------------- #
 rule fastqc:
     input:
-        unpack(get_fastq_files)
+        reads = rules.combine_technical_replicates.output.reads,
+        barcode = rules.combine_technical_replicates.output.barcode
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.fastqc.done")
     params:

@@ -30,7 +30,7 @@ Find_Absolute_Read_Cutoff = function(
     dev.off()
 
 
-    cutoff = min(cutoff, nrow(reads_by_cell))
+  cutoff = min(cutoff, nrow(reads_by_cell))
   message('Print output yaml ...')
     infl_point = estimateCellNumber(reads_by_cell[,1], max.cells=cutoff)
     if(length(infl_point) == 0){

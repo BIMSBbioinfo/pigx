@@ -1,0 +1,17 @@
+#!@GNUBASH@
+# properties = {properties}
+
+if [ 'yes' = '@capture_environment@' ]; then
+    # Ensure that for tools that are looked up via PATH our preferred
+    # variants are used.
+    export PATH="$PIGX_PATH"
+    export R_LIBS_SITE="@R_LIBS_SITE@"
+    export PYTHONPATH="@PYTHONPATH@"
+
+    # FIXME: this is an ugly hack to avoid memory problems with Java
+    export MALLOC_ARENA_MAX=1
+fi
+
+env
+
+{exec_job}

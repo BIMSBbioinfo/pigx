@@ -48,8 +48,8 @@ BamToBigWig = function(
     YIELD = function(bfl) {
         param = ScanBamParam(tag="XC", flag=scanBamFlag(isUnmappedQuery=FALSE))
         aln = readGAlignments(bfl, param=param)
-        g   = granges(aln, use.mcols=TRUE)
-        g[g$XC %in% reads_by_cell$V2]
+        aln = aln[values(aln)$XC %in% reads_by_cell$V2]
+        g   = unlist(grglist(aln, use.mcols=TRUE))
     }
 
     bf = BamFile(bamfile, yieldSize=1000000)
