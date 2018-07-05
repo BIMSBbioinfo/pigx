@@ -95,10 +95,7 @@ if args.pipeline not in pipelines or not pipeline_script:
     exit(1)
 
 if os.path.isfile(pipeline_script) and os.access(pipeline_script, os.X_OK):
-    # TODO: we're assuming that pipeline_script is a shell wrapper,
-    # because that's what Guix does, but it could just as well be a
-    # plain Python script.
-    os.execv("@SHELL@", ["pigx", pipeline_script] + args.arguments)
+    os.execv("@PYTHON@", ["pigx", pipeline_script] + args.arguments)
 else:
     print("Cannot execute {}.".format(pipeline_script), file=sys.stderr)
     exit(1)
