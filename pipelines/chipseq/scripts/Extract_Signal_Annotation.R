@@ -60,7 +60,6 @@ Extract_Signal_Annotation = function(
           })
 
     lout = list(
-        lsml     = lsml,
         profiles = profiles
     )
     saveRDS(lout, outfile)

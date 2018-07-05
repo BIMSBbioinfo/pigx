@@ -96,7 +96,7 @@ rule index_to_chrlen:
             os.path.join(PATH_LOG, "index_to_chrlen.log")
         message:
             """
-                Constructing bowtie2 index:
+                Extracting chromosome lengths from index:
                     input : {params.prefix}
                     output: {output.outfile}
             """
@@ -148,9 +148,13 @@ rule extract_nucleotide_frequency:
             RunRscript(input, output, params, log.logfile, 'Extract_Nucleotide_Frequency.R')
 
 #----------------------------------------------------------------------------- #
+def get_trimmed_files(sample):
+    infiles = TRIM_GALORE_FILES[sample]
+    return(infiles)
+
 rule bowtie2:
     input:
-        infile = lambda wc: get_trimmed_input(wc.name),
+        infile = lambda wc: get_trimmed_files(wc.name),
         genome = rules.bowtie2_build.output.outfile
     output:
         bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
@@ -171,10 +175,10 @@ rule bowtie2:
     run:
         genome = input.genome.replace('.1.bt2','')
         if params.library in ['single','SINGLE']:
-            map_args =  '-U ' + input.infile[0]
+            map_args = '-U {}'.format(','.join(input.infile))
 
         if params.library in ['paired','PAIRED','pair','PAIR']:
-            map_args = '-1 ' + input.infile[0] + ' -2 ' + input.infile[1]
+            map_args = '-1 {} -2 {}'.format(','.join(input.infile[::2]),','.join(input.infile[1::2]))
 
         command = " ".join(
         [params.bowtie2,
@@ -188,34 +192,83 @@ rule bowtie2:
         shell(command)
 
 #----------------------------------------------------------------------------- #
-rule samtools_sort:
+rule samtools_quality_filter:
     input:
         os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}.q{mapq,\d+}.bam")
+    params:
+        mapq    = config['general']['params']['bam_filter']['mapq'],
+        threads  = config['execution']['rules']['samtools_quality_filter']['threads'],
+        samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_quality_filter.log")
+    message:"""
+            Filter reads by mapping quality:
+                input: {input}
+                output: {output}
+        """
+    shell: """
+        {params.samtools} view -q {params.mapq} -F4 --threads {params.threads} -o {output} {input} 2> {log}
+    """
+
+#----------------------------------------------------------------------------- #
+rule samtools_deduplicate:
+    input:
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.bam")
+    output:
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.deduplicated.sorted.bam")
+    params:
+        threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
+        samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_deduplicate.log")
+    message:"""
+            Deduplicating mapped reads:
+                input: {input}
+                output: {output}
+        """
+    shell: """
+        {params.samtools} sort --threads {params.threads} -n {input} 2> {log}| \
+        {params.samtools} fixmate --threads {params.threads}  -m - - 2> {log}| \
+        {params.samtools} sort --threads {params.threads}  - 2> {log}| \
+        {params.samtools} markdup --threads {params.threads}  -r -s - {output} \
+        2> {log}
+    """
+
+#----------------------------------------------------------------------------- #
+rule samtools_sort:
+    input:
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.bam")
+    output:
+        os.path.join(PATH_MAPPED, "{name}", "{prefix}.sorted.bam")
     params:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_sort.log")
     message:"""
             Sorting mapped reads:
                 input: {input}
                 output: {output}
         """
     shell: """
-        {params.samtools} sort --threads {params.threads} -o {output} {input}
+        {params.samtools} sort --threads {params.threads} -o {output} {input} 2> {log}
     """
 
 # ----------------------------------------------------------------------------- #
 rule samtools_index:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX )
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai")
+        os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai")
     params:
         samtools = SOFTWARE['samtools']['executable']
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.samtools_index.log")
     message:"""
         Indexing bam file:\n
             input: {input}
     """
     shell:
-        "{params.samtools} index {input}"
+        "{params.samtools} index {input} 2> {log}"

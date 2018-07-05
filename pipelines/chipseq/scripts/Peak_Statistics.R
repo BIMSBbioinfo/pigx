@@ -17,6 +17,7 @@ Peak_Statistics = function(
   outfile      = NULL,
   scriptdir    = NULL,
   path_mapped  = NULL,
+  bam_suffix   = NULL,
   path_peak    = NULL,
   peaks_resize = NULL,
   ncores       = 8
@@ -54,13 +55,12 @@ Peak_Statistics = function(
             dplyr::filter(!sapply(bam_name, is.null))           %>%
             unnest(bam_name)
         })) %>%
-    merge(.list_BamFiles(path_mapped), by = 'bam_name') %>%
+    merge(.list_BamFiles(path_mapped,bam_suffix), by = 'bam_name') %>%
     merge(.list_qsortPeaks(path_peak), by.x = 'sample_name', by.y='chip_name')  %>%
     mutate(sample_id = paste(sample_name, bam_name, sep='_'))                   %>%
-    mutate(bw_files  = str_replace(bam_file,'sorted.bam','bw'))                 %>%
+    mutate(bw_files  = str_replace(bam_file,bam_suffix,'.bw'))                 %>%
     as.data.frame()
     peaks_sheet$library = unlist(lib_type_dict[peaks_sheet$bam_name])
-
 
   peaks_uniq = peaks_sheet %>%
     dplyr::select(sample_name, bed_file, library) %>%
@@ -123,7 +123,6 @@ Peak_Statistics = function(
 
     lout = list(
       peaks_sample      = cntmat,
-      score_matrix_list = lms,
       peak_profiles     = dms
       )
     saveRDS(lout, outfile)
@@ -168,6 +167,7 @@ Peak_Statistics(
   lib_type_dict= argv$params[['lib_type_dict']],
   scriptdir    = argv$params[['scriptdir']],
   path_mapped  = argv$params[['path_mapped']],
+  bam_suffix   = argv$params[['bam_suffix']],
   path_peak    = argv$params[['path_peak']],
   peaks_resize = argv$params[['peaks_resize']],
   ncores       = argv$params[['threads']]

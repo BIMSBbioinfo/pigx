@@ -19,7 +19,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+if 'yes' == '@capture_environment@':
+    import os, sys
+    os.environ["R_LIBS_SITE"] = "@R_LIBS_SITE@"
+    os.environ["PYTHONPATH"] = "@PYTHONPATH@"
+    # Setting PYTHONPATH does not help with dependencies needed for
+    # this script.
+    for directory in "@PYTHONPATH@".split(":"):
+        try:
+            sys.path.index(directory)
+        except ValueError:
+            sys.path.insert(1, directory)
 
 
 import argparse
@@ -231,8 +241,6 @@ def maybe_copy(source, target_dir):
 def prepare_links():
     os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work'),
                 exist_ok=True)
-    maybe_copy(config['locations']['pkglibexecdir'] + '/scripts/ChipQC.rmd',
-               path.join(config['locations']['output-dir'], 'pigx_work'))
     maybe_copy(config['locations']['pkglibexecdir'] + '/scripts/Sample_Report.rmd',
                path.join(config['locations']['output-dir'], 'pigx_work'))
 
@@ -370,12 +378,13 @@ if config['execution']['submit-to-cluster']:
             exit(1)
         else:
             raise
-    qsub = "qsub -V -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    qsub = "qsub -v R_LIBS_USER -v PATH -v GUIX_LOCPATH -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
     if config['execution']['cluster']['args']:
         qsub += " " + config['execution']['cluster']['args']
     command += [
         "--cluster-config={}".format(cluster_config_file),
         "--cluster={}".format(qsub),
+        "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
@@ -399,6 +408,6 @@ else:
         command.append("--reason")
     if args.unlock:
         command.append("--unlock")
-    if args.target == 'help':
+    if args.target and 'help' in args.target:
         command.append("help")
     subprocess.run(command)

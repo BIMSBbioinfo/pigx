@@ -19,11 +19,15 @@ general:
         extend: 200
         scale_bw: 'yes'
     bowtie2:
-        k: 1
+        # set k if you want to report at most k alignments per read
+        #k: 4
+        N: 0
+    bam_filter:
+        mapq: 0
+        deduplicate: no
     idr:
         idr-threshold: 0.1
     macs2:
-        g:
         keep-dup: auto
         q: 0.05
     extract_signal:
@@ -218,10 +222,13 @@ execution:
       threads:   1
       memory:    8G
     peak_statistics:
-      threads:   16
+      threads:   4
       memory:    16G 
     prepare_annotation:
       threads:   1
+      memory:    16G
+    samtools_deduplicate:
+      threads:   4
       memory:    16G
     samtools_index:
       threads:   1
@@ -229,6 +236,9 @@ execution:
     samtools_sort:
       threads:   4
       memory:    16G
+    samtools_quality_filter:
+      threads:   1
+      memory:    8G
     summarize_data_for_report:
       threads:   1
       memory:    32G
@@ -282,6 +292,7 @@ tools:
             - c
             - outdir
             - n
+            - g
     perl:
         executable: @PERL@
         args: ""
@@ -315,3 +326,6 @@ tools:
     mv:
         executable: @MV@
         args: ""
+    nice:
+        executable: @NICE@
+        args: "-19"

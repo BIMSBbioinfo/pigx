@@ -1,6 +1,7 @@
 ---
-title: "Quality control of ChIP-seq data"
-author: "PiGx ChIP-seq"
+title: "PiGx-ChIPseq - Quality control of ChIP-seq data Report"
+author: "BIMSB Bioinformatics Platform"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 header-includes:
   - \usepackage{comment}
 output:
@@ -21,6 +22,7 @@ params:
     infile:         NULL
     width_params:   NULL
     logo:           NULL
+    random_seed:    123
 
 ---
 
@@ -67,6 +69,7 @@ knitr::opts_chunk$set(echo       = FALSE,
                       eval       = TRUE)
 
 
+set.seed(params$random_seed)
 ```
 
 ```{r test_input, include=FALSE}
@@ -126,6 +129,10 @@ number_of_samples = ncol(lstats$ChIPQC$norm.count)
 scale_factor = .6
 sample_correlation_width  = number_of_samples*scale_factor + 2
 sample_correlation_height = number_of_samples*scale_factor
+
+# sets the default for the Peak_Statistics_Header3
+number_of_peaks     = 10
+peak_number_width   = 100
 
 ```
 
@@ -203,7 +210,7 @@ gc$sample_name = NULL
 gc_fig_width = nrow(gc)*0.5
 ```
 
-```{r GC_Content_Per sample, include=TRUE, fig.align='center', results='asis'}
+```{r GC_Content_Per_Sample, include=TRUE, fig.align='center', results='asis'}
 gl = list()
 for(sample in unique(lstats$ChIPQC$GC$sample_name)){
     g = lstats$ChIPQC$GC %>%
@@ -217,7 +224,6 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
     gl[[sample]] = g
 }
 ```
-
 
 The figure shows the dependence of read counts on the GC content,
 quantified over 1 kb bins. The plot is a diagnostic for proper fragment selection and PCR amplification.
@@ -237,17 +243,16 @@ heatmaply(gc_heat,
 ncat('## GC Content Distribution Per Sample {.tabset}')
 ```
 
-# Per Sample GC Content Vs Number of Reads {.tabset}
-
 The following sets of plots show, for each sample the dependence of read counts on the GC content.
 
-```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', result='asis', eval=TRUE}
+```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', results='asis', eval=TRUE}
 for(sample in names(gl)){
-    cat(paste('##',sample,'\n'))
+    ncat(paste('###',sample))
     print(gl[[sample]])
-    cat(' \n\n')
+    cat('\n')
 }
 ```
+
 
 # Read Distribution in Genomic Features
 
@@ -421,6 +426,10 @@ peak_number_width = length(unique(lstats$Annotate_Peaks$sample_name))*0.5+4
 print(g)
 ```
 
-
-
 ---
+
+# Session Information
+```{r sessionInfo}
+sessionInfo()
+```
+

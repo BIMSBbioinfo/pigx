@@ -6,37 +6,16 @@ dtfindOverlaps = function(reg1, reg2, ignore.strand=FALSE){
     as.data.table(findOverlaps(reg1,reg2, ignore.strand=ignore.strand))
 }
 
-# ---------------------------------------------------------------------------- #
-GtfSelectTranscript = function(gtf){
-
-    suppressPackageStartupMessages(library(data.table))
-    suppressPackageStartupMessages(library(GenomicRanges))
-    suppressPackageStartupMessages(library(stringr))
-    if(!is.null(gtf$exon_id)){
-        gtf = gtf[gtf$exon_id != 'CCDS']
-        gtf = gtf[!str_detect(gtf$exon_id, 'mRNA')]
-        gtf = gtf[!str_detect(gtf$exon_id, 'cdna')]
-    }
-   # gtf = keepStandardChromosomes(gtf, pruning.mode='coarse')
-
-    d = data.table(as.data.frame(values(gtf)))
-    d$strand = as.character(strand(gtf))
-    d$width = width(gtf)
-    d[d$strand == '+' , `:=`( COUNT = .N , IDX = 1:.N ) , by = transcript_id[strand == '+']]
-    d[d$strand == '-' , `:=`( COUNT = .N , IDX = .N:.1) , by = transcript_id[strand == '-']]
-    d.cnt = d[, c('gene_id','transcript_id','COUNT','width'), with=F]
-    d.cnt = d[, list(COUNT=unique(COUNT), width=sum(width)), by=c('gene_id', 'transcript_id')]
-    d.cnt = d.cnt[order(-d.cnt$COUNT, -d.cnt$width),]
-    d.cnt = d.cnt[!duplicated(d.cnt$gene_id)]
-
-    gtf.t = gtf[gtf$transcript_id %in% d.cnt$transcript_id]
-    return(gtf.t)
-}
-
 
 # ---------------------------------------------------------------------------- #
 ReadGTFAnnotation = function(
-  gtf.path
+  gtf.path,
+
+  # defines annotation columns which will be subsetted from the gtf file
+  gtf.colnames = c('gene_id','transcript_id','gene_name','gene_biotype'),
+    
+  # defines the required column names
+  required_colnames = c('type','gene_id','transcript_id')
 ){
 
     suppressPackageStartupMessages(library(data.table))
@@ -45,36 +24,46 @@ ReadGTFAnnotation = function(
     suppressPackageStartupMessages(library(stringr))
     suppressPackageStartupMessages(library(rtracklayer))
 
-
     if(!file.exists(gtf.path))
         stop('the gtf file does not exist')
-
+    
+    
     message('Importing gtf...')
-    gtf          = import.gff(gtf.path)
-    gtf.exon     = subset(gtf, type == 'exon')
-    gtf.exon.ge  = split(gtf.exon, gtf.exon$gene_id)
-    gtf.range.ge = unlist(range(gtf.exon.ge))
-    gtf.exon.tr  = split(gtf.exon, gtf.exon$transcript_id)
+        gtf          = import.gff(gtf.path)
 
+        # checks whether the gtf file contains required column names
+        if(!all(required_colnames %in% colnames(values(gtf)))){
+            missing_colnames = setdiff(required_colnames, colnames(values(gtf)))
+            stop('required colnames are missing:', paste(missing_colnames, collapse=','))
+        }    
 
-    message('Selecting transcripts...')
-    gtf.selected = GtfSelectTranscript(gtf.exon)
-    gtf.selected = split(gtf.selected, gtf.selected$transcript_id)
+        # checks whether type column contains exon element
+        if(!any(gtf$type == 'exon'))
+            stop('type column should contain exon element')
+
+        gtf.exon     = subset(gtf, type == 'exon')
+        gtf.exon.ge  = split(gtf.exon, gtf.exon$gene_id)
+        gtf.range.ge = unlist(range(gtf.exon.ge))
+        gtf.exon.tr  = split(gtf.exon, gtf.exon$transcript_id)
+
 
     message('Making union...')
-    gtf.union = reduce(gtf.exon.ge)
+        gtf.union = reduce(gtf.exon.ge)
 
     message('Constructing annotation...')
-    gtf.annot = unique(as.data.frame(DataFrame(gtf.exon))[,c('gene_id','transcript_id','gene_name','gene_biotype')])
+        gtf.colnames = intersect(gtf.colnames, colnames(values(gtf.exon)))
+        if(length(gtf.colnames) == 0)
+            stop('.gtf file does not contain required column names: gene_id')
+    
+        gtf.annot = unique(as.data.frame(DataFrame(gtf.exon))[,gtf.colnames])
 
-    gtf.annot$gcoord  = as.character(gtf.range.ge[match(gtf.annot$gene_id, names(gtf.range.ge))])
-    gtf.annot$gwidth  = width(gtf.range.ge[match(gtf.annot$gene_id, names(gtf.range.ge))])
-    gtf.annot$tcoord  = as.character(unlist(range(gtf.exon.tr))[match(gtf.annot$transcript_id, names(gtf.exon.tr))])
-    gtf.annot$twidth  = sum(width(gtf.exon.tr))[gtf.annot$transcript_id]
+        gtf.annot$gcoord  = as.character(gtf.range.ge[match(gtf.annot$gene_id, names(gtf.range.ge))])
+        gtf.annot$gwidth  = width(gtf.range.ge[match(gtf.annot$gene_id, names(gtf.range.ge))])
+        gtf.annot$tcoord  = as.character(unlist(range(gtf.exon.tr))[match(gtf.annot$transcript_id, names(gtf.exon.tr))])
+        gtf.annot$twidth  = sum(width(gtf.exon.tr))[gtf.annot$transcript_id]
 
 
     return(list(gtf       = gtf.exon,
-                gtf.sel   = gtf.selected,
                 gtf.union = gtf.union,
                 annot     = gtf.annot))
 }
@@ -159,7 +148,8 @@ GTFGetAnnotation = function(
 ){
 
     g.exon = g[g$type=='exon']
-    exon = unlist(g.exon)
+    exon = g.exon
+    values(exon) = NULL
 
     #------------------------------------------------------------------------- #
     gene = unlist(range(split(g.exon, g.exon$gene_id)))
@@ -200,7 +190,6 @@ GTFGetAnnotation = function(
     splicing_acceptor = resize(splicing_acceptor, width = 1,   fix='start')
     splicing_acceptor = resize(splicing_acceptor, width = width_params$splicing_accep_width, fix='center')
 
-    values(exon) = NULL
     gl = list(tss      = tss,
               tts      = tts,
               exon     = exon,
@@ -256,10 +245,11 @@ Annotate_Reads = function(
 #' .listBamFiles
 #'
 #' @param path - top directory with mapped samples
+#' @param suffix - suffix to strip of from bam files
 #'
 #' @return a data.frame with location of bam files
 
-.list_BamFiles = function(path){
+.list_BamFiles = function(path,suffix='.sorted.bam'){
 
     suppressPackageStartupMessages(library(dplyr))
     suppressPackageStartupMessages(library(stringr))
@@ -270,7 +260,7 @@ Annotate_Reads = function(
                                          recursive=TRUE)) %>%
         mutate(bam_name = basename(bam_file))             %>%
         dplyr::filter(str_detect(bam_name,'sorted'))      %>%
-        mutate(bam_name = str_replace(bam_name,'.sorted.bam',''))
+        mutate(bam_name = str_replace(bam_name,suffix,''))
     return(d)
 }
 

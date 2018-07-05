@@ -73,15 +73,21 @@ installed:
 
 - R
     - argparser
+    - biocparallel
+    - biostrings
     - chipseq
     - data.table
+    - dyplr
     - genomation
+    - genomicalignments
     - genomicranges
+    - rsamtools
     - rtracklayer
-    - rcas
+    - s4vectors
     - stringr
     - jsonlite
     - heatmaply
+    - htmlwidgets
     - ggplot2
     - ggrepel
     - plotly
@@ -182,12 +188,14 @@ The samples used for any subsequent analysis are defined in the _sample sheet_ s
 
 #### Technical Replicates
 
-The current sample sheet does not support multiple technical replicates for one sample, so replicates need to be combined prior to running the pipeline.   
-This could be done by concatenating the respective files (for uncompressed or compressed files):
+The sample sheet offers support for technical replicates, by repeating the sample name (first column) for different input files (second,third column).
+The quality check will be performed for any input file and replicates will be merged during the mapping. 
 
-```sh
-cat sample_tecrep1.fq.gz sample_tecrep2.fq.gz [..] > sample.fq.gz
-```
+
+| SampleName | Read | Read2 |
+|------|-------|--------|
+|ChIPpe| ChIPpe_R1.fq.gz | ChIPpe_R2.fq.gz |
+|ChIPpe| ChIPpe_t2_R1.fq.gz | ChIPpe_t2_R2.fq.gz |
 
 ### Settings File
 
@@ -230,21 +238,28 @@ locations:
   gff-file: genome/mm_chr19.gtf
 
 general:
-  assembly: hg19
+  assembly: mm9
   params:
-    extend: 200
-    scale_bw: 'yes'
+    export_bigwig:
+        extend: 200
+        scale_bw: 'yes'
     bowtie2:
-        k: 1
+        # set k if you want to report at most k alignments per read
+        k: 4
+        N: 0
+    bam_filter:
+        mapq: 0
+        deduplicate: no
     idr:
         idr-threshold: 0.1
     macs2:
-        g: hs
         keep-dup: auto
         q: 0.05
     extract_signal:
         expand_peak: 200
-        bin_num: 20
+        number_of_bins: 50
+    peak_statistics:
+        resize: 500
 
 execution:
   submit-to-cluster: no
@@ -469,3 +484,8 @@ Trimgalore adaptor and quality trimmed files.
 
 Contains a completely formatted UCSC hub, with track descriptions, peaks and bigWig tracks.
 
+
+# Questions
+If you have further questions please e-mail:
+pigx@googlegroups.com or use the web form to ask questions
+https://groups.google.com/forum/#!forum/pigx/

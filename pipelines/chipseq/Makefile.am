@@ -4,7 +4,8 @@ nodist_bin_SCRIPTS = \
   pigx-chipseq
 
 dist_pkglibexec_SCRIPTS = \
-  Snake_ChIPseq.py
+  Snake_ChIPseq.py \
+  qsub-template.sh
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS =		\
@@ -14,7 +15,6 @@ dist_pkglibexec_scripts_SCRIPTS =		\
   scripts/ChIPQC.R						\
   scripts/ChIPQC_Functions.R			\
   scripts/Check_Config.py				\
-  scripts/ChipQC.rmd					\
   scripts/ConstructGenomicWindows.R		\
   scripts/Extract_Nucleotide_Frequency.R\
   scripts/Extract_Signal_Annotation.R	\

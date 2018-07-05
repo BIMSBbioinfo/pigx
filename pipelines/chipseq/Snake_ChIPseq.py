@@ -162,12 +162,12 @@ for i in NAMES:
 # due to the different names for trimmmed output files next lines construct
 # Trim Galore output files
 TRIM_GALORE_DICT = {}
+TRIM_GALORE_FILES = {}
 for name in NAMES:
-    TRIM_GALORE_DICT[name] = get_trimmed_input(name) 
+    TRIM_GALORE_DICT[name] = get_trimming_dict(name)
+    TRIM_GALORE_FILES[name] = flatten([TRIM_GALORE_DICT[name][rep]['trimmed'] for rep in TRIM_GALORE_DICT[name].keys()])
 
-# ---------------------------------------------------------------------------- #
-# RULE ALL
-# Default output files from the pipeline
+
 
 
 # ---------------------------------------------------------------------------- #
@@ -201,11 +201,42 @@ else:
 
 
 # ---------------------------------------------------------------------------- #
-COMMAND         = []
+# check wether quality filtering should be performed, if yes
+# change the suffix of the output bam file
+
+BAM_SUFFIX = ''
+
+if PARAMS['bam_filter']['mapq']:
+    if PARAMS['bam_filter']['mapq'] > 0:
+        BAM_SUFFIX = '.q{}'.format(PARAMS['bam_filter']['mapq'])
+        #BAM_SUFFIX = '.qfilter'
+
+# check wether deduplication should be performed, if yes
+# change the suffix of the output bam file
+if PARAMS['bam_filter']['deduplicate']:
+    BAM_SUFFIX = BAM_SUFFIX + ".deduplicated.sorted.bam"
+else:
+    BAM_SUFFIX = BAM_SUFFIX + ".sorted.bam"
+
+
+# ---------------------------------------------------------------------------- #
+# Inline definition and description of targets
+targets = {
+    # rule to print all rule descriptions
+    'help': {
+        'description': "Print all rules and their descriptions.",
+        'files': []
+    }
+}
+
+# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+# GENERAL MAPPING OUTPUT FILES
+
 GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
 INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
-TRIMMING        = [flatten(TRIM_GALORE_DICT.values())] 
-BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.sorted.bam.bai"), name=NAMES)
+TRIMMING        = [flatten(TRIM_GALORE_DICT.values())]
+BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
 CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
 TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
@@ -216,7 +247,24 @@ ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), nam
 BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
-COMMAND = GENOME_FASTA + INDEX + TRIMMING + BOWTIE2 + CHRLEN + TILLING_WINDOWS + NUCLEOTIDE_FREQ+ BW + LINKS + FASTQC + MULTIQC + BOWTIE2_STATS
+
+targets['mapping'] = {
+        'description': "Produce the bowtie2 mapping results in BAM format.", 
+        'files':
+            BOWTIE2
+}
+
+targets['export-bw'] = {
+        'description': "Take the bowtie2 mapping results in BAM format and create bigWig Tracks.", 
+        'files':
+            BW + LINKS
+}
+
+targets['multiqc'] = {
+        'description': "Get multiQC report based on bowtie2 alignments and fastQC reports.", 
+        'files': 
+            FASTQC +  MULTIQC
+}
 
 # ---------------------------------------------------------------------------- #
 # include rules
@@ -236,12 +284,9 @@ LINK_ANNOTATION           = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
 PREPARE_ANNOTATION        = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
 EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
 
-COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + EXTRACT_SIGNAL_ANNOTATION
-
 # ---------------------------------------------------------------------------- #
 # does the chipqc
 include: os.path.join(RULES_PATH, 'ChIPQC.py')
-COMMAND = COMMAND + ChIPQC
 
 # ---------------------------------------------------------------------------- #
 # ---------------------------------------------------------------------------- #
@@ -267,7 +312,13 @@ if peak_index:
         include: os.path.join(RULES_PATH, 'Peak_Calling.py')
         include: os.path.join(RULES_PATH, 'Peak_Statistics.py')
 
-        COMMAND = COMMAND + MACS + QSORT + PEAK_STATISTICS
+
+        targets['peak-calling'] = {
+            'description': "Perform peak calling based on peak_calling section.", 
+            'files': 
+             MACS +  QSORT +  PEAK_STATISTICS
+            }
+        
 
 # # ----------------------------------------------------------------------------- #
 if 'idr' in set(config.keys()):
@@ -278,7 +329,11 @@ if 'idr' in set(config.keys()):
             PEAK_NAME_LIST[name] = IDR[-1]
 
         include: os.path.join(RULES_PATH, 'IDR.py')
-        COMMAND = COMMAND + IDR
+
+        targets['idr'] = {
+            'description': "Control reproducibilty of peak calling based on idr section.", 
+            'files':IDR
+            }
 
 # # ----------------------------------------------------------------------------- #
 HUB_NAME = None
@@ -288,7 +343,11 @@ if 'hub' in set(config.keys()):
     BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
 
     include: os.path.join(RULES_PATH, 'UCSC_Hub.py')
-    COMMAND = COMMAND + BB + HUB
+    
+    targets['hub'] = {
+            'description': "Generate UCSC track hub based on tracks defined in hub section.", 
+            'files': BB + HUB
+            }
 
 
 # ---------------------------------------------------------------------------- #
@@ -296,18 +355,20 @@ gtf_index = type(ANNOTATION) is str
 if peak_index:
     ANNOTATE_PEAKS     = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Annotate_Peaks.rds'), name=PEAK_NAMES)
     include: os.path.join(RULES_PATH, 'Annotate_Peaks.py')
-    COMMAND = COMMAND + LINK_ANNOTATION + PREPARE_ANNOTATION + ANNOTATE_PEAKS
 
 # ---------------------------------------------------------------------------- #
 if 'feature_combination' in set(config.keys()):
     FEATURE_NAMES = config['feature_combination'].keys()
     if len(FEATURE_NAMES) > 0:
-
         FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
-        name = FEATURE_NAMES)
+                         name = FEATURE_NAMES)
 
-    include: os.path.join(RULES_PATH, 'Feature_Combination.py')
-    COMMAND = COMMAND + FEATURE
+        include: os.path.join(RULES_PATH, 'Feature_Combination.py')
+    
+        targets['feature-combination'] = {
+            'description': "Identify overlapping features based on feature_combination section.", 
+            'files': FEATURE
+            }
 
 # ----------------------------------------------------------------------------- #
 # REPORT INPUT
@@ -328,8 +389,64 @@ REPORT         = [os.path.join(PATH_REPORTS, 'ChIP_Seq_Report.html')]
 ANALISYS_NAMES = [REPORT_CHUNKS[i] for i in ANALISYS_NAMES]
 include: os.path.join(RULES_PATH, 'Summarize_Data_For_Report.py')
 include: os.path.join(RULES_PATH, 'Knit_Report.py')
-COMMAND = COMMAND + SUMMARIZED_DATA_FOR_REPORT + REPORT
+
+targets['final-report'] = {
+'description': "Produce a comprehensive report and pan-file quality control report.",
+'files': SUMMARIZED_DATA_FOR_REPORT + REPORT + targets['multiqc']['files']
+}
+
 # ----------------------------------------------------------------------------- #
+# COMPLETE EXECUTION
+ALL_FILES = list(chain.from_iterable([targets[name]['files'] for name in list(targets.keys())]))
+targets['complete'] = {
+'description': "Run the full pipeline with all available targetds.  This is the default target.",
+'files': ALL_FILES
+}
+# ----------------------------------------------------------------------------- #
+# TARGETTED EXECUTION
+# Selected output files from the above set.
+selected_targets = config['execution']['target'] or ['complete']
+
+# FIXME: the list of files must be flattened twice(!).  We should make
+# sure that the targets really just return simple lists.
+from itertools import chain
+wrong_target = []
+for selection in selected_targets:
+    if not selection in targets.keys():
+            wrong_target.append(selection)
+    if wrong_target:
+        sys.exit(''.join(
+            ['This is not a supported targed:\n {}\n'.format(wrong_target),
+             'Consider one of these:\n {}\n'.format(list(targets.keys()))] )
+            )    
+OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
+
 rule all:
-    input:
-        COMMAND
+  input: OUTPUT_FILES
+
+rule help:
+  run:
+    for key in targets.keys():
+      print('{}:\n  {}'.format(key, targets[key]['description']))
+
+# Record any existing output files, so that we can detect if they have
+# changed.
+expected_files = {}
+onstart:
+    if OUTPUT_FILES:
+        for name in OUTPUT_FILES:
+            if os.path.exists(name):
+                expected_files[name] = os.path.getmtime(name)
+
+# Print generated target files.
+onsuccess:
+    if OUTPUT_FILES:
+        # check if any existing files have been modified
+        generated = []
+        for name in OUTPUT_FILES:
+            if name not in expected_files or os.path.getmtime(name) != expected_files[name]:
+                generated.append(name)
+        if generated:
+            print("The following files have been generated:")
+            for name in generated:
+                print("  - {}".format(name))

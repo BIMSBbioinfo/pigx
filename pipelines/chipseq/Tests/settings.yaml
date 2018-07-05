@@ -12,11 +12,12 @@ general:
         extend: 200
         scale_bw: 'yes'
     bowtie2:
+        N: 0
         k: 1
     idr:
         idr-threshold: 0.1
     macs2:
-        g: mm
+        #        g: mm
         keep-dup: auto
         q: 0.05
         nomodel: ''
@@ -33,6 +34,7 @@ execution:
     bowtie2:
       queue: all.q
       memory: 16G
+      threads: 8
 
 # ------------------------------------------------------------ #
 # ChIP and Cont are hardcoded and must exist in the config file

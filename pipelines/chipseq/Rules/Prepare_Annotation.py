@@ -9,7 +9,13 @@ rule link_annotation:
                     output: {output.outfile}
             """
         run:
-            os.symlink(input.annotation, output.outfile)
+
+            try: 
+                os.symlink(input.annotation, output.outfile)
+            except FileExistsError:
+                if os.path.islink(output.outfile):
+                    if not os.readlink(output.outfile) == input.annotation:
+                        os.symlink(input.annotation, output.outfile)
 
 
 #----------------------------------------------------------------------------- #
