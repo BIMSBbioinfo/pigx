@@ -3,4 +3,5 @@
 ./sample_data
 ./aln
 ./.snakemake/
-./fastqc 
+./fastqc
+./sample_data/output 

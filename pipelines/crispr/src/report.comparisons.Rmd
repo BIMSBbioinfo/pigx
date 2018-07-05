@@ -1,0 +1,205 @@
+---
+title: "Downstream Analysis of PiGx-CRISPR outputs"
+output: html_document
+date: '`r date()`'
+params: 
+  ampliconName: ''
+  indelsFolder: ''
+  comparisonsFile: '' 
+  workdir: ''
+  prefix: ''
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+library(ggplot2)
+library(ggrepel)
+library(data.table)
+library(plotly)
+library(knitr)
+```
+
+The goal of this script is to compare indel scores/frequencies between two sample groups in
+a case-control setting - and extract important sites that are enriched/depleted in the case 
+samples compared to the control samples. 
+
+# Input Settings
+```{r printInputSettings}
+ampliconName <- params$ampliconName
+indelsFolder <- params$indelsFolder
+comparisonsFile <- params$comparisonsFile
+prefix <- params$prefix
+workdir <- params$workdir
+
+inputParameterDesc <- c('Amplicon Name',
+                        'indels folder path', 
+                        'Table of comparisons to make',
+                        'Prefix for output files',
+                        'Working directory'
+                     )
+inputParameterValues <- c(ampliconName, 
+                          indelsFolder,
+                          comparisonsFile,
+                          prefix, 
+                          workdir)
+inputSettings <- data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = nrow(inputSettings),
+                         dom = 't'))
+```
+
+# Comparisons to make 
+```{r parse-comparison-table}
+comp <- data.table::fread(comparisonsFile)
+if(!ampliconName %in% comp$amplicon) {
+  stop("There are no comparisons available for amplicon:",ampliconName,
+       "in the file:",comparisonsFile,"\n")
+}
+comp <- comp[amplicon %in% ampliconName]
+DT::datatable(data = comp, filter = 'bottom')
+```
+
+# Prepare datasets for comparison 
+```{r}
+#
+#import indel/coverage profile stats for samples listed in comparisons
+#TODO: allow for multiple case/control samples (comma-separated), currently
+#this only supports one case versus one control sample comparison
+samples <- unique(c(comp$case_samples, comp$control_samples))
+coverageStats <- as.data.table(do.call(rbind, lapply(samples, function(sampleName) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.coverageStats.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    return(dt)
+  } else {
+    stop("Can't open coverageStats.tsv file for sample",sampleName,
+            "at",f,"\n")
+  }
+})))
+
+# sanity check 
+summ <- table(coverageStats$sample)
+if(min(summ) != max(summ)) {
+  print(summ)
+  stop("Not all samples in the file",f,"contain the same number of measurements",
+       "see: table(coverageStats$sample)")
+}
+
+```
+
+# pairwise comparison of samples 
+```{r}
+#coverageStats: data.frame output from getIndelStats.R function 
+comparePerBaseScores <- function(coverageStats, caseSample, controlSample, indelType) {
+  case <- coverageStats[sample == caseSample,]
+  control <- coverageStats[sample == controlSample,]
+  
+  #calculate fold-change per base
+  caseCov <- case[['cov']]
+  caseScore <- case[[indelType]]
+  
+  controlCov <- control[['cov']]
+  controlScore <- control[[indelType]]
+  
+  A <- ifelse(controlCov > 0, controlScore/controlCov, 0)
+  B <- ifelse(caseCov > 0, caseScore/caseCov, 0)
+  
+  #log fold change as case divided by control
+  log2FoldChange <- log2(B/A)
+  #percent difference between case and control
+  difference <- B - A
+  
+  #p values  - for each base, compare indel probabilities 
+  #and get a fisher exact's p value
+  results <- do.call(rbind, lapply(1:length(caseScore), function(i) {
+    #contingency matrix
+    M <- matrix(c(caseScore[i], controlScore[i], 
+                caseCov[i] - caseScore[i], controlCov[i] - controlScore[i]), nrow = 2)
+    t <- fisher.test(M)
+    oddsRatio <- as.numeric(t$estimate)
+    pVal <- t$p.value
+    return(data.frame('bp' = i, 'oddsRatio' = oddsRatio, 'pval' = pVal))
+  }))
+  
+  results$padj <- p.adjust(results$pval)
+  
+  results <- merge(data.frame('bp' = case$bp, 
+                        'case' = caseSample, 
+                        'control' = controlSample,
+                        'caseScore' = caseScore,
+                        'caseCov' = caseCov, 
+                        'controlScore' = controlScore,
+                        'controlCov' = controlCov,
+                        'indelType' = indelType,
+                        'log2FoldChange' = log2FoldChange, 
+                        'difference' = difference), results, by = 'bp')
+          
+  return(results)
+}
+```
+
+```{r}
+results <- as.data.frame(do.call(rbind, lapply(comp$comparison, function(x) {
+  r <- do.call(rbind, lapply(c('ins', 'del', 'indel'), function(indelType) {
+    comparePerBaseScores(coverageStats = coverageStats, 
+                         caseSample = comp[comparison == x,]$case_samples, 
+                         controlSample = comp[comparison == x,]$control_samples, 
+                         indelType = indelType)
+  }))
+  r$comparison <- x
+  return(r)
+})), stringsAsFactors = FALSE)
+
+plots <- lapply(unique(results$comparison), function(x){
+  plots <- lapply(unique(results$indelType), function(indelType) {
+    df <- results[results$comparison == x & results$indelType == indelType,]
+    
+    #segment the profiles and calculate average p-values in each segment
+    segments <- as.data.frame(fastseg::fastseg(df$difference))
+    segments$mean.padj <- sapply(1:nrow(segments), function(i) {
+      mean(df[df$bp >= segments[i, 'start'] & df$bp <= segments[i, 'end'],]$padj)
+    })
+    #map p-values to stars for visualisation
+    segments$label <- gtools::stars.pval(segments$mean.padj)
+    
+    p <- ggplot(df, aes(x = bp, y = difference)) + 
+      geom_point(aes(color = padj < 0.05)) + 
+      geom_segment(data = segments, aes(x = start, xend = end, 
+                                        y = seg.mean, yend = seg.mean)) + 
+      geom_text(data = segments, aes(x = (start+end)/2, y = seg.mean, 
+                                     label = label)) + 
+      theme_bw() 
+    return(p)
+  })
+  names(plots) <- unique(results$indelType)
+  return(plots)
+})
+names(plots) <- unique(results$comparison)
+
+#save stats to file
+statsOutFile <- file.path(workdir, paste0(ampliconName, '.comparison.stats.tsv'))
+write.table(x = results, file = statsOutFile, quote = FALSE, sep = '\t', row.names = FALSE)
+```
+
+## Significantly Affected Base Positions/Segments 
+
+```{r plotIndelProfilesPlots}
+out = NULL
+for (comparison in names(plots)) {
+  out = c(out, knitr::knit_expand(text='### Comparison {{comparison}} {.tabset} \n\n'))
+  for (indelType in names(plots[[comparison]])) {
+    p <- ggplotly(plots[[comparison]][[indelType]])
+    out = c(out, knitr::knit_expand(text='#### {{indelType}} \n\n {{p}} \n\n'))
+  }
+}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+

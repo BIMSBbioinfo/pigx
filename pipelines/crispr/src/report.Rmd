@@ -1,0 +1,390 @@
+---
+title: "CRISPR Report"
+output: html_document
+date: '`r date()`'
+params: 
+  sampleSheetFile: ''
+  ampliconFastaFile: ''
+  ampliconName: ''
+  cutSitesFile: ''
+  indelsFolder: ''
+  workdir: ''
+  prefix: ''
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+library(knitr)
+library(ggplot2)
+library(ggrepel)
+library(data.table)
+library(rtracklayer)
+library(DT)
+library(plotly)
+library(crosstalk)
+library(GenomicAlignments)
+```
+
+# Input Settings
+```{r printInputSettings}
+ampliconFastaFile <- params$ampliconFastaFile
+ampliconName <- params$ampliconName
+sampleSheetFile <- params$sampleSheetFile
+indelsFolder <- params$indelsFolder
+cutSitesFile <- params$cutSitesFile
+prefix <- params$prefix
+workdir <- params$workdir
+
+inputParameterDesc <- c('Amplicon Fasta File',
+                        'Amplicon Name',
+                        'sgRNA Cut Sites File', 
+                     'Experiment Data File',
+                     'indels folder path', 
+                     'Prefix for output files',
+                     'Working directory'
+                     )
+inputParameterValues <- c(ampliconFastaFile,
+                          ampliconName,
+                          cutSitesFile, 
+                          sampleSheetFile,
+                          indelsFolder, 
+                          prefix,
+                          workdir)
+inputSettings <- data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = nrow(inputSettings),
+                         dom = 't'))
+```
+
+```{r printSampleInformation}
+sampleSheet <- read.csv(sampleSheetFile, stringsAsFactors = F)
+sampleSheet <- sampleSheet[sampleSheet$amplicon == ampliconName,]
+DT::datatable(data = sampleSheet,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         dom = 't'))
+
+cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
+colnames(cutSites) <- c('sgRNA', 'cutSite')
+DT::datatable(data = cutSites)
+
+```
+
+# Coverage Profiles 
+
+## Coverage as Heatmap
+```{r coverage_heatmap}
+# import stats tables 
+coverageStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.coverageStats.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    return(dt)
+  }
+})))
+#create a matrix of bp versus samples where values are coverage
+dt <- dcast.data.table(coverageStats, sample ~ bp, value.var = 'cov', fill = 0)
+M <- as.matrix(dt[,-1])
+rownames(M) <- dt$sample
+pheatmap::pheatmap(M, 
+                   cluster_rows = nrow(M) > 1, 
+                   cluster_cols = F, 
+                   show_colnames = F, 
+                   main = paste(ampliconName, 'Coverage Profiles'))
+```
+
+## Coverage as Line Plot
+
+```{r coverage-lineplot}
+p <- ggplot(coverageStats, aes(x = bp, y = cov, group = sample), height = 500) + 
+  geom_line(aes(color = sample), show.legend = F) +   
+  theme_bw() +  
+  labs(x = 'base position', y = 'Number of Reads', title = paste(ampliconName, 'Coverage Profiles'))
+
+ggplotly(p)
+```
+
+# Indel Score Profiles 
+
+```{r plotIndelProfiles}
+
+plotScores <- function(indelsFolder, sampleName, sampleSheet, cutSites) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.coverageStats.tsv'))
+  dt <- data.table::fread(f)
+
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == sampleName,]$sgRNA_ids, 
+                     split = ':'))
+  
+  sgRNAs <- merge(data.frame('sgRNA' = sgRNAs, 'sample_name' = sampleName), cutSites, by = 'sgRNA')
+
+  mdt <- melt(dt[,-c('ins', 'del', 'indel', 'cov')], id.vars = c('bp', 'sample', 'seqname'))
+  
+  p <- ggplot(mdt, aes(x = bp, y = value, group = variable)) +
+    geom_line(aes(color = variable)) + labs(title = sampleName)
+  if(nrow(sgRNAs) > 0) {
+    p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, 
+                                           color = sgRNA), linetype = 'dotted')
+  }
+  p <- p + 
+    theme_bw(base_size = 14) + 
+    scale_y_continuous(labels = scales::percent)
+  return(p)
+}
+
+plots <- lapply(sampleSheet$sample_name, function(sampleName) {
+  plotScores(indelsFolder = indelsFolder, 
+             sampleName = sampleName, 
+             sampleSheet = sampleSheet, 
+             cutSites = cutSites)
+})
+names(plots) <- sampleSheet$sample_name
+```
+
+```{r plotIndelProfilesHeader, results = 'asis'}
+if(length(plots) > 10) {
+  cat("## Indel Score Profiles {.tabset .tabset-dropdown}\n\n")
+} else {
+  cat("## Indel Score Profiles {.tabset}\n\n")
+}
+```
+
+```{r plotIndelProfilesPlots}
+out = NULL
+for (n in names(plots)) {
+  p <- ggplotly(plots[[n]])
+  out = c(out, knitr::knit_expand(text='### {{n}} \n\n {{p}} \n\n'))
+}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+# sgRNA efficiencies at cut sites
+```{r cutSiteStats}
+# this is a table for all samples versus all cut sites in the amplicon
+# not all sample x sgRNA combinations are true, 
+# but still they are also computed to serve as a negative control
+cutSiteStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.indel_stats_at_cutsites.tsv'))
+  if(file.exists(f)) {
+    dt <- fread(f)
+    return(dt)
+  }
+})))
+
+# match samples to the actual sgRNA guides used in that sample
+sampleGuides <- lapply(sampleSheet$sample_name, function(s) {
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                   split = ':'))
+})
+names(sampleGuides) <- as.character(sampleSheet$sample_name)
+
+cutSiteStats$sampleMatchesGuide <- as.factor(apply(cutSiteStats, 1, function(x) {
+  s <- as.character(x[['sample']])
+  g <- as.character(x[['sgRNA']])
+  return(g %in% sampleGuides[[s]])
+}))
+
+plots <- lapply(as.vector(unique(cutSiteStats$sgRNA)), function(sg) {
+  dt <- cutSiteStats[sgRNA == sg & sampleMatchesGuide == TRUE]
+  if(nrow(dt) > 0) {
+    p <- ggplot(dt, aes(x = sample, y = indelEfficiency)) + 
+      geom_bar(stat = 'identity', aes(fill = sample)) + 
+      labs(title = sg) + coord_flip()
+    return(p)
+  }
+})
+names(plots) <- as.vector(unique(cutSiteStats$sgRNA))
+```
+
+
+```{r plotIndelStatsHeader, results = 'asis'}
+if(length(plots) > 10) {
+  cat("## Indel Stats At Cut Sites {.tabset .tabset-dropdown}\n\n")
+} else {
+  cat("## Indel Stats At Cut Sites {.tabset}\n\n")
+}
+```
+
+```{r plotIndelStatsPlots}
+out = NULL
+for (n in names(plots)) {
+  if(!is.null(plots[[n]])) {
+  p <- ggplotly(plots[[n]])
+  out = c(out, knitr::knit_expand(text='### {{n}} \n\n {{p}} \n\n'))
+  } else {
+    out = c(out, knitr::knit_expand(text='### {{n}} \n\n No indel data found\n\n'))
+  }
+}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+# sgRNA efficiencies at cut sites - version 2
+
+```{r}
+dts <- crosstalk::SharedData$new(cutSiteStats)
+
+bscols(widths = c(4,8),
+  list(
+    filter_checkbox("sampleMatchesGuide", "Own Guide", dts, ~factor(sampleMatchesGuide), inline = TRUE),
+    filter_select( "sgRNA", "Select sgRNA", dts, ~factor(sgRNA), allLevels = FALSE, multiple = FALSE),
+    filter_select( "sample", "Select samples", dts, ~factor(sample), allLevels = FALSE, multiple = TRUE)
+    ),
+  plotly::plot_ly(data = dts,
+                  x = ~ sgRNA,
+                  y = ~ indelEfficiency,
+                  group = ~sgRNA,
+                  color = ~sample,
+                  type = 'bar',
+                  text = ~sample,
+                  height = 500)  %>%
+    layout(showlegend = FALSE, xaxis = list(showticklabels = TRUE), barmode = 'group')
+)
+```
+
+# Indel diversity at cutsites {.tabset}
+
+```{r}
+# indels: a data.table object with minimal columns: start, end, 
+# cutSites: a data.frame/data.table object with minimal columns: sgRNA and cutsite
+# return: data.frame (nrow = nrow(indels), columns are sgRNA ids, 
+#         values are 1 if indel overlaps cutsite, otherwise 0. 
+overlapCutSites <- function(indels, cutSites, extend = 3) {
+  target <- IRanges(start = cutSites$cutSite - extend, 
+                    end = cutSites$cutSite + extend, 
+                    names = cutSites$sgRNA)
+  query <- IRanges(start = indels$start, end = indels$end)
+  
+  startOverlaps <- as.data.table(findOverlaps(start(query), target, type = 'any'))
+  endOverlaps <- as.data.table(findOverlaps(end(query), target, type = 'any'))
+  
+  overlaps <- merge(startOverlaps, endOverlaps, by = c('queryHits', 'subjectHits'), all = TRUE)
+  
+  M <- matrix(data = rep(0, nrow(indels) * length(target)), 
+              nrow = nrow(indels), ncol = length(target))
+  colnames(M) <- names(target)
+
+  M[as.matrix(overlaps)] <- 1
+  
+  return(M)
+}
+
+#import all detected indels (unfiltered) from all samples
+allIndels <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.indels.unfiltered.tsv'))
+  if(file.exists(f)) {
+    dt <- fread(f)
+    return(dt)
+  }
+})))
+
+#summarize indels by read support
+indelSummary <- allIndels[,length(unique(readID)), by = c('seqname', 'sample', 'start', 'end', 'indelType')]
+colnames(indelSummary)[6] <- 'ReadSupport'
+
+dt <- cbind(indelSummary, 
+            overlapCutSites(indels = indelSummary, 
+                            cutSites = cutSites, extend = 3))
+
+mdt <- melt(dt, id.vars = colnames(indelSummary))
+
+#make plots for different score thresholds, facet by samples, guides, and indel types
+supportThresholds <- c(0, 1, 5, 10)
+plots <- lapply(supportThresholds, function(s) {
+  df <- mdt[ReadSupport > s & value == 1,
+            length(seqname), 
+            by = c('sample', 'variable', 'indelType')]
+  if(nrow(df) > 0) {
+    p <- ggplot(data = df, aes(x = sample, y = variable)) + 
+    #geom_point(aes(size = V1)) + 
+    geom_tile(aes(fill = V1)) 
+    if(nrow(df) < 250) {
+      p <- p + 
+        geom_text(aes(label = V1), color = 'white') + facet_wrap(~ indelType, ncol = 1) 
+    }
+    p <- p + theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90), legend.position = 'none')
+    return(p)
+  } else {
+    NULL
+  }
+})
+names(plots) <- paste("Read Support >",supportThresholds)
+```
+
+```{r plotGenotypeDiversity, results='asis', fig.height=8}
+for (i in 1:length(plots)) {
+  cat("## ",names(plots)[i],"\n\n")
+  p <- plots[[i]]
+  if(!is.null(p)) {
+    print(plots[[i]])
+  } else {
+    cat("No genotypes detected")
+  }
+  cat("\n\n")
+}
+```
+
+# Per Base Diversity of Deletion {.tabset}
+
+Here we plot the number of unique deletions that overlap each base at varying levels of read support cut-offs. 
+For example, when `MinReadSupportPerDeletion` is set to 10, then we only count deletions that are supported by at least 10 reads. 
+
+```{r perBaseDiversity}
+dt <- indelSummary[indelType == 'D']
+seqlength <- max(coverageStats$bp)
+results <- lapply(unique(dt$sample), function(s) {
+  df <- dt[sample == s]
+  do.call(rbind, lapply(c(0, 1, 5, 10), function(depth) {
+      df <- df[ReadSupport >= depth]
+      message('dim',nrow(df))
+      if(nrow(df) > 0){
+        gr <- GenomicRanges::makeGRangesFromDataFrame(df[ReadSupport >= depth], keep.extra.columns = TRUE)
+        deletionsPerBase <- GenomicAlignments::coverage(gr)[[1]]
+        deletionsPerBase <- c(deletionsPerBase, rep(0, seqlength - length(deletionsPerBase)))
+        result <- data.frame( 
+                       'sample' = s, 
+                       'bp' = 1:seqlength, 
+                       'uniqueDeletions' = as.vector(deletionsPerBase),
+                       'MinReadSupportPerDeletion' = depth)
+        return(result)
+      }
+  }))
+})
+names(results) <- unique(dt$sample)
+
+plots <- lapply(results, function(df) {
+  df$MinReadSupportPerDeletion <- as.factor(df$MinReadSupportPerDeletion)
+  ggplot(df, aes(x = bp, y = uniqueDeletions)) + geom_bar(aes(fill = MinReadSupportPerDeletion), 
+                                                         position = 'dodge', stat= 'identity') 
+})
+
+```
+
+```{r plotDeletionDiversityPerBase}
+out = NULL
+for (n in names(plots)) {
+  if(!is.null(plots[[n]])) {
+  p <- ggplotly(plots[[n]])
+  out = c(out, knitr::knit_expand(text='## {{n}} \n\n {{p}} \n\n'))
+  } else {
+    out = c(out, knitr::knit_expand(text='## {{n}} \n\n No indel data found\n\n'))
+  }
+}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+
+# R Session Information
+```{r}
+print(sessionInfo())
+```
+
