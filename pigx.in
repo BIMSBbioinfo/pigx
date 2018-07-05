@@ -77,8 +77,8 @@ args = parser.parse_args()
 
 
 
-if os.getenv('PIGX_PATH'):
-    pipeline_script = shutil.which("pigx-" + args.pipeline, path=os.getenv('PIGX_PATH'))
+if os.getenv('PIGX_PIPELINES_PATH'):
+    pipeline_script = shutil.which("pigx-" + args.pipeline, path=os.getenv('PIGX_PIPELINES_PATH'))
 else:
     scripts = {
         "bsseq"   : "@PIGX_BSSEQ@",
@@ -91,7 +91,7 @@ else:
 
 pipelines = "@pipelines@".split()
 if args.pipeline not in pipelines or not pipeline_script:
-    print("Pipeline not available: {}\nTry setting PIGX_PATH.".format(args.pipeline), file=sys.stderr)
+    print("Pipeline not available: {}\nTry setting PIGX_PIPELINES_PATH.".format(args.pipeline), file=sys.stderr)
     exit(1)
 
 if os.path.isfile(pipeline_script) and os.access(pipeline_script, os.X_OK):
