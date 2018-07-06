@@ -31,7 +31,7 @@ general:
         keep-dup: auto
         q: 0.05
     extract_signal:
-        expand_peak:
+        expand_peak: 200
         number_of_bins: 50
     peak_statistics:
         resize: 500
