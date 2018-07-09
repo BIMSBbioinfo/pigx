@@ -94,11 +94,11 @@ err <- tryCatch(expr = {
                     res.gr = methSeg(methRaw.gr,
                                      diagnostic.plot=TRUE)
                     dev.off()},
+
                 error = function(x) {
                 ## if it fails still generate empty output
                     file.create(grFile)
                     file.create(output)
-                    on.exit(file.remove(pngFile))
                     stop(paste("error occured!!",x))
                 })
 
