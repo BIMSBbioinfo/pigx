@@ -64,7 +64,7 @@ sink(out, type = "message")
 ## Segmentation
 
 ## load methylKit
-library("methylKit")
+suppressPackageStartupMessages(library("methylKit"))
 
 input     <- argsL$rds
 output    <- argsL$outBed
@@ -86,9 +86,21 @@ methRaw.gr <- sort(methRaw.gr[,"meth"])
 
 ### Segmentation of methylation profile
 
-png(filename = pngFile,units = "in",width = 8,height = 4.5,res=300)
-res.gr = methSeg(methRaw.gr,diagnostic.plot=TRUE)
-dev.off()
+err <- tryCatch(expr = {
+                ## try to run the code
+                    png(filename = pngFile,
+                        units = "in",width = 8,
+                        height = 4.5,res=300)
+                    res.gr = methSeg(methRaw.gr,
+                                     diagnostic.plot=TRUE)
+                    dev.off()},
+                error = function(x) {
+                ## if it fails still generate empty output
+                    file.create(grFile)
+                    file.create(output)
+                    on.exit(file.remove(pngFile))
+                    stop(paste("error occured!!",x))
+                })
 
 ## Saving object
 saveRDS(res.gr,file=grFile) 
