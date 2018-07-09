@@ -185,13 +185,22 @@ methSegBed      <- params$methSegBed
 methSegGR       <- params$methSegGR
 pngFile         <- params$methSegPng
 pngFile_exists  <- file.exists(pngFile )
+
+methseginfo  = file.info(methSegBed)
+methsegempty = info$size == 0
+
 ```
+
 
 ```{r SegmentationIntro, results='asis', eval=Segmentation} 
 cat('Segmentation based on methylation provides a way to compress information on methylation at the base-pair level into regional resolution. This allows for the detection of regions with methylation patterns that might warrant further investigation.\n')
 ```
 
-```{r Segmentation.load_libraries, results='hide', include=FALSE, eval=Segmentation}
+```{r Segmentation_handle_lowcov, results='asis', eval=( Segmentation && methsegempty ) } 
+For the present data set, however, there exist chromosomes that could not be segmented into 2 or more distinct regions. This can be an indication of insufficient coverage; as such this section has been omitted.
+```
+
+```{r Segmentation.load_libraries, results='hide', include=FALSE, eval=( Segmentation && !methsegempty)}
 
   ## load methylKit
   library("methylKit")
@@ -199,11 +208,11 @@ cat('Segmentation based on methylation provides a way to compress information on
 ```
 
 
-```{r Segmentation.print_params_out, results='asis', eval=Segmentation}
+```{r Segmentation.print_params_out, results='asis', eval=( Segmentation && !methsegempty)}
 cat('**Output files:**\n')
 ```
 
-```{r Segmentation.print_params_out2, eval=Segmentation}
+```{r Segmentation.print_params_out2, eval=( Segmentation && !methsegempty)}
 
 paramsDesc <- c("Segments (BED)",
                 "Segments (GRanges)")
@@ -219,7 +228,7 @@ inputParams <- data.frame( format   = paramsDesc,
 knitr::kable(inputParams)
 ```
 
-```{r SegmentationDescription, results='asis', eval=Segmentation} 
+```{r SegmentationDescription, results='asis', eval=( Segmentation && !methsegempty)} 
 cat('### Segmentation of Methylation Profile\n')
 
 cat('Segmentation of the methylation profile is done using the methSeg() function, where change-points in the genome-wide  signal are recorded and the genome is partitioned into regions between consecutive change-points. This approach is typically used in the detection of copy-number variation [@klambauer2012] but can be applied to methylome segmentation as well [@Wreczycka2017]. Here, the identified segments are further clustered based on their average methylation signal, using a mixture-modeling approach, which permits the detection of distinct regions inside the genome  [@Wreczycka2017].\n')
@@ -256,7 +265,7 @@ cat('For the given sample, there were insufficient segments detected to perform 
               rownames = FALSE)
 ```
 
-```{r SegmentationExport, results='asis', eval=Segmentation}
+```{r SegmentationExport, results='asis', eval=( Segmentation && !methsegempty)}
 cat('### Export to BED\n')
 
 cat('We export the above regions to a *BED* file, which can be loaded into any genome browser (such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) ) to allow for further analysis, annotation and visualisation.\n')
@@ -264,13 +273,13 @@ cat('We export the above regions to a *BED* file, which can be loaded into any g
 
 
 
-```{r AnnotateSegmentsHeader, results='asis', eval=AnnotateSegments}
+```{r AnnotateSegmentsHeader, results='asis', eval=( AnnotateSegments && !methsegempty)}
 cat('## Annotation of Segments\n')
 
 cat('The annotation of the identified regions with genomic features allows for a better understanding and characterization of detected regions.\n')
 ```
 
-```{r AnnotateSegments.load_libraries, results='hide', include=FALSE, eval=AnnotateSegments}
+```{r AnnotateSegments.load_libraries, results='hide', include=FALSE, eval=( AnnotateSegments && !methsegempty)}
 
     library("genomation")
     library("GenomicRanges")
@@ -278,14 +287,14 @@ cat('The annotation of the identified regions with genomic features allows for a
 ```
 
 
-```{r AnnotateSegmentsDescription, results='asis',eval=AnnotateSegments}
+```{r AnnotateSegmentsDescription, results='asis',eval=( AnnotateSegments && !methsegempty)}
 
 cat('Pigx first searches for a reference gene set for the given genome assembly in the path specified in the settings file. Upon failure to find such a file in this location, Pigx allows the user to query the UCSC table browser directly to fetch the reference gene set using the [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html) Package [@rtracklayer2009], when the option `webfetch` (in the settings file) is set to `True` -or, equivalently, `yes`. When this option is set to `False` --or `no`--, and the reference gene files are not found, the corresponding sections are simply omitted from this report. 
 Upon acquiring the reference genes, we can determine different features (e.g. promoter, exon, intron)  intrinsic to each gene,  using the `readTranscriptFeatures()` function from [genomation](http://bioinformatics.mdc-berlin.de/genomation/) [@genomation2014] --likewise, for CpG islands and shores.\n')
 ```
 
 
-```{r AnnotateSegments.fetchRefgene, eval=AnnotateSegments}
+```{r AnnotateSegments.fetchRefgene, eval=( AnnotateSegments && !methsegempty)}
 originally_present_refgen = file.exists(refGenes_bedfile)
 source(paste0(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type      = "refGene",
@@ -295,7 +304,7 @@ fetched.refgenes <- lookupBedFile(type      = "refGene",
 fetch_refgen_success <- ( fetched.refgenes != '')
 ```
 
-```{r AnnotateSegments.readRefGene,  results='asis', eval=AnnotateSegments}
+```{r AnnotateSegments.readRefGene,  results='asis', eval=( AnnotateSegments && !methsegempty)}
 
 ## now we parse the gene features
 if( fetch_refgen_success ) {
@@ -310,7 +319,7 @@ if( fetch_refgen_success ) {
   }
 ```
 
-```{r AnnotateSegments.loadSegments, eval=AnnotateSegments}
+```{r AnnotateSegments.loadSegments, eval=( AnnotateSegments && !methsegempty)}
 
 # now load segments 
 segments.gr <- readBed(file = methSegBed,
@@ -329,11 +338,11 @@ if( fetch_refgen_success )
   }
 ```
 
-```{r AnnotateSegments.text2, results='asis', eval=AnnotateSegments}
+```{r AnnotateSegments.text2, results='asis', eval=( AnnotateSegments && !methsegempty)}
 cat('Here, we plot the average methylation per segment group and the overlap with gene features for the input reference gene set.\n')
 ```
 
-```{r AnnotateSegments.plot,  eval=AnnotateSegments}
+```{r AnnotateSegments.plot,  eval=( AnnotateSegments && !methsegempty)}
 ## percentage of target features overlapping with annotation:
 ## (with promoter > exon > intron precedence)
 if( fetch_refgen_success )
