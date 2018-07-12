@@ -84,38 +84,46 @@ strand(methRaw.gr) <- "*"
 methRaw.gr <- sort(methRaw.gr[,"meth"]) 
 
 
-### Segmentation of methylation profile
 
-err <- tryCatch(expr = {
-                ## try to run the code
-                    png(filename = pngFile,
-                        units = "in",width = 8,
-                        height = 4.5,res=300)
-                    res.gr = methSeg(methRaw.gr,
-                                     diagnostic.plot=TRUE)
-                    dev.off()},
+## catch a possible error and touch empty files
+## to trigger successful run
+err <- tryCatch(
+  expr = {
+    ## try to run the code
+    png(filename = pngFile,
+        units = "in",width = 8,
+        height = 4.5,res=300)
+    
+    ### Segmentation of methylation profile
+    res.gr = methSeg(methRaw.gr,
+                     diagnostic.plot=TRUE)
+    
+    dev.off()
 
-                error = function(x) {
-                ## if it fails still generate empty output
-                    file.create(grFile)
-                    file.create(output)
-                    stop(paste("error occured!!",x))
-                })
-
-## Saving object
-saveRDS(res.gr,file=grFile) 
+    ## Saving object
+    saveRDS(res.gr,file=grFile) 
 
 
-### Export
+    ### Export
 
-## export segments to bed file
-methSeg2bed(segments = res.gr,
-            trackLine = paste0("track name='meth segments ' ",
-                               "description='meth segments of ",
-                               methRaw@sample.id,
-                               " mapped to ",
-                               methRaw@assembly,
-                               "' itemRgb=On"),
-            colramp=colorRamp(c("gray","green", "darkgreen")),
-            filename = output)
+    ## export segments to bed file
+    methSeg2bed(segments = res.gr,
+                trackLine = paste0("track name='meth segments ' ",
+                                   "description='meth segments of ",
+                                   methRaw@sample.id,
+                                   " mapped to ",
+                                   methRaw@assembly,
+                                   "' itemRgb=On"),
+                colramp=colorRamp(c("gray","green", "darkgreen")),
+                filename = output)
+  },
+  error = function(x) {
+    ## if it fails still generate empty output
+    file.create(grFile)
+    file.create(output)
+    message(paste("error occured!!",x))
+  }
+)
+
+
 
