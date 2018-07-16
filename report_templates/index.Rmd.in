@@ -204,8 +204,9 @@ cat('For the present data set, however, there exist chromosomes that could not b
 ```{r Segmentation_checkempty, results='asis', eval=Segmentation}
 if( methsegempty )
    {
-   Segmentation     <- FALSE;
-   AnnotateSegments <- FALSE;
+   Segmentation         <- FALSE;
+   AnnotateSegments     <- FALSE;
+   fetch_refgen_success <- FALSE;
    }
 ```
 
