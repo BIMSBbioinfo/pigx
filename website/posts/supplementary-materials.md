@@ -49,9 +49,9 @@ Each HTML document represents a stand-alone summary of some the key
 findings for the given sample, along with a description of the key
 operations carried out by the pipeline.
 
-- [Tet2 deletion (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2_se_bt2.sorted.deduped_mm10_canon_final.html)
+- [Tet2 deletion (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2_se_bt2.sorted.deduped_mm10_final.html)
 
-- [Wild-type (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_canon_final.html)
+- [Wild-type (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_final.html)
 
 - [Differential methylation, biological replicate 1, (tet2-/-) - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
 
