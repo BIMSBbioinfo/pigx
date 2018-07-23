@@ -11,11 +11,18 @@ the single cell sequencing dataset from (Hu et al. 2017) [can be
 accessed
 here](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/scrnaseq/mm10.scRNA-Seq.report.html).
 
+An archive containing a sample sheet, settings file, and instructions
+on how to reproduce the report [can be downloaded
+here](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/scrnaseq/scrnaseq-notes.tar.gz).
 
 ## PiGx ChIP-seq
 
 The HTML report output of the ChIP-seq pipeline from the analysis of
 the ChIP-seq datasets from Hon. et al [can be accessed here](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/chipseq/ChIP_Seq_Report.html).
+
+An archive containing a sample sheet, settings file, and instructions
+on how to reproduce the report [can be downloaded
+here](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/chipseq/chipseq-notes.tar.gz).
 
 
 ## PiGx RNA-seq
@@ -38,6 +45,10 @@ RNA-seq datasets:
 
 - [WT_diff_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day6.html)
 
+An archive containing a sample sheet, settings file, and instructions
+on how to reproduce the report [can be downloaded
+here](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/rnaseq-notes.tar.gz).
+
 
 ## PiGx BS-seq
 
@@ -54,6 +65,11 @@ operations carried out by the pipeline.
 - [Wild-type (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_final.html)
 
 - [Differential methylation, biological replicate 1, (tet2-/-) - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
+
+An archive containing a sample sheet, settings file, and instructions
+on how to reproduce the report [can be downloaded
+here](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/bsseq-notes.tar.gz).
+
 
 # About PiGx
 
