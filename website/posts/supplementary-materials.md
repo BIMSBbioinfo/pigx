@@ -1,7 +1,11 @@
 title: Supplementary Materials
 ---
 
-These are supplementary files for the PiGx paper.
+These are supplementary files for the PiGx paper.  All reports were
+generated with PiGx 0.0.3 as installed with [GNU
+Guix](https://gnu.org/software/guix) at version
+v0.14.0-7054-g5149aeb7e (git commit
+5149aeb7e62cf62398b55be38469cd28c25d8d7d).
 
 
 ## PiGx scRNA-seq
