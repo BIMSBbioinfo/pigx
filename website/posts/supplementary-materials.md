@@ -13,7 +13,7 @@ v0.14.0-7054-g5149aeb7e (git commit
 The HTML report output of the scRNA-seq pipeline from the analysis of
 the single cell sequencing dataset from (Hu et al. 2017) [can be
 accessed
-here](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/scrnaseq/mm10.scRNA-Seq.report.html).
+here](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/scrnaseq/mm10.scRNA-Seq.report.html).
 
 An archive containing a sample sheet, settings file, and instructions
 on how to reproduce the report [can be downloaded
@@ -22,7 +22,7 @@ here](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/scrna
 ## PiGx ChIP-seq
 
 The HTML report output of the ChIP-seq pipeline from the analysis of
-the ChIP-seq datasets from Hon. et al [can be accessed here](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/chipseq/ChIP_Seq_Report.html).
+the ChIP-seq datasets from Hon. et al [can be accessed here](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/chipseq/ChIP_Seq_Report.html).
 
 An archive containing a sample sheet, settings file, and instructions
 on how to reproduce the report [can be downloaded
@@ -35,19 +35,19 @@ Below are links for the HTML reports for each differential expression
 analysis performed using STAR-based gene counts for the use-case 
 RNA-seq datasets:
 
-- [tet2_diff_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day3.html)
+- [tet2_diff_day3](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day3.html)
 
-- [tet2_diff_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day6.html)
+- [tet2_diff_day6](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_diff_day6.html)
 
-- [tet2_vs_WT_day0](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day0.html)
+- [tet2_vs_WT_day0](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day0.html)
 
-- [tet2_vs_WT_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day3.html)
+- [tet2_vs_WT_day3](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day3.html)
 
-- [tet2_vs_WT_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day6.html)
+- [tet2_vs_WT_day6](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/tet2_vs_WT_day6.html)
 
-- [WT_diff_day3](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day3.html)
+- [WT_diff_day3](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day3.html)
 
-- [WT_diff_day6](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day6.html)
+- [WT_diff_day6](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/rnaseq/WT_diff_day6.html)
 
 An archive containing a sample sheet, settings file, and instructions
 on how to reproduce the report [can be downloaded
@@ -64,11 +64,11 @@ Each HTML document represents a stand-alone summary of some the key
 findings for the given sample, along with a description of the key
 operations carried out by the pipeline.
 
-- [Tet2 deletion (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2_se_bt2.sorted.deduped_mm10_final.html)
+- [Tet2 deletion (biological replicate 1) report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/tet2_se_bt2.sorted.deduped_mm10_final.html)
 
-- [Wild-type (biological replicate 1) report](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_final.html)
+- [Wild-type (biological replicate 1) report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/WT_se_bt2.sorted.deduped_mm10_final.html)
 
-- [Differential methylation, biological replicate 1, (tet2-/-) - WT](http://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
+- [Differential methylation, biological replicate 1, (tet2-/-) - WT](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/bsseq/diffmeth-report.0vs1.html)
 
 An archive containing a sample sheet, settings file, and instructions
 on how to reproduce the report [can be downloaded
