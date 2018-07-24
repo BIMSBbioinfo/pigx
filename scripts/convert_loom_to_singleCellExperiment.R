@@ -270,6 +270,7 @@ sce <- loom2sce(path = loomFile)
 #4.1.1 Subset the sce object, remove cells that don't exist in the metaDataFile
 # warning(date()," Removing cells that don't exist in the meta data file",metaDataFile)
 sample_sheet <- data.table::fread(sampleSheetFile)
+sample_sheet <- sample_sheet[!duplicated(sample_sheet$sample_name), ]
 
 #4.1.2 remove cells with zero expression for all genes 
 warning(date()," Removing cells with zero expression for all genes")
