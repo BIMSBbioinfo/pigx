@@ -12,6 +12,7 @@ import subprocess
 import yaml
 import csv
 import inspect
+import magic as mg
 
 PATH_SCRIPT = os.path.join(config['locations']['pkglibexecdir'], 'scripts')
 
@@ -44,7 +45,7 @@ OUTPUT_DIR           = config['locations']['output-dir']
 PATH_FASTQ           = config['locations']['reads-dir']
 TEMPDIR              = config['locations']['tempdir']
 PATH_ANNOTATION      = os.path.join(OUTPUT_DIR, 'Annotation')
-PATH_FASTQ_COLLAPSED = os.path.join(OUTPUT_DIR, 'Collapsed')
+PATH_FASTQC          = os.path.join(OUTPUT_DIR, 'FASTQC')
 PATH_MAPPED          = os.path.join(OUTPUT_DIR, 'Mapped')
 PATH_LOG             = os.path.join(OUTPUT_DIR, 'Log')
 PATH_SAMPLE_SHEET    = config['locations']['sample-sheet']
@@ -68,14 +69,7 @@ if config['annotation']['secondary']:
 SAMPLE_SHEET = experiment(config = config)
 SAMPLE_SHEET.init_SAMPLE_SHEET(PATH_SAMPLE_SHEET)
 
-## Merge technical replicates
-NEW_SAMPLE_SHEET_PATH = os.path.join(os.path.dirname(PATH_SAMPLE_SHEET), "updated_sheet.csv")
-SAMPLE_SHEET.collapse_technical_replicates(NEW_SAMPLE_SHEET_PATH)
-
-SAMPLE_NAMES = SAMPLE_SHEET.list_attr('sample_name')
-
-COLLAPSED_REPLICATES = expand(os.path.join(PATH_FASTQ_COLLAPSED, '{sample}' + "_" +'{fq_type}' + '.fastq.gz'), sample = SAMPLE_NAMES, fq_type = ['reads', 'barcode'])
-
+SAMPLE_NAMES = list(set(SAMPLE_SHEET.list_attr('sample_name')))
 
 # ----------------------------------------------------------------------------- #
 # check for compatible technology methods
@@ -125,7 +119,8 @@ if GENOME_SECONDARY_IND:
 
 
 # ----------------------------------------------------------------------------- # FastQC
-FASTQC = expand(os.path.join(PATH_MAPPED, "{name}", "{name}.fastqc.done"), name=SAMPLE_NAMES)
+FASTQC_prep  = SAMPLE_SHEET.list_attr('reads') + SAMPLE_SHEET.list_attr('barcode')
+FASTQC = [os.path.join(PATH_FASTQC, file + ".fastqc.done") for file in FASTQC_prep]
 
 # ----------------------------------------------------------------------------- #
 # Change reference gene_name to gene_id
@@ -137,7 +132,12 @@ MAKE_STAR_INDEX = expand(os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','
 
 # ----------------------------------------------------------------------------- #
 # MERGE BARODE AND READS FASTQ FILES
-MERGE_FASTQ_TO_BAM = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + '.fastq.bam'), name=SAMPLE_NAMES)
+SAMPLE_SHEET.merged_bam(PATH_MAPPED)
+MERGE_FASTQ_TO_BAM = SAMPLE_SHEET.list_attr('Merged_BAM')
+
+# ----------------------------------------------------------------------------- #
+# MERGE ALL BAM FILES PER SAMPLE
+MERGE_BAM_PER_SAMPLE = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + ".Merged.bam"), name = SAMPLE_NAMES)
 
 # ----------------------------------------------------------------------------- #
 # MAPPING
@@ -199,62 +199,12 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
-RULE_ALL = RULE_ALL + COLLAPSED_REPLICATES
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
+
 # ----------------------------------------------------------------------------- #
 rule all:
     input:
         RULE_ALL
-
-# ----------------------------------------------------------------------------- #
-def get_all_files(wc):
-   h = { 'reads'   : SAMPLE_SHEET.get_fastq_files(wc.name, 'reads'),
-         'barcode' : SAMPLE_SHEET.get_fastq_files(wc.name, 'barcode')}
-   return(h)
-# Combines technical replicates into FASTQ files in [OUTPUT_DIR]/Collapsed
-rule combine_technical_replicates:
-    input:
-        unpack(get_all_files)
-    output:
-        reads = os.path.join(PATH_FASTQ_COLLAPSED, '{name}'+'_reads.fastq.gz'),
-        barcode = os.path.join(PATH_FASTQ_COLLAPSED, '{name}'+'_barcode.fastq.gz')
-
-    message:"""
-            Merge fastq barcodes and reads with technical replicates.
-        """
-    run:
-        import os
-        import magic as mg
-        import gzip
-        for attr in ['reads', 'barcode']:
-            out_file = str(output[attr])
-            # remove gz from out file if it's there
-            if '.gz' in out_file:
-                out_file = out_file[:-3]
-
-            for in_file in input[attr]:
-                in_file = str(in_file)
-                # determine file type of in_file
-                file_type = mg.from_file(in_file, mime=True)
-                # append content of in_file into out_file
-                if 'gzip' in file_type:
-                    with gzip.open(in_file, 'r') as file:
-                        with open(out_file, 'a+') as out:
-                            for line in file:
-                                out.write(str(line.decode('utf-8')))
-                elif genome_file_type == 'text/plain':
-                    with open(in_file, 'r') as file:
-                        with open(out_file, 'a+') as out:
-                            for line in file:
-                                out.write(str(line.decode('utf-8')))
-                else:
-                    os.sys.exit('Unknown input file format')
-                unzipped = open(out_file, 'rb').read()
-                gzf = gzip.open(out_file+'.gz', 'wb')
-                gzf.write(unzipped)
-                gzf.close()
-                os.unlink(out_file)
-
 
 # ----------------------------------------------------------------------------- #
 # links the primary annotation to the ./Annotation folder
@@ -460,15 +410,21 @@ rule gtf_to_refflat:
 
 
 # # ----------------------------------------------------------------------------- #
+def fetch_fastq_for_merge(wc):
+    reads = SAMPLE_SHEET.lookup('Merged_BAM', os.path.join(PATH_MAPPED, wc.name, "Fastq_" + wc.num + ".bam"), ['reads'])
+    barcode = SAMPLE_SHEET.lookup('Merged_BAM', os.path.join(PATH_MAPPED, wc.name, "Fastq_" + wc.num + ".bam"), ['barcode'])
+    h = { 'reads'   : [os.path.join(PATH_FASTQ, file) for file in reads],
+          'barcode' : [os.path.join(PATH_FASTQ, file) for file in barcode]}
+    return(h)
 
 rule merge_fastq_to_bam:
     input:
-        reads = rules.combine_technical_replicates.output.reads,
-        barcode = rules.combine_technical_replicates.output.barcode
+        unpack(fetch_fastq_for_merge)
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.fastq.bam")
+        outfile = temp(os.path.join(PATH_MAPPED, "{name}", "Fastq_" + "{num}" + ".bam"))
+    
     params:
-        name    = '{name}',
+        name    = '{name}' + '_' + '{num}',
         picard  = SOFTWARE['picard']['executable'],
         java    = SOFTWARE['java']['executable'],
         threads = config['execution']['rules']['merge_fastq_to_bam']['threads'],
@@ -476,7 +432,7 @@ rule merge_fastq_to_bam:
         tempdir = TEMPDIR,
         app_name = 'FastqToSam'
     log:
-        log = os.path.join(PATH_LOG, '{name}.merge_fastq_to_bam.log')
+        log = os.path.join(PATH_LOG, '{name}.{num}.merge_fastq_to_bam.log')
     message:"""
             Merge fastq barcode and reads:
                 input:
@@ -494,15 +450,41 @@ rule merge_fastq_to_bam:
         'F2=' + str(input.reads),
         'QUALITY_FORMAT=Standard',
         'SAMPLE_NAME=' + str(params.name),
-        'SORT_ORDER=queryname',
+        'SORT_ORDER=unsorted',
         '2>' + str(log.log)
         ])
         print(command, file=sys.stderr)
+        shell(command) 
+
+# ----------------------------------------------------------------------------- #
+def fetch_all_bams(wc):
+    bam_files = SAMPLE_SHEET.lookup('sample_name', wc.name, ['Merged_BAM'])
+    return(bam_files)
+
+rule merge_bam_per_sample:
+    input: fetch_all_bams
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}","{name}" + ".Merged.bam")
+    log:
+        log = os.path.join(PATH_LOG, '{name}.merge_bam_per_sample.log')
+    params:
+        samtools = SOFTWARE['samtools']['executable']
+    run:
+        in_files = ' '.join(input)
+        command = ' '.join([
+            params.samtools,
+            'cat -o',
+            output.outfile,
+            in_files,
+            '2>' + str(log.log)
+            ])
+        print(command, file=sys.stderr)
         shell(command)
+
 # ----------------------------------------------------------------------------- #
 rule tag_cells:
     input:
-        infile = rules.merge_fastq_to_bam.output.outfile
+        infile = rules.merge_bam_per_sample.output.outfile
     output:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cell.bam"))
     params:
@@ -519,6 +501,11 @@ rule tag_cells:
         discard_read  = 'false'
     log:
        log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
+    message:"""
+            tag cells
+                input: {input.infile}
+                output : {output.outfile}
+        """
     run:
         tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
 
@@ -1059,7 +1046,7 @@ rule convert_loom_to_singleCellExperiment:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sampleSheetFile={NEW_SAMPLE_SHEET_PATH} --gtfFile={PATH_GTF_PRIMARY} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
+    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sampleSheetFile={PATH_SAMPLE_SHEET} --gtfFile={PATH_GTF_PRIMARY} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -1110,12 +1097,11 @@ rule bam_to_BigWig:
 # ----------------------------------------------------------------------------- #
 rule fastqc:
     input:
-        reads = rules.combine_technical_replicates.output.reads,
-        barcode = rules.combine_technical_replicates.output.barcode
+        infile = os.path.join(PATH_FASTQ, "{name}")
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.fastqc.done")
+        outfile =  os.path.join(PATH_FASTQC, "{name}.fastqc.done")
     params:
-        outpath = os.path.join(PATH_MAPPED, "{name}"),
+        outpath = os.path.join(PATH_FASTQC),
         threads = config['execution']['rules']['fastqc']['threads'],
         mem     = config['execution']['rules']['fastqc']['memory'],
         java    = SOFTWARE['java']['executable'],
@@ -1124,11 +1110,10 @@ rule fastqc:
         log = os.path.join(PATH_LOG, "{name}.fastqc.log")
     message: """
             fastqc:
-                input_R1: {input.barcode}
-                input_R2: {input.reads}
+                input: {input.infile}
                 output: {output.outfile}
             """
     shell:"""
-        {params.fastqc} -j {params.java} -t {params.threads} -o {params.outpath} {input.barcode} {input.reads} 2> {log.log}
+        {params.fastqc} -j {params.java} -t {params.threads} -o {params.outpath} {input.infile} 2> {log.log}
         touch {output.outfile}
     """
