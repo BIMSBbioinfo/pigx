@@ -72,6 +72,7 @@
        ("fastqc" ,fastqc)
        ("java-picard" ,java-picard)
        ("java" ,icedtea-8)
+       ("samtools", samtools)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)
        ("python-pandas" ,python-pandas)

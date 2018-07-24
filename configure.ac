@@ -62,6 +62,7 @@ find_or_override_prog([PANDOC],          [pandoc])
 find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
 find_or_override_prog([FASTQC],          [fastqc])
 find_or_override_prog([STAR],            [STAR])
+find_or_override_prog([SAMTOOLS],        [samtools])
 
 find_or_override_prog([RM],              [rm])
 find_or_override_prog([CAT],             [cat])
