@@ -421,7 +421,7 @@ rule merge_fastq_to_bam:
     input:
         unpack(fetch_fastq_for_merge)
     output:
-        outfile = temp(os.path.join(PATH_MAPPED, "{name}", "Fastq_" + "{num}" + ".bam"))
+        outfile = os.path.join(PATH_MAPPED, "{name}", "Fastq_" + "{num}" + ".bam")
     params:
         name    = '{name}' + '_' + '{num}',
         picard  = SOFTWARE['picard']['executable'],
@@ -461,7 +461,8 @@ def fetch_all_bams(wc):
     return(bam_files)
 
 rule merge_bam_per_sample:
-    input: fetch_all_bams
+    input:
+        bam_files = fetch_all_bams
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}","{name}" + ".Merged.bam")
     log:
@@ -469,7 +470,7 @@ rule merge_bam_per_sample:
     params:
         samtools = SOFTWARE['samtools']['executable']
     run:
-        in_files = ' '.join(input)
+        in_files = ' '.join(input.bam_files)
         command = ' '.join([
             params.samtools,
             'cat -o',
