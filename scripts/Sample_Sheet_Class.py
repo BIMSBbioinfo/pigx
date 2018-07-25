@@ -1,6 +1,7 @@
 import csv
 import inspect
 
+# ---------------------------------------------------------------------------- #
 ## Experiment Class
 class experiment:
     def __init__(self, config = [], name="sc_rnaseq"):
@@ -8,6 +9,8 @@ class experiment:
         self.config = config
         self.name = name
         self.SAMPLE_SHEET = []
+
+    # ------------------------------------------------------------------------ #
     def init_SAMPLE_SHEET(self, PATH_SAMPLE_SHEET):
         """Load the SAMPLE_SHEET as csv and set the *SAMPLE_SHEET* attribute"""
         self.name = PATH_SAMPLE_SHEET
@@ -17,6 +20,8 @@ class experiment:
             SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
             self.SAMPLE_SHEET = SAMPLE_SHEET
         self.validate_sheet_init()
+
+    # ------------------------------------------------------------------------ #
     def lookup(self, column, predicate, fields=[]):
         """Function for fetching elements from the *SAMPLE_SHEET*"""
         if inspect.isfunction(predicate):
@@ -24,12 +29,18 @@ class experiment:
         else:
             records = [line for line in self.SAMPLE_SHEET if line[column]==predicate]
         return [record[field] for record in records for field in fields]
+
+    # ------------------------------------------------------------------------ #
     def list_attr(self, attr):
         """Function for listing values for *atrr*"""
         return [line[attr] for line in self.SAMPLE_SHEET]
+
+    # ------------------------------------------------------------------------ #
     def list_rows(self, column, value):
         records = [line for line in self.SAMPLE_SHEET if line[column]==value]
         return records
+
+    # ------------------------------------------------------------------------ #
     def validate_sheet_init(self):
         """Function to validate the sample sheet"""
         sample_sheet = self.SAMPLE_SHEET
@@ -58,6 +69,8 @@ class experiment:
                 fullpath = os.path.join(self.config['locations']['reads-dir'], filename)
                 if not os.path.isfile(fullpath):
                     raise Exception('ERROR: missing reads file: {}'.format(fullpath))
+
+    # ------------------------------------------------------------------------ #
     def merged_bam(self, PATH_MAPPED):
         MERGE_FASTQ_TO_BAM_HASH = {}
         for name in list(set(self.list_attr('sample_name'))):
@@ -67,4 +80,3 @@ class experiment:
                 MERGE_FASTQ_TO_BAM_HASH[reads[i]] = outname
         for i in range(len(self.SAMPLE_SHEET)):
             self.SAMPLE_SHEET[i]['Merged_BAM'] = MERGE_FASTQ_TO_BAM_HASH[self.SAMPLE_SHEET[i]['reads']]
-            
