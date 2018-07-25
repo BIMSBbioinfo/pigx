@@ -422,7 +422,6 @@ rule merge_fastq_to_bam:
         unpack(fetch_fastq_for_merge)
     output:
         outfile = temp(os.path.join(PATH_MAPPED, "{name}", "Fastq_" + "{num}" + ".bam"))
-    
     params:
         name    = '{name}' + '_' + '{num}',
         picard  = SOFTWARE['picard']['executable'],
@@ -434,7 +433,7 @@ rule merge_fastq_to_bam:
     log:
         log = os.path.join(PATH_LOG, '{name}.{num}.merge_fastq_to_bam.log')
     message:"""
-            Merge fastq barcode and reads:
+            merge_fastq_to_bam:
                 input:
                     barcode : {input.barcode}
                     reads   : {input.reads}
@@ -454,7 +453,7 @@ rule merge_fastq_to_bam:
         '2>' + str(log.log)
         ])
         print(command, file=sys.stderr)
-        shell(command) 
+        shell(command)
 
 # ----------------------------------------------------------------------------- #
 def fetch_all_bams(wc):
