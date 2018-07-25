@@ -1,13 +1,13 @@
 # ---------------------------------------------------------------------------- #
 #Author: BU
 #Date: February, 2018
-#This script takes a loom file, imports it into singleCellExperiment object. 
+#This script takes a loom file, imports it into singleCellExperiment object.
 #Then, it makes further processing on the matrix:
 # - normalizes and scales the count matrix (DelayedMatrixStats package)
 # - calculate reduced dimensions such as PCA, and t-SNE (scater package)
 # - find variable genes  (scrna package)
 # - assign cell cycle scores to each cell (scrna package)
-#Finally, it saves everything as a single SingleCellExperiment object in .RDS format, 
+#Finally, it saves everything as a single SingleCellExperiment object in .RDS format,
 #   which should be the starting point for creating an HTML Report of the whole experiment.
 
 # ---------------------------------------------------------------------------- #
@@ -22,16 +22,16 @@ if(length(args) == 0) {
 }
 
 help_command = "
-convert_loom_to_singleCellExperiment.R: Import a loom file into 
-SingleCellExperiment object and further processes the data to make it 
+convert_loom_to_singleCellExperiment.R: Import a loom file into
+SingleCellExperiment object and further processes the data to make it
 ready for reporting.
 
 Arguments:
 --loomFile Path to .loom file from the scRNA-seq experiment
 --sampleSheetFile Sample Sheet file used to initiate the pipeline
---gtfFile GTF genome annotation file used as input to the pipeline 
+--gtfFile GTF genome annotation file used as input to the pipeline
 --genomeBuild Genome build version (e.g. hg38, mm10)
---outFile Path to the writing location of the output .RDS file 
+--outFile Path to the writing location of the output .RDS file
 
 Example:
 Rscript convert_loom_to_singleCellExperiment.R --loomFile=foo.loom --metaDataFile bar.tsv --genomeBuild hg38 --outFile=foo.RDS"
@@ -104,33 +104,33 @@ library(rtracklayer)
 #3. Define functions
 # ---------------------------------------------------------------------------- #
 #' Import a loom file into SingleCellExperiment object
-#' 
-#' This function was borrowed from the script 'make-data.R' in the repository 
+#'
+#' This function was borrowed from the script 'make-data.R' in the repository
 #' https://github.com/LTLA/HumanCellAtlasData/blob/master/inst/scripts/make-data.R
-#' 
+#'
 #' @param path Path to the .loom file to import into SingleCellExperiment object
-#' @return A SingleCellExperiment object 
+#' @return A SingleCellExperiment object
 loom2sce <- function(path) {
   message("Importing",path,"into SingleCellExperiment object")
   message("Extracting the count matrix")
   mat <- HDF5Array(path, "matrix")
   mat <- t(mat)
-  
+
   message("Extracting the row and column metadata")
   col.attrs <- h5read(path, "col_attrs")
-  if (length(col.attrs)) { 
+  if (length(col.attrs)) {
     col.df <- data.frame(col.attrs)
   } else {
     col.df <- DataFrame(matrix(0, nrow(mat), 0))
   }
-  
+
   row.attrs <- h5read(path, "row_attrs")
-  if (length(row.attrs)) { 
+  if (length(row.attrs)) {
     row.df <- data.frame(row.attrs)
   } else {
     row.df <- NULL
   }
-  
+
 
   message("Extracting layers (if there are any)")
   optional <- h5ls(path)
@@ -139,7 +139,7 @@ loom2sce <- function(path) {
     layer.names <- optional$name[is.layer,]
     other.layers <- vector("list", length(layer.names))
     names(other.layers) <- layer.names
-    
+
     for (layer in layer.names) {
       current <- HDF5Array(path, file.path("/layer", layer))
       other.layers[[layer]] <- t(current)
@@ -147,7 +147,7 @@ loom2sce <- function(path) {
   } else {
     other.layers <- list()
   }
-  
+
   message("Returning SingleCellExperiment object.")
   sce <- SingleCellExperiment(c(matrix=mat, other.layers), rowData=row.df, colData=col.df)
   return(sce)
@@ -166,16 +166,16 @@ getCPM <- function(dm) {
 }
 
 # ---------------------------------------------------------------------------- #
-#' Given a DelayedMatrix object (genes on the row, cells on the column), scale the 
-#' matrix values 
-#' 
-#' @param dm A DelayedMatrix object 
+#' Given a DelayedMatrix object (genes on the row, cells on the column), scale the
+#' matrix values
+#'
+#' @param dm A DelayedMatrix object
 #' @return A DelayedMatrix object of scaled and centered columns
 scaleDM <- function(dm) {
   #center
-  #subtract column means from corresponding columns 
+  #subtract column means from corresponding columns
   cdm <- t(t(dm) - DelayedMatrixStats::rowMeans2(t(dm))) #centred delayed matrix
-  
+
   #scale
   #divide the centered columns by their standard deviations
   scdm <- t(t(cdm) / DelayedMatrixStats::rowSds(t(cdm))) #scaled centered delayed matrix
@@ -183,21 +183,21 @@ scaleDM <- function(dm) {
 }
 
 # ---------------------------------------------------------------------------- #
-#' runPrComp 
-#' 
+#' runPrComp
+#'
 #' run stats::prcomp to obtain PCA rotations and loadings
-#' 
-#' Given a SingleCellExperiment object with at least one assay matrix named `expr_values`, 
-#' compute the PCA and loadings, update the SingleCellExperiment object with 'PCA' in 
+#'
+#' Given a SingleCellExperiment object with at least one assay matrix named `expr_values`,
+#' compute the PCA and loadings, update the SingleCellExperiment object with 'PCA' in
 #' reducedDimensions slot of the object.
-#' 
+#'
 #'  @param x A SingleCellExperiment object
 #'  @param features A character vector of features (should be subset of rowData(x)$Genes)
 #'  @param center whether to center the data
 #'  @param scale whether to scale the data
 #'  @param ncomponents Max number of principle components to look for
-#'  @param expr_values The name of the assay data matrix in `x` 
-#'  
+#'  @param expr_values The name of the assay data matrix in `x`
+#'
 #'  @return A matrix of dimensions [ncol(x), ncomponents] with attributes matrix
 #'    of [len(features), ncol(x)]
 runPrComp <- function(x, features = NULL, center = FALSE, scale = FALSE, ncomponents = 2, expr_values = 'scale') {
@@ -207,9 +207,9 @@ runPrComp <- function(x, features = NULL, center = FALSE, scale = FALSE, ncompon
     dm <- assay(x, expr_values)[select,]
     rownames(dm) <- features
   }
-  results <- stats::prcomp(x = dm, 
-                       center = center, 
-                       scale. = scale, 
+  results <- stats::prcomp(x = dm,
+                       center = center,
+                       scale. = scale,
                        rank. = ncomponents)
   PCA <- results$rotation
   attr(PCA, 'gene.loadings') <- results$x
@@ -218,11 +218,11 @@ runPrComp <- function(x, features = NULL, center = FALSE, scale = FALSE, ncompon
 }
 
 # ---------------------------------------------------------------------------- #
-#' Given a DelayedMatrix object (genes on the row, cells on the column), 
+#' Given a DelayedMatrix object (genes on the row, cells on the column),
 #' calculate basic statistics and return a DataFrame object
-#' 
-#' @param dm A DelayedMatrix object 
-#' @return A DataFrame object (nrow = number of genes) 
+#'
+#' @param dm A DelayedMatrix object
+#' @return A DataFrame object (nrow = number of genes)
 #' of basic stats of genes versus cells
 getGeneStats <- function(m) {
   #ndetected -> number of cells detected per gene
@@ -233,17 +233,17 @@ getGeneStats <- function(m) {
   meanGene <- DelayedMatrixStats::colMeans2(t(m))
   #mean_expr -> average expression per gene only in detected cells
   meanExpr <- ifelse(nCells > 0, DelayedMatrixStats::colSums2(t(m))/nCells, 0)
-  return(DataFrame('ndetected' = nCells, 
-                   'max_gene' = maxGene, 
-                   'mean_gene' = meanGene, 
+  return(DataFrame('ndetected' = nCells,
+                   'max_gene' = maxGene,
+                   'mean_gene' = meanGene,
                    'mean_expr' = meanExpr))
 }
 
-#' Given a DelayedMatrix object (genes on the row, cells on the column), 
+#' Given a DelayedMatrix object (genes on the row, cells on the column),
 #' calculate basic statistics and return a DataFrame object
-#' 
-#' @param dm A DelayedMatrix object 
-#' @return A DataFrame object (nrow = number of cells) 
+#'
+#' @param dm A DelayedMatrix object
+#' @return A DataFrame object (nrow = number of cells)
 #' of basic stats of genes versus cells
 getCellStats <- function(m) {
   #nGene -> number of genes detected per cell
@@ -254,9 +254,9 @@ getCellStats <- function(m) {
   meanGene <- DelayedMatrixStats::rowMeans2(t(m))
   #mean_expr -> average non-zero gene expression per cell
   meanExpr <- DelayedMatrixStats::rowSums2(t(m))/nGene
-  return(DataFrame('nGene' = nGene, 
-                   'max_gene' = maxGene, 
-                   'mean_gene' = meanGene, 
+  return(DataFrame('nGene' = nGene,
+                   'max_gene' = maxGene,
+                   'mean_gene' = meanGene,
                    'mean_expr' = meanExpr))
 }
 
@@ -267,11 +267,15 @@ getCellStats <- function(m) {
 message(date()," Importing loom file into SingleCellExperiment object")
 sce <- loom2sce(path = loomFile)
 
+saveRDS(object = sce, file = paste0(outFile, '.raw.RDS'))
 #4.1.1 Subset the sce object, remove cells that don't exist in the metaDataFile
 # warning(date()," Removing cells that don't exist in the meta data file",metaDataFile)
 sample_sheet <- data.table::fread(sampleSheetFile)
+sample_sheet$barcode = NULL
+sample_sheet$reads   = NULL
+sample_sheet = unique(sample_sheet)
 
-#4.1.2 remove cells with zero expression for all genes 
+#4.1.2 remove cells with zero expression for all genes
 warning(date()," Removing cells with zero expression for all genes")
 zeros <- which(DelayedMatrixStats::rowSums2(t(assays(sce)[[1]])) == 0)
 
@@ -284,11 +288,10 @@ message(date()," Updating colData")
 #4.1.1 update colData with additional meta data
 colData(sce)$sample_name = sub('_[ACGT]+$','',colData(sce)$cell_id)
 
-colData(sce) <- merge(colData(sce), 
+colData(sce) <- merge(colData(sce),
                      DataFrame(sample_sheet),
                      by   = 'sample_name',
                      sort = FALSE)
-
 #count matrix
 counts <- assays(sce)[[1]]
 
@@ -297,30 +300,33 @@ message(date()," Normalizing counts")
 counts_per_million <- round(getCPM(dm = counts), 2)
 
 ##4.2.1 update cell stats using cpm values
-colData(sce) <- cbind(colData(sce), 
+colData(sce) <- cbind(colData(sce),
                       getCellStats(m = counts_per_million))
 
+
 #4.2.2 update gene stats using cpm values
-rowData(sce) <- cbind(rowData(sce), 
+rowData(sce) <- cbind(rowData(sce),
                       getGeneStats(m = counts_per_million))
+
 
 message(date()," Scaling normalized counts")
 #4.3 scale normalized counts
 scaled_counts <- round(scaleDM(dm = counts_per_million), 2)
 
+
 #4.4 save processed assay data
-assays(sce) <- SimpleList("cnts"  = counts, 
-                          "cpm"   = counts_per_million, 
+assays(sce) <- SimpleList("cnts"  = counts,
+                          "cpm"   = counts_per_million,
                           "scale" = scaled_counts)
 
 saveRDS(object = sce, file = paste0(outFile, '.intermediate.RDS'))
 
 
-#4.5 compute gene variability across conditions 
+#4.5 compute gene variability across conditions
 message(date()," Computing gene variability across cells")
 fit    <- scran::trendVar(x = sce, assay.type = 'cpm', use.spikes = FALSE)
 decomp <- scran::decomposeVar(x = sce, fit = fit, assay.type = 'cpm')
-rowData(sce) <- cbind(rowData(sce), 
+rowData(sce) <- cbind(rowData(sce),
                       DataFrame('fitted_variability' = decomp$bio))
 
 max <- 500
@@ -329,7 +335,7 @@ if(max > nrow(sce)) {
 }
 
 rowvars <- DelayedMatrixStats::colVars(t(assay(sce, 'cpm')))
-rowData(sce) <- cbind(rowData(sce), 
+rowData(sce) <- cbind(rowData(sce),
                       DataFrame('row_variability' = rowvars))
 topgenes <- rowData(sce)[order(rowData(sce)$row_variability, decreasing = T),][1:max,]$Genes
 
@@ -362,26 +368,26 @@ if(skipCycleScore == FALSE) {
   cc.pairs <- readRDS(system.file("exdata", paste0(organism,"_cycle_markers.rds"), package="scran"))
   #check if the gene id namespace in the SingleCellExperimet object follows Ensembl style
   overlap <- sum(grepl('^ENS', rowData(sce)$Genes)) / nrow(sce)
-    
+
   if(overlap > 0.5) { #require at least 50% overlap in the gene id overlap
     message(date()," Computing cell cycle phase scores")
     m = as.matrix(assays(sce)[['cpm']])
-    assigned <- scran::cyclone(x = m, 
-                               gene.names = rowData(sce)$Genes, 
-                               pairs      = cc.pairs, 
+    assigned <- scran::cyclone(x = m,
+                               gene.names = rowData(sce)$Genes,
+                               pairs      = cc.pairs,
                                iter       = 100)
     phases <- assigned$phases
     phases[is.na(phases)] <- 'unknown'
-    colData(sce) <- cbind(colData(sce), 
+    colData(sce) <- cbind(colData(sce),
                           DataFrame("CellCyclePhase" = phases))
   } else {
-    warning("Skipping cell cycle score assignment as 
-            gene id namespace used in scran package doesn't match 
+    warning("Skipping cell cycle score assignment as
+            gene id namespace used in scran package doesn't match
             the gene id namespace found in the SingleCellExperiment object")
   }
 }
 
-# 4.8 Map gene ids to gene names and update rowData 
+# 4.8 Map gene ids to gene names and update rowData
 #read mappings from the gtf file
 message(date()," Importing GTF data to map gene ids to gene names")
 gtf <- rtracklayer::import.gff(gtfFile, format = 'gtf')
@@ -390,6 +396,3 @@ rowData(sce)$geneName <- gtf[match(rowData(sce)$Genes, gtf$gene_id),]$gene_name
 
 #5 save SingleCellExperiment object in .RDS format
 saveRDS(object = sce, file = outFile)
-
-
-  

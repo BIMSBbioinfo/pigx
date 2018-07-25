@@ -1,7 +1,4 @@
 sample_name,barcode,reads,method,sample_id,replicate,time
 WT_HEK_0h_br1,HEK_0h_br1_R1_1.fastq.gz,HEK_0h_br1_R2_1.fastq.gz,dropseq,WT_HEK_0h_br1,br1,0h
 WT_HEK_0h_br1,HEK_0h_br1_R1_2.fastq.gz,HEK_0h_br1_R2_2.fastq.gz,dropseq,WT_HEK_0h_br1,br1,0h
-WT_HEK_0h_br1,HEK_0h_br1_R1_3.fastq.gz,HEK_0h_br1_R2_3.fastq.gz,dropseq,WT_HEK_0h_br1,br1,0h
 WT_HEK_4h_br1,HEK_4h_br1_R1.fastq.gz,HEK_4h_br1_R2.fastq.gz,dropseq,WT_HEK_4h_br1,br1,4h
-
-
