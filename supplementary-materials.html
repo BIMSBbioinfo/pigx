@@ -2,7 +2,23 @@
 generated with PiGx 0.0.3 as installed with <a href="https://gnu.org/software/guix">GNU
 Guix</a> at version
 v0.14.0-7054-g5149aeb7e (git commit
-5149aeb7e62cf62398b55be38469cd28c25d8d7d).</p><h2>PiGx scRNA-seq</h2><p>The HTML report output of the scRNA-seq pipeline from the analysis of
+5149aeb7e62cf62398b55be38469cd28c25d8d7d).</p><p>We provide a <a href="https://hub.docker.com/r/bimsbbioinfo/pigx/">generated Docker image on
+Dockerhub</a>.  The tag
+<code>bimsbbioinfo/pigx:publication</code> corresponds to the image at the above
+Guix version, which was used for the publication.</p><p>We also provide a <a href="https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/pigx-singularity-image.squashfs">SquashFS file system
+image</a>,
+which can be used with systems like Singularity.</p><p>The SquashFS image was created with this command:</p><pre><code>guix pack pigx            \
+          -f squashfs     \
+          -S /bin=bin     \
+          -S /lib=lib     \
+          -S /share=share \
+          glibc-utf8-locales tzdata coreutils bash</code></pre><p>This command was used for generating the Docker image:</p><pre><code>guix pack pigx            \
+          -f docker       \
+          -C none         \
+          -S /bin=bin     \
+          -S /lib=lib     \
+          -S /share=share \
+          glibc-utf8-locales tzdata coreutils bash</code></pre><h2>PiGx scRNA-seq</h2><p>The HTML report output of the scRNA-seq pipeline from the analysis of
 the single cell sequencing dataset from (Hu et al. 2017) <a href="https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/scrnaseq/mm10.scRNA-Seq.report.html">can be
 accessed
 here</a>.</p><p>An archive containing a sample sheet, settings file, and instructions
