@@ -7,6 +7,38 @@ Guix](https://gnu.org/software/guix) at version
 v0.14.0-7054-g5149aeb7e (git commit
 5149aeb7e62cf62398b55be38469cd28c25d8d7d).
 
+We provide a [generated Docker image on
+Dockerhub](https://hub.docker.com/r/bimsbbioinfo/pigx/).  The tag
+`bimsbbioinfo/pigx:publication` corresponds to the image at the above
+Guix version, which was used for the publication.
+
+We also provide a [SquashFS file system
+image](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/supplementary_material/pigx-singularity-image.squashfs),
+which can be used with systems like Singularity.
+
+The SquashFS image was created with this command:
+
+```
+guix pack pigx            \
+          -f squashfs     \
+          -S /bin=bin     \
+          -S /lib=lib     \
+          -S /share=share \
+          glibc-utf8-locales tzdata coreutils bash
+```
+
+This command was used for generating the Docker image:
+
+```
+guix pack pigx            \
+          -f docker       \
+          -C none         \
+          -S /bin=bin     \
+          -S /lib=lib     \
+          -S /share=share \
+          glibc-utf8-locales tzdata coreutils bash
+```
+
 
 ## PiGx scRNA-seq
 
