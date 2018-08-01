@@ -181,7 +181,11 @@ DOWNSTREAM_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{
 # ----------------------------------------------------------------------------- #
 # Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects.
 SCE_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"), genome = REFERENCE_NAMES)
+
+
 # ----------------------------------------------------------------------------- #
+# Seurat RDS files
+SEURAT_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.Seurat.RDS"), genome = REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
 ## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
@@ -199,7 +203,7 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + REPORT_FILES
+RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
 
 # ----------------------------------------------------------------------------- #
 rule all:
@@ -1052,6 +1056,27 @@ rule convert_loom_to_singleCellExperiment:
                 output: {output.outfile}
         """
     shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sampleSheetFile={PATH_SAMPLE_SHEET} --gtfFile={PATH_GTF_PRIMARY} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
+
+# ----------------------------------------------------------------------------- #
+rule convert_loom_to_seurat:
+    input:
+        infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
+    output:
+        outfile       = os.path.join(PATH_MAPPED, "{genome}.Seurat.RDS")
+    log:
+        log = os.path.join(PATH_LOG, "{genome}.loom2Seurat.log")
+    params:
+        script         = PATH_SCRIPT,
+        Rscript        = PATH_RSCRIPT,
+        genome_version = "{genome}"
+    message: """
+            convert_loom_to_seurat:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    run:
+        RunRscript(input, output, params, params.script, 'convert_loom_to_Seurat.R')
+
 
 
 # ----------------------------------------------------------------------------- #
