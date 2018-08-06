@@ -100,6 +100,14 @@ loomToSeurat = function(
     #                           g2m.genes = g2m.genes,
     #                           set.ident = FALSE)
     # }
+    if(class(rownames(seu@raw.data)) == array){
+        rownames(seu@raw.data) = as.character(rownames(seu@raw.data))
+    }  
+        
+    if(class(rownames(seu@data)) == array){
+        rownames(seu@data) = as.character(rownames(seu@data))
+    }  
+        
     seu@meta.data$CellID = rownames(seu@meta.data)
     saveRDS(seu, outfile)
 }
