@@ -113,7 +113,7 @@ ggplotly(p)
 
 # Indel Score Profiles 
 
-```{r plotIndelProfiles}
+```{r plotIndelProfiles, fig.height=8}
 
 plotScores <- function(indelsFolder, sampleName, sampleSheet, cutSites) {
   f <- file.path(indelsFolder, paste0(sampleName, '.coverageStats.tsv'))
@@ -127,14 +127,16 @@ plotScores <- function(indelsFolder, sampleName, sampleSheet, cutSites) {
   mdt <- melt(dt[,-c('ins', 'del', 'indel', 'cov')], id.vars = c('bp', 'sample', 'seqname'))
   
   p <- ggplot(mdt, aes(x = bp, y = value, group = variable)) +
-    geom_line(aes(color = variable)) + labs(title = sampleName)
+    geom_line(aes(color = variable)) + labs(title = sampleName) 
   if(nrow(sgRNAs) > 0) {
     p <- p + geom_vline(data = sgRNAs, aes(xintercept = cutSite, 
                                            color = sgRNA), linetype = 'dotted')
   }
   p <- p + 
-    theme_bw(base_size = 14) + 
-    scale_y_continuous(labels = scales::percent)
+#    theme_bw(base_size = 14) + 
+    scale_y_continuous(labels = scales::percent, 
+                       breaks = seq(0, 1, by = 0.025), 
+                       limits = c(0, 1))
   return(p)
 }
 
@@ -195,7 +197,7 @@ plots <- lapply(as.vector(unique(cutSiteStats$sgRNA)), function(sg) {
   dt <- cutSiteStats[sgRNA == sg & sampleMatchesGuide == TRUE]
   if(nrow(dt) > 0) {
     p <- ggplot(dt, aes(x = sample, y = indelEfficiency)) + 
-      geom_bar(stat = 'identity', aes(fill = sample)) + 
+      geom_bar(stat = 'identity', aes(fill = sample)) + ylim(0, 100) + 
       labs(title = sg) + coord_flip()
     return(p)
   }
