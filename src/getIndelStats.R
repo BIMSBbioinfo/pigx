@@ -49,8 +49,8 @@ trimAlignmentEnds <- function(aln, percentile = 75) {
                                 probs = c(1:100)/100)[percentile])
   #find the N terminal and C terminal positions that correspond to the coverageThreshold
   basesAboveCoverage <- which((cov > coverageThreshold) == TRUE)
-  centerAln <- IRanges::subsetByOverlaps(query = aln, 
-                                      subject = GenomicRanges::GRanges(seqnames = levels(seqnames(aln))[1], 
+  centerAln <- IRanges::subsetByOverlaps(x = aln, 
+                                      ranges = GenomicRanges::GRanges(seqnames = levels(seqnames(aln))[1], 
                                                                        ranges = IRanges(start = min(basesAboveCoverage), 
                                                                                         end =  max(basesAboveCoverage))), 
                                       type = 'within') #overlap type is important
