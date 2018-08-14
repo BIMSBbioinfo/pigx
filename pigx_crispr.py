@@ -90,7 +90,9 @@ rule all:
         get_output_file_list(INDELS_DIR, "deletions.bed"),
         get_output_file_list(INDELS_DIR, "insertions.bed"),
         get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
-        get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),                          
+        get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"), 
+        get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"), 
+        get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"), 
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
         expand(os.path.join(OUTPUT_DIR, "{amplicon}", "{amplicon}.fasta"), amplicon=AMPLICONS.keys()),
@@ -186,7 +188,21 @@ rule getFreeBayesVariants:
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_variants.vcf")
     log: os.path.join(LOG_DIR, "{amplicon}", "getFreeBayesVariants.{sample}.log")
     shell: "freebayes -f {input.ref} -F 0.01 -C 1 --no-snps --use-duplicate-reads --pooled-continuous {input.bamFile} > {output} 2> {log}"
-        
+
+#convert VCF output from freebayes to BED files 
+rule vcf2bed:
+    input: os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_variants.vcf")
+    output:
+        deletions = os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_deletions.bed"),
+        insertions = os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_insertions.bed")                    
+    log: 
+        deletions = os.path.join(LOG_DIR, "{amplicon}", "vcf2bed.deletions.{sample}.log"),
+        insertions = os.path.join(LOG_DIR, "{amplicon}", "vcf2bed.insertions.{sample}.log")                      
+    shell: 
+        """
+        vcf2bed --deletions < {input} > {output.deletions} 2> {log.deletions} 
+        vcf2bed --insertions < {input} > {output.insertions} 2> {log.insertions}
+        """
 
 rule getIndelStats:
     input: 
