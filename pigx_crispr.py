@@ -90,6 +90,7 @@ rule all:
         get_output_file_list(INDELS_DIR, "deletions.bed"),
         get_output_file_list(INDELS_DIR, "insertions.bed"),
         get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
+        get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),                          
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
         expand(os.path.join(OUTPUT_DIR, "{amplicon}", "{amplicon}.fasta"), amplicon=AMPLICONS.keys()),
@@ -172,6 +173,20 @@ rule multiqc:
         output_folder = os.path.join(OUTPUT_DIR, "multiqc")
     log: os.path.join(LOG_DIR, 'multiqc.log')
     shell: "multiqc -o {params.output_folder} {params.analysis_folder} > {log} 2>&1"
+
+# runs freebayes tool on top of a BAM file and creates a VCF file containing variants
+# we assume the sequences may come from multiple individuals and suppress snps. 
+# we apply a frequency cut-off of 0.1% 
+rule getFreeBayesVariants: 
+    input: 
+        ref = lambda wildcards:  os.path.join(OUTPUT_DIR, wildcards.amplicon, ''.join([wildcards.amplicon, ".fasta"])),
+        bamIndex = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai"),
+        bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
+    output:
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_variants.vcf")
+    log: os.path.join(LOG_DIR, "{amplicon}", "getFreeBayesVariants.{sample}.log")
+    shell: "freebayes -f {input.ref} -F 0.01 -C 1 --no-snps --use-duplicate-reads --pooled-continuous {input.bamFile} > {output} 2> {log}"
+        
 
 rule getIndelStats:
     input: 
