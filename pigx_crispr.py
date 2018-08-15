@@ -175,7 +175,7 @@ rule multiqc:
         analysis_folder = OUTPUT_DIR,
         output_folder = os.path.join(OUTPUT_DIR, "multiqc")
     log: os.path.join(LOG_DIR, 'multiqc.log')
-    shell: "multiqc -o {params.output_folder} {params.analysis_folder} > {log} 2>&1"
+    shell: "multiqc --force -o {params.output_folder} {params.analysis_folder} > {log} 2>&1"
 
 # runs freebayes tool on top of a BAM file and creates a VCF file containing variants
 # we assume the sequences may come from multiple individuals and suppress snps. 
