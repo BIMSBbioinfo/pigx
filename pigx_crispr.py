@@ -22,6 +22,7 @@ COMPARISONS_FILE = config.get('comparisonsFile', {})
 OUTPUT_DIR = config['output-dir']
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
+FASTA_DIR         = os.path.join(OUTPUT_DIR, 'fasta')
 FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'aln')
@@ -95,17 +96,17 @@ rule all:
         get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"), 
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(BBMAP_INDEX_DIR, "{amplicon}"), amplicon=AMPLICONS.keys()),
-        expand(os.path.join(OUTPUT_DIR, "{amplicon}", "{amplicon}.fasta"), amplicon=AMPLICONS.keys()),
+        expand(os.path.join(FASTA_DIR, "{amplicon}.fasta"), amplicon=AMPLICONS.keys()),
         expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys()),
         expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISON_AMPLICONS),
         expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv'), amplicon=COMPARISON_AMPLICONS)
 
 #notice that get_amplicon_file function for 'fasta' should only be used once. 
 #Other rules that need the amplicon fasta sequence as input should use :
-#lambda wildcards: os.path.join(OUTPUT_DIR, wildcards.amplicon, ''.join([wildcards.amplicon, ".fasta"])) 
+#lambda wildcards: os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])) 
 rule reformatFasta: 
     input: lambda wildcards: get_amplicon_file(wildcards, 'fasta') 
-    output: os.path.join(OUTPUT_DIR, "{amplicon}", "{amplicon}.fasta")
+    output: os.path.join(FASTA_DIR, "{amplicon}.fasta")
     log: os.path.join(LOG_DIR, "{amplicon}", "reformatFasta.{amplicon}.log")
     shell:
         "reformat.sh in={input} out={output} > {log} 2>&1"
@@ -127,7 +128,7 @@ rule trimmomatic:
        ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 > {log} 2>&1"
 
 rule bbmap_indexgenome:
-    input: lambda wildcards:  os.path.join(OUTPUT_DIR, wildcards.amplicon, ''.join([wildcards.amplicon, ".fasta"])) 
+    input: lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])) 
     output: os.path.join(BBMAP_INDEX_DIR, "{amplicon}")
     log: os.path.join(LOG_DIR, 'bbmap_index_{amplicon}.log')
     shell: "bbmap.sh ref={input} path={output} > {log} 2>&1"
@@ -158,7 +159,7 @@ rule samtools_indexbam:
 rule samtools_stats:
     input: 
         bamfile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam"),
-        ref = lambda wildcards:  os.path.join(OUTPUT_DIR, wildcards.amplicon, ''.join([wildcards.amplicon, ".fasta"])) 
+        ref = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])) 
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.samtools.stats.txt")
     log: os.path.join(LOG_DIR, "{amplicon}", "samtools_stats.{sample}.log")
     shell: "samtools stats --reference {input.ref} {input.bamfile} > {output} 2> {log}"
@@ -181,7 +182,7 @@ rule multiqc:
 # we apply a frequency cut-off of 0.1% 
 rule getFreeBayesVariants: 
     input: 
-        ref = lambda wildcards:  os.path.join(OUTPUT_DIR, wildcards.amplicon, ''.join([wildcards.amplicon, ".fasta"])),
+        ref = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])),
         bamIndex = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai"),
         bamFile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     output:
@@ -231,7 +232,7 @@ rule report:
         cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
         indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")
     params:
-      fasta = lambda wildcards:  os.path.join(OUTPUT_DIR, wildcards.amplicon, ''.join([wildcards.amplicon, ".fasta"])),
+      fasta = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])),
       cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
       reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
       reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
