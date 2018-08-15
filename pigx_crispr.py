@@ -109,7 +109,7 @@ rule reformatFasta:
     output: os.path.join(FASTA_DIR, "{amplicon}.fasta")
     log: os.path.join(LOG_DIR, "{amplicon}", "reformatFasta.{amplicon}.log")
     shell:
-        "reformat.sh in={input} out={output} > {log} 2>&1"
+        "reformat.sh in={input} out={output} tuc > {log} 2>&1"
 
 rule fastqc:
     input: reads_input      
