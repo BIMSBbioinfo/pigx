@@ -42,7 +42,7 @@ printBedGraphFile <- function(filepath,
 # described as the region that is covered by at least the 75th percentile value of coverage distribution. 
 #' @param aln GenomicAlignments object read from a bam file
 #' @param percentile can be a value between 0 and 100
-trimAlignmentEnds <- function(aln, percentile = 75) {
+trimAlignmentEnds <- function(aln, percentile = 50) {
   #find minimum coverage required 
   cov <- as.vector(GenomicAlignments::coverage(aln)[[1]])
   coverageThreshold <- as.numeric(quantile(x = cov, 
@@ -63,7 +63,7 @@ printCoverageStats <- function(bamFile, sampleName, outDir = getwd(), trimPercen
   
   # trim the ends of the alignments for low coverage regions of the amplicon
   if(!is.null(trimPercentile)) {
-    message("Trimming alignments with coverage below",trimPercentile,"percentile")
+    message("Trimming alignments with coverage below ",trimPercentile," percentile")
     aln <- trimAlignmentEnds(aln, percentile = trimPercentile)
   }
   
@@ -186,16 +186,31 @@ countEventsAtCutSite <- function(seqName, cutStart, cutEnd, bamFile, readsWithIn
   return(stats)
 }
 
-printBedFile <- function(outDir, sampleName, df, tracktype) {
+printBedFile <- function(outDir, sampleName, df, tracktype, topN = 100, minReadSupport = 5) {
   outfile <- file.path(outDir, paste0(sampleName, '.', tracktype, ".bed"))
-  writeLines(text = paste0("track name=\"",sampleName," top 100 ",tracktype," useScore=1"),
+  writeLines(text = paste0("track name=",sampleName," description=\"top 100 ",tracktype,"\" useScore=1"),
              con = outfile)
+  #convert coordinates to 0 based (start, end) form
+  df$start <- df$start - 1
+  #update ids:
+  df$ID <- paste(df$seqname, df$start, df$end, "rs", df$ReadSupport, sep = ':')
+  #filter features by read support and only show topN of them
+  df <- df[order(df$ReadSupport, decreasing = TRUE),]
+  df <- df[df$ReadSupport >= minReadSupport,]
+  if(topN > nrow(df)) {
+    topN <- nrow(df)
+  }
+  df <- df[1:topN,]
+  #normalize scores to go from 0 to 1000 - to enable color shades on IGV
+  df$ReadSupport <- round(df$ReadSupport / max(df$ReadSupport) * 1000, 3)
+  df$strand <- '.'
+  
   write.table(x = df,
               file = outfile,
               quote = F, sep = '\t', col.names = F, row.names = F, append = T)
 }
 
-readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, trimPercentile = 75)
+readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, trimPercentile = 50)
 
 seqName <- seqnames(seqinfo(readsWithInDels))[1]
 
@@ -236,24 +251,14 @@ write.table(x = cutSiteStats,
 indels <- summarizeInDels(readsWithInDels)
 indels$seqname <- seqName
 
-#print to BED file only top indels based on read support
-#because it doesn't make sense to load every deletion  
-topN <- 100 
-
 #print summarized deletions to BED file
 deletions <- indels[ type == 'D', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
-if(nrow(deletions) > topN) {
-  deletions <- deletions[1:100,]
-}
 printBedFile(outDir = outDir, sampleName = sampleName, 
              df = deletions, 
              tracktype = 'deletions')
 
 #print summarized insertions to BED file
 insertions <- indels[ type == 'I', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
-if(nrow(insertions) > topN) {
-  insertions <- insertions[1:100,]
-}
 printBedFile(outDir = outDir, sampleName = sampleName, 
              df = insertions, 
              tracktype = 'insertions')
