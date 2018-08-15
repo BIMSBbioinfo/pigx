@@ -10,6 +10,10 @@ trimmomatic=0.36
 fastqc=0.11.5
 freebayes
 bedops
+gatk=3.8 #also download GenomeAnalysisToolKit.jar file from https://software.broadinstitute.org/gatk/download/archive
+
+
+#R libraries
 r-crosstalk
 r-data.table
 r-dt
