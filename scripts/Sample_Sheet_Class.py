@@ -54,7 +54,7 @@ class experiment:
         for sample in sample_sheet:
             method = sample['method']
             if not method in methods:
-                message = 'Sample sheet contains unknown method:' + sample + '\n'
+                message = 'Sample sheet contains unknown method:' + str(sample['sample_name']) + '\n'
                 message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
                 sys.exit(message)
         samples = {}
