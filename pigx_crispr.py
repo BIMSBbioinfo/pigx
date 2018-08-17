@@ -88,6 +88,7 @@ rule all:
         get_output_file_list(INDELS_DIR, "deletions.bed"),
         get_output_file_list(INDELS_DIR, "insertions.bed"),
         get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
+        get_output_file_list(INDELS_DIR, "insertedSequences.tsv"),
         get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"), 
         get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"), 
         get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"), 
@@ -272,7 +273,8 @@ rule getIndelStats:
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indel_stats_at_cutsites.tsv"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.deletions.bed"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertions.bed"),
-        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indels.unfiltered.tsv")
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indels.unfiltered.tsv"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertedSequences.tsv"),                    
     params:
         outdir=os.path.join(INDELS_DIR, "{amplicon}"),
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],

@@ -57,9 +57,27 @@ trimAlignmentEnds <- function(aln, percentile = 50) {
   return(centerAln)
 }
 
-printCoverageStats <- function(bamFile, sampleName, outDir = getwd(), trimPercentile = NULL) {
+#get the actual sequences that are inserted in alignments 
+#' @param aln GAlignments object to extract inserted sequences  
+#' @return DNAStringSetList object; one DNAStringSet object per 
+#'  read with at least one insertion ' 
+getInsertedSequences <- function(aln) {
+  insertions <- GenomicAlignments::cigarRangesAlongQuerySpace(cigar = cigar(aln), 
+                                                              ops = c('I'),
+                                                              with.ops = T)
+  names(insertions) <- mcols(aln)$qname
+  insertions <- insertions[lengths(insertions) > 0]
+  
+  sequences <- mcols(aln)$seq[match(names(insertions), mcols(aln)$qname)]
 
-  aln <- readGAlignments(bamFile, param = ScanBamParam(what="qname"))
+  insertedSequences <- Biostrings::extractAt(x = sequences, at = insertions)
+
+  return(insertedSequences)
+}
+
+printCoverageStats <- function(bamFile, sampleName, outDir = getwd(), trimPercentile = NULL, ...) {
+
+  aln <- GenomicAlignments::readGAlignments(bamFile, param = ScanBamParam(what=c("qname", "seq")))
   
   # trim the ends of the alignments for low coverage regions of the amplicon
   if(!is.null(trimPercentile)) {
@@ -78,6 +96,30 @@ printCoverageStats <- function(bamFile, sampleName, outDir = getwd(), trimPercen
   
   del <- indels[which(names(indels) == 'D')]
   ins <- indels[which(names(indels) == 'I')]
+
+  insertedSequencesFile <- file.path(outDir, paste0(sampleName,'.insertedSequences.tsv'))
+  
+  if(length(ins) > 0) {
+    # get inserted sequences and print to the sequences to a file
+    # mcols(ins)$name <- as.character(mcols(ins)$name)
+    insertedSequences <- getInsertedSequences(aln)
+    
+    df <- data.frame('seqname' = levels(seqnames(aln))[1], 
+                     #here we use the genomic coordinate of the insertion rather than the 
+                     #position in the query (read)
+                     'start' = start(ins), 
+                     'name' = as.character(mcols(ins)$name),
+                     'insertedSequence' = paste(unlist(insertedSequences)),
+                     'insertionWidth' = nchar(paste(unlist(insertedSequences)))
+    ) 
+    write.table(x = df, file = insertedSequencesFile, 
+                sep = '\t', quote = F, row.names = F, col.names = T)
+  } else {
+    write(x = paste('seqname', 'start', 'name', 'insertedSequence', 'insertionWidth', collapse  = '\t'), 
+          file =  insertedSequencesFile, sep = '\t')
+  }
+  
+  # calculate score profiles for indels and coverage. 
   
   alnCoverage <- GenomicAlignments::coverage(aln)[[1]]
   
@@ -210,7 +252,7 @@ printBedFile <- function(outDir, sampleName, df, tracktype, topN = 100, minReadS
               quote = F, sep = '\t', col.names = F, row.names = F, append = T)
 }
 
-readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, trimPercentile = 50)
+readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, trimPercentile = 50, nodeN = 8)
 
 seqName <- seqnames(seqinfo(readsWithInDels))[1]
 
