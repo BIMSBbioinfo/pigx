@@ -154,7 +154,7 @@ rule bbmap_map:
         os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
     log: os.path.join(LOG_DIR, "{amplicon}", "bbmap_{sample}.log")
     shell:
-        "bbmap.sh path={input.ref} in={input.reads} outm={output} t=2 sam=1.3 > {log} 2>&1"
+        "bbmap.sh path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1"
 
 # we need an interval file that tells gatk to correct indels within those intervals
 # we use the whole amplicon start end positions for this purpose, however, in genome-wide
