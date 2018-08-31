@@ -334,56 +334,81 @@ for (i in 1:length(plots)) {
 }
 ```
 
-# Per Base Diversity of Deletion {.tabset}
+# Diversity of Deletions {.tabset}
 
-Here we plot the number of unique deletions that overlap each base at varying levels of read support cut-offs. 
-For example, when `MinReadSupportPerDeletion` is set to 10, then we only count deletions that are supported by at least 10 reads. 
+Here we plot the locations and diversity of the deletions that originate at the cut sites (+/- 3 bps) and are supported by at least 5 reads. 
 
-```{r perBaseDiversity}
-dt <- indelSummary[indelType == 'D']
-seqlength <- max(coverageStats$bp)
-results <- lapply(unique(dt$sample), function(s) {
-  df <- dt[sample == s]
-  do.call(rbind, lapply(c(0, 1, 5, 10), function(depth) {
-      df <- df[ReadSupport >= depth]
-      message('dim',nrow(df))
-      if(nrow(df) > 0){
-        gr <- GenomicRanges::makeGRangesFromDataFrame(df[ReadSupport >= depth], keep.extra.columns = TRUE)
-        deletionsPerBase <- GenomicAlignments::coverage(gr)[[1]]
-        deletionsPerBase <- c(deletionsPerBase, rep(0, seqlength - length(deletionsPerBase)))
-        result <- data.frame( 
-                       'sample' = s, 
-                       'bp' = 1:seqlength, 
-                       'uniqueDeletions' = as.vector(deletionsPerBase),
-                       'MinReadSupportPerDeletion' = depth)
-        return(result)
+```{r deletionDiversity}
+deletionCutsiteOverlaps <- cbind(indelSummary[indelType == 'D'], overlapCutSites(indelSummary[indelType == 'D'], cutSites))
+
+deletionCutsiteOverlaps <- deletionCutsiteOverlaps[ReadSupport > 5]
+
+plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
+    dt <- deletionCutsiteOverlaps[sample == s]
+    
+    sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                     split = ':'))
+
+    if(sgRNAs[1] != 'none') {
+      plots <- lapply(sgRNAs, function(sgRNA) {
+      tmp <- dt[get(sgRNA) == 1]
+      if(nrow(tmp) > 0) {
+        tmp <- tmp[order(end-start)]
+        tmp$linePos <- 1:nrow(tmp)/100
+        p1 <- ggplot(tmp, aes(x = linePos, ymin = start, ymax = end)) + 
+          geom_linerange(size = 0.5) + 
+          ylim(c(min(tmp$start)-10, max(tmp$end)+10)) + 
+          theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+          labs(x = '', y = 'base position\n(cut site displayed as grey bar)', 
+               title = paste0('unique deletions n=',nrow(tmp))) + 
+          geom_point(data = tmp, aes(x = linePos, y = start), size = 0.05, color = 'red') + 
+          geom_point(data = tmp, aes(x = linePos, y = end), size = 0.05, color = 'red') + 
+          geom_hline(yintercept = cutSites[cutSites$sgRNA == sgRNA,]$cutSite, 
+                     color = 'black', size = 5, alpha = 0.2) + 
+          coord_flip()
+        p2 <- ggplot(tmp, aes( x = get(sgRNA), y = end - start + 1)) + 
+          geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) + 
+          geom_jitter(height = 0, alpha = 0.5, 
+                      aes(size = as.factor(round(log10(tmp$ReadSupport))), 
+                          color = as.factor(round(log10(tmp$ReadSupport))))) + 
+          labs(x = sgRNA, y = 'Deletion Length', size = 'log10(Read Support)', color = 'log10(Read Support)') + 
+          theme(axis.ticks.x = element_blank() , axis.text.x = element_blank())
+        p <- cowplot::plot_grid(p1, p2, labels = c('A', 'B'))
+        return(p)
+      } else {
+        return(NULL)
       }
-  }))
+      })
+      names(plots) <- sgRNAs
+      return(plots)
+    } else {
+      return(NULL)
+    }
 })
-names(results) <- unique(dt$sample)
-
-plots <- lapply(results, function(df) {
-  df$MinReadSupportPerDeletion <- as.factor(df$MinReadSupportPerDeletion)
-  ggplot(df, aes(x = bp, y = uniqueDeletions)) + geom_bar(aes(fill = MinReadSupportPerDeletion), 
-                                                         position = 'dodge', stat= 'identity') 
-})
+names(plots) <- unique(deletionCutsiteOverlaps$sample)
 
 ```
 
-```{r plotDeletionDiversityPerBase}
-out = NULL
+```{r plotDeletionDiversity, results='asis', fig.height=8, fig.width=10}
 for (n in names(plots)) {
   if(!is.null(plots[[n]])) {
-  p <- ggplotly(plots[[n]])
-  out = c(out, knitr::knit_expand(text='## {{n}} \n\n {{p}} \n\n'))
+    cat('##',n,' {.tabset} \n\n')
+    for(n2 in names(plots[[n]])) {
+      p <- plots[[n]][[n2]]
+      cat('###',n2,'\n\n')
+      if(!is.null(p)) {
+        print(p)
+      } else {
+        cat("No plot to show\n\n")
+      }
+      cat("\n\n")
+    }
   } else {
-    out = c(out, knitr::knit_expand(text='## {{n}} \n\n No indel data found\n\n'))
+    cat('##',n,'\n\n No plot to show\n\n')
   }
+  cat("\n\n")
 }
 ```
-
-`r paste(knit(text = out), collapse = '\n')`
-
 
 # R Session Information
 ```{r}
