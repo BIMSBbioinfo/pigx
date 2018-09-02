@@ -252,7 +252,7 @@ printBedFile <- function(outDir, sampleName, df, tracktype, topN = 100, minReadS
               quote = F, sep = '\t', col.names = F, row.names = F, append = T)
 }
 
-readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, trimPercentile = 50, nodeN = 8)
+readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, trimPercentile = NULL, nodeN = 8)
 
 seqName <- seqnames(seqinfo(readsWithInDels))[1]
 
