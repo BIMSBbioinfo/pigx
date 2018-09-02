@@ -68,7 +68,15 @@ def get_output_file_list(DIR, ext):
         amplicon = lookup('sample_name', sample, ['amplicon'])[0]
         paths.append(os.path.join(DIR, amplicon, ".".join([sample, ext])))
     return(paths)
-    
+
+def get_bbmap_command(wc):
+    sample = wc.sample
+    tech = lookup('sample_name', sample, ['tech'])[0]
+    if tech == 'illumina':
+        return('bbmap.sh')
+    elif tech == 'pacbio':
+        return('mapPacBio.sh maxlen=6000')
+
 ## Check which amplicons are needed for comparisons are to be made
 with open(COMPARISONS_FILE, 'r') as fp:
   rows =  [row for row in csv.reader(fp, delimiter='\t')]
@@ -76,7 +84,7 @@ with open(COMPARISONS_FILE, 'r') as fp:
   COMPARISONS = [dict(zip(header, row)) for row in rows]
   COMPARISON_AMPLICONS = [COMPARISONS[i]['amplicon'] for i in range(len(COMPARISONS))]
 
-    
+
 rule all:
     input:
         get_output_file_list(FASTQC_DIR, "fastqc.done"),
@@ -89,31 +97,31 @@ rule all:
         get_output_file_list(INDELS_DIR, "insertions.bed"),
         get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
         get_output_file_list(INDELS_DIR, "insertedSequences.tsv"),
-        get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"), 
-        get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"), 
-        get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"), 
+        get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
+        get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"),
+        get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"),
         get_output_file_list(GATK_DIR, "realigned.bam"),
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys()),
         expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISON_AMPLICONS),
         expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv'), amplicon=COMPARISON_AMPLICONS)
 
-#notice that get_amplicon_file function for 'fasta' should only be used once. 
+#notice that get_amplicon_file function for 'fasta' should only be used once.
 #Other rules that need the amplicon fasta sequence as input should use :
-#lambda wildcards: os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])) 
-rule reformatFasta: 
-    input: lambda wildcards: get_amplicon_file(wildcards, 'fasta') 
+#lambda wildcards: os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"]))
+rule reformatFasta:
+    input: lambda wildcards: get_amplicon_file(wildcards, 'fasta')
     output: os.path.join(FASTA_DIR, "{amplicon}.fasta")
     log: os.path.join(LOG_DIR, "{amplicon}", "reformatFasta.{amplicon}.log")
     shell:
         "reformat.sh in={input} out={output} tuc > {log} 2>&1"
 
 rule getFastaIndex:
-    input: lambda wildcards: os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])) 
+    input: lambda wildcards: os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"]))
     output: os.path.join(FASTA_DIR, "{amplicon}.fasta.fai")
     log: os.path.join(LOG_DIR, "{amplicon}", "getFastaIndex.{amplicon}.log")
     shell:
-        "samtools faidx {input} > {log} 2>&1"    
+        "samtools faidx {input} > {log} 2>&1"
 
 rule getFastaDict:
     input: lambda wildcards: os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"]))
@@ -122,13 +130,13 @@ rule getFastaDict:
         script=os.path.join(SRC_DIR, "src", "getFastaDict.R")
     log: os.path.join(LOG_DIR, "{amplicon}", "getFastaDict.{amplicon}.log")
     shell:
-        "{RSCRIPT} {params.script} {input} {output} > {log} 2>&1"  
-    
+        "{RSCRIPT} {params.script} {input} {output} > {log} 2>&1"
+
 rule fastqc:
-    input: reads_input      
+    input: reads_input
     output: os.path.join(FASTQC_DIR, "{amplicon}", "{sample}.fastqc.done")
     params:
-        outdir=os.path.join(FASTQC_DIR, "{amplicon}"), 
+        outdir=os.path.join(FASTQC_DIR, "{amplicon}"),
         outfile=os.path.join(FASTQC_DIR, "{amplicon}", "{sample}.fastqc.done")
     log: os.path.join(LOG_DIR, "{amplicon}", "{sample}.fastqc.log")
     shell: "fastqc -o {params.outdir} {input} > {log} 2>&1; touch {params.outfile}"
@@ -137,39 +145,47 @@ rule trimmomatic:
     input: reads_input
     output: os.path.join(TRIMMED_READS_DIR, "{amplicon}", "{sample}.fastq.gz")
     log: os.path.join(LOG_DIR, "{amplicon}", "trimmomatic.{sample}.log")
-    shell: "trimmomatic SE -threads 2 {input} {output} \
-       ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 > {log} 2>&1"
+    params:
+        tech = lambda wildcards: lookup('sample_name', wildcards.sample, ['tech'])[0]
+    run:
+        if params.tech == 'illumina':
+            shell("trimmomatic SE -threads 2 {input} {output} \
+            ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 > {log} 2>&1")
+        elif params.tech == 'pacbio':
+            shell("ln -s {input} {output}")
 
 rule bbmap_indexgenome:
-    input: lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])) 
+    input: lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"]))
     output: os.path.join(BBMAP_INDEX_DIR, "{amplicon}")
     log: os.path.join(LOG_DIR, 'bbmap_index_{amplicon}.log')
     shell: "bbmap.sh ref={input} path={output} > {log} 2>&1"
 
 rule bbmap_map:
-    input: 
-        reads = os.path.join(TRIMMED_READS_DIR, "{amplicon}", "{sample}.fastq.gz"),
+    input:
+        reads = os.path.join(TRIMMED_READS_DIR, '{amplicon}', '{sample}.fastq.gz'),
         ref = lambda wildcards: os.path.join(BBMAP_INDEX_DIR, lookup('sample_name', wildcards.sample, ['amplicon'])[0])
     output:
         os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
+    params:
+        aligner = lambda wildcards: get_bbmap_command(wildcards)
     log: os.path.join(LOG_DIR, "{amplicon}", "bbmap_{sample}.log")
     shell:
-        "bbmap.sh path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1"
+        "{params.aligner} path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1"
 
 # we need an interval file that tells gatk to correct indels within those intervals
 # we use the whole amplicon start end positions for this purpose, however, in genome-wide
-# context, it should be limited to certain regions. 
+# context, it should be limited to certain regions.
 rule get_gatk_realigner_intervals:
-    input: 
+    input:
         ref = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"]))
-    output: 
+    output:
         os.path.join(GATK_DIR, "{amplicon}", "{amplicon}_realigner.intervals")
     params:
         script=os.path.join(SRC_DIR, "src", "get_gatk_realigner_intervals.R")
     shell:
         #find the length of the amplicon sequence and print the start-end positions in a file
-        "{RSCRIPT} {params.script} {input.ref} {output}"  
-    
+        "{RSCRIPT} {params.script} {input.ref} {output}"
+
 rule gatk_indelRealigner:
     input:
         ref = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])),
@@ -183,15 +199,15 @@ rule gatk_indelRealigner:
         bai = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bai")
     log: os.path.join(LOG_DIR, "{amplicon}", "gatk_realigner.{sample}.log")
     shell: "gatk -T IndelRealigner -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
-    
-# GATK requires read groups, so here we add some dummy read group information to the bam files                                     
+
+# GATK requires read groups, so here we add some dummy read group information to the bam files
 rule samtools_addReadGroups:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.sam")
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}_withreadgroups.sam")
     log: os.path.join(LOG_DIR, "{amplicon}", "samtools_addReadGroups_{sample}.log")
-    shell: 
+    shell:
         """
-        samtools addreplacerg -m overwrite_all -o {output} -r ID:pigx_crispr -r PL:illumina -r SM:{wildcards.sample} {input} > {log} 2>&1 
+        samtools addreplacerg -m overwrite_all -o {output} -r ID:pigx_crispr -r PL:illumina -r SM:{wildcards.sample} {input} > {log} 2>&1
         rm {input}
         """
 
@@ -199,12 +215,12 @@ rule samtools_sam2bam:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}_withreadgroups.sam")
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     log: os.path.join(LOG_DIR, "{amplicon}", "sam2bam_{sample}.log")
-    shell: 
+    shell:
         """
         samtools view -bh {input} | samtools sort -o {output} > {log} 2>&1
         rm {input}
         """
-                           
+
 rule samtools_indexbam:
     input: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam")
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam.bai")
@@ -212,9 +228,9 @@ rule samtools_indexbam:
     shell: "samtools index {input} > {log} 2>&1"
 
 rule samtools_stats:
-    input: 
+    input:
         bamfile = os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.bam"),
-        ref = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])) 
+        ref = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"]))
     output: os.path.join(MAPPED_READS_DIR, "{amplicon}", "{sample}.samtools.stats.txt")
     log: os.path.join(LOG_DIR, "{amplicon}", "samtools_stats.{sample}.log")
     shell: "samtools stats --reference {input.ref} {input.bamfile} > {output} 2> {log}"
@@ -226,17 +242,17 @@ rule multiqc:
         samtools = get_output_file_list(MAPPED_READS_DIR, "samtools.stats.txt")
     output:
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html")
-    params: 
+    params:
         analysis_folder = OUTPUT_DIR,
         output_folder = os.path.join(OUTPUT_DIR, "multiqc")
     log: os.path.join(LOG_DIR, 'multiqc.log')
     shell: "multiqc --force -o {params.output_folder} {params.analysis_folder} > {log} 2>&1"
 
 # runs freebayes tool on top of a BAM file and creates a VCF file containing variants
-# we assume the sequences may come from multiple individuals and suppress snps. 
-# we apply a frequency cut-off of 0.1% 
-rule getFreeBayesVariants: 
-    input: 
+# we assume the sequences may come from multiple individuals and suppress snps.
+# we apply a frequency cut-off of 0.1%
+rule getFreeBayesVariants:
+    input:
         ref = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])),
         bamIndex = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bai"),
         bamFile = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bam")
@@ -245,27 +261,27 @@ rule getFreeBayesVariants:
     log: os.path.join(LOG_DIR, "{amplicon}", "getFreeBayesVariants.{sample}.log")
     shell: "freebayes -f {input.ref} -F 0.01 -C 1 --no-snps --use-duplicate-reads --pooled-continuous {input.bamFile} > {output} 2> {log}"
 
-#convert VCF output from freebayes to BED files 
+#convert VCF output from freebayes to BED files
 rule vcf2bed:
     input: os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_variants.vcf")
     output:
         deletions = os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_deletions.bed"),
-        insertions = os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_insertions.bed")                    
-    log: 
+        insertions = os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_insertions.bed")
+    log:
         deletions = os.path.join(LOG_DIR, "{amplicon}", "vcf2bed.deletions.{sample}.log"),
-        insertions = os.path.join(LOG_DIR, "{amplicon}", "vcf2bed.insertions.{sample}.log")                      
-    shell: 
+        insertions = os.path.join(LOG_DIR, "{amplicon}", "vcf2bed.insertions.{sample}.log")
+    shell:
         """
-        vcf2bed --deletions < {input} > {output.deletions} 2> {log.deletions} 
+        vcf2bed --deletions < {input} > {output.deletions} 2> {log.deletions}
         vcf2bed --insertions < {input} > {output.insertions} 2> {log.insertions}
         """
 
 rule getIndelStats:
-    input: 
+    input:
         bamIndex = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bai"),
         bamFile = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bam"),
         cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
-    output: 
+    output:
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indelScores.bedgraph"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.deletionScores.bedgraph"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertionScores.bedgraph"),
@@ -274,14 +290,14 @@ rule getIndelStats:
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.deletions.bed"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertions.bed"),
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indels.unfiltered.tsv"),
-        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertedSequences.tsv"),                    
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.insertedSequences.tsv"),
     params:
         outdir=os.path.join(INDELS_DIR, "{amplicon}"),
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
         script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
     log: os.path.join(LOG_DIR, "{amplicon}", "getIndelStats_{sample}.log")
     shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} > {log} 2>&1"
-                  
+
 rule report:
     input:
         coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
@@ -297,8 +313,8 @@ rule report:
     output:
         os.path.join(REPORT_DIR, '{amplicon}.report.html')
     shell:
-        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"        
-    
+        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"
+
 
 rule report_comparisons:
     input:
@@ -316,12 +332,4 @@ rule report_comparisons:
         os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'),
         os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv')
     shell:
-        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={COMPARISONS_FILE} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"        
-    
-
-       
-         
- 
-    
-        
-    
+        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={COMPARISONS_FILE} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"
