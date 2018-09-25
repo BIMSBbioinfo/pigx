@@ -318,6 +318,7 @@ config = json.load(open(args.configfile, 'r'))
 
 command = [
     "@SNAKEMAKE@",
+    "--printshellcmds",
     "--snakefile={}/pigx_rnaseq.py".format(config['locations']['pkglibexecdir']),
     "--configfile={}".format(args.configfile),
     "--directory={}".format(config['locations']['output-dir']),
