@@ -114,7 +114,8 @@ targets = {
         'files': 
           [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
           os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-          os.path.join(MULTIQC_DIR, 'multiqc_report.html')] +
+          os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+          os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")] +
 	  [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
            os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
            os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
