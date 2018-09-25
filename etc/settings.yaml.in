@@ -63,7 +63,7 @@ tools:
     args: ""
   star:
     executable: @STAR@
-    args: ""
+    args: "--outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40"
   trim-galore:
     executable: @TRIMGALORE@
     args: ""
