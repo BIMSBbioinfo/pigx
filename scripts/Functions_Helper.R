@@ -278,15 +278,21 @@ Annotate_Reads = function(
 }
 
 # ---------------------------------------------------------------------------- #
-# for bowtie2
+# for bowtie2: scheme works for both single and paired data log
 MappingStats_Bowtie2 = function(path){
 
     require(stringr)
     require(data.table)
     s = scan(path, what='character', sep='\t', quiet=TRUE)
+    ## make vectorized version of str_which
+    v_str_which <- Vectorize(FUN = str_which,vectorize.args = 'pattern')
+    r <- v_str_which(s, pattern = c('reads','alignment rate'))
+    ## subset to required log
+    s <- s [r[1]:r[2]]
     s = str_replace(s,'^ +','')
     s = str_replace(s,' .+','')
     s = str_replace(s,'%','')
+    ## skip lines if paired
     if(length(s) > 6)
         s = s[c(1:5, 15)]
     s = as.numeric(s)
