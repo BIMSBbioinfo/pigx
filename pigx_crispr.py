@@ -259,7 +259,7 @@ rule getFreeBayesVariants:
     output:
         os.path.join(INDELS_DIR, "{amplicon}", "{sample}.freeBayes_variants.vcf")
     log: os.path.join(LOG_DIR, "{amplicon}", "getFreeBayesVariants.{sample}.log")
-    shell: "freebayes -f {input.ref} -F 0.01 -C 1 --no-snps --use-duplicate-reads --pooled-continuous {input.bamFile} > {output} 2> {log}"
+    shell: "freebayes -f {input.ref} -F 0.001 -C 1 --no-snps --use-duplicate-reads --pooled-continuous {input.bamFile} > {output} 2> {log}"
 
 #convert VCF output from freebayes to BED files
 rule vcf2bed:
@@ -272,8 +272,8 @@ rule vcf2bed:
         insertions = os.path.join(LOG_DIR, "{amplicon}", "vcf2bed.insertions.{sample}.log")
     shell:
         """
-        vcf2bed --deletions < {input} > {output.deletions} 2> {log.deletions}
-        vcf2bed --insertions < {input} > {output.insertions} 2> {log.insertions}
+        cut -f 1,2,3,4,5,6,7,8 {input} | vcf2bed --deletions > {output.deletions} 2> {log.deletions}
+        cut -f 1,2,3,4,5,6,7,8 {input} | vcf2bed --insertions > {output.insertions} 2> {log.insertions}
         """
 
 rule getIndelStats:
