@@ -336,31 +336,26 @@ for (i in 1:length(plots)) {
 
 # Diversity of Deletions {.tabset}
 
-Here we plot the locations and diversity of the deletions that originate at the cut sites (+/- 3 bps) and are supported by at least 5 reads. 
+Here we plot the locations and diversity of the deletions that originate at the cut sites (+/- 3 bps) and are supported by at least 1 read. 
 
 ```{r deletionDiversity}
 
 deletionCutsiteOverlaps <- cbind(indelSummary[indelType == 'D'], overlapCutSites(indelSummary[indelType == 'D'], cutSites))
 
-plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
-  dt <- deletionCutsiteOverlaps[sample == s & ReadSupport > 5]
-  if(nrow(dt) == 0) {
+plotSegments <- function(dt, cutSites, sgRNAs, readSupportThreshold) {
+  dt <- dt[ReadSupport >= readSupportThreshold]
+  if(nrow(dt) == 0){
     return(NULL)
   }
-  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
-                            split = ':'))
-  if(sgRNAs[1] == 'none') {
-    return(NULL)
-  }
-  dt <- subset(dt, select = c('seqname', 'start', 'end', 'indelType', 'ReadSupport', sgRNAs))
-  # select indels that overlap at least one cut site
-  dt <- dt[apply(subset(dt, select = sgRNAs), 1, function(x) sum(x > 0) > 0),]
-  
+  #first randomize the order (to avoid sorting by start position)
+  dt <- dt[sample(1:nrow(dt), nrow(dt))]
   dt <- dt[order(end - start)]
   dt$linePos <- 1:nrow(dt)
-  p1 <- ggplot2::ggplot(dt, aes(x = linePos, ymin = start, ymax = end)) + 
+  ggplot2::ggplot(dt, aes(x = linePos, ymin = start, ymax = end)) + 
     geom_linerange(size = 0.5) + 
-    labs(title = paste0('unique deletions with > 5 reads at cut sites: n=',nrow(dt))) + 
+    labs(title = paste0('unique deletions with > ',readSupportThreshold,
+                        'reads:\n n (all) =',nrow(dt),
+                        '\n n (only at cutsites) = ',nrow(dt[atCutSite == 'at_cut_site']))) + 
     geom_point(data = dt, aes(x = linePos, y = start), size = 1, color = 'red') + 
     geom_point(data = dt, aes(x = linePos, y = end), size = 1, color = 'blue') + 
     geom_hline(data = cutSites[cutSites$sgRNA %in% sgRNAs,], 
@@ -374,9 +369,14 @@ plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
     scale_y_continuous(sec.axis = dup_axis(breaks = cutSites[cutSites$sgRNA %in% sgRNAs,]$cutSite,
                                            labels = cutSites[cutSites$sgRNA %in% sgRNAs,]$sgRNA)) + 
     coord_flip()
-  
-  p2 <- ggplot(dt, aes(x = 1, y = end - start + 1)) + 
-          geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) + 
+}
+
+plotViolin <- function(dt) {
+  if(nrow(dt) == 0) {
+    return(NULL)
+  }
+  ggplot(dt, aes(x = 1, y = end - start + 1)) + 
+          geom_violin() + 
           geom_jitter(height = 0, alpha = 0.5, 
                       aes(size = as.factor(round(log10(dt$ReadSupport))), 
                           color = as.factor(round(log10(dt$ReadSupport))))) + 
@@ -384,23 +384,82 @@ plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
                size = 'log10(Read Support)', 
                color = 'log10(Read Support)') + 
           theme(axis.ticks.x = element_blank() , axis.text.x = element_blank(), 
-                legend.position = 'bottom')
+                legend.position = 'bottom') +
+        facet_wrap(~ atCutSite)
+}
 
-  p <- cowplot::plot_grid(p1, p2, labels = c('A', 'B'))
-  return(p)
+plotDensity <- function(dt) {
+  if(nrow(dt) == 0) {
+    return(NULL)
+  }
+  ggplot(dt, aes(y= log2(ReadSupport), x = log2(end-start+1))) + 
+    scale_fill_distiller(palette= "Spectral", direction=-1) + 
+    stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
+    geom_point(alpha = 0.1) + 
+    labs(x = 'log2(length)') + 
+    facet_grid(~ atCutSite)
+}
+
+plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
+  dt <- deletionCutsiteOverlaps[sample == s]
+  if(nrow(dt) == 0) {
+    return(NULL)
+  }
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                            split = ':'))
+  if(sgRNAs[1] == 'none') {
+    sgRNAs <- setdiff(unique(unlist(strsplit(x = sampleSheet$sgRNA_ids, split = ':'))), 'none')
+  }
+  dt <- subset(dt, select = c('seqname', 'start', 'end', 'indelType', 'ReadSupport', sgRNAs))
+
+  #check if the indel overlaps/originates at any cut sites
+  dt$atCutSite <- apply(subset(dt, select = sgRNAs), 1, function(x) sum(x > 0) > 0)
+
+  dt$atCutSite <- ifelse(dt$atCutSite == TRUE, 'at_cut_site', 'outside_cut_site')
+    
+  #segment plots with different read support thresholds 
+  segmentPlots <- lapply(c(0, 10, 100), function(readSupportThreshold) {
+    plotSegments(dt, cutSites, sgRNAs, readSupportThreshold)
+  })
+  names(segmentPlots) <- paste0('ReadSupport > ',c(0,10,100))
+
+  violinPlot <- plotViolin(dt)
+  
+  densityPlot <- plotDensity(dt)
+  
+  return(list('segmentPlots' = segmentPlots, 
+            'violinPlot' = violinPlot, 'densityPlot' = densityPlot))
 })
 names(plots) <- unique(deletionCutsiteOverlaps$sample)
 ```
 
 ```{r plotDeletionDiversity, results='asis', fig.height=8, fig.width=10}
-for (n in names(plots)) {
-  cat('##',n,'\n\n')
-  p <- plots[[n]]
-  if(!is.null(p)) {
-        print(p)
-    } else {
-        cat("No plot to show\n\n")
+for (sample in names(plots)) {
+  cat('## ',sample,'{.tabset}\n\n')
+  for(plotType in names(plots[[sample]])) {
+      if(plotType == 'segmentPlots'){
+        cat('### ',plotType,' {.tabset}\n\n')
+        for(r in names(plots[[sample]][[plotType]])) {
+          cat('#### ',r,'\n\n')
+          p <- plots[[sample]][[plotType]][[r]]
+          if(!is.null(p)) {
+            print(p)
+          } else {
+            cat('No plot to show\n\n')
+          }
+          cat("\n\n")
+        }
+      } else {
+        cat('### ',plotType,'\n\n')
+        p <- plots[[sample]][[plotType]]
+        if(!is.null(p)) {
+            print(p)
+        } else {
+          cat("No plot to show\n\n")
+        }
+        cat('\n\n')
       }
+  }
   cat("\n\n")
 }
 ```
