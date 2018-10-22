@@ -145,7 +145,24 @@ comparePerBaseScores <- function(coverageStats, caseSample, controlSample, indel
 ```
 
 ```{r}
-results <- as.data.frame(do.call(rbind, lapply(comp$comparison, function(x) {
+
+printBedFile <- function(outFile, trackText, df) {
+  writeLines(text = trackText,
+             con = outFile)
+  #convert coordinates to 0 based (start, end) form
+  df$start <- df$start - 1
+  write.table(x = df,
+              file = outFile,
+              quote = F, sep = '\t', col.names = F, row.names = F, append = T)
+}
+
+
+cl <- parallel::makeCluster(5)
+parallel::clusterExport(cl = cl, varlist = c('comp', 'comparePerBaseScores', 'coverageStats'))
+
+results <- as.data.frame(do.call(rbind,  pbapply::pblapply(cl = cl, X = comp$comparison, 
+                                                           FUN = function(x) {
+  require(data.table)
   r <- do.call(rbind, lapply(c('ins', 'del', 'indel'), function(indelType) {
     comparePerBaseScores(coverageStats = coverageStats, 
                          caseSample = comp[comparison == x,]$case_samples, 
@@ -155,7 +172,9 @@ results <- as.data.frame(do.call(rbind, lapply(comp$comparison, function(x) {
   r$comparison <- x
   return(r)
 })), stringsAsFactors = FALSE)
+parallel::stopCluster(cl)
 
+pdf(file = file.path(workdir, paste0(ampliconName, ".comparisons.plots.pdf")))
 plots <- lapply(unique(results$comparison), function(x){
   plots <- lapply(unique(results$indelType), function(indelType) {
     df <- results[results$comparison == x & results$indelType == indelType,]
@@ -174,13 +193,19 @@ plots <- lapply(unique(results$comparison), function(x){
                                         y = seg.mean, yend = seg.mean)) + 
       geom_text(data = segments, aes(x = (start+end)/2, y = seg.mean, 
                                      label = label)) + 
+      ggtitle(paste0("Case sample: ",unique(as.character(df$case)), 
+                     "\nControl sample: ",unique(as.character(df$control))), 
+              subtitle = paste0("Indel type: ", indelType))
       theme_bw() 
+    print(p)
     return(p)
   })
   names(plots) <- unique(results$indelType)
   return(plots)
 })
 names(plots) <- unique(results$comparison)
+#close pdf connection
+dev.off()
 
 #save stats to file
 statsOutFile <- file.path(workdir, paste0(ampliconName, '.comparison.stats.tsv'))
