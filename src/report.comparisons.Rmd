@@ -18,6 +18,8 @@ library(ggrepel)
 library(data.table)
 library(plotly)
 library(knitr)
+library(parallel)
+library(pbapply)
 ```
 
 The goal of this script is to compare indel scores/frequencies between two sample groups in
@@ -146,9 +148,10 @@ comparePerBaseScores <- function(coverageStats, caseSample, controlSample, indel
 
 ```{r}
 
-printBedFile <- function(outFile, trackText, df) {
-  writeLines(text = trackText,
-             con = outFile)
+printBedGraphFile <- function(outFile, trackInfo, df) {
+  #write bedgraph file
+  trackDefinition <- paste0("track type=bedGraph name=",trackInfo)
+  writeLines(text = trackDefinition, con = outFile)
   #convert coordinates to 0 based (start, end) form
   df$start <- df$start - 1
   write.table(x = df,
@@ -156,13 +159,8 @@ printBedFile <- function(outFile, trackText, df) {
               quote = F, sep = '\t', col.names = F, row.names = F, append = T)
 }
 
-
-cl <- parallel::makeCluster(5)
-parallel::clusterExport(cl = cl, varlist = c('comp', 'comparePerBaseScores', 'coverageStats'))
-
-results <- as.data.frame(do.call(rbind,  pbapply::pblapply(cl = cl, X = comp$comparison, 
+results <- as.data.frame(do.call(rbind,  lapply(X = comp$comparison, 
                                                            FUN = function(x) {
-  require(data.table)
   r <- do.call(rbind, lapply(c('ins', 'del', 'indel'), function(indelType) {
     comparePerBaseScores(coverageStats = coverageStats, 
                          caseSample = comp[comparison == x,]$case_samples, 
@@ -172,7 +170,6 @@ results <- as.data.frame(do.call(rbind,  pbapply::pblapply(cl = cl, X = comp$com
   r$comparison <- x
   return(r)
 })), stringsAsFactors = FALSE)
-parallel::stopCluster(cl)
 
 pdf(file = file.path(workdir, paste0(ampliconName, ".comparisons.plots.pdf")))
 plots <- lapply(unique(results$comparison), function(x){
@@ -195,9 +192,22 @@ plots <- lapply(unique(results$comparison), function(x){
                                      label = label)) + 
       ggtitle(paste0("Case sample: ",unique(as.character(df$case)), 
                      "\nControl sample: ",unique(as.character(df$control))), 
-              subtitle = paste0("Indel type: ", indelType))
+              subtitle = paste0("Indel type: ", indelType)) + 
       theme_bw() 
     print(p)
+    
+    ## print the 'difference' value for each base position as a bedgraph file
+    outfile <- file.path(workdir, paste0(ampliconName, '.comparison.', 
+                                         x, '.', indelType,  '.bedgraph'))
+    
+    df.bg <- data.frame('seqname' = ampliconName, 
+                        'start' = df$bp,
+                        'end' = df$bp, 
+                        'score' = df$difference, stringsAsFactors = FALSE)
+
+    printBedGraphFile(outFile = outfile,
+                trackInfo = paste(x, 'per base percent difference', indelType),
+                df = df.bg)
     return(p)
   })
   names(plots) <- unique(results$indelType)
