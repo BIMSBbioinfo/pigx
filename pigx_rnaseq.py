@@ -262,10 +262,11 @@ rule fastqc:
 rule star_index:
     input: GENOME_FASTA
     output: 
-        star_index_dir = os.path.join(OUTPUT_DIR, 'star_index'),
         star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex")
+    params:
+        star_index_dir = os.path.join(OUTPUT_DIR, 'star_index')
     log: os.path.join(LOG_DIR, 'star_index.log')
-    shell: "{STAR_EXEC} --runThreadN {STAR_INDEX_THREADS} --runMode genomeGenerate --genomeDir {output.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
+    shell: "{STAR_EXEC} --runThreadN {STAR_INDEX_THREADS} --runMode genomeGenerate --genomeDir {params.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
 
 def map_input(args):
   sample = args[0]
@@ -277,40 +278,49 @@ def map_input(args):
 
 rule star_map:
   input:
-    index_dir = rules.star_index.output.star_index_dir,
+    # This rule really depends on the whole directory (see
+    # params.index_dir), but we can't register it as an input/output
+    # in its own right since Snakemake 5.
+    index_file = rules.star_index.output.star_index_file,
     reads = map_input
   output:
     os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
     os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab")            
   params:
-    output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_'),
+    index_dir = rules.star_index.params.star_index_dir,
+    output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_')
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {input.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
+  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
 
 rule salmon_index: 
   input:
       CDNA_FASTA
   output: 
-      salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index'),
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")
+  params:
+      salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index')
   log: os.path.join(LOG_DIR, 'salmon_index.log')
-  shell: "{SALMON_EXEC} index -t {input} -i {output.salmon_index_dir} -p {SALMON_INDEX_THREADS} >> {log} 2>&1"
+  shell: "{SALMON_EXEC} index -t {input} -i {params.salmon_index_dir} -p {SALMON_INDEX_THREADS} >> {log} 2>&1"
 
 rule salmon_quant: 
-  input: 
-      index_dir = rules.salmon_index.output.salmon_index_dir,
+  input:
+      # This rule really depends on the whole directory (see
+      # params.index_dir), but we can't register it as an input/output
+      # in its own right since Snakemake 5.
+      index_file = rules.salmon_index.output.salmon_index_file,
       reads = map_input
   output:
       os.path.join(SALMON_DIR, "{sample}", "quant.sf"),
       os.path.join(SALMON_DIR, "{sample}", "quant.genes.sf")
   params:
+      index_dir = rules.salmon_index.params.salmon_index_dir,
       outfolder = os.path.join(SALMON_DIR, "{sample}")
   log: os.path.join(LOG_DIR, 'salmon_quant_{sample}.log')
   run:
     if(len(input.reads) == 1):
-        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_QUANT_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+        COMMAND = "{SALMON_EXEC} quant -i {params.index_dir} -l A -p {SALMON_QUANT_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
     elif(len(input.reads) == 2):
-        COMMAND = "{SALMON_EXEC} quant -i {input.index_dir} -l A -p {SALMON_QUANT_THREADS} -1 {input.reads[0]} -2 {input.reads[1]} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+        COMMAND = "{SALMON_EXEC} quant -i {params.index_dir} -l A -p {SALMON_QUANT_THREADS} -1 {input.reads[0]} -2 {input.reads[1]} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
     shell(COMMAND)
 
 rule counts_from_SALMON:
