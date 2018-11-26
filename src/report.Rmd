@@ -193,63 +193,9 @@ cutSiteStats$sampleMatchesGuide <- as.factor(apply(cutSiteStats, 1, function(x) 
   return(g %in% sampleGuides[[s]])
 }))
 
-plots <- lapply(as.vector(unique(cutSiteStats$sgRNA)), function(sg) {
-  dt <- cutSiteStats[sgRNA == sg & sampleMatchesGuide == TRUE]
-  if(nrow(dt) > 0) {
-    p <- ggplot(dt, aes(x = sample, y = indelEfficiency)) + 
-      geom_bar(stat = 'identity', aes(fill = sample)) + ylim(0, 100) + 
-      labs(title = sg) + coord_flip()
-    return(p)
-  }
-})
-names(plots) <- as.vector(unique(cutSiteStats$sgRNA))
+
 ```
 
-
-```{r plotIndelStatsHeader, results = 'asis'}
-if(length(plots) > 10) {
-  cat("## Indel Stats At Cut Sites {.tabset .tabset-dropdown}\n\n")
-} else {
-  cat("## Indel Stats At Cut Sites {.tabset}\n\n")
-}
-```
-
-```{r plotIndelStatsPlots}
-out = NULL
-for (n in names(plots)) {
-  if(!is.null(plots[[n]])) {
-  p <- ggplotly(plots[[n]])
-  out = c(out, knitr::knit_expand(text='### {{n}} \n\n {{p}} \n\n'))
-  } else {
-    out = c(out, knitr::knit_expand(text='### {{n}} \n\n No indel data found\n\n'))
-  }
-}
-```
-
-`r paste(knit(text = out), collapse = '\n')`
-
-# sgRNA efficiencies at cut sites - version 2
-
-```{r}
-dts <- crosstalk::SharedData$new(cutSiteStats)
-
-bscols(widths = c(4,8),
-  list(
-    filter_checkbox("sampleMatchesGuide", "Own Guide", dts, ~factor(sampleMatchesGuide), inline = TRUE),
-    filter_select( "sgRNA", "Select sgRNA", dts, ~factor(sgRNA), allLevels = FALSE, multiple = FALSE),
-    filter_select( "sample", "Select samples", dts, ~factor(sample), allLevels = FALSE, multiple = TRUE)
-    ),
-  plotly::plot_ly(data = dts,
-                  x = ~ sgRNA,
-                  y = ~ indelEfficiency,
-                  group = ~sgRNA,
-                  color = ~sample,
-                  type = 'bar',
-                  text = ~sample,
-                  height = 500)  %>%
-    layout(showlegend = FALSE, xaxis = list(showticklabels = TRUE), barmode = 'group')
-)
-```
 
 # Indel diversity at cutsites {.tabset}
 
@@ -336,12 +282,9 @@ for (i in 1:length(plots)) {
 
 # Diversity of Deletions {.tabset}
 
-Here we plot the locations and diversity of the deletions that originate at the cut sites (+/- 3 bps) and are supported by at least 1 read. 
+Here we plot the locations and diversity of the deletions that originate at the cut sites (+/- 10 bps)
 
 ```{r deletionDiversity}
-
-deletionCutsiteOverlaps <- cbind(indelSummary[indelType == 'D'], overlapCutSites(indelSummary[indelType == 'D'], cutSites))
-
 plotSegments <- function(dt, cutSites, sgRNAs, readSupportThreshold) {
   dt <- dt[ReadSupport >= readSupportThreshold]
   if(nrow(dt) == 0){
@@ -399,6 +342,8 @@ plotDensity <- function(dt) {
     labs(x = 'log2(length)') + 
     facet_grid(~ atCutSite)
 }
+
+deletionCutsiteOverlaps <- cbind(indelSummary[indelType == 'D'], overlapCutSites(indelSummary[indelType == 'D'], cutSites))
 
 plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
   dt <- deletionCutsiteOverlaps[sample == s]
