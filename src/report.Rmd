@@ -182,8 +182,13 @@ cutSiteStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, fun
 
 # match samples to the actual sgRNA guides used in that sample
 sampleGuides <- lapply(sampleSheet$sample_name, function(s) {
+  amplicon <- sampleSheet[sampleSheet$sample_name == s,]$amplicon
   sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
-                   split = ':'))
+                            split = ':'))
+  if(sgRNAs[1] == 'none') {
+    sgRNAs <- setdiff(unique(unlist(strsplit(x = sampleSheet[sampleSheet$amplicon == amplicon,]$sgRNA_ids, split = ':'))), 'none')
+  }
+  return(sgRNAs)
 })
 names(sampleGuides) <- as.character(sampleSheet$sample_name)
 
@@ -193,7 +198,12 @@ cutSiteStats$sampleMatchesGuide <- as.factor(apply(cutSiteStats, 1, function(x) 
   return(g %in% sampleGuides[[s]])
 }))
 
-
+dt <- dcast(cutSiteStats[sampleMatchesGuide == TRUE], sample ~ sgRNA, value.var = 'indelEfficiency')
+M <- as.matrix(dt[,-1])
+rownames(M) <- dt$sample
+pheatmap::pheatmap(M, cluster_rows = F, cluster_cols = F, 
+                   display_numbers = T, na_col = 'black', number_color = 'black', 
+                   main = '% Indel Efficiency Values at Cut Sites (+/- 10bp)')
 ```
 
 
