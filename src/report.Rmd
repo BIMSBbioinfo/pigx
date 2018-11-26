@@ -380,10 +380,122 @@ for (sample in names(plots)) {
 
 These plots show the diversity of insertions at the cut sites taking into account the actual sequence that is inserted. 
 
-```{r}
+```{r insertionDiversityPrepare}
+## import insertions data (that contains inserted sequences, too) and make some summary plots 
+insertions <- as.data.table(do.call(rbind, lapply(1:nrow(sampleSheet), function(i) {
+  sampleName <- sampleSheet[i, 'sample_name']
+  amplicon <- sampleSheet[i, 'amplicon']
+  
+  f <- file.path(indelsFolder, paste0(sampleName, '.insertedSequences.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    dt$sample <- sampleName
+    dt$end <- dt$start
+    return(dt)
+  } else {
+    warning("Can't open .insertedSequences.tsv file for sample ",sampleName,
+            " at ",f,"\n")
+    return(NULL)
+  }
+})))
 
+#collapse insertions 
+insertions <- insertions[,length(name), 
+                         by = c('seqname', 'sample', 'start', 
+                                'end', 'insertedSequence', 
+                                'insertionWidth')]
+colnames(insertions)[7] <- 'ReadSupport'
+
+
+#for each insertion, extract coverage value at the insertion site 
+coverageStats$start <- coverageStats$bp
+insertions <- merge(insertions, coverageStats[,c('seqname', 'sample', 'start', 'cov')], 
+                    by = c('seqname', 'sample', 'start'))
+
+#compute frequency value for each insertion 
+#(number of reads supporting the insertion divided by coverage at insertion site)
+insertions$freq <- insertions$ReadSupport/insertions$cov
+
+#find overlaps with cut sites 
+insertions <- cbind(insertions, overlapCutSites(indels = insertions, cutSites = cutSites, extend =  10))
+
+# for each sample, find the guides used in the sample and find out if the indels overlap cut sites 
+# warnings: only restrict to the cut sites relevant for the sample
+# warnings: if the sample is untreated, then we check overlaps for all cut sites 
+# for the corresponding amplicon
+insertions <- do.call(rbind, lapply(unique(insertions$sample), function(sampleName) {
+  dt <- insertions[sample == sampleName]
+  sgRNAs <- sampleGuides[[sampleName]]
+  dt$atCutSite <- apply(subset(dt, select = sgRNAs), 1, function(x) sum(x > 0) > 0)
+  return(dt)
+}))
 ```
 
+```{r}
+plotInsertions <- function(dt, cutSites, sgRNAs) {
+  #first randomize the order (to avoid sorting by start position)
+  dt <- dt[sample(1:nrow(dt), nrow(dt))]
+  #sort insertions by width of insertion
+  dt <- dt[order(insertionWidth)]
+  dt$linePos <- 1:nrow(dt)
+  
+  ggplot2::ggplot(dt, aes(x = linePos, ymin = start - insertionWidth/2, 
+                          ymax = start + insertionWidth/2)) + 
+    geom_linerange(size = 0.5, alpha = 0.5) + 
+    geom_point(aes(x = linePos, y = start), shape = 24, fill = 'red') +
+    geom_hline(data = cutSites[cutSites$sgRNA %in% sgRNAs,], 
+           aes(yintercept = cutSite, color = sgRNA), linetype = 'dashed', show.legend = FALSE) +
+    theme(axis.text.y = element_blank(), 
+          axis.title.y = element_blank(), 
+          axis.title.x = element_blank(),
+          axis.ticks.y = element_blank(), 
+          axis.text.x = element_text(angle = 90), 
+          plot.title = element_text(hjust = 0.5), 
+          plot.subtitle = element_text(hjust = 0.5)) + 
+    scale_y_continuous(sec.axis = dup_axis(breaks = cutSites[cutSites$sgRNA %in% sgRNAs,]$cutSite,
+                                           labels = cutSites[cutSites$sgRNA %in% sgRNAs,]$sgRNA)) + 
+    coord_flip()
+}
+
+insertions$freqInterval <- cut_interval(log10(insertions$freq), length = 1)
+
+plots <- lapply(unique(insertions$sample), function(sampleName) {
+  dt <- insertions[sample == sampleName & atCutSite == TRUE]
+  dt$freqInterval <- cut_interval(log10(dt$freq), length = 1)
+  #segment plots with different frequency thresholds 
+  segmentPlots <- lapply(levels(dt$freqInterval), function(x) {
+    if(nrow(dt[freqInterval == x]) > 0) {
+      p <-  plotInsertions(dt[freqInterval == x], cutSites, sampleGuides[[sampleName]])
+    } else {
+      p <- NULL
+    }
+    return(p)
+  })
+  names(segmentPlots) <- lapply(levels(dt$freqInterval), function(x) {
+    paste(10^(as.numeric(unlist(strsplit(sub("(\\[|\\()(.+)(\\]|\\))", "\\2", x), ',')))), 
+                               collapse = ' - ')
+  })
+  return(segmentPlots)
+})
+names(plots) <- unique(insertions$sample)
+```
+
+```{r plotInsertionDiversity, results='asis', fig.height=8, fig.width=10}
+for (sample in names(plots)) {
+  cat('## ',sample,'{.tabset}\n\n')
+  for(i in names(plots[[sample]])) {
+    cat('### Freq:',i,'\n\n')
+    p <- plots[[sample]][[i]]
+    if(!is.null(p)) {
+      print(p)
+    } else {
+      cat("No plot to show\n\n")
+    }
+    cat("\n\n")
+  }
+  cat("\n\n")
+}
+```
 
 # R Session Information
 ```{r}
