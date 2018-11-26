@@ -258,7 +258,7 @@ bscols(widths = c(4,8),
 # cutSites: a data.frame/data.table object with minimal columns: sgRNA and cutsite
 # return: data.frame (nrow = nrow(indels), columns are sgRNA ids, 
 #         values are 1 if indel overlaps cutsite, otherwise 0. 
-overlapCutSites <- function(indels, cutSites, extend = 3) {
+overlapCutSites <- function(indels, cutSites, extend = 10) {
   target <- IRanges(start = cutSites$cutSite - extend, 
                     end = cutSites$cutSite + extend, 
                     names = cutSites$sgRNA)
@@ -305,14 +305,14 @@ plots <- lapply(supportThresholds, function(s) {
             by = c('sample', 'variable', 'indelType')]
   if(nrow(df) > 0) {
     p <- ggplot(data = df, aes(x = sample, y = variable)) + 
-    #geom_point(aes(size = V1)) + 
-    geom_tile(aes(fill = V1)) 
+      geom_tile(aes(fill = V1)) + 
+      facet_wrap(~ indelType, ncol = 1)
     if(nrow(df) < 250) {
       p <- p + 
-        geom_text(aes(label = V1), color = 'white') + facet_wrap(~ indelType, ncol = 1) 
+        geom_text(aes(label = V1), color = 'white')  
     }
     p <- p + theme_bw() + 
-    theme(axis.text.x = element_text(angle = 90), legend.position = 'none')
+      theme(axis.text.x = element_text(angle = 90), legend.position = 'none')
     return(p)
   } else {
     NULL
@@ -463,6 +463,15 @@ for (sample in names(plots)) {
   cat("\n\n")
 }
 ```
+
+# Diversity of Insertions {.tabset}
+
+These plots show the diversity of insertions at the cut sites taking into account the actual sequence that is inserted. 
+
+```{r}
+
+```
+
 
 # R Session Information
 ```{r}
