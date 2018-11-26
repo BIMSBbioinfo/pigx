@@ -207,7 +207,7 @@ pheatmap::pheatmap(M, cluster_rows = F, cluster_cols = F,
 ```
 
 
-# Indel diversity at cutsites {.tabset}
+# Diversity of Deletions {.tabset}
 
 ```{r}
 # indels: a data.table object with minimal columns: start, end, 
@@ -247,50 +247,7 @@ allIndels <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, functi
 indelSummary <- allIndels[,length(unique(readID)), by = c('seqname', 'sample', 'start', 'end', 'indelType')]
 colnames(indelSummary)[6] <- 'ReadSupport'
 
-dt <- cbind(indelSummary, 
-            overlapCutSites(indels = indelSummary, 
-                            cutSites = cutSites, extend = 3))
-
-mdt <- melt(dt, id.vars = colnames(indelSummary))
-
-#make plots for different score thresholds, facet by samples, guides, and indel types
-supportThresholds <- c(0, 1, 5, 10)
-plots <- lapply(supportThresholds, function(s) {
-  df <- mdt[ReadSupport > s & value == 1,
-            length(seqname), 
-            by = c('sample', 'variable', 'indelType')]
-  if(nrow(df) > 0) {
-    p <- ggplot(data = df, aes(x = sample, y = variable)) + 
-      geom_tile(aes(fill = V1)) + 
-      facet_wrap(~ indelType, ncol = 1)
-    if(nrow(df) < 250) {
-      p <- p + 
-        geom_text(aes(label = V1), color = 'white')  
-    }
-    p <- p + theme_bw() + 
-      theme(axis.text.x = element_text(angle = 90), legend.position = 'none')
-    return(p)
-  } else {
-    NULL
-  }
-})
-names(plots) <- paste("Read Support >",supportThresholds)
 ```
-
-```{r plotGenotypeDiversity, results='asis', fig.height=8}
-for (i in 1:length(plots)) {
-  cat("## ",names(plots)[i],"\n\n")
-  p <- plots[[i]]
-  if(!is.null(p)) {
-    print(plots[[i]])
-  } else {
-    cat("No genotypes detected")
-  }
-  cat("\n\n")
-}
-```
-
-# Diversity of Deletions {.tabset}
 
 Here we plot the locations and diversity of the deletions that originate at the cut sites (+/- 10 bps)
 
