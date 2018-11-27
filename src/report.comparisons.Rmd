@@ -237,4 +237,129 @@ for (comparison in names(plots)) {
 
 `r paste(knit(text = out), collapse = '\n')`
 
+# Comparison of indel frequencies
+
+
+## Deletion frequencies 
+
+First, get deletions and add coverage values for each deletion
+```{r}
+samples <- unique(c(comp$case_samples, comp$control_samples))
+indels <- as.data.table(do.call(rbind, lapply(samples, function(sampleName) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.indels.unfiltered.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    return(dt)
+  } else {
+    stop("Can't open indels.unfiltere.tsv file for sample",sampleName,
+            "at",f,"\n")
+  }
+})))
+#collapse indels
+indels <- indels[,length(unique(readID)), by = c('seqname', 'sample', 'start', 'end', 'indelType')]
+colnames(indels)[6] <- 'ReadSupport'
+
+deletions <- indels[indelType == 'D']
+
+#get mean coverage at the bases spanned by each deletion 
+deletions <- do.call(rbind, lapply(unique(deletions$sample), function(s) {
+  dt <- deletions[sample == s]
+  
+  #make sure the coverage values start from the first base position
+  #if not, fill those positions up to first coverage value with zeroes 
+  coverage <- coverageStats[sample == s][order(bp)]
+  coverage <- c(rep(0, coverage[1,]$bp - 1), 
+                coverage$cov)
+  
+  dt$meanCoverage <- apply(dt, 1, function(x) {
+    mean(coverage[x[['start']]:x[['end']]])
+  })
+  return(dt)
+}))
+deletions$freq <- deletions$ReadSupport/deletions$meanCoverage
+#assign ids for each deletion that represents the coordinates of the deletion
+deletions$id <- paste(deletions$seqname, deletions$start, deletions$end, sep = ':')
+```
+
+Make plots to compare case versus control samples 
+```{r compare_del_freq}
+plotSegments <- function(dt) {
+  #first randomize the order (to avoid sorting by start position)
+  dt <- dt[sample(1:nrow(dt), nrow(dt))]
+  dt <- dt[order(end - start)]
+  dt$linePos <- 1:nrow(dt)
+  ggplot2::ggplot(dt, aes(x = linePos, ymin = start, ymax = end)) + 
+    geom_linerange(size = 0.5) + 
+    geom_point(data = dt, aes(x = linePos, y = start), size = 1, color = 'red') + 
+    geom_point(data = dt, aes(x = linePos, y = end), size = 1, color = 'blue') + 
+    theme(axis.text.y = element_blank(), 
+          axis.title.y = element_blank(), 
+          axis.title.x = element_blank(),
+          axis.ticks.y = element_blank(), 
+          axis.text.x = element_text(angle = 90), 
+          plot.title = element_text(hjust = 0.5), 
+          plot.subtitle = element_text(hjust = 0.5)) + 
+    coord_flip()
+}
+
+dt <- data.table::dcast(deletions, id ~ sample, value.var = 'freq')
+dt <- merge(deletions[,c('seqname', 'id', 'start', 'end')], dt,  by = 'id')
+
+plots <- lapply(unique(comp$comparison), function(cmp) {
+  caseSample <- comp[comparison == cmp]$case_samples
+  controlSample <- comp[comparison == cmp]$control_samples
+  #deletions found in both case and control
+  shared <- intersect(deletions[sample == caseSample]$id, 
+                      deletions[sample == controlSample]$id)
+  #make a segment plot of shared deletions 
+  dt.shared <- unique(subset(dt[id %in% intersect(deletions[sample == caseSample]$id, 
+                                                  deletions[sample == controlSample]$id)], 
+                             select = c('id', 'start', 'end', caseSample, controlSample)))
+  dt.shared$freqRatio <- dt.shared[,get(caseSample)] / dt.shared[,get(controlSample)]
+  p1 <- ggplot(dt.shared) + 
+    geom_linerange(aes(x = log2(freqRatio), ymin = start, ymax = end)) +
+    geom_point(data = dt.shared, aes(x = log2(freqRatio), y = start), size = 1, color = 'red') + 
+    geom_point(data = dt.shared, aes(x = log2(freqRatio), y = end), size = 1, color = 'blue') +
+    coord_flip()
+  
+  #plot deletions found in case but not control
+  p2 <- plotSegments(dt = unique(subset(dt[id %in% setdiff(deletions[sample == caseSample]$id, 
+                                         deletions[sample == controlSample]$id)], 
+                                        select = c('start', 'end', caseSample, controlSample))))
+  #plot deletions found in control but not case
+  p3 <- plotSegments(dt = unique(subset(dt[id %in% setdiff(deletions[sample == controlSample]$id, 
+                                         deletions[sample == caseSample]$id)], 
+                                        select = c('start', 'end', caseSample, controlSample))))
+  return(list("shared_deletions" = p1, "only_in_case" = p2, "only_in_control" = p3))
+})
+names(plots) <- unique(comp$comparison)
+
+#Save .tsv files for each sample with frequency values of each deletion
+lapply(unique(deletions$sample), function(s) {
+  outFile <- file.path(workdir, paste0(ampliconName,".deletionFrequencies.",s,".tsv"))
+  write.table(x = deletions[sample == s][order(freq, decreasing = T)], file = outFile, sep = '\t', row.names = FALSE, quote = FALSE)
+})
+```
+
+
+```{r plotInsertionDiversity, results='asis', fig.height=8, fig.width=10}
+for (comp in names(plots)) {
+  cat('### Comparison:',comp,'{.tabset}\n\n')
+  for(i in names(plots[[comp]])) {
+    cat('#### ',i,'\n\n')
+    p <- plots[[comp]][[i]]
+    if(!is.null(p)) {
+      print(p)
+    } else {
+      cat("No plot to show\n\n")
+    }
+    cat("\n\n")
+  }
+  cat("\n\n")
+}
+```
+
+```{r sessionInfo}
+print(sessionInfo())
+```
 
