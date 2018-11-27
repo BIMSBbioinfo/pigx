@@ -461,6 +461,9 @@ insertions$freqInterval <- cut_interval(log10(insertions$freq), length = 1)
 
 plots <- lapply(unique(insertions$sample), function(sampleName) {
   dt <- insertions[sample == sampleName & atCutSite == TRUE]
+  if(nrow(dt) == 0) {
+    return(NULL)
+  }
   dt$freqInterval <- cut_interval(log10(dt$freq), length = 1)
   #segment plots with different frequency thresholds 
   segmentPlots <- lapply(levels(dt$freqInterval), function(x) {
