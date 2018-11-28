@@ -261,6 +261,22 @@ colnames(indels)[6] <- 'ReadSupport'
 
 deletions <- indels[indelType == 'D']
 
+#assign ids for each deletion that represents the coordinates of the deletion
+deletions$id <- paste(deletions$seqname, deletions$start, deletions$end, sep = ':')
+
+#create a table where each deletion found in all samples is represented for each sample
+#whether or not the deletion is found in the corresponding sample
+
+deletions <- melt(dcast(deletions, id ~ sample, value.var = 'ReadSupport'), id.vars = 'id')
+#assign NA values to 0
+deletions[is.na(value)]$value <- 0
+colnames(deletions) <- c('id', 'sample', 'ReadSupport')
+
+deletions <- cbind(do.call(rbind, strsplit(deletions$id, ':')), deletions)
+colnames(deletions)[1:3] <- c('seqname', 'start', 'end')
+deletions$start <- as.numeric(deletions$start)
+deletions$end <- as.numeric(deletions$end)
+
 #get mean coverage at the bases spanned by each deletion 
 deletions <- do.call(rbind, lapply(unique(deletions$sample), function(s) {
   dt <- deletions[sample == s]
@@ -271,83 +287,110 @@ deletions <- do.call(rbind, lapply(unique(deletions$sample), function(s) {
   coverage <- c(rep(0, coverage[1,]$bp - 1), 
                 coverage$cov)
   
-  dt$meanCoverage <- apply(dt, 1, function(x) {
-    mean(coverage[x[['start']]:x[['end']]])
+  dt$medianCoverage <- apply(dt, 1, function(x) {
+    median(coverage[x[['start']]:x[['end']]])
   })
   return(dt)
 }))
-deletions$freq <- deletions$ReadSupport/deletions$meanCoverage
-#assign ids for each deletion that represents the coordinates of the deletion
-deletions$id <- paste(deletions$seqname, deletions$start, deletions$end, sep = ':')
+deletions$freq <- deletions$ReadSupport/deletions$medianCoverage
 ```
 
 Make plots to compare case versus control samples 
 ```{r compare_del_freq}
-plotSegments <- function(dt) {
-  #first randomize the order (to avoid sorting by start position)
-  dt <- dt[sample(1:nrow(dt), nrow(dt))]
-  dt <- dt[order(end - start)]
-  dt$linePos <- 1:nrow(dt)
-  ggplot2::ggplot(dt, aes(x = linePos, ymin = start, ymax = end)) + 
-    geom_linerange(size = 0.5) + 
-    geom_point(data = dt, aes(x = linePos, y = start), size = 1, color = 'red') + 
-    geom_point(data = dt, aes(x = linePos, y = end), size = 1, color = 'blue') + 
-    theme(axis.text.y = element_blank(), 
-          axis.title.y = element_blank(), 
-          axis.title.x = element_blank(),
-          axis.ticks.y = element_blank(), 
-          axis.text.x = element_text(angle = 90), 
-          plot.title = element_text(hjust = 0.5), 
-          plot.subtitle = element_text(hjust = 0.5)) + 
-    coord_flip()
+#dt: deletions/insertions table
+#minReadSupport mininum number of reads in sum of the samples
+#minFreq minimum frequency in sum of the samples
+getSignificantIndels <- function(dt, caseSample, controlSample, minReadSupport = 5, minFreq = 10^-4) {
+  #subset for control samples
+  dt <- droplevels(dt[sample %in% c(caseSample, controlSample)])
+  
+  #independent filtering for read support
+  dt <- dt[id %in% dt[,sum(ReadSupport), by = id][V1 > minReadSupport]$id]
+  
+  #independent filtering for frequency
+  dt <- dt[id %in% dt[,sum(freq), by = id][V1 > minFreq]$id]
+  
+  if(nrow(dt) == 0) {
+    cat("warning: getSignificantIndels => No significant indels left after filtering")
+    return(NULL)
+  }
+  
+  # median coverage values as integer
+  dt$medianCoverage <- as.integer(dt$medianCoverage)
+  
+  case <- dt[sample == caseSample]
+  ctrl <- dt[sample == controlSample]
+
+  mdt <- merge(case[,c('id', 'ReadSupport', 'medianCoverage')], 
+        ctrl[,c('id', 'ReadSupport', 'medianCoverage')], 
+        by = 'id', all = TRUE)
+  
+  results <- cbind(mdt, do.call(rbind, apply(mdt, 1, function(x) {
+    #add a constant value (5) to each category to avoid Inf values
+      test <- fisher.test(matrix(as.numeric(x[2:5]), nrow = 2) + 5, 
+                          alternative = 'two.sided')
+      return(data.frame('pval' = test$p.value, 'oddsRatio' = as.numeric(test$estimate)))
+  })))
+  
+  results$padj <- p.adjust(results$pval, method = 'BH')
+ 
+  return(results)
 }
 
-dt <- data.table::dcast(deletions, id ~ sample, value.var = 'freq')
-dt <- merge(deletions[,c('seqname', 'id', 'start', 'end')], dt,  by = 'id')
-
-plots <- lapply(unique(comp$comparison), function(cmp) {
+plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
   caseSample <- comp[comparison == cmp]$case_samples
   controlSample <- comp[comparison == cmp]$control_samples
-  #deletions found in both case and control
-  shared <- intersect(deletions[sample == caseSample]$id, 
-                      deletions[sample == controlSample]$id)
-  #make a segment plot of shared deletions 
-  dt.shared <- unique(subset(dt[id %in% intersect(deletions[sample == caseSample]$id, 
-                                                  deletions[sample == controlSample]$id)], 
-                             select = c('id', 'start', 'end', caseSample, controlSample)))
-  dt.shared$freqRatio <- dt.shared[,get(caseSample)] / dt.shared[,get(controlSample)]
-  p1 <- ggplot(dt.shared) + 
-    geom_linerange(aes(x = log2(freqRatio), ymin = start, ymax = end)) +
-    geom_point(data = dt.shared, aes(x = log2(freqRatio), y = start), size = 1, color = 'red') + 
-    geom_point(data = dt.shared, aes(x = log2(freqRatio), y = end), size = 1, color = 'blue') +
+  
+  #get significance values for each deletion
+  sig <- getSignificantIndels(dt = deletions, 
+                                           caseSample = caseSample, 
+                                           controlSample = controlSample, 
+                                           minReadSupport = 1, 
+                                           minFreq = 10^-6)
+  if(is.null(sig)) {
+    return(list("volcano_plot" = NULL, "segment_plot" = NULL))
+  }
+  results <- merge(unique(deletions[,c('seqname','start', 'end', 'id')]), 
+                   sig, 
+                   by = 'id')
+  
+  #make a volcano plot of deletions 
+  p1 <- ggplot(results, aes(y = -log10(padj), x = log2(oddsRatio))) + 
+    geom_point(aes(color = padj < 0.01)) + 
+    #add labels to top 10
+    geom_text_repel(data = results[order(padj)][1:10], aes( label = id)) +
+    ggtitle(label = "Comparison of detected deletions", 
+            subtitle = paste0("Case: ",caseSample, "\nControl: ",controlSample))
+  
+  #make a segment plot of deletions 
+  p2 <- ggplot(results[padj < 0.01]) + 
+    geom_linerange(aes(x = log2(oddsRatio), ymin = start, ymax = end)) +
+    geom_point(data = results[padj < 0.01], aes(x = log2(oddsRatio), y = start), size = 1, color = 'red') + 
+    geom_point(data = results[padj < 0.01], aes(x = log2(oddsRatio), y = end), size = 1, color = 'blue') +
+    ggtitle(label = "Comparison of deletions\n with significant difference (adjusted p.val < 0.01)", 
+            subtitle = paste0("Case: ",caseSample, "\nControl: ",controlSample)) + 
     coord_flip()
   
-  #plot deletions found in case but not control
-  p2 <- plotSegments(dt = unique(subset(dt[id %in% setdiff(deletions[sample == caseSample]$id, 
-                                         deletions[sample == controlSample]$id)], 
-                                        select = c('start', 'end', caseSample, controlSample))))
-  #plot deletions found in control but not case
-  p3 <- plotSegments(dt = unique(subset(dt[id %in% setdiff(deletions[sample == controlSample]$id, 
-                                         deletions[sample == caseSample]$id)], 
-                                        select = c('start', 'end', caseSample, controlSample))))
-  return(list("shared_deletions" = p1, "only_in_case" = p2, "only_in_control" = p3))
+  return(list("volcano_plot" = p1, "segment_plot" = p2))
 })
 names(plots) <- unique(comp$comparison)
+```
 
+```{r, echo = FALSE}
 #Save .tsv files for each sample with frequency values of each deletion
-lapply(unique(deletions$sample), function(s) {
+for(s in unique(deletions$sample)){
   outFile <- file.path(workdir, paste0(ampliconName,".deletionFrequencies.",s,".tsv"))
-  write.table(x = deletions[sample == s][order(freq, decreasing = T)], file = outFile, sep = '\t', row.names = FALSE, quote = FALSE)
-})
+  write.table(x = deletions[sample == s & ReadSupport > 0][order(freq, decreasing = T)], file = outFile, sep = '\t', row.names = FALSE, quote = FALSE)
+}
 ```
 
 
-```{r plotInsertionDiversity, results='asis', fig.height=8, fig.width=10}
-for (comp in names(plots)) {
-  cat('### Comparison:',comp,'{.tabset}\n\n')
-  for(i in names(plots[[comp]])) {
+```{r plotComparison, results='asis', fig.height=8, fig.width=10}
+for (cmp in names(plots)) {
+  cat('### Comparison:',cmp,'{.tabset}\n\n')
+  for(i in names(plots[[cmp]])) {
     cat('#### ',i,'\n\n')
-    p <- plots[[comp]][[i]]
+    p <- plots[[cmp]][[i]]
     if(!is.null(p)) {
       print(p)
     } else {
@@ -358,6 +401,141 @@ for (comp in names(plots)) {
   cat("\n\n")
 }
 ```
+
+
+## Insertion frequencies
+
+First, get insertions and add coverage values for each insertion
+```{r}
+samples <- unique(c(comp$case_samples, comp$control_samples))
+insertions <- as.data.table(do.call(rbind, lapply(samples, function(sampleName) {
+  f <- file.path(indelsFolder, paste0(sampleName, '.insertedSequences.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    dt$sample <- sampleName
+    return(dt)
+  } else {
+    stop("Can't open .insertedSequences.tsv file for sample",sampleName,
+            "at ",f,"\n")
+  }
+})))
+#collapse 
+insertions <- insertions[,length(unique(name)), 
+                         by = c('seqname', 'sample', 'start', 
+                                'insertedSequence', 
+                                'insertionWidth')]
+colnames(insertions)[6] <- 'ReadSupport'
+
+
+#assign ids for each deletion that represents the coordinates of the deletion
+insertions$id <- paste(insertions$seqname, insertions$start, 
+                       insertions$insertedSequence, sep = ':')
+
+#create a table where each insertion found in all samples is represented for each sample
+#whether or not the insertion is found in the corresponding sample
+
+insertions <- melt(dcast(insertions, id ~ sample, value.var = 'ReadSupport'), id.vars = 'id')
+#assign NA values to 0
+insertions[is.na(value)]$value <- 0
+colnames(insertions) <- c('id', 'sample', 'ReadSupport')
+
+insertions <- cbind(do.call(rbind, strsplit(insertions$id, ':')), insertions)
+colnames(insertions)[1:3] <- c('seqname', 'start', 
+                                'insertedSequence')
+insertions$start <- as.numeric(insertions$start)
+
+#get coverage at the insertion site 
+insertions <- do.call(rbind, lapply(unique(insertions$sample), function(s) {
+  dt <- insertions[sample == s]
+  
+  #make sure the coverage values start from the first base position
+  #if not, fill those positions up to first coverage value with zeroes 
+  coverage <- coverageStats[sample == s][order(bp)]
+  coverage <- c(rep(0, coverage[1,]$bp - 1), 
+                coverage$cov)
+  
+  #in the case of insertions, pick the coverage only at the site of insertion
+  dt$medianCoverage <- coverage[dt$start]
+  return(dt)
+}))
+insertions$freq <- insertions$ReadSupport/insertions$medianCoverage
+```
+
+
+Make plots to compare case versus control samples 
+```{r compare_ins_freq}
+plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
+  caseSample <- comp[comparison == cmp]$case_samples
+  controlSample <- comp[comparison == cmp]$control_samples
+  
+  
+  #get significance values for each insertion
+  sig <- getSignificantIndels(dt = insertions, 
+                                           caseSample = caseSample, 
+                                           controlSample = controlSample, 
+                                           minReadSupport = 1, 
+                                           minFreq = 10^-6)
+  if(is.null(sig)) {
+    return(list("volcano_plot" = NULL, "segment_plot" = NULL))
+  }
+  
+  results <- merge(unique(insertions[,c('seqname','start', 'id')]), 
+                   sig, 
+                   by = 'id')
+  
+  #make a volcano plot of deletions 
+  p1 <- ggplot(results, aes(y = -log10(padj), x = log2(oddsRatio))) + 
+    geom_point(aes(color = padj < 0.01)) + 
+    #add labels to top 10
+    geom_text_repel(data = results[order(padj)][1:10], aes( label = id)) +
+    ggtitle(label = "Comparison of detected insertions", 
+            subtitle = paste0("Case: ",caseSample, "\nControl: ",controlSample))
+  
+  #make a segment plot of deletions 
+  results$insertionWidth <- sapply(strsplit(results$id, ":"), function(x) nchar(x[3]))
+  p2 <- ggplot(results[padj < 0.01]) + 
+    geom_linerange(aes(x = log2(oddsRatio), 
+                       ymin = start - insertionWidth/2, 
+                       ymax = start + insertionWidth/2)) +
+    geom_point(data = results[padj < 0.01], 
+               aes(x = log2(oddsRatio), y = start), 
+               size = 1, shape = 24, fill = 'red') + 
+    ggtitle(label = "Comparison of insertions\n with significant difference (adjusted p.val < 0.01)", 
+            subtitle = paste0("Case: ",caseSample, "\nControl: ",controlSample)) + 
+    coord_flip()
+  
+  return(list("volcano_plot" = p1, "segment_plot" = p2))
+})
+names(plots) <- unique(comp$comparison)
+```
+
+```{r, echo = FALSE}
+#Save .tsv files for each sample with frequency values of each deletion
+for(s in unique(insertions$sample)) {
+  outFile <- file.path(workdir, paste0(ampliconName,".insertionFrequencies.",s,".tsv"))
+  write.table(x = insertions[sample == s & ReadSupport > 0][order(freq, decreasing = T)], file = outFile, sep = '\t', row.names = FALSE, quote = FALSE)
+}
+```
+
+
+```{r plotInsComparison, results='asis', fig.height=8, fig.width=10}
+for (cmp in names(plots)) {
+  cat('### Comparison:',cmp,'{.tabset}\n\n')
+  for(i in names(plots[[cmp]])) {
+    cat('#### ',i,'\n\n')
+    p <- plots[[cmp]][[i]]
+    if(!is.null(p)) {
+      print(p)
+    } else {
+      cat("No plot to show\n\n")
+    }
+    cat("\n\n")
+  }
+  cat("\n\n")
+}
+```
+
+# Session Information
 
 ```{r sessionInfo}
 print(sessionInfo())
