@@ -327,9 +327,11 @@ getSignificantIndels <- function(dt, caseSample, controlSample, minReadSupport =
   
   results <- cbind(mdt, do.call(rbind, apply(mdt, 1, function(x) {
     #add a constant value (5) to each category to avoid Inf values
-      test <- fisher.test(matrix(as.numeric(x[2:5]), nrow = 2) + 5, 
-                          alternative = 'two.sided')
-      return(data.frame('pval' = test$p.value, 'oddsRatio' = as.numeric(test$estimate)))
+    x <- as.numeric(x[2:5])
+    test <- fisher.test(matrix(c(x[1], x[3], 
+                                 x[2] - x[1], x[4] - x[3]), nrow = 2) + 1, 
+                        alternative = 'two.sided')
+    return(data.frame('pval' = test$p.value, 'oddsRatio' = as.numeric(test$estimate)))
   })))
   
   results$padj <- p.adjust(results$pval, method = 'BH')
@@ -342,17 +344,21 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
   controlSample <- comp[comparison == cmp]$control_samples
   
   #get significance values for each deletion
-  sig <- getSignificantIndels(dt = deletions, 
-                                           caseSample = caseSample, 
-                                           controlSample = controlSample, 
-                                           minReadSupport = 1, 
-                                           minFreq = 10^-6)
+  sig <- getSignificantIndels(dt = deletions,
+                              caseSample = caseSample,
+                              controlSample = controlSample, 
+                              minReadSupport = 1, 
+                              minFreq = 10^-6)
   if(is.null(sig)) {
     return(list("volcano_plot" = NULL, "segment_plot" = NULL))
   }
   results <- merge(unique(deletions[,c('seqname','start', 'end', 'id')]), 
                    sig, 
                    by = 'id')
+  #save results table
+  write.table(x = results, 
+              file = file.path(workdir, paste0(ampliconName, ".comparison_stats.deletions.tsv")), 
+              row.names = FALSE, quote = FALSE, sep = '\t')
   
   #make a volcano plot of deletions 
   p1 <- ggplot(results, aes(y = -log10(padj), x = log2(oddsRatio))) + 
@@ -470,11 +476,11 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
   
   
   #get significance values for each insertion
-  sig <- getSignificantIndels(dt = insertions, 
-                                           caseSample = caseSample, 
-                                           controlSample = controlSample, 
-                                           minReadSupport = 1, 
-                                           minFreq = 10^-6)
+  sig <- getSignificantIndels(dt = insertions,
+                              caseSample = caseSample,
+                              controlSample = controlSample, 
+                              minReadSupport = 1, 
+                              minFreq = 10^-6)
   if(is.null(sig)) {
     return(list("volcano_plot" = NULL, "segment_plot" = NULL))
   }
@@ -482,6 +488,11 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
   results <- merge(unique(insertions[,c('seqname','start', 'id')]), 
                    sig, 
                    by = 'id')
+  
+  #save results table
+  write.table(x = results, 
+              file = file.path(workdir, paste0(ampliconName, ".comparison_stats.insertions.tsv")), 
+              row.names = FALSE, quote = FALSE, sep = '\t')
   
   #make a volcano plot of deletions 
   p1 <- ggplot(results, aes(y = -log10(padj), x = log2(oddsRatio))) + 
@@ -496,7 +507,8 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
   p2 <- ggplot(results[padj < 0.01]) + 
     geom_linerange(aes(x = log2(oddsRatio), 
                        ymin = start - insertionWidth/2, 
-                       ymax = start + insertionWidth/2)) +
+                       ymax = start + insertionWidth/2), 
+                   alpha = 0.5) +
     geom_point(data = results[padj < 0.01], 
                aes(x = log2(oddsRatio), y = start), 
                size = 1, shape = 24, fill = 'red') + 
