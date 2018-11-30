@@ -356,8 +356,9 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
                    sig, 
                    by = 'id')
   #save results table
-  write.table(x = results, 
-              file = file.path(workdir, paste0(ampliconName, ".comparison_stats.deletions.tsv")), 
+  write.table(x = results[order(pval)], 
+              file = file.path(workdir, paste0(ampliconName, ".comparison.", 
+                                               cmp, ".stats.deletions.tsv")), 
               row.names = FALSE, quote = FALSE, sep = '\t')
   
   #make a volcano plot of deletions 
@@ -490,8 +491,9 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
                    by = 'id')
   
   #save results table
-  write.table(x = results, 
-              file = file.path(workdir, paste0(ampliconName, ".comparison_stats.insertions.tsv")), 
+  write.table(x = results[order(pval)], 
+              file = file.path(workdir, paste0(ampliconName, ".comparison.", 
+                                               cmp, ".stats.insertions.tsv")), 
               row.names = FALSE, quote = FALSE, sep = '\t')
   
   #make a volcano plot of deletions 
