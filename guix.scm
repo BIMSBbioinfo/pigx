@@ -15,7 +15,7 @@
 ;;;  $ guix package --with-source=pigx_rnaseq-0.0.1.tar.gz -f guix.scm
 ;;;
 ;;; This environment file was developed for Guix version
-;;; TODO
+;;; v0.15.0-4492-g91a4863d9
 
 (use-modules (guix packages)
              (guix licenses)
@@ -42,18 +42,7 @@
     (version %pigx-rnaseq-version)
     (source (string-append (getcwd) "/pigx_rnaseq-" version ".tar.gz"))
     (build-system gnu-build-system)
-    (arguments
-     `(#:parallel-tests? #f ; not supported
-       #:phases
-       (modify-phases %standard-phases
-         (add-after 'install 'wrap-executable
-           ;; Make sure the executable finds all R modules.
-           (lambda* (#:key inputs outputs #:allow-other-keys)
-             (let ((out (assoc-ref outputs "out")))
-               (wrap-program (string-append out "/bin/pigx-rnaseq")
-                 `("R_LIBS_SITE" ":" = (,(getenv "R_LIBS_SITE")))
-                 `("PYTHONPATH"  ":" = (,(getenv "PYTHONPATH")))))
-             #t)))))
+    (arguments '(#:parallel-tests? #f))  ; not supported
     (native-inputs
      `(("autoconf" ,autoconf)
        ("automake" ,automake)))
@@ -86,8 +75,8 @@
        ("r-rtracklayer" ,r-rtracklayer)
        ("r-rjson" ,r-rjson)
        ("salmon" ,salmon)
-       ("ghc-pandoc" ,ghc-pandoc-1)
-       ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc-with-pandoc-1)
+       ("ghc-pandoc" ,ghc-pandoc)
+       ("ghc-pandoc-citeproc" ,ghc-pandoc-citeproc)
        ("python-wrapper" ,python-wrapper)
        ("python-pyyaml" ,python-pyyaml)))
     (home-page "https://github.com/BIMSBbioinfo/pigx_rnaseq/")
