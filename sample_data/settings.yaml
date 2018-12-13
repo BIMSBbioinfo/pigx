@@ -2,7 +2,7 @@ amplicons:
   dpy-10:
     fasta: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/amplicons/amplicon_dpy-10.fa
     cutsites: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/cutsites/sgRNA_cutsites_dpy-10.txt
-  lin-41: 
+  lin-41:
     fasta: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/amplicons/amplicon_lin-41.fa
     cutsites: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/cutsites/sgRNA_cutsites_lin-41.txt
 
@@ -17,6 +17,11 @@ adapters: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_
 nodeN: 4
 
 tools:
-    Rscript: /usr/bin/Rscript
+  Rscript: /usr/bin/Rscript
+  java: 
+    path: /home/buyar/.conda/envs/pigx_crispr/bin/java
+    mem: "-Xmx8G"
+    threads: "-XX:ParallelGCThreads=2"
+  gatk: /home/buyar/.conda/envs/pigx_crispr/opt/gatk-3.8/GenomeAnalysisTK.jar
 
 comparisonsFile: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/comparisons.tsv

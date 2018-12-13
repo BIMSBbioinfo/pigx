@@ -10,6 +10,10 @@ import inspect
 
 # tools
 RSCRIPT = config['tools']['Rscript']
+JAVA = config['tools']['java']['path']
+JAVA_MEM = config['tools']['java']['mem']
+JAVA_THREADS = config['tools']['java']['threads']
+GATK = config['tools']['gatk']
 
 # input locations
 SRC_DIR = config['source-dir']
@@ -34,8 +38,6 @@ GATK_DIR          = os.path.join(OUTPUT_DIR, 'gatk')
 #other parameters
 AMPLICONS = config.get('amplicons', {})
 nodeN = config['nodeN']
-
-
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
@@ -198,7 +200,7 @@ rule gatk_indelRealigner:
         bam = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bam"),
         bai = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bai")
     log: os.path.join(LOG_DIR, "{amplicon}", "gatk_realigner.{sample}.log")
-    shell: "gatk -T IndelRealigner -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
+    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T IndelRealigner -nt 1 -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
 
 # GATK requires read groups, so here we add some dummy read group information to the bam files
 rule samtools_addReadGroups:

@@ -267,7 +267,7 @@ deletions$id <- paste(deletions$seqname, deletions$start, deletions$end, sep = '
 #create a table where each deletion found in all samples is represented for each sample
 #whether or not the deletion is found in the corresponding sample
 
-deletions <- melt(dcast(deletions, id ~ sample, value.var = 'ReadSupport'), id.vars = 'id')
+deletions <- data.table::melt(dcast.data.table(deletions, id ~ sample, value.var = 'ReadSupport'), id.vars = 'id')
 #assign NA values to 0
 deletions[is.na(value)]$value <- 0
 colnames(deletions) <- c('id', 'sample', 'ReadSupport')
@@ -340,6 +340,7 @@ getSignificantIndels <- function(dt, caseSample, controlSample, minReadSupport =
 }
 
 plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
+  cat("comp:",cmp,"\n")
   caseSample <- comp[comparison == cmp]$case_samples
   controlSample <- comp[comparison == cmp]$control_samples
   
