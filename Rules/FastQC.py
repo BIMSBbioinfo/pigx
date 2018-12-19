@@ -11,7 +11,7 @@ rule fastqc:
         outpath = os.path.join(PATH_QC, "{folder}"),
         fastqc  = SOFTWARE['fastqc']['executable']
     log:
-        os.path.join(PATH_LOG, "{name}.fastqc.log")
+        os.path.join(PATH_LOG, "{folder}","{name}.fastqc.log")
     message:"""
             FastQC:
                 input: {input.infile}

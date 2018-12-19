@@ -30,7 +30,7 @@ rule macs2:
         macs2       = SOFTWARE['macs2']['executable'],
         params_macs = PARAMS['macs2']
     log:
-        logfile = os.path.join(PATH_LOG, '{name}.macs.log')
+        logfile = os.path.join(PATH_LOG, "{name}",'{class}.macs.log')
     message:"""
         Running macs2:
             sample: {params.name}

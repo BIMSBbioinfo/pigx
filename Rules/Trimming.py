@@ -16,7 +16,7 @@ rule trim_galore_pe:
             output: {output}
     """
     log: 
-        os.path.join(PATH_LOG, 'trim_galore_{sample}.log')
+        os.path.join(PATH_LOG, "{sample}",'trim_galore_{prefix}.log')
     shell:
         "{params.trim_galore} -o {PATH_TRIMMED}/{wildcards.sample} --paired {input.infile[0]} {input.infile[1]} >> {log} 2>&1 ; {params.mv} {params.tmp1} {output.r1} && {params.mv} {params.tmp2} {output.r2}"
 
@@ -35,6 +35,6 @@ rule trim_galore_se:
             output: {output}
     """
     log: 
-        os.path.join(PATH_LOG, 'trim_galore_{sample}.log')
+        os.path.join(PATH_LOG, "{sample}",'trim_galore_{prefix}.log')
     shell:
         "{params.trim_galore} -o {PATH_TRIMMED}/{wildcards.sample} {input.infile[0]} >> {log} 2>&1 ; {params.mv} {params.tmp} {output.read}"

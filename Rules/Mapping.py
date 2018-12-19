@@ -202,7 +202,7 @@ rule samtools_quality_filter:
         threads  = config['execution']['rules']['samtools_quality_filter']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}.samtools_quality_filter.log")
+        logfile = os.path.join(PATH_LOG, "{name}","samtools_quality_filter_{mapq}.log")
     message:"""
             Filter reads by mapping quality:
                 input: {input}
@@ -222,7 +222,7 @@ rule samtools_deduplicate:
         threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}.samtools_deduplicate.log")
+        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.samtools_deduplicate.log")
     message:"""
             Deduplicating mapped reads:
                 input: {input}
@@ -246,7 +246,7 @@ rule samtools_sort:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}.samtools_sort.log")
+        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.samtools_sort.log")
     message:"""
             Sorting mapped reads:
                 input: {input}

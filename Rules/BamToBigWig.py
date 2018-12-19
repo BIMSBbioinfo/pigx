@@ -11,7 +11,7 @@ rule bam2bigWig:
         Rscript  = SOFTWARE['Rscript']['executable'],
         library  = lambda wc: get_library_type(wc.name)
     log:
-        logfile = os.path.join(PATH_LOG, 'bam2bigWig.log')
+        logfile = os.path.join(PATH_LOG, "{name}", 'bam2bigWig.log')
     message:"""
         Making bigWig:
             input : {input.file}
