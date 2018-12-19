@@ -17,5 +17,5 @@ rule multiqc:
             multiqc
         """
     shell: """
-        {params.multiqc} -o {output} {params.path_log} {params.path_fastqc} >> {log} 2>&1
+        {params.multiqc} -f -n {output} {params.path_log} {params.path_fastqc} >> {log} 2>&1
     """
