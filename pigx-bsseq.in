@@ -300,6 +300,8 @@ def generate_cluster_configuration():
     return cluster_config_file
 
 
+
+def makelink(src, target):
 # Create symbolic links to the inputs and reference genome
 
 # Create links within the output folder that point directly to the
@@ -308,8 +310,6 @@ def generate_cluster_configuration():
 
 # N.B. Any previously existing links will be kept in place, and no
 # warning will be issued if this is the case.
-
-def makelink(src, target):
     if not path.isfile(src):
         bail("Refusing to link non-existent file %s" % src)
     elif not path.isdir(path.dirname(target)):
