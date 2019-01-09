@@ -1,11 +1,58 @@
 # ---------------------------------------------------------------------------- #
+# Creates a symbolic link of the genome file into the project folder
+# should be used inside rules
+def link_genome(input, output):
+    import os
+    import magic as mg
+    import gzip
+
+    # ------------------------------------------------#
+    # prevents errors during linking
+    def trylink(infile, outfile):
+        if os.path.exists(outfile):
+            os.remove(outfile)
+        try:
+            os.symlink(infile, outfile)
+        except:
+            "Symbolic link exists"
+
+    # ------------------------------------------------#
+    # checks whether the input file is zipped, if zipped
+    # unzips the file
+    infile = str(input.genome)
+    outfile = str(output.outfile)
+
+    # this is necessary because the [g]unzip command
+    # dies if the existing file is in the directory
+    # necessary if the reference gets updated
+    if os.path.exists(outfile):
+        os.remove(outfile)
+
+    genome_file_type = mg.from_file(infile, mime=True)
+
+    # this is ugly piece of code
+    if genome_file_type.find('gzip') > 0:
+
+        with gzip.open(infile, 'r') as file:
+            with open(outfile, 'w') as out:
+                for line in file:
+                    out.write(str(line.decode('utf-8')))
+
+    elif genome_file_type == 'text/plain':
+        trylink(infile, outfile)
+
+    else:
+        os.sys.exit('Unknow input genome file format')
+
+# ---------------------------------------------------------------------------- #
 rule link_genome:
     input:
-        genome  = GENOME_ORIG
+        genome  = lambda wc: GENOME_HASH[wc.genome_type]['genome_location']
     output:
-        outfile = GENOME_FASTA
+        outfile = os.path.join(PATH_INDEX, '{genome_type}','{genome}.fa')
+    wildcard_constraints:
+        genome_type = GENOME_TYPES_CONSTRAINT
     params:
-        prefix  = GENOME_PREFIX_PATH,
         threads = config['execution']['rules']['link_genome']['threads'],
         mem     = config['execution']['rules']['link_genome']['memory'],
     log:
@@ -17,92 +64,71 @@ rule link_genome:
                 output: {output.outfile}
         """
     run:
-        import os
-        import magic as mg
-        import gzip
-
-        # ------------------------------------------------#
-        # prevents errors during linking
-        def trylink(infile, outfile):
-            if os.path.exists(outfile):
-                os.remove(outfile)
-            try:
-                os.symlink(infile, outfile)
-            except:
-                "Symbolic link exists"
-                
-        # ------------------------------------------------#            
-        # checks whether the input file is zipped, if zipped
-        # unzips the file
-        infile = str(input.genome)
-        outfile = str(output.outfile)
-        
-        # this is necessary because the [g]unzip command
-        # dies if the existing file is in the directory
-        # necessary if the reference gets updated
-        if os.path.exists(outfile):
-            os.remove(outfile)
-        
-        genome_file_type = mg.from_file(infile, mime=True)
-
-        # this is ugly piece of code
-        if genome_file_type.find('gzip') > 0:
-
-            with gzip.open(infile, 'r') as file:
-                with open(outfile, 'w') as out:
-                    for line in file:
-                        out.write(str(line.decode('utf-8')))
-                  
-        elif genome_file_type == 'text/plain':
-            trylink(infile, outfile)
-            
-        else:
-            os.sys.exit('Unknow input genome file format')
+        link_genome(input, output)
 
 
 # ---------------------------------------------------------------------------- #
 rule bowtie2_build:
     input:
-        genome = GENOME_FASTA
+        genome  = lambda wc: GENOME_HASH[wc.genome_type]['genome_link']
     output:
-        outfile = INDEX_PREFIX_PATH + '.1.bt2'
+        outfile = os.path.join(PATH_INDEX, '{genome_type}','{name}.1.bt2')
+    wildcard_constraints:
+        genome_type = GENOME_TYPES_CONSTRAINT
     params:
-        prefix  = INDEX_PREFIX_PATH,
         bowtie2_build = SOFTWARE['bowtie2-build']['executable']
     log:
-        os.path.join(PATH_LOG, "bowtie2_build.log")
+        log = os.path.join(PATH_LOG, "bowtie2_build_{genome_type}.log")
     message:
         """
             Constructing bowtie2 index:
                 input : {input.genome}
                 output: {output.outfile}
         """
-    shell:"""
-        {params.bowtie2_build} {input.genome} {params.prefix} >> {log} 2>&1 
-    """
+    run:
+        prefix = output.outfile.replace('.1.bt2','')
+
+        command = " ".join(
+        [params.bowtie2_build,
+        input.genome,
+        prefix,
+        '>>', log.log,
+        '2>&1'
+        ])
+        shell(command)
 
 # ---------------------------------------------------------------------------- #
 rule index_to_chrlen:
         input:
-            rules.bowtie2_build.output
+            infile = rules.bowtie2_build.output
         output:
-            outfile = GENOME_PREFIX_PATH + '.chrlen.txt'
+            outfile = os.path.join(PATH_INDEX, '{genome_type}','{name}.chrlen.txt')
+        wildcard_constraints:
+            genome_type = GENOME_TYPES_CONSTRAINT
         params:
-            prefix  = INDEX_PREFIX_PATH,
             bowtie2_inspect = SOFTWARE['bowtie2-inspect']['executable'],
             grep = SOFTWARE['grep']['executable'],
             cut = SOFTWARE['cut']['executable']
         log:
-            os.path.join(PATH_LOG, "index_to_chrlen.log")
+            log = os.path.join(PATH_LOG, "index_to_chrlen.log")
         message:
             """
                 Extracting chromosome lengths from index:
-                    input : {params.prefix}
+                    input : {input.infile}
                     output: {output.outfile}
             """
-        shell:"""
-            {params.bowtie2_inspect} -s {params.prefix} | {params.grep} Sequence | {params.cut} -f2,3 > {output.outfile} 2> {log}
-        """
+        run:
+            prefix = str(input.infile).replace('.1.bt2','')
+
+            command = " ".join(
+            [params.bowtie2_inspect,
+            '-s', prefix,
+            '|',  params.grep, 'Sequence',
+            '|',  params.cut, '-f2,3',
+            '>',  '{output.outfile}',
+            '2>', log.log
+            ])
+            shell(command)
 
 
 #----------------------------------------------------------------------------- #
@@ -110,7 +136,9 @@ rule construct_genomic_windows:
         input:
             infile = rules.index_to_chrlen.output.outfile
         output:
-            outfile = GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds'
+            outfile = os.path.join(GENOME_PREFIX_PATH, "{genome_type}",  '{name}.GenomicWindows.GRanges.rds')
+        wildcard_constraints:
+            genome_type = GENOME_TYPES_CONSTRAINT
         params:
             threads   = 1,
             mem       = '8',
@@ -125,14 +153,16 @@ rule construct_genomic_windows:
             """
         run:
             RunRscript(input, output, params, log.logfile, 'ConstructGenomicWindows.R')
-            
+
 #----------------------------------------------------------------------------- #
 rule extract_nucleotide_frequency:
         input:
-            genome_fasta    = GENOME_FASTA, 
+            genome_fasta    = GENOME_FASTA,
             tilling_windows = rules.construct_genomic_windows.output.outfile
         output:
-            outfile = GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds'
+            outfile = os.path.join(GENOME_PREFIX_PATH, "{genome_type}", '{name}.NucleotideFrequency.GRanges.rds')
+        wildcard_constraints:
+            genome_type = GENOME_TYPES_CONSTRAINT
         params:
             threads   = 1,
             mem       = '8',
@@ -155,9 +185,11 @@ def get_trimmed_files(sample):
 rule bowtie2:
     input:
         infile = lambda wc: get_trimmed_files(wc.name),
-        genome = rules.bowtie2_build.output.outfile
+        genome = lambda wc: GENOME_HASH[wc.genome_type]['bowtie_index']
     output:
-        bamfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
+        bamfile = os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.bam")
+    wildcard_constraints:
+        genome_type = GENOME_TYPES_CONSTRAINT
     params:
         threads        = config['execution']['rules']['bowtie2']['threads'],
         bowtie2        = SOFTWARE['bowtie2']['executable'],
@@ -165,7 +197,7 @@ rule bowtie2:
         library        = lambda wc: get_library_type(wc.name),
         params_bowtie2 = PARAMS['bowtie2']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}.bowtie2.log")
+        logfile = os.path.join(PATH_LOG, "{name}.bowtie2_{genome_type}.log")
     message:"""
         Mapping with bowtie2:
             sample: {input.infile}
@@ -239,9 +271,11 @@ rule samtools_deduplicate:
 #----------------------------------------------------------------------------- #
 rule samtools_sort:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{prefix}.bam")
+        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{prefix}.sorted.bam")
+        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.sorted.bam")
+    wildcard_constraints:
+        genome_type = GENOME_TYPES_CONSTRAINT
     params:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
@@ -259,9 +293,11 @@ rule samtools_sort:
 # ----------------------------------------------------------------------------- #
 rule samtools_index:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX )
+        os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}" + BAM_SUFFIX )
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai")
+        os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}" + BAM_SUFFIX + ".bai")
+    wildcard_constraints:
+        genome_type = GENOME_TYPES_CONSTRAINT
     params:
         samtools = SOFTWARE['samtools']['executable']
     log:
