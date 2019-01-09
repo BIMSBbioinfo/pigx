@@ -18,8 +18,21 @@ def lookup(column, predicate, fields=[]):
 # given a sample name returns library type, depending on number of fastq files
 # uses global variable SAMPLE_SHEET
 def get_library_type(name):
-    library_type = lookup('SampleName', name, ['library_type']) 
+    library_type = lookup('SampleName', name, ['library_type'])
     return(library_type[0])
+
+# ---------------------------------------------------------------------------- #
+# given a sample name returns whether the sample was spiked
+# uses global variable SAMPLE_SHEET
+# return No by default
+def get_spikein_information(name):
+
+    return_value = 'No'
+    if 'Spike-in' in set(SAMPLE_SHEET[0].keys()):
+        return_value = lookup('SampleName', name, ['Spike-in'])[0]
+
+    return return_value
+
 
 # ---------------------------------------------------------------------------- #
 # function which reads the sample sheet from a csv/xlsx file
@@ -33,9 +46,9 @@ def read_SAMPLE_SHEET(config):
         print(config['locations']['sample-sheet'])
         message = 'ERROR: sample-sheet file is does not exist\n'
         sys.exit(message)
-    
+
     SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
-    # Check for the allowed extensions 
+    # Check for the allowed extensions
     if not SAMPLE_SHEET_FILE.endswith(('.csv','.xlsx','.xls')):
         sys.exit('ERROR: File format of the sample_sheet has to be: csv or excel table (xls,xlsx).\n')
     ## Load sample sheet
@@ -52,24 +65,24 @@ def read_SAMPLE_SHEET(config):
     # in both cases we need to strip leading or trailing whitespaces
     rows = [list(map(str.strip, row)) for row in rows]
     header = rows[0]; rows = rows[1:]
-    # we do not want duplicate rows in the sample sheet 
+    # we do not want duplicate rows in the sample sheet
     rows.sort()
     rows = list(row for row,_ in itertools.groupby(rows))
     # then we create a dictionary from header and rows
     SAMPLE_SHEET = [OrderedDict(zip(header, row)) for row in rows if row]
-    
-    # Goes through the sample sheet, and defines the library type based on 
+
+    # Goes through the sample sheet, and defines the library type based on
     # the existence of one or two Read input files
     for input_sample in SAMPLE_SHEET:
-        files = [input_sample['Read'], input_sample['Read2']] 
+        files = [input_sample['Read'], input_sample['Read2']]
         files = [file for file in files if file]
         if len(files) == 2:
             library_type = "paired"
         else:
             library_type = "single"
-        
+
         input_sample['library_type'] = library_type
-    
+
     return(SAMPLE_SHEET)
 
 
@@ -82,12 +95,29 @@ def get_fastq_input(name,prefix):
     return(infiles)
 
 # given a fastq file strips of either of the following extensions:
-# "fastq.gz","fastq","fq.gz","fq" 
+# "fastq.gz","fastq","fq.gz","fq"
 # this is required for parsing trim galore output
 def replace_fastq_ext(fqfile,replacement):
     p = re.compile('.f(ast)*q(\.gz)*')
     repl = p.sub(replacement,fqfile)
     return(repl)
+
+# ---------------------------------------------------------------------------- #
+# The function generates the locations of the genome link, genome prefix, and bowtie2
+# index files for the given genome
+# it is used for the main and spike-in genomes
+# CAUTION: GENOME_HASH is a global dict
+def generate_genome_files(genome_location, index_path, genome_type, genome_name=None):
+
+    GENOME_HASH[genome_type] = {}
+    if genome_name == None:
+        genome_name = os.path.basename(GENOME_LOCATION)
+
+    GENOME_HASH[genome_type]['genome_location'] = genome_location
+    GENOME_HASH[genome_type]['genome_name']   = genome_name
+    GENOME_HASH[genome_type]['genome_prefix'] = os.path.join(index_path, genome_type, GENOME_HASH[genome_type]['genome_name'])
+    GENOME_HASH[genome_type]['genome_link'] = GENOME_HASH[genome_type]['genome_prefix'] + '.fa'
+    GENOME_HASH[genome_type]['bowtie_index'] = GENOME_HASH[genome_type]['genome_prefix'] + '.1.bt2'
 
 # ---------------------------------------------------------------------------- #
 # given a sample name returns fastq location(s)
@@ -110,7 +140,7 @@ def get_trimming_dict(name):
         trimming_dict[prefix]['trimmed']  = [os.path.join(PATH_TRIMMED,name, "{}_{}.fastq.gz".format(prefix,read)) for read in read_ext]
         if lib_type == 'paired':
             trimming_dict[prefix]['raw']      = [fqfiles[tec_rep*2:(tec_rep+1)*2]]
-        else:    
+        else:
             trimming_dict[prefix]['raw']      = [fqfiles[tec_rep]]
     return(trimming_dict)
 
@@ -204,4 +234,12 @@ def RunRscript(input, output, params, logfile, script):
 
     shell(cmd)
 
-
+# ---------------------------------------------------------------------------- #
+# tries to make symbolic link
+def trylink(infile, outfile):
+    if os.path.exists(outfile):
+        os.remove(outfile)
+    try:
+        os.symlink(infile, outfile)
+    except:
+        "Symbolic link exists"
