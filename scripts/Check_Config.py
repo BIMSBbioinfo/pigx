@@ -60,18 +60,18 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
     for obligatory_file in structure_variables['OBLIGATORY_FILES']:
         if locations_dict[obligatory_file] == None:
             message = message + "\t" + obligatory_file + " is not specified\n"
-    
-          
+
+
     # checks whether the locations files exist if they are specified
     for location in sorted(list(set(locations_dict.keys()))):
         message = check_file_exists(locations_dict, location, message)
 
 
-    # ---------------------------------------------------------------------------- #    
+    # ---------------------------------------------------------------------------- #
     # checks whether the fasta header contains whitespaces
     message = check_fasta_header(locations_dict['genome-file'], message)
 
-    # ---------------------------------------------------------------------------- #    
+    # ---------------------------------------------------------------------------- #
     # checks whether the general section is properly formatted
     message = check_general_section(config['general'], message)
 
@@ -157,17 +157,17 @@ def check_sample_exists(sample_sheet_dict, config, message=''):
     locations_dict = config['locations']
     if not locations_dict['input-dir']:
         message = message + "\tfastq input directory is not specified\n"
-        
+
     elif not os.path.isdir(locations_dict['input-dir']):
         message = message + "\tfastq input directory does not exist\n"
-    
+
     else:
         input_dir = locations_dict['input-dir']
         for sample_dict in sample_sheet_dict:
             files = []
             if sample_dict['library_type'] == 'single':
                 files = [sample_dict['Read']]
-                
+
             elif sample_dict['library_type'] == 'paired':
                 files = [sample_dict['Read'], sample_dict['Read2']]
 
@@ -193,13 +193,13 @@ def check_fasta_header(genome_file, message):
     import sys
     import magic as mg
     import gzip
-    
+
     genome_file_type = mg.from_file(genome_file, mime=True)
     if genome_file_type.find('gzip') > 0:
         file = gzip.open(genome_file, 'r')
     else:
         file = open(genome_file, "r")
-    
+
     for line in file:
         if not isinstance(line, str):
             line = str(line.decode('utf-8'))
@@ -208,7 +208,7 @@ def check_fasta_header(genome_file, message):
             if re.search('[ \t]', line):
                 message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
                 return(message)
-                
+
     return(message)
 
 
@@ -222,7 +222,7 @@ def is_number(s):
         return False
 
 # ---------------------------------------------------------------------------- #
-# checks general section for common mistakes 
+# checks general section for common mistakes
 def check_general_section(general_dict, message):
 
     # checks wether assembly is set
