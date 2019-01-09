@@ -4,7 +4,7 @@ rule peak_statistics:
         bamfile    = BOWTIE2,
         peaks      = QSORT,
         bwfiles    = BW,
-        readnumber = rules.parse_bowite2_log.output.outfile
+        readnumber = os.path.join(PATH_RDS, "BowtieLog.rds")
     output:
         outfile    = os.path.join(PATH_RDS, "Peak_Statistics.rds")
     params:
@@ -13,7 +13,7 @@ rule peak_statistics:
         peak_dict       = config['peak_calling'],
         lib_type_dict   = LIB_TYPE,
         path_mapped     = PATH_MAPPED,
-        bam_suffix      = BAM_SUFFIX, 
+        bam_suffix      = BAM_SUFFIX,
         path_peak       = PATH_PEAK,
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable'],

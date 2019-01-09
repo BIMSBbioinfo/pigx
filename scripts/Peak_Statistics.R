@@ -69,6 +69,7 @@ Peak_Statistics = function(
   # -------------------------------------------------------------------------- #
   mapped_reads = readRDS(readnumber)      %>%
     dplyr::filter(stat == 'mapped.total') %>%
+    dplyr::filter(genome_type == 'Main')  %>%
     mutate(stat = NULL)                   %>%
     dplyr::rename(mapped_total = value)   %>%
     dplyr::rename(bam_name = sample_name)
@@ -82,10 +83,10 @@ Peak_Statistics = function(
     names(peaks) = peaks_uniq$sample_name[peaks_ind]
 
     # -------------------------------------------------------------------------- #
-  
+
   message('Counting reads ...')
     cnts = lapply(c('single', 'paired'), function(x){
-        
+
         sub = subset(peaks_sheet, library==x)
         if(nrow(sub) > 0){
             bam_files  = BamFileList(unique(sub$bam_file),  yieldSize = 100000)
@@ -94,7 +95,7 @@ Peak_Statistics = function(
             NULL
         }
       })
-    cnts   = cnts[sapply(cnts, function(x)!is.null(x))] 
+    cnts   = cnts[sapply(cnts, function(x)!is.null(x))]
     cntmat = as.data.frame(do.call(cbind, lapply(cnts, function(x)assays(x)[[1]]))) %>%
       mutate(sample_name = names(peaks)) %>%
       merge(x=peaks_sheet) %>%
@@ -171,5 +172,5 @@ Peak_Statistics(
   path_peak    = argv$params[['path_peak']],
   peaks_resize = argv$params[['peaks_resize']],
   ncores       = argv$params[['threads']]
-  
+
 )
