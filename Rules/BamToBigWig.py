@@ -1,22 +1,30 @@
 # ----------------------------------------------------------------------------- #
+# chrlen is hardcoded to the main genome
 rule bam2bigWig:
     input:
-        file    = os.path.join(PATH_MAPPED, "{name}","{name}" + BAM_SUFFIX),
-        chrlen  = rules.index_to_chrlen.output.outfile
+        # bam files
+        bamfile = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}","{name}" + BAM_SUFFIX),
+        # chromosome lengths
+        chrlen  = lambda wc: GENOME_HASH[GENOME_TYPES['Main']]['genome_prefix'] + '.chrlen.txt',
+        # bowtie mapping stats
+        stats   = os.path.join(PATH_RDS, "BowtieLog.rds")
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{name}.bw")
+        outfile = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}.bw")
     params:
-        extend   = PARAMS['export_bigwig']['extend'],
-        scale    = PARAMS['export_bigwig']['scale_bw'],
-        Rscript  = SOFTWARE['Rscript']['executable'],
-        library  = lambda wc: get_library_type(wc.name)
+        extend      = PARAMS['export_bigwig']['extend'],
+        scale       = PARAMS['export_bigwig']['scale_bw'],
+        Rscript     = SOFTWARE['Rscript']['executable'],
+        library     = lambda wc: get_library_type(wc.name),
+        spikein     = lambda wc: get_spikein_information(wc.name),
+        sample_name = lambda wc: wc.name
     log:
         logfile = os.path.join(PATH_LOG, "{name}", 'bam2bigWig.log')
     message:"""
         Making bigWig:
-            input : {input.file}
-            output: {output.outfile}
-            scale:  {params.scale}
+            input :   {input.bamfile}
+            output:   {output.outfile}
+            scale:    {params.scale}
+            spikein:  {params.spikein}
     """
     run:
         RunRscript(input, output, params, log.logfile, 'BigWigExtend.R')
@@ -24,8 +32,8 @@ rule bam2bigWig:
 # ----------------------------------------------------------------------------- #
 rule makelinks:
     input:
-        file = rules.bam2bigWig.output.outfile
+        file = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}.bw")
     output:
         outfile = os.path.join(PATH_BW, "{name}.bw")
     run:
-        os.symlink(input.file, output.outfile)
+        trylink(input.file, output.outfile)
