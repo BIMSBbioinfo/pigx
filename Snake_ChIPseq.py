@@ -14,6 +14,7 @@ import inspect
 # IMPORTANT defines the compulsory column names for the sample sheet
 # if you want to add the compulsory columns for the sample sheet, do it here
 STRUCTURE_VARIABLES = {
+# Spike-in is a non-compulsory column: values: No/Yes
 'SAMPLE_SHEET_COLUMN_NAMES' : ['SampleName', 'Read', 'Read2'],
 
 # defines the allowed execution parameters list for the config file
@@ -104,45 +105,48 @@ PATH_RDS_CHIPQC     = os.path.join(PATH_RDS, 'ChIPQC')
 PATH_RDS_TEMP       = os.path.join(PATH_RDS, 'Temp')
 
 
+
+# ---------------------------------------------------------------------------- #
+# ACCESSORY VARIABLES
+# Collects the locations of all peaks
+PEAK_NAME_LIST = {}
+
+# a list which contains all mapped files
+# currently used in Parse_Bowtie2log.py
+BAMFILES_LIST = []
+
+# this hash contains the location of the genome link, genome prefix, and bowtie2
+# index files for the main and spike-in genomes
+# HASH Structure:
+# GENOME_HASH[genome_type]['genome_location']
+# GENOME_HASH[genome_type]['genome_name']
+# GENOME_HASH[genome_type]['genome_prefix']
+# GENOME_HASH[genome_type]['genome_link']
+# GENOME_HASH[genome_type]['bowtie_index']
+GENOME_HASH  = {}
+
+#  contains the genome types for the main and spike-in genome - can be extended
+GENOME_TYPES = {'Main' : 'Main','Spike-in' : 'Spike-in'}
+
+# wildcard constraint used for genome building and mapping
+GENOME_TYPES_CONSTRAINT = "|".join(list(GENOME_TYPES.values()))
+
+# names for markdown chunks which will be knit
+# current names: ChIPQC, Extract_Signal_Annotation, Peak_Statistics, Annotate_Peaks
+
 # Hub variables which describe the types of files that can be used in the hub
 TRACK_PATHS = {
-    'bigWig' : {'path': PATH_MAPPED, 'suffix': 'bw', 'type':'bigWig'},
+    'bigWig' : {'path': os.path.join(PATH_MAPPED, GENOME_TYPES['Main']) , 'suffix': 'bw', 'type':'bigWig'},
     'macs' :{'path': PATH_PEAK, 'suffix': 'bb', 'type':'bigBed'},
     'idr' : {'path': PATH_IDR, 'suffix': 'IDR.narrowPeak'}
 }
 
-# Collects the locations of all peaks
-PEAK_NAME_LIST = {}
-
-
-
-# names for markdown chunks which will be knit
-# current names: ChIPQC, Extract_Signal_Annotation, Peak_Statistics, Annotate_Peaks
 # ---------------------------------------------------------------------------- #
-
-
 # Constructs the genome index prefix name
-# If the prefix name is already supplied in the config file, it extracts this index
-# instead of creating a new index
-# index-dir should be the location of the index, without the genome prefix (i.e. without hg19)
-if GENOME_ORIG == None:
-    prefix_default = ''
-    GENOME_ORIG = ''
-else:
-    prefix_default = os.path.join(PATH_INDEX, GENOME)
-
-# set_default is a function of three arguments
-# key, default, dictionary
-# if dictionary[key] does not exist, it returns default
-INDEX_PREFIX_NAME = set_default('index_prefix', GENOME,  config['general'])
-
-# defines the link to the genome location
-GENOME_PREFIX_PATH = os.path.join(prefix_default, INDEX_PREFIX_NAME)
-
-# defines the location of the index (if the index is not specified)
-INDEX_PREFIX_PATH  = os.path.join(set_default('index-dir', prefix_default, config['locations']), INDEX_PREFIX_NAME)
-
-
+# fills in the GENOME_HASH with paths for the main genome
+generate_genome_files(GENOME_ORIG, PATH_INDEX, GENOME_TYPES['Main'], GENOME)
+GENOME_PREFIX_PATH = GENOME_HASH[GENOME_TYPES['Main']]['genome_prefix']
+PATH_MAPPED_MAIN = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'])
 
 # ---------------------------------------------------------------------------- #
 # due to the iditotic namig scheme in FASTQC the next lines construct
@@ -232,11 +236,13 @@ targets = {
 # ---------------------------------------------------------------------------- #
 # ---------------------------------------------------------------------------- #
 # GENERAL MAPPING OUTPUT FILES
-
-GENOME_FASTA    = [GENOME_PREFIX_PATH + '.fa']
-INDEX           = [INDEX_PREFIX_PATH  + '.1.bt2']
+GENOME_FASTA    = [GENOME_HASH[GENOME_TYPES['Main']]['genome_link']]
+INDEX           = [GENOME_HASH[GENOME_TYPES['Main']]['bowtie_index']]
 TRIMMING        = [flatten(TRIM_GALORE_DICT.values())]
-BOWTIE2         = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
+# maps the reads to the main genome
+BOWTIE2         = expand(os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
+BAMFILES_LIST.append(BOWTIE2)
+
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
 CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
 TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
@@ -244,27 +250,68 @@ NUCLEOTIDE_FREQ = [GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']
 FASTQC          = [FASTQC_DICT[i]['fastqc'] for i in list(FASTQC_DICT.keys())]
 MULTIQC         = [os.path.join(PATH_REPORTS, "multiqc.html")]
 ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), name=NAMES)
-BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, "{name}", "{name}.bw"),  name=NAMES)
+BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
 
+
 targets['mapping'] = {
-        'description': "Produce the bowtie2 mapping results in BAM format.", 
+        'description': "Produce the bowtie2 mapping results in BAM format.",
         'files':
             BOWTIE2
 }
 
 targets['export-bw'] = {
-        'description': "Take the bowtie2 mapping results in BAM format and create bigWig Tracks.", 
+        'description': "Take the bowtie2 mapping results in BAM format and create bigWig Tracks.",
         'files':
             BW + LINKS
 }
 
 targets['multiqc'] = {
-        'description': "Get multiQC report based on bowtie2 alignments and fastQC reports.", 
-        'files': 
+        'description': "Get multiQC report based on bowtie2 alignments and fastQC reports.",
+        'files':
             FASTQC +  MULTIQC
 }
+
+# defines the rules for spike in quantification
+if 'spikein-file' in set(config['locations'].keys()):
+
+    # defines the spiked samples
+    NAMES_SPIKEIN = []
+    for line in SAMPLE_SHEET:
+        if 'Spike-in' in set(line.keys()):
+            if line['Spike-in'].upper() == 'YES':
+                NAMES_SPIKEIN.append(line['SampleName'])
+
+    if(len(NAMES_SPIKEIN) > 0):
+
+        GENOME_SPIKEIN  = config['locations']['spikein-file']
+
+        # generates the spike in name, if the name is not supplied
+        if 'spikein_name' in set(config['general'].keys()):
+            GENOME_NAME_SPIKEIN  = config['general']['spikein_name']
+        else:
+            GENOME_NAME_SPIKEIN  = os.path.basename(GENOME_SPIKEIN)
+
+        # fills in the genome hash with the spike-in genome
+        generate_genome_files(GENOME_SPIKEIN, PATH_INDEX, GENOME_TYPES['Spike-in'], GENOME_NAME_SPIKEIN)
+
+        # maps the reads to the spike in genome
+        BOWTIE2_SPIKEIN  = expand(os.path.join(PATH_MAPPED, GENOME_TYPES['Spike-in'], "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES_SPIKEIN)
+
+        BAMFILES_LIST.append(BOWTIE2_SPIKEIN)
+        SPIKE_IN_RULES = [
+            GENOME_HASH[GENOME_TYPES['Spike-in']]['genome_link'],
+            GENOME_HASH[GENOME_TYPES['Spike-in']]['bowtie_index'],
+        ] + BOWTIE2_SPIKEIN
+
+        targets['spike-in'] = {
+            'description' : 'map reads to the spike-in genome and calculate normalization factors',
+            'files':
+                SPIKE_IN_RULES
+        }
+
+
 
 # ---------------------------------------------------------------------------- #
 # include rules
@@ -314,11 +361,11 @@ if peak_index:
 
 
         targets['peak-calling'] = {
-            'description': "Perform peak calling based on peak_calling section.", 
-            'files': 
+            'description': "Perform peak calling based on peak_calling section.",
+            'files':
              MACS +  QSORT +  PEAK_STATISTICS
             }
-        
+
 
 # # ----------------------------------------------------------------------------- #
 if 'idr' in set(config.keys()):
@@ -331,7 +378,7 @@ if 'idr' in set(config.keys()):
         include: os.path.join(RULES_PATH, 'IDR.py')
 
         targets['idr'] = {
-            'description': "Control reproducibilty of peak calling based on idr section.", 
+            'description': "Control reproducibilty of peak calling based on idr section.",
             'files':IDR
             }
 
@@ -343,9 +390,9 @@ if 'hub' in set(config.keys()):
     BB  = expand(os.path.join(PATH_PEAK,  "{name}", "{name}.bb"),  name=config['peak_calling'].keys())
 
     include: os.path.join(RULES_PATH, 'UCSC_Hub.py')
-    
+
     targets['hub'] = {
-            'description': "Generate UCSC track hub based on tracks defined in hub section.", 
+            'description': "Generate UCSC track hub based on tracks defined in hub section.",
             'files': BB + HUB
             }
 
@@ -364,9 +411,9 @@ if 'feature_combination' in set(config.keys()):
                          name = FEATURE_NAMES)
 
         include: os.path.join(RULES_PATH, 'Feature_Combination.py')
-    
+
         targets['feature-combination'] = {
-            'description': "Identify overlapping features based on feature_combination section.", 
+            'description': "Identify overlapping features based on feature_combination section.",
             'files': FEATURE
             }
 
@@ -418,7 +465,7 @@ for selection in selected_targets:
         sys.exit(''.join(
             ['This is not a supported targed:\n {}\n'.format(wrong_target),
              'Consider one of these:\n {}\n'.format(list(targets.keys()))] )
-            )    
+            )
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 rule all:
