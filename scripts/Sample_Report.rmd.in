@@ -361,10 +361,12 @@ ncat('## Frequency of reads in peaks')
 ```
 
 ```{r Peak_Statistics_Freq_Reads_In_Peaks, include=FALSE, eval=analysis_ind['Peak_Statistics'], fig.align='center'}
-dd = lstats$Peak_Statistics$peaks_sample                          %>%
+dd = lstats$Peak_Statistics$peaks_sample %>%
   dplyr::select(-bed_file, -bw_files, -bam_file)                 %>%
   tidyr::gather(sample_cnt, value, -sample_name, -bam_name, -sample_id, -peak_number, -library, -mapped_total)                         %>%
   mutate(sample_cnt = str_replace(sample_cnt, '.sorted.bam','')) %>%
+  mutate(value = as.numeric(value)) %>%
+  mutate(mapped_total = as.numeric(mapped_total)) %>%
   mutate(value      = round(value/mapped_total,2))
 
 g = dd %>%
@@ -432,4 +434,3 @@ print(g)
 ```{r sessionInfo}
 sessionInfo()
 ```
-
