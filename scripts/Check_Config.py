@@ -131,9 +131,9 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
                     message = message + "\tfeature_combination contains unknown peak files"
 
     # ---------------------------------------------------------------------------- #
-    # checks for correspondence between Spike-in in SAMPLE_SHEET and settings
+    # checks for correspondence between Spike-in in sample_sheet_dict and settings
     spike_in_indicator = False
-    for sample in SAMPLE_SHEET:
+    for sample in sample_sheet_dict:
         if 'Spike-in' in set(sample.keys()):
             if sample['Spike-in'].upper() == 'YES':
                 spike_in_indicator = True
@@ -143,12 +143,12 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
         message = message + 'spikein genome fasta file is not defined. Please set locations: spike-in'
     else:
         # checks whether the spikein-file fasta file exists
-        if not os.path.isfile(config['locations']['spike-in']):
+        if not os.path.isfile(config['locations']['spikein-file']):
             message = message + 'spikein-file is not a true file'
-            
+
         # checks whether the spikein fasta file contains header with spaces
         else:
-            message = check_fasta_header(locations_dict['spike-in'], message)
+            message = check_fasta_header(locations_dict['spikein-file'], message)
 
     # ------------------------------------------------------------------------ #
     # checks whether the designated files exist
