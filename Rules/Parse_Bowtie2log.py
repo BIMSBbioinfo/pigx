@@ -1,15 +1,16 @@
 # ----------------------------------------------------------------------------- #
 rule parse_bowite2_log:
     input:
-        bamfiles = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
+        bamfiles = BAMFILES_LIST
     output:
         outfile  = os.path.join(PATH_RDS, "BowtieLog.rds")
     params:
-        logfiles = expand(os.path.join(PATH_LOG, "{name}.bowtie2.log"), name = NAMES),
-        threads   = 1,
-        mem       = '1G',
-        scriptdir = SCRIPT_PATH,
-        Rscript   = SOFTWARE['Rscript']['executable']
+        path_log     = PATH_LOG,
+        threads      = 1,
+        mem          = '1G',
+        scriptdir    = SCRIPT_PATH,
+        Rscript      = SOFTWARE['Rscript']['executable'],
+        genome_types = list(GENOME_TYPES.values())
     log:
        logfile = os.path.join(PATH_LOG, 'parse_bowite2_log.log')
     message:
