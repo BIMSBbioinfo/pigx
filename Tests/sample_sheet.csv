@@ -1,8 +1,7 @@
-SampleName, Read, Read2
-ChIP1, ChIP.fq.gz,
-Cont1, Cont.fq.gz,
-ChIP2, ChIP.fq.gz,
-Cont2, Cont.fq.gz,
-ChIPpe, ChIPpe_R1.fq.gz, ChIPpe_R2.fq.gz
-
-
+SampleName, Read, Read2,Spike-in
+ChIP1, ChIP.fq.gz,,No
+Cont1, Cont.fq.gz,,No
+ChIP2, ChIP.fq.gz,,No
+Cont2, Cont.fq.gz,,No
+ChIPpe, ChIPpe_R1.fq.gz, ChIPpe_R2.fq.gz,No
+HEK,HEK.fq.gz,,Yes

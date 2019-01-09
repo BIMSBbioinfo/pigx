@@ -4,9 +4,12 @@ locations:
   genome-file: genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz
   index-dir:
   gff-file: genome/mm_chr19.gtf
+  spikein-file: genome/genome_subset_hg38_chr1_35287632_37056684.fa.gz
+
 
 general:
   assembly: mm9
+  spikein_name: hg38
   params:
     export_bigwig:
         extend: 200
