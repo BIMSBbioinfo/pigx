@@ -1,10 +1,10 @@
 # ----------------------------------------------------------------------------- #
 rule chipqc:
     input:
-        bamfile              = os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX),
-        index                = os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX + ".bai"),
-        logfile              = rules.parse_bowite2_log.output.outfile,
-        nucleotide_frequency = rules.extract_nucleotide_frequency.output.outfile,
+        bamfile              = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}" + BAM_SUFFIX),
+        index                = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}" + BAM_SUFFIX + ".bai"),
+        logfile              = os.path.join(PATH_RDS, "BowtieLog.rds"),
+        nucleotide_frequency = os.path.join(GENOME_PREFIX_PATH, GENOME_TYPES['Main'], '{name}.NucleotideFrequency.GRanges.rds'),
         annotation           = rules.prepare_annotation.output.outfile
     output:
         outfile  = os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds")

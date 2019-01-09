@@ -5,23 +5,24 @@ def get_files_macs(wc):
     chip = config['peak_calling'][wc.name]['ChIP']
     if isinstance(chip,str):
         chip = [chip]
-    chips = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX), name = chip)
+    chips = expand(os.path.join(PATH_MAPPED_MAIN, "{name}", "{name}" + BAM_SUFFIX), name = chip)
     paths['ChIP'] = chips
 
     cont = config['peak_calling'][wc.name]['Cont']
     if not cont == None:
         if isinstance(cont,str):
             cont = [cont]
-        cont = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + BAM_SUFFIX), name = cont)
+        cont = expand(os.path.join(PATH_MAPPED_MAIN, "{name}", "{name}" + BAM_SUFFIX), name = cont)
         paths['Cont'] = cont
 
     return(paths)
 
 
+# chrlen is currently hardcoded to the main genome
 rule macs2:
     input:
         unpack(get_files_macs),
-        chrlen = rules.index_to_chrlen.output
+        chrlen = GENOME_HASH[GENOME_TYPES['Main']]['genome_prefix'] + '.chrlen.txt'
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}_peaks.{class, narrow|broad}Peak")
     params:
@@ -51,7 +52,7 @@ rule macs2:
             samples = samples + " ".join([' -c'] + input.Cont)
 
         # define the genome size based on sum of length of chroms
-        with open(input.chrlen[0]) as f:
+        with open(input.chrlen) as f:
             chrsize = [ int(line[1]) for line in csv.reader(f,delimiter="\t")]
             gsize = sum( chrsize )
 

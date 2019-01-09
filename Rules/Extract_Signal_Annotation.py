@@ -2,7 +2,7 @@
 rule extract_signal_annotation:
         input:
             annotation = rules.prepare_annotation.output.outfile,
-            wig        = rules.bam2bigWig.output.outfile
+            wig        = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}.bw")
         output:
             outfile    = os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds')
         params:
