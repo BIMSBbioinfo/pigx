@@ -308,7 +308,7 @@ if 'spikein-file' in set(config['locations'].keys()):
         targets['spike-in'] = {
             'description' : 'map reads to the spike-in genome and calculate normalization factors',
             'files':
-                SPIKE_IN_RULES
+                SPIKE_IN_RULES + BW + LINKS
         }
 
 
