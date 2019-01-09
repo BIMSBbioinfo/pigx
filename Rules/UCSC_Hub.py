@@ -30,7 +30,7 @@ def bedToBigBed_input(wc):
 rule bedTobigBed:
     input:
         peaks  = bedToBigBed_input,
-        chrlen = rules.index_to_chrlen.output.outfile,
+        chrlen = GENOME_HASH[GENOME_TYPES['Main']]['genome_prefix'] + '.chrlen.txt'
     output:
         outfile = os.path.join(PATH_PEAK, "{name}", "{name}.bb")
     params:
