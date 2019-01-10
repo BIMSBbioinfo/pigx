@@ -8,8 +8,8 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +1 pigx-bsseq.in
-badd +0 BSseq_pipeline.py
-badd +0 scripts/func_defs.py
+badd +1 BSseq_pipeline.py
+badd +1 scripts/func_defs.py
 argglobal
 silent! argdel *
 $argadd pigx-bsseq.in
@@ -59,22 +59,12 @@ silent! normal! zE
 514,515fold
 517,522fold
 524,540fold
-304
-normal! zo
-312
-normal! zo
-304
-normal! zc
-477
-normal! zo
-477
-normal! zc
-let s:l = 524 - ((202 * winheight(0) + 21) / 42)
+let s:l = 139 - ((2 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-524
-normal! 0
+139
+normal! 011|
 wincmd w
 argglobal
 2argu
@@ -94,41 +84,43 @@ silent! normal! zE
 52,155fold
 171,196fold
 201,238fold
-245,279fold
-285,330fold
-337,359fold
-366,378fold
-383,407fold
-413,425fold
-428,437fold
-444,451fold
-454,461fold
-469,492fold
-494,520fold
-526,542fold
-548,560fold
-566,579fold
-581,597fold
-603,619fold
-621,642fold
-648,663fold
+244,278fold
+284,329fold
+335,357fold
+363,375fold
+381,405fold
+411,423fold
+426,435fold
+441,448fold
+451,458fold
+466,489fold
+491,517fold
+523,539fold
+545,557fold
+563,576fold
+578,594fold
+600,616fold
+618,639fold
+645,660fold
 52
 normal! zo
 52
 normal! zc
-let s:l = 22 - ((3 * winheight(0) + 21) / 42)
+let s:l = 618 - ((77 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-22
+618
 normal! 0
 wincmd w
+2wincmd w
 wincmd =
 tabedit scripts/func_defs.py
 set splitbelow splitright
 wincmd t
 set winminheight=1 winheight=1 winminwidth=1 winwidth=1
 argglobal
+1argu
 if bufexists('scripts/func_defs.py') | buffer scripts/func_defs.py | else | edit scripts/func_defs.py | endif
 setlocal fdm=manual
 setlocal fde=0
@@ -139,6 +131,8 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
+3,21fold
+23,24fold
 26,32fold
 34,38fold
 40,48fold
@@ -151,22 +145,22 @@ silent! normal! zE
 105,110fold
 112,119fold
 121,128fold
-132,134fold
-136,149fold
-151,164fold
-166,167fold
-170,186fold
-188,189fold
-191,195fold
-199,204fold
-206,217fold
-219,222fold
-224,249fold
-let s:l = 187 - ((0 * winheight(0) + 21) / 42)
+130,132fold
+134,147fold
+149,162fold
+164,165fold
+168,184fold
+186,187fold
+189,193fold
+197,202fold
+205,220fold
+223,226fold
+229,254fold
+let s:l = 255 - ((157 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-187
+255
 normal! 0
 tabnext 1
 set stal=1

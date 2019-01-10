@@ -126,8 +126,6 @@ def list_final_reports(files, sampleID, protocol):
         return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"] #---- paired end
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
-
-
 
 def fmt(message):
     """Format the MESSAGE string."""
@@ -203,6 +201,7 @@ def nice(cmd, args, log=None):
         line.append("> {} 2>&1".format(log))
     return " ".join(line)
 
+# custome function for submitting shell command to generate final reports:
 def generateReport(input, output, params, log, reportSubDir):
     dumps = json.dumps(dict(params.items()),sort_keys=True,
                        separators=(",",":"), ensure_ascii=True)
@@ -214,13 +213,19 @@ def generateReport(input, output, params, log, reportSubDir):
                            "--finalReportDir=" + os.path.join(DIR_final,reportSubDir),
                            "--report.params={dumps:q}",
                            "--logFile={log}"])
+    print("==== The present shell command being submitted by the generateReport function is as follows: ")
+    print(cmd)
+    print("==== End of shell command submitted by the generateReport function.")
+
     shell(cmd, dumps)
 
+# abandone current execution with a helpful error message:
 def bail(msg):
     """Print the error message to stderr and exit."""
     print(msg, file=sys.stderr)
     exit(1)
 
+# check for common input/configuration errors:
 def validate_config(config):
     # Check that all locations exist
     for loc in config['locations']:

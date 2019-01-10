@@ -232,10 +232,9 @@ rule final_report:
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
         os.path.join(DIR_final,"{prefix}_{assembly}_final.log")
-    message: fmt("Compiling final report.")
+    message: fmt("Compiling final report: shell execution command sent to snakemake output log file.")
     run:
         generateReport(input, output, params, log, "")
-
 
 
 
@@ -329,7 +328,6 @@ rule diffmeth:
                          '--logFile={log}'])
 
 
-
 
 # ==========================================================================================
 # Perform segmentation on the methylome:
@@ -358,7 +356,6 @@ rule methseg:
                          "--logFile={log}"])
 
 
-
 
 # ==========================================================================================
 # Export a bigwig file:
@@ -376,6 +373,7 @@ rule export_bigwig:
                          "{input.seqlengths}",
                          ASSEMBLY,
                          "{output}"])
+
 
 # ==========================================================================================
 # Process bam files into methyl-called formats:
@@ -435,7 +433,6 @@ rule deduplication_pe:
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
         nice('samtools', [" markdup -r ", "{input}", "{output}"], "{log}")
-
 
 
 # ==========================================================================================
