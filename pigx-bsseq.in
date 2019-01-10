@@ -474,9 +474,11 @@ command = [
 ]
 
 if config['execution']['submit-to-cluster']:
+# Jobs to be submitted to an SGE cluster:
     cluster_config_file = generate_cluster_configuration()
     print("Commencing snakemake run submission to cluster", flush=True, file=sys.stderr)
 
+    # Check if a particular queue has been specified: 
     if ( ('queue' in config['execution']['cluster'] )  or ( 'queue' in config['execution']['rules']['__default__'] )):
         queue_selection_string = " -q {cluster.queue} "
 	# User has defined queue name(s) --either generally, or rule-specific.
@@ -488,11 +490,14 @@ if config['execution']['submit-to-cluster']:
         queue_selection_string = ""
     # --- done checking if ( queue name(s) supplied by user)
 
+    # check if a contact email has been specified:
     if config['execution']['cluster']['contact-email'].lower() == 'none':
         contact_email_string = ""
     else:
         contact_email_string = "-m a -M %s" % config['execution']['cluster']['contact-email']
 
+
+    # check if machine allows for queue submission at all
     try:
         subprocess.call(["qsub", "-help"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except OSError as e:
@@ -501,7 +506,12 @@ if config['execution']['submit-to-cluster']:
             exit(1)
         else:
             raise
-    qsub = "qsub -v R_LIBS_USER -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
+
+    # create path for Snakemake e/o logfiles: 
+    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/cluster_log_files'),
+
+    # define qsub command:
+    qsub = "qsub -e pigx_work/cluster_log_files/ -o pigx_work/cluster_log_files/ -v R_LIBS_USER -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
     if config['execution']['cluster']['args']:
         qsub += " " + config['execution']['cluster']['args']
     command += [
@@ -511,16 +521,19 @@ if config['execution']['submit-to-cluster']:
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
+# Jobs to be submitted on local machine:
     print("Commencing snakemake run submission locally", flush=True, file=sys.stderr)
 
 command.append("--rerun-incomplete")
 if args.graph:
+    # Only output dag graph:
     command.append("--dag")
     with open(args.graph, "w") as outfile:
         p1 = subprocess.Popen(command, stdout=subprocess.PIPE)
         p2 = subprocess.Popen(['dot','-Tpdf'], stdin=p1.stdout, stdout=outfile)
         p2.communicate()
 else:
+    # Check for additional arguments/flags:
     prepare_links()
     display_logo()
     if args.force:
