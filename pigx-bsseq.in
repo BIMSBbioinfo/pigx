@@ -508,7 +508,8 @@ if config['execution']['submit-to-cluster']:
             raise
 
     # create path for Snakemake e/o logfiles: 
-    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/cluster_log_files'),
+    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/cluster_log_files'), exist_ok=True)
+
 
     # define qsub command:
     qsub = "qsub -e pigx_work/cluster_log_files/ -o pigx_work/cluster_log_files/ -v R_LIBS_USER -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
