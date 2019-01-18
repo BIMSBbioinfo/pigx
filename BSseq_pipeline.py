@@ -232,7 +232,7 @@ rule final_report:
         webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
     log:
         os.path.join(DIR_final,"{prefix}_{assembly}_final.log")
-    message: fmt("Compiling final report: shell execution command sent to snakemake output log file.")
+    message: fmt("Compiling final report: Output log file for details (for cluster jobs, see pigx_work/cluster_log_files).")
     run:
         generateReport(input, output, params, log, "")
 

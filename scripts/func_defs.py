@@ -218,6 +218,7 @@ def generateReport(input, output, params, log, reportSubDir):
     print("==== ... and the dumps string is : ")
     print(dumps)
     print("==== End of dump string.")
+    print("==== The arguments list for the rendering is provided in the *html.RenderArgs.rds file ")
 
     shell(cmd, dumps)
 

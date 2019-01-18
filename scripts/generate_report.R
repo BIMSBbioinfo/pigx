@@ -61,12 +61,13 @@ if(!is.null(argsL$report.params)) {
   argsL$report.params <- jsonlite::fromJSON(argsL$report.params)
 }
 
+
 source(paste0(argsL$scriptsDir, "/report_functions.R"))
+
 
 ## catch output and messages into log file
 out <- file(argsL$logFile, open = "wt")
-sink(out,type = "output")
-sink(out, type = "message")
+
 
 cat(paste(
     format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) {
@@ -79,6 +80,12 @@ cat(paste(
     "from template:",basename(argsL$outFile),"\n",
     "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"
 ))
+
+# export a copy of the argument list for this rendering attempt
+saveRDS( argsL, file=paste0(argsL$outFile,".RenderArgs.rds") )
+
+sink(out,type = "output")
+sink(out, type = "message")
 
 render2HTML(reportFile = normalizePath(argsL$reportFile),
                 outFile = basename(argsL$outFile),
