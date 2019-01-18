@@ -7,7 +7,7 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-source scripts/foldstyles.vim
+source dev/foldstyles.vim
 badd +1 pigx-bsseq.in
 badd +0 BSseq_pipeline.py
 badd +0 scripts/func_defs.py

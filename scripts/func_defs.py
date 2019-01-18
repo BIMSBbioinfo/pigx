@@ -215,7 +215,7 @@ def generateReport(input, output, params, log, reportSubDir):
                            "--logFile={log}"])
     print("==== The present shell command being submitted by the generateReport function is as follows: ")
     print(cmd)
-    print("==== and the dumps string is : ")
+    print("==== ... and the dumps string is : ")
     print(dumps)
     print("==== End of dump string.")
 
