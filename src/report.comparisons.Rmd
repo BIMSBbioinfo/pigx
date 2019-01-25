@@ -340,7 +340,6 @@ getSignificantIndels <- function(dt, caseSample, controlSample, minReadSupport =
 }
 
 plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
-  cat("comp:",cmp,"\n")
   caseSample <- comp[comparison == cmp]$case_samples
   controlSample <- comp[comparison == cmp]$control_samples
   
