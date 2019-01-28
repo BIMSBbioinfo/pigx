@@ -9,6 +9,7 @@ amplicons:
 sample_sheet: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/sample_sheet.csv
 
 reads-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/reads
+reference_fasta: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/fasta/chrI.fa
 output-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/output
 source-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/
 
@@ -18,7 +19,7 @@ nodeN: 4
 
 tools:
   Rscript: /usr/bin/Rscript
-  java: 
+  java:
     path: /home/buyar/.conda/envs/pigx_crispr/bin/java
     mem: "-Xmx8G"
     threads: "-XX:ParallelGCThreads=2"
