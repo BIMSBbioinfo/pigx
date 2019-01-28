@@ -38,9 +38,11 @@ printBedGraphFile <- function(filepath,
 
 #get the actual sequences that are inserted in alignments 
 #' @param aln GAlignments object to extract inserted sequences  
+#' @param ins insertion coordinates in the genome 
 #' @return DNAStringSetList object; one DNAStringSet object per 
 #'  read with at least one insertion ' 
-getInsertedSequences <- function(aln) {
+getInsertedSequences <- function(aln, ins) {
+  #get coordinates of insertions in the reads
   insertions <- GenomicAlignments::cigarRangesAlongQuerySpace(cigar = cigar(aln), 
                                                               ops = c('I'),
                                                               with.ops = T)
@@ -51,47 +53,40 @@ getInsertedSequences <- function(aln) {
 
   insertedSequences <- Biostrings::extractAt(x = sequences, at = insertions)
 
-  return(insertedSequences)
+  df <- data.frame('seqname' = as.character(seqnames(aln[match(as.character(mcols(ins)$name), 
+                                                               mcols(aln)$qname)])), 
+                   #here we use the genomic coordinate of the insertion rather than the 
+                   #position in the query (read)
+                   'start' = start(ins), 
+                   'name' = as.character(mcols(ins)$name),
+                   'insertedSequence' = paste(unlist(insertedSequences)),
+                   'insertionWidth' = nchar(paste(unlist(insertedSequences))))
+                   
+  return(df)
 }
 
-printCoverageStats <- function(bamFile, sampleName, outDir = getwd(), ...) {
+getIndelReads <- function(aln) {
+  indelReads <- GenomicAlignments::cigarRangesAlongReferenceSpace(cigar = cigar(aln), 
+                                                              ops = c('I', 'D'),
+                                                              with.ops = T, 
+                                                              pos = start(aln))
+  names(indelReads) <- mcols(aln)$qname
+  indelReads <- stack(indelReads)
+  end(indelReads[which(names(indelReads) == 'I')]) <- start(indelReads[which(names(indelReads) == 'I')]) 
+  
+  #get seqnames fields 
+  indelReads <- cbind(as.data.table(indelReads), as.data.table(mcols(indelReads)))
+  indelReads <- merge(indelReads, 
+                  data.table("seqnames" = as.data.table(seqnames(aln))$value, 
+                             "name" = mcols(aln)$qname),
+                  by = 'name')
+  colnames(indelReads)[5] <- 'indelType'
+  indelReads <- GenomicRanges::makeGRangesFromDataFrame(indelReads, keep.extra.columns = TRUE)
+  
+  return(indelReads)
+}
 
-  aln <- GenomicAlignments::readGAlignments(bamFile, param = ScanBamParam(what=c("qname", "seq")))
-  
-  indels <- GenomicAlignments::cigarRangesAlongReferenceSpace(cigar = cigar(aln), 
-                                                                       ops = c('I', 'D'),
-                                                                       with.ops = T, pos = start(aln))
-  names(indels) <- mcols(aln)$qname
-  
-  indels <- stack(indels)
-  end(indels[which(names(indels) == 'I')]) <- start(indels[which(names(indels) == 'I')]) 
-  seqinfo(indels) <- seqinfo(aln)
-  
-  del <- indels[which(names(indels) == 'D')]
-  ins <- indels[which(names(indels) == 'I')]
-
-  insertedSequencesFile <- file.path(outDir, paste0(sampleName,'.insertedSequences.tsv'))
-  
-  if(length(ins) > 0) {
-    # get inserted sequences and print to the sequences to a file
-    # mcols(ins)$name <- as.character(mcols(ins)$name)
-    insertedSequences <- getInsertedSequences(aln)
-    
-    df <- data.frame('seqname' = levels(seqnames(aln))[1], 
-                     #here we use the genomic coordinate of the insertion rather than the 
-                     #position in the query (read)
-                     'start' = start(ins), 
-                     'name' = as.character(mcols(ins)$name),
-                     'insertedSequence' = paste(unlist(insertedSequences)),
-                     'insertionWidth' = nchar(paste(unlist(insertedSequences)))
-    ) 
-    write.table(x = df, file = insertedSequencesFile, 
-                sep = '\t', quote = F, row.names = F, col.names = T)
-  } else {
-    write(x = paste('seqname', 'start', 'name', 'insertedSequence', 'insertionWidth', collapse  = '\t'), 
-          file =  insertedSequencesFile, sep = '\t')
-  }
-  
+printCoverageStats <- function(aln, ins, del, sampleName, outDir = getwd(), ...) {
   # calculate score profiles for indels and coverage. 
   
   alnCoverage <- GenomicAlignments::coverage(aln)[[1]]
@@ -225,68 +220,86 @@ printBedFile <- function(outDir, sampleName, df, tracktype, topN = 100, minReadS
               quote = F, sep = '\t', col.names = F, row.names = F, append = T)
 }
 
-readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, nodeN = 8)
+#parse alignments from bam file 
+aln <- GenomicAlignments::readGAlignments(bamFile, param = ScanBamParam(what=c("qname", "seq")))
 
-seqName <- seqnames(seqinfo(readsWithInDels))[1]
+#get all reads with (insertions/deletions/substitions)
+indelReads <- getIndelReads(aln) 
 
-cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
-
-cutSiteStats <- do.call(rbind, lapply(1:nrow(cutSites), function(i) {
-  x <- cutSites[i,]
-  guide <- x[[1]]
-  cutStart <- as.numeric(x[[2]])
-  cutEnd <- cutStart + 1
-
-  stats <- countEventsAtCutSite(seqName = seqName,
-                             cutStart = cutStart,
-                             cutEnd = cutEnd,
-                             bamFile = bamFile,
-                             readsWithInDels = readsWithInDels,
-                             extend = 3)
-  
-  stats <- cbind(data.frame("sample" = sampleName,
-                         "sgRNA" = guide,
-                         "cutStart" = cutStart,
-                         "cutEnd" = cutEnd), stats)
-  
-  #efficiency : number of indels that originate around the cut-site
-  #             divided by the read coverage around the cut-site
-  stats$indelEfficiency <- round(stats$indel / stats$cov * 100, 2)
-  
-  return(stats)
-}))
-
-write.table(x = cutSiteStats,
-            file = file.path(outDir, paste0(sampleName, '.indel_stats_at_cutsites.tsv')),
-            quote = F, sep = '\t', row.names = FALSE
-            )
-
-#TODO print summarized indels both as raw and as a summary to file.
-#use summarizeIndels function 
-indels <- summarizeInDels(readsWithInDels)
-indels$seqname <- seqName
-
-#print summarized deletions to BED file
-deletions <- indels[ type == 'D', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
-printBedFile(outDir = outDir, sampleName = sampleName, 
-             df = deletions, 
-             tracktype = 'deletions')
-
-#print summarized insertions to BED file
-insertions <- indels[ type == 'I', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
-printBedFile(outDir = outDir, sampleName = sampleName, 
-             df = insertions, 
-             tracktype = 'insertions')
-
-#write all unfiltered indels to file 
-dt <- cbind(as.data.table(readsWithInDels), as.data.table(mcols(readsWithInDels)))
-dt$seqname <- seqName
-dt$sample <- sampleName
-dt <- dt[,c('seqname', 'sample', 'start', 'end', 'width', 'names', 'name')]
-colnames(dt)[6:7] <- c('indelType', 'readID')
-
-write.table(x = dt,
-            file = file.path(outDir, paste0(sampleName, '.indels.unfiltered.tsv')),
-            quote = F, sep = '\t', col.names = T, row.names = F, append = T)
+#extract insertion sequences and print to file 
+insertedSequencesFile <- file.path(outDir, paste0(sampleName,'.insertedSequences.tsv'))
+ins <- indelReads[which(mcols(indelReads)$indelType == 'I')]
+if(length(ins) > 0) {
+  write.table(x = getInsertedSequences(aln, ins), file = insertedSequencesFile, 
+              sep = '\t', quote = F, row.names = F, col.names = T)
+} else {
+  write(x = paste('seqname', 'start', 'name', 'insertedSequence', 'insertionWidth', collapse  = '\t'), 
+        file =  insertedSequencesFile, sep = '\t')
+}
 
 
+# readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, nodeN = 8)
+# 
+# seqName <- seqnames(seqinfo(readsWithInDels))[1]
+# 
+# cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
+# 
+# cutSiteStats <- do.call(rbind, lapply(1:nrow(cutSites), function(i) {
+#   x <- cutSites[i,]
+#   guide <- x[[1]]
+#   cutStart <- as.numeric(x[[2]])
+#   cutEnd <- cutStart + 1
+# 
+#   stats <- countEventsAtCutSite(seqName = seqName,
+#                              cutStart = cutStart,
+#                              cutEnd = cutEnd,
+#                              bamFile = bamFile,
+#                              readsWithInDels = readsWithInDels,
+#                              extend = 3)
+#   
+#   stats <- cbind(data.frame("sample" = sampleName,
+#                          "sgRNA" = guide,
+#                          "cutStart" = cutStart,
+#                          "cutEnd" = cutEnd), stats)
+#   
+#   #efficiency : number of indels that originate around the cut-site
+#   #             divided by the read coverage around the cut-site
+#   stats$indelEfficiency <- round(stats$indel / stats$cov * 100, 2)
+#   
+#   return(stats)
+# }))
+# 
+# write.table(x = cutSiteStats,
+#             file = file.path(outDir, paste0(sampleName, '.indel_stats_at_cutsites.tsv')),
+#             quote = F, sep = '\t', row.names = FALSE
+#             )
+# 
+# #TODO print summarized indels both as raw and as a summary to file.
+# #use summarizeIndels function 
+# indels <- summarizeInDels(readsWithInDels)
+# indels$seqname <- seqName
+# 
+# #print summarized deletions to BED file
+# deletions <- indels[ type == 'D', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
+# printBedFile(outDir = outDir, sampleName = sampleName, 
+#              df = deletions, 
+#              tracktype = 'deletions')
+# 
+# #print summarized insertions to BED file
+# insertions <- indels[ type == 'I', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
+# printBedFile(outDir = outDir, sampleName = sampleName, 
+#              df = insertions, 
+#              tracktype = 'insertions')
+# 
+# #write all unfiltered indels to file 
+# dt <- cbind(as.data.table(readsWithInDels), as.data.table(mcols(readsWithInDels)))
+# dt$seqname <- seqName
+# dt$sample <- sampleName
+# dt <- dt[,c('seqname', 'sample', 'start', 'end', 'width', 'names', 'name')]
+# colnames(dt)[6:7] <- c('indelType', 'readID')
+# 
+# write.table(x = dt,
+#             file = file.path(outDir, paste0(sampleName, '.indels.unfiltered.tsv')),
+#             quote = F, sep = '\t', col.names = T, row.names = F, append = T)
+# 
+# 
