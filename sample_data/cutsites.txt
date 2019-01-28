@@ -1,0 +1,4 @@
+lin-41	lin-41_UTR_sg15 I:9335262
+lin-41	lin-41_UTR_sg16 I:9335227
+dpy-10	dpy-10_UTR_sg1	II:6710312
+dpy-10	dpy-10_UTR_sg2	II:6710197
