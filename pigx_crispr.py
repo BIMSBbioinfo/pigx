@@ -62,13 +62,6 @@ def reads_input(wc):
   #print("sample:",sample)
   return [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads']) if f]
 
-def get_output_file_list(DIR, ext):
-    paths = list()
-    for sample in SAMPLES:
-        amplicon = lookup('sample_name', sample, ['amplicon'])[0]
-        paths.append(os.path.join(DIR, amplicon, ".".join([sample, ext])))
-    return(paths)
-
 def get_bbmap_command(wc):
     sample = wc.sample
     tech = lookup('sample_name', sample, ['tech'])[0]
