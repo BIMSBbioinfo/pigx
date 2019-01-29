@@ -18,24 +18,6 @@ cat("Running getIndelStats with arguments:",args,"\n")
 #print bedgraph file of deletion ratios per base
 
 
-printBedGraphFile <- function(filepath, 
-                              trackInfo,
-                              scores) {
-  #write bedgraph file for deletions
-  trackDefinition <- paste0("track type=bedGraph name=",trackInfo)
-  writeLines(text = trackDefinition, con = filepath)
-  
-  #copy base position to have start/end equal to base position
-  scores <- scores[,c(1,2,2,3)] 
-
-  #convert to zero-based index
-  scores$bp <- as.numeric(scores$bp) - 1
-  
-  #bedgraph file
-  write.table(x = scores, file = filepath, append = T,
-              sep = '\t', quote = F, row.names = F, col.names = F)
-}
-
 #get the actual sequences that are inserted in alignments 
 #' @param aln GAlignments object to extract inserted sequences  
 #' @param ins insertion coordinates in the genome 
@@ -85,77 +67,25 @@ getIndelReads <- function(aln) {
   
   return(indelReads)
 }
-
-printCoverageStats <- function(aln, ins, del, sampleName, outDir = getwd(), ...) {
-  # calculate score profiles for indels and coverage. 
+#aln: GenomicAlignments object
+#indelReads: GenomicRanges object (ins or del extracted from getIndelReads function)
+getIndelScores <- function(aln, indelReads) {
+  alnCov <- GenomicAlignments::coverage(aln)
+  indelCov <- GenomicAlignments::coverage(indelReads)
   
-  alnCoverage <- GenomicAlignments::coverage(aln)[[1]]
-  
-  delCoverage <- GenomicAlignments::coverage(del)
-  #in case del coverage deosn't cover the whole alignment 
-  #fill in the remaining bases with 0 values
-  delCoverage <- c(delCoverage, rep(0, length(alnCoverage) - length(delCoverage)))
-
-  insCoverage <- GenomicAlignments::coverage(ins)
-  #fill in the remaining bases with 0 values
-  insCoverage <- c(insCoverage, rep(0, length(alnCoverage) - length(insCoverage)))
-  
-  indelCoverage <- GenomicAlignments::coverage(indels)
-  #fill in the remaining bases with 0 values
-  indelCoverage <- c(indelCoverage, rep(0, length(alnCoverage) - length(indelCoverage)))
-  
-
-  df <- data.frame('seqname' = levels(seqnames(aln))[1], 
-                   'sample' = sampleName, 
-                   'bp' = 1:length(alnCoverage), 
-                   'cov' = as.vector(alnCoverage),
-                   'del' = as.vector(delCoverage),
-                   'ins' = as.vector(insCoverage),
-                   'indel' = as.vector(indelCoverage))
-  
-  #add some more stats: 
-  df$delRatio <- ifelse(df$cov > 0, df$del/df$cov, 0)
-  df$insRatio <- ifelse(df$cov > 0, df$ins/df$cov, 0)
-  df$indelRatio <- ifelse(df$cov > 0, df$indel/df$cov, 0)
-
-  #print bedgraph file for indels
-  indelScoresFile <- file.path(outDir, paste0(sampleName,'.indelScores.bedgraph'))
-  printBedGraphFile(file = indelScoresFile, 
-                    trackInfo = paste(sampleName, 'indel score (insertions + deletions / coverage per base)'), 
-                    scores = df[,c('seqname', 'bp', 'indelRatio')])
-  #print bedgraph file for deletions
-  deletionScoresFile <- file.path(outDir, paste0(sampleName,'.deletionScores.bedgraph'))
-  printBedGraphFile(file = deletionScoresFile, 
-                    trackInfo = paste(sampleName, 'deletion score (deletions / coverage per base)'), 
-                    scores = df[,c('seqname', 'bp', 'delRatio')])
-  #print bedgraph file for insertions
-  insertionScoresFile <- file.path(outDir, paste0(sampleName,'.insertionScores.bedgraph'))
-  printBedGraphFile(file = insertionScoresFile, 
-                    trackInfo = paste(sampleName, 'insertion score (insertions / coverage per base)'), 
-                    scores = df[,c('seqname', 'bp', 'insRatio')])
-  
-  #print coverage stats to file
-  statsOutputFile <- file.path(outDir, paste0(sampleName,'.coverageStats.tsv'))
-  write.table(x = df, file = statsOutputFile, append = T,
-              sep = '\t', quote = F, row.names = F, col.names = T)
-  return(indels)
-} 
-
-summarizeInDels <- function(readsWithInDels) {
-  indelCoords <- data.table::data.table('qname' = as.vector(mcols(readsWithInDels)$name),
-                                      'start' = start(readsWithInDels),
-                                      'end' = end(readsWithInDels), 
-                                      'type' = names(readsWithInDels))
-  
-  #for insertions, end should be the same as start
-  indelCoords[type == 'I']$end <- indelCoords[type == 'I']$start
-  
-  indelCoords$ID <- paste(indelCoords$start, indelCoords$end, sep = ':')
-  dt <- indelCoords[,length(qname), by = c('ID', 'start', 'end', 'type')]
-  colnames(dt)[5] <- 'ReadSupport'
-  dt$width <- dt$end - dt$start + 1
-  dt <- dt[order(ReadSupport, decreasing = T)]
-  return(dt)
+  #for each chromosome, calculate per base score: indel count divided by alignment coverage
+  scores <- sapply(names(alnCov), function(chr) {
+    ac <- alnCov[[chr]] #alignment coverage
+    ic <- indelCov[[chr]] #indel coverage
+    
+    #in case indel coverage doesn't cover the whole alignment 
+    #fill in the remaining bases with 0 values
+    ic <- c(ic, rep(0, length(ac) - length(ic)))
+    scores <- as.numeric(ic)/as.numeric(ac)
+    scores[is.na(scores)] <- 0
+    return(Rle(scores))
+  })
+  return(RleList(scores))
 }
 
 #' @param cutStart expected cutting site start pos for the sgRNA
@@ -196,39 +126,36 @@ countEventsAtCutSite <- function(seqName, cutStart, cutEnd, bamFile, readsWithIn
   return(stats)
 }
 
-printBedFile <- function(outDir, sampleName, df, tracktype, topN = 100, minReadSupport = 5) {
-  outfile <- file.path(outDir, paste0(sampleName, '.', tracktype, ".bed"))
-  writeLines(text = paste0("track name=",sampleName," description=\"top 100 ",tracktype,"\" useScore=1"),
-             con = outfile)
-  #convert coordinates to 0 based (start, end) form
-  df$start <- df$start - 1
-  #update ids:
-  df$ID <- paste(df$seqname, df$start, df$end, "rs", df$ReadSupport, sep = ':')
-  #filter features by read support and only show topN of them
-  df <- df[order(df$ReadSupport, decreasing = TRUE),]
-  df <- df[df$ReadSupport >= minReadSupport,]
-  if(topN > nrow(df)) {
-    topN <- nrow(df)
-  }
-  df <- df[1:topN,]
-  #normalize scores to go from 0 to 1000 - to enable color shades on IGV
-  df$ReadSupport <- round(df$ReadSupport / max(df$ReadSupport) * 1000, 3)
-  df$strand <- '.'
-  
-  write.table(x = df,
-              file = outfile,
-              quote = F, sep = '\t', col.names = F, row.names = F, append = T)
-}
-
 #parse alignments from bam file 
 aln <- GenomicAlignments::readGAlignments(bamFile, param = ScanBamParam(what=c("qname", "seq")))
+#export to bigwig 
+rtracklayer::export.bw(object = GenomicAlignments::coverage(aln), 
+                       con = file.path(outDir, paste0(sampleName, ".alnCoverage.bigwig")))
 
 #get all reads with (insertions/deletions/substitions)
 indelReads <- getIndelReads(aln) 
+#get indel scores 
+indelScores <- getIndelScores(aln, indelReads)
+#export to bigwig
+rtracklayer::export.bw(object = indelScores, 
+                       con = file.path(outDir, paste0(sampleName, ".indelScores.bigwig")))
+
+#split insertions and deletions and 
+#get indel scores (indel count divided by alignment coverage) per base
+ins <- indelReads[indelReads$indelType == 'I']
+insScores <- getIndelScores(aln, ins)
+#export to bigwig
+rtracklayer::export.bw(object = insScores, 
+                       con = file.path(outDir, paste0(sampleName, ".insertionScores.bigwig")))
+
+del <- indelReads[indelReads$indelType == 'D']
+delScores <- getIndelScores(aln, del)
+#export to bigwig
+rtracklayer::export.bw(object = delScores, 
+                       con = file.path(outDir, paste0(sampleName, ".deletionScores.bigwig")))
 
 #extract insertion sequences and print to file 
 insertedSequencesFile <- file.path(outDir, paste0(sampleName,'.insertedSequences.tsv'))
-ins <- indelReads[which(mcols(indelReads)$indelType == 'I')]
 if(length(ins) > 0) {
   write.table(x = getInsertedSequences(aln, ins), file = insertedSequencesFile, 
               sep = '\t', quote = F, row.names = F, col.names = T)
@@ -238,10 +165,6 @@ if(length(ins) > 0) {
 }
 
 
-# readsWithInDels <- printCoverageStats(bamFile, sampleName, outDir, nodeN = 8)
-# 
-# seqName <- seqnames(seqinfo(readsWithInDels))[1]
-# 
 # cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
 # 
 # cutSiteStats <- do.call(rbind, lapply(1:nrow(cutSites), function(i) {
@@ -274,32 +197,54 @@ if(length(ins) > 0) {
 #             quote = F, sep = '\t', row.names = FALSE
 #             )
 # 
-# #TODO print summarized indels both as raw and as a summary to file.
-# #use summarizeIndels function 
-# indels <- summarizeInDels(readsWithInDels)
-# indels$seqname <- seqName
-# 
-# #print summarized deletions to BED file
-# deletions <- indels[ type == 'D', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
-# printBedFile(outDir = outDir, sampleName = sampleName, 
-#              df = deletions, 
-#              tracktype = 'deletions')
-# 
-# #print summarized insertions to BED file
-# insertions <- indels[ type == 'I', c('seqname', 'start', 'end', 'ID', 'ReadSupport')]
-# printBedFile(outDir = outDir, sampleName = sampleName, 
-#              df = insertions, 
-#              tracktype = 'insertions')
-# 
-# #write all unfiltered indels to file 
-# dt <- cbind(as.data.table(readsWithInDels), as.data.table(mcols(readsWithInDels)))
-# dt$seqname <- seqName
-# dt$sample <- sampleName
-# dt <- dt[,c('seqname', 'sample', 'start', 'end', 'width', 'names', 'name')]
-# colnames(dt)[6:7] <- c('indelType', 'readID')
-# 
-# write.table(x = dt,
-#             file = file.path(outDir, paste0(sampleName, '.indels.unfiltered.tsv')),
-#             quote = F, sep = '\t', col.names = T, row.names = F, append = T)
-# 
-# 
+
+
+# filter out reads with at least 1 deletion and 1 insertion
+# filter out reads that have substitutions adjacent  to deletions (suggest complex events)
+readsToFilter <- function(aln) {
+  dt <- data.table::data.table('cigar' = cigar(aln), 
+                               'readID' = mcols(aln)$qname)
+  #find reads with at least one insertion and one deletion
+  ins_del <- dt[grepl(pattern = '(I.*D)|(D.*I)', x = dt$cigar)]$readID
+  
+  #find reads with substitutions adjacent to a deletion
+  adj_del_sub <- dt[grepl(pattern = '(X[0-9]+D)|(D[0-9]+X)', x = dt$cigar)]$readID
+  
+  #take the union
+  return(union(ins_del, adj_del_sub))
+}
+
+#TODO use readsToFilter function depending on the sequencing technology (don't apply to pacbio)
+# indelReads <- indelReads[!indelReads$name %in% readsToFilter(aln)]
+
+# collapse indel reads by coordinates and print them into BED files
+indels <- as.data.table(indelReads)[,length(name),by = c('seqnames', 'start', 'end', 'indelType')][order(V1, decreasing = T)]
+colnames(indels)[5] <- 'ReadSupport'
+indels$name <- paste(indels$seqnames, indels$start, indels$end, indels$indelType, sep = ':')
+#get number of reads that overlap each deletion
+overlapCounts <- countOverlaps(split(GenomicRanges::GRanges(indels), indels$name), aln)
+indels$coverage <- as.numeric(overlapCounts[indels$name])
+
+#add a score column for visualization on IGV
+indels$score <- indels$ReadSupport/max(indels$ReadSupport)*1000
+
+#print summarized deletions to BED file
+rtracklayer::export.bed(object = GenomicRanges::GRanges(indels[indelType == 'D']), 
+                        con = file.path(outDir, paste0(sampleName, '.deletions.bed')), 
+                        trackLine = new("BasicTrackLine", useScore = TRUE, name = 'deletions'))
+
+#print summarized insertions to BED file
+rtracklayer::export.bed(object = GenomicRanges::GRanges(indels[indelType == 'I']), 
+                        con = file.path(outDir, paste0(sampleName, '.insertions.bed')), 
+                        trackLine = new("BasicTrackLine", useScore = TRUE, name = 'insertions'))
+
+#write collapsed indels to file
+write.table(x = indels,
+            file = file.path(outDir, paste0(sampleName, '.indels.tsv')),
+            quote = F, sep = '\t', col.names = T, row.names = F)
+
+#write indel reads to file
+write.table(x = indelReads,
+            file = file.path(outDir, paste0(sampleName, '.reads_with_indels.tsv')),
+            quote = F, sep = '\t', col.names = T, row.names = F)
+
