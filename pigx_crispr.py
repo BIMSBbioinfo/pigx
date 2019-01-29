@@ -20,6 +20,7 @@ SRC_DIR = config['source-dir']
 READS_DIR = config['reads-dir']
 ADAPTERS = config['adapters']
 SAMPLE_SHEET_FILE = config['sample_sheet']
+CUT_SITES_FILE = config['cutsites']
 COMPARISONS_FILE = config.get('comparisonsFile', {})
 REFERENCE_FASTA = config['reference_fasta']
 
@@ -37,7 +38,6 @@ REPORT_DIR        = os.path.join(OUTPUT_DIR, 'reports')
 GATK_DIR          = os.path.join(OUTPUT_DIR, 'gatk')
 
 #other parameters
-AMPLICONS = config.get('amplicons', {})
 nodeN = config['nodeN']
 
 ## Load sample sheet
@@ -92,15 +92,15 @@ rule all:
         expand(os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"), sample = SAMPLES),
         #expand(os.path.join(GATK_DIR, "{sample}.realigned.bam"), sample = SAMPLES),
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv")
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv"), sample = SAMPLES),
         #get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
         #get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"),
         #get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"),
@@ -281,8 +281,7 @@ rule getIndelStats:
         #bamIndex = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bai"),
         #bamFile = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bam"),
         bamIndex = os.path.join(MAPPED_READS_DIR,  "{sample}.bam.bai"),
-        bamFile = os.path.join(MAPPED_READS_DIR,  "{sample}.bam"),
-        cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
+        bamFile = os.path.join(MAPPED_READS_DIR,  "{sample}.bam")
     output:
         os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"),
@@ -296,44 +295,43 @@ rule getIndelStats:
         os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv")
     params:
-        outdir=os.path.join(INDELS_DIR, "{amplicon}"),
         sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
         script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
-    log: os.path.join(LOG_DIR, "{amplicon}", "getIndelStats_{sample}.log")
-    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.outdir} {input.cutSitesFile} {params.sgRNA_list} > {log} 2>&1"
+    log: os.path.join(LOG_DIR, "indel_stats", "getIndelStats_{sample}.log")
+    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {INDELS_DIR} {CUT_SITES_FILE} {params.sgRNA_list} > {log} 2>&1"
 
-rule report:
-    input:
-        coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
-        cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
-        indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")
-    params:
-      fasta = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])),
-      cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
-      reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
-      reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
-      indelsFolder = os.path.join(INDELS_DIR, "{amplicon}")
-    log: os.path.join(LOG_DIR, "{amplicon}.report.log")
-    output:
-        os.path.join(REPORT_DIR, '{amplicon}.report.html')
-    shell:
-        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"
-
-
-rule report_comparisons:
-    input:
-        coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
-        cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
-        indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
-        comp = COMPARISONS_FILE
-    params:
-        reportR = os.path.join(SRC_DIR, "src", "runReport.comparisons.R"),
-        reportRmd = os.path.join(SRC_DIR, "src", "report.comparisons.Rmd"),
-        indelsFolder = os.path.join(INDELS_DIR, "{amplicon}"),
-        outDir = os.path.join(REPORT_DIR, 'comparisons'),
-    log: os.path.join(LOG_DIR, "{amplicon}.report.comparisons.log")
-    output:
-        os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'),
-        os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv')
-    shell:
-        "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={COMPARISONS_FILE} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"
+# rule report:
+#     input:
+#         coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
+#         cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
+#         indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")
+#     params:
+#       fasta = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])),
+#       cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
+#       reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
+#       reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
+#       indelsFolder = os.path.join(INDELS_DIR, "{amplicon}")
+#     log: os.path.join(LOG_DIR, "{amplicon}.report.log")
+#     output:
+#         os.path.join(REPORT_DIR, '{amplicon}.report.html')
+#     shell:
+#         "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"
+#
+#
+# rule report_comparisons:
+#     input:
+#         coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
+#         cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
+#         indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
+#         comp = COMPARISONS_FILE
+#     params:
+#         reportR = os.path.join(SRC_DIR, "src", "runReport.comparisons.R"),
+#         reportRmd = os.path.join(SRC_DIR, "src", "report.comparisons.Rmd"),
+#         indelsFolder = os.path.join(INDELS_DIR, "{amplicon}"),
+#         outDir = os.path.join(REPORT_DIR, 'comparisons'),
+#     log: os.path.join(LOG_DIR, "{amplicon}.report.comparisons.log")
+#     output:
+#         os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'),
+#         os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv')
+#     shell:
+#         "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={COMPARISONS_FILE} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"
