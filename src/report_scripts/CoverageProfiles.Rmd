@@ -1,0 +1,115 @@
+---
+title: "Coverage and Indel Profiles"
+output: html_document
+---
+
+Read inputs 
+
+```{r settings}
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(data.table)))
+suppressMessages(suppressWarnings(library(rtracklayer)))
+suppressMessages(suppressWarnings(library(plotly)))
+suppressMessages(suppressWarnings(library(GenomicRanges)))
+
+params <- yaml::read_yaml('./config.yml')
+sampleSheet <- data.table::fread(params$sample_sheet)
+pipeline_output_dir <- params$pigx_output_dir
+#coordinates of cut sites 
+cut_sites <- rtracklayer::import.bed(params$cut_sites_file)
+```
+
+Read bigwig files for the samples in the sample sheet
+```{r}
+importSampleBigWig <- function(pipeline_output_dir, samples, suffix = '.alnCoverage.bigwig') {
+  sapply(simplify = F, USE.NAMES = T, 
+                      X = unique(as.character(samples)), 
+                      FUN = function(s) {
+  f <- file.path(pipeline_output_dir, 'indels', s, paste0(s, suffix))
+  if(file.exists(f)) {
+    rtracklayer::import.bw(f, as = 'RleList')
+  } else {
+    stop("Can't find bigwig file for sample: ",s," at: ",
+         "\n",f,"\n")
+  }})
+}
+
+# alignment coverage 
+alnCoverage <- importSampleBigWig(pipeline_output_dir, 
+                                  sampleSheet$sample_name, ".alnCoverage.bigwig")
+
+#per-base ratio of the number of reads with an insertion over the coverage
+insertionScores <- importSampleBigWig(pipeline_output_dir, 
+                                  sampleSheet$sample_name, ".insertionScores.bigwig")
+
+#per-base ratio of the number of reads with a deletion over the coverage
+deletionScores <- importSampleBigWig(pipeline_output_dir, 
+                                  sampleSheet$sample_name, ".deletionScores.bigwig")
+
+```
+
+For each target region of interest, find the samples and for each sample plot coverage, insertion, and deletion profiles within the given window (target region: e.g. amplicon boundaries)
+
+```{r make_plots}
+subsetRleListByRange <- function(input.rle, input.gr) {
+  as.vector(input.rle[[seqnames(input.gr)]])[start(input.gr):end(input.gr)]
+}
+
+
+plots <- sapply(simplify = F, USE.NAMES = T, 
+                X = unique(sampleSheet$target_name), FUN = function(t) {
+                  sapply(simplify = F, USE.NAMES = T, 
+                         X = unique(sampleSheet[target_name == t]$sample_name), 
+                         FUN = function(s) {
+  target_region <- as(sampleSheet[target_name == t & sample_name == s]$target_region, 'GRanges')
+
+  #combine coverage, insertion, deletion scores
+  #subset rlelist by target region
+  dt <- data.table::data.table(
+    'coverage' = subsetRleListByRange(alnCoverage[[s]], target_region), 
+    'percent_with_insertion' = round(subsetRleListByRange(insertionScores[[s]], target_region) * 100, 2), #percent 
+    'percent_with_deletion' = round(subsetRleListByRange(deletionScores[[s]], target_region) * 100, 2) #percent
+  )
+  dt$bp <- start(target_region):end(target_region)
+  mdt <- reshape2::melt(dt, id.vars = 'bp')
+  p <- ggplot2::ggplot(mdt, aes(x = bp, y = value, group = 'variable')) + 
+    geom_line(aes(color = variable)) + facet_wrap(~ variable, scales= 'free_y', nrow = 3) + 
+    labs(title = paste(t, target_region), x = paste0("Position at chr:",seqnames(target_region)), y = '')
+  
+  #get sample-specific cut sites at the target region
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                     split = ':'))
+  cs <- subsetByOverlaps(cut_sites[cut_sites$name %in% sgRNAs], target_region)
+  
+  #if there is one or more sample-specific cut sites, plot them 
+  if(length(cs) > 0) {
+    p <- p + geom_vline(data = as.data.frame(cs), aes(xintercept = start, 
+                                           color = name), linetype = 'dotted')
+  }
+
+  return(p)
+ })
+})
+
+```
+
+
+# Plots
+
+```{r printplots}
+out = NULL
+for (target_name in names(plots)) {
+  out = c(out, knitr::knit_expand(text='## {{target_name}} {.tabset .tabset-fade .tabset-pills} \n\n'))
+  for(sample_name in names(plots[[target_name]])) {
+    p <- ggplotly(plots[[target_name]][[sample_name]], height = 600)
+    out = c(out, knitr::knit_expand(text='### {{sample_name}} \n\n {{p}} \n\n'))
+}}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+# SessionInfo 
+```{r}
+print(sessionInfo())
+```

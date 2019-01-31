@@ -5,10 +5,19 @@ navbar:
   left:
     - text: "About"
       href: index.html
-    - text: "chapter-1"
-      href: chapter1.html
+    - text: "Coverage and Indel Profiles"
+      href: CoverageProfiles.html
     - text: "chapter-2"
       href: chapter2.html
     - text: "chapter-3"
       href: chapter3.html
+output:
+  html_document:
+    theme: lumen
+    highlight: monochrome
+    code_folding: hide 
+    depth: 2
+    toc: true    
+    toc_float: true
+    number_sections: true
 
