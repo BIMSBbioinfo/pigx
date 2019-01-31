@@ -1,0 +1,10 @@
+---
+title: "chapter-1"
+output: html_document
+---
+
+```{r, echo = FALSE}
+params <- yaml::read_yaml('./config.yml')
+sampleSheet <- read.table(params$sample_sheet, sep = ',', header = T)[1:5,1:5]
+knitr::kable(sampleSheet)
+```

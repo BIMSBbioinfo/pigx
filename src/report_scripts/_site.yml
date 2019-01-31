@@ -1,11 +1,14 @@
-name: "PiGx-CRISPR results"
+name: "PiGx-CRISPR-results"
+output_dir: '.' 
 navbar:
   title: "Reports"
   left:
     - text: "About"
       href: index.html
-output:
-  html_document:
-    theme: journal
-    highlight: monochrome
-output_dir: "."
+    - text: "chapter-1"
+      href: chapter1.html
+    - text: "chapter-2"
+      href: chapter2.html
+    - text: "chapter-3"
+      href: chapter3.html
+

@@ -1,0 +1,9 @@
+---
+title: "chapter-3"
+---
+
+```{r, echo = FALSE}
+params <- yaml::read_yaml('./config.yml')
+cut_sites <- as.data.frame(rtracklayer::import.bed(params$cut_sites_file))
+knitr::kable(cut_sites)
+```

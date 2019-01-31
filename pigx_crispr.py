@@ -94,6 +94,7 @@ rule all:
         expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"), sample = SAMPLES),
         expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"), sample = SAMPLES),
         expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv"), sample = SAMPLES),
+        os.path.join(REPORT_DIR, "index.html")
         #get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
         #get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"),
         #get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"),
@@ -281,7 +282,7 @@ rule getIndelStats:
         os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"),
         # os.path.join(INDELS_DIR, "{amplicon}", "{sample}.coverageStats.tsv"),
-        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.sgRNA_efficiency.tsv"),
+        os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"),
@@ -289,8 +290,28 @@ rule getIndelStats:
         os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv")
     params:
         script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
-    log: os.path.join(LOG_DIR, "indel_stats", "getIndelStats_{sample}.log")
+    log: os.path.join(LOG_DIR, "indel_stats", "getIndelStats.{sample}.log")
     shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {INDELS_DIR} {CUT_SITES_FILE} > {log} 2>&1"
+
+rule renderSite:
+    input:
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"), sample = SAMPLES),
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv"), sample = SAMPLES),
+    output:
+        os.path.join(REPORT_DIR, "index.html")
+    params:
+        script = os.path.join(SRC_DIR, "src", "render_site.sh"),
+        report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts")
+    log: os.path.join(LOG_DIR, "renderSite.log")
+    shell:
+        "bash {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_FILE} {CUT_SITES_FILE} {OUTPUT_DIR} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
 
 # rule report:
 #     input:
