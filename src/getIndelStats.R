@@ -11,12 +11,10 @@ bamFile <- args[1]
 sampleName <- args[2]
 outDir <- args[3]
 cutSitesFile <- args[4] #path to sgRNA cutting sites for the target genome.
-sgRNA_list <- args[5] # column (:) separated list of sgRNA ids (must match ids in cutSitesFile)
-                      # that were used (or desired to be profiles) for the given sample.
 
+outDir <- file.path(outDir, sampleName)
 cat("Running getIndelStats with arguments:",args,"\n")
 #print bedgraph file of deletion ratios per base
-
 
 #get the actual sequences that are inserted in alignments 
 #' @param aln GAlignments object to extract inserted sequences  
@@ -128,8 +126,9 @@ countEventsAtCutSite <- function(seqName, cutStart, cutEnd, bamFile, readsWithIn
 
 #parse alignments from bam file 
 aln <- GenomicAlignments::readGAlignments(bamFile, param = ScanBamParam(what=c("qname", "seq")))
+alnCoverage <- GenomicAlignments::coverage(aln)
 #export to bigwig 
-rtracklayer::export.bw(object = GenomicAlignments::coverage(aln), 
+rtracklayer::export.bw(object = alnCoverage, 
                        con = file.path(outDir, paste0(sampleName, ".alnCoverage.bigwig")))
 
 #get all reads with (insertions/deletions/substitions)
@@ -164,40 +163,20 @@ if(length(ins) > 0) {
         file =  insertedSequencesFile, sep = '\t')
 }
 
+# calculate guide RNA efficiencies (mean indel score at cut site +/- extension)
+cutSites <- rtracklayer::import(cutSitesFile, 'bed')
+cutSites <- GenomicRanges::flank(cutSites, width = 5, both = TRUE)
 
-# cutSites <- read.table(cutSitesFile, stringsAsFactors = F)
-# 
-# cutSiteStats <- do.call(rbind, lapply(1:nrow(cutSites), function(i) {
-#   x <- cutSites[i,]
-#   guide <- x[[1]]
-#   cutStart <- as.numeric(x[[2]])
-#   cutEnd <- cutStart + 1
-# 
-#   stats <- countEventsAtCutSite(seqName = seqName,
-#                              cutStart = cutStart,
-#                              cutEnd = cutEnd,
-#                              bamFile = bamFile,
-#                              readsWithInDels = readsWithInDels,
-#                              extend = 3)
-#   
-#   stats <- cbind(data.frame("sample" = sampleName,
-#                          "sgRNA" = guide,
-#                          "cutStart" = cutStart,
-#                          "cutEnd" = cutEnd), stats)
-#   
-#   #efficiency : number of indels that originate around the cut-site
-#   #             divided by the read coverage around the cut-site
-#   stats$indelEfficiency <- round(stats$indel / stats$cov * 100, 2)
-#   
-#   return(stats)
-# }))
-# 
-# write.table(x = cutSiteStats,
-#             file = file.path(outDir, paste0(sampleName, '.indel_stats_at_cutsites.tsv')),
-#             quote = F, sep = '\t', row.names = FALSE
-#             )
-# 
+cutSiteStats <- data.frame('sample' = sampleName, 
+                           'efficiency' = sapply(split(cutSites, cutSites$name), 
+                                                      function(cs) {
+  round(max(as.numeric(indelScores[[seqnames(cs)]][start(cs):end(cs)])) * 100, 2)
+}))
 
+write.table(x = cutSiteStats,
+            file = file.path(outDir, paste0(sampleName, '.sgRNA_efficiency.tsv')),
+            quote = F, sep = '\t', row.names = FALSE
+            )
 
 # filter out reads with at least 1 deletion and 1 insertion
 # filter out reads that have substitutions adjacent  to deletions (suggest complex events)
