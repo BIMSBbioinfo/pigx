@@ -281,17 +281,16 @@ rule getIndelStats:
         os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"),
         # os.path.join(INDELS_DIR, "{amplicon}", "{sample}.coverageStats.tsv"),
-        # os.path.join(INDELS_DIR, "{amplicon}", "{sample}.indel_stats_at_cutsites.tsv"),
+        os.path.join(INDELS_DIR, "{amplicon}", "{sample}.sgRNA_efficiency.tsv"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv")
     params:
-        sgRNA_list = lambda wildcards: lookup('sample_name', wildcards.sample, ['sgRNA_ids'])[0],
         script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
     log: os.path.join(LOG_DIR, "indel_stats", "getIndelStats_{sample}.log")
-    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {INDELS_DIR} {CUT_SITES_FILE} {params.sgRNA_list} > {log} 2>&1"
+    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {INDELS_DIR} {CUT_SITES_FILE} > {log} 2>&1"
 
 # rule report:
 #     input:
