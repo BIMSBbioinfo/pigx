@@ -1,0 +1,11 @@
+name: "PiGx-CRISPR results"
+navbar:
+  title: "Reports"
+  left:
+    - text: "About"
+      href: index.html
+output:
+  html_document:
+    theme: journal
+    highlight: monochrome
+output_dir: "."
