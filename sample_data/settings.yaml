@@ -1,7 +1,7 @@
 sample_sheet: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/sample_sheet.csv
 cutsites: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/cutsites.txt
 reads-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/reads
-reference_fasta: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/fasta/chrI.fa
+reference_fasta: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/fasta/chrI_II.fa
 output-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/output
 source-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/
 
