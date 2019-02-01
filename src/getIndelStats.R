@@ -175,10 +175,14 @@ indels <- do.call(rbind, pbapply::pbsapply(simplify = F, USE.NAMES = T,
   alnCov <- as.vector(alnCoverage[[chr]])
   dt <- indels[seqnames == chr]
   #for each indel in chromosome:chr, find the max coverage value across boundaries
-  dt$coverage <- pbapply::pbapply(dt, 1, function(x) {
-    return(max(alnCov[x[['start']]:x[['end']]], na.rm = TRUE))
-  })
-  return(dt)
+  if(nrow(dt) > 0){
+    dt$coverage <- pbapply::pbapply(dt, 1, function(x) {
+      return(max(alnCov[x[['start']]:x[['end']]], na.rm = TRUE))
+    })
+    return(dt)
+  } else {
+    return(NULL)
+  }
 }))
 
 #add a score column for visualization on IGV
