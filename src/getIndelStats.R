@@ -205,9 +205,18 @@ readsToFilter <- function(aln) {
 indels <- as.data.table(indelReads)[,length(name),by = c('seqnames', 'start', 'end', 'indelType')][order(V1, decreasing = T)]
 colnames(indels)[5] <- 'ReadSupport'
 indels$name <- paste(indels$seqnames, indels$start, indels$end, indels$indelType, sep = ':')
-#get number of reads that overlap each deletion
-overlapCounts <- countOverlaps(split(GenomicRanges::GRanges(indels), indels$name), aln)
-indels$coverage <- as.numeric(overlapCounts[indels$name])
+#get coverage values across the indel boundary (pick the maximum value) 
+indels <- do.call(rbind, pbapply::pbsapply(simplify = F, USE.NAMES = T, 
+                  X = names(split(indels, indels$seqnames)), 
+                  FUN = function(chr) {
+  alnCov <- as.vector(alnCoverage[[chr]])
+  dt <- indels[seqnames == chr]
+  #for each indel in chromosome:chr, find the max coverage value across boundaries
+  dt$coverage <- pbapply::pbapply(dt, 1, function(x) {
+    return(max(alnCov[x[['start']]:x[['end']]], na.rm = TRUE))
+  })
+  return(dt)
+}))
 
 #add a score column for visualization on IGV
 indels$score <- indels$ReadSupport/max(indels$ReadSupport)*1000
