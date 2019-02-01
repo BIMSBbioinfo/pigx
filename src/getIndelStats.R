@@ -85,43 +85,6 @@ getIndelScores <- function(alnCov, indelReads) {
   return(RleList(scores))
 }
 
-#' @param cutStart expected cutting site start pos for the sgRNA
-#' @param cutEnd expected cutting site end pos for the sgRNA
-#' @param bamFile path to bam file
-#' @param extend (integer, default 3 bp) extend the searching area from cutting
-#'   sites in either direction
-countEventsAtCutSite <- function(seqName, cutStart, cutEnd, bamFile, readsWithInDels, extend = 3) {
-  if(cutEnd < cutStart) {
-    stop("End position of cutting site must be larger than start position\n")
-  }
-  if(cutStart < 0 | cutEnd < 0) {
-    stop("Start/End positions of cutting sites must be positive values")
-  }
-
-  cutStartExt <- cutStart - extend
-  cutEndExt <- cutEnd + extend
-
-  # find the total number of reads whose alignments overlap the extended region of the cut-site
-  aln <- readGAlignments(bamFile, param = ScanBamParam(what="qname",
-                                                       which = GRanges(seqnames = seqName,
-                                                                       ranges = IRanges(start = cutStartExt,
-                                                                                        end = cutEndExt),
-                                                                       strand = '*')))
-  
-  # find the number of reads with deletions that start or end within the
-  # extended region of the cut-site
-
-  indelsAtCutSites <- readsWithInDels[(start(readsWithInDels) >= cutStartExt & 
-                                         start(readsWithInDels) <= cutEndExt) | 
-                                        (end(readsWithInDels) >= cutStartExt & 
-                                           end(readsWithInDels) <= cutEndExt),]
-
-  stats <- data.frame('indel' = length(indelsAtCutSites), 
-                      'del' = sum(names(indelsAtCutSites) == 'D'),
-                      'ins' = sum(names(indelsAtCutSites) == 'I'),
-                      'coverage' = length(aln))
-  return(stats)
-}
 
 #parse alignments from bam file 
 aln <- GenomicAlignments::readGAlignments(bamFile, param = ScanBamParam(what=c("qname", "seq")))
