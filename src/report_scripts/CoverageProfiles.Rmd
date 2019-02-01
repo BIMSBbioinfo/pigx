@@ -80,7 +80,7 @@ plots <- sapply(simplify = F, USE.NAMES = T,
   #get sample-specific cut sites at the target region
   sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
                      split = ':'))
-  cs <- subsetByOverlaps(cut_sites[cut_sites$name %in% sgRNAs], target_region)
+  cs <- subsetByOverlaps(cut_sites[cut_sites$name %in% sgRNAs], target_region, ignore.strand = TRUE)
   
   #if there is one or more sample-specific cut sites, plot them 
   if(length(cs) > 0) {
