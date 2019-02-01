@@ -67,8 +67,7 @@ getIndelReads <- function(aln) {
 }
 #aln: GenomicAlignments object
 #indelReads: GenomicRanges object (ins or del extracted from getIndelReads function)
-getIndelScores <- function(aln, indelReads) {
-  alnCov <- GenomicAlignments::coverage(aln)
+getIndelScores <- function(alnCov, indelReads) {
   indelCov <- GenomicAlignments::coverage(indelReads)
   
   #for each chromosome, calculate per base score: indel count divided by alignment coverage
@@ -134,7 +133,7 @@ rtracklayer::export.bw(object = alnCoverage,
 #get all reads with (insertions/deletions/substitions)
 indelReads <- getIndelReads(aln) 
 #get indel scores 
-indelScores <- getIndelScores(aln, indelReads)
+indelScores <- getIndelScores(alnCoverage, indelReads)
 #export to bigwig
 rtracklayer::export.bw(object = indelScores, 
                        con = file.path(outDir, paste0(sampleName, ".indelScores.bigwig")))
@@ -142,13 +141,13 @@ rtracklayer::export.bw(object = indelScores,
 #split insertions and deletions and 
 #get indel scores (indel count divided by alignment coverage) per base
 ins <- indelReads[indelReads$indelType == 'I']
-insScores <- getIndelScores(aln, ins)
+insScores <- getIndelScores(alnCoverage, ins)
 #export to bigwig
 rtracklayer::export.bw(object = insScores, 
                        con = file.path(outDir, paste0(sampleName, ".insertionScores.bigwig")))
 
 del <- indelReads[indelReads$indelType == 'D']
-delScores <- getIndelScores(aln, del)
+delScores <- getIndelScores(alnCoverage, del)
 #export to bigwig
 rtracklayer::export.bw(object = delScores, 
                        con = file.path(outDir, paste0(sampleName, ".deletionScores.bigwig")))
@@ -170,7 +169,13 @@ cutSites <- GenomicRanges::flank(cutSites, width = 5, both = TRUE)
 cutSiteStats <- data.frame('sample' = sampleName, 
                            'efficiency' = sapply(split(cutSites, cutSites$name), 
                                                       function(cs) {
-  round(max(as.numeric(indelScores[[seqnames(cs)]][start(cs):end(cs)])) * 100, 2)
+  chr <- as.character(seqnames(cs))
+  if(chr %in% names(indelScores)) {
+    scores <- as.numeric(indelScores[[chr]][start(cs):end(cs)])
+    return(round(max(scores)*100,2))
+  } else {
+    return(NA)
+  }
 }))
 
 write.table(x = cutSiteStats,
