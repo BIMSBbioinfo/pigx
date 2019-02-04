@@ -1,6 +1,8 @@
 ---
 title: "Coverage and Indel Profiles"
 output: html_document
+params: 
+  @PARAMS_TARGET_NAME@: 
 ---
 
 Read inputs 
@@ -13,11 +15,11 @@ suppressMessages(suppressWarnings(library(rtracklayer)))
 suppressMessages(suppressWarnings(library(plotly)))
 suppressMessages(suppressWarnings(library(GenomicRanges)))
 
-params <- yaml::read_yaml('./config.yml')
-sampleSheet <- data.table::fread(params$sample_sheet)
-pipeline_output_dir <- params$pigx_output_dir
+config <- yaml::read_yaml('./config.yml')
+sampleSheet <- data.table::fread(config$sample_sheet)[target_name == params$target_name]
+pipeline_output_dir <- config$pigx_output_dir
 #coordinates of cut sites 
-cut_sites <- rtracklayer::import.bed(params$cut_sites_file)
+cut_sites <- rtracklayer::import.bed(config$cut_sites_file)
 ```
 
 Read bigwig files for the samples in the sample sheet
@@ -100,11 +102,11 @@ plots <- sapply(simplify = F, USE.NAMES = T,
 ```{r printplots}
 out = NULL
 for (target_name in names(plots)) {
-  out = c(out, knitr::knit_expand(text='## {{target_name}} {.tabset .tabset-fade .tabset-pills} \n\n'))
+  out = c(out, knitr::knit_expand(text='## {{target_name}} \n\n'))
   for(sample_name in names(plots[[target_name]])) {
     p <- ggplotly(plots[[target_name]][[sample_name]], height = 600)
     out = c(out, knitr::knit_expand(text='### {{sample_name}} \n\n {{p}} \n\n'))
-}}
+  }}
 ```
 
 `r paste(knit(text = out), collapse = '\n')`

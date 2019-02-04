@@ -56,6 +56,7 @@ def lookup(column, predicate, fields=[]):
   return [record[field] for record in records for field in fields]
 
 SAMPLES = [line['sample_name'] for line in SAMPLE_SHEET]
+TARGET_NAMES = [line['target_name'] for line in SAMPLE_SHEET]
 
 def reads_input(wc):
   sample = wc.sample
@@ -80,20 +81,11 @@ with open(COMPARISONS_FILE, 'r') as fp:
 
 rule all:
     input:
-        #os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA)),
         #expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
         expand(os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"), sample = SAMPLES),
         #expand(os.path.join(GATK_DIR, "{sample}.realigned.bam"), sample = SAMPLES),
-        os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv"), sample = SAMPLES),
+        #os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
+        #expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES),
         os.path.join(REPORT_DIR, "index.html")
         #get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
         #get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"),
@@ -277,60 +269,51 @@ rule getIndelStats:
         bamIndex = os.path.join(MAPPED_READS_DIR,  "{sample}.bam.bai"),
         bamFile = os.path.join(MAPPED_READS_DIR,  "{sample}.bam")
     output:
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"),
-        # os.path.join(INDELS_DIR, "{amplicon}", "{sample}.coverageStats.tsv"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"),
-        os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv")
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"),
+        # os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv"),
+        os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv")
     params:
         script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
     log: os.path.join(LOG_DIR, "indel_stats", "getIndelStats.{sample}.log")
     shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {INDELS_DIR} {CUT_SITES_FILE} > {log} 2>&1"
 
+#prepare _site.yml and other Rmd files to be rendered into a html report (see renderSite rule)
+rule generateSiteFiles:
+    input: #TODO: print a file that flags all getIndelStats jobs are finished.
+        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES)
+    output:
+        os.path.join(REPORT_DIR, "_site.yml"),
+        os.path.join(REPORT_DIR, "index.Rmd"),
+        os.path.join(REPORT_DIR, "config.yml")
+    params:
+        report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts"),
+        script = os.path.join(SRC_DIR, "src", "generateSiteFiles.R")
+    log: os.path.join(LOG_DIR, "generateSiteFiles.log")
+    shell:
+        "{RSCRIPT} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_FILE} {CUT_SITES_FILE} {OUTPUT_DIR} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
+
 rule renderSite:
     input:
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertionScores.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.alnCoverage.bigwig"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.deletions.bed"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertions.bed"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.indels.tsv"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.reads_with_indels.tsv"), sample = SAMPLES),
-        expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv"), sample = SAMPLES),
+        os.path.join(REPORT_DIR, "_site.yml"),
+        os.path.join(REPORT_DIR, "index.Rmd"),
+        os.path.join(REPORT_DIR, "config.yml")
     output:
         os.path.join(REPORT_DIR, "index.html")
     params:
-        script = os.path.join(SRC_DIR, "src", "render_site.sh"),
+        render_script = os.path.join(SRC_DIR, "src", "render_site.sh"),
         report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts")
     log: os.path.join(LOG_DIR, "renderSite.log")
     shell:
-        "bash {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_FILE} {CUT_SITES_FILE} {OUTPUT_DIR} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
+        "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{REPORT_DIR}\')\" > {log} 2>&1"
+#        "bash {params.render_script} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
 
-# rule report:
-#     input:
-#         coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
-#         cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
-#         indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv")
-#     params:
-#       fasta = lambda wildcards:  os.path.join(FASTA_DIR, ''.join([wildcards.amplicon, ".fasta"])),
-#       cutSitesFile = lambda wildcards: get_amplicon_file(wildcards, 'cutsites'),
-#       reportR = os.path.join(SRC_DIR, "src", "runReport.R"),
-#       reportRmd = os.path.join(SRC_DIR, "src", "report.Rmd"),
-#       indelsFolder = os.path.join(INDELS_DIR, "{amplicon}")
-#     log: os.path.join(LOG_DIR, "{amplicon}.report.log")
-#     output:
-#         os.path.join(REPORT_DIR, '{amplicon}.report.html')
-#     shell:
-#         "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconFastaFile={params.fasta} --ampliconName={wildcards.amplicon} --cutSitesFile={params.cutSitesFile} --sampleSheetFile={SAMPLE_SHEET_FILE} --indelsFolder={params.indelsFolder} --workdir={REPORT_DIR} --prefix={wildcards.amplicon} > {log} 2>&1"
-#
-#
 # rule report_comparisons:
 #     input:
 #         coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
