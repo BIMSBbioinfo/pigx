@@ -1,0 +1,55 @@
+---
+title: "sgRNA efficiency stats"
+output: html_document
+params: 
+  @PARAMS_TARGET_NAME@: 
+---
+
+Read inputs 
+
+```{r settings}
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(data.table)))
+suppressMessages(suppressWarnings(library(rtracklayer)))
+suppressMessages(suppressWarnings(library(plotly)))
+suppressMessages(suppressWarnings(library(GenomicRanges)))
+
+targetName <- params$target_name
+config <- yaml::read_yaml('./config.yml')
+sampleSheet <- data.table::fread(config$sample_sheet)[target_name == targetName]
+pipeline_output_dir <- config$pigx_output_dir
+```
+
+```{r getdata}
+cutSiteStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(pipeline_output_dir, 'indels', sampleName, paste0(sampleName, '.sgRNA_efficiency.tsv'))
+  if(file.exists(f)) {
+    dt <- fread(f)
+    return(dt)
+  }
+})))
+
+sampleGuides <- lapply(sampleSheet$sample_name, function(s) {
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                            split = ':'))
+  if(sgRNAs[1] == 'none') {
+    sgRNAs <- setdiff(unique(unlist(strsplit(x = sampleSheet[target_name == targetName,]$sgRNA_ids, split = ':'))), 'none')
+  }
+  return(sgRNAs)
+})
+names(sampleGuides) <- as.character(sampleSheet$sample_name)
+
+cutSiteStats$sampleMatchesGuide <- as.factor(apply(cutSiteStats, 1, function(x) {
+  s <- as.character(x[['sample']])
+  g <- as.character(x[['sgRNA']])
+  return(g %in% sampleGuides[[s]])
+}))
+
+dt <- dcast(cutSiteStats[sampleMatchesGuide == TRUE], sample ~ sgRNA, value.var = 'scores')
+M <- as.matrix(dt[,-1])
+rownames(M) <- dt$sample
+pheatmap::pheatmap(M, cluster_rows = F, cluster_cols = F, 
+                   display_numbers = T, na_col = 'black', number_color = 'black', 
+                   main = '% Indel Efficiency Values at Cut Sites (+/- 5bp)')
+```
