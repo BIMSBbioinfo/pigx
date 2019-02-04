@@ -129,17 +129,18 @@ if(length(ins) > 0) {
 cutSites <- rtracklayer::import(cutSitesFile, 'bed')
 cutSites <- GenomicRanges::flank(cutSites, width = 5, both = TRUE)
 
-cutSiteStats <- data.frame('sample' = sampleName, 
-                           'efficiency' = sapply(split(cutSites, cutSites$name), 
-                                                      function(cs) {
-  chr <- as.character(seqnames(cs))
-  if(chr %in% names(indelScores)) {
-    scores <- as.numeric(indelScores[[chr]][start(cs):end(cs)])
-    return(round(max(scores)*100,2))
-  } else {
-    return(NA)
-  }
+cutSiteStats <- do.call(rbind, lapply(split(cutSites, cutSites$name), 
+                       function(cs) {
+                         chr <- as.character(seqnames(cs))
+                         if(chr %in% names(indelScores)) {
+                            scores <- as.numeric(indelScores[[chr]][start(cs):end(cs)])
+                            df <- data.table('sgRNA' = cs$name, 
+                                             'scores' = round(max(scores)*100,2))
+                          } else {
+                            return(NULL)
+                          }
 }))
+cutSiteStats$sample <- sampleName
 
 write.table(x = cutSiteStats,
             file = file.path(outDir, paste0(sampleName, '.sgRNA_efficiency.tsv')),
