@@ -5,8 +5,6 @@ params:
   @PARAMS_TARGET_NAME@: 
 ---
 
-Read inputs 
-
 ```{r settings}
 suppressMessages(suppressWarnings(library(knitr)))
 suppressMessages(suppressWarnings(library(ggplot2)))
@@ -110,8 +108,3 @@ for (target_name in names(plots)) {
 ```
 
 `r paste(knit(text = out), collapse = '\n')`
-
-# SessionInfo 
-```{r}
-print(sessionInfo())
-```

@@ -1,0 +1,5 @@
+
+# SessionInfo 
+```{r}
+print(sessionInfo())
+```
