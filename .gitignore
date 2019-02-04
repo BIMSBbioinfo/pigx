@@ -1,7 +1,12 @@
 .DS_Store
-./pipeline/*
-./sample_data
-./aln
 ./.snakemake/
-./fastqc
 ./sample_data/output 
+._.DS_Store
+._dag.pdf
+.snakemake/
+sample_data/._.DS_Store
+sample_data/fasta/chrI.fa.fai
+sample_data/fasta/chrI_II.fa.fai
+sample_data/output/
+src/._.DS_Store
+src/report_scripts/._index.html
