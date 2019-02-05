@@ -1,0 +1,16 @@
+Reading Config File: 
+
+```{r}
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(data.table)))
+suppressMessages(suppressWarnings(library(rtracklayer)))
+suppressMessages(suppressWarnings(library(plotly)))
+suppressMessages(suppressWarnings(library(GenomicRanges)))
+
+targetName <- params$target_name
+config <- yaml::read_yaml('./config.yml')
+sampleSheet <- data.table::fread(config$sample_sheet)
+pipeline_output_dir <- config$pigx_output_dir
+cut_sites <- rtracklayer::import.bed(config$cut_sites_file)
+```

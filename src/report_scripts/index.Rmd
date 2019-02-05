@@ -1,5 +1,3 @@
 
-# SessionInfo 
-```{r}
-print(sessionInfo())
+```{r, child="_session_info.Rmd"}
 ```

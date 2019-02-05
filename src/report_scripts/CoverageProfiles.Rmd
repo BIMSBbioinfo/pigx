@@ -5,19 +5,14 @@ params:
   @PARAMS_TARGET_NAME@: 
 ---
 
-```{r settings}
-suppressMessages(suppressWarnings(library(knitr)))
-suppressMessages(suppressWarnings(library(ggplot2)))
-suppressMessages(suppressWarnings(library(data.table)))
-suppressMessages(suppressWarnings(library(rtracklayer)))
-suppressMessages(suppressWarnings(library(plotly)))
-suppressMessages(suppressWarnings(library(GenomicRanges)))
+Read config.yml for the locations of sample sheet, pipeline output and cut sites coordinates. 
+```{r, child="_settings.Rmd"}
+```
 
-config <- yaml::read_yaml('./config.yml')
-sampleSheet <- data.table::fread(config$sample_sheet)[target_name == params$target_name]
-pipeline_output_dir <- config$pigx_output_dir
-#coordinates of cut sites 
-cut_sites <- rtracklayer::import.bed(config$cut_sites_file)
+Subset sample sheet for those that match the target region of interest
+```{r}
+targetName <- params$target_name
+sampleSheet <- sampleSheet[target_name == targetName]
 ```
 
 Read bigwig files for the samples in the sample sheet
