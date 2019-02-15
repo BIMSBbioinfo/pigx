@@ -173,14 +173,14 @@ This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2018.
 
 The sample sheet is a tabular file describing the experiment. The table has the following columns:
 
-| name | reads1 | reads2 | library | covariate1 | covariate2 |
-|------|--------|--------|---------|------------|------------|
+| name | barcode | reads | method  | covariate1 | covariate2 |
+|------|---------|-------|---------|------------|------------|
 
 - _name_ - name for the sample, which will be used to label the sample in all downstream analysis
-- _reads1_ - fastq file containing the **adapter sequences**
-- _reads2_ - fastq file containing the **sequenced reads**
+- _baarcode_ - fastq file containing the **adapter sequences**
+- _reads_ - fastq file containing the **sequenced reads**
   - location of these files is specified in `settings.yaml`
-- _library_ - sequencing platform on which the experiment was performed (i.e. dropseq)
+- _method_ - sequencing platform on which the experiment was performed (i.e. dropseq)
 - _covariates_ - variables which describe the samples. For example: replicate, time, hour post infection, tissue ...
 
 Additional columns may be included which may be used as covariates in the differential expression analysis (sex, age, different treatments).
