@@ -75,5 +75,10 @@ Summarize_Statistics_List = function(
     message('Annotation ...')
         lsum$annot = lout$annot
 
+    message('Library Complexity ...')
+        vec = lapply(lout$libComplexity, function(x)cut(x[runValue(x)!=0],seq(0,1,.05), include.lowest=TRUE))
+        vec = table(unlist(vec))
+        lsum$libComplexity = vec
+
     return(lsum)
 }

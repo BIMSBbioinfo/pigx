@@ -153,6 +153,11 @@ ChIPQC = function(
         ShiftsCorTemp = shiftApply(seq(1,shift_window, 10),PosCoverage,NegCoverage,cor)
         lout = Append_List_Element(lout, 'ShiftMatCor', setNames(list(ShiftsCorTemp), chrname))
 
+
+        # Read duplication - library complexity calculation
+        Cov_uniq  = coverage(unique(granges),width=unname(chr_lengths[k]))
+        lout = Append_List_Element(lout, 'libComplexity', cov_uniq / lout$Cov) 
+
         lout$annot = data.frame(annot = AnnotateRanges(temp, annotation)) %>%
               group_by(annot) %>%
               summarize(N = n()) %>%
