@@ -24,7 +24,12 @@ STRUCTURE_VARIABLES = {
 'OBLIGATORY_FILES'          : ['genome-file','gff-file'],
 
 # obligatory names for report chunks
-'REPORT_CHUNKS' : {'EXTRACT_SIGNAL_ANNOTATION':'Extract_Signal_Annotation','PEAK_STATISTICS':'Peak_Statistics','ANNOTATE_PEAKS':'Annotate_Peaks','ChIPQC':'ChIPQC'}
+'REPORT_CHUNKS' : {'EXTRACT_SIGNAL_ANNOTATION':'Extract_Signal_Annotation','PEAK_STATISTICS':'Peak_Statistics','ANNOTATE_PEAKS':'Annotate_Peaks','ChIPQC':'ChIPQC'},
+
+# Types of analysis which are supported
+# used in check config
+# used to setup global variables (SHIFT)
+'ANALYSIS_TYPES' : set(['CHIP','ATAC'])
 }
 
 
@@ -76,6 +81,9 @@ GENOME_ORIG  = config['locations']['genome-file']
 PATH_FASTQ   = config['locations']['input-dir']
 ANNOTATION   = config['locations']['gff-file']
 
+# type of the analysis to run
+ANALYSIS     = config['general']['analysis'].toupper()
+
 # Sample name definition
 PEAK_NAMES   = []
 NAMES = [line['SampleName'] for line in SAMPLE_SHEET]
@@ -104,7 +112,15 @@ PATH_RDS_FEATURE    = os.path.join(PATH_RDS, 'Feature_Combination')
 PATH_RDS_CHIPQC     = os.path.join(PATH_RDS, 'ChIPQC')
 PATH_RDS_TEMP       = os.path.join(PATH_RDS, 'Temp')
 
+# ---------------------------------------------------------------------------- #
+# Hardcoded parameters
+# determines the shift window for the ChIPQC cross-correlation analysis
+# ChIP: 400; ATAC: 2000
+if ANALYSIS == 'CHIP':
+    SHIFT_WINDOW = 400
 
+if ANALYSIS == 'ATAC':
+    SHIFT_WINDOW = 2000
 
 # ---------------------------------------------------------------------------- #
 # ACCESSORY VARIABLES

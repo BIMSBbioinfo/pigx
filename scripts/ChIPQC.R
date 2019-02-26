@@ -186,6 +186,7 @@ ChIPQC(
   outfile              = argv$output[['outfile']],
   scriptdir            = argv$params[['scriptdir']],
   library_type         = argv$params[['library_type']],
+  shift_window         = argv$params[['shift_window']],
   sample_name          = argv$params[['sample_name']],
   use_longest_chr      = argv$params[['use_longest_chr']],
   threads              = argv$params[['threads']]

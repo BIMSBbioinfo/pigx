@@ -73,7 +73,7 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
 
     # ---------------------------------------------------------------------------- #
     # checks whether the general section is properly formatted
-    message = check_general_section(config['general'], message)
+    message = check_general_section(config['general'], structure_variables, message)
 
     # ---------------------------------------------------------------------------- #
     # checks for ChIP and Cont specifications
@@ -243,9 +243,15 @@ def is_number(s):
 
 # ---------------------------------------------------------------------------- #
 # checks general section for common mistakes
-def check_general_section(general_dict, message):
+def check_general_section(general_dict, structure_variables, message):
 
     # checks wether assembly is set
+    if not general_dict['analysis']:
+        message = message + "GENERAL: analysis type needs to be supplied\n"
+    else:
+        if not general_dict['analysis'].upper() in structure_variables['ANALYSIS_TYPES']
+            message = message + "GENERAL: supported analysis types are:" + ','.join(sort(list(structure_variables['ANALYSIS_TYPES']))) + "\n"
+
     if not general_dict['assembly']:
         message = message + "GENERAL: genome assembly is not given\n"
 

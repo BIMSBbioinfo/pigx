@@ -1,4 +1,4 @@
-## ~~~~~~~~~~~~~~~~~~~~~~~~~LOCATIONS~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~LOCATIONS~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section needs to be adjusted to the planned analysis.   #
 ## ------------------------------------------------------------ #
 locations:
@@ -9,10 +9,12 @@ locations:
   gff-file:
 
 
-## ~~~~~~~~~~~~~~~~~~~~~~~~~GENERAL~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~GENERAL~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section needs to be adjusted to the planned analysis.   #
 ## ------------------------------------------------------------ #
 general:
+  analysis:
+    ChIP
   assembly:
   params:
     export_bigwig:
@@ -47,15 +49,15 @@ general:
        splicing_donor_width: 200
        splicing_accep_width: 200
 
-## ~~~~~~~~~~~~~~~~~~~~~~~~~ANALYSIS~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~ANALYSIS~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section needs to be adjusted to the planned analysis.   #
 ## ------------------------------------------------------------ #
 ## define peak calling analysis
 ## ChIP and Cont are hardcoded and must exist in the config file
 #peak_calling:
-#    # analysis can have any name, but the names have to be unique 
-#    Peaks1: 
-#        # sample(s) to be used as treatment sample 
+#    # analysis can have any name, but the names have to be unique
+#    Peaks1:
+#        # sample(s) to be used as treatment sample
 #        ChIP: ChIP1
 #        # sample(s) to be used as control sample
 #        Cont: Cont1
@@ -87,7 +89,7 @@ general:
 #                nomodel: ''
 #
 #    Peaks5:
-#        # the number of samples per group can differ 
+#        # the number of samples per group can differ
 #        ChIP: ChIP2
 #        Cont:
 #            - Cont1
@@ -106,7 +108,7 @@ general:
 #
 ## ------------------------------------------------------------ #
 #idr:
-#    # idr analysis can have any name, but the names have to be unique 
+#    # idr analysis can have any name, but the names have to be unique
 #    ChIP_IDR:
 #        # define the pair of samples, add more combinations for more replicates
 #        ChIP1: Peaks1
@@ -119,11 +121,11 @@ general:
 #    email: my.mail@domain.com
 #    descriptionUrl: pigx_hub.html
 #    super_tracks:
-#        # track groups can have any name, but the names have to be unique 
+#        # track groups can have any name, but the names have to be unique
 #        Tracks1:
-#            # tracks can have any name, but the names have to be unique 
+#            # tracks can have any name, but the names have to be unique
 #            track11:
-#                # to add peaks as a track, define "type: macs" 
+#                # to add peaks as a track, define "type: macs"
 #                name: Peaks1
 #                type: macs
 #            track12:
@@ -150,7 +152,7 @@ general:
 
 
 
-## ~~~~~~~~~~~~~~~~~~~~~~~~~EXECUTION~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~EXECUTION~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section should only be adjusted by advanced users.      #
 ## ------------------------------------------------------------ #
 execution:
@@ -162,7 +164,7 @@ execution:
     memory: 8G
     stack: 128M
     contact-email: none
-    args: ''    
+    args: ''
   rules:
     __default__:
       threads:   1
@@ -214,7 +216,7 @@ execution:
       memory:    16G
     link_genome:
       threads:   1
-      memory:    1G  
+      memory:    1G
     macs2:
       threads:   1
       memory:    16G
@@ -223,7 +225,7 @@ execution:
       memory:    8G
     peak_statistics:
       threads:   4
-      memory:    16G 
+      memory:    16G
     prepare_annotation:
       threads:   1
       memory:    16G
@@ -246,7 +248,7 @@ execution:
       threads:   1
       memory:    8G
 
-## ~~~~~~~~~~~~~~~~~~~~~~~~~TOOLS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~TOOLS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section should only be adjusted by advanced users.      #
 ## ------------------------------------------------------------ #
 tools:
@@ -308,7 +310,7 @@ tools:
     bedToBigBed:
         executable: @BEDTOBIGBED@
         args: ""
-    trim_galore: 
+    trim_galore:
         executable: @TRIMGALORE@
         args: ""
     multiqc:
