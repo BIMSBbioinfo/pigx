@@ -55,7 +55,7 @@ ChIPQC = function(
     suppressPackageStartupMessages(require(Rsamtools))
     suppressPackageStartupMessages(require(GenomicRanges))
     suppressPackageStartupMessages(require(GenomicAlignments))
-    suppressPackageStartupMessages(require(BiocParallel))    
+    suppressPackageStartupMessages(require(BiocParallel))
     source(file.path(scriptdir, 'ChIPQC_Functions.R'))
     source(file.path(scriptdir, 'Functions_Helper.R'))
     register(MulticoreParam(workers = threads))
@@ -117,6 +117,7 @@ ChIPQC = function(
         Param = ScanBamParam(
                     which=GRanges(seqnames=chrname,IRanges(start=1,end=unname(chr_lengths[chrname])-shift_window)))
 
+        # read the reads
         if(library_type == 'single')
             temp  = granges(readGAlignments(bamfile, param=Param), use.mcols = TRUE)
 
@@ -129,9 +130,14 @@ ChIPQC = function(
 
         granges    = granges(temp, use.mcols=TRUE, use.names=TRUE)
         Sample_GIT = GNCList(granges)
+
+        # calculates the coverage
         lout$Cov   = coverage(Sample_GIT,width=unname(chr_lengths[k]))
 
+        # coverage distribution
         lout = Append_List_Element(lout, 'CovHist', list(colSums(table_RleList(lout$Cov))))
+
+        # coverage standard deviation
         lout = Append_List_Element(lout, 'SSD', sd(lout$Cov)[chrname])
 
         PosCoverage = coverage(Sample_GIT[strand(Sample_GIT)=="+"],width=unname(chr_lengths[k]))[[chrname]]
@@ -140,6 +146,7 @@ ChIPQC = function(
         lout = Append_List_Element(lout, 'PosAny', sum(runLength((PosCoverage[PosCoverage > 1]))))
         lout = Append_List_Element(lout, 'NegAny', sum(runLength((NegCoverage[NegCoverage > 1]))))
 
+        # Cross correlation
         ShiftsTemp = shiftApply(seq(1, shift_window, 10),PosCoverage,NegCoverage,RleSumAny)
         lout = Append_List_Element(lout, 'ShiftMat', setNames(list(ShiftsTemp), chrname))
 
