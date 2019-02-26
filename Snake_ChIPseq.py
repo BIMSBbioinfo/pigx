@@ -82,7 +82,7 @@ PATH_FASTQ   = config['locations']['input-dir']
 ANNOTATION   = config['locations']['gff-file']
 
 # type of the analysis to run
-ANALYSIS     = config['general']['analysis'].toupper()
+ANALYSIS     = config['general']['analysis'].upper()
 
 # Sample name definition
 PEAK_NAMES   = []

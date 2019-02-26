@@ -249,7 +249,7 @@ def check_general_section(general_dict, structure_variables, message):
     if not general_dict['analysis']:
         message = message + "GENERAL: analysis type needs to be supplied\n"
     else:
-        if not general_dict['analysis'].upper() in structure_variables['ANALYSIS_TYPES']
+        if not general_dict['analysis'].upper() in structure_variables['ANALYSIS_TYPES']:
             message = message + "GENERAL: supported analysis types are:" + ','.join(sort(list(structure_variables['ANALYSIS_TYPES']))) + "\n"
 
     if not general_dict['assembly']:
