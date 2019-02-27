@@ -39,16 +39,20 @@ general:
     peak_statistics:
         resize: 500
     width_params:
-       tss_width: 1000
-       tts_width: 1000
-       tss_wide_width: 10000
-       tts_wide_width: 10000
-       tss_body_upstream: 1000
-       tss_body_downstream: 10000
-       tts_body_upstream: 10000
-       tts_body_downstream: 1000
-       splicing_donor_width: 200
-       splicing_accep_width: 200
+        tss_width: 1000
+        tts_width: 1000
+        tss_wide_width: 10000
+        tts_wide_width: 10000
+        tss_body_upstream: 1000
+        tss_body_downstream: 10000
+        tts_body_upstream: 10000
+        tts_body_downstream: 1000
+        splicing_donor_width: 200
+        splicing_accep_width: 200
+    count_mitochondrial_reads:
+        chrM_givenName: 'chrM'
+    chipqc:
+        discard_chrM: 'no'
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~ANALYSIS~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section needs to be adjusted to the planned analysis.   #
