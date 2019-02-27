@@ -216,16 +216,19 @@ def check_fasta_header(genome_file, message):
 
     genome_file_type = mg.from_file(genome_file, mime=True)
     if genome_file_type.find('gzip') > 0:
-        file = gzip.open(genome_file, 'r')
+        file = gzip.open(genome_file, 'rb')
     else:
-        file = open(genome_file, "r")
+        file = open(genome_file, "rb")
+    
+    # get ascii for '>', ' ' and '\t'
+    gt = ord('>')
+    ws = ord(' ')
+    tab= ord('\t')
+    bar = ord('|')
 
     for line in file:
-        if not isinstance(line, str):
-            line = str(line.decode('utf-8'))
-
-        if re.search('^>', line):
-            if re.search('[ \t]', line):
+        if line[0] == gt:
+            if (ws in line) or (tab in line) or (bar in line) : 
                 message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
                 return(message)
 
