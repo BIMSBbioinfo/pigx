@@ -19,14 +19,6 @@ argv = Parse_Arguments('ChIPQC')
 #' @return saves RDS object with an annotated GRanges object
 # TO DO - make the function work for no mappd reads
 
-# basepath = './'
-# bamfile  = '/data/local/Projects/pigx/pigx_chipseq/Data/Analyzed/Mapped/Bowtie/mm_tet1_d1_h3k9me3_br2/mm_tet1_d1_h3k9me3_br2.sorted.bam'
-# nucleotide_frequency = '/data/local/Projects/pigx/pigx_chipseq/Data/Analyzed/Bowtie2_Index/mm9/mm9.NucleotideFrequency.GRanges.rds'
-# sample_sheet = yaml::yaml.load_file('/home/vfranke/Projects/AAkalin_pigx/sample_sheet.yaml')
-# sample_name = 'mm_tet1_d1_h3k9me3_br2'
-# scriptdir = 'scripts'
-
-
 
 ChIPQC = function(
     bamfile              = NULL,
@@ -155,8 +147,13 @@ ChIPQC = function(
 
 
         # Read duplication - library complexity calculation
-        Cov_uniq  = coverage(unique(granges),width=unname(chr_lengths[k]))
-        lout = Append_List_Element(lout, 'libComplexity', cov_uniq / lout$Cov) 
+        granges_unique = unique(granges)
+        lout = Append_List_Element(lout, 'duplicated_reads',  length(granges_unique))
+
+        
+        cov_uniq = coverage(granges_unique, width=unname(chr_lengths[k]))
+        cov_ind = cov_uniq > 0
+        lout = Append_List_Element(lout, 'libComplexity', round(cov_uniq[cov_ind]/ lout$Cov[cov_ind],2))
 
         lout$annot = data.frame(annot = AnnotateRanges(temp, annotation)) %>%
               group_by(annot) %>%

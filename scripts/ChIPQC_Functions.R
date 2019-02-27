@@ -75,9 +75,14 @@ Summarize_Statistics_List = function(
     message('Annotation ...')
         lsum$annot = lout$annot
 
+    message('Duplicated Reads ...')
+        lsum$duplicated_reads = data.frame(N = sum(unlist(lout$duplicated_reads)))
+
     message('Library Complexity ...')
-        vec = lapply(lout$libComplexity, function(x)cut(x[runValue(x)!=0],seq(0,1,.05), include.lowest=TRUE))
-        vec = table(unlist(vec))
+        # this reduces the RleList elements into a single Rle which 
+        # is already a histogram
+        vec = Reduce('+', lapply(lout$libComplexity, sort))
+        vec = data.frame(bin = runValue(vec), count = runLength(vec))
         lsum$libComplexity = vec
 
     return(lsum)
