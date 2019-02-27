@@ -17,19 +17,6 @@ sampleSheet <- sampleSheet[target_name == targetName]
 
 Read bigwig files for the samples in the sample sheet
 ```{r}
-importSampleBigWig <- function(pipeline_output_dir, samples, suffix = '.alnCoverage.bigwig') {
-  sapply(simplify = F, USE.NAMES = T, 
-                      X = unique(as.character(samples)), 
-                      FUN = function(s) {
-  f <- file.path(pipeline_output_dir, 'indels', s, paste0(s, suffix))
-  if(file.exists(f)) {
-    rtracklayer::import.bw(f, as = 'RleList')
-  } else {
-    stop("Can't find bigwig file for sample: ",s," at: ",
-         "\n",f,"\n")
-  }})
-}
-
 # alignment coverage 
 alnCoverage <- importSampleBigWig(pipeline_output_dir, 
                                   sampleSheet$sample_name, ".alnCoverage.bigwig")
@@ -47,10 +34,6 @@ deletionScores <- importSampleBigWig(pipeline_output_dir,
 For each target region of interest, find the samples and for each sample plot coverage, insertion, and deletion profiles within the given window (target region: e.g. amplicon boundaries)
 
 ```{r make_plots}
-subsetRleListByRange <- function(input.rle, input.gr) {
-  as.vector(input.rle[[seqnames(input.gr)]])[start(input.gr):end(input.gr)]
-}
-
 
 plots <- sapply(simplify = F, USE.NAMES = T, 
                 X = unique(sampleSheet$target_name), FUN = function(t) {
