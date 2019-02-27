@@ -84,15 +84,17 @@ ncat = function(text)cat(paste0('\n',text),'\n')
 
 
 ```{r libraries, include=FALSE}
-suppressPackageStartupMessages(library(GenomicRanges))
-suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(stringr))
-suppressPackageStartupMessages(library(genomation))
-suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(tidyr))
-suppressPackageStartupMessages(library(ggplot2))
-suppressPackageStartupMessages(library(heatmaply))
-suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages({
+    library(GenomicRanges)
+    library(data.table)
+    library(stringr)
+    library(genomation)
+    library(dplyr)
+    library(tidyr)
+    library(ggplot2)
+    library(heatmaply)
+    library(plotly)
+})
 ```
 
 ```{r source, include=FALSE}
@@ -101,7 +103,7 @@ source(file.path(params$script_path, 'Functions_Sample_Report.R'))
 
 ```{r input, include=FALSE, message=TRUE}
 rds_files = get_RDS_Input_files(params$analysis_path)
-rds_files = subset(rds_files, name %in% rds_files$name[1:5])
+rds_files = subset(rds_files, name %in% subset(rds_files, type=='ChIPQC')$name)
 
 
 # some sections of the pipeline are conditional. Because of that, the
@@ -182,6 +184,33 @@ heatmaply(cc,
           colorbar_xanchor = 'middle',
           colorbar_yanchor = 'bottom')
 
+```
+
+---
+
+# Read duplication rate
+
+```{r Read_Duplication_Rate, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE, eval=TRUE}
+lstats$ChIPQC$duplication_rate %>%
+    arrange(duplication_percentage) %>%
+    mutate(sample_name = factor(sample_name, ordered=TRUE)) %>%
+    ggplot(aes(reorder(sample_name, duplication_percentage), duplication_percentage)) +
+    geom_bar(position='dodge',stat='identity') +
+    xlab('Sample') +
+    ylab('Percentage of uniquely mapped positions')+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+# Library Complexity
+
+```{r Library_Complexity, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE, eval=TRUE}
+lstats$ChIPQC$library_complexity %>%
+    mutate(bin = cut(bin, seq(0,1, 0.1), include.lowest=TRUE)) %>%
+    ggplot(aes(bin, count, fill=sample_name)) +
+    geom_bar(position='dodge',stat='identity')  +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab('Percentage of unique reads') +
+    ylab('Number of mapped positions')
 ```
 
 ---
