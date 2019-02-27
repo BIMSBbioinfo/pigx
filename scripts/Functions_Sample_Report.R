@@ -61,35 +61,49 @@ format_ChIPQC = function(tab){
       }))
 
     message('Shift Correlation ...')
-    lout$shift_correlation = do.call(rbind, lapply(names(lres), function(x){
-        scor = lres[[x]]$ShiftsCorAv
-        tibble(sample_name = x, shift = seq(scor), strand_correlation = scor)
-    }))
+        lout$shift_correlation = do.call(rbind, lapply(names(lres), function(x){
+            scor = lres[[x]]$ShiftsCorAv
+            tibble(sample_name = x, shift = seq(scor), strand_correlation = scor)
+        }))
 
     message('Shift Average ...')
-    lout$shift_average = do.call(rbind, lapply(names(lres), function(x){
-        scor = lres[[x]]$ShiftsAv
-        tibble(sample_name = x, shift = seq(scor), strand_correlation = scor)
-    }))
+        lout$shift_average = do.call(rbind, lapply(names(lres), function(x){
+            scor = lres[[x]]$ShiftsAv
+            tibble(sample_name = x, shift = seq(scor), strand_correlation = scor)
+        }))
 
     message('Counts ...')
-    lout$counts = Reduce(left_join, lapply(names(lres), function(x){
-        cnts = lres[[x]]$tilling_windows$samplecounts[[1]]
-        tab = tibble(window = seq(cnts), counts = cnts)
-        colnames(tab)[2] = x
-        tab
-    })) %>%
-        mutate(window=NULL)
+        lout$counts = Reduce(left_join, lapply(names(lres), function(x){
+            cnts = lres[[x]]$tilling_windows$samplecounts[[1]]
+            tab = tibble(window = seq(cnts), counts = cnts)
+            colnames(tab)[2] = x
+            tab
+        })) %>%
+            mutate(window=NULL)
 
     message('Normalized Counts ...')
-    lout$norm.counts = Reduce(left_join, lapply(names(lres), function(x){
-        cnts = lres[[x]]$tilling_windows$samplecounts[[2]]
-        tab  = tibble(window = seq(cnts), counts = cnts)
-        colnames(tab)[2] = x
-        tab
-    })) %>%
-    mutate(window=NULL)
-
+        lout$norm.counts = Reduce(left_join, lapply(names(lres), function(x){
+            cnts = lres[[x]]$tilling_windows$samplecounts[[2]]
+            tab  = tibble(window = seq(cnts), counts = cnts)
+            colnames(tab)[2] = x
+            tab
+        })) %>%
+        mutate(window=NULL)
+    
+    message('Duplication rate ...')
+        lout$duplication_rate = do.call(rbind, lapply(names(lres), function(x){
+            dat = lres[[x]]$duplication_rate %>%
+                mutate(duplication_percentage = round(Ndup/Ntot,2)) %>%
+                mutate(sample_name = x) 
+            dat
+        })) 
+        
+    message('Library complexity ...')
+        lout$library_complexity = do.call(rbind, lapply(names(lres), function(x){
+            dat = lres[[x]]$library_complexity %>%
+                mutate(sample_name = x) 
+            dat
+        }))
 
     message('Annotation ...')
     lout$Annotation = do.call(rbind, lapply(lres, '[[','annot'))

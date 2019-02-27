@@ -43,11 +43,13 @@ ChIPQC = function(
         stop(paste(paste(names(arglist)[arg.ind], collapse=','),'not defined'))
 
     # ------------------------------------------------------------------------ #
-    suppressPackageStartupMessages(require(dplyr))
-    suppressPackageStartupMessages(require(Rsamtools))
-    suppressPackageStartupMessages(require(GenomicRanges))
-    suppressPackageStartupMessages(require(GenomicAlignments))
-    suppressPackageStartupMessages(require(BiocParallel))
+    suppressPackageStartupMessages({
+        library(dplyr)
+        library(Rsamtools)
+        library(GenomicRanges)
+        library(GenomicAlignments)
+        library(BiocParallel)
+    })
     source(file.path(scriptdir, 'ChIPQC_Functions.R'))
     source(file.path(scriptdir, 'Functions_Helper.R'))
     register(MulticoreParam(workers = threads))
@@ -149,11 +151,12 @@ ChIPQC = function(
         # Read duplication - library complexity calculation
         granges_unique = unique(granges)
         lout = Append_List_Element(lout, 'duplicated_reads',  length(granges_unique))
+        lout = Append_List_Element(lout, 'total_reads',  length(granges))
 
-        
+        # library complexity
         cov_uniq = coverage(granges_unique, width=unname(chr_lengths[k]))
         cov_ind = cov_uniq > 0
-        lout = Append_List_Element(lout, 'libComplexity', round(cov_uniq[cov_ind]/ lout$Cov[cov_ind],2))
+        lout = Append_List_Element(lout, 'library_complexity', round(cov_uniq[cov_ind]/ lout$Cov[cov_ind],2))
 
         lout$annot = data.frame(annot = AnnotateRanges(temp, annotation)) %>%
               group_by(annot) %>%
