@@ -9,8 +9,9 @@ args = commandArgs(trailingOnly=TRUE)
 reportsScriptDir <- args[1] #folder that contains the Rmd reports that will be rendered into a site
 sampleSheetFile <- args[2] #path to sample_sheet.csv file
 cutSitesFile <- args[3] #path to cut_sites.bed file
-pipelineOutputDir <- args[4] #root folder where the pipeline is written to
-siteDir <- args[5] #path to folder where the site will be generated
+comparisonsFile <- args[4] #path to tsv file containing list of pairs of samples to compare 
+pipelineOutputDir <- args[5] #root folder where the pipeline is written to
+siteDir <- args[6] #path to folder where the site will be generated
 
 #read sample sheet
 sampleSheet <- data.table::fread(sampleSheetFile)
@@ -40,7 +41,8 @@ for(f in rmd_files) {
 # re-used by separate Rmd files in the target site
 config_yml <- list('sample_sheet' = sampleSheetFile,
                    'pigx_output_dir' = pipelineOutputDir,
-                   'cut_sites_file' = cutSitesFile)
+                   'cut_sites_file' = cutSitesFile, 
+                   'comparisons_file' = comparisonsFile)
 yaml::write_yaml(config_yml, file = file.path(siteDir, "config.yml"))
 
 # 3. Create a _site.yml file that determines the layout of the rendered html

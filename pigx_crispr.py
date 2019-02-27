@@ -71,14 +71,6 @@ def get_bbmap_command(wc):
     elif tech == 'pacbio':
         return('mapPacBio.sh maxlen=6000')
 
-## Check which amplicons are needed for comparisons are to be made
-with open(COMPARISONS_FILE, 'r') as fp:
-  rows =  [row for row in csv.reader(fp, delimiter='\t')]
-  header = rows[0]; rows = rows[1:]
-  COMPARISONS = [dict(zip(header, row)) for row in rows]
-  COMPARISON_AMPLICONS = [COMPARISONS[i]['amplicon'] for i in range(len(COMPARISONS))]
-
-
 rule all:
     input:
         #expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
@@ -297,7 +289,7 @@ rule generateSiteFiles:
         script = os.path.join(SRC_DIR, "src", "generateSiteFiles.R")
     log: os.path.join(LOG_DIR, "generateSiteFiles.log")
     shell:
-        "{RSCRIPT} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_FILE} {CUT_SITES_FILE} {OUTPUT_DIR} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
+        "{RSCRIPT} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_FILE} {CUT_SITES_FILE} {COMPARISONS_FILE} {OUTPUT_DIR} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
 
 rule renderSite:
     input:

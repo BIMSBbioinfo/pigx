@@ -251,7 +251,7 @@ indels <- as.data.table(do.call(rbind, lapply(samples, function(sampleName) {
     dt <- data.table::fread(f)
     return(dt)
   } else {
-    stop("Can't open indels.unfiltere.tsv file for sample",sampleName,
+    stop("Can't open indels.unfiltered.tsv file for sample",sampleName,
             "at",f,"\n")
   }
 })))
