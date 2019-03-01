@@ -275,7 +275,8 @@ ChIPQC          = expand(
 BW              = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
     "{name}", "{name}.bw"),  name=NAMES)
-LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
+LINKS           = expand(
+    os.path.join(PATH_BW, GENOME_TYPES['Main'], "{ex_name}.bw"),  ex_name=NAMES)
 
 
 
