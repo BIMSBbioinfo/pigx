@@ -17,27 +17,36 @@ general:
   analysis:
     ChIP
   assembly:
+  spikein_name:
   params:
+    # adjust export of bigwig coverage tracks
     export_bigwig:
         extend: 200
         scale_bw: 'yes'
+    # adjust any bowtie2 parameters for mapping
     bowtie2:
         # set k if you want to report at most k alignments per read
         #k: 4
         N: 0
+    # quality filtering after alignment
     bam_filter:
         mapq: 0
         deduplicate: no
+    # adjust sensitivity in idr
     idr:
         idr-threshold: 0.1
+    # adjust any macs2 parameters for peak calling
     macs2:
         keep-dup: auto
         q: 0.05
+    # 
     extract_signal:
         expand_peak: 200
         number_of_bins: 50
+    # 
     peak_statistics:
         resize: 500
+    # adjust widths for the Signal profiles around genomic features
     width_params:
         tss_width: 1000
         tts_width: 1000
@@ -49,8 +58,10 @@ general:
         tts_body_downstream: 1000
         splicing_donor_width: 200
         splicing_accep_width: 200
+    # adjust name of mitochondrial chrom
     count_mitochondrial_reads:
         chrM_givenName: 'chrM'
+    # substract chrM counts from total mapped reads
     chipqc:
         discard_chrM: 'no'
 
