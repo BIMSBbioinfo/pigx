@@ -1,13 +1,13 @@
 # ----------------------------------------------------------------------------- #
 rule chipqc:
     input:
-        bamfile              = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}" + BAM_SUFFIX),
-        index                = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}" + BAM_SUFFIX + ".bai"),
+        bamfile              = os.path.join(PATH_MAPPED, '{genome_type}', "{name}", "{name}" + BAM_SUFFIX),
+        index                = os.path.join(PATH_MAPPED, '{genome_type}', "{name}", "{name}" + BAM_SUFFIX + ".bai"),
         logfile              = os.path.join(PATH_RDS, "BowtieLog.rds"),
-        nucleotide_frequency = os.path.join(GENOME_PREFIX_PATH, GENOME_TYPES['Main'], '{name}.NucleotideFrequency.GRanges.rds'),
+        nucleotide_frequency = os.path.join(PATH_INDEX, '{genome_type}','{genome}.NucleotideFrequency.GRanges.rds'),
         annotation           = rules.prepare_annotation.output.outfile
     output:
-        outfile  = os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds")
+        outfile  = os.path.join(PATH_RDS_CHIPQC, '{genome_type}' ,"{name}_{genome}_ChIPQC.rds")
     params:
         use_longest_chr = 'TRUE',
         sample_name     = "{name}",
@@ -17,7 +17,7 @@ rule chipqc:
         threads         = config['execution']['rules']['chipqc']['threads'],
         shift_window    = SHIFT_WINDOW
     log:
-        logfile = os.path.join(PATH_LOG, '{name}_ChIPQC.log')
+        logfile = os.path.join(PATH_LOG, '{name}_{genome}_ChIPQC.log')
     message:
         """
             Running: ChIPQC:

@@ -161,7 +161,7 @@ TRACK_PATHS = {
 # Constructs the genome index prefix name
 # fills in the GENOME_HASH with paths for the main genome
 generate_genome_files(GENOME_ORIG, PATH_INDEX, GENOME_TYPES['Main'], GENOME)
-GENOME_PREFIX_PATH = GENOME_HASH[GENOME_TYPES['Main']]['genome_prefix']
+GENOME_MAIN_PREFIX_PATH = GENOME_HASH[GENOME_TYPES['Main']]['genome_prefix']
 PATH_MAPPED_MAIN = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'])
 
 # ---------------------------------------------------------------------------- #
@@ -256,17 +256,25 @@ GENOME_FASTA    = [GENOME_HASH[GENOME_TYPES['Main']]['genome_link']]
 INDEX           = [GENOME_HASH[GENOME_TYPES['Main']]['bowtie_index']]
 TRIMMING        = [flatten(TRIM_GALORE_DICT.values())]
 # maps the reads to the main genome
-BOWTIE2         = expand(os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
+BOWTIE2         = expand(
+    os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
+    "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
+    
 BAMFILES_LIST.append(BOWTIE2)
 
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
-CHRLEN          = [GENOME_PREFIX_PATH + '.chrlen.txt']
-TILLING_WINDOWS = [GENOME_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
-NUCLEOTIDE_FREQ = [GENOME_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']
+CHRLEN          = [GENOME_MAIN_PREFIX_PATH + '.chrlen.txt']
+TILLING_WINDOWS = [GENOME_MAIN_PREFIX_PATH + '.GenomicWindows.GRanges.rds']
+NUCLEOTIDE_FREQ = [GENOME_MAIN_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']
 FASTQC          = [FASTQC_DICT[i]['fastqc'] for i in list(FASTQC_DICT.keys())]
 MULTIQC         = [os.path.join(PATH_REPORTS, "multiqc.html")]
-ChIPQC          = expand(os.path.join(PATH_RDS_CHIPQC, "{name}_ChIPQC.rds"), name=NAMES)
-BW              = expand(os.path.join(os.getcwd(), PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}.bw"),  name=NAMES)
+ChIPQC          = expand(
+    os.path.join(PATH_RDS_CHIPQC, GENOME_TYPES['Main'], 
+    "{name}_" + GENOME_HASH['Main']['genome_name'] + "_ChIPQC.rds"), 
+    name=NAMES)
+BW              = expand(
+    os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
+    "{name}", "{name}.bw"),  name=NAMES)
 LINKS           = expand(os.path.join(PATH_BW,  "{ex_name}.bw"),  ex_name=NAMES)
 
 
