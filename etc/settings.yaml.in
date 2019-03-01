@@ -5,6 +5,7 @@ locations:
   input-dir: in/
   output-dir: out/
   genome-file: genome/
+  spikein-file: 
   index-dir:
   gff-file:
 

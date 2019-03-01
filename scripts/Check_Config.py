@@ -139,15 +139,14 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
                 spike_in_indicator = True
 
     # checks whether the spikein-file field is defined
-    if spike_in_indicator and not 'spikein-file' in set(config['locations'].keys()):
-        message = message + 'spikein genome fasta file is not defined. Please set locations: spike-in'
-    else:
-        # checks whether the spikein-file fasta file exists
-        if not os.path.isfile(config['locations']['spikein-file']):
-            message = message + 'spikein-file is not a true file'
-
-        # checks whether the spikein fasta file contains header with spaces
+    if spike_in_indicator:
+        if not config['locations']['spikein-file']:
+            message = message + 'spike-in normalisation is requested, but: '
+            message = message + 'spike-in genome fasta file is not defined. Please set locations: spikein-file'            
         else:
+            # checks whether the spikein-file fasta is a valid file
+            message = check_file_exists(config['locations'],'spikein-file',message)
+            # checks whether the spikein fasta file contains header with spaces
             message = check_fasta_header(locations_dict['spikein-file'], message)
 
     # ------------------------------------------------------------------------ #
