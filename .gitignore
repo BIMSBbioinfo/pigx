@@ -1,6 +1,5 @@
 # Emacs backup files
 *~
-
 # autoconf generated files
 qsub-template.sh
 configure
@@ -20,10 +19,16 @@ Tests/test.sh
 config.json
 Snippet.rmd
 log$
-
 # release tarballs, folders and signatures
 pigx_chipseq-*.tar.gz
 pigx_chipseq-*.tar.gz.asc
 pigx_chipseq-*.tar.gz.sig
 pigx_chipseq-*/
 .Rproj.user
+share
+libexec
+test-suite.log
+cluster_conf.json
+pigx_chipseq.Rproj
+releases
+._.DS_Store
