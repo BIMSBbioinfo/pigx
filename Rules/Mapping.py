@@ -79,12 +79,12 @@ rule bowtie2_build:
         bowtie2_build = SOFTWARE['bowtie2-build']['executable']
     log:
         log = os.path.join(PATH_LOG, "bowtie2_build_{genome_type}.log")
-    # message:
-    #     """
-    #         Constructing bowtie2 index:
-    #             input : {input.genome}
-    #             output: {output.outfile}
-    #     """
+    message:
+        """
+            Constructing bowtie2 index:
+                input : {input.genome}
+                output: {output.outfile}
+        """
     run:
         prefix = output.outfile.replace('.1.bt2','')
 
@@ -111,12 +111,12 @@ rule index_to_chrlen:
             cut = SOFTWARE['cut']['executable']
         log:
             log = os.path.join(PATH_LOG, "index_to_chrlen.log")
-        # message:
-        #     """
-        #         Extracting chromosome lengths from index:
-        #             input : {input.infile}
-        #             output: {output.outfile}
-        #     """
+        message:
+            """
+                Extracting chromosome lengths from index:
+                    input : {input.infile}
+                    output: {output.outfile}
+            """
         run:
             prefix = str(input.infile).replace('.1.bt2','')
 
@@ -147,10 +147,10 @@ rule construct_genomic_windows:
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
             logfile = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
-        # message:"""
-        #         Running: construct_genomic_windows:
-        #             output: {output.outfile}
-        #     """
+        message:"""
+                Running: construct_genomic_windows:
+                    output: {output.outfile}
+            """
         run:
             RunRscript(input, output, params, log.logfile, 'ConstructGenomicWindows.R')
 
@@ -170,10 +170,10 @@ rule extract_nucleotide_frequency:
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
             logfile = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
-        # message:"""
-        #         Running: extract_nucleotide_frequency:
-        #             output: {output.outfile}
-        #     """
+        message:"""
+                Running: extract_nucleotide_frequency:
+                    output: {output.outfile}
+            """
         run:
             RunRscript(input, output, params, log.logfile, 'Extract_Nucleotide_Frequency.R')
 
