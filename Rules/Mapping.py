@@ -72,19 +72,19 @@ rule bowtie2_build:
     input:
         genome  = lambda wc: GENOME_HASH[wc.genome_type]['genome_link']
     output:
-        outfile = os.path.join(PATH_INDEX, '{genome_type}','{name}.1.bt2')
+        outfile = os.path.join(PATH_INDEX, '{genome_type}','{genome}.1.bt2')
     wildcard_constraints:
         genome_type = GENOME_TYPES_CONSTRAINT
     params:
         bowtie2_build = SOFTWARE['bowtie2-build']['executable']
     log:
         log = os.path.join(PATH_LOG, "bowtie2_build_{genome_type}.log")
-    message:
-        """
-            Constructing bowtie2 index:
-                input : {input.genome}
-                output: {output.outfile}
-        """
+    # message:
+    #     """
+    #         Constructing bowtie2 index:
+    #             input : {input.genome}
+    #             output: {output.outfile}
+    #     """
     run:
         prefix = output.outfile.replace('.1.bt2','')
 
@@ -102,7 +102,7 @@ rule index_to_chrlen:
         input:
             infile = rules.bowtie2_build.output
         output:
-            outfile = os.path.join(PATH_INDEX, '{genome_type}','{name}.chrlen.txt')
+            outfile = os.path.join(PATH_INDEX, '{genome_type}','{genome}.chrlen.txt')
         wildcard_constraints:
             genome_type = GENOME_TYPES_CONSTRAINT
         params:
@@ -111,12 +111,12 @@ rule index_to_chrlen:
             cut = SOFTWARE['cut']['executable']
         log:
             log = os.path.join(PATH_LOG, "index_to_chrlen.log")
-        message:
-            """
-                Extracting chromosome lengths from index:
-                    input : {input.infile}
-                    output: {output.outfile}
-            """
+        # message:
+        #     """
+        #         Extracting chromosome lengths from index:
+        #             input : {input.infile}
+        #             output: {output.outfile}
+        #     """
         run:
             prefix = str(input.infile).replace('.1.bt2','')
 
@@ -136,7 +136,7 @@ rule construct_genomic_windows:
         input:
             infile = rules.index_to_chrlen.output.outfile
         output:
-            outfile = os.path.join(GENOME_PREFIX_PATH, "{genome_type}",  '{name}.GenomicWindows.GRanges.rds')
+            outfile = os.path.join(PATH_INDEX, "{genome_type}",  '{genome}.GenomicWindows.GRanges.rds')
         wildcard_constraints:
             genome_type = GENOME_TYPES_CONSTRAINT
         params:
@@ -147,10 +147,10 @@ rule construct_genomic_windows:
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
             logfile = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
-        message:"""
-                Running: construct_genomic_windows:
-                    output: {output.outfile}
-            """
+        # message:"""
+        #         Running: construct_genomic_windows:
+        #             output: {output.outfile}
+        #     """
         run:
             RunRscript(input, output, params, log.logfile, 'ConstructGenomicWindows.R')
 
@@ -160,7 +160,7 @@ rule extract_nucleotide_frequency:
             genome_fasta    = GENOME_FASTA,
             tilling_windows = rules.construct_genomic_windows.output.outfile
         output:
-            outfile = os.path.join(GENOME_PREFIX_PATH, "{genome_type}", '{name}.NucleotideFrequency.GRanges.rds')
+            outfile = os.path.join(PATH_INDEX, "{genome_type}", '{genome}.NucleotideFrequency.GRanges.rds')
         wildcard_constraints:
             genome_type = GENOME_TYPES_CONSTRAINT
         params:
@@ -170,10 +170,10 @@ rule extract_nucleotide_frequency:
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
             logfile = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
-        message:"""
-                Running: extract_nucleotide_frequency:
-                    output: {output.outfile}
-            """
+        # message:"""
+        #         Running: extract_nucleotide_frequency:
+        #             output: {output.outfile}
+        #     """
         run:
             RunRscript(input, output, params, log.logfile, 'Extract_Nucleotide_Frequency.R')
 
@@ -226,9 +226,9 @@ rule bowtie2:
 #----------------------------------------------------------------------------- #
 rule samtools_quality_filter:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.bam")
+        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{name}.q{mapq,\d+}.bam")
+        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.q{mapq,\d+}.bam")
     params:
         mapq    = config['general']['params']['bam_filter']['mapq'],
         threads  = config['execution']['rules']['samtools_quality_filter']['threads'],
@@ -247,9 +247,9 @@ rule samtools_quality_filter:
 #----------------------------------------------------------------------------- #
 rule samtools_deduplicate:
     input:
-        os.path.join(PATH_MAPPED, "{name}", "{prefix}.bam")
+        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{name}", "{prefix}.deduplicated.sorted.bam")
+        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.deduplicated.sorted.bam")
     params:
         threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
         samtools = SOFTWARE['samtools']['executable']
