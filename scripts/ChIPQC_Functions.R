@@ -89,6 +89,44 @@ Summarize_Statistics_List = function(
            group_by(bin) %>% 
            summarize(count = sum(count))
         lsum$library_complexity = vec
+        
+    message('Mitochondrial Reads ...')
+        lsum$mitochondrial_reads = as.data.frame(lout$mitochondrial_reads)
 
     return(lsum)
+}
+
+
+# ---------------------------------------------------------------------------- #
+Count_chrM <- function(
+    bamfile, 
+    chrM_givenName=NULL
+) {
+    
+    library(Rsamtools)
+    
+    ## define some default names for chrM
+    chrM_defaultName <-  c("chrM","MT","MtDNA","chMT")
+    chrM_defaultName <- unique(c(chrM_defaultName,chrM_givenName))
+    
+    bamfile <- gsub(pattern = '.bai',replacement = '',bamfile)
+    
+    ## get genome chrom lengths
+    chr_lengths = scanBamHeader(bamfile)[[1]]$targets
+    
+    ## check if chrM is included
+    if (!any(names(chr_lengths) %in% chrM_defaultName)) {
+        warning("No chrM detected, returning 0 counts.")
+        return(0)
+    }
+    
+    chr_lengths = chr_lengths[names(chr_lengths) %in% chrM_defaultName]
+    gr <- GRanges(seqnames = names(chr_lengths),
+                  ranges = IRanges(start = 1,end = chr_lengths))
+    
+    count <- Rsamtools::countBam(file = bamfile,
+                        param = Rsamtools::ScanBamParam(which = gr))$records
+    
+    return(count)
+    
 }

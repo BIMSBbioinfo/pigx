@@ -201,6 +201,21 @@ lstats$ChIPQC$duplication_rate %>%
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+# Reads Mapping to Mitochondrial Chromosome
+
+Following plot shows the percentage of reads mapped to the mitchondrial chromosome. This information is useful in the context of ATAC-seq data, as these reads are usually ignored and lower the total mapping rate.
+
+```{r Reads_Mapping_to_Mitochondrial_Chromosome, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE, eval=TRUE}
+lstats$ChIPQC$mitochondrial_reads %>%
+    arrange(perc_orig_chrM) %>%
+    mutate(sample_name = factor(sample_name, ordered=TRUE)) %>%
+    ggplot(aes(reorder(sample_name, perc_orig_chrM), perc_orig_chrM)) +
+    geom_bar(position='dodge',stat='identity') +
+    xlab('Sample') +
+    ylab('Percentage of reads mapping to mitochondrial DNA')+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 # Library Complexity
 
 ```{r Library_Complexity, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE, eval=TRUE}

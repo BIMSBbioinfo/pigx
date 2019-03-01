@@ -104,6 +104,13 @@ format_ChIPQC = function(tab){
                 mutate(sample_name = x) 
             dat
         }))
+        
+    message('Mitochondrial Reads ...')
+        lout$mitochondrial_reads = do.call(rbind, lapply(names(lres), function(x){
+            dat = lres[[x]]$mitochondrial_reads %>%
+                mutate(sample_name = x) 
+            dat
+        })) 
 
     message('Annotation ...')
     lout$Annotation = do.call(rbind, lapply(lres, '[[','annot'))

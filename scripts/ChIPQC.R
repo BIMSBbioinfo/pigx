@@ -30,6 +30,8 @@ ChIPQC = function(
     library_type         = NULL,
     sample_name          = NULL,
     use_longest_chr      = NULL,
+    chrM_givenName       = NULL,
+    discard_chrM         = FALSE,
     shift_window         = 400,
     threads              = 1
 ){
@@ -63,6 +65,16 @@ ChIPQC = function(
     cnts.stat = readRDS(logfile)
     mapped.total = cnts.stat[cnts.stat$sample_name == sample_name,]
     mapped.total = mapped.total$value[mapped.total$stat == 'mapped.total']
+    
+    # count mitochondrial reads
+    reads.chrM = Count_chrM(bamfile,chrM_givenName = chrM_givenName)
+    perc_orig_chrM  = round(reads.chrM/mapped.total,digits = 2)
+    
+    # remove mitochondrial reads from mapping stats
+    if ( discard_chrM == 'yes' || discard_chrM == TRUE ) {
+        mapped.total =   mapped.total - reads.chrM
+    }
+    
     # compensates for double number of paired reads
     # normalizes to fragment number
     cnt_factor = ifelse(library_type == 'single', 1, 2)
@@ -103,6 +115,13 @@ ChIPQC = function(
         SSDBL         = NULL,
         readlength    = NULL
     )
+    
+    # mitochondrial reads
+    lout = Append_List_Element(lout, 'mitochondrial_reads', 
+                               list( "reads.chrM"=reads.chrM,
+                                     "perc_orig_chrM"=perc_orig_chrM,
+                                     "discard_chrM"=discard_chrM)
+                               )
 
     # loops through the chromosomes and collects summary statistics
     for(k in 1:length(chr_lengths)){
@@ -167,7 +186,7 @@ ChIPQC = function(
               mutate(sample_name = sample_name)
 
     }
-
+    
     lsum = Summarize_Statistics_List(lout)
 
     tilling_windows = readRDS(nucleotide_frequency)
