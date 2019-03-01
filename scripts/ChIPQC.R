@@ -29,7 +29,7 @@ ChIPQC = function(
     scriptdir            = NULL,
     library_type         = NULL,
     sample_name          = NULL,
-    use_longest_chr      = NULL,
+    use_longest_chr      = TRUE,
     chrM_givenName       = NULL,
     discard_chrM         = FALSE,
     shift_window         = 400,
@@ -82,8 +82,7 @@ ChIPQC = function(
 
     chr_lengths = scanBamHeader(bamfile)[[1]]$targets
     chr_lengths = sort(chr_lengths, decreasing=TRUE)
-    use_longest_chr = TRUE
-    if(use_longest_chr == TRUE || use_longest_chr == 'TRUE')
+    if(use_longest_chr == 'yes' || use_longest_chr == TRUE)
         chr_lengths = head(chr_lengths, 1)
 
     # removes chromosomes which are shorter than shift_size

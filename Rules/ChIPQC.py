@@ -9,13 +9,15 @@ rule chipqc:
     output:
         outfile  = os.path.join(PATH_RDS_CHIPQC, '{genome_type}' ,"{name}_{genome}_ChIPQC.rds")
     params:
-        use_longest_chr = 'TRUE',
+        use_longest_chr = PARAMS['chipqc']['use_longest_chr'],
         sample_name     = "{name}",
         library_type    = lambda wc: get_library_type(wc.name),
         scriptdir       = SCRIPT_PATH,
         Rscript         = SOFTWARE['Rscript']['executable'],
         threads         = config['execution']['rules']['chipqc']['threads'],
-        shift_window    = SHIFT_WINDOW
+        shift_window    = SHIFT_WINDOW,
+        chrM_givenName  = PARAMS['chipqc']['chrM_givenName'],
+        discard_chrM    = PARAMS['chipqc']['discard_chrM']
     log:
         logfile = os.path.join(PATH_LOG, '{name}_{genome}_ChIPQC.log')
     message:

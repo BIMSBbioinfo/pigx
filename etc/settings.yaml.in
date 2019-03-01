@@ -58,12 +58,13 @@ general:
         tts_body_downstream: 1000
         splicing_donor_width: 200
         splicing_accep_width: 200
-    # adjust name of mitochondrial chrom
-    count_mitochondrial_reads:
-        chrM_givenName: 'chrM'
-    # substract chrM counts from total mapped reads
     chipqc:
+        # adjust name of mitochondrial chrom
+        chrM_givenName: 'chrM'
+        # substract chrM counts from total mapped reads
         discard_chrM: 'no'
+        # analyse only longest chr for speeding up
+        use_longest_chr: 'yes'
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~ANALYSIS~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section needs to be adjusted to the planned analysis.   #
