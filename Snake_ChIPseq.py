@@ -118,9 +118,13 @@ PATH_RDS_TEMP       = os.path.join(PATH_RDS, 'Temp')
 # ChIP: 400; ATAC: 2000
 if ANALYSIS == 'CHIP':
     SHIFT_WINDOW = 400
+    DISCARD_CHRM = PARAMS['chipqc']['discard_chrM']
 
 if ANALYSIS == 'ATAC':
     SHIFT_WINDOW = 2000
+    DISCARD_CHRM = 'yes'
+    
+    
 
 # ---------------------------------------------------------------------------- #
 # ACCESSORY VARIABLES
