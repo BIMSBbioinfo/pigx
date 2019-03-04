@@ -63,17 +63,19 @@ AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)"
 TESTS = \
   Tests/test.sh
 
-EXTRA_DIST =												\
-  Tests/sample_sheet.csv									\
-  Tests/settings.yaml										\
+EXTRA_DIST =												    \
+  Tests/sample_sheet.csv									    \
+  Tests/settings.yaml										    \
   Tests/genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz	\
-  Tests/genome/mm_chr19.gtf									\
-  Tests/in/ChIP.fq.gz										\
-  Tests/in/ChIP_1.fq.gz										\
-  Tests/in/ChIP_2.fq.gz										\
-  Tests/in/Cont.fq.gz										\
-  Tests/in/ChIPpe_R1.fq.gz									\
-  Tests/in/ChIPpe_R2.fq.gz
+  Tests/genome/genome_subset_hg38_chr1_35287632_37056684.fa.gz  \
+  Tests/genome/mm_chr19.gtf									    \
+  Tests/in/ChIP.fq.gz										    \
+  Tests/in/ChIP_1.fq.gz										    \
+  Tests/in/ChIP_2.fq.gz										    \
+  Tests/in/Cont.fq.gz										    \
+  Tests/in/ChIPpe_R1.fq.gz									    \
+  Tests/in/ChIPpe_R2.fq.gz                                      \
+  Tests/in/HEK.fq.gz
 
 clean-local:
 	-rm -rf .snakemake
