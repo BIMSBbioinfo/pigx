@@ -2,7 +2,7 @@ sample_sheet: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sam
 cutsites: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/cutsites.bed
 reads-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/reads
 reference_fasta: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/fasta/chrI_II.fa
-output-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/output
+output-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_output
 source-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/
 
 adapters: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/adapters/TruSeq2-SE.fa
@@ -15,6 +15,6 @@ tools:
     path: /home/buyar/.conda/envs/pigx_crispr/bin/java
     mem: "-Xmx8G"
     threads: "-XX:ParallelGCThreads=2"
-  gatk: /home/buyar/.conda/envs/pigx_crispr/opt/gatk-3.8/GenomeAnalysisTK.jar
+  gatk: /home/buyar/tools/GenomeAnalysisTK.jar 
 
 comparisonsFile: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/comparisons.tsv
