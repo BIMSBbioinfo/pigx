@@ -131,15 +131,13 @@ plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
 names(plots) <- unique(deletionCutsiteOverlaps$sample)
 ```
 
-# Deletion Diversity
-
-## Segment Plots {.tabset .tabset-fade .tabset-pills}
+# Deletion diversity at cut sites
 
 ```{r plotDeletionDiversity, results='asis', fig.height=8, fig.width=10}
 for (sample in names(plots)) {
-  cat('### ',sample,'{.tabset .tabset-fade .tabset-pills}\n\n')
+  cat('## ',sample,'{.tabset .tabset-fade .tabset-pills}\n\n')
   for(i in names(plots[[sample]])) {
-    cat('#### Freq:',i,'\n\n')
+    cat('### Freq:',i,'\n\n')
     p <- plots[[sample]][[i]]
     if(!is.null(p)) {
       print(p)
@@ -152,7 +150,7 @@ for (sample in names(plots)) {
 }
 ```
 
-# Diversity of Insertions {.tabset}
+# Insertion diversity at cut sites
 
 These plots show the diversity of insertions at the cut sites taking into account the actual sequence that is inserted. 
 
@@ -266,7 +264,7 @@ names(plots) <- unique(insertions$sample)
 
 ```{r plotInsertionDiversity, results='asis', fig.height=8, fig.width=10}
 for (sample in names(plots)) {
-  cat('## ',sample,'{.tabset}\n\n')
+  cat('## ',sample,'{.tabset .tabset-fade .tabset-pills}\n\n')
   for(i in names(plots[[sample]])) {
     cat('### Freq:',i,'\n\n')
     p <- plots[[sample]][[i]]
