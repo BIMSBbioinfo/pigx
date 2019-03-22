@@ -76,7 +76,8 @@ rule all:
         #expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
         #expand(os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"), sample = SAMPLES),
         expand(os.path.join(GATK_DIR, "{sample}.realigned.bam"), sample = SAMPLES),
-        #os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
+        expand(os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES),
+        os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         #expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES),
         os.path.join(REPORT_DIR, "index.html")
         #get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
@@ -200,14 +201,14 @@ rule gatk_indelRealigner:
         bam = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
         bai = os.path.join(GATK_DIR, "{sample}.realigned.bai")
     log: os.path.join(LOG_DIR, "GATK", "gatk_realigner.{sample}.log")
-    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T IndelRealigner -nt 1 -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
+    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T IndelRealigner -maxReads 5000000 -nt 1 -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
 
 
 rule samtools_stats:
     input:
-        bamfile = os.path.join(MAPPED_READS_DIR, "{sample}.bam"),
+        bamfile = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
         ref = os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
-    output: os.path.join(MAPPED_READS_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt")
+    output: os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt")
     log: os.path.join(LOG_DIR, "SAMTOOLS", "samtools_stats.{sample}.log")
     shell: "samtools stats --reference {input.ref} {input.bamfile} > {output} 2> {log}"
 
@@ -215,7 +216,7 @@ rule multiqc:
     input:
         fastqc = expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
         trimmomatic = expand(os.path.join(TRIMMED_READS_DIR, "{sample}.fastq.gz"), sample = SAMPLES),
-        samtools = expand(os.path.join(MAPPED_READS_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES)
+        samtools = expand(os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES)
     output:
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html")
     params:
