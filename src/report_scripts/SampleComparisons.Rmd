@@ -19,6 +19,9 @@ if(nrow(comp) == 0) {
   cat("No comparisons to make for target region:",targetName,"\n")
   knitr::knit_exit()
 }
+
+outputFolder <- file.path(pipeline_output_dir, "comparisons", targetName)
+dir.create(outputFolder, showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r}
@@ -64,6 +67,7 @@ coverageStats <- do.call(rbind, lapply(samples, function(s) {
     'indel' = subsetRleListByRange(indelCounts[[s]], target_region)
   )
   dt$bp <- start(target_region):end(target_region)
+  dt$seqname <- as.character(GenomeInfoDb::seqnames(target_region))
   dt$sample <- s
   dt[is.na(dt)] <- 0
   return(dt)
@@ -98,7 +102,7 @@ comparePerBaseCounts <- function(coverageStats, caseSample, controlSample, indel
     t <- fisher.test(M)
     oddsRatio <- as.numeric(t$estimate)
     pVal <- t$p.value
-    return(data.frame('bp' = case$bp[i], 'oddsRatio' = oddsRatio, 'pval' = pVal))
+    return(data.frame('seqname' = case$seqname[i], 'bp' = case$bp[i], 'oddsRatio' = oddsRatio, 'pval' = pVal))
   }))
   
   results$padj <- p.adjust(results$pval)
@@ -128,7 +132,7 @@ results <- as.data.frame(do.call(rbind,  lapply(X = comp$comparison,
   return(r)
 })), stringsAsFactors = FALSE)
 
-#pdf(file = file.path(workdir, paste0(ampliconName, ".comparisons.plots.pdf")))
+pdf(file = file.path(outputFolder, paste0(targetName, ".comparisons.plots.pdf")))
 plots <- lapply(unique(results$comparison), function(x){
   plots <- lapply(unique(results$indelType), function(indelType) {
     df <- results[results$comparison == x & results$indelType == indelType,]
@@ -153,7 +157,7 @@ plots <- lapply(unique(results$comparison), function(x){
                      "\nControl sample: ",unique(as.character(df$control))), 
               subtitle = paste0("Indel type: ", indelType)) + 
       theme_bw() 
-    #print(p)
+    print(p)
     
     ## print the 'difference' value for each base position as a bigwig file
     #outfile <- file.path(workdir, paste0(ampliconName, '.comparison.', 
@@ -166,11 +170,11 @@ plots <- lapply(unique(results$comparison), function(x){
 })
 names(plots) <- unique(results$comparison)
 #close pdf connection
-#dev.off()
+dev.off()
 
 #save stats to file
-#statsOutFile <- file.path(workdir, paste0(ampliconName, '.comparison.stats.tsv'))
-#write.table(x = results, file = statsOutFile, quote = FALSE, sep = '\t', row.names = FALSE)
+statsOutFile <- file.path(outputFolder, paste0(targetName, '.comparison.stats.tsv'))
+write.table(x = results, file = statsOutFile, quote = FALSE, sep = '\t', row.names = FALSE)
 ```
 
 # Significantly Affected Base Positions/Segments 
@@ -228,12 +232,12 @@ deletions <- do.call(rbind, lapply(unique(deletions$sample), function(s) {
   coverage <- c(rep(0, coverage[1,]$bp - 1), 
                 coverage$cov)
   
-  dt$maxCoverage <- apply(dt, 1, function(x) {
+  dt$coverage <- apply(dt, 1, function(x) {
     max(coverage[x[['start']]:x[['end']]])
   })
   return(dt)
 }))
-deletions$freq <- deletions$ReadSupport/deletions$maxCoverage
+deletions$freq <- deletions$ReadSupport/deletions$coverage
 ```
 
 
@@ -242,6 +246,7 @@ Make plots to compare case versus control samples
 #dt: deletions/insertions table
 #minReadSupport mininum number of reads in sum of the samples
 #minFreq minimum frequency in sum of the samples
+# TODO: add minCoveragePercentile = 10 
 getSignificantIndels <- function(dt, caseSample, controlSample, minReadSupport = 5, minFreq = 10^-4) {
   #subset for control samples
   dt <- droplevels(dt[sample %in% c(caseSample, controlSample)])
@@ -258,14 +263,17 @@ getSignificantIndels <- function(dt, caseSample, controlSample, minReadSupport =
   }
   
   # median coverage values as integer
-  dt$maxCoverage <- as.integer(dt$maxCoverage)
+  dt$coverage <- as.integer(dt$coverage)
   
   case <- dt[sample == caseSample]
   ctrl <- dt[sample == controlSample]
 
-  mdt <- merge(case[,c('name', 'ReadSupport', 'maxCoverage')], 
-        ctrl[,c('name', 'ReadSupport', 'maxCoverage')], 
+  mdt <- merge(case[,c('name', 'ReadSupport', 'coverage')], 
+        ctrl[,c('name', 'ReadSupport', 'coverage')], 
         by = 'name', all = TRUE)
+  
+  #convert NA values to 0 
+  mdt[is.na(mdt)] <- 0
   
   results <- cbind(mdt, do.call(rbind, apply(mdt, 1, function(x) {
     #add a constant value (5) to each category to avoid Inf values
@@ -286,11 +294,11 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
   controlSample <- comp[comparison == cmp]$control_samples
   
   #get significance values for each deletion
-  sig <- getSignificantIndels(dt = deletions,
+  sig <- getSignificantIndels(dt = as.data.table(subsetByOverlaps(as(deletions, "GRanges"), targetRegion)), 
                               caseSample = caseSample,
                               controlSample = controlSample, 
-                              minReadSupport = 1, 
-                              minFreq = 10^-6)
+                              minReadSupport = 5, 
+                              minFreq = 10^-3)
   if(is.null(sig)) {
     return(list("volcano_plot" = NULL, "segment_plot" = NULL))
   }
@@ -298,10 +306,10 @@ plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
                    sig, 
                    by = 'name')
   #save results table
-  #write.table(x = results[order(pval)], 
-   #           file = file.path(workdir, paste0(ampliconName, ".comparison.", 
-    #                                           cmp, ".stats.deletions.tsv")), 
-     #         row.names = FALSE, quote = FALSE, sep = '\t')
+  write.table(x = results[order(pval)], 
+              file = file.path(outputFolder, paste0(targetName, ".comparison.", 
+                                               cmp, ".stats.deletions.tsv")), 
+              row.names = FALSE, quote = FALSE, sep = '\t')
   
   #make a segment plot of deletions 
   p <- ggplot(results[padj < 0.01]) + 
@@ -319,10 +327,10 @@ names(plots) <- unique(comp$comparison)
 
 ```{r, echo = FALSE}
 #Save .tsv files for each sample with frequency values of each deletion
-#for(s in unique(deletions$sample)){
- # outFile <- file.path(workdir, paste0(ampliconName,".deletionFrequencies.",s,".tsv"))
-#  write.table(x = deletions[sample == s & ReadSupport > 0][order(freq, decreasing = T)], file = outFile, sep = '\t', row.names = FALSE, quote = FALSE)
-#}
+for(s in unique(deletions$sample)){
+  outFile <- file.path(outputFolder, paste0(targetName,".deletionFrequencies.",s,".tsv"))
+  write.table(x = deletions[sample == s & ReadSupport > 0][order(freq, decreasing = T)], file = outFile, sep = '\t', row.names = FALSE, quote = FALSE)
+}
 ```
 
 
@@ -342,4 +350,123 @@ for (cmp in names(plots)) {
   cat("\n\n")
 }
 ```
+
+
+## Insertion frequencies
+
+```{r insertionDiversityPrepare}
+## import insertions data (that contains inserted sequences, too) and make some summary plots 
+insertions <- as.data.table(do.call(rbind, lapply(1:nrow(sampleSheet), function(i) {
+  sampleName <- sampleSheet[i, 'sample_name']
+  
+  f <- file.path(pipeline_output_dir, 'indels', sampleName, paste0(sampleName, '.insertedSequences.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    dt$sample <- sampleName
+    dt$end <- dt$start
+    return(dt)
+  } else {
+    warning("Can't open .insertedSequences.tsv file for sample ",sampleName,
+            " at ",f,"\n")
+    return(NULL)
+  }
+})))
+
+#collapse insertions 
+insertions <- insertions[,length(name), 
+                         by = c('seqname', 'sample', 'start', 
+                                'end', 'insertedSequence', 
+                                'insertionWidth')]
+colnames(insertions)[7] <- 'ReadSupport'
+
+# get alignment coverage - will need for insertion coverage 
+alnCoverage <- importSampleBigWig(pipeline_output_dir, 
+                                  sampleSheet$sample_name, ".alnCoverage.bigwig")
+
+insertions <- do.call(rbind, lapply(unique(insertions$sample), function(s) {
+  do.call(rbind, lapply(unique(insertions[sample == s]$seqname), function(chr) {
+    dt <- insertions[sample == s & seqname == chr]
+    dt$coverage <- as.vector(alnCoverage[[s]][[chr]])[dt$start]
+    return(dt)
+  }))
+}))
+
+#compute frequency value for each insertion 
+#(number of reads supporting the insertion divided by coverage at insertion site)
+insertions$freq <- insertions$ReadSupport/insertions$coverage
+insertions$name <- paste(insertions$seqname, insertions$start, insertions$insertedSequence, sep = ":")
+```
+
+Make plots to compare case versus control samples 
+```{r compare_ins_freq}
+plots <- pbapply::pblapply(unique(comp$comparison), function(cmp) {
+  caseSample <- comp[comparison == cmp]$case_samples
+  controlSample <- comp[comparison == cmp]$control_samples
+  
+  
+  #get significance values for each insertion at the target region 
+  sig <- getSignificantIndels(dt = as.data.table(subsetByOverlaps(as(insertions, "GRanges"), targetRegion)),
+                              caseSample = caseSample,
+                              controlSample = controlSample, 
+                              minReadSupport = 5, 
+                              minFreq = 10^-3)
+  if(is.null(sig)) {
+    return(list("segment_plot" = NULL))
+  }
+  
+  results <- merge(unique(insertions[,c('seqname','start', 'name')]), 
+                   sig, 
+                   by = 'name')
+  
+  #save results table
+  write.table(x = results[order(pval)], 
+              file = file.path(outputFolder, paste0(targetName, ".comparison.", 
+                                               cmp, ".stats.insertions.tsv")), 
+              row.names = FALSE, quote = FALSE, sep = '\t')
+  
+  #make a segment plot of deletions 
+  results$insertionWidth <- sapply(strsplit(results$name, ":"), function(x) nchar(x[3]))
+  p <- ggplot(results[padj < 0.01]) + 
+    geom_linerange(aes(x = log2(oddsRatio), 
+                       ymin = start - insertionWidth/2, 
+                       ymax = start + insertionWidth/2), 
+                   alpha = 0.5) +
+    geom_point(data = results[padj < 0.01], 
+               aes(x = log2(oddsRatio), y = start), 
+               size = 1, shape = 24, fill = 'red') + 
+    ggtitle(label = "Comparison of insertions\n with significant difference (adjusted p.val < 0.01)", 
+            subtitle = paste0("Case: ",caseSample, "\nControl: ",controlSample)) + 
+    coord_flip()
+  
+  return(list("segment_plot" = p))
+})
+names(plots) <- unique(comp$comparison)
+```
+
+```{r, echo = FALSE}
+#Save .tsv files for each sample with frequency values of each deletion
+for(s in unique(insertions$sample)) {
+  outFile <- file.path(outputFolder, paste0(targetName,".insertionFrequencies.",s,".tsv"))
+  write.table(x = insertions[sample == s & ReadSupport > 0][order(freq, decreasing = T)], file = outFile, sep = '\t', row.names = FALSE, quote = FALSE)
+}
+```
+
+
+```{r plotInsComparison, results='asis', fig.height=8, fig.width=10}
+for (cmp in names(plots)) {
+  cat('### Comparison:',cmp,'{.tabset .tabset-pills .tabset-fade}\n\n')
+  for(i in names(plots[[cmp]])) {
+    cat('#### ',i,'\n\n')
+    p <- plots[[cmp]][[i]]
+    if(!is.null(p)) {
+      print(p)
+    } else {
+      cat("No plot to show\n\n")
+    }
+    cat("\n\n")
+  }
+  cat("\n\n")
+}
+```
+
 
