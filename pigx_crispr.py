@@ -74,8 +74,8 @@ def get_bbmap_command(wc):
 rule all:
     input:
         #expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
-        expand(os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"), sample = SAMPLES),
-        #expand(os.path.join(GATK_DIR, "{sample}.realigned.bam"), sample = SAMPLES),
+        #expand(os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"), sample = SAMPLES),
+        expand(os.path.join(GATK_DIR, "{sample}.realigned.bam"), sample = SAMPLES),
         #os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         #expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES),
         os.path.join(REPORT_DIR, "index.html")
@@ -105,7 +105,7 @@ rule getFastaIndex:
 
 rule getFastaDict:
     input: os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
-    output: os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA), 'dict']))
+    output: os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA).replace(".fa", ""), 'dict']))
     params:
         script=os.path.join(SRC_DIR, "src", "getFastaDict.R")
     log: os.path.join(LOG_DIR, ".".join(["getFastaDict", os.path.basename(REFERENCE_FASTA), "log"]))
@@ -177,27 +177,25 @@ rule samtools_indexbam:
     shell: "samtools index {input} > {log} 2>&1"
 
 # we need an interval file that tells gatk to correct indels within those intervals
-# we use the whole amplicon start end positions for this purpose, however, in genome-wide
-# context, it should be limited to certain regions.
+# we provide the target_region that is available
 rule get_gatk_realigner_intervals:
-    input:
-        ref = os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
     output:
-        os.path.join(GATK_DIR, "_".join([os.path.basename(REFERENCE_FASTA), "realigner.intervals"]))
+        os.path.join(GATK_DIR, "{sample}.gatk_realigner.intervals")
     params:
-        script=os.path.join(SRC_DIR, "src", "get_gatk_realigner_intervals.R")
+        intervals = lambda wildcards: lookup('sample_name', wildcards.sample, ['target_region'])[0]
     shell:
-        #find the length of the amplicon sequence and print the start-end positions in a file
-        "{RSCRIPT} {params.script} {input.ref} {output}"
+        #syntax for intervals: <chromosome>:start-end
+        #(here we remove the strand info that may exist in target_region)
+        "echo {params.intervals} | sed 's/:[-+]$//g' > {output}"
 
 rule gatk_indelRealigner:
     input:
         ref = os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA)),
         ref_index = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA), 'fai'])),
-        ref_dict = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA), 'dict'])),
+        ref_dict = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA).replace(".fa", ""), 'dict'])),
         bamIndex = os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"),
         bamFile = os.path.join(MAPPED_READS_DIR, "{sample}.bam"),
-        intervals = os.path.join(GATK_DIR, "_".join([os.path.basename(REFERENCE_FASTA), "realigner.intervals"]))
+        intervals = os.path.join(GATK_DIR, "{sample}.gatk_realigner.intervals")
     output:
         bam = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
         bai = os.path.join(GATK_DIR, "{sample}.realigned.bai")
@@ -256,10 +254,10 @@ rule multiqc:
 
 rule getIndelStats:
     input:
-        #bamIndex = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bai"),
-        #bamFile = os.path.join(GATK_DIR, "{amplicon}", "{sample}.realigned.bam"),
-        bamIndex = os.path.join(MAPPED_READS_DIR,  "{sample}.bam.bai"),
-        bamFile = os.path.join(MAPPED_READS_DIR,  "{sample}.bam")
+        bamIndex = os.path.join(GATK_DIR,  "{sample}.realigned.bai"),
+        bamFile = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
+        #bamIndex = os.path.join(MAPPED_READS_DIR,  "{sample}.bam.bai"),
+        #bamFile = os.path.join(MAPPED_READS_DIR,  "{sample}.bam")
     output:
         # os.path.join(INDELS_DIR, "{sample}", "{sample}.indelScores.bigwig"),
         # os.path.join(INDELS_DIR, "{sample}", "{sample}.deletionScores.bigwig"),
