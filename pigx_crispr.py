@@ -351,21 +351,3 @@ rule renderSite:
     shell:
         "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{REPORT_DIR}\')\" > {log} 2>&1"
 #        "bash {params.render_script} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
-
-# rule report_comparisons:
-#     input:
-#         coverageStats = get_output_file_list(INDELS_DIR, "coverageStats.tsv"),
-#         cutsiteStats = get_output_file_list(INDELS_DIR, "indel_stats_at_cutsites.tsv"),
-#         indels = get_output_file_list(INDELS_DIR, "indels.unfiltered.tsv"),
-#         comp = COMPARISONS_FILE
-#     params:
-#         reportR = os.path.join(SRC_DIR, "src", "runReport.comparisons.R"),
-#         reportRmd = os.path.join(SRC_DIR, "src", "report.comparisons.Rmd"),
-#         indelsFolder = os.path.join(INDELS_DIR, "{amplicon}"),
-#         outDir = os.path.join(REPORT_DIR, 'comparisons'),
-#     log: os.path.join(LOG_DIR, "{amplicon}.report.comparisons.log")
-#     output:
-#         os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'),
-#         os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv')
-#     shell:
-#         "{RSCRIPT} {params.reportR}  --reportFile={params.reportRmd} --ampliconName={wildcards.amplicon} --comparisonsFile={COMPARISONS_FILE} --indelsFolder={params.indelsFolder} --workdir={params.outDir} --prefix={wildcards.amplicon} > {log} 2>&1"
