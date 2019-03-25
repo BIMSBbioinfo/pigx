@@ -167,7 +167,7 @@ rule samtools_sam2bam:
     log: os.path.join(LOG_DIR, "SAMTOOLS", "samtools_sam2bam.{sample}.log")
     shell:
         """
-        samtools view -bh {input} | samtools sort -o {output} > {log} 2>&1
+        samtools view -bh {input} | samtools rmdup -s - - | samtools sort -o {output} > {log} 2>&1
         rm {input}
         """
 
