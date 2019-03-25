@@ -201,7 +201,7 @@ rule gatk_indelRealigner:
         bam = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
         bai = os.path.join(GATK_DIR, "{sample}.realigned.bai")
     log: os.path.join(LOG_DIR, "GATK", "gatk_realigner.{sample}.log")
-    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T IndelRealigner -maxReads 5000000 -nt 1 -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
+    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T IndelRealigner -maxReads 5000000 -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
 
 
 rule samtools_stats:
