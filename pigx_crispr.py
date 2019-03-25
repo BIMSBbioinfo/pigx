@@ -271,9 +271,10 @@ rule getIndelStats:
         # os.path.join(INDELS_DIR, "{sample}", "{sample}.insertedSequences.tsv"),
         os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv")
     params:
-        script=os.path.join(SRC_DIR, "src", "getIndelStats.R")
+        script = os.path.join(SRC_DIR, "src", "getIndelStats.R"),
+        tech = lambda wildcards: lookup('sample_name', wildcards.sample, ['tech'])[0]
     log: os.path.join(LOG_DIR, "indel_stats", "getIndelStats.{sample}.log")
-    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {INDELS_DIR} {CUT_SITES_FILE} > {log} 2>&1"
+    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {INDELS_DIR} {CUT_SITES_FILE} {params.tech} > {log} 2>&1"
 
 #prepare _site.yml and other Rmd files to be rendered into a html report (see renderSite rule)
 rule generateSiteFiles:

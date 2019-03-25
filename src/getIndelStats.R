@@ -11,6 +11,7 @@ bamFile <- args[1]
 sampleName <- args[2]
 outDir <- args[3]
 cutSitesFile <- args[4] #path to sgRNA cutting sites for the target genome.
+tech <- args[5] #the sequencing platform (illumina or pacbio)
 
 outDir <- file.path(outDir, sampleName)
 cat("Running getIndelStats with arguments:",args,"\n")
@@ -28,6 +29,10 @@ getInsertedSequences <- function(aln, ins) {
                                                               with.ops = T)
   names(insertions) <- mcols(aln)$qname
   insertions <- insertions[lengths(insertions) > 0]
+  
+  #remove insertions that don't exist in "ins", which contains the genomic coordinate of all insertions
+  #ins object may be missing some insertion events due to the readsToFilter function. 
+  insertions <- insertions[unique(ins$name)]
   
   sequences <- mcols(aln)$seq[match(names(insertions), mcols(aln)$qname)]
 
@@ -85,6 +90,26 @@ getIndelScores <- function(alnCov, indelReads) {
   return(RleList(scores))
 }
 
+# filter out reads with at least 1 deletion and 1 insertion
+# filter out reads that have substitutions adjacent  to deletions (suggest complex events)
+readsToFilter <- function(aln) {
+  dt <- data.table::data.table('cigar' = cigar(aln), 
+                               'readID' = mcols(aln)$qname)
+  #find reads with at least one insertion and one deletion
+  #ins_del <- dt[grepl(pattern = '(I.*D)|(D.*I)', x = dt$cigar)]$readID
+  
+  #find reads with more than one insertions or deletions  
+  mul_indel <- dt[which(stringi::stri_count(regex = "D|I", dt$cigar) > 1),]$readID
+    
+  #find reads with substitutions adjacent to a deletion
+  adj_del_sub <- dt[grepl(pattern = '(X[0-9]+D)|(D[0-9]+X)', x = dt$cigar)]$readID
+  
+  #take the union of all types of reads to remove
+  toFilter <- union(mul_indel, adj_del_sub)
+  
+  return(toFilter)
+}
+
 
 #parse alignments from bam file 
 aln <- GenomicAlignments::readGAlignments(bamFile, param = ScanBamParam(what=c("qname", "seq")))
@@ -95,6 +120,17 @@ rtracklayer::export.bw(object = alnCoverage,
 
 #get all reads with (insertions/deletions/substitions)
 indelReads <- getIndelReads(aln) 
+
+#use readsToFilter function depending on the sequencing technology (don't apply to pacbio)
+if(tech == 'illumina') {
+  toFilter <-  readsToFilter(aln)
+  message("Filtering out ",length(toFilter)," out of ",length(unique(indelReads$name)), 
+          " indel reads (",round(length(toFilter) / length(unique(indelReads$name)) * 100, 2),"%)",
+          " \n\tdue to multiple indel events per read or mismatches adjacent to deletions.")
+  
+  indelReads <- indelReads[!indelReads$name %in% toFilter]
+}
+
 #get indel scores 
 indelScores <- getIndelScores(alnCoverage, indelReads)
 #export to bigwig
@@ -147,23 +183,6 @@ write.table(x = cutSiteStats,
             quote = F, sep = '\t', row.names = FALSE
             )
 
-# filter out reads with at least 1 deletion and 1 insertion
-# filter out reads that have substitutions adjacent  to deletions (suggest complex events)
-readsToFilter <- function(aln) {
-  dt <- data.table::data.table('cigar' = cigar(aln), 
-                               'readID' = mcols(aln)$qname)
-  #find reads with at least one insertion and one deletion
-  ins_del <- dt[grepl(pattern = '(I.*D)|(D.*I)', x = dt$cigar)]$readID
-  
-  #find reads with substitutions adjacent to a deletion
-  adj_del_sub <- dt[grepl(pattern = '(X[0-9]+D)|(D[0-9]+X)', x = dt$cigar)]$readID
-  
-  #take the union
-  return(union(ins_del, adj_del_sub))
-}
-
-#TODO use readsToFilter function depending on the sequencing technology (don't apply to pacbio)
-# indelReads <- indelReads[!indelReads$name %in% readsToFilter(aln)]
 
 # collapse indel reads by coordinates and print them into BED files
 indels <- as.data.table(indelReads)[,length(name),by = c('seqnames', 'start', 'end', 'indelType')][order(V1, decreasing = T)]
