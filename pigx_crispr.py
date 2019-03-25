@@ -75,8 +75,9 @@ rule all:
     input:
         #expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
         #expand(os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"), sample = SAMPLES),
-        expand(os.path.join(GATK_DIR, "{sample}.realigned.bam"), sample = SAMPLES),
-        expand(os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES),
+        #expand(os.path.join(GATK_DIR, "{sample}.indels.realigned.bam"), sample = SAMPLES),
+        expand(os.path.join(OUTPUT_DIR,  "aln_merged", "{sample}.bam"), sample = SAMPLES),
+        #expand(os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES),
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         #expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES),
         os.path.join(REPORT_DIR, "index.html")
@@ -177,40 +178,85 @@ rule samtools_indexbam:
     log: os.path.join(LOG_DIR, "samtools_indexbam.{sample}.log")
     shell: "samtools index {input} > {log} 2>&1"
 
+
+# split the bam file into two: First contains only reads alignments with indels
+# second contains alignments without indels
+rule split_bam_by_indels:
+    input:
+        bamFile = os.path.join(MAPPED_READS_DIR, "{sample}.bam"),
+        bamIndex = os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai")
+    output:
+        os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam"),
+        os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam.bai"),
+        os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.without_indels.bam"),
+        os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.without_indels.bam.bai"),
+    params:
+        script = os.path.join(SRC_DIR, "src", "split_bam_by_indels.R"),
+        tech = lambda wildcards: lookup('sample_name', wildcards.sample, ['tech'])[0],
+        output_dir = os.path.join(OUTPUT_DIR, "aln_split_by_indels")
+    log: os.path.join(LOG_DIR, "split_bam_by_indels.{sample}.log")
+    shell: "{RSCRIPT} {params.script} {input.bamFile} {wildcards.sample} {params.output_dir} > {log} 2>&1"
+
+
 # we need an interval file that tells gatk to correct indels within those intervals
 # we provide the target_region that is available
 rule get_gatk_realigner_intervals:
+    input:
+        ref = os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA)),
+        ref_index = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA), 'fai'])),
+        ref_dict = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA).replace(".fa", ""), 'dict'])),
+        bamIndex = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam.bai"),
+        bamFile = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam")
     output:
         os.path.join(GATK_DIR, "{sample}.gatk_realigner.intervals")
     params:
         intervals = lambda wildcards: lookup('sample_name', wildcards.sample, ['target_region'])[0]
-    shell:
+    log: os.path.join(LOG_DIR, "GATK", "gatk_realigner_target_creator.{sample}.log")
+    #shell:
         #syntax for intervals: <chromosome>:start-end
         #(here we remove the strand info that may exist in target_region)
-        "echo {params.intervals} | sed 's/:[-+]$//g' > {output}"
+        #"echo {params.intervals} | sed 's/:[-+]$//g' > {output}"
+    #to use RealignerTargetCreator from GATK use the line below
+    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T RealignerTargetCreator --maxIntervalSize 10000 -R {input.ref} -I {input.bamFile} -o {output} > {log} 2>&1"
+
 
 rule gatk_indelRealigner:
     input:
         ref = os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA)),
         ref_index = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA), 'fai'])),
         ref_dict = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA).replace(".fa", ""), 'dict'])),
-        bamIndex = os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai"),
-        bamFile = os.path.join(MAPPED_READS_DIR, "{sample}.bam"),
+        bamIndex = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam.bai"),
+        bamFile = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam"),
         intervals = os.path.join(GATK_DIR, "{sample}.gatk_realigner.intervals")
     output:
-        bam = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
-        bai = os.path.join(GATK_DIR, "{sample}.realigned.bai")
+        bam = os.path.join(GATK_DIR, "{sample}.indels.realigned.bam"),
+        bai = os.path.join(GATK_DIR, "{sample}.indels.realigned.bai")
     log: os.path.join(LOG_DIR, "GATK", "gatk_realigner.{sample}.log")
-    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T IndelRealigner -maxReads 5000000 -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
+    shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T IndelRealigner -maxReads 1000000 -R {input.ref} -I {input.bamFile} -targetIntervals {input.intervals} -o {output.bam} > {log} 2>&1"
 
+# merge bam files that were split for realigning the indels
+# merge the realigned bam file with the bam file containing no indels.
+rule merge_bam:
+    input:
+        bam1 = os.path.join(GATK_DIR, "{sample}.indels.realigned.bam"),
+        bam2 = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.without_indels.bam")
+    output:
+        bam=os.path.join(OUTPUT_DIR, "aln_merged", "{sample}.bam"),
+        bai=os.path.join(OUTPUT_DIR, "aln_merged", "{sample}.bam.bai"),
+    log: os.path.join(LOG_DIR, "SAMTOOLS", "merge.realigned.{sample}.log")
+    shell:
+        """
+        samtools merge {output.bam} {input.bam1} {input.bam2}
+        samtools index {output.bam}
+        """
 
 rule samtools_stats:
     input:
-        bamfile = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
+        bamfile = os.path.join(OUTPUT_DIR, "aln_merged", "{sample}.bam"),
         ref = os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
     output: os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt")
     log: os.path.join(LOG_DIR, "SAMTOOLS", "samtools_stats.{sample}.log")
-    shell: "samtools stats --reference {input.ref} {input.bamfile} > {output} 2> {log}"
+    shell: "samtools stats --reference {input.ref} {input.bamfile} > {output} 2> {log} 2>&1"
 
 rule multiqc:
     input:
@@ -255,8 +301,8 @@ rule multiqc:
 
 rule getIndelStats:
     input:
-        bamIndex = os.path.join(GATK_DIR,  "{sample}.realigned.bai"),
-        bamFile = os.path.join(GATK_DIR, "{sample}.realigned.bam"),
+        bamIndex = os.path.join(OUTPUT_DIR, "aln_merged",  "{sample}.bam.bai"),
+        bamFile = os.path.join(OUTPUT_DIR,  "aln_merged", "{sample}.bam"),
         #bamIndex = os.path.join(MAPPED_READS_DIR,  "{sample}.bam.bai"),
         #bamFile = os.path.join(MAPPED_READS_DIR,  "{sample}.bam")
     output:
