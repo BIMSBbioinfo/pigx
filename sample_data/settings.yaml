@@ -15,6 +15,8 @@ tools:
     path: /home/buyar/.conda/envs/pigx_crispr/bin/java
     mem: "-Xmx8G"
     threads: "-XX:ParallelGCThreads=2"
-  gatk: /home/buyar/tools/GenomeAnalysisTK.jar 
+  gatk: /home/buyar/tools/GenomeAnalysisTK.jar
+  bbmap:
+    memory: "-Xmx20G" 
 
 comparisonsFile: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/comparisons.tsv
