@@ -30,7 +30,6 @@ Knit_Report = function(
     analysis_path   = NULL,
     analysis_names  = NULL,
     analysis_mode   = NULL,
-    genome          = NULL,
     report_chunks   = NULL,
     script_path     = NULL,
     width_params    = NULL,
@@ -51,7 +50,7 @@ Knit_Report = function(
         output_dir        = workdir,
         intermediates_dir = tempdir,
         clean             = TRUE,
-        output_file       = outfile,
+        output_file       = basename(outfile),
         output_format     = rmarkdown::html_document(
             code_folding    = 'hide',
             depth           = 2,
@@ -65,7 +64,6 @@ Knit_Report = function(
                       analysis_names = analysis_names,
                       report_chunks  = report_chunks,
                       analysis_mode   = analysis_mode,
-                      genome          = genome,
                       script_path    = script_path,
                       infile         = infile,
                       logo           = logo),
@@ -84,7 +82,6 @@ Knit_Report(
     analysis_path   = argv$params[['analysis_path']],
     analysis_names  = argv$params[['analysis_names']],
     analysis_mode   = argv$params[['analysis_mode']],
-    genome          = argv$params[['genome']],
     report_chunks   = argv$params[['report_chunks']],
     script_path     = argv$params[['script_path']],
     width_params    = argv$params[['width_params']],
@@ -92,3 +89,5 @@ Knit_Report(
     infile          = argv$input[['infile']],
     outfile         = argv$output[['outfile']]
 )
+
+warnings()

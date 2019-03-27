@@ -15,7 +15,6 @@ rule knit_report:
             width_params    = PARAMS['width_params'],
             # analysis mode can either be "ATAC" or "ChIP"
             analysis_mode   = ANALYSIS_MODE,
-            genome          = GENOME,
             logo            = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png"), 
             threads         = config['execution']['rules']['knit_report']['threads'],
             mem             = config['execution']['rules']['chipqc']['memory'],
