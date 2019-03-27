@@ -144,17 +144,18 @@ rule bbmap_map:
         reads = os.path.join(TRIMMED_READS_DIR, '{sample}.fastq.gz'),
         ref = os.path.join(BBMAP_INDEX_DIR, re.sub("\.fa(sta)?$", "", os.path.basename(REFERENCE_FASTA)))
     output:
-        os.path.join(MAPPED_READS_DIR, "{sample}.sam")
+        os.path.join(MAPPED_READS_DIR, "{sample}", "{sample}.sam")
     params:
-        aligner = lambda wildcards: get_bbmap_command(wildcards)
+        aligner = lambda wildcards: get_bbmap_command(wildcards),
+        memory = config['tools']['bbmap']['memory']
     log: os.path.join(LOG_DIR, "BBMAP", "bbmap_align.{sample}.log")
     shell:
-        "{params.aligner} path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1"
+        "{params.aligner} {params.memory} path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1"
 
 # GATK requires read groups, so here we add some dummy read group information to the bam files
 rule samtools_addReadGroups:
-    input: os.path.join(MAPPED_READS_DIR, "{sample}.sam")
-    output: os.path.join(MAPPED_READS_DIR, "{sample}.sam_withreadgroups")
+    input: os.path.join(MAPPED_READS_DIR,  "{sample}", "{sample}.sam")
+    output: os.path.join(MAPPED_READS_DIR, "{sample}", "{sample}.sam_withreadgroups")
     log: os.path.join(LOG_DIR, "SAMTOOLS", "samtools_addReadGroups.{sample}.log")
     shell:
         """
@@ -163,8 +164,8 @@ rule samtools_addReadGroups:
         """
 
 rule samtools_sam2bam:
-    input: os.path.join(MAPPED_READS_DIR, "{sample}.sam_withreadgroups")
-    output: os.path.join(MAPPED_READS_DIR, "{sample}.bam")
+    input: os.path.join(MAPPED_READS_DIR,  "{sample}", "{sample}.sam_withreadgroups")
+    output: os.path.join(MAPPED_READS_DIR,  "{sample}", "{sample}.bam")
     log: os.path.join(LOG_DIR, "SAMTOOLS", "samtools_sam2bam.{sample}.log")
     shell:
         """
@@ -173,8 +174,8 @@ rule samtools_sam2bam:
         """
 
 rule samtools_indexbam:
-    input: os.path.join(MAPPED_READS_DIR, "{sample}.bam")
-    output: os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai")
+    input: os.path.join(MAPPED_READS_DIR,  "{sample}", "{sample}.bam")
+    output: os.path.join(MAPPED_READS_DIR,  "{sample}", "{sample}.bam.bai")
     log: os.path.join(LOG_DIR, "samtools_indexbam.{sample}.log")
     shell: "samtools index {input} > {log} 2>&1"
 
@@ -183,8 +184,8 @@ rule samtools_indexbam:
 # second contains alignments without indels
 rule split_bam_by_indels:
     input:
-        bamFile = os.path.join(MAPPED_READS_DIR, "{sample}.bam"),
-        bamIndex = os.path.join(MAPPED_READS_DIR, "{sample}.bam.bai")
+        bamFile = os.path.join(MAPPED_READS_DIR,  "{sample}", "{sample}.bam"),
+        bamIndex = os.path.join(MAPPED_READS_DIR,  "{sample}", "{sample}.bam.bai")
     output:
         os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam"),
         os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam.bai"),
@@ -209,15 +210,21 @@ rule get_gatk_realigner_intervals:
         bamFile = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam")
     output:
         os.path.join(GATK_DIR, "{sample}.gatk_realigner.intervals")
-    params:
-        intervals = lambda wildcards: lookup('sample_name', wildcards.sample, ['target_region'])[0]
     log: os.path.join(LOG_DIR, "GATK", "gatk_realigner_target_creator.{sample}.log")
-    #shell:
-        #syntax for intervals: <chromosome>:start-end
-        #(here we remove the strand info that may exist in target_region)
-        #"echo {params.intervals} | sed 's/:[-+]$//g' > {output}"
-    #to use RealignerTargetCreator from GATK use the line below
     shell: "{JAVA} {JAVA_MEM} {JAVA_THREADS} -jar {GATK} -T RealignerTargetCreator --maxIntervalSize 10000 -R {input.ref} -I {input.bamFile} -o {output} > {log} 2>&1"
+
+# only consider realigner intervals that overlap target region
+rule subset_gatk_realigner_intervals:
+    input:
+        os.path.join(GATK_DIR, "{sample}.gatk_realigner.intervals")
+    output:
+        os.path.join(GATK_DIR, "{sample}.gatk_realigner.target.intervals")
+    params:
+        target_region = lambda wildcards: lookup('sample_name', wildcards.sample, ['target_region'])[0],
+        script = os.path.join(SRC_DIR, "src", "subset_gatk_realigner_intervals.R"),
+    log: os.path.join(LOG_DIR, "GATK", "subset_gatk_realigner_intervals.{sample}.log")
+    shell: "{RSCRIPT} {params.script} '{params.target_region}' {input} > {log} 2>&1"
+
 
 
 rule gatk_indelRealigner:
@@ -227,7 +234,7 @@ rule gatk_indelRealigner:
         ref_dict = os.path.join(FASTA_DIR, ".".join([os.path.basename(REFERENCE_FASTA).replace(".fa", ""), 'dict'])),
         bamIndex = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam.bai"),
         bamFile = os.path.join(OUTPUT_DIR, "aln_split_by_indels", "{sample}.with_indels.bam"),
-        intervals = os.path.join(GATK_DIR, "{sample}.gatk_realigner.intervals")
+        intervals = os.path.join(GATK_DIR, "{sample}.gatk_realigner.target.intervals")
     output:
         bam = os.path.join(GATK_DIR, "{sample}.indels.realigned.bam"),
         bai = os.path.join(GATK_DIR, "{sample}.indels.realigned.bai")
@@ -246,7 +253,7 @@ rule merge_bam:
     log: os.path.join(LOG_DIR, "SAMTOOLS", "merge.realigned.{sample}.log")
     shell:
         """
-        samtools merge {output.bam} {input.bam1} {input.bam2}
+        samtools merge {output.bam} {input.bam1} {input.bam2} 2> {log} 2>&1
         samtools index {output.bam}
         """
 
