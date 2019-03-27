@@ -17,6 +17,7 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = e
 params:
     analysis_path:  NULL
     analysis_names: NULL
+    analysis_mode:  NULL
     report_chunks:  NULL
     script_path:    NULL
     infile:         NULL
@@ -79,9 +80,35 @@ set_analysis = setdiff(params$analysis_names, .allowed_analysis_names)
 if(length(set_analysis))
   stop('The current analysis are not supported:', set_analysis)
 
+# set the mode of analysis to adjust sections and text
+analysis_mode = params$analysis_mode
+
 ncat = function(text)cat(paste0('\n',text),'\n')
 ```
 
+
+```{r Reporttoplevel_HEADER, eval=FALSE, include=FALSE}
+
+basic_paramsDesc <- c("Sample ID",
+            "Source directory",
+            "Output directory ([out]) ",
+            "Reference genome assembly"
+            )
+
+basic_paramsValues <- c( params$Samplename,
+             params$source_dir,
+             params$out_dir, 
+             params$assembly
+             )
+
+basic_inputParams <- data.frame(Parameters = basic_paramsDesc,
+                          Values = basic_paramsValues,
+                          stringsAsFactors = FALSE)
+#params
+#datatable(basic_inputParams,options = list(dom = 't'),rownames = FALSE)
+knitr::kable(basic_inputParams)
+
+```
 
 ```{r libraries, include=FALSE}
 suppressPackageStartupMessages({
@@ -140,9 +167,12 @@ peak_number_width   = 100
 
 # Sample Correlation
 
-The following figure shows clustering of normalized ChIP signal,
-quantified in 1 kb bins.
-The color scale represents spearman correlation coefficient. The samples should cluster based on their biological function, and not based on batch effects or latent variables.
+```{r Sample_Correlation_text, results='asis'}
+message = sprintf('The following figure shows clustering of normalized %s signal, quantified in 1 kb bins.
+The color scale represents spearman correlation coefficient. The samples should cluster based on their biological function, and not based on batch effects or latent variables.', analysis_mode)
+ncat(message)
+```
+
 
 ```{r Sample_Correlation, include=TRUE, fig.align='center', message=FALSE, warning=FALSE, fig.width=sample_correlation_width, fig.height=sample_correlation_height, warning=FALSE, message=FALSE}
 dcor = cor(lstats$ChIPQC$norm.count, method='spearman')
@@ -158,8 +188,18 @@ heatmaply(dcor,
 
 # Inter Strand Cross Correlation
 
-Inter strand cross-correlation show the correlation of ChIP signal between Watson and Crick strands. The coverage vectors are firstly shifted by the designated amount and correlation coefficient is calculated from the resulting vectors.
-If the DNA shearing, chromatin immunoprecipitation, and fragment selection were succesfull, the maximum value of the, per sample, distribution should correspond to the average fragment length.
+```{r Inter_Strand_Cross_Correlation_text, results='asis'}
+message = sprintf('Inter strand cross-correlation show the correlation of %s signal between Watson and Crick strands. The coverage vectors are firstly shifted by the designated amount and correlation coefficient is calculated from the resulting vectors.', analysis_mode)
+
+if( toupper(analysis_mode) == 'CHIP') {
+    message = paste(message,'If the DNA shearing, chromatin immunoprecipitation, and fragment selection were succesfull, the maximum value of the, per sample, distribution should correspond to the average fragment length.')
+} else {
+    message = paste(message,' If the DNA transposition and fragment selection were succesfull, the distribution should show a periodic pattern, corresponding to nucleosome positioning on the DNA.')
+}
+    
+ncat(message)
+```
+
 
 ```{r Cross_Correlation, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE,fig.width=10}
 cc = lstats$ChIPQC$shift_correlation %>%
@@ -190,6 +230,8 @@ heatmaply(cc,
 
 # Read duplication rate
 
+The following figure shows the proportion of fragments which were duplicated in each sample (e.g. fragments which have the same chr, start, end, strand).
+
 ```{r Read_Duplication_Rate, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE, eval=TRUE}
 lstats$ChIPQC$duplication_rate %>%
     arrange(duplication_percentage) %>%
@@ -198,8 +240,10 @@ lstats$ChIPQC$duplication_rate %>%
     geom_bar(position='dodge',stat='identity') +
     xlab('Sample') +
     ylab('Percentage of uniquely mapped positions')+
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    coord_flip()
 ```
+
+---
 
 # Reads Mapping to Mitochondrial Chromosome
 
@@ -213,8 +257,11 @@ lstats$ChIPQC$mitochondrial_reads %>%
     geom_bar(position='dodge',stat='identity') +
     xlab('Sample') +
     ylab('Percentage of reads mapping to mitochondrial DNA')+
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    ylim(c(0,1)) +
+    coord_flip()
 ```
+
+---
 
 # Library Complexity
 
@@ -225,7 +272,8 @@ lstats$ChIPQC$library_complexity %>%
     geom_bar(position='dodge',stat='identity')  +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     xlab('Percentage of unique reads') +
-    ylab('Number of mapped positions')
+    ylab('Number of mapped positions') +
+    coord_flip()
 ```
 
 ---
@@ -284,19 +332,20 @@ heatmaply(gc_heat,
 
 
 ```{r GC_Content_Plot_Header, include=TRUE, fig.align='center', results='asis'}
-ncat('## GC Content Distribution Per Sample {.tabset}')
+ncat('## GC Content Distribution Per Sample {.tabset .tabset-dropdown}')
 ```
 
 The following sets of plots show, for each sample the dependence of read counts on the GC content.
 
 ```{r GC_Content_Per_Sample_Plots, include=TRUE, fig.align='center', results='asis', eval=TRUE}
 for(sample in names(gl)){
-    ncat(paste('###',sample))
+    ncat(paste('###',sample, '{-}'))
     print(gl[[sample]])
-    cat('\n')
+    ncat('\n')
 }
 ```
 
+---
 
 # Read Distribution in Genomic Features
 
@@ -315,24 +364,21 @@ g = lstats$ChIPQC$Annotation %>%
         xlab('Sample') +
         ylab('Frequency of reads in genomic annotation') +
         scale_fill_brewer(name = 'Annotation', palette='Set2') +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+        coord_flip()
 
 read_distribution_width = length(unique(lstats$ChIPQC$Annotation$sample_name))*0.5
 ```
 
-```{r Read_Distribution_in_Genomic_Features_Plot, include=TRUE, fig.align='center', fig.width=read_distribution_width}
+```{r Read_Distribution_in_Genomic_Features_Plot, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10}
 print(g)
 ```
 
-
 ---
-
-
 
 ```{r Read_Distribution_in_Genomic_Features_Header2, include=analysis_ind['Extract_Signal_Annotation'], fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
 ncat('## Signal profiles around genomic features {.tabset}')
 
-message = 'The following sets of plots show the positional distribution of ChIP signal around sets of genomic features. The figures are not intended for hypothesis formation, and interpretation, rather, they should be used only for quality control. The profiles should look similar to the profiles from published experiments. For proper biological interpretation, the data should be analyzed in more detail, with corresponding statistical methods.'
+message = sprintf('The following sets of plots show the positional distribution of %s signal around sets of genomic features. The figures are not intended for hypothesis formation, and interpretation, rather, they should be used only for quality control. The profiles should look similar to the profiles from published experiments. For proper biological interpretation, the data should be analyzed in more detail, with corresponding statistical methods.',analysis_mode)
 ncat(message)
 ```
 
@@ -370,7 +416,7 @@ genomic_coordinates = lapply(setNames(genomic_locations,genomic_locations), func
 for(i in seq(genomic_locations)){
   location = genomic_locations[i]
   coordinates = genomic_coordinates[[location]]
-  ncat(paste('###',location))
+  ncat(paste('###',location, '{-}'))
   g = tab %>%
     dplyr::filter(genomic_location==location)  %>%
     ggplot(aes(position, value, color=sample_name)) +
@@ -391,16 +437,13 @@ for(i in seq(genomic_locations)){
 
 ---
 
-
 ```{r Peak_Statistics_Header, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis'}
 ncat('# Peak Statistics')
 
 message  = 'Frequency of reads in peaks is a read out of ChIP efficiency. For mamallian genomes an enrichment > 5% is considered as mediocre, an enrichment >10% is considered good, and >20% excellent. The samples should also be checked by looking at the signal profiles in the genome browser.'
 
 ncat(message)
-```
 
-```{r Peak_Statistics_Header2, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis'}
 ncat('## Frequency of reads in peaks')
 ```
 
@@ -419,18 +462,17 @@ g = dd %>%
   geom_bar(stat='identity', position='dodge') +
   xlab('Peak name')                           +
   ylab('Percentage of reads in peaks') +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() +
   scale_fill_discrete('Sample')
 
 number_of_peaks = length(unique(dd$sample_name))*0.5+2
 ```
 
-```{r Peak_Statistics_Header3, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis', fig.width=number_of_peaks}
+```{r Peak_Statistics_Header3, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis', fig.height=number_of_peaks, fig.width = 10}
 print(g)
 ```
 
 ---
-
 
 ```{r Peak_Number_Header, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', results='asis'}
 ncat('# Peak Distribution in Genomic Features')
@@ -439,10 +481,6 @@ message  = 'The following sets of plots show the peak distribution in functional
 
 ncat(message)
 
-
-```
-
-```{r Peak_Number_Header2, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', results='asis'}
 ncat('## Number of peaks per sample in genomic features')
 ```
 
@@ -462,13 +500,13 @@ g = lstats$Annotate_Peaks    %>%
   geom_bar(stat='identity') +
   xlab('Sample name') +
   ylab('Number of peaks') +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() + 
   scale_fill_brewer(name='Annotation', palette='Set2')
 
 peak_number_width = length(unique(lstats$Annotate_Peaks$sample_name))*0.5+4
 ```
 
-```{r Peak_Number_in_Genomic_Features_Plot, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', fig.width=peak_number_width}
+```{r Peak_Number_in_Genomic_Features_Plot, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', fig.height=peak_number_width, fig.width=10}
 print(g)
 ```
 
