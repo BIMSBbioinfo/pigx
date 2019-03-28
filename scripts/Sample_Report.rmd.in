@@ -155,7 +155,10 @@ number_of_samples = ncol(lstats$ChIPQC$norm.count)
 
 # ---------------------------------------------------------------------------- #
 # Figure sizes
-scale_factor = .6
+scale_factor = ifelse(number_of_samples<10,number_of_samples/10,
+                      ifelse(number_of_samples<=50,
+                             10/number_of_samples,
+                             15/number_of_samples))
 sample_correlation_width  = number_of_samples*scale_factor + 2
 sample_correlation_height = number_of_samples*scale_factor
 
