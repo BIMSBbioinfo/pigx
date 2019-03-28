@@ -167,11 +167,12 @@ ChIPQC = function(
 
 
         # Read duplication - library complexity calculation
-        granges_unique = unique(granges)
-        lout = Append_List_Element(lout, 'duplicated_reads',  length(granges_unique))
+        granges_duplicated = duplicated(granges)
+        lout = Append_List_Element(lout, 'duplicated_reads',  length(granges_duplicated))
         lout = Append_List_Element(lout, 'total_reads',  length(granges))
 
         # library complexity
+        granges_unique = unique(granges)
         cov_uniq = coverage(granges_unique, width=unname(chr_lengths[k]))
         cov_ind = cov_uniq > 0
         lout = Append_List_Element(lout, 'library_complexity', round(cov_uniq[cov_ind]/ lout$Cov[cov_ind],2))
