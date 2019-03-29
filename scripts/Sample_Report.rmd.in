@@ -425,6 +425,12 @@ genomic_coordinates = lapply(setNames(genomic_locations,genomic_locations), func
     v
 })
 
+make_plotly <- number_of_samples > 20
+```
+
+
+
+```{r Signal_profiles_in_genomic_features_ggplot, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation']&!make_plotly, fig.width = 10, results='asis'}
 for(i in seq(genomic_locations)){
   location = genomic_locations[i]
   coordinates = genomic_coordinates[[location]]
@@ -446,6 +452,67 @@ for(i in seq(genomic_locations)){
   cat('\n')
 }
 ```
+
+
+```{r Signal_profiles_in_genomic_features_plotly, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation']&make_plotly m fig.width = 10}
+
+tab_wide <- spread(tab, genomic_location, value)
+
+p <- plot_ly(data = tab_wide, x = ~position, color = ~sample_name, colors = "Set1") %>%
+    ## add default plot
+    add_lines( y = tab_wide[[genomic_locations[1]]], x = tab_wide[['position']]) %>%
+    layout(yaxis = list(title = 'Signal Value'),
+           xaxis = list(title = 'Relative position',
+                        tickvals = genomic_coordinates[[1]]$breaks,
+                        ticktext = genomic_coordinates[[1]]$labels))
+
+for(i in seq(2,length(genomic_locations))){
+    location = genomic_locations[i]
+    coordinates = genomic_coordinates[[location]]
+    ## other plots
+    p <- add_lines(p, 
+                   y = tab_wide[[location]], 
+                   x = tab_wide[['position']], 
+                   visible = F)
+}
+
+location_mask <- rep(genomic_locations, each = nrow(tab_wide)/length(unique(tab_wide$position)))
+
+## we want to update the plot to restyle and relayout in one go (see https://plot.ly/r/custom-buttons/#update-button)
+updateList <- list()
+for(i in seq(genomic_locations)){
+    ## determine which lines to show
+    visibility_mask <- location_mask == genomic_locations[[i]]
+    ## create updatemenue components
+    updateList[[i]] <- list(
+        method = "update",
+        ## for method 'update' args is a list with two internal lists 
+        ## (for restyle and relayout each)
+        args = list( 
+            ## restyle list
+            list(visible = visibility_mask),
+            ## relayout list
+            list(xaxis = list(tickvals = genomic_coordinates[[i]]$breaks, 
+                              ticktext = genomic_coordinates[[i]]$labels,
+                              title = 'Relative position'))
+                    ),
+        label = genomic_locations[[i]])
+}
+
+p <- p %>% layout(
+    xaxis = list(title = 'Relative position'),
+    yaxis = list(title = 'Signal Value'),
+    updatemenus = list(
+        list(y = 0.7,
+             title = "Genomic Feature",
+             buttons = updateList)
+        )
+    )
+p
+
+
+```
+
 
 ---
 
