@@ -158,7 +158,11 @@ number_of_samples = ncol(lstats$ChIPQC$norm.count)
 scale_factor = ifelse(number_of_samples<10,number_of_samples/10,
                       ifelse(number_of_samples<=50,
                              10/number_of_samples,
-                             15/number_of_samples))
+                             ifelse(number_of_samples <= 100,
+                                    15/number_of_samples,
+                                    0.15)
+                             )
+                      )
 sample_correlation_width  = number_of_samples*scale_factor + 2
 sample_correlation_height = number_of_samples*scale_factor
 
@@ -204,7 +208,7 @@ ncat(message)
 ```
 
 
-```{r Cross_Correlation, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE,fig.width=10}
+```{r Cross_Correlation, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE}
 cc = lstats$ChIPQC$shift_correlation %>%
     mutate(shift = shift*10) %>%
     tidyr::spread(shift, strand_correlation, fill=0) %>%
@@ -219,7 +223,7 @@ heatmaply(cc,
           xlab   = 'Read Shift',
           ylab   = 'Sample',
           k_col  = 2, k_row = 2,
-          limits = c(-1,1),
+          limits = c(0,1),
           colors = c('royalblue4','white','darkred'),
           Colv   = FALSE,
           column_text_angle = 90,
@@ -243,7 +247,8 @@ lstats$ChIPQC$duplication_rate %>%
     geom_bar(position='dodge',stat='identity') +
     xlab('Sample') +
     ylab('Percentage of uniquely mapped positions')+
-    coord_flip()
+    coord_flip() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ---
@@ -261,7 +266,8 @@ lstats$ChIPQC$mitochondrial_reads %>%
     xlab('Sample') +
     ylab('Percentage of reads mapping to mitochondrial DNA')+
     ylim(c(0,1)) +
-    coord_flip()
+    coord_flip() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ---
@@ -275,8 +281,10 @@ lstats$ChIPQC$library_complexity %>%
     geom_bar(position='dodge',stat='identity')  +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     xlab('Percentage of unique reads') +
-    ylab('Number of mapped positions') +
-    coord_flip()
+    ylab('Number of mapped positions') -> 
+    g
+
+ggplotly(g)
 ```
 
 ---
@@ -323,7 +331,7 @@ for(sample in unique(lstats$ChIPQC$GC$sample_name)){
 The figure shows the dependence of read counts on the GC content,
 quantified over 1 kb bins. The plot is a diagnostic for proper fragment selection and PCR amplification.
 
-```{r GC_Content_Plot, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = gc_fig_width, warning=FALSE, message=FALSE}
+```{r GC_Content_Plot, include=TRUE, fig.align='center', fig.height=sample_correlation_height, fig.width = 10, warning=FALSE, message=FALSE}
 heatmaply(gc_heat,
           xlab   = 'GC content',
           ylab   = 'Sample',
@@ -367,7 +375,8 @@ g = lstats$ChIPQC$Annotation %>%
         xlab('Sample') +
         ylab('Frequency of reads in genomic annotation') +
         scale_fill_brewer(name = 'Annotation', palette='Set2') +
-        coord_flip()
+        coord_flip() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 read_distribution_width = length(unique(lstats$ChIPQC$Annotation$sample_name))*0.5
 ```
@@ -466,6 +475,7 @@ g = dd %>%
   xlab('Peak name')                           +
   ylab('Percentage of reads in peaks') +
   coord_flip() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
   scale_fill_discrete('Sample')
 
 number_of_peaks = length(unique(dd$sample_name))*0.5+2
@@ -490,21 +500,23 @@ ncat('## Number of peaks per sample in genomic features')
 
 ```{r Peak_Number_in_Genomic_Features, include=FALSE, eval=analysis_ind['Annotate_Peaks'], fig.align='center'}
 g = lstats$Annotate_Peaks    %>%
+    
     mutate(annot = case_when(
       annot == 'none' ~ 'intergenic',
       TRUE ~ as.character(annot)
     )) %>%
-  group_by(sample_name) %>%
-  mutate(n = sum(counts)) %>%
-  arrange(desc(-n)) %>%
-  ungroup() %>%
-  mutate(sample_name = factor(sample_name, ordered=TRUE, levels=unique(sample_name))) %>%
-  ggplot(aes(sample_name, counts, fill=annot)) +
-  geom_bar(stat='identity') +
-  xlab('Sample name') +
-  ylab('Number of peaks') +
-  coord_flip() + 
-  scale_fill_brewer(name='Annotation', palette='Set2')
+    group_by(sample_name) %>%
+    mutate(n = sum(counts)) %>%
+    arrange(desc(-n)) %>%
+    ungroup() %>%
+    mutate(sample_name = factor(sample_name, ordered=TRUE, levels=unique(sample_name))) %>%
+    ggplot(aes(sample_name, counts, fill=annot)) +
+    geom_bar(stat='identity') +
+    xlab('Sample name') +
+    ylab('Number of peaks') +
+    coord_flip() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_fill_brewer(name='Annotation', palette='Set2')
 
 peak_number_width = length(unique(lstats$Annotate_Peaks$sample_name))*0.5+4
 ```
