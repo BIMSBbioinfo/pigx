@@ -97,6 +97,7 @@ Peak_Statistics = function(
       })
     cnts   = cnts[sapply(cnts, function(x)!is.null(x))]
     cntmat = as.data.frame(do.call(cbind, lapply(cnts, function(x)assays(x)[[1]]))) %>%
+      setNames( .,  str_replace(names(.),bam_suffix,'') ) %>%
       mutate(sample_name = names(peaks)) %>%
       merge(x=peaks_sheet) %>%
       mutate(peak_number = elementNROWS(peaks)[sample_name]) %>%
