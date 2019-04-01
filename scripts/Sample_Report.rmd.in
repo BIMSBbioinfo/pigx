@@ -155,14 +155,19 @@ number_of_samples = ncol(lstats$ChIPQC$norm.count)
 
 # ---------------------------------------------------------------------------- #
 # Figure sizes
-scale_factor = ifelse(number_of_samples<10,number_of_samples/10,
+
+getScaleFactor <- function(number_of_samples,stdHeight=10,
+                           incHeight=15,minScale=0.15) {
+    scale_factor = ifelse(number_of_samples<stdHeight,number_of_samples/stdHeight,
                       ifelse(number_of_samples<=50,
-                             10/number_of_samples,
+                             stdHeight/number_of_samples,
                              ifelse(number_of_samples <= 100,
-                                    15/number_of_samples,
-                                    0.15)
-                             )
-                      )
+                                    incHeight/number_of_samples,
+                                    minScale)))
+    return(scale_factor)
+}
+
+scale_factor <- getScaleFactor(number_of_samples)
 sample_correlation_width  = number_of_samples*scale_factor + 2
 sample_correlation_height = number_of_samples*scale_factor
 
@@ -454,7 +459,7 @@ for(i in seq(genomic_locations)){
 ```
 
 
-```{r Signal_profiles_in_genomic_features_plotly, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation']&make_plotly m fig.width = 10}
+```{r Signal_profiles_in_genomic_features_plotly, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation']&make_plotly, fig.width = 10}
 
 tab_wide <- spread(tab, genomic_location, value)
 
@@ -548,7 +553,7 @@ number_of_peaks = length(unique(dd$sample_name))*0.5+2
 ```
 
 ```{r Peak_Statistics_Header3, include=analysis_ind['Peak_Statistics'], eval=analysis_ind['Peak_Statistics'], fig.align='center', results='asis', fig.height=number_of_peaks, fig.width = 10}
-print(g)
+ggplotly(g)
 ```
 
 ---
@@ -584,12 +589,18 @@ g = lstats$Annotate_Peaks    %>%
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     scale_fill_brewer(name='Annotation', palette='Set2')
 
-peak_number_width = length(unique(lstats$Annotate_Peaks$sample_name))*0.5+4
+number_of_peaks <- unique(lstats$Annotate_Peaks$sample_name)
+peak_number_width = length(number_of_peaks)*getScaleFactor(number_of_peaks)+4
 ```
 
-```{r Peak_Number_in_Genomic_Features_Plot, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks'], fig.align='center', fig.height=peak_number_width, fig.width=10}
+```{r Peak_Number_in_Genomic_Features_Plot_ggplot, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks']&!make_plotly, fig.align='center', fig.height=peak_number_width, fig.width=10}
 print(g)
 ```
+
+```{r Peak_Number_in_Genomic_Features_Plot_ggplotly, include=analysis_ind['Annotate_Peaks'], eval=analysis_ind['Annotate_Peaks']&make_plotly, fig.align='center', fig.height=peak_number_width, fig.width=10}
+ggplotly(g)
+```
+
 
 ---
 
