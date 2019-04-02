@@ -17,7 +17,7 @@ rule bam2bigWig:
         spikein     = lambda wc: get_spikein_information(wc.name),
         sample_name = lambda wc: wc.name
     log:
-        logfile = os.path.join(PATH_LOG, "{name}", 'bam2bigWig.log')
+        logfile = os.path.join(PATH_LOG, "{name}", '{name}.{genome_type}_genome.bam2bigWig.log')
     message:"""
         Making bigWig:
             input :   {input.bamfile}

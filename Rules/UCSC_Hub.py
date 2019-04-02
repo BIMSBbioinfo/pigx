@@ -37,7 +37,7 @@ rule bedTobigBed:
         name        = '{name}',
         bedToBigBed = SOFTWARE['bedToBigBed']['executable']
     log:
-        log = os.path.join(PATH_LOG, "{name}.bedtobigbed.log")
+        log = os.path.join(PATH_LOG, "{name}", "{name}.bedtobigbed.log")
     message:"""
             bedToBigBed:
                 input : {input}

@@ -7,7 +7,7 @@ rule chipqc:
         nucleotide_frequency = os.path.join(PATH_INDEX, '{genome_type}','{genome}.NucleotideFrequency.GRanges.rds'),
         annotation           = rules.prepare_annotation.output.outfile
     output:
-        outfile  = os.path.join(PATH_RDS_CHIPQC, '{genome_type}' ,"{name}_{genome}_ChIPQC.rds")
+        outfile  = os.path.join(PATH_RDS_CHIPQC, '{genome_type}','{genome}' ,"{name}_ChIPQC.rds")
     params:
         use_longest_chr = PARAMS['chipqc']['use_longest_chr'],
         sample_name     = "{name}",
@@ -19,7 +19,7 @@ rule chipqc:
         chrM_givenName  = PARAMS['chipqc']['chrM_givenName'],
         discard_chrM    = PARAMS['chipqc']['discard_chrM']
     log:
-        logfile = os.path.join(PATH_LOG, '{name}_{genome}_ChIPQC.log')
+        logfile = os.path.join(PATH_LOG, "{name}", '{name}.{genome_type}_genome_{genome}.ChIPQC.log')
     message:
         """
             Running: ChIPQC:

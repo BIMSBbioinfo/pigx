@@ -14,7 +14,7 @@ rule idr:
         idr        = SOFTWARE['idr']['executable'],
         params_idr = PARAMS['idr']
     log:
-        log = os.path.join(PATH_LOG, '{name}.idr.log')
+        log = os.path.join(PATH_LOG, '{name}', '{name}.idr.log')
     message:"""
             Running IDR2:
                 input : {input.ChIP1} {input.ChIP2}

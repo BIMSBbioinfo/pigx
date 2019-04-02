@@ -56,7 +56,7 @@ rule link_genome:
         threads = config['execution']['rules']['link_genome']['threads'],
         mem     = config['execution']['rules']['link_genome']['memory'],
     log:
-        logfile = os.path.join(PATH_LOG, "link_genome.log")
+        logfile = os.path.join(PATH_LOG, "link_{genome_type}_genome_{genome}.log")
     message:
         """
             Linking genome fasta:
@@ -78,7 +78,7 @@ rule bowtie2_build:
     params:
         bowtie2_build = SOFTWARE['bowtie2-build']['executable']
     log:
-        log = os.path.join(PATH_LOG, "bowtie2_build_{genome_type}.log")
+        log = os.path.join(PATH_LOG, "bowtie2_build_{genome_type}_genome_{genome}.log")
     message:
         """
             Constructing bowtie2 index:
@@ -110,7 +110,7 @@ rule index_to_chrlen:
             grep = SOFTWARE['grep']['executable'],
             cut = SOFTWARE['cut']['executable']
         log:
-            log = os.path.join(PATH_LOG, "index_to_chrlen.log")
+            log = os.path.join(PATH_LOG, "index_to_chrlen_{genome_type}_genome_{genome}.log")
         message:
             """
                 Extracting chromosome lengths from index:
@@ -146,7 +146,7 @@ rule construct_genomic_windows:
             scriptdir = SCRIPT_PATH,
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
-            logfile = os.path.join(PATH_LOG, 'construct_genomic_windows.log')
+            logfile = os.path.join(PATH_LOG, 'construct_genomic_windows_{genome_type}_genome_{genome}.log')
         message:"""
                 Running: construct_genomic_windows:
                     output: {output.outfile}
@@ -169,7 +169,7 @@ rule extract_nucleotide_frequency:
             scriptdir = SCRIPT_PATH,
             Rscript   = SOFTWARE['Rscript']['executable']
         log:
-            logfile = os.path.join(PATH_LOG, 'extract_nucleotide_frequency.log')
+            logfile = os.path.join(PATH_LOG, 'extract_nucleotide_frequency_{genome_type}_genome_{genome}.log')
         message:"""
                 Running: extract_nucleotide_frequency:
                     output: {output.outfile}
@@ -197,7 +197,7 @@ rule bowtie2:
         library        = lambda wc: get_library_type(wc.name),
         params_bowtie2 = PARAMS['bowtie2']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}.bowtie2_{genome_type}.log")
+        logfile = os.path.join(PATH_LOG, "{name}", "{name}.bowtie2_{genome_type}.log")
     message:"""
         Mapping with bowtie2:
             sample: {input.infile}
@@ -234,7 +234,7 @@ rule samtools_quality_filter:
         threads  = config['execution']['rules']['samtools_quality_filter']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}","samtools_quality_filter_{mapq}.log")
+        logfile = os.path.join(PATH_LOG, "{name}","{name}.{genome_type}_genome.samtools_quality_filter_{mapq}.log")
     message:"""
             Filter reads by mapping quality:
                 input: {input}
@@ -254,7 +254,7 @@ rule samtools_deduplicate:
         threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.samtools_deduplicate.log")
+        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.{genome_type}_genome.samtools_deduplicate.log")
     message:"""
             Deduplicating mapped reads:
                 input: {input}
@@ -280,7 +280,7 @@ rule samtools_sort:
         threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.samtools_sort.log")
+        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.{genome_type}_genome.samtools_sort.log")
     message:"""
             Sorting mapped reads:
                 input: {input}
@@ -301,7 +301,7 @@ rule samtools_index:
     params:
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}.samtools_index.log")
+        logfile = os.path.join(PATH_LOG, "{name}","{name}.{genome_type}_genome.samtools_index.log")
     message:"""
         Indexing bam file:\n
             input: {input}
