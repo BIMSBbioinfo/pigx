@@ -273,8 +273,11 @@ NUCLEOTIDE_FREQ = [GENOME_MAIN_PREFIX_PATH + '.NucleotideFrequency.GRanges.rds']
 FASTQC          = [FASTQC_DICT[i]['fastqc'] for i in list(FASTQC_DICT.keys())]
 MULTIQC         = [os.path.join(PATH_REPORTS, "multiqc.html")]
 ChIPQC          = expand(
-    os.path.join(PATH_RDS_CHIPQC, GENOME_TYPES['Main'], 
-    "{name}_" + GENOME_HASH['Main']['genome_name'] + "_ChIPQC.rds"), 
+    os.path.join(
+        PATH_RDS_CHIPQC, 
+        GENOME_TYPES['Main'], 
+        GENOME_HASH['Main']['genome_name'], 
+        "{name}_ChIPQC.rds"), 
     name=NAMES)
 BW              = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
