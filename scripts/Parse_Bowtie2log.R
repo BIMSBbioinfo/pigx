@@ -16,7 +16,7 @@ Parse_Bowtie2log = function(
     # ------------------------------------------------------------------------ #
 
     message('Parsing log files ...')
-    infiles = list.files(path_log, full.names=TRUE, pattern='bowtie2')
+    infiles = list.files(path_log, full.names=TRUE, recursive = TRUE ,pattern='bowtie2')
     infiles = infiles[!str_detect(infiles,'build')]
 
     ld = list()
