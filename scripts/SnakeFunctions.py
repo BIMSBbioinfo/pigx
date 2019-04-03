@@ -44,7 +44,7 @@ def read_SAMPLE_SHEET(config):
         sys.exit(message)
     elif not os.path.isfile(config['locations']['sample-sheet']):
         print(config['locations']['sample-sheet'])
-        message = 'ERROR: sample-sheet file is does not exist\n'
+        message = 'ERROR: sample-sheet file does not exist\n'
         sys.exit(message)
 
     SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
