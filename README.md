@@ -37,11 +37,17 @@ configurable manner.
 - narrowPeak files
 - UCSC track hub folder
 
-# Install
+# Installation of the PiGx-ChIPseq Pipeline
+
+## Install via guix
 
 You can install this pipeline with all its dependencies using GNU Guix:
 
     guix package -i pigx-chipseq
+    
+After exporting the guix profile to the PATH you should be able to [get started](#getting-started).
+
+## Install from source
 
 You can also install it from source manually.  You can find the
 [latest
@@ -55,7 +61,7 @@ unpacking the latest release tarball:
 make install
 ```
 
-# Dependencies
+### Dependencies
 
 By default the `configure` script expects tools to be in a directory
 listed in the `PATH` environment variable.  If the tools are installed
@@ -64,7 +70,16 @@ script about them with variables.  Run `./configure --help` for a list
 of all variables and options.
 
 You can prepare a suitable environment with Conda or with [GNU
-Guix](https://gnu.org/s/guix).  If you do not use one of these package
+Guix](https://gnu.org/s/guix). 
+
+Assuming you have Guix installed, the following command spawns a
+sub-shell in which all dependencies are available:
+
+```sh
+guix environment -l guix.scm
+```
+
+If you do not use one of these package
 managers, you will need to ensure that the following software is
 installed:
 
@@ -114,14 +129,7 @@ installed:
 
 </details>
 
-## Via Guix
 
-Assuming you have Guix installed, the following command spawns a
-sub-shell in which all dependencies are available:
-
-```sh
-guix environment -l guix.scm
-```
 
 
 # Getting started
