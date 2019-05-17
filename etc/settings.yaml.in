@@ -128,6 +128,7 @@ general:
 #    # idr analysis can have any name, but the names have to be unique
 #    ChIP_IDR:
 #        # define the pair of samples, add more combinations for more replicates
+#        # ChIP1 and ChIP2 are required labels, only adjust values of those
 #        ChIP1: Peaks1
 #        ChIP2: Peaks2
 ## ------------------------------------------------------------ #
