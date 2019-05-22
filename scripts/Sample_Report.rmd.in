@@ -541,7 +541,7 @@ dd = lstats$Peak_Statistics$peaks_sample %>%
 
 g = dd %>%
   dplyr::filter(bam_name == sample_cnt)                          %>%
-  ggplot(aes(bam_name, value, fill=sample_name)) +
+  ggplot(aes(x = sample_name, y = value, fill=bam_name)) +
   geom_bar(stat='identity', position='dodge') +
   xlab('Peak name')                           +
   ylab('Percentage of reads in peaks') +
