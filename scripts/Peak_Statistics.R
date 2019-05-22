@@ -90,7 +90,8 @@ Peak_Statistics = function(
         sub = subset(peaks_sheet, library==x)
         if(nrow(sub) > 0){
             bam_files  = BamFileList(unique(sub$bam_file),  yieldSize = 100000)
-            summarizeOverlaps(peaks, bam_files, singleEnd = x == 'single', ignore.strand=TRUE)
+            summarizeOverlaps(peaks, bam_files, singleEnd = x == 'single', ignore.strand=TRUE, 
+                              inter.feature = FALSE)
         }else{
             NULL
         }
