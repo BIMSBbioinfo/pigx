@@ -492,6 +492,17 @@ Trimgalore adaptor and quality trimmed files.
 
 Contains a completely formatted UCSC hub, with track descriptions, peaks and bigWig tracks.
 
+# Documentation
+
+If are interested in the general workflow of the pipeline and want to learn more about PiGx make sure you check:
+- the docs at https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-chip-seq.html#pigx-chip-seq
+- our other pipelines at https://bioinformatics.mdc-berlin.de/pigx/
+
+# Citation
+
+If you use the pipeline in published research, please cite our publication:
+
+Wurmus, R., Uyar, B., Osberg, B., Franke, V., Gosdschan, A., Wreczycka, K., Ronen, J., Akalin, A. (2018). PiGx: Reproducible genomics analysis pipelines with GNU Guix. GigaScience. https://doi.org/10.1093/gigascience/giy123 
 
 # Questions
 If you have further questions please e-mail:
