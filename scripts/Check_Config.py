@@ -69,7 +69,7 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
 
     # ---------------------------------------------------------------------------- #
     # checks whether the fasta header contains whitespaces
-    message = check_fasta_header(locations_dict['genome-file'], message)
+    message = check_fasta_header(locations_dict['genome-file'], message, locations_dict['gff-file'])
 
     # ---------------------------------------------------------------------------- #
     # checks whether the general section is properly formatted
@@ -207,7 +207,7 @@ def check_params(config_dict, params, message):
 
 # ---------------------------------------------------------------------------- #
 # checks fasta header for spaces
-def check_fasta_header(genome_file, message):
+def check_fasta_header(genome_file, message, gtf_file = None):
     import re
     import sys
     import magic as mg
@@ -224,12 +224,42 @@ def check_fasta_header(genome_file, message):
     ws = ord(' ')
     tab= ord('\t')
     bar = ord('|')
-
+    
+    chr_list = []
     for line in file:
         if line[0] == gt:
             if (ws in line) or (tab in line) or (bar in line) : 
                 message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
                 return(message)
+            if gtf_file:
+                chr_list.append(line.split()[0])
+
+    if gtf_file:
+        message = message + check_gtf_sequence_names(gtf_file, chr_list, message)
+
+    return(message)
+
+
+def check_gtf_sequence_names(gtf_file, chr_list, message):
+    import re
+    import sys
+    import magic as mg
+    import gzip
+
+    gtf_file_type = mg.from_file(gtf_file, mime=True)
+    if gtf_file_type.find('gzip') > 0:
+        file = gzip.open(gtf_file, 'rb')
+    else:
+        file = open(gtf_file, "rb")
+   
+    chroms = [ chrom.decode().replace('>','').encode() for chrom in chr_list ]
+    for line in file:
+        if not line.split()[0] in chroms:
+            message = message + ''.join([
+                'GTF file contains sequence names not found in genome fasta headers: ',
+                line.split()[0].decode(),'\n',
+                'Please check for matching assemblies and providers.','\n'])
+            return(message)
 
     return(message)
 
