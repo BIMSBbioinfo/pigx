@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------- #
 def get_sample_idr(wc):
     name = config['idr'][wc.name]
-    samps = dict(zip(name.keys(),[os.path.join(PATH_PEAK, i, i + '_qsort.bed') for i in name.values()]))
+    samps = [os.path.join(PATH_PEAK, i, i + '_qsort.bed') for i in name.values()]
     return(samps)
 
 
@@ -17,13 +17,13 @@ rule idr:
         log = os.path.join(PATH_LOG, '{name}', '{name}.idr.log')
     message:"""
             Running IDR2:
-                input : {input.ChIP1} {input.ChIP2}
+                input : {input}
                 output: {output.outfile}
         """
     run:
         command = " ".join(
         [params.idr,
-        '--samples', input.ChIP1, input.ChIP2,
+        '--samples', input,
         '--input-file-type',  'bed',
         '--output-file-type', 'bed',
         '--rank', '9',

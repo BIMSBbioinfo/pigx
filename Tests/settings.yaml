@@ -98,6 +98,9 @@ idr:
     ChIP_IDR:
         ChIP1: Peaks1
         ChIP2: Peaks2
+    ChIP_IDR2:
+        ChIP1: Peaks1
+        ChIP3: Peaks2
 
 # ------------------------------------------------------------ #
 hub:
