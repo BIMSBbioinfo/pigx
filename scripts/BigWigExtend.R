@@ -44,7 +44,7 @@ Extend_Regions = function(
     lcov = NULL
     total = 0
     while (length(chunk <- readGAlignments(bamfile, param=param))) {
-        gchunk = resize(granges(chunk), width=extend)
+        gchunk = trim(resize(granges(chunk), width=extend))
         cov = coverage(gchunk)
         if(is.null(lcov)){
             lcov = cov
