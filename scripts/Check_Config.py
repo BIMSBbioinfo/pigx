@@ -106,12 +106,12 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
         if(len(config['peak_calling']) > 0 and len(config['idr']) > 0):
             peaks_calling = set(config['peak_calling'].keys())
             for i in config['idr'].keys():
-                print(i)
                 peaks_idr = set([config['idr'][i][j] for j in config['idr'][i].keys()])
                 if not len(peaks_idr) == 2:
                     message = message + "\tIDR: " + i + " Cannot do comparisons of more than two peak sets.\n"
-                if len(peaks_idr - peaks_calling) > 0:
-                    message = message + "\tIDR: " + i + " Contains samples not in peak calling\n"
+                peaks_not_defined = peaks_idr - peaks_calling    
+                if len(peaks_not_defined) > 0:
+                    message = message + "\tIDR: " + i + " Contains samples not in peak calling: "+ " ".join(peaks_not_defined) +"\n"
 
     # ------------------------------------------------------------------------ #
     # checks for proper feature combination

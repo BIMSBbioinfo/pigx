@@ -23,7 +23,7 @@ rule idr:
     run:
         command = " ".join(
         [params.idr,
-        '--samples', input,
+        '--samples', " ".join(input),
         '--input-file-type',  'bed',
         '--output-file-type', 'bed',
         '--rank', '9',
