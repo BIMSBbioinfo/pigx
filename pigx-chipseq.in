@@ -379,6 +379,9 @@ if config['execution']['submit-to-cluster']:
         else:
             raise
     qsub = "qsub -v R_LIBS_USER -v PATH -v GUIX_LOCPATH -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    if config['execution']['cluster']['log-dir']:
+        qsub += " -o %s/ " % config['execution']['cluster']['log-dir']
+        qsub += " -e %s/ " % config['execution']['cluster']['log-dir']
     if config['execution']['cluster']['args']:
         qsub += " " + config['execution']['cluster']['args']
     command += [

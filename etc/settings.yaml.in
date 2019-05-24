@@ -181,6 +181,7 @@ execution:
     memory: 8G
     stack: 128M
     contact-email: none
+    log-dir: 'Log/Cluster'
     args: ''
   rules:
     __default__:
