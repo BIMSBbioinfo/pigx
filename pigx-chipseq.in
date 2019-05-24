@@ -34,7 +34,7 @@ if 'yes' == '@capture_environment@':
 
 import argparse
 from os import path
-import os, sys, json, csv, yaml
+import os, sys, json, csv, yaml, errno
 from snakemake.utils import update_config
 import shutil, filecmp
 from glob import glob
@@ -373,7 +373,7 @@ if config['execution']['submit-to-cluster']:
     try:
         subprocess.call(["qsub", "-help"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except OSError as e:
-        if e.errno == os.errno.ENOENT:
+        if e.errno == errno.ENOENT:
             print("Error: Your system does not seem to support cluster submission.\nReason: Could not find qsub executable.", file=sys.stderr)
             exit(1)
         else:
