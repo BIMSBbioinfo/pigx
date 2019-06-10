@@ -92,13 +92,16 @@ installed:
 
 ## Via Conda
 
+Although we highly recommend using Guix to install the software, it is also possible 
+to install the dependencies via Conda. 
+
 - Download pigx_rnaseq source code 
     - run: 
     > git clone https://github.com/BIMSBbioinfo/pigx_rnaseq.git
 - Download and install Anaconda from https://www.anaconda.com/download
-- Locate the 'environment.yml' file in the source code. 
+- Locate the 'requirements.txt' file in the source code. 
     - run:
-    > conda env create -f environment.yml #provide path to the environment.yml file
+    > conda create --name pigx_rnaseq --file requirements.txt
     - activate the environment:
     > source activate pigx_rnaseq 
 
