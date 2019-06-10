@@ -351,14 +351,13 @@ pheatmap::pheatmap(vsd.counts[select,],
          annotation_col=df, 
          main = 'Heatmap of the Normalized Expression Values (VST) of \n Top 100 Genes with highest variance across samples')
 #save image to folder
-pdf(file = file.path(imagesDir, 'heatmap.pdf'))
 pheatmap::pheatmap(vsd.counts[select,], 
          cluster_rows=TRUE, 
          show_rownames=FALSE, 
          cluster_cols=TRUE, 
-         annotation_col=df, 
+         annotation_col=df,
+         filename = file.path(imagesDir, 'heatmap.pdf'),
          main = 'Heatmap of the Normalized Expression Values (VST) of \n Top 100 Genes with highest variance across samples')
-invisible(dev.off())
 ```
 
 # Exploratory Plots and Tables
