@@ -47,19 +47,15 @@ names(sampleGuides) <- as.character(sampleSheet$sample_name)
 # return: data.frame (nrow = nrow(indels), columns are sgRNA ids, 
 #         values are 1 if indel overlaps cutsite, otherwise 0. 
 overlapCutSites <- function(indels, cutSites, extend = 5) {
-  cutSites <- flank(cutSites, width = extend, both = TRUE)
-  query.start <- GenomicRanges::makeGRangesFromDataFrame(indels, start.field = 'start', end.field = 'start')
-  query.end <- GenomicRanges::makeGRangesFromDataFrame(indels, start.field = 'end', end.field = 'end')
-  
-  startOverlaps <- as.data.table(findOverlaps(query.start, flank(cutSites, width = extend, both = TRUE), type = 'any', ignore.strand = TRUE))
-  endOverlaps <- as.data.table(findOverlaps(query.end, cutSites, type = 'any', ignore.strand = TRUE))
-  
-  overlaps <- merge(startOverlaps, endOverlaps, by = c('queryHits', 'subjectHits'), all = TRUE)
+  cutSites_ext <- flank(cutSites, width = extend, both = TRUE)
+  #check if indel overlaps with the cut site
+  query <- GenomicRanges::makeGRangesFromDataFrame(indels)
+  overlaps <- as.data.table(findOverlaps(query, cutSites_ext, type = 'any', ignore.strand = TRUE))
   
   M <- matrix(data = rep(0, nrow(indels) * length(cutSites)), 
               nrow = nrow(indels), ncol = length(cutSites))
   colnames(M) <- cutSites$name
-
+  
   M[as.matrix(overlaps)] <- 1
   
   return(M)
@@ -196,7 +192,7 @@ insertions <- do.call(rbind, lapply(unique(insertions$sample), function(s) {
 insertions$freq <- insertions$ReadSupport/insertions$coverage
 
 #find overlaps with cut sites 
-insertions <- cbind(insertions, overlapCutSites(indels = insertions, cutSites = cutSites, extend =  10))
+insertions <- cbind(insertions, overlapCutSites(indels = insertions, cutSites = cutSites))
 
 # for each sample, find the guides used in the sample and find out if the indels overlap cut sites 
 # warnings: only restrict to the cut sites relevant for the sample
