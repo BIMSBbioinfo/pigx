@@ -27,7 +27,7 @@ mapped_files_dir = args[1]
 reads_per_gene_files = list.files(mapped_files_dir, 'ReadsPerGene')
 sample_names = unlist(lapply(strsplit(reads_per_gene_files, "_Reads"), function(x) x[1]))
 
-readspergene = lapply(reads_per_gene_files, function(f) read.table(file.path(mapped_files_dir, f), skip=4))
+readspergene = lapply(reads_per_gene_files, function(f) read.table(file.path(mapped_files_dir, f), skip=5))
 genes = readspergene[[1]]$V1
 
 readsmatrix = matrix(nrow=length(genes), ncol=length(sample_names))
