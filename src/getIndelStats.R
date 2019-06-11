@@ -91,21 +91,22 @@ getIndelScores <- function(alnCov, indelReads) {
 }
 
 # filter out reads with at least 1 deletion and 1 insertion
-# filter out reads that have substitutions adjacent  to deletions (suggest complex events)
+# filter out reads that have substitutions adjacent to deletions or insertions (suggest complex events)
 readsToFilter <- function(aln) {
   dt <- data.table::data.table('cigar' = cigar(aln), 
                                'readID' = mcols(aln)$qname)
-  #find reads with at least one insertion and one deletion
-  #ins_del <- dt[grepl(pattern = '(I.*D)|(D.*I)', x = dt$cigar)]$readID
-  
+
   #find reads with more than one insertions or deletions  
   mul_indel <- dt[which(stringi::stri_count(regex = "D|I", dt$cigar) > 1),]$readID
     
   #find reads with substitutions adjacent to a deletion
   adj_del_sub <- dt[grepl(pattern = '(X[0-9]+D)|(D[0-9]+X)', x = dt$cigar)]$readID
   
+  #find reads with substitutions adjacent to an insertion
+  adj_ins_sub <- dt[grepl(pattern = '(X[0-9]+I)|(I[0-9]+X)', x = dt$cigar)]$readID
+  
   #take the union of all types of reads to remove
-  toFilter <- union(mul_indel, adj_del_sub)
+  toFilter <- unique(c(mul_indel, adj_del_sub, adj_ins_sub))
   
   return(toFilter)
 }
@@ -126,7 +127,7 @@ if(tech == 'illumina') {
   toFilter <-  readsToFilter(aln)
   message("Filtering out ",length(toFilter)," out of ",length(unique(indelReads$name)), 
           " indel reads (",round(length(toFilter) / length(unique(indelReads$name)) * 100, 2),"%)",
-          " \n\tdue to multiple indel events per read or mismatches adjacent to deletions.")
+          " \n\tdue to multiple indel events per read or mismatches adjacent to indels")
   
   indelReads <- indelReads[!indelReads$name %in% toFilter]
 }
