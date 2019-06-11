@@ -118,12 +118,15 @@ tools:
     executable: @FASTQC@
   star:
     executable: @STAR@
+    args: ""
   java:
     executable: @JAVA@
   perl:
     executable: @PERL@
+    args: ""
   python:
     executable: @PYTHON@
+    args: ""
   cat:
     executable: @CAT@
   rm:

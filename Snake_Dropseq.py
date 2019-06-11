@@ -249,6 +249,7 @@ if GENOME_SECONDARY_IND:
             genome_name_primary   = GENOME_NAME_PRIMARY,
             genome_name_secondary = GENOME_NAME_SECONDARY,
             perl = SOFTWARE['perl']['executable'],
+            perl_args = SOFTWARE['perl']['executable']['args'],
             cat =  SOFTWARE['cat']['executable']
         message:
             """
@@ -258,8 +259,8 @@ if GENOME_SECONDARY_IND:
                     output: {output.outfile}
             """
         shell:"""
-            {params.cat} {input.primary}   | {params.perl} -pe 's|^>|>{params.genome_name_primary}|' >     {output.outfile}
-            {params.cat} {input.secondary} | {params.perl} -pe 's|^>|>{params.genome_name_secondary}|' >> {output.outfile}
+            {params.cat} {input.primary}   | {params.perl} {params.perl_args} -pe 's|^>|>{params.genome_name_primary}|' >     {output.outfile}
+            {params.cat} {input.secondary} | {params.perl} {params.perl_args} -pe 's|^>|>{params.genome_name_secondary}|' >> {output.outfile}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -273,6 +274,7 @@ rule make_star_reference:
     params:
         outdir  = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
         star    = SOFTWARE['star']['executable'],
+        star_args = SOFTWARE['star']['executable']['args'],
         threads = config['execution']['rules']['make_star_reference']['threads'],
         mem     = config['execution']['rules']['make_star_reference']['memory']
     log:
@@ -284,7 +286,7 @@ rule make_star_reference:
                 gtf   : {input.gtf}
         """
     shell:"""
-        {params.star} --runMode genomeGenerate --genomeDir {params.outdir} --genomeFastaFiles {input.fasta} --runThreadN {params.threads} --sjdbGTFfile {input.gtf} --sjdbOverhang 99
+        {params.star} {params.star_args} --runMode genomeGenerate --genomeDir {params.outdir} --genomeFastaFiles {input.fasta} --runThreadN {params.threads} --sjdbGTFfile {input.gtf} --sjdbOverhang 99
         touch {output.outfile} 2> {log}
 """
 
@@ -303,6 +305,7 @@ if GENOME_SECONDARY_IND:
             genome_name_primary   = GENOME_NAME_PRIMARY,
             genome_name_secondary = GENOME_NAME_SECONDARY,
             perl = SOFTWARE['perl']['executable'],
+            perl_args = SOFTWARE['perl']['executable']['args'],
             cat = SOFTWARE['cat']['executable'],
         message:
             """
@@ -312,8 +315,8 @@ if GENOME_SECONDARY_IND:
                     output: {output.outfile}
             """
         shell:"""
-            {params.cat} {input.primary}   | {params.perl} -pe 's|^|{params.genome_name_primary}|' > {output.outfile}
-            {params.cat} {input.secondary} | {params.perl} -pe 's|^|{params.genome_name_secondary}|' >> {output.outfile}
+            {params.cat} {input.primary}   | {params.perl} {params.perl_args} -pe 's|^|{params.genome_name_primary}|' > {output.outfile}
+            {params.cat} {input.secondary} | {params.perl} {params.perl_args} -pe 's|^|{params.genome_name_secondary}|' >> {output.outfile}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -468,11 +471,13 @@ rule merge_bam_per_sample:
     log:
         log = os.path.join(PATH_LOG, '{name}.merge_bam_per_sample.log')
     params:
-        samtools = SOFTWARE['samtools']['executable']
+        samtools      = SOFTWARE['samtools']['executable'],
+        samtools_args = SOFTWARE['samtools']['executable']['args']
     run:
         in_files = ' '.join(input.bam_files)
         command = ' '.join([
             params.samtools,
+            params.samtools_args,
             'cat -o',
             output.outfile,
             in_files,
@@ -696,6 +701,7 @@ rule map_star:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","star.Aligned.out.sam"))
     params:
         star       = SOFTWARE['star']['executable'],
+        star_args  = SOFTWARE['star']['executable']['args'],
         genome     = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
         outpath    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         threads    = config['execution']['rules']['map_star']['threads'],
@@ -705,7 +711,7 @@ rule map_star:
        log = os.path.join(PATH_LOG, "{name}.{genome}.star.log")
 
     shell:"""
-    {params.star} --genomeDir {params.genome} --runThreadN {params.threads} --outFileNamePrefix {params.outpath}/star. --readFilesIn {input.infile}
+    {params.star} {params.star_args} --genomeDir {params.genome} --runThreadN {params.threads} --outFileNamePrefix {params.outpath}/star. --readFilesIn {input.infile}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -998,7 +1004,8 @@ rule convert_matrix_from_txt_to_loom:
     output:
         outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom')
     params:
-        python = SOFTWARE['python']['executable']
+        python      = SOFTWARE['python']['executable'],
+        python_args = SOFTWARE['python']['executable']['args']
     log:
         log = os.path.join(PATH_LOG, "{name}.{genome}.convert2loom.log")
     message: """
@@ -1006,7 +1013,7 @@ rule convert_matrix_from_txt_to_loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "{params.python} {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
+    shell: "{params.python} {params.python_args} {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
@@ -1019,6 +1026,7 @@ rule combine_UMI_matrices_into_loom:
     params:
          tmpfile = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp"),
          python  = SOFTWARE['python']['executable'],
+         python_args = SOFTWARE['python']['executable']['args'],
          rm      = SOFTWARE['rm']['executable']
     log:
         log = os.path.join(PATH_LOG, "{genome}.combine_looms.log")
@@ -1027,7 +1035,7 @@ rule combine_UMI_matrices_into_loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "echo {input.infile} > {params.tmpfile}; {params.python} {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; {params.rm} {params.tmpfile} &> {log.log}"
+    shell: "echo {input.infile} > {params.tmpfile}; {params.python} {params.python_args} {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; {params.rm} {params.tmpfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #
