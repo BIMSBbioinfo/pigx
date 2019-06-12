@@ -111,18 +111,19 @@ targets = {
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
         'files':
-          [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
-          os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-          os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-          os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")] +
+      [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
+            os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
+            os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+            os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")] +
 	  [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
-           os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
-           os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
-           os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")] +
-	  expand(os.path.join(BIGWIG_DIR, '{sample}.bigwig'), sample = SAMPLES) +
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+            os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
+            os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
+            os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")] +
+	  expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
+      expand(os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig'), sample = SAMPLES) +
+      expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
+      expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
+      expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     },
     'deseq_report_star': {
         'description': "Produce one HTML report for each analysis based on STAR results.",
@@ -152,7 +153,8 @@ targets = {
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
         'files':
-          expand(os.path.join(BIGWIG_DIR, '{sample}.bigwig'), sample = SAMPLES)
+          expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
+          expand(os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig'), sample = SAMPLES)
     },
     'fastqc': {
         'description': "post-mapping quality control by FASTQC.",
@@ -346,9 +348,11 @@ rule genomeCoverage:
   input:
     bam=rules.star_map.output[0],
     bai=rules.index_bam.output
-  output: os.path.join(BIGWIG_DIR, '{sample}.bigwig')
+  output:
+    os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'),
+    os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig')
   log: os.path.join(LOG_DIR, 'genomeCoverage_{sample}.log')
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/export_bigwig.R {input.bam} {output} >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/export_bigwig.R {input.bam} {wildcards.sample} {BIGWIG_DIR} >> {log} 2>&1"
 
 rule multiqc:
   input:

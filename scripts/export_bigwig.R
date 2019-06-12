@@ -20,18 +20,22 @@
 # R script takes as input a BAM file and exports a coverage track
 # in bigwig format
 
-
 args <- commandArgs(trailingOnly = TRUE)
 
 bamFile <- args[1]
-outFile <- args[2] 
+sampleName <- args[2]
+outDir <- args[3] 
 
 aln <- GenomicAlignments::readGAlignments(bamFile)
 
-cov <- GenomicRanges::coverage(aln)
+cov_pos <- GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '+',])
+cov_neg <- GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '-',])
 
-rtracklayer::export.bw(object = cov, con = outFile)
+out_pos <- file.path(outDir, paste0(sampleName, ".forward.bigwig"))
+out_neg <- file.path(outDir, paste0(sampleName, ".reverse.bigwig"))
 
+rtracklayer::export.bw(object = cov_pos, con = out_pos)
+rtracklayer::export.bw(object = cov_neg, con = out_neg)
 
 
 
