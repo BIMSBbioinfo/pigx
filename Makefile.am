@@ -14,7 +14,8 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/translate_sample_sheet_for_report.R		\
   scripts/deseqReport.Rmd		\
   scripts/counts_matrix_from_SALMON.R		\
-  scripts/validate_input.py
+  scripts/validate_input.py	\ 
+  scripts/export_bigwig.R
 
 dist_pkgdata_DATA =									\
   etc/sample_sheet.csv.example								\
