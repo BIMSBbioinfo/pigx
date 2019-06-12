@@ -37,9 +37,9 @@ rm ${tmp_settings} ${tmp_samplesheet}
 
 rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${testfolder}/bedgraph_files/HBR_Rep1.bedgraph
+if ! test -f ${testfolder}/bigwig_files/HBR_Rep1.bigwig
 then
-  echo "ERROR: failed to create bedgraph file from input BAM file"
+  echo "ERROR: failed to create bigwig file from input BAM file"
   exit 1
 fi
 
