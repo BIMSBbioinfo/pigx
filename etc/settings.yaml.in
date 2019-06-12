@@ -67,9 +67,6 @@ tools:
   trim-galore:
     executable: @TRIMGALORE@
     args: ""
-  bedtools:
-    executable: @BEDTOOLS@
-    args: ""
   samtools:
     executable: @SAMTOOLS@
     args: ""

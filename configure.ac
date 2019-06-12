@@ -43,7 +43,6 @@ find_or_override_prog([TRIMGALORE],      [trim_galore])
 find_or_override_prog([STAR],            [STAR])
 find_or_override_prog([MULTIQC],         [multiqc])
 find_or_override_prog([HTSEQ_COUNT],     [htseq-count])
-find_or_override_prog([BEDTOOLS],     [bedtools]) 
 
 find_or_override_prog([SALMON],     [salmon])
 
