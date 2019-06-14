@@ -441,9 +441,14 @@ To make changes or add improvements to the pipeline, follow these steps:
 4. check whether the updates work by running the following code:
 
         make install && ./pigx-scrnaseq tests/sample_sheet.csv -s tests/settings.yaml
- 
- 5. check whether there were updates to master. If there were updates, run git pull -r. Again check whether the pipeline works
- 6. push the changes to the corresponding branch, and open a pull request.
+
+5. run the tests with
+
+        export DISTCHECK_CONFIGURE_FLAGS=PICARDJAR=$GUIX_ENVIRONMENT/share/java/picard.jar DROPSEQJAR=$GUIX_ENVIRONMENT/share/java/dropseq.jar
+        make distcheck
+
+6. check whether there were updates to master. If there were updates, run git pull -r. Again check whether the pipeline works
+7. push the changes to the corresponding branch, and open a pull request.
 
  
 ----------------------------------------
