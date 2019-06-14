@@ -273,7 +273,7 @@ rule make_star_reference:
     params:
         outdir  = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
         star    = SOFTWARE['star']['executable'],
-        star_args = SOFTWARE['star']['executable']['args'],
+        star_args = SOFTWARE['star']['args'],
         threads = config['execution']['rules']['make_star_reference']['threads'],
         mem     = config['execution']['rules']['make_star_reference']['memory']
     log:
@@ -470,7 +470,7 @@ rule merge_bam_per_sample:
         log = os.path.join(PATH_LOG, '{name}.merge_bam_per_sample.log')
     params:
         samtools      = SOFTWARE['samtools']['executable'],
-        samtools_args = SOFTWARE['samtools']['executable']['args']
+        samtools_args = SOFTWARE['samtools']['args']
     run:
         in_files = ' '.join(input.bam_files)
         command = ' '.join([
@@ -699,7 +699,7 @@ rule map_star:
         outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","star.Aligned.out.sam"))
     params:
         star       = SOFTWARE['star']['executable'],
-        star_args  = SOFTWARE['star']['executable']['args'],
+        star_args  = SOFTWARE['star']['args'],
         genome     = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
         outpath    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         threads    = config['execution']['rules']['map_star']['threads'],
@@ -1003,7 +1003,7 @@ rule convert_matrix_from_txt_to_loom:
         outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom')
     params:
         python      = SOFTWARE['python']['executable'],
-        python_args = SOFTWARE['python']['executable']['args']
+        python_args = SOFTWARE['python']['args']
     log:
         log = os.path.join(PATH_LOG, "{name}.{genome}.convert2loom.log")
     message: """
@@ -1024,7 +1024,7 @@ rule combine_UMI_matrices_into_loom:
     params:
          tmpfile = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp"),
          python  = SOFTWARE['python']['executable'],
-         python_args = SOFTWARE['python']['executable']['args'],
+         python_args = SOFTWARE['python']['args'],
          rm      = SOFTWARE['rm']['executable']
     log:
         log = os.path.join(PATH_LOG, "{genome}.combine_looms.log")
