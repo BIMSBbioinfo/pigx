@@ -1024,8 +1024,7 @@ rule combine_UMI_matrices_into_loom:
     params:
          tmpfile = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp"),
          python  = SOFTWARE['python']['executable'],
-         python_args = SOFTWARE['python']['args'],
-         rm      = SOFTWARE['rm']['executable']
+         python_args = SOFTWARE['python']['args']
     log:
         log = os.path.join(PATH_LOG, "{genome}.combine_looms.log")
     message: """
@@ -1033,7 +1032,7 @@ rule combine_UMI_matrices_into_loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
-    shell: "echo {input.infile} > {params.tmpfile}; {params.python} {params.python_args} {PATH_SCRIPT}/combine_UMI_matrices.py {params.tmpfile} {output.outfile}; {params.rm} {params.tmpfile} &> {log.log}"
+    shell: "{params.python} {params.python_args} {PATH_SCRIPT}/combine_UMI_matrices.py {input.infile} {output.outfile} &> {log.log}"
 
 
 # ----------------------------------------------------------------------------- #

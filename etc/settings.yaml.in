@@ -127,8 +127,6 @@ tools:
   python:
     executable: @PYTHON@
     args: ""
-  rm:
-    executable: @RM@
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla"
