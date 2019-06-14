@@ -65,7 +65,6 @@ find_or_override_prog([STAR],            [STAR])
 find_or_override_prog([SAMTOOLS],        [samtools])
 
 find_or_override_prog([RM],              [rm])
-find_or_override_prog([CAT],             [cat])
 find_or_override_prog([PERL],            [perl])
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])

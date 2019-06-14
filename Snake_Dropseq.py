@@ -249,8 +249,7 @@ if GENOME_SECONDARY_IND:
             genome_name_primary   = GENOME_NAME_PRIMARY,
             genome_name_secondary = GENOME_NAME_SECONDARY,
             perl = SOFTWARE['perl']['executable'],
-            perl_args = SOFTWARE['perl']['executable']['args'],
-            cat =  SOFTWARE['cat']['executable']
+            perl_args = SOFTWARE['perl']['executable']['args']
         message:
             """
                 Combining fasta files:
@@ -259,8 +258,8 @@ if GENOME_SECONDARY_IND:
                     output: {output.outfile}
             """
         shell:"""
-            {params.cat} {input.primary}   | {params.perl} {params.perl_args} -pe 's|^>|>{params.genome_name_primary}|' >     {output.outfile}
-            {params.cat} {input.secondary} | {params.perl} {params.perl_args} -pe 's|^>|>{params.genome_name_secondary}|' >> {output.outfile}
+            {params.perl} {params.perl_args} -pe 's|^>|>{params.genome_name_primary}|' < {input.primary} > {output.outfile}
+            {params.perl} {params.perl_args} -pe 's|^>|>{params.genome_name_secondary}|' < {input.secondary} >> {output.outfile}
     """
 
 # ----------------------------------------------------------------------------- #
@@ -305,8 +304,7 @@ if GENOME_SECONDARY_IND:
             genome_name_primary   = GENOME_NAME_PRIMARY,
             genome_name_secondary = GENOME_NAME_SECONDARY,
             perl = SOFTWARE['perl']['executable'],
-            perl_args = SOFTWARE['perl']['executable']['args'],
-            cat = SOFTWARE['cat']['executable'],
+            perl_args = SOFTWARE['perl']['executable']['args']
         message:
             """
                 Combining gtf files:
@@ -315,8 +313,8 @@ if GENOME_SECONDARY_IND:
                     output: {output.outfile}
             """
         shell:"""
-            {params.cat} {input.primary}   | {params.perl} {params.perl_args} -pe 's|^|{params.genome_name_primary}|' > {output.outfile}
-            {params.cat} {input.secondary} | {params.perl} {params.perl_args} -pe 's|^|{params.genome_name_secondary}|' >> {output.outfile}
+            {params.perl} {params.perl_args} -pe 's|^|{params.genome_name_primary}|' < {input.primary} > {output.outfile}
+            {params.perl} {params.perl_args} -pe 's|^|{params.genome_name_secondary}|' < {input.secondary} >> {output.outfile}
     """
 
 # ----------------------------------------------------------------------------- #
