@@ -29,7 +29,7 @@ suppressPackageStartupMessages(library(ggplot2))
 
 PiGx scRNAseq
 
-This report was generated with PiGx-scRNAseq version 0.0.1.
+This report was generated with PiGx-scRNAseq version @VERSION@.
 
 # Input Settings
 ```{r printInputSettings}

@@ -112,8 +112,9 @@ AX_R_PACKAGE([SingleCellExperiment])
   ])
 
 AC_CONFIG_FILES([etc/settings.yaml
-                 Makefile]
-                 qsub-template.sh)
+                 scripts/scrnaReport.Rmd
+                 Makefile
+                 qsub-template.sh])
 AC_CONFIG_FILES([tests/test.sh], [chmod +x tests/test.sh])
 AC_CONFIG_FILES([pigx-scrnaseq], [chmod +x pigx-scrnaseq])
 AC_OUTPUT
