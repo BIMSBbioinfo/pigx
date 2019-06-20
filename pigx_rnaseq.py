@@ -113,7 +113,7 @@ targets = {
       [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
             os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
             os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_STAR.tsv")] +
+            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")] +
 	  [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
             os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
             os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
@@ -147,7 +147,7 @@ targets = {
     'star_counts': {
         'description': "Get count matrix from STAR mapping results.",
         'files':
-          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_STAR.tsv")]
+          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")]
     },
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
@@ -174,7 +174,7 @@ targets = {
     'salmon_counts': {
         'description': "Get count matrix from SALMON quant.",
         'files':
-          [os.path.join(COUNTS_DIR, "raw_counts", counts_from_SALMON.transcripts.tsv"),
+          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
 	   os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
 	   os.path.join(COUNTS_DIR, "normalized",  "TPM_counts_from_SALMON.transcripts.tsv"),
 	   os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")]
@@ -362,14 +362,14 @@ rule multiqc:
   shell: "{MULTIQC_EXEC} -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
 
 rule htseq_count:
-  input: rules.star_map.output
-  output: os.path.join(HTSEQ_COUNTS_DIR, "{sample}_counts.txt")
+  input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_Aligned.sortedByCoord.out.bam"), sample = SAMPLES)
+  output: os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")
   log: os.path.join(LOG_DIR, "htseq-count_{sample}.log")
   shell: "{HTSEQ_COUNT_EXEC} -f bam -t exon -i gene_id {input} {GTF_FILE} 1> {output} 2>> {log}"
 
 rule report1:
   input:
-    counts=os.path.join(COUNTS_DIR, "raw_counts", "counts_from_STAR.tsv"),
+    counts=os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt"),
     coldata=str(rules.translate_sample_sheet_for_report.output),
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
