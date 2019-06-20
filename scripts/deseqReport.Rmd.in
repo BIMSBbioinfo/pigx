@@ -178,8 +178,7 @@ message("design formula:", designFormula)
 dds <- DESeq2::DESeqDataSetFromMatrix(countData = countData, colData = colData, design = stats::as.formula(designFormula))
 dds <- dds[ rowSums(counts(dds)) > 1, ]
 dds <- DESeq2::DESeq(dds)
-vsd <- DESeq2::varianceStabilizingTransformation(dds)
-vsd.counts = SummarizedExperiment::assay(vsd)
+norm.counts = DESeq2::counts(dds, normalized = TRUE)
 
 DEtable = DESeq2::results(dds, contrast = c("AnalysisGroup", 'Case', 'Control'))
 DEtable <- DEtable[order(DEtable$padj),]
@@ -188,7 +187,7 @@ DE <- as.data.frame(DEtable)
 DE$geneName <- mapIdsToNames(rownames(DE), gtfData)
 
 DEnormalizedCountsFile <- file.path(workdir, paste0(prefix, '.normalized_counts.tsv'))
-write.table(x = vsd.counts, 
+write.table(x = norm.counts, 
             file = DEnormalizedCountsFile, 
             quote = FALSE, sep = '\t')
             
@@ -292,7 +291,7 @@ invisible(dev.off())
 ```{r computePCAplots} 
 plotGroups <- c(covariates, 'AnalysisGroup', 'group')
 pcaPlots <- lapply(plotGroups, function(g) {
-  pca <- stats::prcomp(t(vsd.counts), center = TRUE)
+  pca <- stats::prcomp(t(norm.counts), center = TRUE)
   pcaSummary <- summary(pca)
   df <- merge(as.data.frame(pca$x), colData, by = 'row.names')
   ggplot(df, aes(x = PC1, y = PC2)) + 
@@ -327,7 +326,7 @@ for (i in 1:length(pcaPlots)) {
 The pairwise correlation plot provides a more detailed view of which samples are more similar or different.
 
 ```{r plot_corr}
-M <- stats::cor(vsd.counts)
+M <- stats::cor(norm.counts)
 corrplot::corrplot(corr = M, order = 'hclust', method = 'square', type = 'lower', tl.srt = 45, addCoef.col = 'white')
 #save image to folder
 pdf(file = file.path(imagesDir, 'correlationPlot.pdf'))
@@ -342,22 +341,24 @@ invisible(dev.off())
 The heatmap below summarizes the experiment, and the apparent relationship between samples, based on the 100 highest variance genes. Each column is a sample, and each row is a gene. Both rows and columns are clustered using euclidean distance and complete linkage.
 
 ```{r plot_heatmap}
-select <- na.omit(names(sort(apply(X = vsd.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100])
+select <- na.omit(names(sort(apply(X = norm.counts, MARGIN = 1, FUN = var),decreasing = T))[1:100])
 df <- as.data.frame(colData[,c("group","AnalysisGroup")])
-pheatmap::pheatmap(vsd.counts[select,], 
+pheatmap::pheatmap(norm.counts[select,], 
          cluster_rows=TRUE, 
+         scale = 'row',
          show_rownames=FALSE, 
          cluster_cols=TRUE, 
          annotation_col=df, 
-         main = 'Heatmap of the Normalized Expression Values (VST) of \n Top 100 Genes with highest variance across samples')
+         main = 'Heatmap of the Normalized Expression Values of \n Top 100 Genes with highest variance across samples')
 #save image to folder
-pheatmap::pheatmap(vsd.counts[select,], 
+pheatmap::pheatmap(norm.counts[select,], 
          cluster_rows=TRUE, 
+         scale = 'row',
          show_rownames=FALSE, 
          cluster_cols=TRUE, 
          annotation_col=df,
          filename = file.path(imagesDir, 'heatmap.pdf'),
-         main = 'Heatmap of the Normalized Expression Values (VST) of \n Top 100 Genes with highest variance across samples')
+         main = 'Heatmap of the Normalized Expression Values of \n Top 100 Genes with highest variance across samples')
 ```
 
 # Exploratory Plots and Tables
@@ -414,7 +415,7 @@ This interactive plot lets you see genes' position in the volcano plot, as well 
 ```{r plot_interactive_boxplots}
 select <- rownames(DEsubset)
 if(length(select) > 1) {
-  expressionLevels <- reshape2::melt(vsd.counts[select,])
+  expressionLevels <- reshape2::melt(norm.counts[select,])
   colnames(expressionLevels) <- c('geneId', 'sampleName', 'expressionLevel')
   
   expressionLevels$group <- colData[expressionLevels$sampleName,]$group
