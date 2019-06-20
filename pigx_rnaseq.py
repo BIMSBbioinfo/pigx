@@ -113,12 +113,14 @@ targets = {
         'files':
       [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
             os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-            os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")] +
+            os.path.join(MULTIQC_DIR, 'multiqc_report.html')] +
 	  [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
             os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
             os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
-            os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")] +
+            os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv"),
+            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt"),
+            os.path.join(COUNTS_DIR, "normalized", "deseq_normalized_counts.tsv",
+            os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt"))] +
 	  expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
       expand(os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig'), sample = SAMPLES) +
       expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
@@ -381,6 +383,24 @@ rule htseq_count:
     # remove temp file
     rm {params.tmp_file}
     """
+
+# create a normalized counts table including all samples
+# using the median-of-ratios normalization procedure of
+# deseq2
+rule norm_counts_deseq:
+    input:
+        counts_file = os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt"),
+        colDataFile = rules.translate_sample_sheet_for_report.output
+    output:
+        size_factors = os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt"),
+        norm_counts = os.path.join(COUNTS_DIR, "normalized", "deseq_normalized_counts.tsv")
+    log:
+        os.path.join(LOG_DIR, "norm_counts_deseq.log")
+    params:
+        script=os.path.join(SCRIPTS_DIR, "norm_counts_deseq.R"),
+        outdir=os.path.join(COUNTS_DIR, "normalized")
+    shell:
+        "{RSCRIPT_EXEC} {params.script} {input.counts_file} {input.colDataFile} {params.outdir} >> {log} 2>&1"
 
 rule report1:
   input:
