@@ -9,7 +9,6 @@ dist_pkglibexec_SCRIPTS = \
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS =					\
-  scripts/counts_matrix_from_STAR.R					\
   scripts/runDeseqReport.R							\
   scripts/translate_sample_sheet_for_report.R		\
   scripts/deseqReport.Rmd		\
