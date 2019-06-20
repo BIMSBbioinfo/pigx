@@ -113,11 +113,11 @@ targets = {
       [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
             os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
             os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-            os.path.join(COUNTS_DIR, "counts_from_STAR.tsv")] +
-	  [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
-            os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
-            os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
-            os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")] +
+            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_STAR.tsv")] +
+	  [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
+            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
+            os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
+            os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")] +
 	  expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
       expand(os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig'), sample = SAMPLES) +
       expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
@@ -147,7 +147,7 @@ targets = {
     'star_counts': {
         'description': "Get count matrix from STAR mapping results.",
         'files':
-          [os.path.join(COUNTS_DIR, "counts_from_STAR.tsv")]
+          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_STAR.tsv")]
     },
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
@@ -174,10 +174,10 @@ targets = {
     'salmon_counts': {
         'description': "Get count matrix from SALMON quant.",
         'files':
-          [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
-	   os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
-	   os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
-	   os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")]
+          [os.path.join(COUNTS_DIR, "raw_counts", counts_from_SALMON.transcripts.tsv"),
+	   os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
+	   os.path.join(COUNTS_DIR, "normalized",  "TPM_counts_from_SALMON.transcripts.tsv"),
+	   os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")]
     },
     'multiqc': {
         'description': "Get multiQC report based on STAR alignments and fastQC reports.",
@@ -328,10 +328,10 @@ rule counts_from_SALMON:
       quantGenesFiles = expand(os.path.join(SALMON_DIR, "{sample}", "quant.genes.sf"), sample=SAMPLES),
       colDataFile = rules.translate_sample_sheet_for_report.output
   output:
-      os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
-      os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
-      os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
-      os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.genes.tsv")
+      os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
+      os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
+      os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
+      os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")
   log: os.path.join(LOG_DIR, 'salmon_import_counts.log')
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {input.colDataFile} >> {log} 2>&1"
 
@@ -369,7 +369,7 @@ rule htseq_count:
 
 rule report1:
   input:
-    counts=os.path.join(COUNTS_DIR, "counts_from_STAR.tsv"),
+    counts=os.path.join(COUNTS_DIR, "raw_counts", "counts_from_STAR.tsv"),
     coldata=str(rules.translate_sample_sheet_for_report.output),
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
@@ -387,7 +387,7 @@ rule report1:
 
 rule report2:
   input:
-    counts=os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
+    counts=os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
     coldata=str(rules.translate_sample_sheet_for_report.output)
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
@@ -404,7 +404,7 @@ rule report2:
 
 rule report3:
   input:
-    counts=os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
+    counts=os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
     coldata=str(rules.translate_sample_sheet_for_report.output)
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
