@@ -34,6 +34,7 @@ AS_IF([test -z "$$1"],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
 
 find_or_override_prog([GUNZIP],          [gunzip])
+find_or_override_prog([SED],          [sed])
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])

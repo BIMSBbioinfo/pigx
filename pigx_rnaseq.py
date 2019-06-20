@@ -72,6 +72,7 @@ SAMTOOLS_EXEC    = tool('samtools')
 HTSEQ_COUNT_EXEC = tool('htseq-count')
 GUNZIP_EXEC      = tool('gunzip')
 RSCRIPT_EXEC     = tool('Rscript')
+SED_EXEC = tool('sed')
 
 STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
 SALMON_INDEX_THREADS = config['execution']['rules']['salmon_index']['threads']
@@ -363,9 +364,23 @@ rule multiqc:
 
 rule htseq_count:
   input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_Aligned.sortedByCoord.out.bam"), sample = SAMPLES)
-  output: os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")
+  output:
+    stats_file = os.path.join(COUNTS_DIR, "raw_counts", "htseq_stats.txt"),
+    counts_file = os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")
   log: os.path.join(LOG_DIR, "htseq-count.log")
-  shell: "{HTSEQ_COUNT_EXEC} -f bam -t exon -i gene_id {input} {GTF_FILE} 1> {output} 2>> {log}"
+  params:
+    tmp_file = os.path.join(COUNTS_DIR, "raw_counts", "htseq_out.txt")
+  shell:
+    """
+    echo {SAMPLES} | {SED_EXEC} 's/ /\t/g' > {params.tmp_file}
+    {HTSEQ_COUNT_EXEC} {input} {GTF_FILE} 1>> {params.tmp_file} 2>> {log};
+    ## move feature count stats (e.g. __no_feature etc) to another file
+    echo {SAMPLES} > {output.stats_file}; tail -n 5 {params.tmp_file} >> {output.stats_file};
+    ## only keep feature counts in the counts table (remove stats)
+    head -n -5 {params.tmp_file} > {output.counts_file};
+    # remove temp file
+    rm {params.tmp_file}
+    """
 
 rule report1:
   input:
