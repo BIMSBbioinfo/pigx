@@ -148,7 +148,7 @@ targets = {
           expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
     },
     'star_counts': {
-        'description': "Get count matrix from STAR mapping results.",
+        'description': "Get count matrix from STAR mapping results using htseq-count.",
         'files':
           [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")]
     },
