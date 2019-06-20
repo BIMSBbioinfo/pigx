@@ -285,13 +285,12 @@ rule star_map:
     index_file = rules.star_index.output.star_index_file,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
-    os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab")
+    os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
   params:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_')
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} --quantMode TranscriptomeSAM GeneCounts >> {log} 2>&1"
+  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
 
 rule salmon_index:
   input:
@@ -368,12 +367,6 @@ rule htseq_count:
   output: os.path.join(HTSEQ_COUNTS_DIR, "{sample}_counts.txt")
   log: os.path.join(LOG_DIR, "htseq-count_{sample}.log")
   shell: "{HTSEQ_COUNT_EXEC} -f bam -t exon -i gene_id {input} {GTF_FILE} 1> {output} 2>> {log}"
-
-rule counts_from_STAR:
-  input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_ReadsPerGene.out.tab"), sample=SAMPLES)
-  output: os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_STAR.R {MAPPED_READS_DIR} {output}"
-
 
 rule report1:
   input:
