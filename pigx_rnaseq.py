@@ -50,9 +50,8 @@ FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 BIGWIG_DIR      = os.path.join(OUTPUT_DIR, 'bigwig_files')
-HTSEQ_COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
+COUNTS_DIR  = os.path.join(OUTPUT_DIR, 'feature_counts')
 SALMON_DIR        = os.path.join(OUTPUT_DIR, 'salmon_output')
-PREPROCESSED_OUT  = os.path.join(OUTPUT_DIR, 'preprocessed_data')
 
 def toolArgs(name):
     if 'args' in config['tools'][name]:
@@ -114,7 +113,7 @@ targets = {
       [os.path.join(OUTPUT_DIR, 'star_index', "SAindex"),
             os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
             os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
-            os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")] +
+            os.path.join(COUNTS_DIR, "counts_from_STAR.tsv")] +
 	  [os.path.join(SALMON_DIR, "counts_from_SALMON.transcripts.tsv"),
             os.path.join(SALMON_DIR, "counts_from_SALMON.genes.tsv"),
             os.path.join(SALMON_DIR, "TPM_counts_from_SALMON.transcripts.tsv"),
@@ -148,7 +147,7 @@ targets = {
     'star_counts': {
         'description': "Get count matrix from STAR mapping results.",
         'files':
-          [os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv")]
+          [os.path.join(COUNTS_DIR, "counts_from_STAR.tsv")]
     },
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
@@ -370,7 +369,7 @@ rule htseq_count:
 
 rule report1:
   input:
-    counts=os.path.join(PREPROCESSED_OUT, "counts_from_STAR.tsv"),
+    counts=os.path.join(COUNTS_DIR, "counts_from_STAR.tsv"),
     coldata=str(rules.translate_sample_sheet_for_report.output),
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
