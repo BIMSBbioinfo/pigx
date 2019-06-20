@@ -333,7 +333,7 @@ rule counts_from_SALMON:
       os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
       os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")
   log: os.path.join(LOG_DIR, 'salmon_import_counts.log')
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {input.colDataFile} >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {COUNTS_DIR} {input.colDataFile} >> {log} 2>&1"
 
 rule index_bam:
   input: rules.star_map.output[0]
@@ -364,7 +364,7 @@ rule multiqc:
 rule htseq_count:
   input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_Aligned.sortedByCoord.out.bam"), sample = SAMPLES)
   output: os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")
-  log: os.path.join(LOG_DIR, "htseq-count_{sample}.log")
+  log: os.path.join(LOG_DIR, "htseq-count.log")
   shell: "{HTSEQ_COUNT_EXEC} -f bam -t exon -i gene_id {input} {GTF_FILE} 1> {output} 2>> {log}"
 
 rule report1:

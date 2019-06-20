@@ -23,10 +23,11 @@
 library(data.table)
 
 args <- commandArgs(trailingOnly = TRUE)
-salmon_output_folder <- args[1]
-colDataFile <- args[2]
+salmon_output_folder <- args[1] #folder where salmon files are written
+counts_dir <- args[2] #where to save to collated count files
+colDataFile <- args[3]
 
-writeCounts <- function(colDataFile, salmon_output_folder, type) {
+writeCounts <- function(colDataFile, salmon_output_folder, counts_dir, type) {
   colData <- read.table(colDataFile)
   if(type == 'transcripts') {
     files <- file.path(salmon_output_folder, rownames(colData), "quant.sf")
@@ -38,12 +39,13 @@ writeCounts <- function(colDataFile, salmon_output_folder, type) {
   
   dds <- DESeq2::DESeqDataSetFromTximport(txi, colData, ~group)
   
+  #save raw counts
   write.table(x = DESeq2::counts(dds), 
-              file = file.path(salmon_output_folder, paste0("counts_from_SALMON.", type,".tsv")), 
+              file = file.path(counts_dir, "raw_counts", paste0("counts_from_SALMON.", type,".tsv")), 
               quote = F, sep = '\t')
 }
 
-writeTPMcounts <- function(colDataFile, salmon_output_folder, type) {
+writeTPMcounts <- function(colDataFile, salmon_output_folder, counts_dir, type) {
   colData <- read.table(colDataFile)
   if(type == 'transcripts') {
     files <- file.path(salmon_output_folder, rownames(colData), "quant.sf")
@@ -66,13 +68,13 @@ writeTPMcounts <- function(colDataFile, salmon_output_folder, type) {
   rownames(tpmMatrix) <- tpmMatrix$Name
   tpmMatrix <- tpmMatrix[-1]
   write.table(x = tpmMatrix, 
-              file = file.path(salmon_output_folder, paste0("TPM_counts_from_SALMON.", type,".tsv")), 
+              file = file.path(counts_dir, "normalized", paste0("TPM_counts_from_SALMON.", type,".tsv")), 
               quote = F, sep = '\t')
 } 
 
-writeCounts(colDataFile, salmon_output_folder, type = 'transcripts')
-writeCounts(colDataFile, salmon_output_folder, type = 'genes')
+writeCounts(colDataFile, salmon_output_folder, counts_dir, type = 'transcripts')
+writeCounts(colDataFile, salmon_output_folder, counts_dir, type = 'genes')
 
 
-writeTPMcounts(colDataFile, salmon_output_folder, type = 'transcripts')
-writeTPMcounts(colDataFile, salmon_output_folder, type = 'genes')
+writeTPMcounts(colDataFile, salmon_output_folder, counts_dir, type = 'transcripts')
+writeTPMcounts(colDataFile, salmon_output_folder, counts_dir, type = 'genes')
