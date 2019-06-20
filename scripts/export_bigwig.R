@@ -18,18 +18,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # R script takes as input a BAM file and exports a coverage track
-# in bigwig format
+# in bigwig format. Uses DESeq2 estimated size factors to normalize
+# the coverage tracks by size factors computed across all 
+# samples available in the sample sheet. 
+# (see DESeq2::estimateSizeFactors)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-bamFile <- args[1]
-sampleName <- args[2]
-outDir <- args[3] 
+bamFile <- args[1] #STAR alignment file 
+sampleName <- args[2] 
+size_factors_file <- args[3] #deseq size factors for all samples
+outDir <- args[4] # where to write the bigwig files
+
+#' @param cov RLE-list object 
+#' @param size_factor single numeric value corresponding 
+#' to the size factor for the sample 
+#' (see DESeq2::estimateSizeFactors)
+scale_coverage <- function(cov, size_factor) {
+  cov_scaled <- lapply(cov, function(x) {
+    S4Vectors::runValue(x) <- S4Vectors::runValue(x) / size_factor
+    return(x)
+  })
+  return(as(cov_scaled, "SimpleRleList"))
+}
 
 aln <- GenomicAlignments::readGAlignments(bamFile)
 
-cov_pos <- GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '+',])
-cov_neg <- GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '-',])
+size_factors <- read.table(size_factors_file)
+
+cov_pos <- scale_coverage(cov = GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '+',]), 
+                          size_factor = size_factors[sampleName,])
+cov_neg <- scale_coverage(cov = GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '-',]), 
+                          size_factor = size_factors[sampleName,])
 
 out_pos <- file.path(outDir, paste0(sampleName, ".forward.bigwig"))
 out_neg <- file.path(outDir, paste0(sampleName, ".reverse.bigwig"))

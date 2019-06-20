@@ -347,13 +347,14 @@ rule index_bam:
 
 rule genomeCoverage:
   input:
+    size_factors_file=os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt"),
     bam=rules.star_map.output[0],
     bai=rules.index_bam.output
   output:
     os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'),
     os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig')
   log: os.path.join(LOG_DIR, 'genomeCoverage_{sample}.log')
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/export_bigwig.R {input.bam} {wildcards.sample} {BIGWIG_DIR} >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/export_bigwig.R {input.bam} {wildcards.sample} {input.size_factors_file} {BIGWIG_DIR} >> {log} 2>&1"
 
 rule multiqc:
   input:
