@@ -16,7 +16,8 @@ http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-rna-seq.html
 
 # Sample Reports
 
-See sample HTML reports produced 
+See sample HTML reports produced by PiGx pipelines:
+http://bioinformatics.mdc-berlin.de/pigx/supplementary-materials.html
 
 # Citing PiGx-RNAseq
 
