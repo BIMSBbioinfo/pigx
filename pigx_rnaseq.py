@@ -65,7 +65,8 @@ def tool(name):
 
 FASTQC_EXEC  = tool('fastqc')
 MULTIQC_EXEC = tool('multiqc')
-STAR_EXEC    = tool('star')
+STAR_EXEC_MAP    = tool('star_map')
+STAR_EXEC_INDEX  = tool('star_index')
 SALMON_EXEC  = tool('salmon')
 TRIM_GALORE_EXEC = tool('trim-galore')
 SAMTOOLS_EXEC    = tool('samtools')
@@ -269,7 +270,7 @@ rule star_index:
     params:
         star_index_dir = os.path.join(OUTPUT_DIR, 'star_index')
     log: os.path.join(LOG_DIR, 'star_index.log')
-    shell: "{STAR_EXEC} --runThreadN {STAR_INDEX_THREADS} --runMode genomeGenerate --genomeDir {params.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
+    shell: "{STAR_EXEC_INDEX} --runMode genomeGenerate --runThreadN {STAR_INDEX_THREADS} --genomeDir {params.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
 
 def map_input(args):
   sample = args[0]
@@ -292,7 +293,7 @@ rule star_map:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_')
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
+  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
 
 rule salmon_index:
   input:

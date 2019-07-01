@@ -15,6 +15,3 @@ DEanalyses:
     control_sample_groups: "UHR"
     covariates: ''
 
-tools:
-  star:
-    args: "--outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40"

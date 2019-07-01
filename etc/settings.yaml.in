@@ -61,9 +61,12 @@ tools:
   multiqc:
     executable: @MULTIQC@
     args: ""
-  star:
+  star_map:
     executable: @STAR@
     args: "--outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40"
+  star_index:
+    executable: @STAR@
+    args: ""
   trim-galore:
     executable: @TRIMGALORE@
     args: ""
