@@ -257,11 +257,6 @@ rule trim_galore_se:
   log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
   shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
 
-rule fastqc:
-  input: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
-  output: os.path.join(FASTQC_DIR, '{sample}_Aligned.sortedByCoord.out_fastqc.zip')
-  log: os.path.join(LOG_DIR, 'fastqc_{sample}.log')
-  shell: "{FASTQC_EXEC} -o {FASTQC_DIR} -f bam {input} >> {log} 2>&1"
 
 rule star_index:
     input: GENOME_FASTA
@@ -288,12 +283,30 @@ rule star_map:
     index_file = rules.star_index.output.star_index_file,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
+    os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.out.bam')
   params:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, '{sample}_')
   log: os.path.join(LOG_DIR, 'star_map_{sample}.log')
-  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
+  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM Unsorted --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
+
+rule sort_bam:
+  input: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.out.bam')
+  output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
+  log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
+  shell: "{SAMTOOLS_EXEC} sort -o {output} {input} >> {log} 2>&1"
+
+rule index_bam:
+  input: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
+  output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam.bai')
+  log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
+  shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
+
+rule fastqc:
+  input: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam')
+  output: os.path.join(FASTQC_DIR, '{sample}_Aligned.sortedByCoord.out_fastqc.zip')
+  log: os.path.join(LOG_DIR, 'fastqc_{sample}.log')
+  shell: "{FASTQC_EXEC} -o {FASTQC_DIR} -f bam {input} >> {log} 2>&1"
 
 rule salmon_index:
   input:
@@ -338,12 +351,6 @@ rule counts_from_SALMON:
       os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")
   log: os.path.join(LOG_DIR, 'salmon_import_counts.log')
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {COUNTS_DIR} {input.colDataFile} >> {log} 2>&1"
-
-rule index_bam:
-  input: rules.star_map.output[0]
-  output: os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam.bai')
-  log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
-  shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
 
 rule genomeCoverage:
