@@ -51,6 +51,19 @@ organism: ''
     # comma separated list of additional co-variates to control for in differential expression analysis (e.g. batch, age, temperature, sequencing_technology etc.). Must correspond to a column field in the sample_sheet.csv file.)
     #covariates: ''
 
+# Configuration for how to do read counting
+# using GenomicAlignments::summarizeOverlaps
+# feature type and grouping features must match what is available in the GTF file
+# most GTF files will use "exon" or "CDS" as features and "gene_id", and "transcript_id"
+# for combining features.
+counting:
+  counting_mode: "Union" # other options are "IntersectionStrict" and "IntersectionNotEmpty"
+  count_nonunique: TRUE # boolean (see inter.feature argument of summarizeOverlaps)
+  strandedness: "unspecific" # other options are "forward" and "reverse" for strand-specific read-counting
+  feature: "exon"
+  group_feature_by: "gene_id"
+  yield_size: 2000000 # how many reads to process at a time (this impacts memory consumption)
+
 tools:
   gunzip:
     executable: @GUNZIP@
