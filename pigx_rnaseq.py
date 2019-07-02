@@ -119,7 +119,7 @@ targets = {
             os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
             os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
             os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv"),
-            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt"),
+            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star.tsv"),
             os.path.join(COUNTS_DIR, "normalized", "deseq_normalized_counts.tsv",
             os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt"))] +
 	  expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
@@ -149,9 +149,9 @@ targets = {
           expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
     },
     'star_counts': {
-        'description': "Get count matrix from STAR mapping results using htseq-count.",
+        'description': "Get count matrix from STAR mapping results using summarizeOverlaps.",
         'files':
-          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt")]
+          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star.tsv")]
     },
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
@@ -234,6 +234,14 @@ rule translate_sample_sheet_for_report:
   output: os.path.join(os.getcwd(), "colData.tsv")
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/translate_sample_sheet_for_report.R {input}"
 
+# determine if the sample library is single end or paired end
+def isSingleEnd(args):
+  sample = args[0]
+  files = lookup('name', sample, ['reads', 'reads2'])
+  if len(files) == 2:
+      return False
+  elif len(files) == 1:
+      return True
 
 def trim_galore_input(args):
   sample = args[0]
@@ -373,6 +381,39 @@ rule multiqc:
   log: os.path.join(LOG_DIR, 'multiqc.log')
   shell: "{MULTIQC_EXEC} -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
 
+rule count_reads:
+  input:
+    bam = os.path.join(MAPPED_READS_DIR, "{sample}_Aligned.sortedByCoord.out.bam"),
+    bai = os.path.join(MAPPED_READS_DIR, "{sample}_Aligned.sortedByCoord.out.bam.bai")
+  output:
+    os.path.join(MAPPED_READS_DIR, "{sample}.read_counts.csv")
+  log: os.path.join(LOG_DIR, "{sample}.count_reads.log")
+  params:
+    single_end = isSingleEnd,
+    mode = config['counting']['counting_mode'],
+    nonunique = config['counting']['count_nonunique'],
+    strandedness = config['counting']['strandedness'],
+    feature = config['counting']['feature'],
+    group_by = config['counting']['group_feature_by'],
+    yield_size = config['counting']['yield_size']
+  shell:
+    "{RSCRIPT_EXEC} {SCRIPTS_DIR}/count_reads.R {wildcards.sample} {input.bam} {GTF_FILE} \
+        {params.single_end} {params.mode} {params.nonunique} {params.strandedness} \
+        {params.feature} {params.group_by} {params.yield_size} >> {log} 2>&1"
+
+rule collate_read_counts:
+  input:
+    expand(os.path.join(MAPPED_READS_DIR, "{sample}.read_counts.csv"), sample = SAMPLES)
+  output:
+    os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star.tsv")
+  log: os.path.join(LOG_DIR, "collate_read_counts.log")
+  params:
+    out_file = os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star.tsv"),
+    script = os.path.join(SCRIPTS_DIR, "collate_read_counts.R")
+  shell:
+    "{RSCRIPT_EXEC} {params.script} {MAPPED_READS_DIR} {params.out_file} >> {log} 2>&1"
+
+
 rule htseq_count:
   input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_Aligned.sortedByCoord.out.bam"), sample = SAMPLES)
   output:
@@ -398,7 +439,7 @@ rule htseq_count:
 # deseq2
 rule norm_counts_deseq:
     input:
-        counts_file = os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt"),
+        counts_file = os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star.tsv"),
         colDataFile = rules.translate_sample_sheet_for_report.output
     output:
         size_factors = os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt"),
@@ -413,7 +454,7 @@ rule norm_counts_deseq:
 
 rule report1:
   input:
-    counts=os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star_htseq-count.txt"),
+    counts=os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star.tsv"),
     coldata=str(rules.translate_sample_sheet_for_report.output),
   params:
     outdir=os.path.join(OUTPUT_DIR, "report"),
