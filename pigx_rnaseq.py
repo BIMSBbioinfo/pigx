@@ -238,9 +238,10 @@ rule translate_sample_sheet_for_report:
 def isSingleEnd(args):
   sample = args[0]
   files = lookup('name', sample, ['reads', 'reads2'])
-  if len(files) == 2:
+  count = sum(1 for f in files if f)
+  if count == 2:
       return False
-  elif len(files) == 1:
+  elif count == 1:
       return True
 
 def trim_galore_input(args):
