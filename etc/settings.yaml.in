@@ -21,8 +21,8 @@ execution:
       threads: 1
       memory: 8G
     star_index:
-      threads: 8
-      memory: 4G
+      threads: 2
+      memory: 32G
     salmon_index:
       threads: 8
       memory: 4G
@@ -30,8 +30,8 @@ execution:
       threads: 8
       memory: 5G
     star_map:
-      threads: 8
-      memory: 4G
+      threads: 2
+      memory: 16G
 
 #organism is needed for GO term analysis. Leave it empty if not interested in GO analysis.
 #Otherwise provide a string with the initial of genus and the species name (e.g. hsapiens, mmusculus, dmelanogaster, celegans)
@@ -76,7 +76,7 @@ tools:
     args: ""
   star_map:
     executable: @STAR@
-    args: "--outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin 40"
+    args: ""
   star_index:
     executable: @STAR@
     args: ""
