@@ -29,6 +29,16 @@ outDir <- args[3]
 counts <- read.table(countsFile)
 colData <- read.table(colDataFile)
 
+common <- intersect(colnames(counts), rownames(colData)) 
+if(length(common) < ncol(counts)) {
+  stop("Not all samples in the counts table can be found in the 
+       colData table")
+}
+
+# update counts and colData to respect the order of common samples
+colData <- colData[common,]
+counts <- counts[,common]
+
 dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts, 
                                       colData = colData, 
                                       design = ~1)
