@@ -100,6 +100,7 @@ library(DelayedMatrixStats)
 library(DelayedArray)
 library(data.table)
 library(rtracklayer)
+path="/data/local/Projects/APombo_Cocaine/Results/pigx-scrnaseq/scRNA_Batch2/Mapped/mm10_UMI.loom"
 
 #3. Define functions
 # ---------------------------------------------------------------------------- #
@@ -261,7 +262,6 @@ getCellStats <- function(m) {
 }
 
 #4. start analysis
-
 # ---------------------------------------------------------------------------- #
 #4.1 import loom into SingleCellExperiment object
 message(date()," Importing loom file into SingleCellExperiment object")
@@ -288,10 +288,18 @@ message(date()," Updating colData")
 #4.1.1 update colData with additional meta data
 colData(sce)$sample_name = sub('_[ACGT]+$','',colData(sce)$cell_id)
 
+# checks whether sample IDs are unique
+if(length(unique(sample_sheet[['sample_name']])) < nrow(sample_sheet)){
+
+  warning('removing duplicated columns from the sample_sheet')
+  sample_sheet = sample_sheet[!duplicated(sample_sheet$sample_name),]
+}
 colData(sce) <- merge(colData(sce),
                      DataFrame(sample_sheet),
                      by   = 'sample_name',
                      sort = FALSE)
+
+#
 #count matrix
 counts <- assays(sce)[[1]]
 
