@@ -34,7 +34,7 @@ rm ${tmp_settings}
 
 rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${testfolder}/feature_counts/raw_counts/counts_from_star_htseq-count.txt
+if ! test -f ${testfolder}/feature_counts/raw_counts/counts_from_star.tsv
 then
   echo "ERROR: failed obtaining counts matrix from STAR results"
   exit 1
