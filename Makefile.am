@@ -23,7 +23,9 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/Run_Rscript.py						\
   scripts/Sample_Sheet_Class.py						\
   scripts/scrnaReport.Rmd							\
-  scripts/validate_input.py 
+  scripts/validate_input.py \
+  scripts/convert_loom_to_Seurat.R \
+  scripts/loom_Functions.R
 
 dist_pkgdata_DATA =					\
   etc/sample_sheet.csv.example		\
