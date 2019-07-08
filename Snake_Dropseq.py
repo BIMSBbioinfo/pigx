@@ -13,6 +13,8 @@ import yaml
 import csv
 import inspect
 import magic as mg
+import sys
+import pandas as pd
 
 PATH_SCRIPT = os.path.join(config['locations']['pkglibexecdir'], 'scripts')
 
@@ -69,7 +71,6 @@ if config['annotation']['secondary']:
 SAMPLE_SHEET = experiment(config = config)
 SAMPLE_SHEET.init_SAMPLE_SHEET(PATH_SAMPLE_SHEET)
 
-SAMPLE_NAMES = list(set(SAMPLE_SHEET.list_attr('sample_name')))
 
 # ----------------------------------------------------------------------------- #
 # check for compatible technology methods
@@ -130,14 +131,14 @@ PATH_GTF_PRIMARY_ID = expand(os.path.join(PATH_ANNOTATION_PRIMARY, "{name}" + "g
 # STAR INDEX
 MAKE_STAR_INDEX = expand(os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','done.txt'), genome = REFERENCE_NAMES)
 
-# ----------------------------------------------------------------------------- #
-# MERGE BARODE AND READS FASTQ FILES
-SAMPLE_SHEET.merged_bam(PATH_MAPPED)
-MERGE_FASTQ_TO_BAM = SAMPLE_SHEET.list_attr('Merged_BAM')
+# ----------------------------------------------------------------------------- 
+#
+# merge reads
+MERGE_READS = expand(os.path.join(PATH_MAPPED, '{name}',SAMPLE_SHEET.fetch_reads['{name}']['output'])  name = SAMPLE_SHEET.fetch_sample_names())
 
-# ----------------------------------------------------------------------------- #
-# MERGE ALL BAM FILES PER SAMPLE
-MERGE_BAM_PER_SAMPLE = expand(os.path.join(PATH_MAPPED, "{name}", "{name}" + ".Merged.bam"), name = SAMPLE_NAMES)
+# merge barcodes
+MERGE_BARCODES = expand(os.path.join(PATH_MAPPED, '{name}',SAMPLE_SHEET.fetch_barcodes['{name}']['output'])  name = SAMPLE_SHEET.fetch_sample_names())
+
 
 # ----------------------------------------------------------------------------- #
 # MAPPING
@@ -203,7 +204,10 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
+#RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
+
+RULE_ALL = RULE_ALL + DICT + MAKE_STAR_INDEX + MERGE_FASTQ
+
 
 # ----------------------------------------------------------------------------- #
 rule all:
@@ -267,11 +271,35 @@ if GENOME_SECONDARY_IND:
     """
 
 # ----------------------------------------------------------------------------- #
+# changes the gene_name field in the GTF file to the gene_id
+# this is required for droptools counting
+rule change_gtf_id:
+    input:
+        infile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf')
+    output:
+        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
+    params:
+        threads = config['execution']['rules']['change_gtf_id']['threads'],
+        mem     = config['execution']['rules']['change_gtf_id']['memory'],
+        script  = PATH_SCRIPT,
+        Rscript = PATH_RSCRIPT
+    message:
+        """
+            Changing GTF id:
+                input  : {input}
+                output : {output}
+        """
+    run:
+        RunRscript(input, output, params, params.script, 'change_gtf_id.R')
+
+
+
+# ----------------------------------------------------------------------------- #
 # STAR INDEX
 rule make_star_reference:
     input:
         fasta = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta'),
-        gtf   = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf'),
+        gtf   = rules.change_gtf_id.output.outfile,
     output:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','done.txt')
     params:
@@ -322,139 +350,39 @@ if GENOME_SECONDARY_IND:
     """
 
 # ----------------------------------------------------------------------------- #
-
-rule fasta_dict:
-    input:
-        infile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta')
-    output:
-        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict')
-    params:
-        picard  = SOFTWARE['picard']['executable'],
-        java    = SOFTWARE['java']['executable'],
-        threads = config['execution']['rules']['fasta_dict']['threads'],
-        mem     = config['execution']['rules']['fasta_dict']['memory'],
-        tempdir = TEMPDIR,
-        app_name = 'CreateSequenceDictionary'
-    log:
-        log = os.path.join(PATH_LOG, '{genome}.fasta_dict.log')
-    message:
-        """
-            Fasta dict:
-                input  : {input}
-                output : {output}
-        """
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'R=' + str(input.infile),
-        'O=' + str(output.outfile),
-        '2>' + str(log.log)
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-# changes the gene_name field in the GTF file to the gene_id
-# this is required for droptools counting
-rule change_gtf_id:
-    input:
-        infile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf')
-    output:
-        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
-    params:
-        threads = config['execution']['rules']['change_gtf_id']['threads'],
-        mem     = config['execution']['rules']['change_gtf_id']['memory'],
-        script  = PATH_SCRIPT,
-        Rscript = PATH_RSCRIPT
-    message:
-        """
-            Changing GTF id:
-                input  : {input}
-                output : {output}
-        """
-    run:
-        RunRscript(input, output, params, params.script, 'change_gtf_id.R')
-
-
-# ----------------------------------------------------------------------------- #
-rule gtf_to_refflat:
-    input:
-        dict = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.dict'),
-        gtf  = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gene_id.gtf')
-    output:
-        outfile = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.refFlat')
-    params:
-        threads   = config['execution']['rules']['gtf_to_refflat']['threads'],
-        mem       = config['execution']['rules']['gtf_to_refflat']['memory'],
-        java      = SOFTWARE['java']['executable'] ,
-        droptools = SOFTWARE['droptools']['executable'],
-        tempdir   = TEMPDIR,
-        app_name  = 'ConvertToRefFlat'
-    log:
-        log = os.path.join(PATH_LOG, '{genome}.gtf_to_refflat.log')
-    message:"""
-            GTF To refFlat:
-                input
-                    dict : {input.dict}
-                    gtf  : {input.gtf}
-                output : {output}
-        """
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'ANNOTATIONS_FILE='     + str(input.gtf),
-        'SEQUENCE_DICTIONARY='  + str(input.dict),
-        'O=' + str(output.outfile),
-        '2>' + str(log.log)
-        ])
-        print(command, file=sys.stderr)
-        shell(command)
-
-
-# # ----------------------------------------------------------------------------- #
-def fetch_fastq_for_merge(wc):
+def merge_technical_replicates(wc):
     reads = SAMPLE_SHEET.lookup('Merged_BAM', os.path.join(PATH_MAPPED, wc.name, "Fastq_" + wc.num + ".bam"), ['reads'])
     barcode = SAMPLE_SHEET.lookup('Merged_BAM', os.path.join(PATH_MAPPED, wc.name, "Fastq_" + wc.num + ".bam"), ['barcode'])
     h = { 'reads'   : [os.path.join(PATH_FASTQ, file) for file in reads],
           'barcode' : [os.path.join(PATH_FASTQ, file) for file in barcode]}
     return(h)
 
-rule merge_fastq_to_bam:
+rule merge_fastq:
     input:
         unpack(fetch_fastq_for_merge)
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "Fastq_" + "{num}" + ".bam")
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{type}", ".fastq.gz")
     params:
+        ## TODO - add cat/zip/gzip/zcat to params 
+
         name    = '{name}' + '_' + '{num}',
-        picard  = SOFTWARE['picard']['executable'],
-        java    = SOFTWARE['java']['executable'],
         threads = config['execution']['rules']['merge_fastq_to_bam']['threads'],
         mem     = config['execution']['rules']['merge_fastq_to_bam']['memory'],
         tempdir = TEMPDIR,
-        app_name = 'FastqToSam'
     log:
         log = os.path.join(PATH_LOG, '{name}.{num}.merge_fastq_to_bam.log')
     message:"""
-            merge_fastq_to_bam:
+            merge_fastq:
                 input:
                     barcode : {input.barcode}
                     reads   : {input.reads}
                 output : {output}
         """
     run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
-
         command = ' '.join([
-        tool,
-        'O='  + str(output.outfile),
-        'F1=' + str(input.barcode),
-        'F2=' + str(input.reads),
-        'QUALITY_FORMAT=Standard',
-        'SAMPLE_NAME=' + str(params.name),
-        'SORT_ORDER=unsorted',
+        'cat',
+        input.infiles,
+        '>'  + str(output.outfile),
         '2>' + str(log.log)
         ])
         print(command, file=sys.stderr)
