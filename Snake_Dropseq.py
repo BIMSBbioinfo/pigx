@@ -73,15 +73,6 @@ SAMPLE_SHEET.init_SAMPLE_SHEET(PATH_SAMPLE_SHEET)
 
 
 # ----------------------------------------------------------------------------- #
-# check for compatible technology methods
-methods = set(ADAPTER_PARAMETERS.keys())
-for method in set(SAMPLE_SHEET.list_attr('method')):
-    if not method in methods:
-        message = 'Sample sheet contains unknown method:' + method + '\n'
-        message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
-        sys.exit(message)
-
-# ----------------------------------------------------------------------------- #
 # sets the temporrary directory to default in the working directory if the tempdir does not exist
 if TEMPDIR == None:
     if "TMPDIR" in os.environ.keys():
