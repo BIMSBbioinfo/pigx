@@ -26,7 +26,7 @@ countsFile <- args[1]
 colDataFile <- args[2]
 outDir <- args[3] 
 
-counts <- read.table(countsFile)
+counts <- read.table(countsFile, check.names = FALSE)
 colData <- read.table(colDataFile)
 
 common <- intersect(colnames(counts), rownames(colData)) 
