@@ -36,16 +36,18 @@ outDir <- args[4] # where to write the bigwig files
 #' (see DESeq2::estimateSizeFactors)
 scale_coverage <- function(cov, size_factor) {
   cov_scaled <- lapply(cov, function(x) {
-    S4Vectors::runValue(x) <- S4Vectors::runValue(x) / size_factor
+    S4Vectors::runValue(x) <- round(S4Vectors::runValue(x) / size_factor, 1)
     return(x)
   })
   return(as(cov_scaled, "SimpleRleList"))
 }
 
-aln <- GenomicAlignments::readGAlignments(bamFile)
+message(date()," ... Reading alignments from bam file: \n",bamFile,"\n")
+aln <- GenomicAlignments::readGAlignments(file = bamFile, index = bamFile)
 
 size_factors <- read.table(size_factors_file)
 
+message(date()," ... Getting strand-specific coverage data")
 cov_pos <- scale_coverage(cov = GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '+',]), 
                           size_factor = size_factors[sampleName,])
 cov_neg <- scale_coverage(cov = GenomicRanges::coverage(aln[GenomicRanges::strand(aln) == '-',]), 
@@ -54,8 +56,10 @@ cov_neg <- scale_coverage(cov = GenomicRanges::coverage(aln[GenomicRanges::stran
 out_pos <- file.path(outDir, paste0(sampleName, ".forward.bigwig"))
 out_neg <- file.path(outDir, paste0(sampleName, ".reverse.bigwig"))
 
-rtracklayer::export.bw(object = cov_pos, con = out_pos)
-rtracklayer::export.bw(object = cov_neg, con = out_neg)
+message(date(), " ... exporting bigwig files")
+
+rtracklayer::export.bw(cov_pos, con = out_pos, format = 'bw')
+rtracklayer::export.bw(cov_neg, con = out_neg, format = 'bw')
 
 
 
