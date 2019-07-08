@@ -365,8 +365,8 @@ rule counts_from_SALMON:
 rule genomeCoverage:
   input:
     size_factors_file=os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt"),
-    bam=rules.star_map.output[0],
-    bai=rules.index_bam.output
+    bam=os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'),
+    bai=os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam.bai')
   output:
     os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'),
     os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig')
