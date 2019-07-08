@@ -19,7 +19,7 @@ execution:
   rules:
     __default__:
       threads: 1
-      memory: 8G
+      memory: 64G
     star_index:
       threads: 2
       memory: 32G
