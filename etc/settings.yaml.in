@@ -40,36 +40,18 @@ execution:
     combine_gtf:
       threads: 1,
       memory: 4G
-    fasta_dict:
-      threads:  1
-      memory: 2G
     change_gtf_id:
       threads:  1
       memory: 4G
     gtf_to_refflat:
       threads:  1
       memory: 30G
-    merge_fastq_to_bam:
+    filter_reads:
+      threads: 2
+      memory: 4G
+    merge_technical_replicates:
       threads:  1
       memory: 2G
-    tag_cells:
-      threads:  8
-      memory: 35G
-    tag_molecules:
-      threads:  8
-      memory: 35G
-    filter_bam:
-      threads:  1
-      memory: 10G
-    trim_starting_sequence:
-      threads:  1
-      memory: 10G
-    trim_polya:
-      threads:  1
-      memory: 10G
-    sam_to_fastq:
-      threads:  1
-      memory: 10G
     map_star:
       threads:  4
       memory: 32G
@@ -108,12 +90,6 @@ execution:
       memory: 16G
 
 tools:
-  picard:
-    executable: @PICARDJAR@
-  droptools:
-    executable: @DROPSEQJAR@
-    genes_per_cell: 10
-    num_core_barcodes: 10
   fastqc:
     executable: @FASTQC@
   star:
@@ -127,11 +103,20 @@ tools:
   python:
     executable: @PYTHON@
     args: ""
+  cat:
+    executable: @CAT@
+  rm:
+    executable: @RM@
+  ln:
+    executable: @LN@
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla"
   samtools:
     executable: @SAMTOOLS@
+    args: ""
+  flexbar:
+    executable: @FLEXBAR@
     args: ""
 
 # ---------------------------------------------------------------------------- #

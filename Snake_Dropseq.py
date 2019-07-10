@@ -33,8 +33,8 @@ SOFTWARE = config['tools']
 # variables
 
 GENOME_NAME_PRIMARY = config['annotation']['primary']['genome']['name']
-REFERENCE_NAMES = [GENOME_NAME_PRIMARY]
-COVARIATES = config['covariates']
+REFERENCE_NAMES     = [GENOME_NAME_PRIMARY]
+COVARIATES          = config['covariates']
 
 # ----------------------------------------------------------------------------- #
 # adapter locations
@@ -71,6 +71,7 @@ if config['annotation']['secondary']:
 SAMPLE_SHEET = experiment(config = config)
 SAMPLE_SHEET.init_SAMPLE_SHEET(PATH_SAMPLE_SHEET)
 
+SAMPLE_NAMES = SAMPLE_SHEET.fetch_sample_names()
 
 # ----------------------------------------------------------------------------- #
 # sets the temporrary directory to default in the working directory if the tempdir does not exist
@@ -99,19 +100,8 @@ if GENOME_SECONDARY_IND:
     PATH_GTF_MIX = os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.gtf')
     COMBINE_REFERENCE = COMBINE_REFERENCE + [PATH_REFERENCE_MIX, PATH_GTF_MIX]
 
-
-# ----------------------------------------------------------------------------- #
-# REFFLAT and DICT
-REFFLAT = [os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.refFlat')]
-DICT    = [os.path.join(PATH_ANNOTATION_PRIMARY, GENOME_NAME_PRIMARY + '.dict')]
-
-if GENOME_SECONDARY_IND:
-    REFFLAT = REFFLAT + [os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.refFlat')]
-    DICT    = DICT    + [os.path.join(PATH_ANNOTATION_MIX, GENOME_NAME_MIX + '.dict')]
-
-
 # ----------------------------------------------------------------------------- # FastQC
-FASTQC_prep  = SAMPLE_SHEET.list_attr('reads') + SAMPLE_SHEET.list_attr('barcode')
+FASTQC_prep  = list(SAMPLE_SHEET.SAMPLE_SHEET['reads']) + list(SAMPLE_SHEET.SAMPLE_SHEET['barcode'])
 FASTQC = [os.path.join(PATH_FASTQC, file + ".fastqc.done") for file in FASTQC_prep]
 
 # ----------------------------------------------------------------------------- #
@@ -122,18 +112,20 @@ PATH_GTF_PRIMARY_ID = expand(os.path.join(PATH_ANNOTATION_PRIMARY, "{name}" + "g
 # STAR INDEX
 MAKE_STAR_INDEX = expand(os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','done.txt'), genome = REFERENCE_NAMES)
 
-# ----------------------------------------------------------------------------- 
+
+# -----------------------------------------------------------------------------
 #
 # merge reads
-MERGE_READS = expand(os.path.join(PATH_MAPPED, '{name}',SAMPLE_SHEET.fetch_reads['{name}']['output'])  name = SAMPLE_SHEET.fetch_sample_names())
-
-# merge barcodes
-MERGE_BARCODES = expand(os.path.join(PATH_MAPPED, '{name}',SAMPLE_SHEET.fetch_barcodes['{name}']['output'])  name = SAMPLE_SHEET.fetch_sample_names())
-
+# use for loop - expand gives wrong results
+MERGE_TECHNICAL_REPLICATES = []
+for sample_name in SAMPLE_NAMES:
+    print(sample_name)
+    MERGE_TECHNICAL_REPLICATES.append(os.path.join(PATH_MAPPED, sample_name, SAMPLE_SHEET.fetch_field(sample_name,'reads_merged')))
+    MERGE_TECHNICAL_REPLICATES.append(os.path.join(PATH_MAPPED, sample_name, SAMPLE_SHEET.fetch_field(sample_name,'barcode_merged')))
 
 # ----------------------------------------------------------------------------- #
 # MAPPING
-MAP_scRNA = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}", "star_gene_exon_tagged.bam"), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
+MAP_scRNA = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}", "{name}.bam"), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 
 # ----------------------------------------------------------------------------- #
@@ -197,7 +189,7 @@ if len(COMBINE_REFERENCE) > 0:
 
 #RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
 
-RULE_ALL = RULE_ALL + DICT + MAKE_STAR_INDEX + MERGE_FASTQ
+RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES
 
 
 # ----------------------------------------------------------------------------- #
@@ -216,7 +208,9 @@ rule link_primary_annotation:
         fasta = LINK_REFERENCE_PRIMARY
     params:
         threads = config['execution']['rules']['link_primary_annotation']['threads'],
-        mem     = config['execution']['rules']['link_primary_annotation']['memory']
+        mem     = config['execution']['rules']['link_primary_annotation']['memory'],
+        #ln      = SOFTWARE['ln']['executable']
+        ln = 'ln'
     message:
         """
             Linking primary reference files:
@@ -228,8 +222,8 @@ rule link_primary_annotation:
                     link: {output.fasta}
         """
     shell:"""
-        ln -s {input.gtf} {output.gtf}
-        ln -s {input.fasta} {output.fasta}
+        {params.ln} -s {input.gtf} {output.gtf}
+        {params.ln} -s {input.fasta} {output.fasta}
     """
 
 
@@ -273,7 +267,8 @@ rule change_gtf_id:
         threads = config['execution']['rules']['change_gtf_id']['threads'],
         mem     = config['execution']['rules']['change_gtf_id']['memory'],
         script  = PATH_SCRIPT,
-        Rscript = PATH_RSCRIPT
+        Rscript = PATH_RSCRIPT,
+        perl    = SOFTWARE['perl']['executable']
     message:
         """
             Changing GTF id:
@@ -283,14 +278,21 @@ rule change_gtf_id:
     run:
         RunRscript(input, output, params, params.script, 'change_gtf_id.R')
 
+        # removes header from the gtf file
+        command = " ".join([
+            params.perl, "-pi -e 's|^#.+$||'", output.outfile
+        ])
+        shell(command)
 
 
 # ----------------------------------------------------------------------------- #
 # STAR INDEX
+###
 rule make_star_reference:
     input:
         fasta = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta'),
-        gtf   = rules.change_gtf_id.output.outfile,
+        gtf   = rules.change_gtf_id.output.outfile
+        # gtf   = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.gtf')
     output:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','done.txt')
     params:
@@ -299,18 +301,37 @@ rule make_star_reference:
         star_args = SOFTWARE['star']['args'],
         threads = config['execution']['rules']['make_star_reference']['threads'],
         mem     = config['execution']['rules']['make_star_reference']['memory']
+
     log:
-        os.path.join(PATH_LOG, '{genome}.make_star_reference.log')
+        logfile = os.path.join(PATH_LOG, '{genome}.make_star_reference.log')
     message:"""
         Star reference:
             input:
                 fasta : {input.fasta}
                 gtf   : {input.gtf}
         """
-    shell:"""
-        {params.star} {params.star_args} --runMode genomeGenerate --genomeDir {params.outdir} --genomeFastaFiles {input.fasta} --runThreadN {params.threads} --sjdbGTFfile {input.gtf} --sjdbOverhang 99
-        touch {output.outfile} 2> {log}
-"""
+    run:
+        # star genome build command
+        command = " ".join(
+        [params.star, params.star_args,
+         '--runMode genomeGenerate',
+        '--genomeDir',        str(params.outdir),
+        '--runThreadN',       str(params.threads),
+        '--genomeFastaFiles', str(input.fasta),
+        '--sjdbGTFfile',      str(input.gtf),
+        '--sjdbOverhang',     '99',
+        '2>',log.logfile
+        ])
+
+        # touch command for the star index
+        command_touch = " ".join([
+        'touch', str(output.outfile),
+        '2>',    str(log.logfile)
+        ])
+
+        command_final = command + ';' + command_touch
+        print(command_final, file=sys.stderr)
+        shell(command_final)
 
 # ----------------------------------------------------------------------------- #
 # GIVEN PRIMARY AND SECONDARY GTF, COMBINES THEM INTO ONE GTF FILE
@@ -341,48 +362,17 @@ if GENOME_SECONDARY_IND:
     """
 
 # ----------------------------------------------------------------------------- #
-def merge_technical_replicates(wc):
-    reads = SAMPLE_SHEET.lookup('Merged_BAM', os.path.join(PATH_MAPPED, wc.name, "Fastq_" + wc.num + ".bam"), ['reads'])
-    barcode = SAMPLE_SHEET.lookup('Merged_BAM', os.path.join(PATH_MAPPED, wc.name, "Fastq_" + wc.num + ".bam"), ['barcode'])
-    h = { 'reads'   : [os.path.join(PATH_FASTQ, file) for file in reads],
-          'barcode' : [os.path.join(PATH_FASTQ, file) for file in barcode]}
-    return(h)
+def fetch_fastq_technical_replicates(wc):
+    sample_name = str(wc.name)
+    if(str(wc.type) == 'R1'):
+        input_fastq = SAMPLE_SHEET.fetch_barcode_path(sample_name)
 
-rule merge_fastq:
-    input:
-        unpack(fetch_fastq_for_merge)
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{type}", ".fastq.gz")
-    params:
-        ## TODO - add cat/zip/gzip/zcat to params 
+    if(str(wc.type) == 'R2'):
+        input_fastq = SAMPLE_SHEET.fetch_reads_path(sample_name)
 
-        name    = '{name}' + '_' + '{num}',
-        threads = config['execution']['rules']['merge_fastq_to_bam']['threads'],
-        mem     = config['execution']['rules']['merge_fastq_to_bam']['memory'],
-        tempdir = TEMPDIR,
-    log:
-        log = os.path.join(PATH_LOG, '{name}.{num}.merge_fastq_to_bam.log')
-    message:"""
-            merge_fastq:
-                input:
-                    barcode : {input.barcode}
-                    reads   : {input.reads}
-                output : {output}
-        """
-    run:
-        command = ' '.join([
-        'cat',
-        input.infiles,
-        '>'  + str(output.outfile),
-        '2>' + str(log.log)
-        ])
-        print(command, file=sys.stderr)
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-def fetch_all_bams(wc):
-    bam_files = SAMPLE_SHEET.lookup('sample_name', wc.name, ['Merged_BAM'])
-    return(bam_files)
+    if not input_fastq.__class__ == list:
+        input_fastq = list(input_fastq)
+    return(input_fastq)
 
 rule merge_bam_per_sample:
     input:
@@ -407,662 +397,30 @@ rule merge_bam_per_sample:
         print(command, file=sys.stderr)
         shell(command)
 
-# ----------------------------------------------------------------------------- #
-rule tag_cells:
+rule merge_technical_replicates:
     input:
-        infile = rules.merge_bam_per_sample.output.outfile
+        infiles = fetch_fastq_technical_replicates
     output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cell.bam"))
+        outfile = os.path.join(PATH_MAPPED, "{name}", ("{name}" + "_{type,(R1)|(R2)}" + ".fastq.gz"))
     params:
-        summary   = os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Cellular.bam_summary.txt"),
-        droptools  = SOFTWARE['droptools']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'TagBamWithReadSequenceExtended',
-        name       = '{name}',
-        threads   = config['execution']['rules']['tag_cells']['threads'],
-        mem       = config['execution']['rules']['tag_cells']['memory'],
-        tempdir    = TEMPDIR,
-        base_qual  = 10,
-        barcoded_read = 1,
-        discard_read  = 'false'
+        threads = config['execution']['rules']['merge_technical_replicates']['threads'],
+        mem     = config['execution']['rules']['merge_technical_replicates']['memory'],
+        tempdir = TEMPDIR,
+        cat     = SOFTWARE['cat']['executable']
     log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_cells.log")
+        log = os.path.join(PATH_LOG, '{name}.{type,(R1)|(R2)}.merge_technical_replicates.log')
     message:"""
-            tag cells
-                input: {input.infile}
-                output : {output.outfile}
+            merge_technical_replicates:
+                input:   {input}
+                output : {output}
         """
     run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        # fetches method from the sample_sheet
-        method = SAMPLE_SHEET.lookup('sample_name', params.name, ['method'])[0]
-        adapter_params = ADAPTER_PARAMETERS[method]['cell_barcode']
 
         command = ' '.join([
-        tool,
-        'SUMMARY='       + str(params.summary),
-        'BASE_RANGE='    + "-".join([str(adapter_params['base_min']),str(adapter_params['base_max'])]),
-        'BASE_QUALITY='  + str(params.base_qual),
-        'BARCODED_READ=' + str(params.barcoded_read),
-        'DISCARD_READ='  + str(params.discard_read),
-        'TAG_NAME=XC',
-        'NUM_BASES_BELOW_QUALITY=1',
-        'INPUT='  + str(input.infile),
-        'OUTPUT=' + str(output.outfile)
+            params.cat,
+            " ".join(input.infiles),
+            '>'  + str(output.outfile),
+            '2>' + str(log.log)
         ])
         print(command, file=sys.stderr)
         shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule tag_molecules:
-    input:
-        infile = rules.tag_cells.output.outfile
-    output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_CellMolecular.bam"))
-    params:
-        summary   = os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_Molecular.bam_summary.txt"),
-        droptools = SOFTWARE['droptools']['executable'],
-        java      = SOFTWARE['java']['executable'],
-        app_name  = 'TagBamWithReadSequenceExtended',
-        name      = '{name}',
-        threads   = config['execution']['rules']['tag_molecules']['threads'],
-        mem       = config['execution']['rules']['tag_molecules']['memory'],
-        tempdir   = TEMPDIR,
-        base_qual = 10,
-        barcoded_read = 1,
-        discard_read  = 'true'
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_molecules.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        method = SAMPLE_SHEET.lookup('sample_name', params.name, ['method'])[0]
-        adapter_params = ADAPTER_PARAMETERS[method]['umi_barcode']
-
-        command = ' '.join([
-        tool,
-        'SUMMARY='       + params.summary,
-        'BASE_RANGE='    + "-".join([str(adapter_params['base_min']),str(adapter_params['base_max'])]),
-        'BASE_QUALITY='  + str(params.base_qual),
-        'BARCODED_READ=' + str(params.barcoded_read),
-        'DISCARD_READ='  + str(params.discard_read),
-        'TAG_NAME=XM',
-        'NUM_BASES_BELOW_QUALITY=1',
-        'INPUT='  + str(input.infile),
-        'OUTPUT=' + str(output.outfile)
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule filter_bam:
-    input:
-        infile = rules.tag_molecules.output.outfile
-    output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_filtered.bam"))
-    params:
-        droptools = SOFTWARE['droptools']['executable'],
-        java      = SOFTWARE['java']['executable'],
-        app_name  = 'FilterBAM',
-        threads   = config['execution']['rules']['filter_bam']['threads'],
-        mem       = config['execution']['rules']['filter_bam']['memory'],
-        tempdir   = TEMPDIR
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.filter_bam.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'TAG_REJECT=XQ',
-        'INPUT='  + str(input.infile),
-        'OUTPUT=' + str(output.outfile)
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule trim_starting_sequence:
-    input:
-        infile  = rules.filter_bam.output.outfile
-    output:
-        outfile = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_tagged_trimmed_smart.bam"))
-    params:
-        droptools  = SOFTWARE['droptools']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'TrimStartingSequence',
-        threads    = config['execution']['rules']['trim_starting_sequence']['threads'],
-        mem        = config['execution']['rules']['trim_starting_sequence']['memory'],
-        tempdir    = TEMPDIR,
-        summary    = os.path.join(PATH_MAPPED, "{name}", "{genome}","adapter_trimming_report.txt"),
-        mismatches = 1,
-        num_bases  = 5,
-        sequence   = 'AAGCAGTGGTATCAACGCAGAGTGAATGGG'
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.trim_starting_sequence.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'OUTPUT_SUMMARY='  + str(params.summary),
-        'MISMATCHES='      + str(params.mismatches),
-        'NUM_BASES='       + str(params.num_bases),
-        'SEQUENCE='        + str(params.sequence),
-        'INPUT='           + str(input.infile),
-        'OUTPUT='          + str(output.outfile)
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule trim_polya:
-    input:
-        infile = rules.trim_starting_sequence.output.outfile
-    output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.bam"))
-    params:
-        droptools  = SOFTWARE['droptools']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'PolyATrimmer',
-        threads    = config['execution']['rules']['trim_polya']['threads'],
-        mem        = config['execution']['rules']['trim_polya']['memory'],
-        tempdir    = TEMPDIR,
-        summary    = os.path.join(PATH_MAPPED, "{name}", "{genome}","polyA_trimming_report.txt"),
-        mismatches = 0,
-        num_bases  = 6
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.trim_polya.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'OUTPUT_SUMMARY='  + str(params.summary),
-        'MISMATCHES='      + str(params.mismatches),
-        'NUM_BASES='       + str(params.num_bases),
-        'INPUT='           + str(input.infile),
-        'OUTPUT='          + str(output.outfile)
-        ])
-        shell(command)
-# ----------------------------------------------------------------------------- #
-rule sam_to_fastq:
-    input:
-        infile = rules.trim_polya.output.outfile
-    output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","unaligned_mc_tagged_polyA_filtered.fastq"))
-    params:
-        picard     = SOFTWARE['picard']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'SamToFastq',
-        threads    = config['execution']['rules']['sam_to_fastq']['threads'],
-        mem        = config['execution']['rules']['sam_to_fastq']['memory'],
-        tempdir    = TEMPDIR
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.SamToFastq.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'INPUT='   + str(input.infile),
-        'FASTQ='   + str(output.outfile)
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule map_star:
-    input:
-        infile = rules.sam_to_fastq.output.outfile,
-        genome = rules.make_star_reference.output
-    output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","star.Aligned.out.sam"))
-    params:
-        star       = SOFTWARE['star']['executable'],
-        star_args  = SOFTWARE['star']['args'],
-        genome     = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
-        outpath    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        threads    = config['execution']['rules']['map_star']['threads'],
-        mem        = config['execution']['rules']['map_star']['memory'],
-        tempdir    = TEMPDIR,
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.star.log")
-
-    shell:"""
-    {params.star} {params.star_args} --genomeDir {params.genome} --runThreadN {params.threads} --outFileNamePrefix {params.outpath}/star. --readFilesIn {input.infile}
-    """
-
-# ----------------------------------------------------------------------------- #
-rule sort_aligned:
-    input:
-        infile = rules.map_star.output.outfile
-    output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","aligned.sorted.bam"))
-    params:
-        picard     = SOFTWARE['picard']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'SortSam',
-        threads    = config['execution']['rules']['sort_aligned']['threads'],
-        mem        = config['execution']['rules']['sort_aligned']['memory'],
-        tempdir    = TEMPDIR
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.sort_aligned.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'SORT_ORDER=queryname',
-        'TMP_DIR=' + str(params.tempdir),
-        'INPUT='   + str(input.infile),
-        'OUTPUT='  + str(output.outfile)
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule merge_bam:
-    input:
-        mapped    = rules.sort_aligned.output.outfile,
-        unmapped  = rules.trim_polya.output.outfile,
-        reference = os.path.join(PATH_ANNOTATION, '{genome}', '{genome}.fasta'),
-        dict      = rules.fasta_dict.output.outfile
-    output:
-        outfile   = temp(os.path.join(PATH_MAPPED, "{name}", "{genome}","merged.bam"))
-    params:
-        picard     = SOFTWARE['picard']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'MergeBamAlignment',
-        threads    = config['execution']['rules']['merge_bam']['threads'],
-        mem        = config['execution']['rules']['merge_bam']['memory'],
-        tempdir    = TEMPDIR
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.merge_bam.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.picard, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'REFERENCE_SEQUENCE=' + str(input.reference),
-        'UNMAPPED_BAM='       + str(input.unmapped),
-        'ALIGNED_BAM='        + str(input.mapped),
-        'INCLUDE_SECONDARY_ALIGNMENTS=false',
-        'PAIRED_RUN=false',
-        'OUTPUT='             + str(output.outfile)
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule tag_with_gene_exon:
-    input:
-        infile    = rules.merge_bam.output.outfile,
-        refflat   = rules.gtf_to_refflat.output
-    output:
-        outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","star_gene_exon_tagged.bam")
-    params:
-        droptools  = SOFTWARE['droptools']['executable'],
-        java       = SOFTWARE['java']['executable'],
-        app_name   = 'TagReadWithGeneExon',
-        threads    = config['execution']['rules']['tag_with_gene_exon']['threads'],
-        mem        = config['execution']['rules']['tag_with_gene_exon']['memory'],
-        tempdir    = TEMPDIR
-    log:
-       log = os.path.join(PATH_LOG, "{name}.{genome}.tag_with_gene_exon.log")
-
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'ANNOTATIONS_FILE=' + str(input.refflat),
-        'TAG=GE',
-        'CREATE_INDEX=true',
-        'INPUT='  + str(input.infile),
-        'OUTPUT=' + str(output.outfile)
-        ])
-        shell(command)
-
-
-
-# ----------------------------------------------------------------------------- #
-rule extract_read_statistics:
-    input:
-        bamfile = rules.tag_with_gene_exon.output.outfile
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadStatistics.txt')
-    params:
-        outname  = "{name}_{genome}",
-        threads  = config['execution']['rules']['extract_read_statistics']['threads'],
-        mem      = config['execution']['rules']['extract_read_statistics']['memory'],
-        script   = PATH_SCRIPT,
-        Rscript  = PATH_RSCRIPT
-    message: """
-            extract_read_statistics:
-                input:  {input.bamfile}
-                output: {output.outfile}
-        """
-    run:
-        RunRscript(input, output, params, params.script, 'Extract_Read_Statistics.R')
-
-
-
-
-# ----------------------------------------------------------------------------- #
-# calculates the number of reads per cell
-rule bam_tag_histogram:
-    input:
-        infile = rules.tag_with_gene_exon.output.outfile
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_BAMTagHistogram.txt')
-    params:
-        outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname   = "{name}_{genome}",
-        threads   = config['execution']['rules']['bam_tag_histogram']['threads'],
-        mem       = config['execution']['rules']['bam_tag_histogram']['memory'],
-        java      = SOFTWARE['java']['executable'],
-        droptools = SOFTWARE['droptools']['executable'],
-        tempdir   = TEMPDIR,
-        app_name  = 'BAMTagHistogram'
-    message: """
-            BamTagHistogram:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    run:
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'O=' + str(output.outfile),
-        'I=' + str(input.infile),
-        'TAG=XC'
-        ])
-        shell(command)
-
-
-# ----------------------------------------------------------------------------- #
-# calculates the UMI matrix
-rule find_absolute_read_cutoff:
-    input:
-        infile = rules.bam_tag_histogram.output.outfile
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml')
-    params:
-        outdir   = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname  = "{name}_{genome}",
-        threads  = config['execution']['rules']['find_absolute_read_cutoff']['threads'],
-        mem      = config['execution']['rules']['find_absolute_read_cutoff']['memory'],
-        cutoff   = 50000,
-        script   = PATH_SCRIPT,
-        Rscript  = PATH_RSCRIPT
-    message: """
-            find_absolute_read_cutoff:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    run:
-        RunRscript(input, output, params, params.script, 'Find_Absolute_Read_Cutoff.R')
-
-
-# ----------------------------------------------------------------------------- #
-# calculates the UMI matrix
-rule get_umi_matrix:
-    input:
-        infile        = rules.tag_with_gene_exon.output,
-        reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt')
-    params:
-        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname           = "{name}_{genome}",
-        threads           = config['execution']['rules']['get_umi_matrix']['threads'],
-        mem               = config['execution']['rules']['get_umi_matrix']['memory'],
-        java              = SOFTWARE['java']['executable'] ,
-        droptools         = SOFTWARE['droptools']['executable'],
-        app_name          = 'DigitalExpression',
-        tempdir           = TEMPDIR,
-        genes_per_cell    = SOFTWARE['droptools']['genes_per_cell'],
-        num_core_barcodes = SOFTWARE['droptools']['num_core_barcodes']
-    message: """
-            Count UMI:
-                input:  {input.infile}
-                reads:  {input.reads_cutoff}
-                output: {output.outfile}
-        """
-    run:
-        with open(input.reads_cutoff) as stream:
-            reads_cutoff = yaml.load(stream)['reads_cutoff']
-
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'O=' + str(output.outfile),
-        'I=' + str(input.infile),
-        'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
-#         'MIN_NUM_GENES_PER_CELL=' + str(params.genes_per_cell),
-        'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff),
-        'OUTPUT_READS_INSTEAD=F'
-        ])
-        shell(command)
-
-
-# ----------------------------------------------------------------------------- #
-# calculates the reads matrix - used for PCR duplication estimations
-rule get_reads_matrix:
-    input:
-        infile        = rules.tag_with_gene_exon.output,
-        reads_cutoff  = rules.find_absolute_read_cutoff.output.outfile
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt')
-    params:
-        outdir            = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname           = "{name}_{genome}",
-        java              = SOFTWARE['java']['executable'] ,
-        droptools         = SOFTWARE['droptools']['executable'],
-        app_name          = 'DigitalExpression',
-        tempdir           = TEMPDIR,
-        threads           = config['execution']['rules']['get_reads_matrix']['threads'],
-        mem               = config['execution']['rules']['get_reads_matrix']['memory']
-    message: """
-            Count UMI:
-                input:  {input.infile}
-                reads:  {input.reads_cutoff}
-                output: {output.outfile}
-        """
-    run:
-        with open(input.reads_cutoff) as stream:
-            reads_cutoff = yaml.load(stream)['reads_cutoff']
-
-        tool = java_tool(params.java, params.threads, params.mem, params.tempdir, params.droptools, params.app_name)
-
-        command = ' '.join([
-        tool,
-        'O=' + str(output.outfile),
-        'I=' + str(input.infile),
-        'SUMMARY=' + os.path.join(params.outdir, params.outname + '_Summary.txt'),
-        'MIN_NUM_READS_PER_CELL=' + str(reads_cutoff),
-        'OUTPUT_READS_INSTEAD=T'
-        ])
-        shell(command)
-
-# ----------------------------------------------------------------------------- #
-rule extract_downstream_statistics:
-    input:
-        umi_matrix   = rules.get_umi_matrix.output.outfile,
-        reads_matrix = rules.get_reads_matrix.output.outfile,
-        reads_stats  = rules.extract_read_statistics.output.outfile,
-        reads_cutoff = rules.find_absolute_read_cutoff.output.outfile
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt')
-    params:
-        file_location = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname       = "{name}_{genome}",
-        threads       = config['execution']['rules']['extract_downstream_statistics']['threads'],
-        mem           = config['execution']['rules']['extract_downstream_statistics']['memory'],
-        script        = PATH_SCRIPT,
-        Rscript       = PATH_RSCRIPT
-    message: """
-            extract_downstream_statistics:
-                umi:    {input.umi_matrix}
-                reads:  {input.reads_matrix}
-                stats:  {input.reads_stats}
-                output: {output.outfile}
-        """
-    run:
-        RunRscript(input, output, params, params.script, 'Extract_Downstream_Statistics.R')
-
-# ----------------------------------------------------------------------------- #
-# convert UMI matrix from txt format into one loom format
-rule convert_matrix_from_txt_to_loom:
-    input:
-        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'),
-        gtf           = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf']))
-    output:
-        outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom')
-    params:
-        python      = SOFTWARE['python']['executable'],
-        python_args = SOFTWARE['python']['args']
-    log:
-        log = os.path.join(PATH_LOG, "{name}.{genome}.convert2loom.log")
-    message: """
-            Convert UMI Matrix from .txt to .loom:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    shell: "{params.python} {params.python_args} {PATH_SCRIPT}/convert_matrix_to_loom.py {wildcards.name} {input.infile} {input.gtf} {output.outfile} &> {log.log}"
-
-
-# ----------------------------------------------------------------------------- #
-## combines multiple loom files into one loom file
-rule combine_UMI_matrices_into_loom:
-    input:
-        infile        = lambda wildcards: expand(os.path.join(PATH_MAPPED, "{name}", wildcards.genome, '_'.join(["{name}", wildcards.genome, 'UMI.Matrix.loom'])), name = SAMPLE_NAMES)
-    output:
-        outfile       = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
-    params:
-         tmpfile = os.path.join(PATH_MAPPED, "{genome}_UMI.loom.tmp"),
-         python  = SOFTWARE['python']['executable'],
-         python_args = SOFTWARE['python']['args']
-    log:
-        log = os.path.join(PATH_LOG, "{genome}.combine_looms.log")
-    message: """
-            Combine multiple loom files into one:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    shell: "{params.python} {params.python_args} {PATH_SCRIPT}/combine_UMI_matrices.py {input.infile} {output.outfile} &> {log.log}"
-
-
-# ----------------------------------------------------------------------------- #
-## Imports and preprocesses the combined loom files and saves as SingleCellExperiment.RDS objects.
-rule convert_loom_to_singleCellExperiment:
-    input:
-        infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
-    output:
-        outfile       = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
-    log:
-        log = os.path.join(PATH_LOG, "{genome}.loom2sce.log")
-    params:
-        Rscript = PATH_RSCRIPT
-    message: """
-            Import loom file, preprocess and save as singleCellExperiment.RDS:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/convert_loom_to_singleCellExperiment.R --loomFile={input.infile} --sampleSheetFile={PATH_SAMPLE_SHEET} --gtfFile={PATH_GTF_PRIMARY} --genomeBuild={wildcards.genome} --outFile={output.outfile} &> {log.log}"
-
-# ----------------------------------------------------------------------------- #
-rule convert_loom_to_seurat:
-    input:
-        infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
-    output:
-        outfile       = os.path.join(PATH_MAPPED, "{genome}.Seurat.RDS")
-    log:
-        log = os.path.join(PATH_LOG, "{genome}.loom2Seurat.log")
-    params:
-        script         = PATH_SCRIPT,
-        Rscript        = PATH_RSCRIPT,
-        genome_version = "{genome}"
-    message: """
-            convert_loom_to_seurat:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    run:
-        RunRscript(input, output, params, params.script, 'convert_loom_to_Seurat.R')
-
-
-
-# ----------------------------------------------------------------------------- #
-## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
-rule report:
-    input:
-        infile        = os.path.abspath(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")),
-        read_stats    = READ_STATISTICS
-    output:
-        outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
-    params:
-        reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
-        Rscript       = PATH_RSCRIPT,
-        workdir       = os.path.abspath(PATH_MAPPED),
-        sceRdsFile    = lambda wildcards: os.path.abspath(os.path.join(PATH_MAPPED, wildcards.genome + ".SingleCellExperiment.RDS")),
-        path_mapped   = PATH_MAPPED
-    log:
-        log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
-    message: """
-            Generate an HTML report from SingleCellExperiment.RDS:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    shell: "{params.Rscript} --vanilla {PATH_SCRIPT}/renderReport.R --reportFile={params.reportRmd} --sceRdsFile={params.sceRdsFile} --covariates='{COVARIATES}' --prefix={wildcards.genome} --workdir={params.workdir} --path_mapped='{params.path_mapped}' 2>&1 {log.log}"
-
-# ----------------------------------------------------------------------------- #
-rule bam_to_BigWig:
-    input:
-        bamfile            = rules.tag_with_gene_exon.output,
-        cell_cutoff_file   = rules.find_absolute_read_cutoff.output.outfile,
-        reads_by_cell_file = rules.bam_tag_histogram.output.outfile
-    output:
-        bwfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}.bw')
-    params:
-        threads = config['execution']['rules']['bam_to_BigWig']['threads'],
-        mem     = config['execution']['rules']['bam_to_BigWig']['memory'],
-        script  = PATH_SCRIPT,
-        Rscript = PATH_RSCRIPT
-    message: """
-            bam_to_BigWig:
-                input:  {input.bamfile}
-                output: {output.bwfile}
-            """
-    run:
-        RunRscript(input, output, params, params.script, 'BamToBigWig.R')
-
-
-# ----------------------------------------------------------------------------- #
-rule fastqc:
-    input:
-        infile = os.path.join(PATH_FASTQ, "{name}")
-    output:
-        outfile =  os.path.join(PATH_FASTQC, "{name}.fastqc.done")
-    params:
-        outpath = os.path.join(PATH_FASTQC),
-        threads = config['execution']['rules']['fastqc']['threads'],
-        mem     = config['execution']['rules']['fastqc']['memory'],
-        java    = SOFTWARE['java']['executable'],
-        fastqc  = SOFTWARE['fastqc']['executable']
-    log:
-        log = os.path.join(PATH_LOG, "{name}.fastqc.log")
-    message: """
-            fastqc:
-                input: {input.infile}
-                output: {output.outfile}
-            """
-    shell:"""
-        {params.fastqc} -j {params.java} -t {params.threads} -o {params.outpath} {input.infile} 2> {log.log}
-        touch {output.outfile}
-    """
