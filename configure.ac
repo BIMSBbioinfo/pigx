@@ -55,6 +55,7 @@ find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
 find_or_override_prog([JAVA],            [java])
 find_or_override_prog([FLEXBAR],         [flexbar])
+find_or_override_prog([JELLYFISH],       [jellyfish])
 
 AC_ARG_ENABLE([environment-capture],
   AS_HELP_STRING([--disable-environment-capture], [Do not capture environment variables.]),

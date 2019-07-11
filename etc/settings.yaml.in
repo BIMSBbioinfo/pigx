@@ -43,9 +43,6 @@ execution:
     change_gtf_id:
       threads:  1
       memory: 4G
-    gtf_to_refflat:
-      threads:  1
-      memory: 30G
     filter_reads:
       threads: 2
       memory: 4G
@@ -55,21 +52,15 @@ execution:
     map_star:
       threads:  4
       memory: 32G
-    sort_aligned:
-      threads:  1
-      memory: 5G
-    merge_bam:
-      threads:  1
-      memory: 5G
-    tag_with_gene_exon:
+    sort_bam:
       threads:  1
       memory: 5G
     extract_read_statistics:
       threads:  1
       memory: 8G
-    bam_tag_histogram:
+    cell_barcode_histogram:
       threads:  1
-      memory: 64G
+      memory: 16G
     find_absolute_read_cutoff:
       threads:  1
       memory: 8G
@@ -118,6 +109,9 @@ tools:
   flexbar:
     executable: @FLEXBAR@
     args: ""
+  jellyfish:
+    executable: @JELLYFISH@
+    
 
 # ---------------------------------------------------------------------------- #
 # HARDCODED adapter parameters
