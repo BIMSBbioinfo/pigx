@@ -19,7 +19,7 @@ execution:
   rules:
     __default__:
       threads: 1
-      memory: 64G
+      memory: 8G
     star_index:
       threads: 2
       memory: 32G
@@ -32,6 +32,9 @@ execution:
     star_map:
       threads: 2
       memory: 16G
+    genomeCoverage:
+      threads: 1
+      memory: 64G
 
 #organism is needed for GO term analysis. Leave it empty if not interested in GO analysis.
 #Otherwise provide a string with the initial of genus and the species name (e.g. hsapiens, mmusculus, dmelanogaster, celegans)
