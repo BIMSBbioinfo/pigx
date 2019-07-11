@@ -1,4 +1,5 @@
 from snakemake import shell
+import sys
 
 # ----------------------------------------------------------------------------- #
 # java_head_difference is the reduction in heap allocation given to the java executible

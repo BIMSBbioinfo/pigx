@@ -7,7 +7,7 @@ argv = Parse_Arguments('Find_Absolute_Read_Cutoff')
 Find_Absolute_Read_Cutoff = function(
     infile  = NULL,
     outfile = NULL,
-    cutoff  = 50000
+    cutoff  = 5000
 ){
   if(is.null(infile))
     stop('infile not specified')
@@ -15,31 +15,59 @@ Find_Absolute_Read_Cutoff = function(
   if(is.null(outfile))
       stop('outfile not specified')
 
-  suppressPackageStartupMessages(library(dropbead))
-  suppressPackageStartupMessages(library(stringr))
-  suppressPackageStartupMessages(library(yaml))
+  suppressPackageStartupMessages({
+      library(stringr)
+      library(yaml)
+      library(ggplot2)
+  })
+  
+  reads_by_cell = read.table(infile, stringsAsFactors = FALSE)
+  reads_by_cell = reads_by_cell[order(-reads_by_cell$V2),]
 
-  reads_by_cell = read.table(infile)
-
-  message('Plot inflection point ...')
+    cutoff = min(c(cutoff,nrow(reads_by_cell)))
+               
+ 
+    message('Calculate cutoff ...')
+        cumsum = cumsum(reads_by_cell[1:cutoff, 2])
+        df = data.frame(
+            "cum"   = cumsum/max(cumsum),
+            "cells" = 1:cutoff
+         )
+        df$rank = 1:nrow(df)
+        df$perc = df$rank/max(df$rank)
+        df$dist = df$cum - df$perc
+    
+        knee.point = which.max(df$dist)
+    
+    message('Plot inflection point ...')
+        g = (ggplot(df, aes(cells, cum)) + geom_line(col="steelblue", size=1.25) + theme_minimal()
+                + scale_x_continuous(expand=c(0.015, 0))
+                + scale_y_continuous(expand = c(0.01, 0)) 
+                + ylab("Cumulative fraction of reads")
+                + xlab("Cell barcodes (descending number of reads)")
+                + theme(text=element_text(size=24),
+                      plot.margin = unit(c(1, 1 , 0.5, 0.5), "cm"),
+                      panel.border = element_rect(colour = "black", fill=NA, size=1),
+                      panel.grid.major = element_blank()) )
+        g = (g 
+            + geom_vline(xintercept = knee.point, col='red', size=1)
+            + ggtitle(paste0('Number of STAMPS: ', knee.point))
+            + theme(title = element_text(size=16)))
+        
     png(str_replace(outfile,'yaml','png'), width=400, height=300)
-      p = plotCumulativeFractionOfReads(reads_by_cell,
-                                    cutoff = cutoff,
-                                    draw.knee.point = TRUE)
-      print(p)
+        print(g)
     dev.off()
 
 
-  cutoff = min(cutoff, nrow(reads_by_cell))
+    cutoff = min(cutoff, nrow(reads_by_cell))
   message('Print output yaml ...')
-    infl_point = estimateCellNumber(reads_by_cell[,1], max.cells=cutoff)
-    if(length(infl_point) == 0){
+    
+    if(knee.point == cutoff){
       message('knee cell selection did not succeed: including all cells')
-      infl_point = min(reads_by_cell[,1])
+        knee.point = min(reads_by_cell[,2])
     }
-    lout       = list(reads_cutoff = reads_by_cell[infl_point,1])
+    lout       = list(reads_cutoff = reads_by_cell[knee.point,2])
     cat(as.yaml(lout), file=outfile)
-
 }
 
 
