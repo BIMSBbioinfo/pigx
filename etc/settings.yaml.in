@@ -15,6 +15,10 @@ annotation:
 
 covariates: 'replicate'
 
+general:
+    # defines the maximal, per sample, number of cell which will be considered in the analysis; used in find_absolute_read_cutoff
+    cell_maximal_number: 50000
+
 execution:
   submit-to-cluster: no
   jobs: 6
