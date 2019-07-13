@@ -16,9 +16,9 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/Extract_Read_Statistics.R					\
   scripts/Find_Absolute_Read_Cutoff.R				\
   scripts/change_gtf_id.R							\
-  scripts/combine_UMI_matrices.py					\
+  scripts/combine_loom_matrices.py					\
   scripts/convert_loom_to_singleCellExperiment.R	\
-  scripts/convert_matrix_to_loom.py					\
+  scripts/convert_matrix_from_mtx_to_loom.py					\
   scripts/renderReport.R							\
   scripts/Run_Rscript.py						\
   scripts/Sample_Sheet_Class.py						\

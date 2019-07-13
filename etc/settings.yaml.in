@@ -59,6 +59,12 @@ execution:
     sort_bam:
       threads:  1
       memory: 5G
+    convert_matrix_from_mtx_to_loom:
+      threads:  1
+      memory: 16G
+    combine_loom_files:
+      threads:  1
+      memory: 16G
     extract_read_statistics:
       threads:  1
       memory: 8G
@@ -100,6 +106,8 @@ tools:
     args: ""
   cat:
     executable: @CAT@
+  zcat:
+    executable: @ZCAT@
   rm:
     executable: @RM@
   ln:
@@ -115,7 +123,7 @@ tools:
     args: ""
   jellyfish:
     executable: @JELLYFISH@
-    
+
 
 # ---------------------------------------------------------------------------- #
 # HARDCODED adapter parameters
