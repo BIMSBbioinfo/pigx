@@ -159,14 +159,11 @@ FIND_CELL_NUMBER_CUTOFF = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",
 READS_MATRIX = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # ----------------------------------------------------------------------------- #
-# UMI matrix
-UMI = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
-
 # UMI matrix in loom format
-UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.Matrix.loom'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
+UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.matrix.loom'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # Combined UMI matrices in loom format
-COMBINED_UMI_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
+COMBINED_LOOM_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
 # READ statistics
@@ -206,7 +203,7 @@ if len(COMBINE_REFERENCE) > 0:
 
 #RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
 
-RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES + FILTER_READS + MAP_scRNA + SORT_BAM + BAM_HISTOGRAM + FIND_CELL_NUMBER_CUTOFF
+RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES + FILTER_READS + BAM_HISTOGRAM + FIND_CELL_NUMBER_CUTOFF + MAP_scRNA + SORT_BAM + UMI_LOOM + COMBINED_LOOM_MATRICES
 
 
 # ----------------------------------------------------------------------------- #
@@ -216,7 +213,7 @@ rule all:
 
 
 
-# ----------------------------------------------------------------------------- 
+# -----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------- #
 # links the primary annotation to the ./Annotation folder
 rule link_primary_annotation:
@@ -350,9 +347,9 @@ rule make_star_reference:
         ])
 
         command_final = command + ';' + command_touch
-        print_shell(command)
-        
-        
+        print_shell(command_final)
+
+
 # ----------------------------------------------------------------------------- #
 # GIVEN PRIMARY AND SECONDARY GTF, COMBINES THEM INTO ONE GTF FILE
 if GENOME_SECONDARY_IND:
@@ -504,19 +501,121 @@ rule filter_reads:
         print_shell(command)
 
 
+# ----------------------------------------------------------------------------- # Barcode histogram
+# calculates the number of reads per cell
+rule cell_barcode_histogram:
+    input:
+        infile = rules.filter_reads.output.barcode
+    output:
+        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_cell_barcode_histogram.txt')
+    params:
+        outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname   = "{name}_{genome}",
+        name      = "{name}",
+        threads   = config['execution']['rules']['cell_barcode_histogram']['threads'],
+        mem       = config['execution']['rules']['cell_barcode_histogram']['memory'],
+        jellyfish = SOFTWARE['jellyfish']['executable'],
+        perl      = SOFTWARE['perl']['executable'],
+        zcat      = SOFTWARE['zcat']['executable'],
+        tempdir   = TEMPDIR,
+        hash_size = 10000000
+    message: """
+            cell_barcode_histogram:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    log:
+        logfile = os.path.join(PATH_LOG, '{name}_{genome}_cell_barcode_histogram.log')
+    run:
+        cb_adapter   = adapter_params(params.name, 'cell_barcode')
+        count_file   = os.path.join(params.outdir, params.outname + '.jf')
+        tmp_file     = os.path.join(params.outdir, params.outname + '.tmp.fastq')
+        # parses the barcodes from the fastq file
+        # counts the kmers
+        # extracts the cell barcode kmers using a perl oneliner - not optimal but works
+        # ------------------------------------------------ #
+        perl_extract_cb = ' '.join([
+            params.perl,
+            '\'-ne if( $. % 4 == 0 | $. % 4 ==2 ){{print substr($_,',
+             str(cb_adapter['start']),
+             ',',
+             str(cb_adapter['length']),
+             ')."\\n";}}else{{print}}\''
+        ])
+        command_parse = ' '.join([
+            params.zcat, input.infile, '|',
+            perl_extract_cb, '>',
+            tmp_file
+        ])
+
+        # ------------------------------------------------ #
+        command_count = ' '.join([
+            params.jellyfish, 'count',
+            '-t',    str(params.threads),
+            '-o',    str(count_file),
+            '-m',    str(cb_adapter['length']),
+            '-s',    str(params.hash_size),
+            tmp_file
+        ])
+
+        # ------------------------------------------------ #
+        # outputs the kmer table
+        command_dump = ' '.join([
+            params.jellyfish, 'dump',
+            '--column',
+            '--tab',
+            '-o',    str(output.outfile),
+            count_file
+        ])
+
+        # ------------------------------------------------ #
+        # removes the jellyfish database
+        command_remove = ' '.join([
+            'rm', count_file, tmp_file
+        ])
+
+        command_final = ";".join([command_parse, command_count,command_dump,command_remove])
+        print_shell(command_final)
+
+# ----------------------------------------------------------------------------- #
+# finds the barcode cutoff using inflection method
+rule find_absolute_read_cutoff:
+    input:
+        infile = rules.cell_barcode_histogram.output.outfile
+    output:
+        outfile_yaml = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml'),
+        outfile_tab  = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.txt')
+    params:
+        outdir   = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
+        outname  = "{name}_{genome}",
+        threads  = config['execution']['rules']['find_absolute_read_cutoff']['threads'],
+        mem      = config['execution']['rules']['find_absolute_read_cutoff']['memory'],
+        cutoff   = config['general']['cell_maximal_number'],
+        script   = PATH_SCRIPT,
+        Rscript  = PATH_RSCRIPT
+    message: """
+            find_absolute_read_cutoff:
+                input:  {input.infile}
+                output: {output.outfile_yaml}
+        """
+    run:
+        RunRscript(input, output, params, params.script, 'Find_Absolute_Read_Cutoff.R')
+
+
 # ----------------------------------------------------------------------------- #
 # Maps single cell data using star and constructs the DGE matrix
 rule map_star:
     input:
-        barcode  = rules.filter_reads.output.barcode,
-        reads    = rules.filter_reads.output.reads,
-        genome   = rules.make_star_reference.output
+        barcode   = rules.filter_reads.output.barcode,
+        reads     = rules.filter_reads.output.reads,
+        genome    = rules.make_star_reference.output,
+        whitelist = rules.find_absolute_read_cutoff.output.outfile_tab
     output:
         outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","{name}_Aligned.out.bam")
     params:
         name        = "{name}",
         star        = SOFTWARE['star']['executable'],
-        #zcat        = SOFTWARE['zcat']['executable'],
+        zcat        = SOFTWARE['zcat']['executable'],
         genome      = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
         outpath     = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         threads     = config['execution']['rules']['map_star']['threads'],
@@ -541,12 +640,12 @@ rule map_star:
 
         command = " ".join([
             params.star,
-            '--genomeDir', '{params.genome}',
+            '--genomeDir',  str(params.genome),
             '--runThreadN', str(params.threads),
             '--outFileNamePrefix', os.path.join(params.outpath, params.name) + '_',
             '--readFilesIn',     infiles,
             '--soloType',        'Droplet',
-            '--soloCBwhitelist', str(params.cb_file),
+            '--soloCBwhitelist', str(input.whitelist),
             '--soloCBstart',     str(cb_adapter['start']),
             '--soloCBlen',       str(cb_adapter['length']),
             '--soloUMIstart',    str(umi_adapter['start']),
@@ -554,7 +653,7 @@ rule map_star:
             '--soloStrand',      str(params.strand),
             '--soloFeatures',    str(params.features),
             '--outSAMtype', 'BAM Unsorted',
-            '--readFilesCommand', 'zcat',
+            '--readFilesCommand', str(params.zcat),
             '2>',str(log.logfile)
         ])
         print_shell(command)
@@ -589,81 +688,68 @@ rule sort_bam:
         print_shell(command)
 
 
-# ----------------------------------------------------------------------------- # Barcode histogram
-# calculates the number of reads per cell
-rule cell_barcode_histogram:
-    input:
-        infile = rules.filter_reads.output.barcode
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_cell_barcode_histogram.txt')
-    params:
-        outdir    = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname   = "{name}_{genome}",
-        name      = "{name}",
-        threads   = config['execution']['rules']['cell_barcode_histogram']['threads'],
-        mem       = config['execution']['rules']['cell_barcode_histogram']['memory'],
-        jellyfish = SOFTWARE['jellyfish']['executable'],
-        tempdir   = TEMPDIR,
-        hash_size = 10000000
-    message: """
-            cell_barcode_histogram:
-                input:  {input.infile}
-                output: {output.outfile}
-        """
-    run:
-        adapter_size = get_adapter_size(params.name)
-        count_file   = os.path.join(params.outdir, params.outname + '.jf')
-        
-        # parses the barcodes from the fastq file
-        # counts the kmers
-        command_count = ' '.join([
-            params.jellyfish, 'count',
-            '-t',    str(params.threads),
-            '-o',    str(count_file),
-            '-m',    str(adapter_size),
-            '-s',    str(params.hash_size),
-             '<(zcat ' + input.infile + ')'
-        ])
-        
-        # outputs the kmer table
-        command_dump = ' '.join([
-            params.jellyfish, 'dump',
-            '--column',
-            '--tab',
-            '-o',    str(output.outfile),
-            count_file
-        ])
-        
-        # removes the jellyfish database
-        command_remove = ' '.join([
-            'rm', count_file
-        ]) 
-        
-        command_final = ";".join([command_count,command_dump,command_remove])
-        print_shell(command_final)
-        
 # ----------------------------------------------------------------------------- #
-# calculates the UMI matrix
-rule find_absolute_read_cutoff:
+# convert UMI matrix from txt format into one loom format
+rule convert_matrix_from_mtx_to_loom:
     input:
-        infile = rules.cell_barcode_histogram.output.outfile
+        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_Solo.out', 'matrix.mtx'),
+        gtf           = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf']))
     output:
-        outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml')
+        outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.matrix.loom')
     params:
-        outdir   = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
-        outname  = "{name}_{genome}",
-        threads  = config['execution']['rules']['find_absolute_read_cutoff']['threads'],
-        mem      = config['execution']['rules']['find_absolute_read_cutoff']['memory'],
-        cutoff   = config['general']['cell_maximal_number'],
-        script   = PATH_SCRIPT,
-        Rscript  = PATH_RSCRIPT
+        name   = '{name}',
+        python = SOFTWARE['python']['executable'],
+        threads    = config['execution']['rules']['convert_matrix_from_mtx_to_loom']['threads'],
+        mem        = config['execution']['rules']['convert_matrix_from_mtx_to_loom']['memory'],
+        script = PATH_SCRIPT
+    log:
+        logfile = os.path.join(PATH_LOG, "{name}.{genome}.convert_matrix_from_mtx_to_loom.log")
     message: """
-            find_absolute_read_cutoff:
+            convert_matrix_from_mtx_to_loom:
                 input:  {input.infile}
                 output: {output.outfile}
         """
     run:
-        RunRscript(input, output, params, params.script, 'Find_Absolute_Read_Cutoff.R')
+        command = ' '.join([
+            params.python, os.path.join(params.script, 'convert_matrix_from_mtx_to_loom.py'),
+            '--sample_id',   params.name,
+            '--input_file',  input.infile,
+            '--gtf_file',    input.gtf,
+            '--output_file', output.outfile,
+            '&>', str(log.logfile)
+        ])
+        print_shell(command)
 
 
+# ----------------------------------------------------------------------------- #
+## combines multiple loom files into one loom file
+def fetch_loom_files(wc):
+    loom_files  = expand(os.path.join(PATH_MAPPED, "{name}", wc.genome, '_'.join(["{name}", wc.genome, 'UMI.matrix.loom'])), name = SAMPLE_NAMES)
+    return(loom_files)
 
+rule combine_loom_files:
+    input:
+        infile   = fetch_loom_files
+    output:
+        outfile  = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
+    params:
+         python = SOFTWARE['python']['executable'],
+         threads    = config['execution']['rules']['combine_loom_files']['threads'],
+         mem        = config['execution']['rules']['combine_loom_files']['memory'],
+         script = PATH_SCRIPT
+    log:
+        logfile = os.path.join(PATH_LOG, "{genome}.combine_loom_files.log")
+    message: """
+            combine_loom_files:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+
+    run:
+        command = ' '.join([
+            params.python, os.path.join(params.script, 'combine_loom_matrices.py'),
+            '--input_files', " ".join(input.infile),
+            '--output_file', output.outfile,
+            '&>', str(log.logfile)
+        ])
+        print_shell(command)
