@@ -5,20 +5,22 @@ argv = Parse_Arguments('Find_Absolute_Read_Cutoff')
 
 # -------------------------------------------------------------------------- #
 Find_Absolute_Read_Cutoff = function(
-    infile  = NULL,
-    outfile = NULL,
-    cutoff  = 5000
+    infile       = NULL,
+    outfile_yaml = NULL,
+    outfile_tab  = NULL,
+    cutoff       = 5000
 ){
   if(is.null(infile))
     stop('infile not specified')
 
-  if(is.null(outfile))
+  if(is.null(outfile_yaml) | is.null(outfile_tab))
       stop('outfile not specified')
 
   suppressPackageStartupMessages({
       library(stringr)
       library(yaml)
       library(ggplot2)
+      library(data.table)
   })
   
   reads_by_cell = read.table(infile, stringsAsFactors = FALSE)
@@ -54,26 +56,33 @@ Find_Absolute_Read_Cutoff = function(
             + ggtitle(paste0('Number of STAMPS: ', knee.point))
             + theme(title = element_text(size=16)))
         
-    png(str_replace(outfile,'yaml','png'), width=400, height=300)
+    png(str_replace(outfile_yaml,'yaml','png'), width=400, height=300)
         print(g)
     dev.off()
 
 
     cutoff = min(cutoff, nrow(reads_by_cell))
-  message('Print output yaml ...')
+    message('Print output yaml ...')
     
     if(knee.point == cutoff){
       message('knee cell selection did not succeed: including all cells')
         knee.point = min(reads_by_cell[,2])
     }
     lout       = list(reads_cutoff = reads_by_cell[knee.point,2])
-    cat(as.yaml(lout), file=outfile)
+    cat(as.yaml(lout), file=outfile_yaml)
+    
+    message('Print barcode table ...')
+    
+    barcodes = data.table(reads_by_cell[,1][1:knee.point])
+    fwrite(barcodes, outfile_tab, 
+           row.names=FALSE, col.names=FALSE, quote=FALSE, sep='\t')
 }
 
 
 # -------------------------------------------------------------------------- #
 Find_Absolute_Read_Cutoff(
-      infile  = argv$input[['infile']],
-      outfile = argv$output[['outfile']],
-      cutoff  = argv$params[['cutoff']]
+      infile       = argv$input[['infile']],
+      outfile_yaml = argv$output[['outfile_yaml']],
+      outfile_tab  = argv$output[['outfile_tab']],
+      cutoff       = argv$params[['cutoff']]
   )
