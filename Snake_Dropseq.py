@@ -153,17 +153,23 @@ BAM_HISTOGRAM = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{g
 # Number of reads per cell calculation
 FIND_CELL_NUMBER_CUTOFF = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadCutoff.yaml'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
-
-# ----------------------------------------------------------------------------- #
-# Reads matrix
-READS_MATRIX = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_READS.Matrix.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
-
 # ----------------------------------------------------------------------------- #
 # UMI matrix in loom format
 UMI_LOOM =  expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.matrix.loom'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
 # Combined UMI matrices in loom format
 COMBINED_LOOM_MATRICES = expand(os.path.join(PATH_MAPPED, "{genome}_UMI.loom"), genome = REFERENCE_NAMES)
+
+
+# ----------------------------------------------------------------------------- #
+# Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects.
+SCE_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"), genome = REFERENCE_NAMES)
+
+
+# ----------------------------------------------------------------------------- #
+# Seurat RDS files
+SEURAT_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.Seurat.RDS"), genome = REFERENCE_NAMES)
+
 
 # ----------------------------------------------------------------------------- #
 # READ statistics
@@ -175,15 +181,6 @@ READ_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_
 # IMPORTANT - STILL NOT IMPLEMENTED
 DOWNSTREAM_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
 
-
-# ----------------------------------------------------------------------------- #
-# Import and preprocess the combined loom files and save as SingleCellExperiment.RDS objects.
-SCE_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS"), genome = REFERENCE_NAMES)
-
-
-# ----------------------------------------------------------------------------- #
-# Seurat RDS files
-SEURAT_RDS_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.Seurat.RDS"), genome = REFERENCE_NAMES)
 
 # ----------------------------------------------------------------------------- #
 ## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
@@ -203,7 +200,7 @@ if len(COMBINE_REFERENCE) > 0:
 
 #RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
 
-RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES + FILTER_READS + BAM_HISTOGRAM + FIND_CELL_NUMBER_CUTOFF + MAP_scRNA + SORT_BAM + UMI_LOOM + COMBINED_LOOM_MATRICES
+RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES + FILTER_READS + BAM_HISTOGRAM + FIND_CELL_NUMBER_CUTOFF + MAP_scRNA + SORT_BAM + UMI_LOOM + COMBINED_LOOM_MATRICES + SCE_RDS_FILES
 
 
 # ----------------------------------------------------------------------------- #
@@ -753,3 +750,46 @@ rule combine_loom_files:
             '&>', str(log.logfile)
         ])
         print_shell(command)
+
+
+
+
+# ----------------------------------------------------------------------------- #
+## Imports and preprocesses the combined loom files and saves as SingleCellExperiment.RDS objects.
+#  THIS function needs to be adapted if the pipeline will be extended to more than one genome
+def fetch_gtf_path(wc):
+    PATH_GTF = ''
+    if config['annotation']['primary']['genome']['name'] == wc.genome:
+        PATH_GTF = PATH_GTF_PRIMARY
+
+    if 'secondary' in set(config['annotation'].keys()):
+        if not config['annotation']['secondary'] == None:
+            if config['annotation']['secondary']['genome']['name'] == wc.genome:
+                PATH_GTF = PATH_GTF_SECONDARY
+
+    if len(PATH_GTF) == 0:
+        sys.exit('genome name is not properly defined')
+
+    return(PATH_GTF)
+
+rule convert_loom_to_singleCellExperiment:
+    input:
+        infile        = os.path.join(PATH_MAPPED, "{genome}_UMI.loom")
+    output:
+        outfile       = os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")
+    log:
+        logfile = os.path.join(PATH_LOG, "{genome}.convert_loom_to_singleCellExperiment.log")
+    params:
+        gtf_file          = fetch_gtf_path,
+        sample_sheet_file = PATH_SAMPLE_SHEET,
+        script            = PATH_SCRIPT,
+        Rscript           = PATH_RSCRIPT,
+        threads  = config['execution']['rules']['convert_loom_to_singleCellExperiment']['threads'],
+        mem      = config['execution']['rules']['convert_loom_to_singleCellExperiment']['memory']
+    message: """
+            convert_loom_to_singleCellExperiment:
+                input:  {input.infile}
+                output: {output.outfile}
+        """
+    run:
+        RunRscript(input, output, params, params.script, 'convert_loom_to_singleCellExperiment.R')
