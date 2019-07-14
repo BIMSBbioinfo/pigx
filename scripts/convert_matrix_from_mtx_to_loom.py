@@ -58,10 +58,12 @@ if __name__ == '__main__':
     path_genes = os.path.join(basepath,'genes.tsv')
     genes      = pd.read_csv(path_genes, sep='\t', header=None)
     genes.columns = ['gene_id','gene_id2']
+    genes      = genes.drop(columns = ['gene_id2'])
 
     path_barcode    = os.path.join(basepath,'barcodes.tsv')
     barcode         = pd.read_csv(path_barcode, sep='\t', header=None)
     barcode.columns = ['cell_id']
+    barcode['sample_name'] = sample_id
 
     # -------------------------------------------------------------- #
     print("Parsing gene ids from gtf file",gtf_file)
