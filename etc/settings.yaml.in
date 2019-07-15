@@ -65,6 +65,12 @@ execution:
     combine_loom_files:
       threads:  1
       memory: 16G
+    convert_loom_to_singleCellExperiment:
+      threads:  1
+      memory: 16G
+    convert_loom_to_seurat:
+      threads:  1
+      memory: 16G
     extract_read_statistics:
       threads:  1
       memory: 8G
@@ -110,6 +116,8 @@ tools:
     executable: @ZCAT@
   rm:
     executable: @RM@
+  touch:
+    executable: @TOUCH@
   ln:
     executable: @LN@
   Rscript:
