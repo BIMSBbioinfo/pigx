@@ -13,42 +13,31 @@ GRangesToBigWig = function(g, outfile, scale.fac){
 # ---------------------------------------------------------------------------- #
 BamToBigWig = function(
     bamfile            = NULL,
-    reads_by_cell_file = NULL,
-    cell_cutoff_file   = NULL,
     bwfile             = NULL
 
 ){
     if(is.null(bamfile))
         stop('bamfile not specified')
 
-    if(is.null(reads_by_cell_file))
-        stop('reads_by_cell not specified')
-
-    if(is.null(cell_cutoff_file))
-        stop('cell_cutoff not specified')
-
     if(is.null(bwfile))
         stop('bwfile not specified')
 
 
-    suppressPackageStartupMessages(library(Rsamtools))
-    suppressPackageStartupMessages(library(GenomicRanges))
-    suppressPackageStartupMessages(library(GenomicFiles))
-    suppressPackageStartupMessages(library(GenomicAlignments))
-    suppressPackageStartupMessages(library(yaml))
-    suppressPackageStartupMessages(library(dplyr))
-    suppressPackageStartupMessages(library(stringr))
-
-    cell_cutoff   = yaml.load_file(cell_cutoff_file)
-    reads_by_cell = read.table(reads_by_cell_file) %>%
-        dplyr::filter(V1 >= cell_cutoff[[1]])
+    suppressPackageStartupMessages({
+        library(Rsamtools)
+        library(GenomicRanges)
+        library(GenomicFiles)
+        library(GenomicAlignments)
+        library(yaml)
+        library(dplyr)
+        library(stringr)
+    })
 
 
     # ---------------------------------------------------------------------------- #
     YIELD = function(bfl) {
-        param = ScanBamParam(tag="XC", flag=scanBamFlag(isUnmappedQuery=FALSE))
+        param = ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE))
         aln = readGAlignments(bfl, param=param)
-        aln = aln[values(aln)$XC %in% reads_by_cell$V2]
         g   = unlist(grglist(aln, use.mcols=TRUE))
     }
 
@@ -74,7 +63,5 @@ BamToBigWig = function(
 # -------------------------------------------------------------------------- #
 BamToBigWig(
     bamfile            = argv$input[['bamfile']],
-    reads_by_cell_file = argv$input[['reads_by_cell_file']],
-    cell_cutoff_file   = argv$input[['cell_cutoff_file']],
     bwfile             = argv$output[['bwfile']]
 )
