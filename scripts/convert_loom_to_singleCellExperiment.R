@@ -6,57 +6,6 @@ argv = Parse_Arguments('convert_loom_to_singleCellExperiment')
 
 
 # ---------------------------------------------------------------------------- #
-#' Import a loom file into SingleCellExperiment object
-#'
-#' This function was borrowed from the script 'make-data.R' in the repository
-#' https://github.com/LTLA/HumanCellAtlasData/blob/master/inst/scripts/make-data.R
-#'
-#' @param path Path to the .loom file to import into SingleCellExperiment object
-#' @return A SingleCellExperiment object
-loom2sce = function(path) {
-  message("Importing",path,"into SingleCellExperiment object")
-  message("Extracting the count matrix")
-  mat = HDF5Array(path, "matrix")
-  mat = t(mat)
-
-  message("Extracting the row and column metadata")
-  col.attrs = h5read(path, "col_attrs")
-  if (length(col.attrs)) {
-    col.df = data.frame(col.attrs)
-  } else {
-    col.df = DataFrame(matrix(0, nrow(mat), 0))
-  }
-
-  row.attrs = h5read(path, "row_attrs")
-  if (length(row.attrs)) {
-    row.df = data.frame(row.attrs)
-  } else {
-    row.df = NULL
-  }
-
-
-  message("Extracting layers (if there are any)")
-  optional = h5ls(path)
-  is.layer = optional$group=="/layer"
-  if (any(is.layer)) {
-    layer.names = optional$name[is.layer,]
-    other.layers = vector("list", length(layer.names))
-    names(other.layers) = layer.names
-
-    for (layer in layer.names) {
-      current = HDF5Array(path, file.path("/layer", layer))
-      other.layers[[layer]] = t(current)
-    }
-  } else {
-    other.layers = list()
-  }
-
-  message("Returning SingleCellExperiment object.")
-  sce = SingleCellExperiment(c(matrix=mat, other.layers), rowData=row.df, colData=col.df)
-  return(sce)
-}
-
-# ---------------------------------------------------------------------------- #
 #' Given a DelayedMatrix object (genes on the row, cells on the column),
 #' calculate counts per million
 #'
@@ -167,7 +116,6 @@ getCellStats = function(m) {
 # ---------------------------------------------------------------------------- #
 loomToSingleCellExperiment = function(
     loom_file         = NULL,
-    sample_sheet_file = NULL,
     gtf_file          = NULL,
     outfile           = NULL,
     genome_version    = NULL,
@@ -187,6 +135,7 @@ loomToSingleCellExperiment = function(
     library(rtracklayer)
     library(stringr)
   })
+  source(file.path(script_path, 'loom_Functions.R'))
 
 
   message(date()," Importing loom file into SingleCellExperiment object")
@@ -195,11 +144,7 @@ loomToSingleCellExperiment = function(
   outname = str_replace(outfile,'.RDS','')
   saveRDS(object = sce, file = paste0(outname, '.raw.RDS'))
   #4.1.1 Subset the sce object, remove cells that don't exist in the metaDataFile
-  # warning(date()," Removing cells that don't exist in the meta data file",metaDataFile)
-  sample_sheet = data.table::fread(sample_sheet_file)
-  sample_sheet$barcode = NULL
-  sample_sheet$reads   = NULL
-  sample_sheet = unique(sample_sheet)
+
 
   #4.1.2 remove cells with zero expression for all genes
   warning(date()," Removing cells with zero expression for all genes")
@@ -210,12 +155,6 @@ loomToSingleCellExperiment = function(
     sce = sce[,-zeros]
   }
 
-  message(date()," Updating colData")
-  #4.1.1 update colData with additional meta data
-  colData(sce) = merge(colData(sce),
-                       DataFrame(sample_sheet),
-                       by   = 'sample_name',
-                       sort = FALSE)
 
 
   #count matrix
@@ -268,6 +207,5 @@ loomToSingleCellExperiment(
     outfile           = argv$output[['outfile']],
     genome_version    = argv$params[['genome_version']],
     script_path       = argv$params[['script']],
-    sample_sheet_file = argv$params[['sample_sheet_file']],
     gtf_file          = argv$params[['gtf_file']]
 )

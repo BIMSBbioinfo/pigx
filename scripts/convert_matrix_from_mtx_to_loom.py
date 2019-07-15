@@ -42,13 +42,15 @@ if __name__ == '__main__':
     parser.add_argument('--input_file',  action="store", dest="input_file")
     parser.add_argument('--gtf_file',    action="store", dest="gtf_file")
     parser.add_argument('--output_file', action="store", dest="output_file")
+    parser.add_argument('--sample_sheet_file', action="store", dest="sample_sheet_file")
 
     args = parser.parse_args()
     # -------------------------------------------------------------- #
-    sample_id    = args.sample_id
-    input_file   = args.input_file
-    gtf_file     = args.gtf_file
-    output_file  = args.output_file
+    sample_id         = args.sample_id
+    input_file        = args.input_file
+    gtf_file          = args.gtf_file
+    output_file       = args.output_file
+    sample_sheet_file = args.sample_sheet_file
 
     # -------------------------------------------------------------- #
     print("Reading input files ...")
@@ -64,6 +66,14 @@ if __name__ == '__main__':
     barcode         = pd.read_csv(path_barcode, sep='\t', header=None)
     barcode.columns = ['cell_id']
     barcode['sample_name'] = sample_id
+    barcode['index'] = range(barcode.shape[0])
+
+    sample_sheet = pd.read_csv(sample_sheet_file)
+    sample_sheet = sample_sheet.drop(columns=['reads','barcode'])
+    sample_sheet = sample_sheet.drop_duplicates()
+    barcode      = barcode.merge(sample_sheet, on='sample_name')
+    barcode      = barcode.sort_values(by='index')
+    barcode      = barcode.drop(columns=['index'])
 
     # -------------------------------------------------------------- #
     print("Parsing gene ids from gtf file",gtf_file)
