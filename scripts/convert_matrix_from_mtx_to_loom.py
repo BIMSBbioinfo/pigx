@@ -67,6 +67,7 @@ if __name__ == '__main__':
     barcode.columns = ['cell_id']
     barcode['sample_name'] = sample_id
     barcode['index'] = range(barcode.shape[0])
+    barcode['cell_id'] = barcode['cell_id'] + '_' +  barcode['sample_name']
 
     sample_sheet = pd.read_csv(sample_sheet_file)
     sample_sheet = sample_sheet.drop(columns=['reads','barcode'])
