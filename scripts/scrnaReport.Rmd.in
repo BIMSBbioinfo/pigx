@@ -6,23 +6,28 @@ output:
   html_document:
     df_print: paged
 params:
-  covariates: replicate
-  outFile: test.scRNA.html
-  sceRdsFile:
-  workdir: .
+  sceRds_file:
+  read_stats: NULL
+  output_file: 'test.scRNA.html'
+  workdir: './'
   path_mapped: NULL
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = params$workdir)
-suppressPackageStartupMessages(library(cowplot))
-suppressPackageStartupMessages(library(DT))
-suppressPackageStartupMessages(library(SingleCellExperiment))
-suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(pheatmap))
-suppressPackageStartupMessages(library(ggplot2))
+```
+
+```{r libraries, include=FALSE}
+suppressPackageStartupMessages({
+  library(cowplot)
+  library(SingleCellExperiment)
+  library(data.table)
+  library(dplyr)
+  library(pheatmap)
+  library(DT)
+  library(ggplot2)
+})
 ```
 
 # Description
@@ -32,22 +37,20 @@ PiGx scRNAseq
 This report was generated with PiGx-scRNAseq version @VERSION@.
 
 # Input Settings
+
 ```{r printInputSettings}
 
-sceRdsFile = params$sceRdsFile
-workdir = params$workdir
-outFile = params$outFile
-covariates = gsub(' ', '', unlist(strsplit(x = params$covariates, split = ',')))
+sceRds_file = params$sceRds_file
+workdir     = params$workdir
+output_file = params$output_file
 
 inputParameterDesc = c('RDS format file containing a SingleCellExperiment object',
                      'Working directory',
-                     'Path to HTML report output',
-                     'Covariates to use when plotting (PCA and t-SNE)'
+                     'Path to HTML report output'
                      )
-inputParameterValues = c(sceRdsFile,
+inputParameterValues = c(sceRds_file,
                           workdir,
-                          outFile,
-                          paste0(covariates, collapse = ', '))
+                          output_file)
 inputSettings = data.frame(parameters = inputParameterDesc,
                             values = inputParameterValues,
                             stringsAsFactors = FALSE)
@@ -60,36 +63,94 @@ DT::datatable(data = inputSettings,
 ```
 
 
-## Content Summary of the SingleCellExperiment Object
-
-
-First a pre-generated SingleCellExperiment object is read.
-
-This object must minimally have the following `assays`:
-
-  - cnts (row read counts matrix per gene X cell)
-  - cpm (`cnts` object normalized into counts per million in log2 scale)
-  - scale (centered and scaled version of `cpm`)
-
-And the following `reduced dimension` datasets:
-
-  - PCA: Principle Component Analysis values for each cell (at least top 10 components)
-  - TSNE: t-SNE analysis values of for each cell (at least top 2 components)
-
-
-```{r input, include=FALSE, eval=TRUE}
-stat_reads = list.files(params$path_mapped, full.names=TRUE, pattern='ReadStatistics.txt', recursive=TRUE)
-stat_reads = do.call(rbind, lapply(stat_reads, read.table, header=TRUE)) %>%
-    mutate(sample_name = rownames(.)) %>%
-    data.table::melt()
+```{r read-sce-object, include=FALSE, echo=FALSE}
+sce = readRDS(file = sceRds_file)
 ```
 
-```{r read-sce-object}
-sce = readRDS(file = sceRdsFile)
-print(sce)
+```{r input, include=FALSE, echo=FALSE}
+read_statistics = do.call(rbind, lapply(params$read_stats, read.table, header=TRUE))
 ```
 
-# Results
+
+# Sample Statistics
+
+The following set of figures provide the basic statistics about the quality of the single cell data sets.
+
+### Total number of reads per sample
+
+The plot displays the numbers of mapped reads (in millions) for total (green bars) and uniquely-mapped UMI (orange bars) for each sample.
+
+```{r TotalReads, results='asis', echo = FALSE}
+read_statistics %>%
+    dplyr::filter(mapped %in% c('reads.total','map.uniq')) %>%
+    mutate(mapped = case_when(
+        mapped == 'reads.total' ~ 'total UMI',
+        mapped == 'map.uniq'    ~ 'uniquely mapped UMI'
+    )) %>%
+    ggplot(aes(sample, cnts, fill=mapped)) +
+    geom_bar(stat='identity', position='dodge') +
+    xlab('Sample') +
+    ylab('Number of mapped reads (in milions)') +
+    scale_fill_brewer(name='Mapped reads', palette='Set2') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+### Number of cell barcodes
+
+The figure shows the total number of detected cells per sample.
+
+```{r Read_Statistics}
+read_statistics %>%
+  filter(mapped == 'nCellBarcodes') %>%
+  filter(type   ==  'exon') %>%
+  ggplot(aes(sample, cnts, fill=mapped)) +
+  geom_bar(stat='identity') +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  xlab('Sample Name') +
+  ylab('Number of detected cells') +
+  scale_fill_manual(values=c('black','lightgray'))
+```
+
+### Number of UMI
+
+The figure shows the total number of detected UMIs per sample.
+
+```{r exon_reads}
+read_statistics %>%
+  filter(mapped == 'nUMIs') %>%
+  filter(type   ==  'exon') %>%
+  ggplot(aes(sample, cnts, fill=mapped)) +
+  geom_bar(stat='identity') +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  xlab('Sample Name') +
+  ylab('Number of detected UMI') +
+  scale_fill_manual(values=c('black','lightgray'))
+```
+
+### Read Distribution in Genomic Features
+
+The plot displays the numbers of mapped reads (in millions) categorized by annotation (as indicated by the legend) for each sample.
+
+```{r ReadDistribution, results='asis', echo = FALSE}
+read_statistics %>%
+    dplyr::filter(type   %in% c('exon','gene','mapped')) %>%
+    dplyr::filter(mapped %in% c('map.total','nUMIs')) %>%
+    dcast(sample ~ type, value.var='cnts')  %>%
+    mutate(intron = gene - exon) %>%
+    mutate(other  = mapped - gene) %>%
+    dplyr::select(sample, other, exon, intron) %>%
+    melt() %>%
+    mutate(sample = factor(sample, ordered=TRUE, levels=unique(sample))) %>%
+    mutate(value = value * 1e-6) %>%
+    ggplot(aes(sample, value, fill=variable)) +
+    geom_bar(stat='identity') +
+    xlab('Sample') +
+    ylab('Number of mapped reads (in milions)') +
+    scale_fill_brewer(name = 'Annotation', palette='Set2') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 
 ```{r cell-stats}
 plotCellStats = function(df, x, y, label_x, label_y, title) {
@@ -111,63 +172,21 @@ plotDesc = list('nGene' = c('Sample',
                               'Average gene expression',
                               'Average gene expression per cell\nfor genes with >0 UMI'))
 
+
 cellStatsPlots = lapply(names(plotDesc), function(y){
-  p = plotCellStats(df = as.data.frame(colData(sce)),
-                x = 'sample_name',
-                y = y,
-                label_x = plotDesc[[y]][1],
-                label_y = plotDesc[[y]][2],
-                title = plotDesc[[y]][3])
+  p = plotCellStats(
+    df      = as.data.frame(colData(sce)),
+    x       = 'sample_name',
+    y       = y,
+    label_x = plotDesc[[y]][1],
+    label_y = plotDesc[[y]][2],
+    title   = plotDesc[[y]][3])
   return(p)
 })
 names(cellStatsPlots) = paste(lapply(plotDesc, function(x) x[2]))
 ```
 
-## Sample Statistics
-
-### Total number of reads per sample
-
-The plot displays the numbers of mapped reads (in millions) for total (green bars) and uniquely-mapped UMI (orange bars) for each sample.
-
-```{r TotalReads, results='asis', echo = FALSE}
-stat_reads %>%
-    dplyr::filter(variable %in% c('total_reads','uniq_mapped')) %>%
-    mutate(variable = case_when(
-        variable == 'total_reads' ~ 'total UMI',
-        variable == 'uniq_mapped' ~ 'uniquely mapped UMI'
-    )) %>%
-    ggplot(aes(sample_name, value, fill=variable)) +
-    geom_bar(stat='identity', position='dodge') +
-    xlab('Sample') +
-    ylab('Number of mapped reads (in milions)') +
-    scale_fill_brewer(name='Mapped reads', palette='Set2') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-### Read Distribution in Genomic Features
-
-The plot displays the numbers of mapped reads (in millions) categorized by annotation (as indicated by the legend) for each sample.
-
-```{r ReadDistribution, results='asis', echo = FALSE}
-stat_reads %>%
-    dplyr::filter(!variable %in% c('total_reads','uniq_mapped','total_barcodes')) %>%
-    group_by(sample_name) %>%
-    mutate(total = sum(value)) %>%
-    arrange(total) %>%
-    ungroup() %>%
-    mutate(sample_name = factor(sample_name, ordered=TRUE, levels=unique(sample_name))) %>%
-    ggplot(aes(sample_name, value, fill=variable)) +
-    geom_bar(stat='identity') +
-    xlab('Sample') +
-    ylab('Number of mapped reads (in milions)') +
-    scale_fill_brewer(name = 'Annotation', palette='Set2') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-
----
-
-## Cell Statistics {.tabset}
+### Cell Statistics{.tabset}
 
 These are boxplots of cell statistics.
 
@@ -179,258 +198,6 @@ __Average gene expression__ displays the distributions of average gene expressio
 for (i in 1:length(cellStatsPlots)) {
   cat("### ",names(cellStatsPlots)[i],"\n")
   print(cellStatsPlots[[i]])
-  cat('\n\n')
-}
-```
-
-## Cell Composition
-
-The following plots visualize the cells in the principle component space, for the pairs of components indicated in the axes. These plots can be used to assess the data structure as well as to detect clusters, trends, outliers, and batch effects. The sample points are colored by the feature indicated in the corresponding tab title.
-
-```{r definePlotPCAFunction, include=TRUE, fig.width=35, fig.height=5}
-reducedDimPlot = function(df, dim1, dim2, title = NULL, color_by = NULL, gradient = FALSE) {
-  p = ggplot2::ggplot(df, aes_string(x = dim1, y = dim2)) +
-    geom_point(aes_string(color = color_by), size = 0.5, alpha = 0.5) +
-    labs(title = title)
-
-  if (gradient == TRUE) {
-    p = p + scale_color_gradient2(midpoint = 3.3)
-  }
-  return(p)
-}
-```
-
-```{r CellComposition-PCA}
-colData(sce)$log10nGene = log10(colData(sce)$nGene)
-gradientList = c('log10nGene')
-covariateList = c(covariates, gradientList)
-if('CellCyclePhase' %in% colnames(colData(sce))) {
-  covariateList = c(covariateList, 'CellCyclePhase')  
-}
-
-pcaData = as.data.table(cbind(colData(sce), sce@reducedDims$PCA))
-
-pcaPlotList <- lapply(covariateList, function(cov) {
-  pL<- lapply(paste0('PC', c(2:5)), function(pc) {
-  myTitle <- paste('PC1 vs', pc)
-  reducedDimPlot(df = pcaData,
-                 dim1 = 'PC1',
-                 dim2 = pc,
-                 title = myTitle,
-                 color_by = cov,
-                 gradient = cov %in% gradientList)
-  })
-names(pL) <- paste0('PC1 vs PC',c(2:5))
-
-  return(pL)
-  }
-)
-names(pcaPlotList) = covariateList
-```
-
-```{r pcaPlotList, results='asis', echo = FALSE}
-for(cov in names(pcaPlotList)) {
-  cat("### PCA - Colored by",cov," {.tabset} \n")
-  for (i in 1:length(pcaPlotList[[cov]])) {
-    cat("#### ",names(pcaPlotList[[cov]])[i],"\n")
-    print(pcaPlotList[[cov]][[i]])
-    cat('\n\n')
-  }
-}
-```
-
-```{r CellComposition-TSNE}
-
-tsneData = as.data.table(cbind(colData(sce), reducedDim(sce, 'TSNE')))
-
-tsnePlotList = lapply(covariateList, function(cov) {
-  reducedDimPlot(df = tsneData, dim1 = 'V1', dim2 = 'V2', title = 'tSNE_1 vs tSNE_2', color_by = cov)
-})
-names(tsnePlotList) = covariateList
-```
-
-### t-SNE - colored by different covariates {.tabset}
-
-The following plots show the scores obtained through t-SNE dimensionality reduction. These plots can be used to assess the data structure as well as to detect clusters, trends, outliers, and batch effects. The sample points are colored by the feature indicated in the corresponding title.
-
-```{r tsnePlotList, results='asis', echo = FALSE}
-for (i in 1:length(tsnePlotList)) {
-  cat("#### t-SNE - Colored by ",names(tsnePlotList)[[i]],"\n")
-  print(tsnePlotList[[i]])
-  cat('\n\n')
-}
-```
-
-## Gene Exploration
-
-```{r Genes_PCA_contribution}
-plotPCAContribution = function(sce, pc, n = 20){
-  p = attr(reducedDim(sce, 'PCA'), 'gene.loadings')  %>%
-    as.data.frame() %>%
-    dplyr::mutate(gene_id = rownames(.)) %>%
-    dplyr::mutate_(X = pc)  %>%
-    dplyr::arrange(-abs(X)) %>%
-    head(n=n) %>%
-    dplyr::arrange(X) %>%
-    dplyr::mutate(gene_name = rowData(sce)[match(gene_id, rowData(sce)$Genes),]$geneName) %>%
-    dplyr::mutate(gene_name = factor(gene_name, levels=gene_name)) %>%
-    ggplot2::ggplot(aes_string(x = pc, y = 'gene_name')) +
-    geom_point() +
-    ylab('Gene Name')+
-    ggtitle(paste('Top',n,'genes for', pc)) + theme_bw()
-    return(p)
-}
-
-
-pcaContributionPlots <- lapply(paste0('PC', 1:5), function(pc) {
-  plotPCAContribution(sce = sce, pc = pc, n = 20)
-})
-names(pcaContributionPlots) <- paste0('PC', 1:5)
-```
-
-### Top Genes Contributing to Principle Components {.tabset}
-
-The following plots display the scores of top genes contributing to the given principle components. x-axis indicates the contribution for the given principle component while y-axis indicates the genes contributing significantly to the component.
-
-```{r top_PCA_Genes, results='asis'}
-for (i in 1:length(pcaContributionPlots)) {
-  cat("#### ",names(pcaContributionPlots)[[i]],"\n")
-  print(pcaContributionPlots[[i]])
-  cat('\n\n')
-}
-```
-
-```{r Genes_PCA_contribution_Heatmap}
-plotPCAcontributorsHeatmap = function(workdir, sce, cellCount = 500, pc, n = 20){
-  M <- attr(reducedDim(sce, 'PCA'), 'gene.loadings')
-
-  if(n > nrow(M)) {
-    n = nrow(M)
-  }
-  topGenes = names(sort(x = M[,pc], decreasing = TRUE))[1:n]
-
-  if(ncol(sce) < cellCount) {
-    cellCount = ncol(sce)
-  }
-
-  select <- sample(1:ncol(sce), cellCount)
-  exprMatrix <- assay(sce, 'scale')[match(topGenes, rowData(sce)$Genes),select]
-
-  annotationDf <- as.data.frame(colData(sce)[select,covariateList])
-  rownames(annotationDf) <- colData(sce)[select,]$cell_id
-  rownames(exprMatrix) <- rowData(sce)[match(topGenes, rowData(sce)$Genes),]$geneName
-  colnames(exprMatrix) <- rownames(annotationDf)
-  p <- pheatmap::pheatmap(mat = exprMatrix,
-                     show_rownames = TRUE,
-                     annotation_col = annotationDf,
-                     show_colnames = FALSE)
-  filename = file.path(workdir, paste0("heatmap", pc, '.png'))
-  png(filename = filename, width = 800, height = 500, units = 'px')
-  grid::grid.newpage()
-  grid::grid.draw(p$gtable)
-  dev.off()
-  return(filename)
-}
-
-pcaContributorHeatmaps <- lapply(paste0('PC', 1:5), function(pc) {
-  plotPCAcontributorsHeatmap(workdir = workdir, sce = sce, pc = pc, n = 20, cellCount = 100)
-})
-names(pcaContributorHeatmaps) <- paste0('PC', 1:5)
-```
-
-### Heatmaps of Top Genes Contributing to Principle Components {.tabset}
-
-The following plots display heatmaps of the expression values of top contributing genes to the given principle component. Columns are cells and rows are the top genes. _CellCyclePhase_ indicates cell cycle phases classified based on gene expression data. _log10nGene_ indicates log10-transformed numbers of genes detected per cell. 
-
-```{r top_PCA_Genes_Heatmaps, results='asis'}
-for (i in 1:length(pcaContributorHeatmaps)) {
-  cat("#### ",names(pcaContributorHeatmaps)[[i]],"\n")
-  cat(paste0("![](",pcaContributorHeatmaps[[i]],")"))
-  cat('\n\n')
-}
-```
-
-
-```{r define-projectGeneExpression}
-plotGeneExpressionOnPCA <- function(sce, geneNames, assay.type = 'scale', dim1, dim2, reducedDimType = 'PCA') {
-  geneNames <- intersect(geneNames, rowData(sce)$geneName)
-  if(length(geneNames) > 0){
-    #find indices of given genes in the rowData
-    select <- match(geneNames, rowData(sce)$geneName)
-    #subset assay matrix for the selected genes
-    assayData <- assay(sce, assay.type)[select,]
-    rownames(assayData) <- geneNames
-    dt <- cbind(data.table::as.data.table(reducedDim(sce, reducedDimType)[,c(dim1, dim2)]),
-                data.table::as.data.table(t(assayData)))
-    mdt = reshape2::melt(dt, id.vars = 1:2)
-
-    p = ggplot2::ggplot(mdt, aes_string(x = colnames(mdt)[1],
-                                         y = colnames(mdt)[2])) +
-      geom_point(aes(color = value), size = 0.2, alpha = 0.5) +
-      facet_wrap(~ variable, ncol = 4) +
-      theme(axis.text.x = element_text(angle = 90),  
-            strip.text = element_text(size = 10)) +
-      scale_color_gradient(low = 'grey', high = 'blue')
-    return(p)
-  } else{
-    stop("None of the provided gene ids match the gene ids
-         in the SingleCellExperiment object")
-  }
-}
-
-highlyVariableGenes <- rowData(sce)[order(rowData(sce)$fitted_variability, decreasing = T),][1:20,]$geneName
-```
-
-```{r compute-projectGeneExpression-PCA}
-myPlotList = list('PC1_vs_PC2'  = 1:2,
-                   'PC3_vs_PC4'  = 3:4,
-                   'PC5_vs_PC6'  = 5:6,
-                   'PC7_vs_PC8'  = 7:8)
-
-geneProjectionPlots = lapply(myPlotList, function(x) {
-  plotGeneExpressionOnPCA(sce = sce,
-                          geneNames = highlyVariableGenes,
-                          assay.type = 'scale',
-                          reducedDimType = 'PCA',
-                          dim1 = x[1], dim2 = x[2])
-})
-names(geneProjectionPlots) = names(myPlotList)
-```
-
-### Project Highly Variable Genes on PCA {.tabset}
-
-The following plots display the expression of the top variable genes in the dataset (accross all cells). Each dot is a cell, displayed in a space defined by the principle component analysis. The axes show the position of each cell along the two given principle components. The color of each cell indicates the cell-type-specific gene expression value (shown in the _value_ legend).
-
-```{r print-projectGeneExpression-PCA, results='asis'}
-for (i in 1:length(geneProjectionPlots)) {
-  cat("#### ",names(geneProjectionPlots)[[i]],"\n")
-  print(geneProjectionPlots[[i]])
-  cat('\n\n')
-}
-```
-
-```{r compute-projectGeneExpression-TSNE}
-myPlotList = list('tSNE-1 vs tSNE-2'  = 1:2)
-
-
-geneProjectionPlots = lapply(myPlotList, function(x) {
-  plotGeneExpressionOnPCA(sce = sce,
-                          geneNames = highlyVariableGenes,
-                          assay.type = 'scale',
-                          reducedDimType = 'TSNE',
-                          dim1 = x[1], dim2 = x[2])
-})
-names(geneProjectionPlots) = names(myPlotList)
-```
-
-### Project Highly Variable Genes on TSNE {.tabset}
-
-The following plots display the expression of the top variable genes in the dataset (accross all cells). Each dot is a cell, displayed in a space defined by the t-SNE analysis. The axes show the position of each cell along the two given t-SNE components. The color of each cell indicates the cell-type-specific gene expression value (shown in the _value_ legend).
-
-```{r print-projectGeneExpression-TSNE, results='asis'}
-for (i in 1:length(geneProjectionPlots)) {
-  cat("#### ",names(geneProjectionPlots)[[i]],"\n")
-  print(geneProjectionPlots[[i]])
   cat('\n\n')
 }
 ```
