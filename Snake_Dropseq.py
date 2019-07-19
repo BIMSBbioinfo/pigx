@@ -53,6 +53,10 @@ PATH_LOG             = os.path.join(OUTPUT_DIR, 'Log')
 PATH_SAMPLE_SHEET    = config['locations']['sample-sheet']
 PATH_RSCRIPT         = SOFTWARE['Rscript']['executable']
 
+# used in automatic recognition of parameters from the settings files
+PARAMS               = config['general']['params']
+SOFTWARE             = config['tools']
+
 PATH_ANNOTATION_PRIMARY = os.path.join(PATH_ANNOTATION, GENOME_NAME_PRIMARY)
 PATH_REFERENCE_PRIMARY  = config['annotation']['primary']['genome']['fasta']
 PATH_GTF_PRIMARY        = config['annotation']['primary']['gtf']
@@ -184,12 +188,6 @@ READ_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_
 
 
 # ----------------------------------------------------------------------------- #
-# DOWNSTREAM statistics
-# IMPORTANT - STILL NOT IMPLEMENTED
-DOWNSTREAM_STATISTICS = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_DownstreamStatistics.txt'), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
-
-
-# ----------------------------------------------------------------------------- #
 ## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
 REPORT_FILES = expand(os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html"), genome = REFERENCE_NAMES)
 # ----------------------------------------------------------------------------- #
@@ -207,7 +205,7 @@ if len(COMBINE_REFERENCE) > 0:
 
 #RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
 
-RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES + FILTER_READS + BAM_HISTOGRAM + FIND_CELL_NUMBER_CUTOFF + MAP_scRNA + SORT_BAM + INDEX_BAM + UMI_LOOM + COMBINED_LOOM_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + BIGWIG + READ_STATISTICS
+RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES + FILTER_READS + BAM_HISTOGRAM + FIND_CELL_NUMBER_CUTOFF + MAP_scRNA + SORT_BAM + INDEX_BAM + UMI_LOOM + COMBINED_LOOM_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + BIGWIG + READ_STATISTICS + REPORT_FILES
 
 
 # ----------------------------------------------------------------------------- #
@@ -318,12 +316,12 @@ rule make_star_reference:
         outfile = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','done.txt')
     params:
         outdir      = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
-        star        = SOFTWARE['star']['executable'],
-        star_args   = SOFTWARE['star']['args'],
+        star        = SOFTWARE['STAR']['executable'],
+        star_args   = SOFTWARE['STAR']['args'],
         touch       = SOFTWARE['touch']['executable'],
         threads     = config['execution']['rules']['make_star_reference']['threads'],
-        mem         = config['execution']['rules']['make_star_reference']['memory']
-
+        mem         = config['execution']['rules']['make_star_reference']['memory'],
+        params_STAR = PARAMS['make_star_reference']
     log:
         logfile = os.path.join(PATH_LOG, '{genome}.make_star_reference.log')
     message:"""
@@ -341,7 +339,7 @@ rule make_star_reference:
         '--runThreadN',       str(params.threads),
         '--genomeFastaFiles', str(input.fasta),
         '--sjdbGTFfile',      str(input.gtf),
-        '--sjdbOverhang',     '99',
+        join_params("STAR", PARAMS, params.params_STAR),
         '2>',log.logfile
         ])
 
@@ -542,7 +540,7 @@ rule cell_barcode_histogram:
         perl_extract_cb = ' '.join([
             params.perl,
             '\'-ne if( $. % 4 == 0 | $. % 4 ==2 ){{print substr($_,',
-             str(cb_adapter['start']),
+             str(cb_adapter['start'] - 1),
              ',',
              str(cb_adapter['length']),
              ')."\\n";}}else{{print}}\''
@@ -619,16 +617,16 @@ rule map_star:
         outfile   = os.path.join(PATH_MAPPED, "{name}", "{genome}","{name}_Aligned.out.bam")
     params:
         name        = "{name}",
-        star        = SOFTWARE['star']['executable'],
+        star        = SOFTWARE['STAR']['executable'],
         zcat        = SOFTWARE['zcat']['executable'],
         genome      = os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX'),
         outpath     = os.path.join(PATH_MAPPED, "{name}", "{genome}"),
         threads     = config['execution']['rules']['map_star']['threads'],
         mem         = config['execution']['rules']['map_star']['memory'],
-        cb_file     = 'None',
         strand      = 'Forward',
         features    = 'Gene SJ GeneFull',
-        tempdir     = TEMPDIR
+        tempdir     = TEMPDIR,
+        params_STAR = PARAMS['map_star']
     message:"""
         map_star:
             reads:   {input.reads}
@@ -659,6 +657,7 @@ rule map_star:
             '--soloFeatures',    str(params.features),
             '--outSAMtype', 'BAM Unsorted',
             '--readFilesCommand', str(params.zcat),
+            join_params("STAR", PARAMS, params.params_STAR),
             '2>',str(log.logfile)
         ])
         print_shell(command)
@@ -679,7 +678,7 @@ rule sort_bam:
        log = os.path.join(PATH_LOG, "{name}.{genome}.sort_bam.log")
     message:"""
         sort_bam:
-            input: {input.infile}
+            input:  {input.infile}
             output: {output.outfile}
     """
 
@@ -725,30 +724,34 @@ rule index_bam:
 # convert UMI matrix from txt format into one loom format
 rule convert_matrix_from_mtx_to_loom:
     input:
-        infile        = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_Solo.out', 'matrix.mtx'),
-        gtf           = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf']))
+        bamfile       = rules.sort_bam.output.outfile,
     output:
         outfile       = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_UMI.matrix.loom')
     params:
-        name   = '{name}',
-        python = SOFTWARE['python']['executable'],
-        threads    = config['execution']['rules']['convert_matrix_from_mtx_to_loom']['threads'],
-        mem        = config['execution']['rules']['convert_matrix_from_mtx_to_loom']['memory'],
-        script = PATH_SCRIPT,
+        name    = '{name}',
+        python  = SOFTWARE['python']['executable'],
+        threads = config['execution']['rules']['convert_matrix_from_mtx_to_loom']['threads'],
+        mem     = config['execution']['rules']['convert_matrix_from_mtx_to_loom']['memory'],
+
+        # input file
+        infile  = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_Solo.out', 'matrix.mtx'),
+        # input gtf
+        gtf     = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf'])),
+        script  = PATH_SCRIPT,
         sample_sheet_file = PATH_SAMPLE_SHEET
     log:
         logfile = os.path.join(PATH_LOG, "{name}.{genome}.convert_matrix_from_mtx_to_loom.log")
     message: """
             convert_matrix_from_mtx_to_loom:
-                input:  {input.infile}
+                input:  {params.infile}
                 output: {output.outfile}
         """
     run:
         command = ' '.join([
             params.python, os.path.join(params.script, 'convert_matrix_from_mtx_to_loom.py'),
             '--sample_id',         params.name,
-            '--input_file',        input.infile,
-            '--gtf_file',          input.gtf,
+            '--input_file',        params.infile,
+            '--gtf_file',          params.gtf,
             '--output_file',       output.outfile,
             '--sample_sheet_file', params.sample_sheet_file,
             '&>', str(log.logfile)
@@ -932,28 +935,28 @@ rule extract_read_statistics:
         """
     run:
         RunRscript(input, output, params, params.script, 'Extract_Read_Statistics.R')
-        
+
 
 # ----------------------------------------------------------------------------- #
 ## Using the preprocessed SingleCellExperiment.RDS file, generates a self-contained HTML report
 rule report:
     input:
-        infile        = os.path.abspath(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")),
+        sceRds_file   = os.path.abspath(os.path.join(PATH_MAPPED, "{genome}.SingleCellExperiment.RDS")),
         read_stats    = READ_STATISTICS
     output:
         outfile       = os.path.join(PATH_MAPPED, "{genome}.scRNA-Seq.report.html")
     params:
-        reportRmd     = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
-        Rscript       = PATH_RSCRIPT,
+        report_file   = os.path.join(PATH_SCRIPT, "scrnaReport.Rmd"),
         workdir       = os.path.abspath(PATH_MAPPED),
-        sceRdsFile    = lambda wildcards: os.path.abspath(os.path.join(PATH_MAPPED, wildcards.genome + ".SingleCellExperiment.RDS")),
-        path_mapped   = PATH_MAPPED
+        Rscript       = PATH_RSCRIPT,
+        script        = PATH_SCRIPT,
+        path_mapped   = PATH_MAPPED,
     log:
         log = os.path.join(PATH_LOG, "{genome}.scRNA-Seq.report.log")
     message: """
             Generate an HTML report:
-                input:  {input.infile}
+                input:  {input.sceRds_file}
                 output: {output.outfile}
         """
-    run: 
+    run:
         RunRscript(input, output, params, params.script, 'renderReport.R')

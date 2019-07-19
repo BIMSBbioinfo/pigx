@@ -1,5 +1,7 @@
 from snakemake import shell
 import sys
+import subprocess
+import re
 
 # ----------------------------------------------------------------------------- #
 # java_head_difference is the reduction in heap allocation given to the java executible
@@ -57,5 +59,56 @@ def get_adapter_size(name):
     umi_adapter  = adapter_params(name, 'umi_barcode')
     adapter_size = cb_adapter['length'] + umi_adapter['length']
     return(adapter_size)
+
+
+# ---------------------------------------------------------------------------- #
+# given a app name calls the help and parses the parameters
+def get_app_params(app_name):
+    app_return = subprocess.check_output(SOFTWARE[app_name]['executable'] +' '+ SOFTWARE[app_name]['help'], shell=True)
+    app_return = str(app_return)
+    vals = list(set(re.findall('^(\-{1,2}[a-zA-Z][\w\-]*)\W' , app_return)))
+    keys = [re.sub('^-+','',i) for i in vals]
+    args = dict(zip(keys, vals))
+    return(args)
+
+# ---------------------------------------------------------------------------- #
+# star requires a separate function for parsing parameters
+# help doesn't include --
+def get_star_params():
+    app_return = subprocess.check_output(SOFTWARE['STAR']['executable'] +' '+ SOFTWARE['STAR']['help'], shell=True)
+    app_return = str(app_return)
+    keys = list(set(re.findall('\\\\n([a-zA-Z]+)\W' , app_return)))
+    vals = ['--' + i for i in keys]
+    args = dict(zip(keys, vals))
+    return(args)
+
+
+# ---------------------------------------------------------------------------- #
+# WRITE TESTS FOR THIS FUNCTION!!!
+def join_params(app, app_params, params_set):
+    app_name    = os.path.basename(app)
+    if app == 'STAR':
+        params_all = get_star_params()
+    else:
+        params_all  = get_app_params(app_name)
     
+    # checks whether any parameters are defined
+    if params_set == None:
+        params = ""
+    else:
+        names       = set(params_all.keys())
+        params_diff = set(params_set) - names
+        if len(params_diff) > 0:
+            message = app_name + 'contains unknown parameters: ' + ", ".join(list(params_diff))
+            sys.exit(message)
+        
+        params_set_keys = set(params_set.keys())
+        # check whether some of the arguments are not allowed
+        if 'remove' in SOFTWARE[app_name].keys():
+            params_set_keys = params_set_keys- set(SOFTWARE[app_name]['remove'])
+        params_set_keys = list(params_set_keys)
+        params = [params_all[i] +' '+ str(params_set[i]) for i in params_set_keys]
+        params = " ".join(params)
+        
+    return(params)
     
