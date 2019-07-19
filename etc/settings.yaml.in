@@ -19,6 +19,15 @@ general:
     # defines the maximal, per sample, number of cell which will be considered in the analysis; used in find_absolute_read_cutoff
     cell_maximal_number: 50000
 
+    # tools specific parameters
+    params:
+        # star reference construction
+        make_star_reference:
+            sjdbOverhang: 99
+            
+        # star mapping
+        map_star:
+
 execution:
   submit-to-cluster: no
   jobs: 6
@@ -99,9 +108,10 @@ execution:
 tools:
   fastqc:
     executable: @FASTQC@
-  star:
+  STAR:
     executable: @STAR@
     args: ""
+    help: "-h"
   java:
     executable: @JAVA@
   perl:
@@ -129,6 +139,7 @@ tools:
   flexbar:
     executable: @FLEXBAR@
     args: ""
+    help: "-hh"
   jellyfish:
     executable: @JELLYFISH@
 
