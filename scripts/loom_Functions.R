@@ -41,24 +41,27 @@ loom2sce = function(
         row.df = NULL
     }
     row.df = array2char(row.df)
-
+    rownames(mat) = row.df$gene_id
+    colnames(mat) = col.df$cell_id
 
     message("Extracting layers (if there are any)")
     optional = h5ls(path)
-    is.layer = optional$group=="/layer"
+    is.layer = optional$group=="/layers"
     if (any(is.layer)) {
-        layer.names = optional$name[is.layer,]
+        layer.names = optional$name[is.layer]
         other.layers = vector("list", length(layer.names))
         names(other.layers) = layer.names
 
         for (layer in layer.names) {
-            current = HDF5Array(path, file.path("/layer", layer))
-            other.layers[[layer]] = t(current)
+            current = HDF5Array(path, file.path("/layers", layer))
+            current = t(current)
+            rownames(current) = rownames(mat)
+            colnames(current) = colnames(mat)
+            other.layers[[layer]] = current
         }
     } else {
         other.layers = list()
     }
-
     message("Returning SingleCellExperiment object.")
     sce = SingleCellExperiment(c(counts=mat, other.layers), rowData=row.df, colData=col.df)
     colnames(rowData(sce))[1] = 'gene_id'

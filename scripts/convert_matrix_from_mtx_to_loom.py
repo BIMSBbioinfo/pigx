@@ -24,15 +24,18 @@ def get_gtf_gene_ids (gtf_file):
 #and fill the matrix with rows of zeros for each missing gene
 def fill_missing_genes_into_matrix(gene_ids, matrix, row_names, col_names):
     missing = list(set(gene_ids) - set(row_names))
-
     # append the matrix with rows of zeros
     if(len(missing) > 0):
         new_rows  = numpy.zeros((len(missing), len(col_names)), dtype = int)
         matrix    = numpy.vstack((matrix, new_rows))
         row_names = row_names + missing
-
     return(matrix, row_names)
 
+# ------------------------------------------------------------------ #
+def dict_to_array(d):
+    for i in d.keys():
+        d[i] = numpy.asarray(d[i])
+    return(d)
 # ------------------------------------------------------------------ #
 # ------------------------------------------------------------------ #
 if __name__ == '__main__':
@@ -54,19 +57,17 @@ if __name__ == '__main__':
 
     # -------------------------------------------------------------- #
     print("Reading input files ...")
-    matrix = mmread(input_file)
-
-    basepath   = os.path.dirname(input_file)
-    path_genes = os.path.join(basepath,'genes.tsv')
-    genes      = pd.read_csv(path_genes, sep='\t', header=None)
+    basepath      = os.path.dirname(input_file)
+    path_genes    = os.path.join(basepath,'genes.tsv')
+    genes         = pd.read_csv(path_genes, sep='\t', header=None)
     genes.columns = ['gene_id','gene_id2']
-    genes      = genes.drop(columns = ['gene_id2'])
+    genes         = genes.drop(columns = ['gene_id2'])
 
-    path_barcode    = os.path.join(basepath,'barcodes.tsv')
-    barcode         = pd.read_csv(path_barcode, sep='\t', header=None)
-    barcode.columns = ['cell_id']
+    path_barcode       = os.path.join(basepath,'barcodes.tsv')
+    barcode            = pd.read_csv(path_barcode, sep='\t', header=None)
+    barcode.columns    = ['cell_id']
     barcode['sample_name'] = sample_id
-    barcode['index'] = range(barcode.shape[0])
+    barcode['index']   = range(barcode.shape[0])
     barcode['cell_id'] = barcode['cell_id'] + '_' +  barcode['sample_name']
 
     sample_sheet = pd.read_csv(sample_sheet_file)
@@ -81,15 +82,26 @@ if __name__ == '__main__':
     gene_ids = get_gtf_gene_ids(gtf_file)
 
     # -------------------------------------------------------------- #
-    # fills the matrix with zeros for missing genes
+    # fills the GENE matrix with zeros for missing genes
+    matrix_gene = mmread(os.path.join(basepath, 'matrixGeneFull.mtx'))
+    matrix_gene_umi, rownames = fill_missing_genes_into_matrix(gene_ids, matrix_gene.toarray(), genes['gene_id'], barcode['cell_id'])
+
+    # -------------------------------------------------------------- #
+    # fills the EXON matrix with zeros for missing genes
     # all input matrices have the same X dimension
-    umi_matrix, row_names = fill_missing_genes_into_matrix(gene_ids, matrix.toarray(), genes['gene_id'], barcode['cell_id'])
+    matrix_exon = mmread(input_file)
+    matrix_exon_umi, row_names = fill_missing_genes_into_matrix(gene_ids, matrix_exon.toarray(), genes['gene_id'], barcode['cell_id'])
 
     # -------------------------------------------------------------- #
     print('Creating loompy file')
-    loompy.create(
-        output_file,
-        matrix.toarray(),
-        genes.to_dict("list"),
-        barcode.to_dict("list")
-    )
+    lm = {'' : matrix_exon_umi, 'unspliced' : matrix_gene_umi - matrix_exon_umi }
+
+    col_attrs = barcode.to_dict("list")
+    col_attrs = dict_to_array(col_attrs)
+        
+    row_attrs = genes.to_dict("list")
+    row_attrs = dict_to_array(row_attrs)
+    
+    loompy.create(output_file, lm, row_attrs, col_attrs)
+    
+    

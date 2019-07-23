@@ -31,7 +31,16 @@ convert_loom_to_seurat = function(
     colnames(raw.data) = as.character(meta.data$cell_id)
     seu = CreateSeuratObject(counts    = raw.data,
                              meta.data = meta.data)
-
+    
+    message('Unspliced ...')
+        unspliced = Matrix(assays(loom)$unspliced, nrow=nrow(loom), ncol=ncol(loom))
+        rownames(unspliced) = rownames(loom)
+        colnames(unspliced) = colnames(loom)
+        ass = CreateAssayObject(
+            counts = unspliced
+        )
+        seu$Unspliced = ass
+    
     message('Normalize ...')
         seu = NormalizeData(seu)
 
