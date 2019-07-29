@@ -128,7 +128,6 @@ MAKE_STAR_INDEX = expand(os.path.join(PATH_ANNOTATION, '{genome}','STAR_INDEX','
 # use for loop - expand gives wrong results
 MERGE_TECHNICAL_REPLICATES = []
 for sample_name in SAMPLE_NAMES:
-    print(sample_name)
     MERGE_TECHNICAL_REPLICATES.append(os.path.join(PATH_MAPPED, sample_name, SAMPLE_SHEET.fetch_field(sample_name,'reads_merged')))
     MERGE_TECHNICAL_REPLICATES.append(os.path.join(PATH_MAPPED, sample_name, SAMPLE_SHEET.fetch_field(sample_name,'barcode_merged')))
 
