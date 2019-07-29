@@ -96,7 +96,7 @@ class experiment:
                 
                 # --------------------------------------------------------- #
                 # Check that the files are gzipped   
-                file_type = mg.from_file(fullpath, mime=True)
+                file_type = mg.from_file(os.path.realpath(fullpath), mime=True)
                 if not file_type.find('gzip') > 0:
                     message = message + 'Input file should be gzipped: ' + fullpath + '\n'
         
@@ -110,11 +110,11 @@ class experiment:
                         adapter_length = max([adapter['cell_barcode']['base_max'], adapter['umi_barcode']['base_max']])
                         
                         
-                        # loops over 40000 lines and checks whether the adapter length is ok; otherwise STAR will fail with hard to fish out error   
+                        # loops over 10000 lines and checks whether the adapter length is ok; otherwise STAR will fail with hard to fish out error   
                         line_ind = 0
                         with gzip.open(fullpath,'rt') as f:
                         
-                            for line in f.readlines():
+                            for line in f:
                                 line_ind = line_ind + 1
                                 # check whether the line corresponds to sequence or quality
                                 if (line_ind % 4 == 2 ) or (line_ind % 4 == 0):
@@ -123,7 +123,7 @@ class experiment:
                                     if not len(line) == (adapter_length + 1):
                                         message = message + 'Input barcode file does not have the appropriate adapter length: ' + str(adapter_length) + ' : ' + fullpath + '\n'    
                                         break
-                                if line_ind > 40000:
+                                if line_ind > 10000:
                                     break
         
         
