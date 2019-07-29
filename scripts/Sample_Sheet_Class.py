@@ -4,6 +4,8 @@ import os
 import sys
 import pandas as pd
 import re
+import magic as mg
+import gzip
 
 # ---------------------------------------------------------------------------- #
 ## Experiment Class
@@ -73,10 +75,6 @@ class experiment:
                 message = 'Sample sheet contains unknown method: ' + str(sample_name) + " : " + str(method) + '\n'
                 message = message + 'Supported methods are:' + " ".join(list(methods)) + '\n'
 
-        # checks whether some of the samples contain errors
-        if(len(message) > 0):
-            raise Exception(message)
-
         # ----------------------------------------------------------------- #
         # Check that all fastq files are unique
         files = list(sample_sheet.reads) + list(sample_sheet.barcode)
@@ -84,15 +82,57 @@ class experiment:
             raise Exception("ERROR: at least one fastq file is duplicated! The fastq files must be unique.")
 
         # ----------------------------------------------------------------- #
-        # Check that reads files exist
+        # Checks basic properties of input files
         for index, row in sample_sheet.iterrows():
             filenames = [row.barcode,row.reads]
-            for filename in filenames:
+            
+            for file_index in range(len(filenames)):
+                filename = filenames[file_index]
                 fullpath = os.path.join(self.config['locations']['reads-dir'], filename)
+                # --------------------------------------------------------- #
+                # Check that reads files exist
                 if not os.path.isfile(fullpath):
                     raise Exception('ERROR: missing reads file: {}'.format(fullpath))
+                
+                # --------------------------------------------------------- #
+                # Check that the files are gzipped   
+                file_type = mg.from_file(fullpath, mime=True)
+                if not file_type.find('gzip') > 0:
+                    message = message + 'Input file should be gzipped: ' + fullpath + '\n'
+        
+                # --------------------------------------------------------- #
+                # Check that the barcode files have the desired length
+                # really ugly code
+                else:
+                    # check whether barcode file
+                    if file_index == 0:
+                        adapter = self.config['adapter_parameters'][row.method]
+                        adapter_length = max([adapter['cell_barcode']['base_max'], adapter['umi_barcode']['base_max']])
+                        
+                        
+                        # loops over 40000 lines and checks whether the adapter length is ok; otherwise STAR will fail with hard to fish out error   
+                        line_ind = 0
+                        with gzip.open(fullpath,'rt') as f:
+                        
+                            for line in f.readlines():
+                                line_ind = line_ind + 1
+                                # check whether the line corresponds to sequence or quality
+                                if (line_ind % 4 == 2 ) or (line_ind % 4 == 0):
+                                    
+                                    # adapter_length + 1 because of newline
+                                    if not len(line) == (adapter_length + 1):
+                                        message = message + 'Input barcode file does not have the appropriate adapter length: ' + str(adapter_length) + ' : ' + fullpath + '\n'    
+                                        break
+                                if line_ind > 40000:
+                                    break
+        
+        
+        # ----------------------------------------------------------------- #
+        # checks whether some of the samples contain errors
+        if(len(message) > 0):
+            raise Exception('ERROR:\n\n' + message)
 
-
+    
 
     # ----------------------------------------------------------------------- #
     # pivots the sample_sheet by sample_name to get unique technical replicates
