@@ -28,7 +28,7 @@ def fill_missing_genes_into_matrix(gene_ids, matrix, row_names, col_names):
     if(len(missing) > 0):
         new_rows  = numpy.zeros((len(missing), len(col_names)), dtype = int)
         matrix    = numpy.vstack((matrix, new_rows))
-        row_names = row_names + missing
+        row_names = row_names.append(pd.Series(missing))
     return(matrix, row_names)
 
 # ------------------------------------------------------------------ #
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     barcode.columns    = ['cell_id']
     barcode['sample_name'] = sample_id
     barcode['index']   = range(barcode.shape[0])
-    barcode['cell_id'] = barcode['cell_id'] + '_' +  barcode['sample_name']
+    barcode['cell_id'] = barcode['sample_name'] + '_' + barcode['cell_id']
 
     sample_sheet = pd.read_csv(sample_sheet_file)
     sample_sheet = sample_sheet.drop(columns=['reads','barcode'])
@@ -83,14 +83,33 @@ if __name__ == '__main__':
 
     # -------------------------------------------------------------- #
     # fills the GENE matrix with zeros for missing genes
+    print('Gene matrix ...')
     matrix_gene = mmread(os.path.join(basepath, 'matrixGeneFull.mtx'))
-    matrix_gene_umi, rownames = fill_missing_genes_into_matrix(gene_ids, matrix_gene.toarray(), genes['gene_id'], barcode['cell_id'])
+    matrix_gene_umi, row_names_gene = fill_missing_genes_into_matrix(gene_ids, matrix_gene.toarray(), genes['gene_id'], barcode['cell_id'])
 
     # -------------------------------------------------------------- #
     # fills the EXON matrix with zeros for missing genes
     # all input matrices have the same X dimension
+    print('Exon matrix ...')
     matrix_exon = mmread(input_file)
-    matrix_exon_umi, row_names = fill_missing_genes_into_matrix(gene_ids, matrix_exon.toarray(), genes['gene_id'], barcode['cell_id'])
+    matrix_exon_umi, row_names_exon = fill_missing_genes_into_matrix(gene_ids, matrix_exon.toarray(), genes['gene_id'], barcode['cell_id'])
+
+    # -------------------------------------------------------------- #
+    row_names = pd.DataFrame({'gene_id' : row_names_gene})
+    if not row_names_gene.equals(row_names_exon):
+        print('Arranging rows ...')
+        pd_gene = pd.DataFrame({
+        'id'    : row_names_gene
+        })
+        pd_exon = pd.DataFrame({
+        'id'    : row_names_exon,
+        'index' : range(row_names_exon.shape[0])
+        })
+        merged_names    = pd_gene.merge(pd_exon, how='left', on='id')
+        row_names       = pd.DataFrame({'gene_id' : merged_names['id']})
+        matrix_gene_umi = matrix_gene_umi[merged_names['index'],]
+        matrix_exon_umi = matrix_exon_umi[merged_names['index'],]
+        
 
     # -------------------------------------------------------------- #
     print('Creating loompy file')
@@ -99,7 +118,7 @@ if __name__ == '__main__':
     col_attrs = barcode.to_dict("list")
     col_attrs = dict_to_array(col_attrs)
         
-    row_attrs = genes.to_dict("list")
+    row_attrs = row_names.to_dict("list")
     row_attrs = dict_to_array(row_attrs)
     
     loompy.create(output_file, lm, row_attrs, col_attrs)
