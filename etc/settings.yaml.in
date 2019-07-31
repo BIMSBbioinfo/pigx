@@ -89,15 +89,6 @@ execution:
     find_absolute_read_cutoff:
       threads:  1
       memory: 8G
-    get_umi_matrix:
-      threads:  1
-      memory: 8G
-    get_reads_matrix:
-      threads:  1
-      memory:  8G
-    extract_downstream_statistics:
-      threads:  1
-      memory: 8G
     bam_to_BigWig:
       threads:  1
       memory: 16G
