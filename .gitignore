@@ -16,22 +16,33 @@ Makefile
 autom4te.cache/
 etc/settings.yaml
 test.sh
-report_templates/index.Rmd
+report_templates/*.Rmd
+
+# on install generated
+libexec/
+share/
 
 # releases
 pigx_bsseq-*.tar.gz
 pigx_bsseq-*.tar.gz.sig
 
+# dev
+dev/guix/.guix-profile*
+dev/guix/load_env.sh
+dev/guix/init_env.sh
 
 # test generated files
 test.sh.trs
-test/out/
+tests/out/
+tests/genome/
+tests/*
 
 # pipeline generated files
 *.log
 snakemakeObj.RData
 report_templates/*.md
 report_templates/*.nb.html
+cluster_conf.json
 
 # ignore all folders, except for:
 #*/
@@ -60,3 +71,5 @@ test_dataset/TableSheet_test.csv
 test_dataset/PROGS.json
 tmp
 config2.json
+local_install/
+.vscode/settings.json
