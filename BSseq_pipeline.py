@@ -41,9 +41,18 @@ DIR_final       = os.path.join(OUTDIR, "Final_Reports/")
 
 #--- DEFINE PATHS AND FILE NAMES:
 
-PATHIN     = "pigx_work/input/"           # location of the data files to be imported (script creates symbolic link)
-GENOMEPATH = "pigx_work/refGenome/"       # where the reference genome being mapped to is stored
+PATHIN     = os.path.join(OUTDIR, "pigx_work/input/")           # location of the data files to be imported (script creates symbolic link)
+GENOMEPATH = config['locations']['genome-dir']       # where the reference genome being mapped to is stored
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
+
+## FIXME: request the genome file instead of the folder in the settings file
+# this hack actually will only take the first file ending with either .fa or .fasta as reference genome
+GENOMEFILE = os.path.join(GENOMEPATH, [file for file in os.listdir(GENOMEPATH) if file.endswith((".fasta",".fa"))][0])
+
+#--- COMPATIBILTY VARIABLES FOR KASIAS WGBS PIPELINE:
+SUBSET_READS = False
+NOTRIMMING   = False
+USEBWAMETH   = config['general']['use_bwameth']
 
 # include function definitions and extra rules
 include   : os.path.join(config['locations']['pkglibexecdir'], 'scripts/func_defs.py')
@@ -94,6 +103,11 @@ targets = {
     'mapping': {
         'description': "Align and map reads with Bismark.",
         'files': files_for_sample(list_files_bismark)
+    },
+
+    'mapping-bwameth': {
+        'description': "Align and map reads with Bismark.",
+        'files': files_for_sample(list_files_bwameth)
     },
 
     'sorting': {
@@ -147,6 +161,9 @@ else:
 
 # Selected output files from the above set.
 selected_targets = config['execution']['target'] or selected_targets_default
+if USEBWAMETH: 
+    selected_targets.append('mapping-bwameth')
+
 
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
@@ -459,7 +476,7 @@ rule sortbam_pe:
 
 
 # ==========================================================================================
-# Align and map reads to the reference genome:
+# Align and map reads to the reference genome using bismark:
 
 bismark_cores = str(config['tools']['bismark']['cores'])
 
@@ -515,6 +532,11 @@ rule bismark_align_and_map_pe:
     shell:
         nice('bismark', ["{params}", "-1 {input.fin1}", "-2 {input.fin2}"], "{log}")
 
+
+# ==========================================================================================
+# Align and map reads to the reference genome using bwa-meth:
+
+include: './Rules/Align_bwameth_rules.py'
 
 
 # ==========================================================================================

@@ -5,6 +5,8 @@ locations:
 
 general:
   assembly: hg19
+  use_bwameth: True
+  use_bismark: True
   methylation-calling:
     minimum-coverage: 10
     minimum-quality: 10

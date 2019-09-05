@@ -77,6 +77,18 @@ def list_files_bismark(files, sampleID, protocol):
     else:
         raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
+def list_files_bwameth(files, sampleID, protocol):
+    PATH = DIR_mapped
+    if len(files) == 1:
+        return [] #---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+".bwameth.idxstats.txt",
+                PATH+sampleID+".bwameth.stats.txt",
+                PATH+sampleID+".bwameth.flagstat.txt",
+                PATH+sampleID+".bwameth_sorted.bam"] #---- paired end
+    else:
+        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 def list_files_dedupe(files, sampleID, protocol):
     PATH = DIR_sorted
     if len(files) == 1:
