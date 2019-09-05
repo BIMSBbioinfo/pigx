@@ -18,6 +18,11 @@ etc/settings.yaml
 test.sh
 report_templates/index.Rmd
 
+# releases
+pigx_bsseq-*.tar.gz
+pigx_bsseq-*.tar.gz.sig
+
+
 # test generated files
 test.sh.trs
 test/out/
