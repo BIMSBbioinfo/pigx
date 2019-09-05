@@ -27,5 +27,8 @@
 "trim-galore"
 "cutadapt"
 "samtools"
+"bwa-meth"
+"bwa"
+"sambamba"
 ))
 (specifications->manifest packages)

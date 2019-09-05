@@ -60,6 +60,9 @@ tools:
   cutadapt:
     executable: @CUTADAPT@
     args: ""
+  bwameth:
+    executable: @BWAMETH@
+    args: ""
   bowtie2:
     executable: @BOWTIE2@
     args: ""
@@ -75,6 +78,9 @@ tools:
     args: ""
   samtools:
     executable: @SAMTOOLS@
+    args: ""
+  sambamba_sort:
+    executable: @SAMBAMBA@
     args: ""
   bowtie2-inspect:
     executable: @BOWTIE2_INSPECT@

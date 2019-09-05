@@ -41,6 +41,8 @@ find_or_override_prog([PANDOC],          [pandoc])
 find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
 find_or_override_prog([FASTQC],          [fastqc])
 find_or_override_prog([TRIMGALORE],      [trim_galore])
+find_or_override_prog([BWAMETH],         [bwameth.py])
+find_or_override_prog([BWAMETH],         [bwa])
 find_or_override_prog([BOWTIE2],         [bowtie2])
 find_or_override_prog([BOWTIE2_INSPECT], [bowtie2-inspect])
 find_or_override_prog([CUTADAPT],        [cutadapt])
@@ -67,7 +69,7 @@ AX_R_PACKAGE([rmarkdown], [1.5])
 AX_R_PACKAGE([bookdown])
   ])
 
-
+find_or_override_prog([SAMBAMBA],      [sambamba])
 find_or_override_prog([SAMTOOLS],      [samtools])
 AC_ARG_ENABLE([samtools-version-check],
   AS_HELP_STRING([--disable-samtools-version-check], [Do not check the Samtools version.]),
