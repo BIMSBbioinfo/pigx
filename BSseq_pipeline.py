@@ -565,6 +565,13 @@ include: './rules/deduplicate_samblaster.py'
 # extract mapping statistics like duplicate numbers and flagstats using samtools:
 
 include: './rules/mapping_stats.py'
+
+# ==========================================================================================
+# Extract methylation counts with methylDackel, 
+# create methylation bias and export to tabix 
+
+include: './rules/preprocessing_methyldackel.py'
+
 
 # ==========================================================================================
 # Generate methyl-converted version of the reference genome, if necessary:
