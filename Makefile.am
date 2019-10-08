@@ -18,6 +18,11 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/methCall.R          \
   scripts/methSeg.R           \
   scripts/methDiff.R
+pkglibexec_rulesdir = $(pkglibexecdir)/rules
+dist_pkglibexec_rules_SCRIPTS =			\
+  rules/Align_bwameth_rules.py 			\
+  rules/deduplicate_samblaster.py 		\
+  rules/mapping_stats.py 				\
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\

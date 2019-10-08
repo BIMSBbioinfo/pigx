@@ -69,8 +69,8 @@ AX_R_PACKAGE([rmarkdown], [1.5])
 AX_R_PACKAGE([bookdown])
   ])
 
-find_or_override_prog([SAMBAMBA],      [sambamba])
-find_or_override_prog([SAMTOOLS],      [samtools])
+find_or_override_prog([SAMBLASTER],       [samblaster])
+find_or_override_prog([SAMTOOLS],         [samtools])
 AC_ARG_ENABLE([samtools-version-check],
   AS_HELP_STRING([--disable-samtools-version-check], [Do not check the Samtools version.]),
   [AC_MSG_NOTICE([Skipping Samtools version check.  Be careful!])],

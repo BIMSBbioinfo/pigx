@@ -29,6 +29,7 @@
 "samtools"
 "bwa-meth"
 "bwa"
-"sambamba"
+"methyldackel"
+"samblaster"
 ))
 (specifications->manifest packages)
