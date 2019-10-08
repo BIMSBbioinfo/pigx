@@ -49,6 +49,7 @@ find_or_override_prog([CUTADAPT],        [cutadapt])
 find_or_override_prog([BISMARK],         [bismark])
 find_or_override_prog([BISMARK_GENOME_PREPARATION], [bismark_genome_preparation])
 find_or_override_prog([DEDUPLICATE_BISMARK], [deduplicate_bismark])
+find_or_override_prog([METHYLDACKEL], [MethylDackel])
 
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])

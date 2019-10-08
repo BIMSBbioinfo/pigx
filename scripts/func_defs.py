@@ -32,80 +32,121 @@ def dedupe_tag(protocol):
         raise Exception("=== ERROR: unexpected protocol ===")
 
 def files_for_sample(proc):
-    return [ expand(proc(config['SAMPLES'][sample]['files'],
-                         config['SAMPLES'][sample]['SampleID'],
-                         config['SAMPLES'][sample]['Protocol']))
-             for sample in config['SAMPLES'] ]
+    return [expand(proc(config['SAMPLES'][sample]['files'],
+                        config['SAMPLES'][sample]['SampleID'],
+                        config['SAMPLES'][sample]['Protocol']))
+            for sample in config['SAMPLES']]
+
 
 def list_files_rawQC(files, sampleID, protocol):
     PATH = DIR_rawqc
     if len(files) == 1:
-        return [PATH+sampleID+"_fastqc.html"] #---- single end
+        return [PATH+sampleID+"_fastqc.html"]  # ---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_fastqc.html", PATH+sampleID+"_2_fastqc.html"] #---- paired end
+        # ---- paired end
+        return [PATH+sampleID+"_1_fastqc.html", PATH+sampleID+"_2_fastqc.html"]
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
 def list_files_TG(files, sampleID, protocol):
     PATH = DIR_trimmed
     if len(files) == 1:
-        return [PATH+sampleID+"_trimmed.fq.gz"] #---- single end
+        return [PATH+sampleID+"_trimmed.fq.gz"]  # ---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1.fq.gz", PATH+sampleID+"_2_val_2.fq.gz"] #---- paired end
+        # ---- paired end
+        return [PATH+sampleID+"_1_val_1.fq.gz", PATH+sampleID+"_2_val_2.fq.gz"]
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
 def list_files_posttrim_QC(files, sampleID, protocol):
     PATH = DIR_posttrim_QC
     if len(files) == 1:
-        return [PATH+sampleID+"_trimmed_fastqc.html" ] #---- single end
+        return [PATH+sampleID+"_trimmed_fastqc.html"]  # ---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_fastqc.html", PATH+sampleID+"_2_val_2_fastqc.html"] #---- paired end
+        # ---- paired end
+        return [PATH+sampleID+"_1_val_1_fastqc.html", PATH+sampleID+"_2_val_2_fastqc.html"]
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 
 def list_files_bismark(files, sampleID, protocol):
     PATH = DIR_mapped
     if len(files) == 1:
         return [PATH+sampleID+"_trimmed_bismark_bt2_SE_report.txt",
-                PATH+sampleID+"_trimmed_bismark_bt2.bam"] #---- single end
+                PATH+sampleID+"_trimmed_bismark_bt2.bam"]  # ---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bismark_bt2_PE_report.txt",
-                PATH+sampleID+"_1_val_1_bismark_bt2_pe.bam"] #---- paired end
+                PATH+sampleID+"_1_val_1_bismark_bt2_pe.bam"]  # ---- paired end
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 
 def list_files_bwameth(files, sampleID, protocol):
     PATH = DIR_mapped
     if len(files) == 1:
-        return [] #---- single end
+        return [PATH+sampleID+".bwameth.bam"]  # ---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+".bwameth.idxstats.txt",
-                PATH+sampleID+".bwameth.stats.txt",
-                PATH+sampleID+".bwameth.flagstat.txt",
-                PATH+sampleID+".bwameth_sorted.bam"] #---- paired end
+        return [PATH+sampleID+".bwameth.bam"]  # ---- paired end
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 
 def list_files_dedupe(files, sampleID, protocol):
     PATH = DIR_sorted
     if len(files) == 1:
-        return [PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bam"] #---- single end
+        # ---- single end
+        return [PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bam"]
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".bam"] #---- paired end
+        # ---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".bam"]
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+
+def list_files_markdup(files, sampleID, protocol):
+    PATH = DIR_mapped
+    if len(files) == 1:
+        return [PATH+sampleID+".bwameth.sorted.markdup.bam"]  # ---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+".bwameth.sorted.markdup.bam"]  # ---- paired end
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+
+def list_files_bwamethMappingStats(files, sampleID, protocol):
+    PATH = DIR_mapped
+    if len(files) == 1:
+        return [PATH+sampleID+".bwameth.sorted.markdup.idxstats.txt",
+                PATH+sampleID+".bwameth.sorted.markdup.stats.txt",
+                PATH+sampleID+".bwameth.sorted.markdup.flagstat.txt"]  # ---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+".bwameth.sorted.markdup.idxstats.txt",
+                PATH+sampleID+".bwameth.sorted.markdup.stats.txt",
+                PATH+sampleID+".bwameth.sorted.markdup.flagstat.txt"]  # ---- paired end
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 
 def list_files_sortbam(files, sampleID, protocol):
     PATH = DIR_sorted
     if len(files) == 1:
-        return [PATH+sampleID+"_se_bt2.sorted.bam"] #---- single end
+        return [PATH+sampleID+"_se_bt2.sorted.bam"]  # ---- single end
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.bam"] #---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.bam"]  # ---- paired end
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
 
 def bam_processing(files, sampleID, protocol):
     PATH = DIR_methcall
@@ -113,6 +154,46 @@ def bam_processing(files, sampleID, protocol):
         return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS" #---- single end
     elif len(files) == 2:
         return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS"] #---- paired end
+
+def list_files_methyldackel_extract(files, sampleID, protocol):
+    PATH = DIR_methcall + "methylDackel/"
+    if len(files) == 1:
+        # ---- single end
+        return [PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CpG.methylKit",
+                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHG.methylKit",
+                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHH.methylKit",
+                PATH+sampleID+"_mbias_methyldackel.txt",
+                PATH+sampleID+"_mbias_OB.svg",
+                PATH+sampleID+"_mbias_OT.svg",
+                PATH+sampleID+"_methyldackel.cytosine_report.txt"
+]
+    elif len(files) == 2:
+        return [PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CpG.methylKit",
+                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHG.methylKit",
+                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHH.methylKit",
+                PATH+sampleID+"_mbias_methyldackel.txt",
+                PATH+sampleID+"_mbias_OB.svg",
+                PATH+sampleID+"_mbias_OT.svg",
+                PATH+sampleID+"_methyldackel.cytosine_report.txt"
+                ]  # ---- paired end
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+def list_files_maketabix_methyldackel(files, sampleID, protocol):
+    PATH = DIR_methcall + "methylDackel/"
+    if len(files) == 1:
+        # ---- single end
+        return [PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz",
+                PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz.tbi"
+                ]
+    elif len(files) == 2:
+        # ---- paired end
+        return [PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz",
+                PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz.tbi"
+                ]      else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def bigwig_exporting(files, sampleID, protocol):
     PATH = os.path.join(config['locations']['output-dir'], DIR_bigwig )

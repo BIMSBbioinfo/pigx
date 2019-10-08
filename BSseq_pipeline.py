@@ -130,12 +130,22 @@ targets = {
         'description': "Get stats on BWA-Meth bam files.",
         'files': files_for_sample(list_files_bwamethMappingStats)
     },
+
+    'methyl-extraction': {
+        'description': "Process bwameth bam files using methylDackel.",
+        'files': files_for_sample(list_files_methyldackel_extract)
+    },
+
      # TODO: had to add this part to call bam_methCall for diff meth rule
     'methyl-calling': {
-        'description': "Process bam files.",
+        'description': "Process bismark bam files.",
         'files': files_for_sample(bam_processing)
     },
 
+    'maketabix-methyldackel': {
+        'description': "Generate Tabix files from methylDackel files.",
+        'files': files_for_sample(list_files_maketabix_methyldackel)
+    },
     'bigwig': {
         'description': "export bigwig files to separate folder for visualization",
         'files': files_for_sample(bigwig_exporting)

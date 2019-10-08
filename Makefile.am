@@ -17,11 +17,12 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/export_bw.R         \
   scripts/methCall.R          \
   scripts/methSeg.R           \
-  scripts/methDiff.R
+  scripts/makeTabix.R          		\
 pkglibexec_rulesdir = $(pkglibexecdir)/rules
 dist_pkglibexec_rules_SCRIPTS =			\
   rules/Align_bwameth_rules.py 			\
   rules/deduplicate_samblaster.py 		\
+  rules/preprocessing_methyldackel.py 	\
   rules/mapping_stats.py 				\
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
