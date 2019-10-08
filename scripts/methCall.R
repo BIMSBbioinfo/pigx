@@ -1,6 +1,7 @@
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2019 Alexander Blume <alexander.blume@mdc-berlin.de>
 #
 # This file is part of the PiGx BSseq Pipeline.
 #
@@ -17,6 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#methCall.R - takes a bismark bam file and exports methylKit tabix file
+# ---last updated Sep. 2019 by A. Blume
+
+
+
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -28,14 +34,15 @@ if(length(args) < 1) {
 ## Help section
 if("--help" %in% args) {
   cat("
-      Render to report
+      Call methylation using methylKit
       
       Arguments:
       --inBam location of input bam file
       --assembly assembly used to map the reads
       --mincov minimum coverage (default: 10)
       --minqual minimum base quality (default: 20)
-      --rds name of the RDS output file
+      --context cytosine context to extract
+      --tabix name of the tabix output file
       --logFile file to print the logs to
       --help              - print this text
       
@@ -63,18 +70,21 @@ sink(out, type = "message")
 
 # Run Functions -----------------------------------------------------------
 
+st <- system.time({
 
 ### Methylation Calling
 
 ## load methylKit
+suppressPackageStartupMessages(expr = {
 library("methylKit")
-
+})
 
 input     <- argsL$inBam
 assembly  <- argsL$assembly
 mincov    <- as.numeric(argsL$mincov)
 minqual   <- as.numeric(argsL$minqual)
-rdsfile   <- argsL$rds
+context   <- argsL$context
+tabixfile   <- argsL$tabix
 
 ### Extract Methylation Calls
 
@@ -82,16 +92,30 @@ rdsfile   <- argsL$rds
 sample_id <- gsub(".bam","",basename(input))
 
 ## define the location to save intermediate file
-save_folder <- dirname(rdsfile)
+save_folder <- dirname(tabixfile)
 
+## format context string
+contextStr <- switch(tolower(context),
+                     "cpg" = "CpG",
+                     "chg" = "CHG",
+                     "chh" = "CHH"
+                     )
+
+message("Reading bam file into methylKit object")
 ## read bam file into methylKit object
-methRaw = processBismarkAln(location = input,
+methRawDB = processBismarkAln(location = input,
                             sample.id = sample_id,
                             assembly = assembly,
                             mincov = mincov,
                             minqual = minqual,
-                            save.context = "CpG",
-                            save.folder = save_folder)
+                            read.context = contextStr,
+                            save.context = NULL,
+                            save.folder = save_folder,
+                            save.db=TRUE)
 
-## Saving object
-saveRDS(methRaw,file=normalizePath(rdsfile)) 
+message("Tabix saved to: \n\t",getDBPath(methRawDB))
+
+                  })
+message("Done.")
+message("Process finished in (seconds): \n")
+print(st)

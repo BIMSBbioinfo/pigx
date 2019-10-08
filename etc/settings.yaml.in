@@ -10,6 +10,9 @@ general:
   methylation-calling:
     minimum-coverage: 10
     minimum-quality: 10
+    # this applies to bwameth only
+    keep-singleton: False
+    keep-Dups: Auto                 # can be Auto/True/False, Auto decides based on protocol
   reports:
     TSS_plotlength: 5000
   differential-methylation:
@@ -51,6 +54,18 @@ execution:
     final_report:
       threads: 1
       memory: 40G
+    sort_index_bam_bwameth:
+      threads: 12
+      memory: 12G
+    samtools_sort_bam:
+      threads: 12
+      memory: 12G
+    bwameth_align_pe_raw:
+      threads: 12
+      memory: 20G
+    methyldackel_extract:
+      threads: 4
+      memory: 6G
 
 tools:
   fastqc:
@@ -81,8 +96,11 @@ tools:
   samtools:
     executable: @SAMTOOLS@
     args: ""
-  sambamba_sort:
-    executable: @SAMBAMBA@
+  samblaster:
+    executable: @SAMBLASTER@
+    args: ""
+  methyldackel:
+    executable: @METHYLDACKEL@
     args: ""
   bowtie2-inspect:
     executable: @BOWTIE2_INSPECT@

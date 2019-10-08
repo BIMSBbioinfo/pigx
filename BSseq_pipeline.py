@@ -417,29 +417,27 @@ rule export_bigwig:
 
 rule bam_methCall:
     input:
-        bamfile     = os.path.join(DIR_sorted,"{prefix}.bam")
+        bamfile         = os.path.join(DIR_sorted,"{prefix}.bam")
     output:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS"),
-        callFile    = os.path.join(DIR_methcall,"{prefix}_CpG.txt")
+        tabixfile       = os.path.join(DIR_methcall,"methylKit","tabix_{context}","{prefix}_{context}.txt.bgz"),
+        tabixfileindex  = os.path.join(DIR_methcall,"methylKit","tabix_{context}","{prefix}_{context}.txt.bgz.tbi")
     params:
-        ## absolute path to bamfiles
-        inBam       = os.path.join(OUTDIR,DIR_sorted,"{prefix}.bam"),
-        assembly    = ASSEMBLY,
-        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
-        minqual     = int(config['general']['methylation-calling']['minimum-quality']),
-        ## absolute path to output folder in working dir
-        rds         = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS")
+        assembly        = ASSEMBLY,
+        mincov          = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual         = int(config['general']['methylation-calling']['minimum-quality']),
+        context         = "{context}"
     log:
-        os.path.join(DIR_methcall,"{prefix}_meth_calls.log")
+        os.path.join(DIR_methcall,"{prefix}_{context}_meth_calls.log")
     message: fmt("Extract methylation calls from bam file.")
     shell:
         nice('Rscript', ["{DIR_scripts}/methCall.R",
-                         "--inBam={params.inBam}",
+                         "--inBam={input.bamfile}",
                          "--assembly={params.assembly}",
                          "--mincov={params.mincov}",
                          "--minqual={params.minqual}",
-                         "--rds={params.rds}",
-                         "--logFile={log}"])
+                         "--context={params.context}",
+                         "--tabix={output.tabixfile}",
+                         "--logFile={log}"],"{log}")
 
 
 # ==========================================================================================
