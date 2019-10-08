@@ -2,6 +2,7 @@
 #
 # Copyright © 2017, 2018 Bren Osberg <Brendan.Osberg@mdc-berlin.de>
 # Copyright © 2017 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2019 Alexander Blume <alexander.blume@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
@@ -106,7 +107,7 @@ targets = {
     },
 
     'mapping-bwameth': {
-        'description': "Align and map reads with Bismark.",
+        'description': "Align and map reads with BWA-Meth.",
         'files': files_for_sample(list_files_bwameth)
     },
 
@@ -116,10 +117,19 @@ targets = {
     },
 
     'deduplication': {
-        'description': "Deduplicate bam files.",
+        'description': "Deduplicate Bismark bam files.",
         'files': files_for_sample(list_files_dedupe)
     },
 
+    'markduplicates': {
+        'description': "Mark duplicates and sort BWA-Meth bam files.",
+        'files': files_for_sample(list_files_markdup)
+    },
+
+    'bwameth-mapping-stats': {
+        'description': "Get stats on BWA-Meth bam files.",
+        'files': files_for_sample(list_files_bwamethMappingStats)
+    },
      # TODO: had to add this part to call bam_methCall for diff meth rule
     'methyl-calling': {
         'description': "Process bam files.",
@@ -536,8 +546,17 @@ rule bismark_align_and_map_pe:
 # ==========================================================================================
 # Align and map reads to the reference genome using bwa-meth:
 
-include: './Rules/Align_bwameth_rules.py'
+include: './rules/Align_bwameth_rules.py'
 
+# ==========================================================================================
+# Mark duplicate reads from bwa-meth alignment using picard-markduplicates like algo:
+
+include: './rules/deduplicate_samblaster.py'
+
+# ==========================================================================================
+# extract mapping statistics like duplicate numbers and flagstats using samtools:
+
+include: './rules/mapping_stats.py'
 
 # ==========================================================================================
 # Generate methyl-converted version of the reference genome, if necessary:
