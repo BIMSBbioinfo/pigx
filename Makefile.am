@@ -15,7 +15,7 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/ideoDMC.R					\
   scripts/report_functions.R		\
   scripts/export_bw.R         \
-  scripts/methCall.R          \
+  scripts/export_tbx2bw.R         	\
   scripts/methSeg.R           \
   scripts/makeTabix.R          		\
 pkglibexec_rulesdir = $(pkglibexecdir)/rules
@@ -24,6 +24,7 @@ dist_pkglibexec_rules_SCRIPTS =			\
   rules/deduplicate_samblaster.py 		\
   rules/preprocessing_methyldackel.py 	\
   rules/mapping_stats.py 				\
+  rules/export_tabix_bigwig.py 			\
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\

@@ -148,6 +148,7 @@ def list_files_sortbam(files, sampleID, protocol):
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
+# FIXME: contexts should be generate output based on settings file
 def bam_processing(files, sampleID, protocol):
     PATH = DIR_methcall+ "methylKit/"
     if len(files) == 1:
@@ -170,6 +171,7 @@ def bam_processing(files, sampleID, protocol):
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
                 
+# FIXME: contexts should be generate output based on settings file
 def list_files_methyldackel_extract(files, sampleID, protocol):
     PATH = DIR_methcall + "methylDackel/"
     if len(files) == 1:
@@ -195,6 +197,7 @@ def list_files_methyldackel_extract(files, sampleID, protocol):
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
+# FIXME: contexts should be generate output based on settings file
 def list_files_maketabix_methyldackel(files, sampleID, protocol):
     PATH = DIR_methcall + "methylDackel/"
     if len(files) == 1:
@@ -210,12 +213,33 @@ def list_files_maketabix_methyldackel(files, sampleID, protocol):
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def bigwig_exporting(files, sampleID, protocol):
-    PATH = os.path.join(config['locations']['output-dir'], DIR_bigwig )
+# FIXME: contexts should be generate output based on settings file
+def bigwig_exporting_bismark(files, sampleID, protocol):
+    PATH = DIR_bigwig
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".bw" #---- single end
+        # ---- single end
+        return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".cpg" + ".methylKit"+ ".bw"
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".bw"] #---- paired end
+        # ---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".cpg"  + ".methylKit" + ".bw"]
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+def bigwig_exporting_bwameth(files, sampleID, protocol):
+    PATH = DIR_bigwig
+    if len(files) == 1:
+        # ---- single end
+        return []
+    elif len(files) == 2:
+        # ---- paired end
+        return [PATH+sampleID+dedupe_tag(protocol) + ".CpG" + ".methylDackel" + ".bw",
+                PATH+sampleID+dedupe_tag(protocol) + ".CHG" + ".methylDackel" + ".bw",
+                PATH+sampleID+dedupe_tag(protocol) + ".CHH" + ".methylDackel" + ".bw"
+                ]
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def methSeg(files, sampleID, protocol):
     PATH = DIR_seg

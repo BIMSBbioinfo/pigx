@@ -146,9 +146,15 @@ targets = {
         'description': "Generate Tabix files from methylDackel files.",
         'files': files_for_sample(list_files_maketabix_methyldackel)
     },
+
+    'export-bigwig': {
+        'description': "export bigwig files from tabix files for visualization",
+        'files': files_for_sample(bigwig_exporting_bwameth)
+    },
+
     'bigwig': {
         'description': "export bigwig files to separate folder for visualization",
-        'files': files_for_sample(bigwig_exporting)
+        'files': files_for_sample(bigwig_exporting_bismark)
     },
 
     'segmentation': {
@@ -572,6 +578,10 @@ include: './rules/mapping_stats.py'
 
 include: './rules/preprocessing_methyldackel.py'
 
+# ==========================================================================================
+# generate bigwig from tabix
+
+include: './rules/export_tabix_bigwig.py'
 
 # ==========================================================================================
 # Generate methyl-converted version of the reference genome, if necessary:
@@ -600,17 +610,15 @@ rule bismark_genome_preparation:
 
 rule tabulate_seqlengths:
     input:
-        rules.bismark_genome_preparation.output
+        GENOMEFILE
     output:
-        seqlengths = DIR_mapped+"Refgen_"+ASSEMBLY+"_chromlengths.csv",
-    params:
-        chromlines = " | " + tool('grep') + " Sequence ",
-        chromcols  = " | " + tool('cut') + " -f2,3     ",
-        seqnames   = " | " + tool('sed') + " \"s/_CT_converted//g\" "
+        index       = GENOMEFILE+".fai",
+        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
     shell:
-        nice('bowtie2-inspect', ['-s ' + GENOMEPATH + "Bisulfite_Genome/CT_conversion/BS_CT", '{params.chromlines}', '{params.chromcols}', '{params.seqnames}', ' > {output}'])
-
+        nice('samtools', 
+        ['faidx {input}',";",
+        tool('cut'),"-f1,2","{output.index}","> {output.chrom_seqlengths}"])
 
 
 # ==========================================================================================
