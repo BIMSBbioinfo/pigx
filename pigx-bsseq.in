@@ -471,6 +471,7 @@ command = [
     "--configfile={}".format(args.configfile),
     "--directory={}".format(config['locations']['output-dir']),
     "--jobs={}".format(config['execution']['jobs']),
+    "--rerun-incomplete"
 ]
 
 if config['execution']['submit-to-cluster']:
