@@ -1,6 +1,7 @@
 # PiGx BSseq Pipeline.
 #
 # Copyright © 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2019 Alexander Blume <alexander.blume@mdc-berlin.de>
 #
 # This file is part of the PiGx BSseq Pipeline.
 #
@@ -28,14 +29,15 @@ if(length(args) < 1) {
 ## Help section
 if("--help" %in% args) {
   cat("
-      Render to report
+      Segment methylation profile using methylKit
 
       Arguments:
-      --rds name of the input RDS file containting the methylRaw object
-      --grds name of output RDS file containing Segments as GRanges object
-      --outBed name of output BED file containing Segments
-      --png name of file to save diagnostic plots to   
-      --logFile file to print the logs to
+      --tabix     name of the input tabix file containting the methylRaw object
+      --outBed    name of output BED file containing Segments
+      --png       name of file to save diagnostic plots to
+      --sample.id sample name
+      --assembly  genome assembly
+      --logFile   file to print the logs to
       --help              - print this text
       
       Example:
@@ -61,69 +63,67 @@ sink(out, type = "message")
 
 # Run Functions -----------------------------------------------------------
 
+st <- system.time({
+
 ## Segmentation
 
 ## load methylKit
 suppressPackageStartupMessages(library("methylKit"))
 
-input     <- argsL$rds
+input     <- argsL$tabix
 output    <- argsL$outBed
-grFile    <- argsL$grds
 pngFile   <- argsL$png
-
-## read input methylRaw
-methRaw <- readRDS(input)
-
-## convert to GRanges
-methRaw.gr= as(methRaw,"GRanges")
-## calculate methylation score 
-mcols(methRaw.gr)$meth=100*methRaw.gr$numCs/methRaw.gr$coverage
-##destrand
-strand(methRaw.gr) <- "*"
-##sort 
-methRaw.gr <- sort(methRaw.gr[,"meth"]) 
+sample.id <- argsL$sample.id
+assembly  <- argsL$assembly
 
 
+message("Reading tabix file.")
+## read input tabix to methylRawDB
+methRawDB <- methRead(location=input,
+                      sample.id =sample.id,
+                      assembly = assembly,
+                      dbtype ="tabix")
 
-## catch a possible error and touch empty files
-## to trigger successful run
-err <- tryCatch(
-  expr = {
+# ## catch a possible error and touch empty files
+# ## to trigger successful run
+# err <- tryCatch(
+#   expr = {
     ## try to run the code
     png(filename = pngFile,
         units = "in",width = 8,
         height = 4.5,res=300)
     
+    message("Performing segmentation...")
     ### Segmentation of methylation profile
-    res.gr = methSeg(methRaw.gr,
+    res.gr = methSeg(methRawDB,
                      diagnostic.plot=TRUE)
     
     dev.off()
 
-    ## Saving object
-    saveRDS(res.gr,file=grFile) 
-
-
     ### Export
 
+    message("Exporting segmentation...")
     ## export segments to bed file
     methSeg2bed(segments = res.gr,
                 trackLine = paste0("track name='meth segments ' ",
                                    "description='meth segments of ",
-                                   methRaw@sample.id,
+                                   methRawDB@sample.id,
                                    " mapped to ",
-                                   methRaw@assembly,
+                                   methRawDB@assembly,
                                    "' itemRgb=On"),
                 colramp=colorRamp(c("gray","green", "darkgreen")),
                 filename = output)
-  },
-  error = function(x) {
-    ## if it fails still generate empty output
-    file.create(grFile)
-    file.create(output)
-    message(paste("error occured!!",x))
-  }
-)
+#   },
+#   error = function(x) {
+#     ## if it fails still generate empty output
+#     file.create(output)
+#     message(paste("error occured!!",x))
+#   }
+# )
 
 
 
+                  })
+message("Done.")
+message("Process finished in (seconds): \n")
+print(st)

@@ -226,6 +226,7 @@ def bigwig_exporting_bismark(files, sampleID, protocol):
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
+# FIXME: contexts should be generate output based on settings file
 def bigwig_exporting_bwameth(files, sampleID, protocol):
     PATH = DIR_bigwig
     if len(files) == 1:
@@ -241,14 +242,29 @@ def bigwig_exporting_bwameth(files, sampleID, protocol):
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def methSeg(files, sampleID, protocol):
+def methSeg_bismark(files, sampleID, protocol):
     PATH = DIR_seg
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS" #---- single end
+        # ---- single end
+        return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_cpg" + "_methylKit" +".meth_segments.bed"
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_meth_segments_gr.RDS"] #---- paired end
+        # ---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_cpg" + "_methylKit" +".meth_segments.bed"]
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+def methSeg_bwameth(files, sampleID, protocol):
+    PATH = DIR_seg
+    if len(files) == 1:
+        # ---- single end
+        return []
+    elif len(files) == 2:
+        # ---- paired end
+        return [PATH+sampleID+dedupe_tag(protocol) + "_CpG" + "_methylDackel" +".meth_segments.bed"]
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 def list_final_reports(files, sampleID, protocol):
     PATH = DIR_final

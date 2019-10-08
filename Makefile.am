@@ -16,8 +16,9 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/report_functions.R		\
   scripts/export_bw.R         \
   scripts/export_tbx2bw.R         	\
-  scripts/methSeg.R           \
+  scripts/methCall.R          		\
   scripts/makeTabix.R          		\
+  scripts/methSeg.R           		\
 pkglibexec_rulesdir = $(pkglibexecdir)/rules
 dist_pkglibexec_rules_SCRIPTS =			\
   rules/Align_bwameth_rules.py 			\

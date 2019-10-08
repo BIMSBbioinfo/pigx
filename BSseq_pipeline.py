@@ -159,9 +159,13 @@ targets = {
 
     'segmentation': {
         'description': "Segmentation of the methylation signal.",
-        'files': files_for_sample(methSeg)
+        'files': files_for_sample(methSeg_bismark)
     },
 
+    'segmentation-bwameth': {
+        'description': "Segmentation of the methylation signal.",
+        'files': files_for_sample(methSeg_bwameth)
+    },
     'diffmeth': {
         'description': "Perform differential methylation calling.",
         'files': [ [DIR_diffmeth+"_".join(x)+
@@ -378,44 +382,24 @@ rule diffmeth:
 rule methseg:
     ## paths inside input and output should be relative
     input:
-        rdsfile      = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS")
+        tabixfile   =  os.path.join(DIR_methcall,"{tool}","tabix_{context}","{prefix}_{context}.txt.bgz")
     output:
-        grfile       = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        bedfile      = os.path.join(DIR_seg,"{prefix}_meth_segments.bed")
+        bedfile     = os.path.join(DIR_seg,"{prefix}_{context}_{tool}.meth_segments.bed")
     params:
-        methCallRDS  = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
-        methSegGR    = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        methSegBed   = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.bed"),
-        methSegPng   = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.png")
+        methSegPng  = os.path.join(DIR_seg,"{prefix}_{context}_{tool}.meth_segments.png"),
+        sample_id   = "{prefix}",
+        assembly    = ASSEMBLY
     log:
-        os.path.join(DIR_seg,"{prefix}_meth_segments.log")
-    message: fmt("Segmenting methylation profile for {input.rdsfile}.")
+        os.path.join(DIR_seg,"{prefix}_{context}_{tool}.meth_segments.log")
+    message: fmt("Segmenting methylation profile for {input.tabixfile}.")
     shell:
         nice('Rscript', ["{DIR_scripts}/methSeg.R",
-                         "--rds={params.methCallRDS}",
-                         "--grds={params.methSegGR}",
-                         "--outBed={params.methSegBed}",
+                         "--tabix={input.tabixfile}",
+                         "--outBed={output.bedfile}",
                          "--png={params.methSegPng}",
-                         "--logFile={log}"])
-
-
-
-# ==========================================================================================
-# Export a bigwig file:
-
-rule export_bigwig:
-    input:
-        seqlengths = os.path.join(DIR_mapped,   "Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        rdsfile    = os.path.join(DIR_methcall, "{bigwig_prefix}_methylRaw.RDS")
-    output:
-        bw         = os.path.join(DIR_bigwig,   "{bigwig_prefix}.bw")
-    message: fmt("exporting bigwig files.")
-    shell:
-        nice('Rscript', ["{DIR_scripts}/export_bw.R",
-                         "{input.rdsfile}",
-                         "{input.seqlengths}",
-                         ASSEMBLY,
-                         "{output}"])
+                         "--sample.id={params.sample_id}",
+                         "--assembly={params.assembly}",
+                         "--logFile={log}"],"{log}")
 
 
 # ==========================================================================================

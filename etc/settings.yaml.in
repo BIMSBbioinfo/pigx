@@ -71,23 +71,15 @@ execution:
     samtools_sort_bam:
       threads: 12
       memory: 12G
-  export-bigwig:
-    context:
-      cpg: 
-        export: True
-        destrand: True
-      chg: 
-        export: False
-        destrand: False
-      chh: 
-        export: False
-        destrand: False
     bwameth_align_pe_raw:
       threads: 12
       memory: 20G
     methyldackel_extract:
       threads: 4
       memory: 6G
+    export_tabix_bigwig:
+      threads: 8
+      memory: 8G
 
 tools:
   fastqc:
