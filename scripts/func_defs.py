@@ -98,6 +98,17 @@ def list_files_bwameth(files, sampleID, protocol):
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
+def list_files_sortbam(files, sampleID, protocol):
+    PATH = DIR_sorted
+    if len(files) == 1:
+        return [PATH+sampleID+"_se_bt2.sorted.bam"]  # ---- single end
+    elif len(files) == 2:
+        return [PATH+sampleID+"_1_val_1_bt2.sorted.bam"]  # ---- paired end
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+
 def list_files_dedupe(files, sampleID, protocol):
     PATH = DIR_sorted
     if len(files) == 1:
@@ -112,7 +123,7 @@ def list_files_dedupe(files, sampleID, protocol):
 
 
 def list_files_markdup(files, sampleID, protocol):
-    PATH = DIR_mapped
+    PATH = DIR_sorted
     if len(files) == 1:
         return [PATH+sampleID+".bwameth.sorted.markdup.bam"]  # ---- single end
     elif len(files) == 2:
@@ -123,7 +134,7 @@ def list_files_markdup(files, sampleID, protocol):
 
 
 def list_files_bwamethMappingStats(files, sampleID, protocol):
-    PATH = DIR_mapped
+    PATH = DIR_sorted
     if len(files) == 1:
         return [PATH+sampleID+".bwameth.sorted.markdup.idxstats.txt",
                 PATH+sampleID+".bwameth.sorted.markdup.stats.txt",
@@ -136,16 +147,6 @@ def list_files_bwamethMappingStats(files, sampleID, protocol):
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-
-def list_files_sortbam(files, sampleID, protocol):
-    PATH = DIR_sorted
-    if len(files) == 1:
-        return [PATH+sampleID+"_se_bt2.sorted.bam"]  # ---- single end
-    elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted.bam"]  # ---- paired end
-    else:
-        raise Exception(
-            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
 
 # FIXME: contexts should be generate output based on settings file

@@ -29,7 +29,7 @@ def keepDups(protocol):
 
 rule methyldackel_extract_methylKit:
     input:
-        bamfile = DIR_mapped + "{sample}.bwameth.sorted.markdup.bam",
+        bamfile = DIR_sorted + "{sample}.bwameth.sorted.markdup.bam",
         genome = GENOMEFILE
     output:
         cpgCallFile = DIR_methcall + "methylDackel/" +"{sample}_methyldackel_CpG.methylKit",
@@ -61,7 +61,7 @@ rule methyldackel_extract_methylKit:
 
 rule methyldackel_extract_methylKit_deduped:
     input:
-        bamfile = DIR_mapped + "{sample}.bwameth.sorted.markdup.bam",
+        bamfile = DIR_sorted + "{sample}.bwameth.sorted.markdup.bam",
         genome = GENOMEFILE
     output:
         cpgCallFile = DIR_methcall + "methylDackel/" + \
@@ -97,7 +97,7 @@ rule methyldackel_extract_methylKit_deduped:
 
 rule methyldackel_mbias:
     input:
-        bamfile = DIR_mapped + "{sample}.bwameth.sorted.markdup.bam",
+        bamfile = DIR_sorted + "{sample}.bwameth.sorted.markdup.bam",
         genome = GENOMEFILE
     output:
         txt = DIR_methcall + "methylDackel/" + "{sample}_mbias_methyldackel.txt",
@@ -127,7 +127,7 @@ rule methyldackel_mbias:
 
 rule methyldackel_cytosine_report:
     input:
-        bamfile = DIR_mapped + "{sample}.bwameth.sorted.markdup.bam",
+        bamfile = DIR_sorted + "{sample}.bwameth.sorted.markdup.bam",
         genome = GENOMEFILE
     output:
         DIR_methcall + "methylDackel/" + "{sample}_methyldackel.cytosine_report.txt"

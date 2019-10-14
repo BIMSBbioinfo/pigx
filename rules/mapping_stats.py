@@ -23,26 +23,26 @@
 
 rule idxstats_samtools:
   input:
-    DIR_mapped+"{prefix}.bam",
+    DIR_sorted+"{prefix}.bam",
   output:
-    DIR_mapped+"{prefix}.idxstats.txt"
+    DIR_sorted+"{prefix}.idxstats.txt"
   shell:
     nice("samtools" ,["idxstats {input} > {output}"])
 
 
 rule stat_samtools:
   input:
-    DIR_mapped+"{prefix}.bam",
+    DIR_sorted+"{prefix}.bam",
   output:
-    DIR_mapped+"{prefix}.stats.txt"
+    DIR_sorted+"{prefix}.stats.txt"
   shell:
     nice("samtools", ['stats {input} > {output}'])
 
 
 rule flagstat_samtools:
   input:
-    DIR_mapped+"{prefix}.bam",
+    DIR_sorted+"{prefix}.bam",
   output:
-    DIR_mapped+"{prefix}.flagstat.txt"
+    DIR_sorted+"{prefix}.flagstat.txt"
   shell:
     nice("samtools" ,["flagstat {input} > {output}"])
