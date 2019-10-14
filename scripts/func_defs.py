@@ -295,42 +295,84 @@ def get_fastq_name(full_name):
 
     return(output)
 
+# --------------------------------------
+# diffmeth related
+# --------------------------------------
 def get_sampleids_from_treatment(treatment):
-  treatment = treatment.replace(".deduped", "")
+    treatment = treatment.replace(".deduped", "")
 
-  SAMPLE_IDS = list(config["SAMPLES"].keys())
-  SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+    SAMPLE_IDS = list(config["SAMPLES"].keys())
+    SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
 
-  treatments = treatment.split("_")
-  sampleids_list = []
-  for t in treatments:
-    sampleids = [SAMPLE_IDS[i] for i, x in enumerate(SAMPLE_TREATMENTS) if x == t]
-    sampleids_list.append(sampleids)
+    treatments = treatment.split("_")
+    sampleids_list = []
+    for t in treatments:
+        sampleids = [SAMPLE_IDS[i]
+                     for i, x in enumerate(SAMPLE_TREATMENTS) if x == t]
+        sampleids_list.append(sampleids)
 
-  sampleids_list = list(sum(sampleids_list, []))
-  return(sampleids_list)
+    sampleids_list = list(sum(sampleids_list, []))
+    return(sampleids_list)
 
-def makeDiffMethPath(DIR_diffmeth, suffix, wc):
-    return DIR_diffmeth + str(wc.treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(wc.treatment[0])[0]]['Protocol']) + '_' + suffix
 
-# For only CpG context
-def diffmeth_input_function(wc):
-  treatments = wc.treatment
-  treatments = treatments.replace(".deduped", "")
-  sampleids  = get_sampleids_from_treatment(treatments)
+def makeDiffMethPath(path, suffix, treatment):
+    return path + str(treatment).replace('vs', '_') + dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(treatment[0])[0]]['Protocol']) + '_' + suffix
 
-  inputfiles = []
-  for sampleid in sampleids:
-    fqname = config["SAMPLES"][sampleid]['fastq_name']
-    protocol = config["SAMPLES"][sampleid]['Protocol']
-    if len(fqname)==1:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_se_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
-    elif len(fqname)==2:
-      inputfile=[os.path.join(DIR_methcall,sampleid+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
-    inputfiles.append(inputfile)
+def diffmeth_input_function(treatments):
+    treatments = treatments.replace(".deduped", "")
+    sampleids = get_sampleids_from_treatment(treatments)
 
-  inputfiles = list(sum(inputfiles, []))
-  return(inputfiles)
+    inputfiles = []
+    for sampleid in sampleids:
+        fqname = config["SAMPLES"][sampleid]['fastq_name']
+        protocol = config["SAMPLES"][sampleid]['Protocol']
+        if len(fqname) == 1:
+            inputfile = [os.path.join(
+                DIR_methcall, sampleid+"_se_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
+        elif len(fqname) == 2:
+            inputfile = [os.path.join(
+                DIR_methcall, sampleid+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_methylRaw.RDS")]
+        inputfiles.append(inputfile)
+
+    inputfiles = list(sum(inputfiles, []))
+    return(inputfiles)
+
+# FIXME: create named treatment groups in settings file
+def files_for_treatment(proc):
+    treatment_groups = config['general']['differential-methylation']['treatment-groups'] 
+    if treatment_groups:
+        return [expand(proc("_".join(comparison))) for comparison in treatment_groups if comparison]
+    else:
+        return []
+
+def list_files_unite_bismark(treatment):
+    PATH = DIR_diffmeth + treatment + "/"  
+    return [ PATH + "methylBase_"+treatment+"_cpg_methylKit.txt.bgz" ] 
+     
+def list_files_unite_bwameth(treatment):
+    PATH = DIR_diffmeth + treatment + "/"  
+    return [ PATH + "methylBase_"+treatment+"_CpG_methylDackel.txt.bgz" ] 
+
+
+def list_files_diffmeth_bismark(treatment):
+    PATH = DIR_diffmeth + treatment + "/"  
+    return [ 
+            PATH + "methylDiff_"+treatment+"_cpg_methylKit_full.txt.bgz",
+            PATH + "methylDiff_"+treatment+"_cpg_methylKit_results.tsv"
+            ]
+
+    
+def list_files_diffmeth_bwameth(treatment):
+    PATH = DIR_diffmeth + treatment + "/"  
+    return [ 
+            PATH + "methylDiff_"+treatment+"_CpG_methylDackel_full.txt.bgz",
+            PATH + "methylDiff_"+treatment+"_CpG_methylDackel_results.tsv"
+            ]
+
+def list_files_diffmeth_report(treatment):
+    PATH = DIR_final 
+    return [ PATH +"diffmeth-report."+ treatment.replace("_","vs") + ".html"]
+
 
 def tool(name):
     return config['tools'][name]['executable']

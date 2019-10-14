@@ -18,6 +18,8 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/methCall.R          		\
   scripts/makeTabix.R          		\
   scripts/methSeg.R           		\
+  scripts/methDiff.R				
+
 pkglibexec_rulesdir = $(pkglibexecdir)/rules
 dist_pkglibexec_rules_SCRIPTS =			\
   rules/Align_bwameth_rules.py 			\
@@ -25,6 +27,7 @@ dist_pkglibexec_rules_SCRIPTS =			\
   rules/preprocessing_methyldackel.py 	\
   rules/mapping_stats.py 				\
   rules/export_tabix_bigwig.py 			\
+  rules/perform_diffmeth.py
 
 pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\
@@ -33,10 +36,10 @@ dist_pkgdata_report_templates_SCRIPTS = 			\
   report_templates/pigx_bsseq_logo.html				\
   report_templates/reports.bib
 
-dist_pkgdata_DATA =					\
+dist_pkgdata_DATA =							\
   etc/sample_sheet.csv.example				\
-  etc/settings.yaml					\
-  etc/pretty.txt 					\
+  etc/settings.yaml							\
+  etc/pretty.txt 							\
   etc/CONTENTS.txt					
 
 dist_doc_DATA = 					\

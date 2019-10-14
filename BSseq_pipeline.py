@@ -166,15 +166,30 @@ targets = {
         'description': "Segmentation of the methylation signal.",
         'files': files_for_sample(methSeg_bwameth)
     },
+    
+    'unite-bwameth': {
+        'description': "Unite samples for differential methylation calling.",
+        'files': files_for_treatment(list_files_unite_bwameth)
+    },
+
+    'unite': {
+        'description': "Unite samples for differential methylation calling.",
+        'files': files_for_treatment(list_files_unite_bismark)
+    },
+    
+    'diffmeth-bwameth': {
+        'description': "Perform differential methylation calling.",
+        'files': files_for_treatment(list_files_diffmeth_bwameth)
+    },
+
     'diffmeth': {
         'description': "Perform differential methylation calling.",
-        'files': [ [DIR_diffmeth+"_".join(x)+
-                    dedupe_tag(config["SAMPLES"][get_sampleids_from_treatment(x[0])[0]]['Protocol']) + "_diffmeth.RDS"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
+        'files': files_for_treatment(list_files_diffmeth_bismark)
     },
 
     'diffmeth-report': {
         'description': "Produce a comprehensive report for differential methylation.",
-        'files':[ [DIR_final+"diffmeth-report."+"vs".join(x)+".html"] for x in config["general"]["differential-methylation"]["treatment-groups"] if x ]
+        'files': files_for_treatment(list_files_diffmeth_report)
     },
 
     'final-report': {
