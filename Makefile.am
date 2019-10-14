@@ -14,7 +14,6 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/func_defs.py				\
   scripts/ideoDMC.R					\
   scripts/report_functions.R		\
-  scripts/export_bw.R         \
   scripts/export_tbx2bw.R         	\
   scripts/methCall.R          		\
   scripts/makeTabix.R          		\
