@@ -43,7 +43,7 @@ DIR_final       = os.path.join(OUTDIR, "Final_Reports/")
 #--- DEFINE PATHS AND FILE NAMES:
 
 PATHIN     = os.path.join(OUTDIR, "pigx_work/input/")           # location of the data files to be imported (script creates symbolic link)
-GENOMEPATH = config['locations']['genome-dir']       # where the reference genome being mapped to is stored
+GENOMEPATH = config['locations']['genome-dir']+"/"       # where the reference genome being mapped to is stored
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
 ## FIXME: request the genome file instead of the folder in the settings file
