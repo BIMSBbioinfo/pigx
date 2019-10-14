@@ -36,7 +36,7 @@ rule methyldackel_extract_methylKit:
         chgCallFile = DIR_methcall + "methylDackel/" + "{sample}_methyldackel_CHG.methylKit",
         chhCallFile = DIR_methcall + "methylDackel/" + "{sample}_methyldackel_CHH.methylKit"
     wildcard_constraints:
-        sample="!.deduped"
+        sample=".+(?<!deduped)"
     params:
         threads = config['execution']['rules']['methyldackel_extract']['threads'],
         prefix = DIR_methcall + "methylDackel/" + "{sample}_methyldackel",
