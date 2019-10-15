@@ -30,7 +30,7 @@ rule unite_meth_calls:
     input:
         samples = lambda wc: get_unite_tabixfiles(wc.treatment,wc.tool,wc.context)     
     output:
-        tabixfile = DIR_diffmeth+"{treatment}/methylBase_{treatment}_{context}_{tool}.txt.bgz" 
+        tabixfile = DIR_diffmeth+"{treatment}/methylBase_{treatment}_{context}_{tool}.txt.bgz", 
         tabixindex = DIR_diffmeth+"{treatment}/methylBase_{treatment}_{context}_{tool}.txt.bgz.tbi" 
     params:
         inputfiles = lambda wc, input: ",".join(input.samples),
