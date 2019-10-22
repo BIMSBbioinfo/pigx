@@ -34,7 +34,7 @@ if("--help" %in% args) {
       
       Arguments:
       --inputfiles comma separated input tabix files
-      --samples comma separated sample name vector 
+      --sampleids comma separated sample name vector 
       --treatments comma separated treatment vector
       --assembly genome assembly
       --context methylation context
@@ -72,13 +72,23 @@ data.table::setDTthreads(8)
 
 ## Load variables
 inputs      <- strsplit(argsL$inputfiles, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
-samples     <- strsplit(argsL$samples, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
-treatments  <- as.numeric( strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]] )
+sampleids   <- strsplit(argsL$sampleids, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 cores       <- as.numeric(argsL$cores)
 assembly    <- argsL$assembly
 suffix      <- argsL$suffix
 outdir      <- argsL$outdir
-destrand 	<- argsL$destrand
+destrand    <- ifelse(tolower(argsL$destrand) %in% c("true","yes"),TRUE,FALSE)
+
+message("Remapping Treatment Description to number.")
+# split all treatment values, could be numeric or not
+treatmentsStr  <- strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+# convert into named numeric vector
+treatments <- as.numeric( as.factor( treatmentsStr ))
+names(treatments) <- treatmentsStr
+
+message(paste(sort(unique(treatmentsStr)),
+              sort(unique(treatments)), 
+              sep = ": ",collapse = "\n"))
 
 # convert variables and perform checks
 context <- switch(tolower(argsL$context),
@@ -96,8 +106,6 @@ if(length(inputs) <= 1)
 	stop("At least two samples required to perform merging")
 
 
-destrand <- ifelse(tolower(destrand) %in% c("true","yes"),TRUE,FALSE)
-
 # ---------------------------------------------------
 st <- system.time({
 
@@ -111,13 +119,13 @@ inputs <- linkedFiles
 
 if(length(inputs > 1)) {
 	inputs <- as.list(inputs)
-	samples <- as.list(samples)
+	sampleids <- as.list(sampleids)
 }
 
 ## Read data
 message("Importing Tabix files.")
 methylRawListDB <- methRead(location = inputs, 
-							sample.id = samples,
+							sample.id = sampleids,
 							assembly = assembly, 
 							dbtype = "tabix", 
 							context = context, 

@@ -8,16 +8,27 @@ general:
   methylation-calling:
     minimum-coverage: 1
     minimum-quality: 10
+    keep-Dups: Auto                 
   differential-methylation:
     cores: 1
     qvalue: 0.05
-    treatment-groups:
-      - ['0', '1']
-      - ['0', '2']
     annotation:
       cpgIsland_bedfile: pigx_work/refGenome/cpgIslandExt.hg19.bed.gz 
       refGenes_bedfile:  pigx_work/refGenome/refGene.hg19.bed.gz
       webfetch:   no
+
+DManalyses:
+  # The names of analyses can be anything but they have to be unique
+  # for each combination of case control group comparisons.
+
+  med1vsh2o:
+    # If multiple sample names are provided, they must be separated by comma.
+    treatment_sample_groups: "MED1"
+    control_sample_groups: "H2O"
+
+  analysis2:
+    treatment_sample_groups: "MED2,MED1"
+    control_sample_groups: "H2O"
 
 execution:
   submit-to-cluster: no

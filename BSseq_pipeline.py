@@ -198,7 +198,7 @@ targets = {
     }
 }
 
-TREAT_GROUPS=config["general"]["differential-methylation"]["treatment-groups"]
+TREAT_GROUPS=config["DManalyses"]
 if TREAT_GROUPS:
   selected_targets_default = ['final-report', 'diffmeth-report', 'bigwig']
 else:
@@ -206,8 +206,9 @@ else:
 
 # Selected output files from the above set.
 selected_targets = config['execution']['target'] or selected_targets_default
-if USEBWAMETH: 
-    selected_targets.append('mapping-bwameth')
+# FIXME: add all relevant bwameth realted rules here
+# if USEBWAMETH: 
+#     selected_targets.append('bwameth-mapping-stats')
 
 
 # FIXME: the list of files must be flattened twice(!).  We should make

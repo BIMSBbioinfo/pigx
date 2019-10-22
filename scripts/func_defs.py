@@ -299,20 +299,38 @@ def get_fastq_name(full_name):
 # diffmeth related
 # --------------------------------------
 def get_sampleids_from_treatment(treatment):
+    """Get SampleIDs from treatment string."""
     treatment = treatment.replace(".deduped", "")
 
     SAMPLE_IDS = list(config["SAMPLES"].keys())
-    SAMPLE_TREATMENTS = [config["SAMPLES"][s]["Treatment"] for s in SAMPLE_IDS]
+    SAMPLE_TREATMENTS = [samplesheet(s,"Treatment") for s in SAMPLE_IDS]
 
     treatments = treatment.split("_")
     sampleids_list = []
     for t in treatments:
         sampleids = [SAMPLE_IDS[i]
                      for i, x in enumerate(SAMPLE_TREATMENTS) if x == t]
-        sampleids_list.append(sampleids)
+        sampleids_list.extend(sampleids)
 
-    sampleids_list = list(sum(sampleids_list, []))
     return(sampleids_list)
+    
+def get_treatments_from_analysis(analysis):
+    """Get Treatments from Analysis string."""
+    treatment_list = []
+    for group in config['DManalyses'][analysis]:
+        treatment_list += config['DManalyses'][analysis][group].split(",")
+            
+    return(treatment_list)
+    
+def get_sampleids_from_analysis(analysis):
+    """Get SampleIDs from Analysis string."""
+    sampleids_list = []
+    for treatment in get_treatments_from_analysis(analysis):
+            sampleids_list += get_sampleids_from_treatment(treatment)
+            
+    return(sampleids_list)
+    
+
 
 
 def makeDiffMethPath(path, suffix, treatment):
@@ -339,9 +357,9 @@ def diffmeth_input_function(treatments):
 
 # FIXME: create named treatment groups in settings file
 def files_for_treatment(proc):
-    treatment_groups = config['general']['differential-methylation']['treatment-groups'] 
+    treatment_groups = config['DManalyses']
     if treatment_groups:
-        return [expand(proc("_".join(comparison))) for comparison in treatment_groups if comparison]
+        return [expand(proc(comparison)) for comparison in treatment_groups if comparison]
     else:
         return []
 
@@ -382,6 +400,14 @@ def toolArgs(name):
         return config['tools'][name]['args']
     else:
         return ""
+
+# sample sheet accessor functions
+def samplesheet(name, item=None):
+    """Access the SAMPLES dict from config."""
+    if item:
+        return config["SAMPLES"][name][item]
+    else:
+        config["SAMPLES"][name]
 
 # Generate a command line string that can be passed to snakemake's
 # "shell".  The string is prefixed with an invocation of "nice".

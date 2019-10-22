@@ -93,11 +93,22 @@ data.table::setDTthreads(8)
 # load variables
 input       <- argsL$inputfile
 sampleids   <- strsplit(argsL$sampleids, ",", fixed            = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
-treatments  <- as.numeric( strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]] )
 assembly    <- argsL$assembly
 destranded  <- ifelse(tolower(argsL$destranded) %in% c("true","yes"),TRUE,FALSE)
 outdir      <- argsL$outdir
 resultsFile <- argsL$resultsFile
+
+message("Remapping Treatments Descriptions into treatment and control groups.")
+# split all treatment values, could be numeric or not
+treatmentsStr  <- strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+# reorganize samples into treatment and control groups 
+treatment_group <- strsplit(argsL$treatment_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+control_group <- strsplit(argsL$control_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+
+treatments <- ifelse(treatmentsStr %in% treatment_group,1,0)
+
+message("Control group (0): ", paste0(control_group,collapse = ", "))
+message("Treatment group (1): ", paste0(treatment_group,collapse = ", "))
 
 # convert variables and perform checks
 context <- switch(tolower(argsL$context),

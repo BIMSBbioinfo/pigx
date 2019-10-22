@@ -9,12 +9,13 @@
 # ==========================================================================================
 # Merge methylation samples
 
-def get_unite_tabixfiles(treatment, tool, context):
-    samplelist =  get_sampleids_from_treatment(treatment)
-    protocols = [ samples(sampleid,'Protocol') for sampleid in samplelist]
+def get_unite_tabixfiles(analysis, tool, context):
+    
+    samplelist = get_sampleids_from_analysis(analysis)
+    protocols = [ samplesheet(sampleid,'Protocol') for sampleid in samplelist]
     dedup_tag = [dedupe_tag(prot) for prot in protocols]
     if tool.lower() == "methylkit":
-        paired_flag = [len(samples(sampleid, 'files'))==2 for sampleid in samplelist]
+        paired_flag = [len(samplesheet(sampleid, 'files'))==2 for sampleid in samplelist]
         aligner_tag = ["_1_val_1_bt2.sorted"  if flag else  "_se_bt2.sorted" for flag in paired_flag ]
     else:
         aligner_tag = ["" for sample in samplelist]
@@ -28,28 +29,28 @@ def get_unite_tabixfiles(treatment, tool, context):
 
 rule unite_meth_calls:
     input:
-        samples = lambda wc: get_unite_tabixfiles(wc.treatment,wc.tool,wc.context)     
+        samples = lambda wc: get_unite_tabixfiles(wc.analysis,wc.tool,wc.context)     
     output:
-        tabixfile = DIR_diffmeth+"{treatment}/methylBase_{treatment}_{context}_{tool}.txt.bgz", 
-        tabixindex = DIR_diffmeth+"{treatment}/methylBase_{treatment}_{context}_{tool}.txt.bgz.tbi" 
+        tabixfile = DIR_diffmeth+"{analysis}/methylBase_{analysis}_{context}_{tool}.txt.bgz", 
+        tabixindex = DIR_diffmeth+"{analysis}/methylBase_{analysis}_{context}_{tool}.txt.bgz.tbi" 
     params:
         inputfiles = lambda wc, input: ",".join(input.samples),
-        samples    = lambda wc: ",".join(get_sampleids_from_treatment(wc.treatment)),
-        treatments = lambda wc: ",".join([samples(sample,'Treatment') for
-            sample in get_sampleids_from_treatment(wc.treatment)]),
+        sampleids    = lambda wc: ",".join(get_sampleids_from_analysis(wc.analysis)),
+        treatments = lambda wc: ",".join([samplesheet(sample,'Treatment') for
+            sample in get_sampleids_from_analysis(wc.analysis)]),
         assembly   = ASSEMBLY,
         context    = "{context}",
         destrand   = lambda wc: destrand(wc.context),
         cores      = int(config['general']['differential-methylation']['cores']),
-        outdir     = DIR_diffmeth+"{treatment}/",
-        suffix     = "{treatment}_{context}_{tool}"
+        outdir     = DIR_diffmeth+"{analysis}/",
+        suffix     = "{analysis}_{context}_{tool}"
     log: 
-        DIR_diffmeth+"{treatment}/{treatment}_{context}_{tool}_unite.log"
+        DIR_diffmeth+"{analysis}/{analysis}_{context}_{tool}_unite.log"
     shell:
         nice('Rscript',
                 ["{DIR_scripts}/methUnite.R",
                     "--inputfiles={params.inputfiles}",
-                    "--samples={params.samples}",
+                    "--sampleids={params.sampleids}",
                     "--treatments={params.treatments}",
                     "--assembly={params.assembly}",
                     "--context={params.context}",
@@ -67,23 +68,25 @@ rule unite_meth_calls:
 rule diffmeth:
     ## paths inside input and output should be relative
     input:
-        inputfile = DIR_diffmeth+"{treatment}/methylBase_{treatment}_{context}_{tool}.txt.bgz"  
+        inputfile = DIR_diffmeth+"{analysis}/methylBase_{analysis}_{context}_{tool}.txt.bgz"  
     output:
-        methylDiff_tabix_file   = os.path.join(DIR_diffmeth,"{treatment}","methylDiff_{treatment}_{context}_{tool}_full.txt.bgz"),
-        methylDiff_tabix_index   = os.path.join(DIR_diffmeth,"{treatment}","methylDiff_{treatment}_{context}_{tool}_full.txt.bgz.tbi"),
-        results_file   = os.path.join(DIR_diffmeth,"{treatment}","methylDiff_{treatment}_{context}_{tool}_results.tsv"),
+        methylDiff_tabix_file   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_full.txt.bgz"),
+        methylDiff_tabix_index   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_full.txt.bgz.tbi"),
+        results_file   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_results.tsv"),
     params:
-        sampleids   = lambda wc: ','.join(get_sampleids_from_treatment(wc.treatment)),
-        treatments = lambda wc: ",".join([samples(sample,'Treatment') for 
-            sample in get_sampleids_from_treatment(wc.treatment)]),
+        sampleids   = lambda wc: ','.join(get_sampleids_from_analysis(wc.analysis)),
+        treatments = lambda wc: ",".join([samplesheet(sample,'Treatment') for
+            sample in get_sampleids_from_analysis(wc.analysis)]),
         assembly    = ASSEMBLY,
         context    = "{context}",
         destranded = lambda wc: destrand(wc.context),
+        treatment_group = lambda wc: config["DManalyses"][wc.analysis]["treatment_sample_groups"],
+        control_group = lambda wc: config["DManalyses"][wc.analysis]["control_sample_groups"],
         cores       = int(config['general']['differential-methylation']['cores']),
         methylDiff_results_suffix   = "full",
-        outdir     = DIR_diffmeth+"{treatment}/"
+        outdir     = DIR_diffmeth+"{analysis}/"
     log:
-        os.path.join(DIR_diffmeth+"{treatment}_{context}_{tool}_diffmeth.log")
+        os.path.join(DIR_diffmeth+"{analysis}_{context}_{tool}_diffmeth.log")
     message: fmt("Calculating differential methylation.")
     shell:
         nice('Rscript', 
@@ -94,10 +97,12 @@ rule diffmeth:
                     '--assembly={params.assembly}',
                     '--context={params.context}',
                     '--destranded={params.destranded}',
+                    '--treatment_group={params.treatment_group}',
+                    '--control_group={params.control_group}',
                     '--cores={params.cores}',
                     '--methylDiff_results_suffix={params.methylDiff_results_suffix}',
                     '--resultsFile={output.results_file}',
                     "--outdir={params.outdir}",
                     '--logFile={log}'
-                    ])
+                    ],"{log}")
 

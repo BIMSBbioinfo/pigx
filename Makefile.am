@@ -18,6 +18,7 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/methCall.R          		\
   scripts/makeTabix.R          		\
   scripts/methSeg.R           		\
+  scripts/methUnite.R          		\
   scripts/methDiff.R				
 
 pkglibexec_rulesdir = $(pkglibexecdir)/rules

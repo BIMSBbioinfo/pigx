@@ -166,7 +166,7 @@ rule tabix_methyldackelfile:
     params:
         sampleid = "{prefix}_{context}",
         assembly = ASSEMBLY,
-        treatment = lambda wc: samples(
+        treatment = lambda wc: samplesheet(
             wc.prefix.replace(".deduped", ""), 'Treatment'),
         context = "{context}",
         dbdir = DIR_methcall + "methylDackel/" + "/tabix_{context}/",

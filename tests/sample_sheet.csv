@@ -1,5 +1,6 @@
 Read1,             Read2     , SampleID,        Protocol, Treatment
-PE_1.fq.gz,        PE_2.fq.gz, PEsample,        WGBS,     0
-SE_techrep1.fq.gz ,          , SEsample,        WGBS,     1
-SE_techrep2.fq.gz ,          , SEsample_v2,     WGBS,     1
-SE_techrep2.fq.gz ,          , SEsample_v2copy, WGBS,     2
+PE_1.fq.gz,        PE_2.fq.gz, PEsample_wgbs,        WGBS,     H2O
+PE_1.fq.gz,        PE_2.fq.gz, PEsample_rrbs,   RRBS,     H2O
+SE_techrep1.fq.gz ,          , SEsample,        WGBS,     MED1
+SE_techrep2.fq.gz ,          , SEsample_v2,     WGBS,     MED1
+SE_techrep2.fq.gz ,          , SEsample_v2copy, WGBS,     MED2
