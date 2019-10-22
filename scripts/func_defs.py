@@ -23,6 +23,123 @@
 import os
 from glob import glob
 
+# ==============================================================================
+#
+#                                       HELPER FUNCTIONS
+#
+# put here helper functions that are used within more than one rule   
+# ==============================================================================
+
+
+# --------------------------------------
+# general purpose
+# --------------------------------------
+
+def fmt(message):
+    """Format the MESSAGE string."""
+    return "----------  " + message + "  ----------"
+
+def tool(name):
+    return config['tools'][name]['executable']
+
+def toolArgs(name):
+    if 'args' in config['tools'][name]:
+        return config['tools'][name]['args']
+    else:
+        return ""
+
+# sample sheet accessor functions
+def samplesheet(name, item=None):
+    """Access the SAMPLES dict from config."""
+    if item:
+        return config["SAMPLES"][name][item]
+    else:
+        config["SAMPLES"][name]
+
+
+# Generate a command line string that can be passed to snakemake's
+# "shell".  The string is prefixed with an invocation of "nice".
+def nice(cmd, args, log=None):
+    executable = tool(cmd)
+    line = ["nice -" + str(config['execution']['nice']),
+            executable] + [toolArgs(cmd)] + args
+    if log:
+        line.append("> {} 2>&1".format(log))
+    return " ".join(line)
+
+
+# custome function for submitting shell command to generate final reports:
+def generateReport(input, output, params, log, reportSubDir):
+    dumps = json.dumps(dict(params.items()), sort_keys=True,
+                       separators=(",", ":"), ensure_ascii=True)
+
+    cmd = nice('Rscript', ["{DIR_scripts}/generate_report.R",
+                           "--scriptsDir=" + DIR_scripts,
+                           "--reportFile={input.template}",
+                           "--outFile={output.report}",
+                           "--finalReportDir=" +
+                           os.path.join(DIR_final, reportSubDir),
+                           "--report.params={dumps:q}",
+                           "--logFile={log}"])
+    print("==== The present shell command being submitted by the generateReport function is as follows: ")
+    print(cmd)
+    print("==== ... and the dumps string is : ")
+    print(dumps)
+    print("==== End of dump string.")
+    print("==== The arguments list for the rendering is provided in the *html.RenderArgs.rds file ")
+    
+    return(cmd)
+    # shell(cmd, dumps)
+
+
+# abandone current execution with a helpful error message:
+def bail(msg):
+    """Print the error message to stderr and exit."""
+    print(msg, file=sys.stderr)
+    exit(1)
+
+
+# check for common input/configuration errors:
+def validate_config(config):
+    # Check that all locations exist
+    for loc in config['locations']:
+        if (not loc == 'output-dir') and (not os.path.isdir(config['locations'][loc])):
+            bail("ERROR: The following necessary directory does not exist: {} ({})".format(
+                config['locations'][loc], loc))
+
+    # Check that all of the requested differential methylation
+    # treatment values are found in the sample sheet.
+    treatments = set([config["SAMPLES"][sample]["Treatment"]
+                      for sample in config["SAMPLES"]])
+    if config['DManalyses']:
+        for analysis in config['DManalyses']:
+            for group in config['DManalyses'][analysis]:
+                print(group)
+                for treat in config['DManalyses'][analysis][group].split(","):
+                    print(treat)
+                    if (treat not in treatments) :
+                        bail("ERROR: Invalid treatment group '{}' in analysis '{}'".format(
+                        treat, analysis))
+
+    # Check for a genome fasta file
+    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
+    fa = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
+
+    # Check if we have permission to write to the reference-genome directory ourselves
+    # if not, then check if the ref genome has already been converted
+    if (not os.access(config['locations']['genome-dir'], os.W_OK) and
+            not os.path.isdir(os.path.join(config['locations']['genome-dir'], 'Bisulfite_Genome'))):
+        bail("ERROR: reference genome has not been bisulfite-converted, and PiGx does not have permission to write to that directory. Please either (a) provide Bisulfite_Genome conversion directory yourself, or (b) enable write permission in {} so that PiGx can do so on its own.".format(
+            config['locations']['genome-dir']))
+
+    if not len(fasta) + len(fa) == 1:
+        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(
+            config['locations']['genome-dir']))
+
+# --------------------------------------
+# sample related      
+# --------------------------------------
+        
 def dedupe_tag(protocol):
     if protocol.upper() == "WGBS":
         return ".deduped"
@@ -30,6 +147,34 @@ def dedupe_tag(protocol):
         return ""
     else:
         raise Exception("=== ERROR: unexpected protocol ===")
+
+
+def get_fastq_name(full_name):
+    # single end
+    find_se_inx = full_name.find('_se_bt2')
+    # paired-end
+    find_pe_inx = full_name.find('_1_val_1_bt2')
+
+    if(find_se_inx >= 0):
+        output = full_name[:find_se_inx]
+    elif(find_pe_inx >= 0):
+        output = full_name[:find_pe_inx]
+    else:
+        bail("Unable to infer sample fastq name; cannot find trimming string in filename. \nHave the files been trimmed for adapter sequence and quality?")
+
+    return(output)
+
+
+# --------------------------------------
+# context related      
+# --------------------------------------
+def destrand(context):
+    return config['general']['export-bigwig']['context'][context.lower()]['destrand']
+
+
+# --------------------------------------
+# generate dynamic output files per rule     
+# --------------------------------------
 
 def files_for_sample(proc):
     return [expand(proc(config['SAMPLES'][sample]['files'],
@@ -175,44 +320,26 @@ def bam_processing(files, sampleID, protocol):
 # FIXME: contexts should be generate output based on settings file
 def list_files_methyldackel_extract(files, sampleID, protocol):
     PATH = DIR_methcall + "methylDackel/"
-    if len(files) == 1:
-        # ---- single end
-        return [PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CpG.methylKit",
-                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHG.methylKit",
-                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHH.methylKit",
-                PATH+sampleID+"_mbias_methyldackel.txt",
-                PATH+sampleID+"_mbias_OB.svg",
-                PATH+sampleID+"_mbias_OT.svg",
-                PATH+sampleID+"_methyldackel.cytosine_report.txt"
-]
-    elif len(files) == 2:
-        return [PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CpG.methylKit",
-                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHG.methylKit",
-                PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHH.methylKit",
-                PATH+sampleID+"_mbias_methyldackel.txt",
-                PATH+sampleID+"_mbias_OB.svg",
-                PATH+sampleID+"_mbias_OT.svg",
-                PATH+sampleID+"_methyldackel.cytosine_report.txt"
-                ]  # ---- paired end
-    else:
-        raise Exception(
-            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+    return [PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CpG.methylKit",
+            PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHG.methylKit",
+            PATH+sampleID+dedupe_tag(protocol)+"_methyldackel_CHH.methylKit",
+            # PATH+sampleID+"_mbias_methyldackel.txt",
+            # PATH+sampleID+"_mbias_OB.svg",
+            # PATH+sampleID+"_mbias_OT.svg",
+            # PATH+sampleID+"_methyldackel.cytosine_report.txt"
+            ]
 
 # FIXME: contexts should be generate output based on settings file
 def list_files_maketabix_methyldackel(files, sampleID, protocol):
     PATH = DIR_methcall + "methylDackel/"
-    if len(files) == 1:
-        # ---- single end
-        return [PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz",
-                PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz.tbi"
-                ]
-    elif len(files) == 2:
-        # ---- paired end
-        return [PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz",
-                PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz.tbi"
-                ]      else:
-        raise Exception(
-            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+    return [
+            PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz",
+            PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz.tbi",
+            PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz",
+            PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz.tbi",
+            PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz",
+            PATH+"tabix_CpG/"+sampleID+dedupe_tag(protocol)+"_CpG.txt.bgz.tbi"
+            ]
 
 # FIXME: contexts should be generate output based on settings file
 def bigwig_exporting_bismark(files, sampleID, protocol):
@@ -270,30 +397,15 @@ def methSeg_bwameth(files, sampleID, protocol):
 def list_final_reports(files, sampleID, protocol):
     PATH = DIR_final
     if len(files) == 1:
-        return  PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html" #---- single end
+        # ---- single end
+        return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"
     elif len(files) == 2:
-        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"] #---- paired end
+        # ---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"]
     else:
-        raise Exception("=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def fmt(message):
-    """Format the MESSAGE string."""
-    return "----------  " + message + "  ----------"
-
-def get_fastq_name(full_name):
-    # single end
-    find_se_inx=full_name.find('_se_bt2')
-    # paired-end
-    find_pe_inx=full_name.find('_1_val_1_bt2')
-
-    if(find_se_inx>=0):
-      output=full_name[:find_se_inx]
-    elif(find_pe_inx>=0):
-     output=full_name[:find_pe_inx]
-    else:
-     bail("Unable to infer sample fastq name; cannot find trimming string in filename. \nHave the files been trimmed for adapter sequence and quality?")
-
-    return(output)
 
 # --------------------------------------
 # diffmeth related
@@ -314,18 +426,12 @@ def get_sampleids_from_treatment(treatment):
 
     return(sampleids_list)
     
-def get_treatments_from_analysis(analysis):
-    """Get Treatments from Analysis string."""
-    treatment_list = []
-    for group in config['DManalyses'][analysis]:
-        treatment_list += config['DManalyses'][analysis][group].split(",")
-            
-    return(treatment_list)
-    
+
 def get_sampleids_from_analysis(analysis):
-    """Get SampleIDs from Analysis string."""
+    """Get SampleIDs for each Analysis group."""
     sampleids_list = []
-    for treatment in get_treatments_from_analysis(analysis):
+    for group in config['DManalyses'][analysis]:
+        for treatment in config['DManalyses'][analysis][group].split(","):
             sampleids_list += get_sampleids_from_treatment(treatment)
             
     return(sampleids_list)
@@ -390,86 +496,3 @@ def list_files_diffmeth_bwameth(treatment):
 def list_files_diffmeth_report(treatment):
     PATH = DIR_final 
     return [ PATH +"diffmeth-report."+ treatment.replace("_","vs") + ".html"]
-
-
-def tool(name):
-    return config['tools'][name]['executable']
-
-def toolArgs(name):
-    if 'args' in config['tools'][name]:
-        return config['tools'][name]['args']
-    else:
-        return ""
-
-# sample sheet accessor functions
-def samplesheet(name, item=None):
-    """Access the SAMPLES dict from config."""
-    if item:
-        return config["SAMPLES"][name][item]
-    else:
-        config["SAMPLES"][name]
-
-# Generate a command line string that can be passed to snakemake's
-# "shell".  The string is prefixed with an invocation of "nice".
-def nice(cmd, args, log=None):
-    executable = tool(cmd)
-    line = ["nice -" + str(config['execution']['nice']), executable] + [toolArgs(cmd)] + args
-    if log:
-        line.append("> {} 2>&1".format(log))
-    return " ".join(line)
-
-# custome function for submitting shell command to generate final reports:
-def generateReport(input, output, params, log, reportSubDir):
-    dumps = json.dumps(dict(params.items()),sort_keys=True,
-                       separators=(",",":"), ensure_ascii=True)
-
-    cmd = nice('Rscript', ["{DIR_scripts}/generate_report.R",
-                           "--scriptsDir=" + DIR_scripts,
-                           "--reportFile={input.template}",
-                           "--outFile={output.report}",
-                           "--finalReportDir=" + os.path.join(DIR_final,reportSubDir),
-                           "--report.params={dumps:q}",
-                           "--logFile={log}"])
-    print("==== The present shell command being submitted by the generateReport function is as follows: ")
-    print(cmd)
-    print("==== ... and the dumps string is : ")
-    print(dumps)
-    print("==== End of dump string.")
-    print("==== The arguments list for the rendering is provided in the *html.RenderArgs.rds file ")
-
-    shell(cmd, dumps)
-
-# abandone current execution with a helpful error message:
-def bail(msg):
-    """Print the error message to stderr and exit."""
-    print(msg, file=sys.stderr)
-    exit(1)
-
-# check for common input/configuration errors:
-def validate_config(config):
-    # Check that all locations exist
-    for loc in config['locations']:
-        if (not loc == 'output-dir') and (not os.path.isdir(config['locations'][loc]) ) :
-            bail("ERROR: The following necessary directory does not exist: {} ({})".format(config['locations'][loc], loc))
-
-    # Check that all of the requested differential methylation
-    # treatment values are found in the sample sheet.
-    treatments = set([ config["SAMPLES"][sample]["Treatment"] for sample in config["SAMPLES"] ])
-    for pair in config['general']['differential-methylation']['treatment-groups']:
-        for group in pair:
-            if ( (group not in treatments) or (not (str.isdigit(group))) )  :
-                bail("ERROR: Invalid treatment group '{}' in pair '{}'".format(group, pair))
-
-    # Check for a genome fasta file
-    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
-    fa    = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
-
-    # Check if we have permission to write to the reference-genome directory ourselves
-    # if not, then check if the ref genome has already been converted
-    if (not os.access(config['locations']['genome-dir'], os.W_OK) and
-        not os.path.isdir(os.path.join(config['locations']['genome-dir'], 'Bisulfite_Genome'))):
-        bail("ERROR: reference genome has not been bisulfite-converted, and PiGx does not have permission to write to that directory. Please either (a) provide Bisulfite_Genome conversion directory yourself, or (b) enable write permission in {} so that PiGx can do so on its own.".format(config['locations']['genome-dir']))
-
-    if not len(fasta) + len(fa) == 1 :
-        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(config['locations']['genome-dir']))
-
