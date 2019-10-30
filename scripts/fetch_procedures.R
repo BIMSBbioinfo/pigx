@@ -41,69 +41,104 @@ suppressPackageStartupMessages(expr = {
 #' @export
 #' @docType methods
 #' @rdname fetchTablefromUCSC
-fetchTableFromUCSC <- function (table.name, table.loc=NULL, assembly) {
-    mySession = browserSession("UCSC")
-    genome(mySession) <- assembly
-    track.names <- trackNames(ucscTableQuery(mySession))
-
-    if (table.name %in% track.names) {
-        message(paste("Downloading", table.name, "..."))
-
-        targetTrack <- track(mySession, table.name)
-        ## and write it to BED file
-        export.bed(object = targetTrack,
-                   con = table.loc,
-                   trackLine = FALSE)
-        message(paste("Wrote track to ", table.loc))
-        return(table.loc)
-    } else {
-        stop(paste("Could not find", table.name, "for the given assembly <'",assembly,"'>."))
-    }
+fetchTableFromUCSC <- function(table.name, filename, assembly) {
+  require("rtracklayer")
+  mySession = rtracklayer::browserSession("UCSC")
+  rtracklayer::genome(mySession) <- assembly
+  track.names <- rtracklayer::trackNames(rtracklayer::ucscTableQuery(mySession))
+  
+  if (table.name %in% track.names) {
+      message(paste("Downloading", table.name, "..."))
+  
+      targetTrack <- rtracklayer::track(mySession, table.name)
+      return(targetTrack)
+  } else {
+      warning(paste("Could not find", table.name, " track for the given assembly <'",assembly,"'>."))
+      return(FALSE)
+  }
 }
 
-lookupBedFile <- function (type, filename, assembly, webfetch) {
-  ## import local bed file if available
+
+#' Fetch a table from the Annotation hub
+#'
+#' @param table.name a character indicating name of a UCSC table
+#' @param table.loc a character indicating path to the output BED file
+#' @param assembly a character indicating a genome version, e.g. "ce10""
+#'
+#' @return
+#' @export
+#'
+#' @examples
+fetchTableFromAnnotationHub <- function(table.name, filename, assembly) {
+  require("AnnotationHub")
+  hub = AnnotationHub()
+  
+  ## query track for assembly
+  track.q <- query(hub, c(table.name, "genes", assembly))
+  
+  ## If there is exactly one record: fetch it
+  if(length(track.q) == 1) {
+    message("Found single ", table.name ," track, downloading...\n")
+    track <- hub[[names(track.q)]]
+    return(track)
+  } else {
+    warning(paste("Could not find single", table.name, "track for the given assembly <'",assembly,"'>.\n"))
+    return(NULL)
+  }
+}
+
+#' Lookup annotation files
+#' 
+#' Check if annotation file already exist, if not download from UCSC
+#'
+#' @param type 
+#' @param filename 
+#' @param assembly 
+#' @param webfetch 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+lookupBedFile <- function(type, filename, assembly, webfetch) {
+  
   if (file.exists(filename)) {
     return(filename)
   }
-  gzipped <- paste0(filename, ".gz")
-  if (file.exists(gzipped)) {
-    return(gzipped)
+  
+  if(!(type %in% c("cpgIslandExt", "knownGene"))) {
+    stop('ERROR: type can be either "cpgIslandExt" or "knownGene".')
+  }
+
+  message("Trying to fetch from AnnotationHub.\n")
+  
+  track <- fetchTableFromAnnotationHub(type,filename,assembly)
+  if(is.null(track)) {
+    
+    message("Trying to fetch from UCSC directly.\n")
+    track <-fetchTableFromUCSC(type,filename,assembly)
+    if(is.null(track)) {
+      
+      warning( "Failed to find reference annotation file",type," for assembly <'",assembly,"'>.",
+               "Make sure you used a valid UCSC assembly for settings:general:assembly in settings file." )
+      return(NULL)
+    }
   }
   
-  # can't fine file locally: now check if we should try to download it:
-  if( webfetch )
-  {
-    message(paste0("Could not find ", filename, ".  Fetching from Internet."))
-    if (type == "refGene") {
-      message("Trying to fetch from AnnotationHub.\n")
-      hub = AnnotationHub()
-      
-      ## query refseq genes for assembly
-      refseq.q <- query(hub, c("refseq", "genes", assembly))
-      
-      ## If there is exactly one record: fetch it
-      if(length(refseq.q) == 1) {
-        message("Found single RefSeq track, downloading...\n")
-        refGenes <- hub[[names(refseq.q)]]
-        ## and write it to BED file
-        export.bed(object = refGenes,
-                   con = filename,
-                   trackLine=FALSE)
-        message(paste("Wrote RefSeq track to:", filename))
-        return(filename)
-      }
-    }
+  
+  ## write gzipped file ?
+  if (grepl(".gz$",filename)) {
+    fileCon <- gzfile(filename)
+  } else {
+    fileCon <- file(filename)
+  }
+  
+  ## else write it to BED file
+  export.bed(object = track,
+             con = fileCon,
+             trackLine = FALSE)
+  message(paste("Wrote ", table.name, " track to:", filename))
+  
+  return(filename)
     
-    tryCatch({
-        return(fetchTableFromUCSC(type, filename, assembly))
-    }, error = function (msg) {
-        message(paste0("Error while downloading from UCSC browser: ", msg))
-    })
   }
-  else
-  {
-  # print( paste("Failed to find reference annotation file",type," for <'",assembly,"'> (see settings:general in settings file.)." ))
-  return('')
-  }
-}
