@@ -65,7 +65,7 @@ rule bwameth_genome_preparation:
 
 
 def bwameth_input(sample):
-    files = list_files_TG(samples(sample,'files'),sample, '')
+    files = list_files_TG(samplesheet(sample,'files'),sample, '')
     return(files)
 
 rule bwameth_align_trimmed:
