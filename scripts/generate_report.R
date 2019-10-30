@@ -2,6 +2,7 @@
 #
 # Copyright © 2017 Bren Osberg <brendan.osberg@mdc-berlin.de>
 # Copyright © 2017, 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
+# Copyright © 2017, 2018, 2019 Alexander Blume <alexander.blume@mdc-berlin.de>
 # Copyright © 2017 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
@@ -20,6 +21,77 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+## Wrapper function to run a specific Rmd script
+## which does the computation and generates an HTML report with code included
+#' Title
+#'
+#' @param reportFile rmarkdown file to render
+#' @param outFile name of the output file
+#' @param workDir working directory
+#' @param report.params
+#' @param logo Location of PiGx logo
+#' @param quiet boolean value (default: FALSE). If set to TRUE, progress bars 
+#'   and chunk labels will be suppressed while knitting the Rmd file.
+#' @param selfContained boolean value (default: TRUE). By default, the generated
+#'   html file will be self-contained, which means that all figures and tables 
+#'   will be embedded in a single html file with no external dependencies (See 
+#'   rmarkdown::html_document)
+#' @param bibTexFile path to bibTex biblographie file
+#' @param prefix prefix for report
+#'   
+#' @return An html generated using rmarkdown/knitr/pandoc that contains 
+#'   interactive figures, tables, and text that provide an overview of the 
+#'   experiment
+#' @export
+#'
+#' @examples
+render2HTML <- function(reportFile,
+                        outFile,
+                        workdir = getwd(),
+                        report.params,
+                        logo,
+                        bibTexFile,
+                        prefix,
+                        selfContained=TRUE,
+                        quiet = FALSE)
+{
+  
+  
+  if(is.null(report.params)) report.params <- list()
+  
+  ## render single report
+  message("rendering report from template: ", reportFile)
+  
+  htmlwidgets::setWidgetIdSeed(1234)
+  rmarkdown::render(
+    input = reportFile,
+    output_dir = workdir,
+    intermediates_dir = file.path(workdir, prefix),
+    output_file = outFile,
+    output_format = rmarkdown::html_document(
+      toc = TRUE,
+      depth = 2,
+      toc_float = TRUE,
+      theme = 'lumen',
+      number_sections = TRUE,
+      code_folding = "hide",
+      self_contained = selfContained,
+      bibliography = bibTexFile
+    ),
+    params = c(report.params,
+               logo = logo,
+               prefix = prefix,
+               workdir = workdir),
+    quiet  = quiet,
+    clean  = TRUE
+  )
+  
+}
+
+
+
+
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -34,10 +106,12 @@ if("--help" %in% args) {
       Render to report
 
       Arguments:
-        --scriptsDir location of R scripts
         --reportFile report template
-        --outFile output file
-        --finalReportDir final report location
+        --outFile    output file
+        --workdir    working directory
+        --logo       path to PiGx Logo
+        --bibTexFile path to bibTex biblographie file
+        --prefix     prefix for report
         --report.params parameters to report, write in
                         the form of 'p1:v1;p2:v2'
         --logFile file to print the logs to
@@ -56,17 +130,37 @@ argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 
-## get deeper list elements
+## catch output and messages into log file
+if(!is.null(argsL$logFile)) {
+  out <- file(argsL$logFile, open = "wt")
+  sink(out,type = "output")
+  sink(out, type = "message")
+} else {
+  sink()
+}
+
+# export a copy of the argument list for this rendering attempt
+saveRDS( argsL, file=paste0(argsL$outFile,".RenderArgs.rds") )
+
+
+## get deeper list elements of report params
 if(!is.null(argsL$report.params)) {
   argsL$report.params <- jsonlite::fromJSON(argsL$report.params)
 }
 
 
-source(paste0(argsL$scriptsDir, "/report_functions.R"))
+## check wether all required report params are given 
+paramsList <- knitr::knit_params(readLines(argsL$reportFile),
+                                 evaluate = TRUE)
 
+## exclude standard report params
+paramsList <- paramsList[!names(paramsList) %in% c("logo","prefix","workdir")]
 
-## catch output and messages into log file
-out <- file(argsL$logFile, open = "wt")
+givenParams <- names(paramsList) %in% names(argsL$report.params)
+if( !all(givenParams ))  {
+  warning("Missing values for parameters: ",
+          paste(names(paramsList)[!givenParams],collapse = ", "))
+}
 
 
 cat(paste(
@@ -81,15 +175,11 @@ cat(paste(
     "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"
 ))
 
-# export a copy of the argument list for this rendering attempt
-saveRDS( argsL, file=paste0(argsL$outFile,".RenderArgs.rds") )
-
-sink(out,type = "output")
-sink(out, type = "message")
 
 render2HTML(reportFile = normalizePath(argsL$reportFile),
-                outFile = basename(argsL$outFile),
-                outDir = normalizePath(dirname(argsL$outFile)),
-                finalReportDir = normalizePath(argsL$finalReportDir),
-                report.params = argsL$report.params,
-                logFile = argsL$logFile)
+            outFile = basename(argsL$outFile),
+            workdir = normalizePath(dirname(argsL$outFile)),
+            report.params = argsL$report.params,
+            logo = argsL$logo,
+            bibTexFile = argsL$bibTexFile,
+            prefix = argsL$prefix)

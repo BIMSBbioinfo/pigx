@@ -68,29 +68,6 @@ def nice(cmd, args, log=None):
     return " ".join(line)
 
 
-# custome function for submitting shell command to generate final reports:
-def generateReport(input, output, params, log, reportSubDir):
-    dumps = json.dumps(dict(params.items()), sort_keys=True,
-                       separators=(",", ":"), ensure_ascii=True)
-
-    cmd = nice('Rscript', ["{DIR_scripts}/generate_report.R",
-                           "--scriptsDir=" + DIR_scripts,
-                           "--reportFile={input.template}",
-                           "--outFile={output.report}",
-                           "--finalReportDir=" +
-                           os.path.join(DIR_final, reportSubDir),
-                           "--report.params={dumps:q}",
-                           "--logFile={log}"])
-    print("==== The present shell command being submitted by the generateReport function is as follows: ")
-    print(cmd)
-    print("==== ... and the dumps string is : ")
-    print(dumps)
-    print("==== End of dump string.")
-    print("==== The arguments list for the rendering is provided in the *html.RenderArgs.rds file ")
-    
-    return(cmd)
-    # shell(cmd, dumps)
-
 
 # abandone current execution with a helpful error message:
 def bail(msg):
