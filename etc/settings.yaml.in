@@ -31,8 +31,9 @@ general:
     qvalue: 0.01
     difference: 25
     annotation:
-      cpgIsland_bedfile: "pigx_work/refGenome/cpgIslandExt.hg19.bed.gz"
-      refGenes_bedfile:  "pigx_work/refGenome/refGene.hg19.bed.gz"
+      # download cpgIsland-bedfile or refGenes-bedfile automatically if not given?
+      cpgIsland-bedfile: pigx_work/refGenome/cpgIslandExt.hg19.bed.gz
+      refGenes-bedfile: pigx_work/refGenome/knownGene.hg19.bed.gz
       webfetch:   no
       
 # DManalyses:
