@@ -42,9 +42,24 @@ DIR_final       = os.path.join(OUTDIR, "Final_Reports/")
 
 #--- DEFINE PATHS AND FILE NAMES:
 
+LOGOPATH    = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
+BIBTEXPATH  = os.path.join(config['locations']['pkgdatadir'], "report_templates/reports.bib")
+
 PATHIN     = os.path.join(OUTDIR, "pigx_work/input/")           # location of the data files to be imported (script creates symbolic link)
 GENOMEPATH = config['locations']['genome-dir']+"/"       # where the reference genome being mapped to is stored
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
+
+# FIXME: lookup and fetch now done in diffmethreport, but should they get their own rule ??
+WEBFETCH = True if repr(config['general']['differential-methylation']['annotation']['webfetch']).lower() in ["true","yes"] else False
+CPGISLAND_BEDFILE = os.path.abspath(config['general']['differential-methylation']['annotation']['cpgIsland-bedfile'])
+REFGENES_BEDFILE  = os.path.abspath(config['general']['differential-methylation']['annotation']['refGenes-bedfile'])
+
+if not CPGISLAND_BEDFILE and WEBFETCH:
+  CPGISLAND_BEDFILE = os.path.join(OUTDIR, 'pigx_work','refGenome',"cpgIslandExt."+ASSEMBLY+".bed.gz")
+
+if not REFGENES_BEDFILE and WEBFETCH:
+  REFGENES_BEDFILE = os.path.join(OUTDIR, 'pigx_work','refGenome',"knownGene."+ASSEMBLY+".bed.gz")
+  
 
 ## FIXME: request the genome file instead of the folder in the settings file
 # this hack actually will only take the first file ending with either .fa or .fasta as reference genome
@@ -291,8 +306,8 @@ rule final_report:
         methSegPng      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.png"),
         genome_dir  = config['locations']['genome-dir'],
         scripts_dir = DIR_scripts,
-        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
-        webfetch    = config['general']['differential-methylation']['annotation']['webfetch']
+        refGene_bedfile  = REFGENES_BEDFILE,
+        webfetch    = WEBFETCH
     log:
         os.path.join(DIR_final,"{prefix}_{assembly}_final.log")
     message: fmt("Compiling final report: Output log file for details (for cluster jobs, see pigx_work/cluster_log_files).")
