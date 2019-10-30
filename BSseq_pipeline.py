@@ -54,15 +54,30 @@ GENOMEPATH = config['locations']['genome-dir']+"/"       # where the reference g
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
 # FIXME: lookup and fetch now done in diffmethreport, but should they get their own rule ??
+## should we do fetching at all? would be maybe more stable if we require people to download themselves.
 WEBFETCH = True if repr(config['general']['differential-methylation']['annotation']['webfetch']).lower() in ["true","yes"] else False
-CPGISLAND_BEDFILE = os.path.abspath(config['general']['differential-methylation']['annotation']['cpgIsland-bedfile'])
-REFGENES_BEDFILE  = os.path.abspath(config['general']['differential-methylation']['annotation']['refGenes-bedfile'])
+CPGISLAND_BEDFILE = config['general']['differential-methylation']['annotation']['cpgIsland-bedfile']
+REFGENES_BEDFILE  = config['general']['differential-methylation']['annotation']['refGenes-bedfile']
 
-if not CPGISLAND_BEDFILE and WEBFETCH:
-  CPGISLAND_BEDFILE = os.path.join(OUTDIR, 'pigx_work','refGenome',"cpgIslandExt."+ASSEMBLY+".bed.gz")
+if CPGISLAND_BEDFILE and os.path.isfile(CPGISLAND_BEDFILE):
+  # make path absolute
+  CPGISLAND_BEDFILE = os.path.abspath(CPGISLAND_BEDFILE)
+  
+elif WEBFETCH:
+    CPGISLAND_BEDFILE = os.path.join(OUTDIR, 'pigx_work','refGenome',"cpgIslandExt."+ASSEMBLY+".bed.gz")
+    print("WARNING: Parameter 'general::differential-methylation::annotation::cpgIsland-bedfile' was not set to a valid file.\n",
+    "Updating to "+CPGISLAND_BEDFILE+" since webfetch was set.\n")
+    
 
-if not REFGENES_BEDFILE and WEBFETCH:
+if REFGENES_BEDFILE and os.path.isfile(REFGENES_BEDFILE):
+  # make path absolute
+  REFGENES_BEDFILE = os.path.abspath(REFGENES_BEDFILE)
+  
+elif WEBFETCH:
   REFGENES_BEDFILE = os.path.join(OUTDIR, 'pigx_work','refGenome',"knownGene."+ASSEMBLY+".bed.gz")
+  print("WARNING: Parameter 'general::differential-methylation::annotation::refGenes-bedfile' was not set to a valid file.\n",
+  "Updating to "+REFGENES_BEDFILE+" since webfetch was set.\n")
+  
   
 
 ## FIXME: request the genome file instead of the folder in the settings file
