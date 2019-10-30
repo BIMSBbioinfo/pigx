@@ -492,6 +492,10 @@ def list_files_diffmeth_bwameth(treatment):
             PATH + "methylDiff_"+treatment+"_CpG_methylDackel_results.tsv"
             ]
 
-def list_files_diffmeth_report(treatment):
+def list_files_diffmeth_report_bwameth(treatment):
     PATH = DIR_final 
-    return [ PATH +"diffmeth-report."+ treatment.replace("_","vs") + ".html"]
+    return [ PATH +"diffmeth-report."+ treatment.replace("_","vs") + "_CpG_methylDackel" +".html"]
+
+def list_files_diffmeth_report_bismark(treatment):
+    PATH = DIR_final 
+    return [ PATH +"diffmeth-report."+ treatment.replace("_","vs") + "_cpg_methylKit" +".html"]

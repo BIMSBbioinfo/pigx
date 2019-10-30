@@ -202,9 +202,14 @@ targets = {
         'files': files_for_treatment(list_files_diffmeth_bismark)
     },
 
+    'diffmeth-report-bwameth': {
+        'description': "Produce a comprehensive report for differential methylation.",
+        'files': files_for_treatment(list_files_diffmeth_report_bwameth)
+    },
+    
     'diffmeth-report': {
         'description': "Produce a comprehensive report for differential methylation.",
-        'files': files_for_treatment(list_files_diffmeth_report)
+        'files': files_for_treatment(list_files_diffmeth_report_bismark)
     },
 
     'final-report': {
