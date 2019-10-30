@@ -13,8 +13,8 @@ general:
     cores: 1
     qvalue: 0.05
     annotation:
-      cpgIsland_bedfile: pigx_work/refGenome/cpgIslandExt.hg19.bed.gz 
-      refGenes_bedfile:  pigx_work/refGenome/refGene.hg19.bed.gz
+      cpgIsland-bedfile: pigx_work/refGenome/cpgIslandExt.hg19.bed.gz 
+      refGenes-bedfile: pigx_work/refGenome/refGene.hg19.bed.gz
       webfetch:   no
 
 DManalyses:
