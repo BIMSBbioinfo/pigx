@@ -177,4 +177,4 @@ rule diffmeth_report:
                                '"difference":"{params.difference}"',
                                '"webfetch":"{params.webfetch}"'
                            ])+"}}'",
-                           "--logFile={log}"])
+                           "--logFile={log}"], "{log}")
