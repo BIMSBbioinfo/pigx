@@ -1,282 +1,535 @@
 ---
-title: "PiGx: BS-seq"
+title: "PiGx-BSseq: Differential Methylation Report"
+author: "BIMSB Bioinformatics Platform"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+link-citations: yes
 output:
   html_notebook:
-    toc:        TRUE
-    toc_float:  TRUE
-    theme:      "lumen"
-    number_sections: FALSE
-    code_folding: "hide"
-    self_contained: TRUE
-    includes:
-      in_header: pigx_bsseq_logo.html
-date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
-bibliography: reports.bib
-link-citations: yes
+      toc : TRUE
+      depth : 2
+      toc_float : TRUE
+      theme : 'lumen'
+      number_sections : TRUE
+      code_folding : "hide"
+      self_contained : TRUE
+      bibliography : 'report_templates/reports.bib'
 params:
-  source_dir: ''
-  scripts_dir: ''
-  diffmeth_dir: ''
-  genome_dir: ''
-  out_dir:    ''
-  cpgIsland_bedfile:  ''
-  refGenes_bedfile:   ''
-  chrom_seqlengths: ''
-  assembly: ''
-  treatment: ''
-  qvalue: 0.01
-  difference: 25
-  methylDiff_files: list()
-  webfetch:     ''
+  scripts_dir:            ''
+  cpgIsland_bedfile:      ''
+  refGenes_bedfile:       ''
+  chrom_seqlengths:       ''
+  qvalue:                 0.01
+  difference:             25
+  webfetch:               ''
 
-  methylDiff_file:          ''
-  methylDiff_hyper_file:    ''
-  methylDiff_hypo_file:     ''
-  methylDiff_nonsig_file:   ''
-  methylDiffBed:            ''
+  sampleids:              ''
+  treatments:             ''
+  assembly:               ''
+  context:                ''
+  destranded:             ''
 
-  AnnotateDiffMeth: TRUE
-  DiffMeth: TRUE
-  MethCall: TRUE
+  control_group:          ''
+  treatment_group:        ''
+
+  methylDiff_file:        ''
+  methylBase_file:	      ''
+  methylDiff_results_file: ''
+
+  prefix:                 ''
+  workdir:                ''
+  logo:                   ''
 ---
 
+
+<style>
+#logo
+{
+    position: relative;
+}
+#logo img {
+    /*position: relative;*/
+    top: 25px;
+    /*right: 0px;*/
+    left: 50px;
+    position: fixed;
+    width: 125px;
+    }
+body
+{
+    position: absolute;
+    top: 150px;
+}
+</style>
+
+<div id="logo" align="top">
+```{r echo=FALSE}
+knitr::include_graphics(params$logo)
+```
+</div>
+
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.height = 4.5, fig.width = 8,fig.show="hold")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.height = 4.5, fig.width = 8, fig.show = "hold")
 knitr::opts_knit$set(progress = FALSE)
-```
-
-
-```{r chunk_eval_options}
-
-hyper.col     = "magenta"
-hypo.col      = "darkolivegreen4"
-hist_breakset = seq(-101,101,2)
-
-DiffMeth          <- params$DiffMeth
-AnnotateDiffMeth  <- params$AnnotateDiffMeth
-
-cpgIsland_bedfile       <- params$cpgIsland_bedfile
-refGenes_bedfile        <- params$refGenes_bedfile
-webfetch          <- params$webfetch
-chrom_seqlengths <- params$chrom_seqlengths
-
-qvalue <- params$qvalue
-difference <- params$difference
-
-genome_dir   <- params$genome_dir
-scripts_dir  <- params$scripts_dir
-out_dir <- params$out_dir
-
-if(!DiffMeth) AnnotateDiffMeth <- FALSE
-```
-
-# Differential Methylation Report {-}
-
-
-
-```{r DiffMeth.load_libraries, results='hide', include=FALSE, eval=DiffMeth}
 
 ## load libraries
 library("methylKit")
 library("DT")
-library("jsonlite")
+library("genomation")
+library("rtracklayer")
+library("ggplot2")
+library("ggrepel")
+require("matrixStats")
+require("data.table")
+data.table::setDTthreads(8)
 
 ```
 
-```{r DiffMeth.check_params, eval=DiffMeth}
-if(!length(params$methylDiff_files) == 0 ) {
-    methylDiff_files   <- params$methylDiff_files
-} else {
-    DiffMeth = FALSE
-    AnnotateDiffMeth = FALSE
-}
-```
+# Description 
 
-```{r DiffMethHeader, results='asis', eval=DiffMeth}
-cat('## Calling Differentially Methylated Cytosines\n')
+PiGx BSseq performs differential methylation testing using _methylKit's_ ,`calculateDiffMeth()` function and produces this report. The report includes tables and figures summarizing similarities and differences between comparison groups as specified in the settings file. 
 
-cat('For each treatment vector specified in the  settings file, the ratio of methylation between the control (i.e. the first entry), and the treatment (i.e. the second entry) is calculated across the genome. Logistic regression is then applied to model the log-odds probability of observing this ratio, by chance, in any given location (p-value) as well as the probability of observing it *somewhere* within the genome (q-value). The resulting probabilities are then tabulated below.\n')
+This report was generated with PiGx BSseq version @VERSION@.
 
-cat('After q-value calculation, differentially methylated bases are extracted based on q-value and percent methylation difference cutoffs. Here we select bases that have q-value < 0.01 and percent methylation difference larger than 25%. Futhermore, we calculate hyper-methylated or hypo-methylated bases.\n')
+```{r chunk_eval_options}
 
-cat('Overdispersion occurs when there is more variability in the data than assumed by the distribution and is here included in the differentially methylatation calculation.\n')
+hyper.col <- "magenta"
+hypo.col <- "darkolivegreen4"
+nTop <- 1000
 
-cat('For more details about `calculateDiffMeth()` and `getMethylDiff()` functions see [@methylKit2012] and for details about
-the logistic regression and overdispersion see [@Wreczycka2017].\n')
-```
+cpgIsland_bedfile       <- params$cpgIsland_bedfile
+refGenes_bedfile        <- params$refGenes_bedfile
+webfetch          <- params$webfetch
+chrom_seqlengths_file <- params$chrom_seqlengths
 
-```{r DiffMeth.eval_params, eval=DiffMeth}
-treatmentpair = params$treatment
-assembly = params$assembly
+methylDiff_file <- params$methylDiff_file
+methylBase_file <- params$methylBase_file
+methylDiff_results_file <- params$methylDiff_results_file
 
-outputdir = params$diffmeth_dir
-methylDiff_file         <- params$methylDiff_file
-methylDiff_hyper_file   <- params$methylDiff_hyper_file
-methylDiff_hypo_file    <- params$methylDiff_hypo_file
-methylDiff_nonsig_file  <- params$methylDiff_nonsig_file
+qvalue <- as.numeric(params$qvalue)
+difference <- as.numeric(params$difference)
 
-methylDiffBed           <- params$methylDiffBed
-```
+scripts_dir  <- params$scripts_dir
 
-```{r DiffMeth.load, eval=DiffMeth}
-methylDiff.obj        <- readRDS(methylDiff_file)
-methylDiff.obj.hyper  <- readRDS(methylDiff_hyper_file)
-methylDiff.obj.hypo   <- readRDS(methylDiff_hypo_file)
-methylDiff.obj.nonsig <- readRDS(methylDiff_nonsig_file)
+sampleids     <- strsplit(params$sampleids, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+# split all treatment values, could be numeric or not
+treatmentsStr  <- strsplit(params$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+# convert into named numeric vector
+treatments <- as.numeric( as.factor( treatmentsStr ))
+names(treatments) <- treatmentsStr
 
-sampleids <- methylDiff.obj@sample.ids
-treatment <- getTreatment(methylDiff.obj)
-```
+assembly  <- params$assembly
+context <- params$context
+destranded <- ifelse(tolower(params$destranded) %in% c("true","yes"),TRUE,FALSE)
 
-```{r DiffMeth.print_params_in, results='asis', eval=DiffMeth}
 
-cat( paste('Input files were taken from the source directory: ', params$source_dir))
-cat( ' and were compared based on parameters described in the following table. Here each sample is denoted with a **sample.id** that consists of the original sample ID appended with suffixes denoting operations that were carried out in the course of the pipeline (e.g. sorting, deduplication, alignment using bowtie-2 (bt2), etc.) ')
-```
+control_group_str <- params$control_group
+control_group <- strsplit(params$control_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+treatment_group_str <- params$treatment_group
+treatment_group <- strsplit(params$treatment_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 
-```{r DiffMeth.print_params_in2, eval=DiffMeth}
+prefix <-  params$prefix
+workdir <- params$workdir
 
-inputParams <- data.frame(Sample.id=sampleids,
-                          Treatment=treatment,
-                          Assembly=assembly,
-                          Qvalue=qvalue,
-                          Min.meth.difference=difference,
-                          stringsAsFactors = FALSE)
+ExtractDiffMeth <- TRUE
+AnnotateDiffMeth <- TRUE
+AnnotateDiffMeth <- TRUE
 
-knitr::kable(inputParams)
-
-```
-
-```{r DiffMeth.print_params_out, results='asis', eval=DiffMeth}
-cat('**Output files:**\n')
-```
-
-```{r DiffMeth.print_params_out2, eval=DiffMeth}
-
-paramsDesc   <- c("BEDfile", "RDSfile (diff. methyl. Cs)","RDSfile_hyper (hyper-methyl. Cs)","RDSfile_hypo (hypo-methyl. Cs)")
-paramsValues <-  gsub( out_dir, "[out]", c(methylDiffBed, methylDiff_file, methylDiff_hyper_file, methylDiff_hypo_file) )
-outputParams <- data.frame( Format   = paramsDesc,
-                            Location = paramsValues,
-                            stringsAsFactors = FALSE)
-knitr::kable(outputParams)
-
-```
-
-```{r DiffMeth.check_content, results='asis' ,eval=DiffMeth}
-# Check if there are some differentially methylated cytosines
-methylDiff.nonempty = nrow(methylDiff.obj)>1
-if(!methylDiff.nonempty) {
-  cat('**No differentially methylated cytosines were observed.**\n')
-  DiffMeth <- FALSE
+if(!all(file.exists(cpgIsland_bedfile,refGenes_bedfile))) {
   AnnotateDiffMeth <- FALSE
 }
+
+#create a folder to save high quality images generated by the report script
+imagesDir <- file.path(workdir, paste0(prefix, '_images'))
+if(!dir.exists(imagesDir)) { 
+  dir.create(path = imagesDir)
+}
+
+inputParameterDesc <- c('Control sample groups', 
+                        'Treatment sample groups',
+                        'Qvalue cutoff',
+                        'Minimal Methylation Difference',
+                        'United Samples Tabix file',
+                        'DiffMeth Tabix file',
+                        'Genome Assembly',
+                        'Prefix for output files',
+                        'Working directory'
+                     )
+inputParameterValues <- c(
+    control_group_str,
+    treatment_group_str,
+    qvalue,
+    difference,
+    basename(methylDiff_file),
+    basename(methylBase_file),
+    assembly,
+    prefix,
+    workdir
+)
+
+inputSettings <- data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = 9,
+                         dom = 't'))
+
 ```
 
-```{r DiffMeth.export, results='asis', eval=DiffMeth}
+# Quality Control 
 
-cat('### Export Differentially Methylated Cytosines\n')
 
-cat('We export differentially-methylated CpG sites to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
+## Sample Clustering ( top `r nTop` most variable sites )
+
+
+The first quality control should be to check wether the samples cluster in their respective groups, or wether there are some known or unknown batch effects that need to be considered for the following differential methylation analysis. This plot shows the result of a principle components analysis (PCA) based on the `r nTop` most variable cytosine sites. 
+
+```{r pca_function}
+
+#' Get Most Variable CpGs Percent Methylation
+#'
+#' This function extracts the top most variable 
+#'
+#' @param .object   can be a methylBase, methylBaseDB or 
+#'   methylation matrix extracted by percMethylation()
+#' @param file      path to file storing methylation matrix extracted by percMethylation()
+#' @param nTop      number of top most variable sites
+#' @param chunk.size  how big are the chunks to be processed (only relevant for methylBaseDB )
+#'
+#' @return methylation matrix ordered by variability
+getMostVariableCpGs = function(.object=NULL, file=NULL, nTop=5000, chunk.size = 1e6){
+    require(matrixStats)
+    require(data.table)
+    data.table::setDTthreads(8)
+    
+    if ( !is.null(.object) ) {
+        if (class(.object) %in% c("methylBase","methylBaseDB") ) {
+        meth.mat.dt <- as.data.table(percMethylation(.object,chunk.size = chunk.size))
+        } else {
+            meth.mat.dt = copy(as.data.table(.object))
+        }
+    } else if ( !is.null(file) & file.exists(file) )  {
+        meth.mat.dt <- data.table::fread(file)
+    }
+    
+    meth.mat.dt[, variance := rowVars(as.matrix(.SD))]
+    ## fastest ordering method
+    ## https://stackoverflow.com/questions/13685295/sort-a-data-table-fast-by-ascending-descending-order
+    meth.mat.dt[, id := seq_len(nrow(meth.mat.dt))]
+    setorder(meth.mat.dt, -variance)
+    meth.mat.dt = meth.mat.dt[1:min(nrow(meth.mat.dt),nTop),] 
+    meth.mat.dt[, `:=`(variance=NULL, id=NULL)]
+    return(meth.mat.dt)
+    
+}
 ```
+
+
+
+```{r DiffMeth.load_methylBaseDB}
+
+# Read input files
+methylBaseDB <- methylKit:::readMethylBaseDB(dbpath = methylBase_file,
+                                    dbtype = "tabix",
+                                    sample.ids = sampleids,
+                                    assembly = assembly,
+                                    context = context,
+                                    resolution = "base",
+                                    treatment = treatments,
+                                    destranded = destranded)
+                                    
+
+topVar <- getMostVariableCpGs(methylBaseDB, nTop = nTop)
+pca <- stats::prcomp(t(topVar), center = TRUE)
+pcaSummary <- summary(pca)
+df <- cbind(as.data.frame(pca$x), "Group" = treatmentsStr)
+df$SampleID <- row.names(df)
+
+```
+
+
+
+```{r DiffMeth.plotPCA}
+p <- ggplot(df, aes(x = PC1, y = PC2)) + 
+    geom_point(aes_string(color = "Group")) + 
+    geom_label_repel(aes(label = SampleID), size = 3) +
+    labs(x = paste0('PC1 (',round(pcaSummary$importance[2, 'PC1'] * 100, 1),'%)'), 
+         y = paste0('PC2 (',round(pcaSummary$importance[2, 'PC2'] * 100, 1),'%)')) + 
+    ggtitle(label = paste("PCA plot based on",nrow(topVar),"most variable", context," sites")) +
+    theme_bw()
+
+print(p)
+
+ggsave(plot = p, filename = file.path(imagesDir,paste0(prefix,".pca.png")),
+       width = 7,height = 6)
+       
+```
+
+# Differential Methylation Analysis
+
+## Calling Differentially Methylated Cytosines
+
+For each treatment vector specified in the  settings file, the ratio of methylation between the control (i.e. the first entry), and the treatment (i.e. the second entry) is calculated across the genome. Logistic regression is then applied to model the log-odds probability of observing this ratio, by chance, in any given location (p-value) as well as the probability of observing it *somewhere* within the genome (q-value). The resulting probabilities are then tabulated below.
+
+After q-value calculation, differentially methylated bases are extracted based on q-value and percent methylation difference cutoffs. Here we select bases that have q-value < 0.01 and percent methylation difference larger than 25%. Futhermore, we calculate hyper-methylated or hypo-methylated bases.
+
+Overdispersion occurs when there is more variability in the data than assumed by the distribution and is here included in the differentially methylatation calculation.
+
+For more details about `calculateDiffMeth()` and `getMethylDiff()` functions see [methylKit](https://bioconductor.org/packages/release/bioc/html/methylKit.html) and for details about
+the logistic regression and overdispersion see [Wreczycka, et al (2017)](https://www.sciencedirect.com/science/article/pii/S0168165617315936).
+
+The full table of methylKit calculateDiffMeth() results can be found at:
+
+- **methylKit calculateDiffMeth results file**:
+`r methylDiff_results_file`
+
+
+```{r DiffMeth.load_methylDB}
+
+
+# reorganize samples into treatment and control groups 
+treatments_cmp <- ifelse(treatmentsStr %in% treatment_group,1,0)
+
+methylDiffDB <- methylKit:::readMethylDiffDB(dbpath = methylDiff_file,
+                                    dbtype = "tabix",
+                                    sample.ids = sampleids,
+                                    assembly = assembly,
+                                    context = context,
+                                    resolution = "base",
+                                    treatment = treatments_cmp,
+                                    destranded = destranded)
+
+# Get differentially methylated bases based on cutoffs  
+methylDiff.obj.all <- getMethylDiff(.Object = methylDiffDB, 
+									difference=difference,
+									type="all",
+									qvalue = qvalue,
+									save.db = FALSE)
+
+# Check if there are some differentially methylated cytosines
+if (! nrow(methylDiff.obj.all)>1 ) {
+	cat("\n**There are no differentially methylated cytosines.**")
+	ExtractDiffMeth <- FALSE
+	AnnotateDiffMeth <- FALSE
+  }
+
+```
+
+```{r DiffMeth.export_text, results='asis', eval=ExtractDiffMeth}
+cat('### Export Differentially Methylated Cytosines\n\n')
+
+cat('We export differentially-methylated CpG sites (DMC) to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
+
+cat('- **DmC BED file**:\n',file.path(workdir,paste0(prefix,".dmc.bed")),'\n')
+
+```
+
+```{r Diffmeth.extract, eval=ExtractDiffMeth}
+
+# Get hyper-methylated
+methylDiff.obj.hyper <- getMethylDiff(.Object = methylDiff.obj.all,
+									  difference = difference,
+									  type = "hyper",
+									  qvalue = qvalue)
+# Get hypo-methylated
+methylDiff.obj.hypo <- getMethylDiff(.Object = methylDiff.obj.all,
+									 difference = difference,
+									 type = "hypo",
+									 qvalue=qvalue)
+
+```
+
+
+```{r DiffMeth.export, eval=ExtractDiffMeth, echo=FALSE}
+
+#-------------------------------------------------------------------
+#' Export windows to a BED file
+#'
+#' The windows are color coded based on their score (methylation or differential
+#' methylation value).
+#'
+#' @param windows \code{\link[GenomicRanges]{GRanges}} object with information about
+#' differentially methylated regions
+#' @param filename name of the output data
+#' @param trackLine UCSC browser trackline
+#' @param colramp color scale to be used in the BED display
+#' defaults to gray,green, darkgreen scale.
+#'
+#' @return A BED files with the differentially methylated regions
+#' which can be visualized in the UCSC browser
+#'
+#' @seealso \code{\link{methylKit::methSeg2bed}}
+#'
+#' @export
+#' @docType methods
+#' @rdname meth2bed
+meth2bed<-function(windows,filename,
+                   trackLine="track name='meth windows' description='meth windows' itemRgb=On",
+                   colramp=colorRamp(c("gray","green", "darkgreen"))
+){
+  require(rtracklayer)
+
+  range01 <- function(x){(x-min(x)+1)/(max(x)-min(x)+1)}
+
+  if(class(windows)!="GRanges"){
+    windows=as(windows, "GRanges")
+  }
+
+  ## case if only one line is exported
+  if(is.null(colramp) | length(windows)==1){
+    trackLine <- gsub(pattern = "itemRgb=On",replacement = "",x = trackLine)
+  } else {
+    ramp <- colramp
+    score(windows)=range01(windows$meth.diff)
+    mcols(windows)$itemRgb= rgb(ramp(score(windows)), maxColorValue = 255)
+  }
+
+  strand(windows)="*"
+  score(windows)=range01(windows$meth.diff)
+
+  if(is.null(trackLine)){
+
+    export.bed(windows,filename)
+  }else{
+    export.bed(windows,filename,
+               trackLine=as(trackLine, "BasicTrackLine"))
+  }
+}
+
+
+# Export differentially methylated cytosines to a bed file
+trackLine = paste0("track name='differentially methylated cytosines ' ",
+                   "description='diff. meth. between ",
+                   treatment_group_str, "and", control_group_str,
+                   "' itemRgb=On")
+
+bedFile <- file.path(workdir,paste0(prefix,".dmc.bed"))
+meth2bed(windows = methylDiff.obj.all,
+         trackLine=trackLine,
+         colramp=colorRamp(c("gray","green", "darkgreen")),
+         filename = bedFile) 
+```
+
 
 
 
 ```{r AnnotateDiffMethHeader,results='asis', eval=AnnotateDiffMeth}
-cat('## Annotation of Differentially Methylated Cytosines\n')
+cat('## Annotation of Differentially Methylated Cytosines\n\n')
+
+cat('Once differentially-methylated CpG sites (DMC) have been found, the sites are classified into hyper- and hypo-methylated sites, based on two cutoffs: the minimal  methylation difference and the qvalue cutoff as shown in the parameter table. Hypermethylation indicates increasingly-methylated sites, while hypomethylation indicates lowered methylation when performing the comparison of treatment - control.\n\n')
 ```
 
-```{r AnnotateDiffMeth.load_libraries, eval=AnnotateDiffMeth}
+```{r AnnotateDiffMeth.prepSeqinfo, eval=AnnotateDiffMeth}
+chrom_seqlengths <- read.delim(chrom_seqlengths_file,
+                               header = FALSE, stringsAsFactors = FALSE)
 
-    library("genomation")
-    library("rtracklayer")
-    library("DT")
-    library("ggplot2")
+myseqinfo <- Seqinfo(seqnames = chrom_seqlengths[,1], 
+                     seqlengths = chrom_seqlengths[,2], 
+                     genome = assembly)
+myseqinfo = keepStandardChromosomes(myseqinfo)
 ```
 
-```{r AnnotateDiffMeth.print_params_in2, eval=AnnotateDiffMeth}
-
-paramsDesc <- c("Input RDS Data (diff. methyl. Cs)",
-                "Input RDS Data (hyper-methyl. Cs)",
-                "Input RDS Data (hypo-methyl. Cs)",
-                "Assembly")
-
-paramsValues <-  c(gsub( out_dir, "[out]", c(methylDiff_file, methylDiff_hyper_file, methylDiff_hypo_file) ),
-                   assembly)
-inputParams <- data.frame( Format   = paramsDesc,
-                           Location = paramsValues,
-                           stringsAsFactors = FALSE)
-
-knitr::kable(inputParams)
-
-```
-
-```{r AnnotateDiffMeth.prepr, results='asis', eval=AnnotateDiffMeth}
-cat('A summary of these findings is presented below:')
-```
 
 ```{r AnnotateDiffMeth.convert, eval=AnnotateDiffMeth}
 # Convert a methylDiff object to a GRanges object
-GRanges.diffmeth        = as(methylDiff.obj, "GRanges")
+GRanges.diffmeth    = as(methylDiff.obj.all, "GRanges")
+seqinfo(GRanges.diffmeth) <- myseqinfo
 GRanges.diffmeth.hyper  = as(methylDiff.obj.hyper, "GRanges")
+seqinfo(GRanges.diffmeth.hyper) <- myseqinfo
 GRanges.diffmeth.hypo   = as(methylDiff.obj.hypo, "GRanges")
-GRanges.diffmeth.nonsig = as(methylDiff.obj.nonsig, "GRanges")
+seqinfo(GRanges.diffmeth.hypo) <- myseqinfo
+# GRanges.diffmeth.nonsig = as(methylDiff.obj.nonsig, "GRanges")
 
 ```
 
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
-source(paste0(scripts_dir, "fetch_procedures.R"))
-fetched.refgenes <- lookupBedFile(type = "refGene",
-                               filename = paste0(out_dir,"/",refGenes_bedfile),
+source(file.path(scripts_dir, "fetch_procedures.R"))
+fetched.refgenes <- lookupBedFile(type = "knownGene",
+                               filename = refGenes_bedfile,
                                assembly = assembly,
                                webfetch = webfetch )
-fetch_refgen_success <- ( fetched.refgenes != '')
+fetch_refgen_success <- ( !is.null(fetched.refgenes))
 
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
-                              filename =  paste0(out_dir,"/",cpgIsland_bedfile),
+                              filename =  cpgIsland_bedfile,
                               assembly = assembly,
                               webfetch = webfetch )
+
+fetch_cpgi_success <- ( !is.null(fetched.cpgi))
+
+```
+
+```{r AnnotateDiffMeth.overview_descr, results='asis', eval=AnnotateDiffMeth}
+
+if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
+  
+cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n\n')
+  
+cat('This chromosome ideogram represents differential methylation, where only CpGs fulfilling the cutoffs of q-value < ', qvalue ,' and methylation difference of at least ', difference,'% are shown.\n' )
+  
+}
+```
+
+```{r AnnotateDiffMeth.overview_plot, eval=AnnotateDiffMeth, echo=FALSE, message=FALSE, warning=FALSE}
+
+if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
+
+
+source(file.path(params$scripts_dir, "ideoDMC.R"))
+ideoDMC_hyper_hypo(methylDiff.obj.hyper, 
+                   methylDiff.obj.hypo, 
+                   chrom.length = seqlengths( myseqinfo ),
+                   circos = FALSE, 
+                   title = "Genome Wide Differential Methylation", 
+                   hyper.col = hyper.col, hypo.col = hypo.col) + theme_classic()
+
+}
 
 ```
 
 ```{r AnnotateDiffMeth.num_of_dmcs_title, results='asis', eval=AnnotateDiffMeth}
-cat('### Differentially Methylated Cytosines per Chromosome\n')
+cat('#### Fraction of Differentially Methylated Cytosines per Chromosome\n\n')
+
+cat('These stacked barplots visualize the percentages of hyper and hypomethylated DMCs out of all covered CpGs for each chromosome.\n\n')
 ```
 
 ```{r AnnotateDiffMeth.num_of_dmcs, eval=AnnotateDiffMeth}
 
-number.of.elements.per.chr = function(gr.obj, title){
+# Get number of differentially methylated cytosines per chromosome
+stats.perChr <- diffMethPerChr(methylDiffDB,plot = FALSE)$diffMeth.per.chr
 
-  # Optional, if you want a genomic order of the chromosomes
-  diffmeth.gr = sortSeqlevels(gr.obj)
-  # Split into a GRangesList
-  # where each element has all ranges for one chromosome
-  diffmeth.gr.perchr = split(diffmeth.gr, seqnames(diffmeth.gr))
-  el.chrs = elementNROWS(diffmeth.gr.perchr)
+stats.df <- reshape2::melt(stats.perChr,
+               measure.vars = c("number.of.hypermethylated",
+                                "number.of.hypomethylated"),
+               id.vars = "chr",
+               value.name = "count")
+stats.df$perc <- reshape2::melt(stats.perChr,
+               measure.vars = c("percentage.of.hypermethylated",
+                                "percentage.of.hypomethylated"),
+               id.vars = "chr",
+               value.name = "percentage")[,"percentage"]
 
-  df = data.frame(Chromosome=names(el.chrs), Number.diff.meth.bases=as.vector(el.chrs))
-  colnames(df) = c("Chromosome", title)
-  return(df)
-}
+stats.df$variable <- factor(c("hypermethylated","hypomethylated"),
+                            levels = c("hypomethylated","hypermethylated"))
 
-# Show number of differentially methylated cytosines per chromosome
-if(length(GRanges.diffmeth)!=0){
-  stats.df = number.of.elements.per.chr(GRanges.diffmeth, title="Number of diff. meth. cytosines")
-  knitr::kable(stats.df)
-}
+p <- ggplot(stats.df, aes(x = chr, y = perc, fill = variable)) + 
+  scale_fill_manual(values = c(hypo.col,hyper.col)) +
+  geom_bar(stat = "identity",position = "stack", color = "black") +
+  geom_text_repel(aes(label = count), position = position_stack(vjust = 0.5),
+            hjust = 0,size = 8) +
+  ggtitle(label = "Differentially methylated Cytosines per Chromosome") +
+  labs(y = "Percentage", x = "Chromosome") + 
+  coord_flip() +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.title = element_blank())
 
-if(length(GRanges.diffmeth.hyper)!=0){
-  stats.df.hyper = number.of.elements.per.chr(GRanges.diffmeth.hyper, title="Number of hypermethylated meth. cytosines")
-  knitr::kable(stats.df.hyper)
-}
-
-if(length(GRanges.diffmeth.hypo)!=0){
-  stats.df.hypo = number.of.elements.per.chr(GRanges.diffmeth.hypo, title="Number of hypomethylated meth. cytosines")
-  knitr::kable(stats.df.hypo)
-}
+print(p)
 ```
 
-```{r AnnotateDiffMeth.annotation,  eval=AnnotateDiffMeth}
 
+```{r AnnotateDiffMeth.annotateWithGeneParts,  eval=AnnotateDiffMeth, echo=FALSE, message=FALSE, results='asis'}
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   ## now we parse the gene features
   refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
@@ -285,127 +538,147 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
                                          feature = refgenes.grl,
                                          intersect.chr = TRUE)
 
-  # plot the target overlap for each
-  genomation::plotTargetAnnotation(annot.gene,
-                       main="Differential methylation annotation")
+  cat('### Differentially Methylated Cytosines per Genomic Feature\n\n')
+  
+  cat('The distribution of differentially methylated cytosines over the genomic features is a good start to check hypothesis that could indicate possible effects on the gene expression level.\n\n')
+  
 }
+```
 
-if( (fetched.cpgi != '') & length(GRanges.diffmeth)!=0){
+
+```{r AnnotateDiffMeth.annotateWithGenePartsPlot,  eval=AnnotateDiffMeth, echo=FALSE}
+
+if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
+  
+  # # plot the target overlap for each
+  genomation::plotTargetAnnotation(annot.gene,
+                       main="Differentially methylated Cytosines\nper Genomic Feature")
+  
+  # construct dataframe for ggplot
+  df <- reshape2::melt(getTargetAnnotationStats(annot.gene))
+  df$variable <- factor(names(getTargetAnnotationStats(annot.gene)),
+                        levels = rev(names(getTargetAnnotationStats(annot.gene))))
+  df$count <- annot.gene@num.annotation
+  
+  cols <- getColors(length(getTargetAnnotationStats(annot.gene)))
+  
+  p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+  scale_fill_manual(values = rev(cols)) +
+  geom_bar(stat = "identity" ,color = "black") +
+  geom_text(aes(label = count), position = position_stack(vjust = -0.1),
+            hjust = 0,size = 8) +
+  ggtitle(label = "Differentially methylated Cytosines per Genomic Feature") +
+  labs(y = "Percentage", x = "Feature") + 
+  coord_flip() +
+  theme_bw() +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  theme(legend.position = "bottom", legend.title = element_blank(),
+        # axis.title.y = element_blank(), axis.ticks.y = element_blank(),
+        # axis.text.y = element_blank()
+        )
+
+  print(p)
+}
+```
+
+
+```{r AnnotateDiffMeth.annotateWithFeatureFlank,  eval=AnnotateDiffMeth, echo=FALSE, warning=FALSE, message=FALSE ,results='asis'}
+if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
 
   # read the shores and flanking regions and name the flanks as shores
   # and CpG islands as CpGi
-  cpg.obj=readFeatureFlank(fetched.cpgi,
+    cpg.obj=readFeatureFlank(fetched.cpgi,
                            feature.flank.name=c("CpGi","shores"))
   #
   # convert methylDiff object to GRanges and annotate
-  diffCpGann=annotateWithFeatureFlank(GRanges.diffmeth,
-                                      cpg.obj$CpGi, cpg.obj$shores,
+  diffCpGann=annotateWithFeatureFlank(target = GRanges.diffmeth,
+                                      feature = cpg.obj$CpGi, 
+                                      flank = cpg.obj$shores,
                                       feature.name="CpGi",flank.name="shores")
+  
+  cat('### Differentially Methylated Cytosines over CpG Islands\n\n')
+  
+    cat("CpG islands are genomic features of 200 to 2000 base pairs that have an increased CG base pair content and show abundant CpG sequences. A large fraction (~70%) of human promoters of a gene contain a CpG island ([Deaton, A. M., & Bird, A. (2011)](http://genesdev.cshlp.org/content/25/10/1010.short)). Silencing of genes is often achieved by methylation in CpG Islands, so observation of hypomethylation in CpG Islands could indicate effects on the expression of a gene.\n\n")
+
+
+}
+```
+
+
+```{r AnnotateDiffMeth.annotateWithFeatureFlankPlot,  eval=AnnotateDiffMeth, echo=FALSE}
+
+if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
 
   # plot the target overlap for each
   genomation::plotTargetAnnotation(diffCpGann,
                        col=c("green","gray","white"),
-                       main="Differential methylation annotation")
+                       main="Differentially methylated Cytosines over CpG Islands\n")
+
+
+  # construct dataframe for ggplot
+  df <- reshape2::melt(getTargetAnnotationStats(diffCpGann))
+  df$variable <- factor(names(getTargetAnnotationStats(diffCpGann)),
+                        levels = rev(names(getTargetAnnotationStats(diffCpGann))))
+  df$count <- diffCpGann@num.annotation
+  
+  p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+  scale_fill_manual(values = c("green","gray","white"),
+                    labels = c("CpGi","shores","other")) +
+  geom_bar(stat = "identity", position = "stack", width = 0.8,color = "black") +
+  geom_text(aes(label = count), position = position_stack(vjust = -0.1),
+            hjust = 0,size = 8) +
+  coord_flip() +
+  labs(y = "Percentage", x = "Feature") + 
+  ggtitle(label = "Differentially methylated Cytosines per CpG Island Feature") +
+  theme_bw() +
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        # axis.title.y = element_blank(), axis.ticks.y = element_blank(),
+        # axis.text.y = element_blank()
+        )
+
+  print(p)
+  
 }
 
+```
+```{r}
+if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
+
+  cat('### Distribution of differential methylation around TSS\n\n')
+  
+    cat("This histogram of differential CpG methylation show how far the different types of differentially methylated cytosines are distributed around the closest transcription start site of the nearest genes.\n\n")
+
+}
 ```
 
 
 ```{r AnnotateDiffMeth.plot, eval=AnnotateDiffMeth}
-cat('### Distribution of differential methylation')
-
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
   {
   # Get distance to nearest TSS and gene id from AnnotationByGeneParts
   # target.row is the row number in diffmeth.gr
   assoTSS = getAssociationWithTSS(annot.gene)
 
-  datatable(as.data.frame(assoTSS),
-            extensions = 'Buttons',
-            options = list(
-              dom = 'Bfrtip',
-              buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-              scrollX = TRUE),
-            caption = "Distance to nearest TSS",
-            rownames = FALSE)
-
-
-  hist(assoTSS[,2], main="Distance to the nearest TSS", xlab="bp", ylab="Frequency", col="cornflowerblue")
-
+  assoTSS$dmc.type <- "hypermethylated" 
+  assoTSS$dmc.type[ GRanges.diffmeth[assoTSS$target.row]$meth.diff < 0] <- "hypomethylated" 
+  
+  p <- ggplot(assoTSS, aes(x = dist.to.feature, fill = dmc.type)) +
+    geom_histogram(color = "black", position = position_dodge()) +
+    scale_fill_manual(values = c(hyper.col,hypo.col)) +
+    labs(x="Base Pairs", y="Frequency" ) +
+    ggtitle("Distance to the nearest TSS") + 
+    theme_bw() +
+    theme(legend.position = "bottom", 
+          legend.title = element_blank(),
+          )
+  
+  p
+  
   }
 
 ```
 
-```{r AnnotateDiffMeth.overview_descr, results='asis', eval=AnnotateDiffMeth}
-cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n')
-```
-
-```{r AnnotateDiffMeth.overview_plot, eval=AnnotateDiffMeth}
-
-if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
-
-seqdat_temp    = read.csv(chrom_seqlengths,
-                          sep="\t", header=FALSE, stringsAsFactors=FALSE)
-chr.len        = seqdat_temp[,2]
-names(chr.len) = seqdat_temp[,1]
-
-myseqinfo = Seqinfo(names(chr.len), seqlengths=chr.len, genome=assembly)
-myseqinfo.st = keepStandardChromosomes(myseqinfo)
-
-source(paste0(params$scripts_dir, "ideoDMC.R"))
-ideoDMC_hyper_hypo(methylDiff.obj.hyper, methylDiff.obj.hypo, chrom.length = seqlengths( myseqinfo.st ),
-       circos = FALSE, title = "Differential methylation", hyper.col = hyper.col, hypo.col = hypo.col)
-
-}
-
-```
-
-Below is a histogram of (statistically significant) differential CpG
-methylation, alongside CpG sites without statistically significant
-differences in methylation --each are normalized independently, as the
-latter are generally far more numerous than the former).
-
-```{r plot.methdiff.histogram, eval=AnnotateDiffMeth}
-
-methdiff_hist   <- hist( methylDiff.obj$meth.diff,
-                         breaks = hist_breakset,
-                         plot   = FALSE )
-methdiff_nonsig <- hist( methylDiff.obj.nonsig$meth.diff,
-                         breaks = hist_breakset,
-                         plot   = FALSE )
-Nbreaks_hist=length(hist_breakset)
-
-plot( methdiff_hist$mids,methdiff_hist$density,
-      pch    = ".",
-      xlim   = c(-100,100),
-      ylim   = c(0, max(methdiff_hist$density ) ),
-      yaxt = "n",
-      main   = "Relative CpG methylation",
-      xlab   = "% methylation difference \n[treatment - control]",
-      ylab   = "Frequency")
-lines( methdiff_hist$mids[1:(Nbreaks_hist/2)], methdiff_hist$density[1:(Nbreaks_hist/2)],
-       col = hypo.col,
-       lw  = 3)
-lines( methdiff_hist$mids[(Nbreaks_hist/2):Nbreaks_hist], methdiff_hist$density[(Nbreaks_hist/2):Nbreaks_hist],
-       col = hyper.col,
-       lw  = 3)
-
-par(new=TRUE)
-plot( methdiff_nonsig$mids,
-      methdiff_nonsig$density,
-      pch  =".",
-      xaxt = "n",
-      xlim = c(-100,100),
-      yaxt = "n",
-      ylab ="",
-      xlab ="",
-      col  ="black" )
-lines( methdiff_nonsig$mids, methdiff_nonsig$density,
-       col = "black",
-       lw  = 3  )
-lines( c(0,0), c(0, max(methdiff_nonsig$density) ), lw=2, lty=3, col=rgb(0,0,0,alpha=0.5)  )
-
-```
 
 
 ## Session Information
@@ -413,7 +686,4 @@ lines( c(0,0), c(0, max(methdiff_nonsig$density) ), lw=2, lty=3, col=rgb(0,0,0,a
 ```{r SessionInfo}
 sessionInfo()
 ```
-
-## References
-
 
