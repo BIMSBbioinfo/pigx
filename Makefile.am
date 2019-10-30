@@ -41,7 +41,8 @@ dist_pkgdata_DATA =							\
   etc/sample_sheet.csv.example				\
   etc/settings.yaml							\
   etc/pretty.txt 							\
-  etc/CONTENTS.txt					
+  etc/CONTENTS.txt            \
+  images/Logo_PiGx.png
 
 dist_doc_DATA = 					\
   README.md
