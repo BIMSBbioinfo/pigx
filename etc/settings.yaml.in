@@ -4,7 +4,7 @@ locations:
   genome-dir: genome/
 
 general:
-  assembly: hg19
+  assembly: ''
   use_bwameth: True
   use_bismark: True
   methylation-calling:
@@ -32,8 +32,8 @@ general:
     difference: 25
     annotation:
       # download cpgIsland-bedfile or refGenes-bedfile automatically if not given?
-      cpgIsland-bedfile: pigx_work/refGenome/cpgIslandExt.hg19.bed.gz
-      refGenes-bedfile: pigx_work/refGenome/knownGene.hg19.bed.gz
+      cpgIsland-bedfile: ''
+      refGenes-bedfile: ''
       webfetch:   no
       
 # DManalyses:
@@ -41,12 +41,12 @@ general:
 #   # for each combination of case control group comparisons.
 
 #   analysis1:
-#     # If multiple sample names are provided, they must be separated by comma.
 #     treatment_sample_groups: "MED1"
 #     control_sample_groups: "H2O"
 
 #   analysis2:
-#     treatment_sample_groups: "MED2"
+#     # If multiple sample names are provided, they must be separated by comma.
+#     treatment_sample_groups: "MED1,MED2"
 #     control_sample_groups: "H2O"
 
 
