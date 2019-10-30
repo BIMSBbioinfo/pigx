@@ -96,10 +96,18 @@ def validate_config(config):
                     if (treat not in treatments) :
                         bail("ERROR: Invalid treatment group '{}' in analysis '{}'".format(
                         treat, analysis))
+                        
+    if 'treatment-groups' in config['general']['differential-methylation']:
+        bail("ERROR: The specification of treatment groups and differential analysis has changed.\n",
+        "Please retrieve the new default settings layout with 'pigx-bsseq --init settings'.\n")
 
     # Check for a genome fasta file
     fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
     fa = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
+    
+    # Check for a any Assembly string
+    if not config['general']['assembly']:
+            bail("ERROR: Please set a genome assembly string in the settings file at general::assembly.")
 
     # Check if we have permission to write to the reference-genome directory ourselves
     # if not, then check if the ref genome has already been converted
