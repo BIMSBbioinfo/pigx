@@ -103,20 +103,19 @@ def bail(msg):
 def validate_config(config):
     # Check that all locations exist
     for loc in config['locations']:
-        if (not loc == 'output-dir') and (not os.path.isdir(config['locations'][loc])):
-            bail("ERROR: The following necessary directory does not exist: {} ({})".format(
+        if ( (not loc == 'output-dir') and (not os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
+            bail("ERROR: The following necessary directory/file does not exist: {} ({})".format(
                 config['locations'][loc], loc))
 
     # Check that all of the requested differential methylation
     # treatment values are found in the sample sheet.
     treatments = set([config["SAMPLES"][sample]["Treatment"]
                       for sample in config["SAMPLES"]])
-    if config['DManalyses']:
+    if 'DManalyses' in config:
         for analysis in config['DManalyses']:
             for group in config['DManalyses'][analysis]:
-                print(group)
                 for treat in config['DManalyses'][analysis][group].split(","):
-                    print(treat)
+                    treat = treat.strip() #remove any leading/trailing whitespaces in the sample group names
                     if (treat not in treatments) :
                         bail("ERROR: Invalid treatment group '{}' in analysis '{}'".format(
                         treat, analysis))
