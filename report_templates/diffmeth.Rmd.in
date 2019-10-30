@@ -450,14 +450,13 @@ fetched.refgenes <- lookupBedFile(type = "knownGene",
                                filename = refGenes_bedfile,
                                assembly = assembly,
                                webfetch = webfetch )
-fetch_refgen_success <- ( !is.null(fetched.refgenes))
-
+fetch_refgen_success <- !is.null(fetched.refgenes)
 fetched.cpgi <- lookupBedFile(type = "cpgIslandExt",
                               filename =  cpgIsland_bedfile,
                               assembly = assembly,
                               webfetch = webfetch )
 
-fetch_cpgi_success <- ( !is.null(fetched.cpgi))
+fetch_cpgi_success <- !is.null(fetched.cpgi)
 
 ```
 
@@ -642,18 +641,19 @@ if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
 }
 
 ```
-```{r}
+
+```{r AnnotateDiffMeth.annotateTSS,  eval=AnnotateDiffMeth, echo=FALSE,results='asis'}
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
 
   cat('### Distribution of differential methylation around TSS\n\n')
   
-    cat("This histogram of differential CpG methylation show how far the different types of differentially methylated cytosines are distributed around the closest transcription start site of the nearest genes.\n\n")
+  cat("This histogram of differential CpG methylation show how far the different types of differentially methylated cytosines are distributed around the closest transcription start site of the nearest genes.\n\n")
 
 }
 ```
 
 
-```{r AnnotateDiffMeth.plot, eval=AnnotateDiffMeth}
+```{r ```{r AnnotateDiffMeth.annotateTSSPlot,  eval=AnnotateDiffMeth, echo=FALSE}
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
   {
   # Get distance to nearest TSS and gene id from AnnotationByGeneParts

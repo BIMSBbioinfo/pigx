@@ -62,7 +62,7 @@ fetchTableFromUCSC <- function(table.name, filename, assembly) {
       return(targetTrack)
   } else {
       warning(paste("Could not find", table.name, " track for the given assembly <'",assembly,"'>."))
-      return(FALSE)
+      return(NULL)
   }
 }
 
@@ -120,14 +120,31 @@ lookupBedFile <- function(type, filename, assembly, webfetch) {
 
   message("Trying to fetch from AnnotationHub.\n")
   
-  track <- fetchTableFromAnnotationHub(type,filename,assembly)
+  track <- tryCatch(
+    expr = {
+      fetchTableFromAnnotationHub(type,filename,assembly)
+      }, 
+    error = function (msg) {
+      message(paste0("Error while downloading from AnnotationHub: ", msg))
+      return(NULL)
+      })
+  
   if(is.null(track)) {
     
     message("Trying to fetch from UCSC directly.\n")
-    track <-fetchTableFromUCSC(type,filename,assembly)
+    
+    track <- tryCatch(
+      expr = {
+        fetchTableFromUCSC(type,filename,assembly)
+      }, 
+      error = function (msg) {
+        message(paste0("Error while downloading from UCSC browser: ", msg))
+        return(NULL)
+      })
+    
     if(is.null(track)) {
       
-      warning( "Failed to find reference annotation file",type," for assembly <'",assembly,"'>.",
+      warning( "Failed to find annotation file",type," for assembly <'",assembly,"'>.",
                "Make sure you used a valid UCSC assembly for settings:general:assembly in settings file." )
       return(NULL)
     }
