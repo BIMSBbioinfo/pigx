@@ -320,96 +320,6 @@ rule final_report:
         generateReport(input, output, params, log, "")
 
 
-
-# ==========================================================================================
-# Generate the final report for differential methylation between pairs of treatment values:
-
-rule diffmeth_report:
-    input:
-        bedfile            = lambda wc: makeDiffMethPath(DIR_diffmeth, '_diffmeth.bed',   wc),
-        RDSdiffFile        = lambda wc: makeDiffMethPath(DIR_diffmeth, '_diffmeth.RDS',   wc),
-        RDSdiffFile_hyper  = lambda wc: makeDiffMethPath(DIR_diffmeth, '_diffmethhyper.RDS',  wc),
-        RDSdiffFile_hypo   = lambda wc: makeDiffMethPath(DIR_diffmeth, '_diffmethhypo.RDS',   wc),
-        RDSdiffFile_nonsig = lambda wc: makeDiffMethPath(DIR_diffmeth, '_diffmethnonsig.RDS', wc),
-        template           = os.path.join(DIR_templates,"diffmeth.Rmd"),
-        chrom_seqlengths   = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
-    output:
-        report        = os.path.join(DIR_final, "diffmeth-report.{treatment}.html")
-    params:
-        source_dir   = config['locations']['input-dir'],
-        scripts_dir  = DIR_scripts,
-        diffmeth_dir = DIR_diffmeth,
-        genome_dir   = config['locations']['genome-dir'],
-        out_dir      = OUTDIR,
-        cpgIsland_bedfile = config['general']['differential-methylation']['annotation']['cpgIsland_bedfile'],
-        refGenes_bedfile  = config['general']['differential-methylation']['annotation']['refGenes_bedfile'],
-        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
-        assembly    = ASSEMBLY,
-        treatment  = lambda wc: str(wc.treatment).replace('vs', '_'),
-        qvalue     = float(config['general']['differential-methylation']['qvalue']),
-        difference = float(config['general']['differential-methylation']['difference']),
-        webfetch    = config['general']['differential-methylation']['annotation']['webfetch'],
-        methylDiffBed           = lambda wc: makeDiffMethPath(DIR_diffmeth,  '_diffmeth.bed', wc),
-        methylDiff_file         = lambda wc: makeDiffMethPath(DIR_diffmeth,  '_diffmeth.RDS', wc),
-        methylDiff_hyper_file   = lambda wc: makeDiffMethPath(DIR_diffmeth,  '_diffmethhyper.RDS', wc),
-        methylDiff_hypo_file    = lambda wc: makeDiffMethPath(DIR_diffmeth,  '_diffmethhypo.RDS', wc),
-        methylDiff_nonsig_file  = lambda wc: makeDiffMethPath(DIR_diffmeth,  '_diffmethnonsig.RDS', wc)
-    log:
-        os.path.join(DIR_final,"diffmeth-report.{treatment}.log")
-    message: fmt("Compiling differential methylation report " + "for treatment " + "{wildcards.treatment}")
-    run:
-        generateReport(input, output, params, log, "")
-
-
-# ==========================================================================================
-# Perform differential methylation analysis:
-
-rule diffmeth:
-    ## paths inside input and output should be relative
-    input:
-        inputfiles  = diffmeth_input_function
-    output:
-        methylDiff_file        = os.path.join(DIR_diffmeth, "{treatment}_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(DIR_diffmeth, "{treatment}_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(DIR_diffmeth, "{treatment}_diffmethhypo.RDS"),
-        methylDiff_nonsig_file = os.path.join(DIR_diffmeth, "{treatment}_diffmethnonsig.RDS"),
-        bedfile                = os.path.join(DIR_diffmeth, '{treatment}_diffmeth.bed')
-    params:
-        workdir     = OUTDIR,
-        scripts_dir = DIR_scripts,
-        inputfiles  = diffmeth_input_function,
-        sampleids   = lambda wc: get_sampleids_from_treatment(wc.treatment),
-        treatment   = lambda wc: [config["SAMPLES"][sampleid]['Treatment'] for sampleid in get_sampleids_from_treatment(wc.treatment)],
-        assembly    = ASSEMBLY,
-        qvalue      = float(config['general']['differential-methylation']['qvalue']),
-        difference  = float(config['general']['differential-methylation']['difference']),
-        mincov      = int(config['general']['methylation-calling']['minimum-coverage']),
-        cores       = int(config['general']['differential-methylation']['cores']),
-        methylDiff_file        = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmeth.RDS"),
-        methylDiff_hyper_file  = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmethhyper.RDS"),
-        methylDiff_hypo_file   = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmethhypo.RDS"),
-        methylDiff_nonsig_file = os.path.join(OUTDIR, DIR_diffmeth, "{treatment}_diffmethnonsig.RDS"),
-        outBed      = os.path.join(OUTDIR,DIR_diffmeth,"{treatment}_diffmeth.bed")
-    log:
-        os.path.join(DIR_diffmeth+"{treatment}_diffmeth.log")
-    message: fmt("Calculating differential methylation.")
-    shell:
-        nice('Rscript', ['{DIR_scripts}/methDiff.R',
-                         '--inputfiles="{params.inputfiles}"',
-                         '--sampleids="{params.sampleids}"',
-                         '--treatment="{params.treatment}"',
-                         '--assembly={params.assembly}',
-                         '--qvalue={params.qvalue}',
-                         '--difference={params.difference}',
-                         '--mincov={params.mincov}',
-                         '--cores={params.cores}',
-                         '--methylDiff_file={params.methylDiff_file}',
-                         '--methylDiff_hyper_file={params.methylDiff_hyper_file}',
-                         '--methylDiff_hypo_file={params.methylDiff_hypo_file}',
-                         '--methylDiff_nonsig_file={params.methylDiff_nonsig_file}',
-                         '--outBed={params.outBed}',
-                         '--logFile={log}'])
-
 
 
 # ==========================================================================================
@@ -602,6 +512,13 @@ include: './rules/preprocessing_methyldackel.py'
 # generate bigwig from tabix
 
 include: './rules/export_tabix_bigwig.py'
+
+
+# ==========================================================================================
+# Merge methylation samples and perform differential analysis:
+
+include: 'rules/perform_diffmeth.py'
+
 
 # ==========================================================================================
 # Generate methyl-converted version of the reference genome, if necessary:

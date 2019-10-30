@@ -68,7 +68,7 @@ rule unite_meth_calls:
 rule diffmeth:
     ## paths inside input and output should be relative
     input:
-        inputfile = DIR_diffmeth+"{analysis}/methylBase_{analysis}_{context}_{tool}.txt.bgz"  
+        inputfile = os.path.join(DIR_diffmeth,"{analysis}","methylBase_{analysis}_{context}_{tool}.txt.bgz")
     output:
         methylDiff_tabix_file   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_full.txt.bgz"),
         methylDiff_tabix_index   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_full.txt.bgz.tbi"),
@@ -106,3 +106,75 @@ rule diffmeth:
                     '--logFile={log}'
                     ],"{log}")
 
+
+# ==========================================================================================
+# Generate the final report for differential methylation between pairs of analysis values:
+
+rule diffmeth_report:
+    input:
+        methylBase_tabix_file   = os.path.join(DIR_diffmeth,"{analysis}","methylBase_{analysis}_{context}_{tool}.txt.bgz"),
+        methylDiff_tabix_file   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_full.txt.bgz"),
+        methylDiff_results_file   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_results.tsv"),
+        template           = os.path.join(DIR_templates,"diffmeth.Rmd"),
+        chrom_seqlengths   = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+    output:
+        report        = os.path.join(DIR_final, "diffmeth-report.{analysis}_{context}_{tool}.html")
+    params:
+        # specific for this report
+        sampleids              = lambda wc: ','.join(get_sampleids_from_analysis(wc.analysis)),
+        treatments             = lambda wc: ",".join([samplesheet(sample,'Treatment') for
+            sample in get_sampleids_from_analysis(wc.analysis)]),
+        assembly               = ASSEMBLY,
+        context                = "{context}",
+        destranded             = lambda wc: destrand(wc.context),
+        treatment_group        = lambda wc: config["DManalyses"][wc.analysis]["treatment_sample_groups"],
+        control_group          = lambda wc: config["DManalyses"][wc.analysis]["control_sample_groups"],
+        scripts_dir            = DIR_scripts,
+        cpgIsland_bedfile      = CPGISLAND_BEDFILE,
+        refGenes_bedfile       = REFGENES_BEDFILE,
+        chrom_seqlengths       = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        qvalue                 = float(config['general']['differential-methylation']['qvalue']),
+        difference             = float(config['general']['differential-methylation']['difference']),
+        webfetch               = config['general']['differential-methylation']['annotation']['webfetch'],
+        # required for any report
+        bibTexFile             = BIBTEXPATH,
+        prefix                 = "{analysis}_{context}_{tool}",
+        workdir                = os.path.join(DIR_diffmeth,"{analysis}"),
+        logo                   = LOGOPATH
+    log:
+        os.path.join(DIR_final,"diffmeth-report.{analysis}_{context}_{tool}.log")
+    # message: fmt("Compiling differential methylation report " + "for analysis " + "{wildcards.analysis}")
+    # run:
+    #     generateReport(input, output, params, log, "")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/generate_report.R",
+                           "--reportFile={input.template}",
+                           "--outFile={output.report}",
+                           "--workdir={params.workdir}",
+                           "--logo={params.logo}",
+                           "--bibTexFile={params.bibTexFile}",
+                           "--prefix={params.prefix}",
+                           "--report.params='{{"+
+                           ",".join([
+                               '"sampleids":"{params.sampleids}"',
+                               '"treatments":"{params.treatments}"',
+                               '"assembly":"{params.assembly}"',
+                               '"context":"{params.context}"',
+                               '"destranded":"{params.destranded}"',
+                               
+                               '"treatment_group":"{params.treatment_group}"',
+                               '"control_group":"{params.control_group}"',
+                               
+                               '"methylBase_file":"{input.methylBase_tabix_file}"',
+                               '"methylDiff_file":"{input.methylDiff_tabix_file}"',
+                               '"methylDiff_results_file":"{input.methylDiff_results_file}"',
+                               
+                               '"scripts_dir":"{params.scripts_dir}"',
+                               '"cpgIsland_bedfile":"{params.cpgIsland_bedfile}"',
+                               '"refGenes_bedfile":"{params.refGenes_bedfile}"',
+                               '"chrom_seqlengths":"{params.chrom_seqlengths}"',
+                               '"qvalue":"{params.qvalue}"',
+                               '"difference":"{params.difference}"',
+                               '"webfetch":"{params.webfetch}"'
+                           ])+"}}'",
+                           "--logFile={log}"])
