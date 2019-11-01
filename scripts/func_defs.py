@@ -90,15 +90,14 @@ def validate_config(config):
                       for sample in config["SAMPLES"]])
     if 'DManalyses' in config:
         for analysis in config['DManalyses']:
-            for group in config['DManalyses'][analysis]:
-                for treat in config['DManalyses'][analysis][group].split(","):
-                    treat = treat.strip() #remove any leading/trailing whitespaces in the sample group names
-                    if (treat not in treatments) :
+                for group in config['DManalyses'][analysis]['treatment_sample_groups'].split(",") + config['DManalyses'][analysis]['control_sample_groups'].split(","):
+                    group = group.strip() #remove any leading/trailing whitespaces in the sample group names
+                    if not any(treat == group for treat in treatments):
                         bail("ERROR: Invalid treatment group '{}' in analysis '{}'".format(
-                        treat, analysis))
+                        group, analysis))
                         
     if 'treatment-groups' in config['general']['differential-methylation']:
-        bail("ERROR: The specification of treatment groups and differential analysis has changed.\n",
+        bail("ERROR: The specification of treatment groups and differential analysis has changed.\n"+
         "Please retrieve the new default settings layout with 'pigx-bsseq --init settings'.\n")
 
     # Check for a genome fasta file
