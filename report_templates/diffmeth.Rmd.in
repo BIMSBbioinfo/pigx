@@ -127,6 +127,14 @@ control_group <- strsplit(params$control_group, ",", fixed = FALSE, perl = FALSE
 treatment_group_str <- params$treatment_group
 treatment_group <- strsplit(params$treatment_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 
+if (length(control_group) > 0) {
+  # reorganize samples into treatment and control groups 
+  case_group <- ifelse(treatmentsStr %in% treatment_group,"Treatment","Control")
+} else {
+  # convert into named numeric vector
+  case_group <- rep(length(treatmentsStr),"Treatment" )
+}
+
 prefix <-  params$prefix
 workdir <- params$workdir
 
@@ -244,7 +252,7 @@ methylBaseDB <- methylKit:::readMethylBaseDB(dbpath = methylBase_file,
 topVar <- getMostVariableCpGs(methylBaseDB, nTop = nTop)
 pca <- stats::prcomp(t(topVar), center = TRUE)
 pcaSummary <- summary(pca)
-df <- cbind(as.data.frame(pca$x), "Group" = treatmentsStr)
+df <- cbind(as.data.frame(pca$x), "Group" = treatmentsStr, "Case" = case_group)
 df$SampleID <- row.names(df)
 
 ```
@@ -252,8 +260,10 @@ df$SampleID <- row.names(df)
 
 
 ```{r DiffMeth.plotPCA}
+for ( batch in c("Group","Case")) {
+
 p <- ggplot(df, aes(x = PC1, y = PC2)) + 
-    geom_point(aes_string(color = "Group")) + 
+    geom_point(aes_string(color = batch)) + 
     geom_label_repel(aes(label = SampleID), size = 3) +
     labs(x = paste0('PC1 (',round(pcaSummary$importance[2, 'PC1'] * 100, 1),'%)'), 
          y = paste0('PC2 (',round(pcaSummary$importance[2, 'PC2'] * 100, 1),'%)')) + 
@@ -264,6 +274,7 @@ print(p)
 
 ggsave(plot = p, filename = file.path(imagesDir,paste0(prefix,".pca.png")),
        width = 7,height = 6)
+} 
        
 ```
 
@@ -289,8 +300,25 @@ The full table of methylKit calculateDiffMeth() results can be found at:
 ```{r DiffMeth.load_methylDB}
 
 
-# reorganize samples into treatment and control groups 
-treatments_cmp <- ifelse(treatmentsStr %in% treatment_group,1,0)
+if (!setequal(control_group,treatment_group)) {
+  message("Remapping Treatments Descriptions into treatment and control groups.")
+  # reorganize samples into treatment and control groups 
+  treatments_cmp <- ifelse(treatmentsStr %in% treatment_group,1,0)
+  
+  message("Control group (0): ", paste0(control_group,collapse = ", "))
+  message("Treatment group (1): ", paste0(treatment_group,collapse = ", "))
+} else {
+  message("Remapping Treatment Description to number.")
+  # convert into named numeric vector
+  treatments_cmp <- as.numeric( as.factor( treatmentsStr ))
+  names(treatments_cmp) <- treatmentsStr
+  
+  message(paste(sort(unique(treatmentsStr)),
+                sort(unique(treatments_cmp)), 
+                sep = ": ",collapse = "\n"))
+  
+}
+
 
 methylDiffDB <- methylKit:::readMethylDiffDB(dbpath = methylDiff_file,
                                     dbtype = "tabix",
@@ -621,8 +649,7 @@ if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
   df$count <- diffCpGann@num.annotation
   
   p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
-  scale_fill_manual(values = c("green","gray","white"),
-                    labels = c("CpGi","shores","other")) +
+  scale_fill_manual(values = c("white","gray","green")) +
   geom_bar(stat = "identity", position = "stack", width = 0.8,color = "black") +
   geom_text(aes(label = count), position = position_stack(vjust = -0.1),
             hjust = 0,size = 8) +
@@ -630,6 +657,7 @@ if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
   labs(y = "Percentage", x = "Feature") + 
   ggtitle(label = "Differentially methylated Cytosines per CpG Island Feature") +
   theme_bw() +
+  guides(fill = guide_legend(reverse = TRUE)) +
   theme(legend.position = "bottom", 
         legend.title = element_blank(),
         # axis.title.y = element_blank(), axis.ticks.y = element_blank(),

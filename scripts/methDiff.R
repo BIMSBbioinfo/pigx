@@ -56,6 +56,11 @@ if("--help" %in% args) {
       --context		methylation context
       --destranded 	wether strands are merged or not
       --methylDiff_results_suffix 		suffix of tabix file containing testing results
+      --treatment_group  comma separated list of treatment groups
+      --control_group   comma separated list of control groups (put same as 
+        treatment group again if you want to calculate methylation difference 
+        as the difference of max(x) - min(x) where x is vector of 
+        mean methylation per group per region)
       --resultsFile 	file containing testing results
       --outdir output directory
       --cores number of cores to use for calculateDiffMeth
@@ -98,17 +103,33 @@ destranded  <- ifelse(tolower(argsL$destranded) %in% c("true","yes"),TRUE,FALSE)
 outdir      <- argsL$outdir
 resultsFile <- argsL$resultsFile
 
-message("Remapping Treatments Descriptions into treatment and control groups.")
 # split all treatment values, could be numeric or not
 treatmentsStr  <- strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
-# reorganize samples into treatment and control groups 
+
 treatment_group <- strsplit(argsL$treatment_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 control_group <- strsplit(argsL$control_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 
-treatments <- ifelse(treatmentsStr %in% treatment_group,1,0)
+if (!setequal(control_group,treatment_group)) {
+  
+  message("Remapping Treatments Descriptions into treatment and control groups.")
+  # reorganize samples into treatment and control groups 
+  treatments <- ifelse(treatmentsStr %in% treatment_group,1,0)
+  
+  message("Control group (0): ", paste0(control_group,collapse = ", "))
+  message("Treatment group (1): ", paste0(treatment_group,collapse = ", "))
+} else {
+  
+  message("Remapping Treatment Description to number.")
+  # convert into named numeric vector
+  treatments <- as.numeric( as.factor( treatmentsStr ))
+  names(treatments) <- treatmentsStr
+  
+  message(paste(sort(unique(treatmentsStr)),
+                sort(unique(treatments)), 
+                sep = ": ",collapse = "\n"))
+  
+}
 
-message("Control group (0): ", paste0(control_group,collapse = ", "))
-message("Treatment group (1): ", paste0(treatment_group,collapse = ", "))
 
 # convert variables and perform checks
 context <- switch(tolower(argsL$context),
