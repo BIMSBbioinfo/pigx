@@ -395,17 +395,11 @@ def list_final_reports(files, sampleID, protocol):
 # --------------------------------------
 def get_sampleids_from_treatment(treatment):
     """Get SampleIDs from treatment string."""
-    treatment = treatment.replace(".deduped", "")
+    sample_ids = list(config["SAMPLES"].keys())
+    sample_treatments = [samplesheet(s,"Treatment") for s in sample_ids]
 
-    SAMPLE_IDS = list(config["SAMPLES"].keys())
-    SAMPLE_TREATMENTS = [samplesheet(s,"Treatment") for s in SAMPLE_IDS]
-
-    treatments = treatment.split("_")
-    sampleids_list = []
-    for t in treatments:
-        sampleids = [SAMPLE_IDS[i]
-                     for i, x in enumerate(SAMPLE_TREATMENTS) if x == t]
-        sampleids_list.extend(sampleids)
+    sampleids_list = [sample_ids[i]
+                 for i, x in enumerate(sample_treatments) if x == treatment]
 
     return(sampleids_list)
     
