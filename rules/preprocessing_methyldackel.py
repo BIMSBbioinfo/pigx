@@ -27,6 +27,8 @@ def keepDups(protocol):
     return keepDups
 
 
+## TODO: compress methylKit files  
+## TODO: make extraction of chg and chh files optional?? 
 rule methyldackel_extract_methylKit:
     input:
         bamfile = DIR_sorted + "{sample}.bwameth.sorted.markdup.bam",
@@ -59,6 +61,7 @@ rule methyldackel_extract_methylKit:
              ("{log}"))
 
 
+## TODO: compress methylKit files  
 rule methyldackel_extract_methylKit_deduped:
     input:
         bamfile = DIR_sorted + "{sample}.bwameth.sorted.markdup.bam",
