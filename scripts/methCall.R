@@ -77,6 +77,7 @@ st <- system.time({
 ## load methylKit
 suppressPackageStartupMessages(expr = {
 library("methylKit")
+data.table::setDTthreads(8)
 })
 
 input     <- argsL$inBam
