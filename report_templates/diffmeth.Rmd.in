@@ -98,8 +98,8 @@ nTop <- 1000
 
 cpgIsland_bedfile       <- params$cpgIsland_bedfile
 refGenes_bedfile        <- params$refGenes_bedfile
-webfetch          <- params$webfetch
-chrom_seqlengths_file <- params$chrom_seqlengths
+webfetch                <- tolower(params$webfetch) %in% c("true", "yes")
+chrom_seqlengths_file   <- params$chrom_seqlengths
 
 methylDiff_file <- params$methylDiff_file
 methylBase_file <- params$methylBase_file
@@ -138,11 +138,10 @@ if (length(control_group) > 0) {
 prefix <-  params$prefix
 workdir <- params$workdir
 
-ExtractDiffMeth <- TRUE
-AnnotateDiffMeth <- TRUE
-AnnotateDiffMeth <- TRUE
+ExtractDiffMeth   <- TRUE
+AnnotateDiffMeth  <- TRUE
 
-if(!all(file.exists(cpgIsland_bedfile,refGenes_bedfile))) {
+if(! (all(file.exists(cpgIsland_bedfile,refGenes_bedfile)) | webfetch )) {
   AnnotateDiffMeth <- FALSE
 }
 
