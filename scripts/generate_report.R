@@ -28,7 +28,7 @@
 #'
 #' @param reportFile rmarkdown file to render
 #' @param outFile name of the output file
-#' @param workDir working directory
+#' @param workdir working directory
 #' @param report.params
 #' @param logo Location of PiGx logo
 #' @param quiet boolean value (default: FALSE). If set to TRUE, progress bars 
@@ -58,17 +58,22 @@ render2HTML <- function(reportFile,
 {
   
   
-  if(is.null(report.params)) report.params <- list()
+  if (is.null(report.params)) report.params <- list()
   
   ## render single report
   message("rendering report from template: ", reportFile)
-  
+ 
+
+  interdir <- file.path(workdir,prefix,"_tmp")
+  # dir.create(interdir)
+
   htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
     input = reportFile,
     output_dir = workdir,
-    intermediates_dir = file.path(workdir, prefix),
-    output_file = outFile,
+    intermediates_dir = interdir,
+    knit_root_dir = interdir,
+	output_file = outFile,
     output_format = rmarkdown::html_document(
       toc = TRUE,
       depth = 2,
@@ -84,9 +89,10 @@ render2HTML <- function(reportFile,
                prefix = prefix,
                workdir = workdir),
     quiet  = quiet,
-    clean  = TRUE
+    clean  = FALSE
   )
-  
+
+  # on.exit(unlink(interdir, recursive = TRUE),add = TRUE)
 }
 
 
@@ -141,7 +147,8 @@ if(!is.null(argsL$logFile)) {
 
 # export a copy of the argument list for this rendering attempt
 saveRDS( argsL, file=paste0(argsL$outFile,".RenderArgs.rds") )
-
+message("Parameters")
+print(argsL)
 
 ## get deeper list elements of report params
 if(!is.null(argsL$report.params)) {
@@ -172,13 +179,13 @@ cat(paste(
     "\n\n",
     "Rendering report:",basename(argsL$reportFile),"\n",
     "from template:",basename(argsL$outFile),"\n",
-    "into directory:",normalizePath(dirname(argsL$outFile)),"\n\n"
+    "into directory:",argsL$workdir ,"\n\n"
 ))
 
 
 render2HTML(reportFile = normalizePath(argsL$reportFile),
             outFile = basename(argsL$outFile),
-            workdir = normalizePath(dirname(argsL$outFile)),
+            workdir = argsL$workdir,
             report.params = argsL$report.params,
             logo = argsL$logo,
             bibTexFile = argsL$bibTexFile,
