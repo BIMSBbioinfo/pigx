@@ -26,9 +26,13 @@ DManalyses:
     treatment_sample_groups: "MED1"
     control_sample_groups: "H2O"
 
-  analysis2:
+  multipleTreat:
     treatment_sample_groups: "MED2,MED1"
     control_sample_groups: "H2O"
+    
+  withinGroup:
+    treatment_sample_groups: "MED2,MED1,H2O"
+    control_sample_groups: "MED2,MED1,H2O"
 
 execution:
   submit-to-cluster: no

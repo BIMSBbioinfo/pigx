@@ -44,10 +44,16 @@ general:
 #     treatment_sample_groups: "MED1"
 #     control_sample_groups: "H2O"
 
-#   analysis2:
-#     # If multiple sample names are provided, they must be separated by comma.
-#     treatment_sample_groups: "MED1,MED2"
-#     control_sample_groups: "H2O"
+
+#  multipleTreat:
+#     # If multiple sample groups are provided, they must be separated by comma.
+#    treatment_sample_groups: "MED2,MED1"
+#    control_sample_groups: "H2O"
+
+#  withinGroup:
+#    # For within group comparison (all vs all), give the same groups to treatment and control.
+#    treatment_sample_groups: "MED2,MED1,H2O"
+#    control_sample_groups: "MED2,MED1,H2O"
 
 
 execution:
