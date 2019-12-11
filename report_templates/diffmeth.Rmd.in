@@ -296,7 +296,7 @@ The full table of methylKit calculateDiffMeth() results can be found at:
 `r methylDiff_results_file`
 
 
-```{r DiffMeth.load_methylDB}
+```{r DiffMeth.load_methylDB, message=TRUE}
 
 
 if (!setequal(control_group,treatment_group)) {
@@ -347,7 +347,7 @@ if (! nrow(methylDiff.obj.all)>1 ) {
 ```{r DiffMeth.export_text, results='asis', eval=ExtractDiffMeth}
 cat('### Export Differentially Methylated Cytosines\n\n')
 
-cat('We export differentially-methylated CpG sites (DMC) to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n')
+cat('We export differentially-methylated CpG sites (DMC) to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n\n')
 
 cat('- **DmC BED file**:\n',file.path(workdir,paste0(prefix,".dmc.bed")),'\n')
 
@@ -442,13 +442,13 @@ meth2bed(windows = methylDiff.obj.all,
 
 
 
-```{r AnnotateDiffMethHeader,results='asis', eval=AnnotateDiffMeth}
+```{r AnnotateDiffMethHeader,results='asis', eval=ExtractDiffMeth}
 cat('## Annotation of Differentially Methylated Cytosines\n\n')
 
 cat('Once differentially-methylated CpG sites (DMC) have been found, the sites are classified into hyper- and hypo-methylated sites, based on two cutoffs: the minimal  methylation difference and the qvalue cutoff as shown in the parameter table. Hypermethylation indicates increasingly-methylated sites, while hypomethylation indicates lowered methylation when performing the comparison of treatment - control.\n\n')
 ```
 
-```{r AnnotateDiffMeth.prepSeqinfo, eval=AnnotateDiffMeth}
+```{r AnnotateDiffMeth.prepSeqinfo, eval=ExtractDiffMeth}
 chrom_seqlengths <- read.delim(chrom_seqlengths_file,
                                header = FALSE, stringsAsFactors = FALSE)
 
@@ -456,19 +456,96 @@ myseqinfo <- Seqinfo(seqnames = chrom_seqlengths[,1],
                      seqlengths = chrom_seqlengths[,2], 
                      genome = assembly)
 myseqinfo = keepStandardChromosomes(myseqinfo)
+myseqinfo <- sortSeqlevels(myseqinfo)
+
 ```
 
 
-```{r AnnotateDiffMeth.convert, eval=AnnotateDiffMeth}
+```{r AnnotateDiffMeth.convert, eval=ExtractDiffMeth}
+# subset to all available chromosomes
+seqlevels(myseqinfo) <- seqlevels(GRanges.diffmeth)
 # Convert a methylDiff object to a GRanges object
 GRanges.diffmeth    = as(methylDiff.obj.all, "GRanges")
+GRanges.diffmeth <- sortSeqlevels(GRanges.diffmeth)
 seqinfo(GRanges.diffmeth) <- myseqinfo
+
 GRanges.diffmeth.hyper  = as(methylDiff.obj.hyper, "GRanges")
+GRanges.diffmeth.hyper <- sortSeqlevels(GRanges.diffmeth.hyper)
 seqinfo(GRanges.diffmeth.hyper) <- myseqinfo
+
 GRanges.diffmeth.hypo   = as(methylDiff.obj.hypo, "GRanges")
+GRanges.diffmeth.hypo <- sortSeqlevels(GRanges.diffmeth.hypo)
 seqinfo(GRanges.diffmeth.hypo) <- myseqinfo
 # GRanges.diffmeth.nonsig = as(methylDiff.obj.nonsig, "GRanges")
+```
 
+```{r AnnotateDiffMeth.overview_descr, results='asis', eval=ExtractDiffMeth}
+
+if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
+  
+cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n\n')
+  
+cat('This chromosome ideogram represents differential methylation, where only CpGs fulfilling the cutoffs of q-value < ', qvalue ,' and methylation difference of at least ', difference,'% are shown.\n' )
+  
+}
+```
+
+```{r AnnotateDiffMeth.overview_plot, eval=ExtractDiffMeth, echo=FALSE, message=FALSE, warning=FALSE,fig.width= 8, fig.height=10}
+
+if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
+
+source(file.path(params$scripts_dir, "ideoDMC.R"))
+ideoDMC_hyper_hypo(methylDiff.obj.hyper, 
+                   methylDiff.obj.hypo, 
+                   chrom.length = seqlengths( sortSeqlevels(myseqinfo) ),
+                   circos = FALSE, 
+                   title = "Genome Wide Differential Methylation", 
+                   hyper.col = hyper.col, hypo.col = hypo.col) + theme_classic()
+
+}
+
+```
+
+```{r AnnotateDiffMeth.num_of_dmcs_title, results='asis', eval=ExtractDiffMeth}
+cat('#### Fraction of Differentially Methylated Cytosines per Chromosome\n\n')
+
+cat('These stacked barplots visualize the percentages of hyper and hypomethylated DMCs out of all covered CpGs for each chromosome.\n\n')
+```
+
+```{r AnnotateDiffMeth.num_of_dmcs, eval=ExtractDiffMeth,fig.height=10}
+# Get number of differentially methylated cytosines per chromosome
+stats.perChr <- diffMethPerChr(methylDiffDB,plot = FALSE)$diffMeth.per.chr
+
+stats.df <- reshape2::melt(stats.perChr,
+               measure.vars = c("number.of.hypermethylated",
+                                "number.of.hypomethylated"),
+               id.vars = "chr",
+               value.name = "count")
+levels(stats.df$chr) <- unique(stats.df$chr)
+stats.df$perc <- reshape2::melt(stats.perChr,
+               measure.vars = c("percentage.of.hypermethylated",
+                                "percentage.of.hypomethylated"),
+               id.vars = "chr",
+               value.name = "percentage")[,"percentage"]
+
+stats.df$variable <- factor(gsub("number.of.","",stats.df$variable),
+                            levels = c("hypomethylated","hypermethylated"))
+```
+
+
+```{r AnnotateDiffMeth.num_of_dmcs.plot, eval=ExtractDiffMeth,fig.width=8,fig.height=8}
+p <- ggplot(stats.df, aes(x = chr, y = perc, fill = variable)) + 
+  scale_fill_manual(values = c(hypo.col,hyper.col)) +
+  geom_bar(stat = "identity",position = "stack", color = "black") +
+  geom_text_repel(aes(label = count), position = position_stack(vjust = 0.5),
+            hjust = 0.1,size = 5) +
+  ggtitle(label = "Differentially methylated Cytosines per Chromosome") +
+  labs(y = "Percentage", x = "Chromosome") + 
+  coord_flip() +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+print(p)
 ```
 
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
@@ -487,74 +564,6 @@ fetch_cpgi_success <- !is.null(fetched.cpgi)
 
 ```
 
-```{r AnnotateDiffMeth.overview_descr, results='asis', eval=AnnotateDiffMeth}
-
-if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
-  
-cat('### Overview of Hyper- and Hypo-Methylated CpGs Over the Genome\n\n')
-  
-cat('This chromosome ideogram represents differential methylation, where only CpGs fulfilling the cutoffs of q-value < ', qvalue ,' and methylation difference of at least ', difference,'% are shown.\n' )
-  
-}
-```
-
-```{r AnnotateDiffMeth.overview_plot, eval=AnnotateDiffMeth, echo=FALSE, message=FALSE, warning=FALSE}
-
-if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
-
-
-source(file.path(params$scripts_dir, "ideoDMC.R"))
-ideoDMC_hyper_hypo(methylDiff.obj.hyper, 
-                   methylDiff.obj.hypo, 
-                   chrom.length = seqlengths( myseqinfo ),
-                   circos = FALSE, 
-                   title = "Genome Wide Differential Methylation", 
-                   hyper.col = hyper.col, hypo.col = hypo.col) + theme_classic()
-
-}
-
-```
-
-```{r AnnotateDiffMeth.num_of_dmcs_title, results='asis', eval=AnnotateDiffMeth}
-cat('#### Fraction of Differentially Methylated Cytosines per Chromosome\n\n')
-
-cat('These stacked barplots visualize the percentages of hyper and hypomethylated DMCs out of all covered CpGs for each chromosome.\n\n')
-```
-
-```{r AnnotateDiffMeth.num_of_dmcs, eval=AnnotateDiffMeth}
-
-# Get number of differentially methylated cytosines per chromosome
-stats.perChr <- diffMethPerChr(methylDiffDB,plot = FALSE)$diffMeth.per.chr
-
-stats.df <- reshape2::melt(stats.perChr,
-               measure.vars = c("number.of.hypermethylated",
-                                "number.of.hypomethylated"),
-               id.vars = "chr",
-               value.name = "count")
-stats.df$perc <- reshape2::melt(stats.perChr,
-               measure.vars = c("percentage.of.hypermethylated",
-                                "percentage.of.hypomethylated"),
-               id.vars = "chr",
-               value.name = "percentage")[,"percentage"]
-
-stats.df$variable <- factor(c("hypermethylated","hypomethylated"),
-                            levels = c("hypomethylated","hypermethylated"))
-
-p <- ggplot(stats.df, aes(x = chr, y = perc, fill = variable)) + 
-  scale_fill_manual(values = c(hypo.col,hyper.col)) +
-  geom_bar(stat = "identity",position = "stack", color = "black") +
-  geom_text_repel(aes(label = count), position = position_stack(vjust = 0.5),
-            hjust = 0,size = 8) +
-  ggtitle(label = "Differentially methylated Cytosines per Chromosome") +
-  labs(y = "Percentage", x = "Chromosome") + 
-  coord_flip() +
-  theme_bw() +
-  theme(legend.position = "bottom", legend.title = element_blank())
-
-print(p)
-```
-
-
 ```{r AnnotateDiffMeth.annotateWithGeneParts,  eval=AnnotateDiffMeth, echo=FALSE, message=FALSE, results='asis'}
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   ## now we parse the gene features
@@ -563,6 +572,18 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   annot.gene <- annotateWithGeneParts(target = GRanges.diffmeth,
                                          feature = refgenes.grl,
                                          intersect.chr = TRUE)
+  
+  if( length(GRanges.diffmeth.hypo)!=0 & length(GRanges.diffmeth.hyper)!=0){
+  
+  annot.gene.hyper <- annotateWithGeneParts(target = GRanges.diffmeth.hyper,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+  
+  annot.gene.hypo <- annotateWithGeneParts(target = GRanges.diffmeth.hypo,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+  }
+  
 
   cat('### Differentially Methylated Cytosines per Genomic Feature\n\n')
   
@@ -570,15 +591,23 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   
 }
 ```
-
-
-```{r AnnotateDiffMeth.annotateWithGenePartsPlot,  eval=AnnotateDiffMeth, echo=FALSE}
-
+```{r AnnotateDiffMeth.annotateWithGenePartsPlot1,  eval=AnnotateDiffMeth, echo=FALSE, results='asis'}
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   
+  cat('#### Piechart\n\n')
   # # plot the target overlap for each
   genomation::plotTargetAnnotation(annot.gene,
                        main="Differentially methylated Cytosines\nper Genomic Feature")
+  
+  cat('\n\n')
+}
+
+```
+
+
+```{r AnnotateDiffMeth.annotateWithGenePartsPlot2,  eval=AnnotateDiffMeth, echo=FALSE, results='asis'}
+
+if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   
   # construct dataframe for ggplot
   df <- reshape2::melt(getTargetAnnotationStats(annot.gene))
@@ -588,23 +617,110 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   
   cols <- getColors(length(getTargetAnnotationStats(annot.gene)))
   
+
+  
   p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
-  scale_fill_manual(values = rev(cols)) +
-  geom_bar(stat = "identity" ,color = "black") +
-  geom_text(aes(label = count), position = position_stack(vjust = -0.1),
-            hjust = 0,size = 8) +
-  ggtitle(label = "Differentially methylated Cytosines per Genomic Feature") +
-  labs(y = "Percentage", x = "Feature") + 
-  coord_flip() +
-  theme_bw() +
-  guides(fill = guide_legend(reverse = TRUE)) +
-  theme(legend.position = "bottom", legend.title = element_blank(),
-        # axis.title.y = element_blank(), axis.ticks.y = element_blank(),
-        # axis.text.y = element_blank()
-        )
+    scale_fill_manual(values = rev(cols)) +
+    geom_bar(stat = "identity" ,color = "black", position = position_dodge()) +
+    geom_text(aes(y = -10, label = count), hjust = 0,size = 5) +
+    ggtitle(label = "Differentially methylated Cytosines per Genomic Feature") +
+    labs(y = "Percentage", x = "Feature") + 
+    coord_flip() +
+    theme_bw() +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    theme(legend.position = "bottom", legend.title = element_blank())  
+
+  cat('#### Barchart\n\n')
 
   print(p)
+  
+  cat('\n\n')
+  
+
 }
+```
+
+
+```{r facet_strip_coloring, echo=FALSE}
+
+fill_strip <- function(facet_ggplot, fills, plot=FALSE) {
+  # extract gtable
+  g <- ggplot_gtable(ggplot_build(facet_ggplot))
+  # figure out facet strips
+  strip_both <- which(grepl('strip-', g$layout$name))
+  #
+  
+  if(! length(fills) == length(strip_both)) {
+    stop("Length of colors (",length(fills),")",
+         "does not match with number of strips (",
+         length(strip_both),").")
+  }
+  
+  k <- 1
+  for (i in strip_both) {
+  j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
+  g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+  k <- k+1
+  }
+  
+  if(plot) {
+    grid.newpage(recording = FALSE)
+    grid.draw(g)
+  } 
+  
+  invisible(return(g))
+  
+}
+
+```
+
+
+```{r AnnotateDiffMeth.annotateWithGenePartsPlot3,  eval=AnnotateDiffMeth, echo=FALSE, results='asis'}
+  if( length(GRanges.diffmeth.hypo)!=0 & length(GRanges.diffmeth.hyper)!=0){
+  
+    
+    df <- reshape2::melt(cbind(getTargetAnnotationStats(annot.gene.hyper),
+                               getTargetAnnotationStats(annot.gene.hypo)))
+    names(df) <- c("variable","type","value")
+    df$variable <- factor(df$variable,
+                        levels = rev(names(getTargetAnnotationStats(annot.gene))))
+    df$type <- factor(ifelse(df$type == 1,"hypermethylated","hypomethylated"),
+                      levels = c("hypomethylated","hypermethylated"))
+    df$count <- c(annot.gene.hyper@num.annotation,
+                      annot.gene.hypo@num.annotation)
+    
+    p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+      scale_fill_manual(values = rev(cols)) +
+      geom_bar(mapping = aes(group = type), stat = "identity" ,color = "black",  position = position_dodge()) +
+      geom_text(mapping = aes(group = type, color = type , y = -10, label = count), size = 5, 
+                  position = position_dodge(width= 1)) +
+      scale_color_manual(values = c(hypo.col,hyper.col)) + 
+      ggtitle(label = "Differentially methylated Cytosines per Genomic Feature") +
+      labs(y = "Percentage", x = "Feature") + 
+      coord_flip() +
+      theme_bw() +
+      guides(fill = guide_legend(reverse = TRUE)) +
+      theme(legend.position = "bottom", legend.title = element_blank(),
+            legend.text = element_text(colour=c(rep(times = length(cols),"black"),
+                                                c(hypo.col,hyper.col))))
+      
+    cat('#### Barchart (Split per DMC Type)\n\n')
+    
+    p <- p + facet_wrap( ~ type,nrow = 2)
+    
+    print(p)
+    
+    # png(filename = file.path(imagesDir,paste0(prefix,"DMCperGenomicFeat.type.png")),
+    #        height = 4.5, width = 8)
+    # g <- fill_strip(p, fills = rev(c(hypo.col,hyper.col)),plot = TRUE)
+    # dev.off()
+    # # ggsave(plot = g, filename = file.path(imagesDir,paste0(prefix,"DMCperGenomicFeat.type.png")),
+    #        # width = 7,height = 6)
+    # 
+    # cat('![](',file.path(imagesDir,paste0(prefix,"DMCperGenomicFeat.type.png")),')')
+    
+    cat('\n\n')
+  }
 ```
 
 
@@ -622,6 +738,20 @@ if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
                                       flank = cpg.obj$shores,
                                       feature.name="CpGi",flank.name="shores")
   
+  if( length(GRanges.diffmeth.hypo)!=0 & length(GRanges.diffmeth.hyper)!=0){
+    
+      diffCpGann.hypo=annotateWithFeatureFlank(target = GRanges.diffmeth.hypo,
+                                          feature = cpg.obj$CpGi, 
+                                          flank = cpg.obj$shores,
+                                          feature.name="CpGi",flank.name="shores")
+      
+      diffCpGann.hyper=annotateWithFeatureFlank(target = GRanges.diffmeth.hyper,
+                                          feature = cpg.obj$CpGi, 
+                                          flank = cpg.obj$shores,
+                                          feature.name="CpGi",flank.name="shores")
+  }
+
+  
   cat('### Differentially Methylated Cytosines over CpG Islands\n\n')
   
     cat("CpG islands are genomic features of 200 to 2000 base pairs that have an increased CG base pair content and show abundant CpG sequences. A large fraction (~70%) of human promoters of a gene contain a CpG island ([Deaton, A. M., & Bird, A. (2011)](http://genesdev.cshlp.org/content/25/10/1010.short)). Silencing of genes is often achieved by methylation in CpG Islands, so observation of hypomethylation in CpG Islands could indicate effects on the expression of a gene.\n\n")
@@ -631,16 +761,25 @@ if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
 ```
 
 
-```{r AnnotateDiffMeth.annotateWithFeatureFlankPlot,  eval=AnnotateDiffMeth, echo=FALSE}
-
+```{r AnnotateDiffMeth.annotateWithFeatureFlankPlot1,  eval=AnnotateDiffMeth, echo=FALSE, results='asis'}
 if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
 
+  cat('#### Piechart\n\n')  
+  
   # plot the target overlap for each
   genomation::plotTargetAnnotation(diffCpGann,
                        col=c("green","gray","white"),
                        main="Differentially methylated Cytosines over CpG Islands\n")
+  
+  cat('\n\n')
+}
+```
 
 
+```{r AnnotateDiffMeth.annotateWithFeatureFlankPlot2,  eval=AnnotateDiffMeth, echo=FALSE, results='asis'}
+
+if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
+    
   # construct dataframe for ggplot
   df <- reshape2::melt(getTargetAnnotationStats(diffCpGann))
   df$variable <- factor(names(getTargetAnnotationStats(diffCpGann)),
@@ -649,9 +788,8 @@ if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
   
   p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
   scale_fill_manual(values = c("white","gray","green")) +
-  geom_bar(stat = "identity", position = "stack", width = 0.8,color = "black") +
-  geom_text(aes(label = count), position = position_stack(vjust = -0.1),
-            hjust = 0,size = 8) +
+  geom_bar(stat = "identity" ,color = "black", position = position_dodge()) +
+    geom_text(aes(y = -10, label = count), hjust = 0,size = 5) +
   coord_flip() +
   labs(y = "Percentage", x = "Feature") + 
   ggtitle(label = "Differentially methylated Cytosines per CpG Island Feature") +
@@ -663,7 +801,54 @@ if( (fetch_cpgi_success) & length(GRanges.diffmeth)!=0){
         # axis.text.y = element_blank()
         )
 
+  cat('#### Barchart\n\n')
+
   print(p)
+  
+  cat('\n\n')
+}
+
+```
+
+```{r AnnotateDiffMeth.annotateWithFeatureFlankPlot3,  eval=AnnotateDiffMeth, echo=FALSE, results='asis'}
+  
+if( length(GRanges.diffmeth.hypo)!=0 & length(GRanges.diffmeth.hyper)!=0){
+    
+  # construct dataframe for ggplot
+  df <- reshape2::melt(cbind(getTargetAnnotationStats(diffCpGann.hyper),
+                             getTargetAnnotationStats(diffCpGann.hypo)))
+  names(df) <- c("variable","type","value")
+  df$variable <- factor(df$variable,
+                        levels = rev(names(getTargetAnnotationStats(diffCpGann))))
+  df$type <- factor(ifelse(df$type == 1,"hypermethylated","hypomethylated"),
+                    levels = c("hypomethylated","hypermethylated"))
+  df$count <- c(diffCpGann.hyper@num.annotation,diffCpGann.hypo@num.annotation)
+  
+  
+  p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+  scale_fill_manual(values = c("white","gray","green")) +
+  geom_bar(mapping = aes(group = type), stat = "identity" ,color = "black",  position = position_dodge()) +
+  geom_text(mapping = aes(group = type, color = type , y = -10, label = count), size = 5, 
+            position = position_dodge(width= 1)) +
+  scale_color_manual(values = c(hypo.col,hyper.col)) +
+  coord_flip() +
+  labs(y = "Percentage", x = "Feature") + 
+  ggtitle(label = "Differentially methylated Cytosines per CpG Island Feature") +
+  theme_bw() +
+  guides(fill = guide_legend(reverse = TRUE),color = FALSE) +
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        # axis.title.y = element_blank(), axis.ticks.y = element_blank(),
+        # axis.text.y = element_blank()
+        )
+
+  cat('#### Barchart (Split per DMC Type)\n\n')
+
+  p <- p + facet_wrap(~type, nrow = 2)
+  
+  print(p)
+  
+  cat('\n\n')
   
 }
 
@@ -700,7 +885,7 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
           legend.title = element_blank(),
           )
   
-  p
+  p + facet_wrap( ~ feature.strand)
   
   }
 
