@@ -29,7 +29,7 @@ validate_config(config)
 OUTDIR = config['locations']['output-dir']                      #--- current work dir (important for rmarkdown)
 
 DIR_scripts   = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
-DIR_templates = os.path.join(OUTDIR, 'pigx_work/report_templates/')
+DIR_templates = os.path.join(config['locations']['pkgdatadir'], 'report_templates/')
 
 DIR_diffmeth    =  os.path.join(OUTDIR, '09_differential_methylation/' )
 DIR_seg         =  os.path.join(OUTDIR, '08_segmentation/' )
@@ -46,7 +46,12 @@ DIR_final       = os.path.join(OUTDIR, "Final_Reports/")
 
 #--- DEFINE PATHS AND FILE NAMES:
 
-LOGOPATH    = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
+
+if os.getenv("PIGX_UNINSTALLED"):
+    LOGOPATH = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") 
+else:
+    LOGOPATH = os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
+
 BIBTEXPATH  = os.path.join(config['locations']['pkgdatadir'], "report_templates/reports.bib")
 
 PATHIN     = os.path.join(OUTDIR, "pigx_work/input/")           # location of the data files to be imported (script creates symbolic link)

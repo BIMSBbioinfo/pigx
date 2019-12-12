@@ -462,20 +462,18 @@ myseqinfo <- sortSeqlevels(myseqinfo)
 
 
 ```{r AnnotateDiffMeth.convert, eval=ExtractDiffMeth}
-# subset to all available chromosomes
-seqlevels(myseqinfo) <- seqlevels(GRanges.diffmeth)
 # Convert a methylDiff object to a GRanges object
 GRanges.diffmeth    = as(methylDiff.obj.all, "GRanges")
 GRanges.diffmeth <- sortSeqlevels(GRanges.diffmeth)
+# subset to all available chromosomes
+seqlevels(myseqinfo) <- seqlevels(GRanges.diffmeth)
 seqinfo(GRanges.diffmeth) <- myseqinfo
 
 GRanges.diffmeth.hyper  = as(methylDiff.obj.hyper, "GRanges")
 GRanges.diffmeth.hyper <- sortSeqlevels(GRanges.diffmeth.hyper)
-seqinfo(GRanges.diffmeth.hyper) <- myseqinfo
 
 GRanges.diffmeth.hypo   = as(methylDiff.obj.hypo, "GRanges")
 GRanges.diffmeth.hypo <- sortSeqlevels(GRanges.diffmeth.hypo)
-seqinfo(GRanges.diffmeth.hypo) <- myseqinfo
 # GRanges.diffmeth.nonsig = as(methylDiff.obj.nonsig, "GRanges")
 ```
 
@@ -548,6 +546,43 @@ p <- ggplot(stats.df, aes(x = chr, y = perc, fill = variable)) +
 print(p)
 ```
 
+```{r AnnotateDiffMeth.num_of_dmcs_title2, results='asis', eval=ExtractDiffMeth}
+cat('These stacked barplots visualize the percentages of hyper and hypomethylated DMCs out of all detected differential CpGs for each chromosome.\n\n')
+```
+
+```{r AnnotateDiffMeth.num_of_dmcs.plot2, eval=ExtractDiffMeth,fig.width=8,fig.height=8}
+# Get number of differentially methylated cytosines per chromosome
+stats.DMC.perChr <- diffMethPerChr(methylDiff.obj.all,plot = FALSE)$diffMeth.per.chr
+
+stats.DMC.df <- reshape2::melt(stats.DMC.perChr,
+               measure.vars = c("number.of.hypermethylated",
+                                "number.of.hypomethylated"),
+               id.vars = "chr",
+               value.name = "count")
+levels(stats.DMC.df$chr) <- unique(stats.DMC.df$chr)
+stats.DMC.df$perc <- reshape2::melt(stats.DMC.perChr,
+               measure.vars = c("percentage.of.hypermethylated",
+                                "percentage.of.hypomethylated"),
+               id.vars = "chr",
+               value.name = "percentage")[,"percentage"]
+
+stats.DMC.df$variable <- factor(gsub("number.of.","",stats.DMC.df$variable),
+                            levels = c("hypomethylated","hypermethylated"))
+
+p <- ggplot(stats.DMC.df, aes(x = chr, y = perc, fill = variable)) + 
+  scale_fill_manual(values = c(hypo.col,hyper.col)) +
+  geom_bar(stat = "identity",position = "stack", color = "black") +
+  geom_text_repel(aes(label = count), position = position_stack(vjust = 0.5),
+            hjust = 0.1,size = 5) +
+  ggtitle(label = "Differentially methylated Cytosines per Chromosome") +
+  labs(y = "Percentage", x = "Chromosome") + 
+  coord_flip() +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+print(p)
+```
+
 ```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
 source(file.path(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type = "knownGene",
@@ -591,6 +626,7 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   
 }
 ```
+
 ```{r AnnotateDiffMeth.annotateWithGenePartsPlot1,  eval=AnnotateDiffMeth, echo=FALSE, results='asis'}
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
   
@@ -865,7 +901,7 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0){
 ```
 
 
-```{r ```{r AnnotateDiffMeth.annotateTSSPlot,  eval=AnnotateDiffMeth, echo=FALSE}
+```{r AnnotateDiffMeth.annotateTSSPlot,  eval=AnnotateDiffMeth, echo=FALSE}
 if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
   {
   # Get distance to nearest TSS and gene id from AnnotationByGeneParts
@@ -885,7 +921,7 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
           legend.title = element_blank(),
           )
   
-  p + facet_wrap( ~ feature.strand)
+  print(p)
   
   }
 

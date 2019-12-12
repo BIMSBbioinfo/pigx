@@ -472,8 +472,8 @@ def list_files_diffmeth_bwameth(treatment):
 
 def list_files_diffmeth_report_bwameth(treatment):
     PATH = DIR_final 
-    return [ PATH +"diffmeth-report."+ treatment.replace("_","vs") + "_CpG_methylDackel" +".html"]
+    return [ PATH + treatment + "/" + treatment + "_CpG_methylDackel"+ ".diffmeth-report.html"]
 
 def list_files_diffmeth_report_bismark(treatment):
     PATH = DIR_final 
-    return [ PATH +"diffmeth-report."+ treatment.replace("_","vs") + "_cpg_methylKit" +".html"]
+    return [ PATH + treatment + "/" + treatment + "_cpg_methylKit" +".diffmeth-report.html"]

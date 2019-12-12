@@ -46,6 +46,7 @@ rule unite_meth_calls:
         suffix     = "{analysis}_{context}_{tool}"
     log: 
         DIR_diffmeth+"{analysis}/{analysis}_{context}_{tool}_unite.log"
+    message: fmt("Uniting samples for differential analysis.")
     shell:
         nice('Rscript',
                 ["{DIR_scripts}/methUnite.R",
@@ -86,7 +87,7 @@ rule diffmeth:
         methylDiff_results_suffix   = "full",
         outdir     = DIR_diffmeth+"{analysis}/"
     log:
-        os.path.join(DIR_diffmeth+"{analysis}_{context}_{tool}_diffmeth.log")
+        os.path.join(DIR_diffmeth,"{analysis}","{analysis}_{context}_{tool}_diffmeth.log")
     message: fmt("Calculating differential methylation.")
     shell:
         nice('Rscript', 
@@ -118,7 +119,7 @@ rule diffmeth_report:
         template           = os.path.join(DIR_templates,"diffmeth.Rmd"),
         chrom_seqlengths   = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
     output:
-        report        = os.path.join(DIR_final, "diffmeth-report.{analysis}_{context}_{tool}.html")
+        report        = os.path.join(DIR_final, "{analysis}", "{analysis}_{context}_{tool}.diffmeth-report.html")
     params:
         # specific for this report
         sampleids              = lambda wc: ','.join(get_sampleids_from_analysis(wc.analysis)),
@@ -139,11 +140,11 @@ rule diffmeth_report:
         # required for any report
         bibTexFile             = BIBTEXPATH,
         prefix                 = "{analysis}_{context}_{tool}",
-        workdir                = os.path.join(DIR_diffmeth,"{analysis}"),
+        workdir                = os.path.join(DIR_final,"{analysis}"),
         logo                   = LOGOPATH
     log:
-        os.path.join(DIR_final,"diffmeth-report.{analysis}_{context}_{tool}.log")
-    # message: fmt("Compiling differential methylation report " + "for analysis " + "{wildcards.analysis}")
+        os.path.join(DIR_final,"{analysis}","{analysis}_{context}_{tool}_diffmeth-report.log")
+    message: fmt("Compiling differential methylation report " + "for analysis " + "{wildcards.analysis}")
     # run:
     #     generateReport(input, output, params, log, "")
     shell:

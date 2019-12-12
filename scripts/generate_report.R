@@ -54,7 +54,8 @@ render2HTML <- function(reportFile,
                         bibTexFile,
                         prefix,
                         selfContained=TRUE,
-                        quiet = FALSE)
+                        quiet = FALSE,
+						clean = FALSE)
 {
   
   
@@ -81,18 +82,18 @@ render2HTML <- function(reportFile,
       theme = 'lumen',
       number_sections = TRUE,
       code_folding = "hide",
-      self_contained = selfContained,
       bibliography = bibTexFile
     ),
+	output_options = list(self_contained = selfContained),
     params = c(report.params,
                logo = logo,
                prefix = prefix,
                workdir = workdir),
     quiet  = quiet,
-    clean  = FALSE
+    clean  = clean
   )
 
-  # on.exit(unlink(interdir, recursive = TRUE),add = TRUE)
+  on.exit(unlink(interdir, recursive = TRUE),add = TRUE)
 }
 
 
@@ -189,4 +190,6 @@ render2HTML(reportFile = normalizePath(argsL$reportFile),
             report.params = argsL$report.params,
             logo = argsL$logo,
             bibTexFile = argsL$bibTexFile,
-            prefix = argsL$prefix)
+            prefix = argsL$prefix,
+			selfContained = TRUE,
+			clean =TRUE)
