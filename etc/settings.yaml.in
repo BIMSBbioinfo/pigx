@@ -158,6 +158,16 @@ adapter_parameters:
             base_min: 17
             base_max: 26
 
+    chromium10xV3:
+        cell_barcode:
+            base_min: 1
+            base_max: 16
+        umi_barcode:
+            base_min: 17
+            base_max: 28
+
+    ICell8:
+        cell_barcode:
     ICell8:
         cell_barcode:
             base_min: 1
