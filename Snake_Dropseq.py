@@ -425,7 +425,8 @@ rule merge_technical_replicates:
         threads = config['execution']['rules']['merge_technical_replicates']['threads'],
         mem     = config['execution']['rules']['merge_technical_replicates']['memory'],
         tempdir = TEMPDIR,
-        cat     = SOFTWARE['cat']['executable']
+        cat     = SOFTWARE['cat']['executable'],
+        ln      = 'ln'
     log:
         log = os.path.join(PATH_LOG, '{name}.{type,(R1)|(R2)}.merge_technical_replicates.log')
     message:"""
@@ -435,12 +436,24 @@ rule merge_technical_replicates:
         """
     run:
 
-        command = ' '.join([
-            params.cat,
-            " ".join(input.infiles),
-            '>'  + str(output.outfile),
-            '2>' + str(log.log)
-        ])
+        # if there is more than one input file, cat them
+        # if there is only one, create a symbolic link
+        if len(input.infiles) > 1:
+            command = ' '.join([
+                params.cat,
+                " ".join(input.infiles),
+                '>'  + str(output.outfile),
+                '2>' + str(log.log)
+            ])
+
+        else:
+            command = ' '.join([
+                params.ln,
+                str(input.infiles),
+                str(output.outfile),
+                '2>' + str(log.log)
+            ])
+
         print_shell(command)
 
 
@@ -448,8 +461,8 @@ rule merge_technical_replicates:
 # uses flexbar to filter reads
 def fetch_reads(wc):
     read_hash = {
-        'reads'   : os.path.join(PATH_MAPPED, wc.name, SAMPLE_SHEET.fetch_field(wc.name,'reads_merged')),
-        'barcode' : os.path.join(PATH_MAPPED, wc.name, SAMPLE_SHEET.fetch_field(wc.name,'barcode_merged'))
+        'barcode' : os.path.join(PATH_MAPPED, wc.name, SAMPLE_SHEET.fetch_field(wc.name,'barcode_merged')),
+        'reads'   : os.path.join(PATH_MAPPED, wc.name, SAMPLE_SHEET.fetch_field(wc.name,'reads_merged'))
     }
     return(read_hash)
 
@@ -547,7 +560,8 @@ rule cell_barcode_histogram:
         command_parse = ' '.join([
             params.zcat, input.infile, '|',
             perl_extract_cb, '>',
-            tmp_file
+            tmp_file,
+            '2>>', str(log.logfile)
         ])
 
         # ------------------------------------------------ #
@@ -557,7 +571,8 @@ rule cell_barcode_histogram:
             '-o',    str(count_file),
             '-m',    str(cb_adapter['length']),
             '-s',    str(params.hash_size),
-            tmp_file
+            tmp_file,
+            '2>>', str(log.logfile)
         ])
 
         # ------------------------------------------------ #
@@ -567,7 +582,8 @@ rule cell_barcode_histogram:
             '--column',
             '--tab',
             '-o',    str(output.outfile),
-            count_file
+            count_file,
+            '2>>', str(log.logfile)
         ])
 
         # ------------------------------------------------ #
