@@ -2,6 +2,7 @@
 *.snakemake.*
 *.Rproj.*
 *~
+*._*
 
 # generated files
 configure
