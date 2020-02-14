@@ -95,6 +95,7 @@ if __name__ == '__main__':
     matrix_exon_umi, row_names_exon = fill_missing_genes_into_matrix(gene_ids, matrix_exon.toarray(), genes['gene_id'], barcode['cell_id'])
 
     # -------------------------------------------------------------- #
+    # sorts the exon and gene matrices
     row_names = pd.DataFrame({'gene_id' : row_names_gene})
     if not row_names_gene.equals(row_names_exon):
         print('Arranging rows ...')
@@ -109,7 +110,7 @@ if __name__ == '__main__':
         row_names       = pd.DataFrame({'gene_id' : merged_names['id']})
         matrix_gene_umi = matrix_gene_umi[merged_names['index'],]
         matrix_exon_umi = matrix_exon_umi[merged_names['index'],]
-        
+
 
     # -------------------------------------------------------------- #
     print('Creating loompy file')
@@ -117,10 +118,8 @@ if __name__ == '__main__':
 
     col_attrs = barcode.to_dict("list")
     col_attrs = dict_to_array(col_attrs)
-        
+
     row_attrs = row_names.to_dict("list")
     row_attrs = dict_to_array(row_attrs)
-    
+
     loompy.create(output_file, lm, row_attrs, col_attrs)
-    
-    
