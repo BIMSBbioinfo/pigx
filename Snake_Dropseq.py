@@ -393,28 +393,6 @@ def fetch_fastq_technical_replicates(wc):
         input_fastq = list(input_fastq)
     return(input_fastq)
 
-rule merge_bam_per_sample:
-    input:
-        bam_files = fetch_all_bams
-    output:
-        outfile = os.path.join(PATH_MAPPED, "{name}","{name}" + ".Merged.bam")
-    log:
-        log = os.path.join(PATH_LOG, '{name}.merge_bam_per_sample.log')
-    params:
-        samtools      = SOFTWARE['samtools']['executable'],
-        samtools_args = SOFTWARE['samtools']['args']
-    run:
-        in_files = ' '.join(input.bam_files)
-        command = ' '.join([
-            params.samtools,
-            params.samtools_args,
-            'cat -o',
-            output.outfile,
-            in_files,
-            '2>' + str(log.log)
-            ])
-        print(command, file=sys.stderr)
-        shell(command)
 
 rule merge_technical_replicates:
     input:
