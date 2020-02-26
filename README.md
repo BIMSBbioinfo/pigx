@@ -6,7 +6,7 @@
 </a>
 </div>
 
-**Copyright 2017-2018: Vedran Franke, Bora Uyar, Ricardo Wurmus, Altuna Akalin.**
+**Copyright 2017-2020: Vedran Franke, Bora Uyar, Ricardo Wurmus, Altuna Akalin.**
 **This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
 -----------
@@ -60,9 +60,7 @@ unpacking the latest release tarball:
 
 ```sh
 ./configure                         \
-    --prefix=/some/where            \
-    DROPSEQJAR=/path/to/dropseq.jar \
-    PICARDJAR=/path/to/picard.jar
+    --prefix=/some/where
 make install
 ```
 
@@ -76,15 +74,6 @@ of all variables and options.
 
 You can prepare a suitable environment with Conda or with [GNU
 Guix](https://gnu.org/s/guix).  
-
-The pipeline currently depends on two external java programs, which can be found on the
-following links:
-
-1. [Picard tools](https://github.com/broadinstitute/picard/releases/tag/2.18.0)
-
-2. [Dropseq tools](http://mccarrolllab.com/download/1276/)
-
-During the configure step path to the **.jar** files needs to be provided.
 
 ## Via Conda
 
@@ -444,7 +433,6 @@ To make changes or add improvements to the pipeline, follow these steps:
 
 5. run the tests with
 
-        export DISTCHECK_CONFIGURE_FLAGS=PICARDJAR=$GUIX_ENVIRONMENT/share/java/picard.jar DROPSEQJAR=$GUIX_ENVIRONMENT/share/java/dropseq.jar
         make distcheck
 
 6. check whether there were updates to master. If there were updates, run git pull -r. Again check whether the pipeline works
@@ -452,4 +440,4 @@ To make changes or add improvements to the pipeline, follow these steps:
 
  
 ----------------------------------------
-2018
+2020
