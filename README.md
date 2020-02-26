@@ -75,18 +75,6 @@ of all variables and options.
 You can prepare a suitable environment with Conda or with [GNU
 Guix](https://gnu.org/s/guix).  
 
-## Via Conda
-
-- Download pigx_scrnaseq source code 
-    - run: 
-    > git clone https://github.com/BIMSBbioinfo/pigx_scrnaseq.git
-- Download and install Anaconda from https://www.anaconda.com/download
-- Locate the 'environment.yml' file in the source code. 
-    - run:
-    > conda env create -f environment.yml #provide path to the environment.yml file
-    - activate the environment:
-    > source activate pigx_scrnaseq 
-
 ## Via Guix
 
 Assuming you have Guix installed, the following command spawns a
