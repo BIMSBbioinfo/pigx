@@ -10,8 +10,8 @@ rule samblaster_markdup_sort:
         bam = DIR_sorted+"{sample}.bwameth.sorted.markdup.bam",
         index = DIR_sorted+"{sample}.bwameth.sorted.markdup.bam.bai"
     params:
-        threads=config['execution']['rules']['samtools_sort_bam']['threads'],
-        memory=config['execution']['rules']['samtools_sort_bam']['memory'],
+        threads=config['execution']['rules']['samblaster_markdup_sort']['threads'],
+        memory=config['execution']['rules']['samblaster_markdup_sort']['memory'],
         tmpdir=DIR_sorted+"{sample}/"
     log:
         DIR_sorted+"{sample}_markdups.log"

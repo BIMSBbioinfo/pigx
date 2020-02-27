@@ -76,7 +76,7 @@ rule bwameth_align_trimmed:
         bam = DIR_mapped+"{sample}.bwameth.bam"
     params:
       # bwa-meth parameters
-        threads = config['execution']['rules']['bwameth_align_pe_raw']['threads']
+        threads = config['execution']['rules']['bwameth_align_trimmed']['threads']
     log:
         DIR_mapped+"{sample}_bwameth_mapping.log"
     message: "Mapping reads to genome using bwa-meth."

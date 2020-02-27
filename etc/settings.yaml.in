@@ -90,7 +90,10 @@ execution:
     samtools_sort_bam:
       threads: 12
       memory: 12G
-    bwameth_align_pe_raw:
+    samblaster_markdup_sort:
+      threads: 12
+      memory: 12G
+    bwameth_align_trimmed:
       threads: 12
       memory: 20G
     methyldackel_extract:
