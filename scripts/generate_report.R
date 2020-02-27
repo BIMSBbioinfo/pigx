@@ -63,17 +63,12 @@ render2HTML <- function(reportFile,
   
   ## render single report
   message("rendering report from template: ", reportFile)
- 
-
-  interdir <- file.path(workdir,prefix,"_tmp")
-  # dir.create(interdir)
 
   htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
     input = reportFile,
     output_dir = workdir,
-    intermediates_dir = interdir,
-    knit_root_dir = interdir,
+    intermediates_dir = file.path(workdir, prefix),
 	output_file = outFile,
     output_format = rmarkdown::html_document(
       toc = TRUE,
@@ -92,8 +87,9 @@ render2HTML <- function(reportFile,
     quiet  = quiet,
     clean  = clean
   )
-
-  on.exit(unlink(interdir, recursive = TRUE),add = TRUE)
+	if(dir.exists(file.path(workdir, prefix))) {
+			unlink(file.path(workdir, prefix), recursive = TRUE)
+	  }
 }
 
 
@@ -192,4 +188,4 @@ render2HTML(reportFile = normalizePath(argsL$reportFile),
             bibTexFile = argsL$bibTexFile,
             prefix = argsL$prefix,
 			selfContained = TRUE,
-			clean =TRUE)
+			clean =FALSE)
