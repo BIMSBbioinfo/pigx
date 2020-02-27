@@ -59,6 +59,20 @@ rule bwameth_genome_preparation:
     shell:
         nice("bwameth", ["index {input}"],"{log}")
 
+rule bwameth_touch_index:
+    input:
+        GENOMEFILE+".bwameth.c2t.sa",
+        GENOMEFILE+".bwameth.c2t.amb",
+        GENOMEFILE+".bwameth.c2t.ann",
+        GENOMEFILE+".bwameth.c2t.pac",
+        GENOMEFILE+".bwameth.c2t.bwt"
+    output:
+        GENOMEFILE+".bwameth.c2t_was.touched"
+    message: "Update timestamp for {ASSEMBLY} Genome Index"
+    shell:
+        "sleep 60; touch {input};touch {output}"
+
+
 # # ==========================================================================================
 # # Align whole data sets
 #    
@@ -70,8 +84,9 @@ def bwameth_input(sample):
 
 rule bwameth_align_trimmed:
     input:
+        rules.bwameth_touch_index.output,
         index = rules.bwameth_genome_preparation.output,
-        files = lambda wc: bwameth_input(wc.sample) 
+        files = lambda wc: bwameth_input(wc.sample)
     output:
         bam = DIR_mapped+"{sample}.bwameth.bam"
     params:
