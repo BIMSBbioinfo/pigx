@@ -42,10 +42,11 @@ Star_Solo_Stat = function(path, name, type=''){
 
 # -------------------------------------------------------------------------- #
 Extract_Read_Statistics = function(
-    bamfile  = NULL,
-    outfile  = NULL,
-    sample   = 'Sample',
-    mito_chr = 'chrM'
+    bamfile           = NULL,
+    outfile           = NULL,
+    sample            = 'Sample',
+    star_output_types = 'Gene',
+    mito_chr          = 'chrM'
 
 ){
     if(is.null(bamfile))
@@ -60,6 +61,8 @@ Extract_Read_Statistics = function(
     })
 
     basedir = dirname(bamfile)
+
+    star_output_types = unlist(strsplit(star_output_types,' '))
 
     message('STAR Mapping Statistics ...')
     stat_file     = file.path(basedir, paste(sample, 'Log.final.out', sep='_'))
@@ -80,27 +83,29 @@ Extract_Read_Statistics = function(
         type   = 'mito'
     )
 
-    message('Exon UMI statistics ...')
-    solo_path = file.path(basedir, paste(sample,'Solo.out', sep='_'))
+    message('Feature UMI statistics ...')
+    solo_stats_list = list()
+    for(star_output_type in star_output_types){
+        solo_path       = file.path(basedir, paste(sample,'Solo.out', sep='_'))
+        solo_stat_path  = file.path(solo_path, star_output_type, 'Features.stats')
+        if(!file.exists(solo_stat_path))
+            error(paste('File does not exist:', solo_stat_path))
 
-    exon_path  = file.path(solo_path, 'Gene.stats')
-    stats_exon = Star_Solo_Stat(exon_path, sample, 'exon')
-
-    message('Gene UMI statistics ...')
-    gene_path  = file.path(solo_path, 'GeneFull.stats')
-    stats_gene = Star_Solo_Stat(gene_path, sample, 'gene')
-
-    message('Spliced statistics ...')
-    sj_path  = file.path(solo_path, 'SJ.stats')
-    stats_sj = Star_Solo_Stat(sj_path, sample, 'spliced')
+        solo_stat_table = cbind(
+            sample = sample, read.table(solo_stat_path, header = FALSE)
+        )
+        setnames(solo_stat_table,2:3, c('mapped','cnts'))
+        solo_stat_table$freq = NA
+        solo_stat_table$type = star_output_type
+        solo_stats_list[[star_output_type]] = solo_stat_table
+    }
+    solo_stats_combined = rbindlist(solo_stats_list)
 
     message('Writing read statistics ...')
     read_statistics = rbindlist(list(
         stats_mapping,
         stats_mito,
-        stats_exon,
-        stats_gene,
-        stats_sj
+        solo_stats_combined
     ))
     read_statistics$freq = round(read_statistics$cnts / subset(read_statistics, mapped == 'reads.total')$cnts,2)
 
@@ -111,8 +116,9 @@ Extract_Read_Statistics = function(
 
 # -------------------------------------------------------------------------- #
 Extract_Read_Statistics(
-      bamfile  = argv$input[['bamfile']],
-      outfile  = argv$output[['outfile']],
-      sample   = argv$params[['sample']],
-      mito_chr = argv$params[['mito_chr']]
+      bamfile           = argv$input[['bamfile']],
+      outfile           = argv$output[['outfile']],
+      sample            = argv$params[['sample']],
+      star_output_types = argv$params[['star_output_types']],
+      mito_chr          = argv$params[['mito_chr']]
   )

@@ -29,6 +29,8 @@ def fill_missing_genes_into_matrix(gene_ids, matrix, row_names, col_names):
         new_rows  = numpy.zeros((len(missing), len(col_names)), dtype = int)
         matrix    = numpy.vstack((matrix, new_rows))
         row_names = row_names.append(pd.Series(missing))
+
+    row_names = pd.DataFrame({'gene_id' : row_names})
     return(matrix, row_names)
 
 # ------------------------------------------------------------------ #
@@ -41,85 +43,84 @@ def dict_to_array(d):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Convert STAR mtx to loom')
-    parser.add_argument('--sample_id',   action="store", dest='sample_id')
-    parser.add_argument('--input_file',  action="store", dest="input_file")
-    parser.add_argument('--gtf_file',    action="store", dest="gtf_file")
-    parser.add_argument('--output_file', action="store", dest="output_file")
+    parser.add_argument('--sample_id',         action="store", dest='sample_id')
+    parser.add_argument('--input_dir',         action="store", dest="input_dir")
+    parser.add_argument('--gtf_file',          action="store", dest="gtf_file")
+    parser.add_argument('--star_output_types', action="store", dest="star_output_types", nargs='+')
+    parser.add_argument('--output_file',       action="store", dest="output_file")
     parser.add_argument('--sample_sheet_file', action="store", dest="sample_sheet_file")
 
     args = parser.parse_args()
     # -------------------------------------------------------------- #
     sample_id         = args.sample_id
-    input_file        = args.input_file
+    basepath          = args.input_dir
     gtf_file          = args.gtf_file
+    star_output_types = args.star_output_types
     output_file       = args.output_file
     sample_sheet_file = args.sample_sheet_file
-
-    # -------------------------------------------------------------- #
-    print("Reading input files ...")
-    basepath      = os.path.dirname(input_file)
-    path_genes    = os.path.join(basepath,'genes.tsv')
-    genes         = pd.read_csv(path_genes, sep='\t', header=None)
-    genes.columns = ['gene_id','gene_id2']
-    genes         = genes.drop(columns = ['gene_id2'])
-
-    path_barcode       = os.path.join(basepath,'barcodes.tsv')
-    barcode            = pd.read_csv(path_barcode, sep='\t', header=None)
-    barcode.columns    = ['cell_id']
-    barcode['sample_name'] = sample_id
-    barcode['index']   = range(barcode.shape[0])
-    barcode['cell_id'] = barcode['sample_name'] + '_' + barcode['cell_id']
-
-    sample_sheet = pd.read_csv(sample_sheet_file)
-    sample_sheet = sample_sheet.drop(columns=['reads','barcode'])
-    sample_sheet = sample_sheet.drop_duplicates()
-    barcode      = barcode.merge(sample_sheet, on='sample_name')
-    barcode      = barcode.sort_values(by='index')
-    barcode      = barcode.drop(columns=['index'])
 
     # -------------------------------------------------------------- #
     print("Parsing gene ids from gtf file",gtf_file)
     gene_ids = get_gtf_gene_ids(gtf_file)
 
     # -------------------------------------------------------------- #
-    # fills the GENE matrix with zeros for missing genes
-    print('Gene matrix ...')
-    matrix_gene = mmread(os.path.join(basepath, 'matrixGeneFull.mtx'))
-    matrix_gene_umi, row_names_gene = fill_missing_genes_into_matrix(gene_ids, matrix_gene.toarray(), genes['gene_id'], barcode['cell_id'])
+    dge_list = {}
+    print("Reading input files ...")
+    for star_output_type in star_output_types:
+        print(star_output_type)
+        path_input    = os.path.join(basepath, star_output_type, 'raw')
 
-    # -------------------------------------------------------------- #
-    # fills the EXON matrix with zeros for missing genes
-    # all input matrices have the same X dimension
-    print('Exon matrix ...')
-    matrix_exon = mmread(input_file)
-    matrix_exon_umi, row_names_exon = fill_missing_genes_into_matrix(gene_ids, matrix_exon.toarray(), genes['gene_id'], barcode['cell_id'])
+        print('Features ...')
+        path_genes    = os.path.join(path_input,'features.tsv')
+        genes         = pd.read_csv(path_genes, sep='\t', header=None)
+        genes.columns = ['gene_id','gene_id2']
+        genes         = genes.drop(columns = ['gene_id2'])
 
-    # -------------------------------------------------------------- #
-    # sorts the exon and gene matrices
-    row_names = pd.DataFrame({'gene_id' : row_names_gene})
-    if not row_names_gene.equals(row_names_exon):
-        print('Arranging rows ...')
-        pd_gene = pd.DataFrame({
-        'id'    : row_names_gene
-        })
-        pd_exon = pd.DataFrame({
-        'id'    : row_names_exon,
-        'index' : range(row_names_exon.shape[0])
-        })
-        merged_names    = pd_gene.merge(pd_exon, how='left', on='id')
-        row_names       = pd.DataFrame({'gene_id' : merged_names['id']})
-        matrix_gene_umi = matrix_gene_umi[merged_names['index'],]
-        matrix_exon_umi = matrix_exon_umi[merged_names['index'],]
+        print('Barcode ...')
+        path_barcode       = os.path.join(path_input,'barcodes.tsv')
+        barcode            = pd.read_csv(path_barcode, sep='\t', header=None)
+        barcode.columns    = ['cell_id']
+        barcode['sample_name'] = sample_id
+        barcode['index']   = range(barcode.shape[0])
+        barcode['cell_id'] = barcode['sample_name'] + '_' + barcode['cell_id']
 
+        sample_sheet = pd.read_csv(sample_sheet_file)
+        sample_sheet = sample_sheet.drop(columns=['reads','barcode'])
+        sample_sheet = sample_sheet.drop_duplicates()
+        barcode      = barcode.merge(sample_sheet, on='sample_name')
+        barcode      = barcode.sort_values(by='index')
+        barcode      = barcode.drop(columns=['index'])
+
+
+        # -------------------------------------------------------------- #
+        # fills the GENE matrix with zeros for missing genes
+        print('Matrix ...')
+        matrix_gene = mmread(os.path.join(path_input, 'matrix.mtx'))
+
+        # row_names_gene needs to be a named pandas object
+        matrix_gene_umi, row_names_gene = fill_missing_genes_into_matrix(gene_ids, matrix_gene.toarray(), genes['gene_id'], barcode['cell_id'])
+
+        dge_list[star_output_type] = {'matrix' : matrix_gene, 'barcode' : barcode, 'genes' : row_names_gene}
+
+    # ADD: test to check that the rownames and the column names correspond
+    # between diferent matrices
 
     # -------------------------------------------------------------- #
     print('Creating loompy file')
-    lm = {'' : matrix_exon_umi, 'unspliced' : matrix_gene_umi - matrix_exon_umi }
+    matrix_list = {'' : dge_list['Gene']['matrix']}
 
-    col_attrs = barcode.to_dict("list")
+    # checks whether the Velocyto and GeneFull outputs
+    # are in the STAR output folder
+    if 'Velocyto' in set(star_output_types):
+        matrix_list['unspliced'] = dge_list['Velocyto']['matrix']
+
+    if 'GeneFull' in set(star_output_types):
+        matrix_list['total'] = dge_list['GeneFull']['matrix']
+
+    col_attrs = dge_list['Gene']['barcode'].to_dict("list")
     col_attrs = dict_to_array(col_attrs)
 
-    row_attrs = row_names.to_dict("list")
+    row_attrs = dge_list['Gene']['genes'].to_dict("list")
     row_attrs = dict_to_array(row_attrs)
 
-    loompy.create(output_file, lm, row_attrs, col_attrs)
+    loompy.create(output_file, matrix_list, row_attrs, col_attrs)

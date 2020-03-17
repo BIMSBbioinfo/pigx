@@ -40,6 +40,11 @@ COVARIATES          = config['covariates']
 # adapter locations
 ADAPTER_PARAMETERS = config['adapter_parameters']
 
+# ----------------------------------------------------------------------------- #
+# output count matrices for STAR solo
+# Gene and GeneFull is obligatory, the rest might be set as params in conig
+# SJ matrix is absent because STAR output is currently wrong
+STAR_OUTPUT_TYPES = ['Gene','GeneFull'] + ['Velocyto']
 
 # ----------------------------------------------------------------------------- #
 # PATHS
@@ -617,7 +622,7 @@ rule map_star:
         threads     = config['execution']['rules']['map_star']['threads'],
         mem         = config['execution']['rules']['map_star']['memory'],
         strand      = 'Forward',
-        features    = 'Gene SJ GeneFull',
+        features    = " ".join(STAR_OUTPUT_TYPES),
         tempdir     = TEMPDIR,
         params_STAR = PARAMS['map_star']
     message:"""
@@ -727,7 +732,11 @@ rule convert_matrix_from_mtx_to_loom:
         mem     = config['execution']['rules']['convert_matrix_from_mtx_to_loom']['memory'],
 
         # input file
-        infile  = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_Solo.out', 'matrix.mtx'),
+        indir   = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_Solo.out'),
+
+        # STARsolo output types
+        star_output_types = " ".join(STAR_OUTPUT_TYPES),
+
         # input gtf
         gtf     = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf'])),
         script  = PATH_SCRIPT,
@@ -736,15 +745,16 @@ rule convert_matrix_from_mtx_to_loom:
         logfile = os.path.join(PATH_LOG, "{name}.{genome}.convert_matrix_from_mtx_to_loom.log")
     message: """
             convert_matrix_from_mtx_to_loom:
-                input:  {params.infile}
+                input:  {params.indir}
                 output: {output.outfile}
         """
     run:
         command = ' '.join([
             params.python, os.path.join(params.script, 'convert_matrix_from_mtx_to_loom.py'),
             '--sample_id',         params.name,
-            '--input_file',        params.infile,
+            '--input_dir',         params.indir,
             '--gtf_file',          params.gtf,
+            '--star_output_types', params.star_output_types,
             '--output_file',       output.outfile,
             '--sample_sheet_file', params.sample_sheet_file,
             '&>', str(log.logfile)
@@ -837,9 +847,9 @@ rule convert_loom_to_seurat:
     log:
         log = os.path.join(PATH_LOG, "{genome}.convert_loom_to_seurat.log")
     params:
-        script         = PATH_SCRIPT,
-        Rscript        = PATH_RSCRIPT,
-        genome_version = "{genome}",
+        script            = PATH_SCRIPT,
+        Rscript           = PATH_RSCRIPT,
+        genome_version    = "{genome}",
         threads  = config['execution']['rules']['convert_loom_to_seurat']['threads'],
         mem      = config['execution']['rules']['convert_loom_to_seurat']['memory']
 
@@ -915,12 +925,13 @@ rule extract_read_statistics:
     output:
         outfile = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_{genome}_ReadStatistics.txt')
     params:
-        sample   = "{name}",
-        threads  = config['execution']['rules']['extract_read_statistics']['threads'],
-        mem      = config['execution']['rules']['extract_read_statistics']['memory'],
-        script   = PATH_SCRIPT,
-        Rscript  = PATH_RSCRIPT,
-        mito_chr = MITOCHNODRIAL_CHROMOSOME
+        sample            = "{name}",
+        threads           = config['execution']['rules']['extract_read_statistics']['threads'],
+        mem               = config['execution']['rules']['extract_read_statistics']['memory'],
+        script            = PATH_SCRIPT,
+        star_output_types = " ".join(STAR_OUTPUT_TYPES),
+        Rscript           = PATH_RSCRIPT,
+        mito_chr          = MITOCHNODRIAL_CHROMOSOME
     message: """
             extract_read_statistics:
                 input:  {input.bamfile}
