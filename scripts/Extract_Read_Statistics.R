@@ -21,25 +21,6 @@ MappingStats_STAR = function(path, name){
     return(d)
 }
 
-# ------------------------------------------------------------------------ #
-Star_Solo_Stat = function(path, name, type=''){
-
-   s = scan(path, what='character', sep='\n', quiet=TRUE)
-   s = s[-c(1,6)]
-   s = gsub('\\s+','\t',s)
-   s = strsplit(s,'\t')
-   d = do.call(rbind, lapply(s, function(x)data.frame(t(x), stringsAsFactors = FALSE)))
-   d$X1 = NULL
-   d$X3 = as.numeric(as.character(d$X3))
-   d = d[c(2,3,4,6,7,13,14),]
-   d = data.frame(sample = name, d)
-   colnames(d) = c('sample','mapped','cnts')
-   d$freq = NA
-   d$type = type
-   return(d)
-
-}
-
 # -------------------------------------------------------------------------- #
 Extract_Read_Statistics = function(
     bamfile           = NULL,
