@@ -134,6 +134,12 @@ The plot displays the numbers of mapped reads (in millions) categorized by annot
 
 ```{r ReadDistribution, results='asis', echo = FALSE}
 read_statistics %>%
+  mutate(type = as.character(type)) %>%
+  mutate(type  = case_when(
+    type == 'GeneFull' ~ 'gene',
+    type == 'Gene'     ~ 'exon',
+    TRUE ~ type
+  )) %>%
     dplyr::filter(type   %in% c('exon','gene','mapped')) %>%
     dplyr::filter(mapped %in% c('map.total','nUMIs')) %>%
     dcast(sample ~ type, value.var='cnts')  %>%
