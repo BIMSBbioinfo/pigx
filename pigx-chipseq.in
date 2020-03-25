@@ -355,8 +355,8 @@ if config['execution']['submit-to-cluster']:
 
     if ( ('queue' in config['execution']['cluster'] )  or ( 'queue' in config['execution']['rules']['__default__'] )):
         queue_selection_string = " -q {cluster.queue} "
-	# User has defined queue name(s) --either generally, or rule-specific.
-	# in either case, generate_cluster_configuration() (defined above) has 
+        # User has defined queue name(s) --either generally, or rule-specific.
+        # in either case, generate_cluster_configuration() (defined above) has 
         # already printed the apropriate queue name to each rule.
         queue_selection_string = " -q {cluster.queue} "
     else :
