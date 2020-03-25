@@ -413,4 +413,5 @@ else:
         command.append("--unlock")
     if args.target and 'help' in args.target:
         command.append("help")
+        while "--dryrun" in command: command.remove("--dryrun")
     subprocess.run(command)
