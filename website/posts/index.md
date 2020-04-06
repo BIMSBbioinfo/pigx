@@ -8,6 +8,12 @@ configured with a simple sample sheet and a descriptive settings file.
 The result is a set of comprehensive, interactive HTML reports with
 interesting findings about your samples.
 
+## Publication
+
+**Wurmus R, Uyar B, Osberg B, Franke V, Gosdschan A, Wreczycka K, Ronen J,
+Akalin A**. [PiGx: Reproducible genomics analysis pipelines with GNU Guix.](https://www.ncbi.nlm.nih.gov/pubmed/30277498)
+**Gigascience**. 2018 Oct 2. doi: 10.1093/gigascience/giy123. PubMed PMID: 30277498.
+
 ###### BUTTONS HERE
 
 PiGx includes the following pipelines:
