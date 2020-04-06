@@ -66,7 +66,7 @@ management.  Install the complete pipeline bundle with the following
 command:
 
 ```sh
-guix package -i pigx
+guix install pigx
 ```
 
 If you want to install PiGx from source, please make sure that all
