@@ -81,7 +81,7 @@ for reproducible, user-controlled software management.  Install the
 complete pipeline bundle with the following command:
 
 ```sh
-guix package -i pigx
+guix install pigx
 ```
 
 PiGx is [free
