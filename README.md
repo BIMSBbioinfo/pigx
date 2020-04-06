@@ -30,6 +30,11 @@ format) and a descriptive settings file (in YAML format).  For more
 detailed information see the README.md file for each of the pipelines
 in the `pipelines` directory.
 
+## Publication
+
+**Wurmus R, Uyar B, Osberg B, Franke V, Gosdschan A, Wreczycka K, Ronen J,
+Akalin A**. [PiGx: Reproducible genomics analysis pipelines with GNU Guix.](https://www.ncbi.nlm.nih.gov/pubmed/30277498)
+**Gigascience**. 2018 Oct 2. doi: 10.1093/gigascience/giy123. PubMed PMID: 30277498.
 
 # Getting started
 
