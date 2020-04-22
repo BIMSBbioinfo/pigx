@@ -139,9 +139,92 @@ st <- system.time({
     treatment = treatments
   )
 
-## Remove temp hardlinked files
-unlink(c(linkedFiles,paste0(linkedFiles,".tbi")))
+  ## Destrand if needed
+  if (destrand) {
+    message("Destranding first.")
 
+    destrandFun <- function(obj, cores) {
+      print(getSampleID(obj))
+
+      if (obj@resolution == "base") {
+        dir <- dirname(obj@dbpath)
+        filename <- paste(gsub(".txt.bgz", "", obj@dbpath),
+          "destrand.txt",
+          sep = "_"
+        )
+
+        filename <- basename(filename)
+
+        # need to use .CpG.dinuc.unifyOld because output needs to be ordered
+        newdbpath <- methylKit:::applyTbxByChr(obj@dbpath,
+          dir = dir, filename = filename,
+          return.type = "tabix",
+          FUN = function(x) {
+            methylKit:::.CpG.dinuc.unifyOld(methylKit:::.setMethylDBNames(
+              x,
+              "methylRawDB"
+            ))
+          },
+          mc.cores = cores
+        )
+
+        obj <- methylKit:::readMethylRawDB(
+          dbpath = newdbpath, dbtype = "tabix",
+          sample.id = obj@sample.id,
+          assembly = obj@assembly, context = obj@context,
+          resolution = obj@resolution
+        )
+      }
+      return(obj)
+    }
+
+    new.list <- suppressMessages(lapply(methylRawListDB, destrandFun, cores = cores))
+    methylRawListDB <- new("methylRawListDB", new.list, treatment = methylRawListDB@treatment)
+    destrandFiles <- getDBPath(methylRawListDB)
+    suffix <- sprintf("%s_destranded", suffix)
+  }
+
+  ## Unite
+  message("Merging samples.")
+  methylBaseDB <- unite(methylRawListDB,
+    destrand = FALSE,
+    suffix = suffix,
+    dbdir = outdir,
+    mc.cores = cores,
+    chunk.size = 1e7,
+  )
+
+  ## FIXME: check wether result has more than 1 rows and fail if not
+
+  if (destrand) {
+    message("Linking destranded tabix file.")
+    file.symlink(
+      from = getDBPath(methylBaseDB),
+      to = file.path(
+        outdir,
+        sprintf(
+          "methylBase_%s.txt.bgz",
+          gsub("_destranded", "", suffix)
+        )
+      )
+    )
+    file.symlink(
+      from = paste0(getDBPath(methylBaseDB), ".tbi"),
+      to = file.path(
+        outdir,
+        sprintf(
+          "methylBase_%s.txt.bgz.tbi",
+          gsub("_destranded", "", suffix)
+        )
+      )
+    )
+
+    ## Remove temp destrand files
+    unlink(c(destrandFiles, paste0(destrandFiles, ".tbi")))
+  }
+
+  ## Remove temp hardlinked files
+  unlink(c(linkedFiles, paste0(linkedFiles, ".tbi")))
 })
 
 message("Done.")
