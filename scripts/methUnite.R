@@ -23,18 +23,18 @@
 args <- commandArgs(TRUE)
 
 ## Default setting when no arguments passed
-if(length(args) < 1) {
+if (length(args) < 1) {
   args <- c("--help")
 }
 
 ## Help section
-if("--help" %in% args) {
+if ("--help" %in% args) {
   cat("
       Merge methylation samples using methylKit
-      
+
       Arguments:
       --inputfiles comma separated input tabix files
-      --sampleids comma separated sample name vector 
+      --sampleids comma separated sample name vector
       --treatments comma separated treatment vector
       --assembly genome assembly
       --context methylation context
@@ -44,11 +44,11 @@ if("--help" %in% args) {
       --suffix suffix for merged file
       --logFile file to print the logs to
       --help              - print this text
-      
+
       Example:
       ./test.R --arg1=1 --arg2='output.txt' --arg3=TRUE \n\n")
-  
-  q(save="no")
+
+  q(save = "no")
 }
 
 ## Parse arguments (we expect the form --arg=value)
@@ -60,7 +60,7 @@ names(argsL) <- argsDF$V1
 
 # ## catch output and messages into log file
 out <- file(argsL$logFile, open = "wt")
-sink(out,type = "output")
+sink(out, type = "output")
 sink(out, type = "message")
 
 print(argsL)
@@ -71,75 +71,73 @@ suppressPackageStartupMessages(library("methylKit"))
 data.table::setDTthreads(8)
 
 ## Load variables
-inputs      <- strsplit(argsL$inputfiles, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
-sampleids   <- strsplit(argsL$sampleids, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
-cores       <- as.numeric(argsL$cores)
-assembly    <- argsL$assembly
-suffix      <- argsL$suffix
-outdir      <- argsL$outdir
-destrand    <- ifelse(tolower(argsL$destrand) %in% c("true","yes"),TRUE,FALSE)
+inputs <- strsplit(argsL$inputfiles, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+sampleids <- strsplit(argsL$sampleids, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+cores <- as.numeric(argsL$cores)
+assembly <- argsL$assembly
+suffix <- argsL$suffix
+outdir <- argsL$outdir
+destrand <- ifelse(tolower(argsL$destrand) %in% c("true", "yes"), TRUE, FALSE)
 
 message("Remapping Treatment Description to number.")
 # split all treatment values, could be numeric or not
-treatmentsStr  <- strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+treatmentsStr <- strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 # convert into named numeric vector
-treatments <- as.numeric( as.factor( treatmentsStr ))
+treatments <- as.numeric(as.factor(treatmentsStr))
 names(treatments) <- treatmentsStr
 
-message(paste(sort(unique(treatmentsStr)),
-              sort(unique(treatments)), 
-              sep = ": ",collapse = "\n"))
+message(paste(
+  sort(unique(treatmentsStr)),
+  sort(unique(treatments)),
+  sep = ": ", collapse = "\n"
+))
 
 # convert variables and perform checks
 context <- switch(tolower(argsL$context),
-	cpg = "CpG",
-	chh = "CHH",
-	chg = "CHG",
-	NULL
-	)
+  cpg = "CpG",
+  chh = "CHH",
+  chg = "CHG",
+  NULL
+)
 
-if(is.null(context)) 
-	stop("The given context <",argsL$context,
-		 "> is not among the supported ones ('CpG','CHG','CHH')")
+if (is.null(context)) {
+  stop(
+    "The given context <", argsL$context,
+    "> is not among the supported ones ('CpG','CHG','CHH')"
+  )
+}
 
-if(length(inputs) <= 1)
-	stop("At least two samples required to perform merging")
+if (length(inputs) <= 1) {
+  stop("At least two samples required to perform merging")
+}
 
 
 # ---------------------------------------------------
 st <- system.time({
 
-## Hardlink Tabix files to avoid race conditions
-inputFiles <- basename(inputs)
-linkedFiles <- file.path(outdir,inputFiles)
-file.link(inputs,linkedFiles)
-file.link(paste0(inputs,".tbi"),paste0(linkedFiles,".tbi"))
-inputs <- linkedFiles
+  ## Hardlink Tabix files to avoid race conditions
+  inputFiles <- basename(inputs)
+  linkedFiles <- file.path(outdir, inputFiles)
+  file.link(inputs, linkedFiles)
+  file.link(paste0(inputs, ".tbi"), paste0(linkedFiles, ".tbi"))
+  inputs <- linkedFiles
 
 
-if(length(inputs > 1)) {
-	inputs <- as.list(inputs)
-	sampleids <- as.list(sampleids)
-}
+  if (length(inputs > 1)) {
+    inputs <- as.list(inputs)
+    sampleids <- as.list(sampleids)
+  }
 
-## Read data
-message("Importing Tabix files.")
-methylRawListDB <- methRead(location = inputs, 
-							sample.id = sampleids,
-							assembly = assembly, 
-							dbtype = "tabix", 
-							context = context, 
-							treatment = treatments)
-
-## Unite
-message("Merging samples.")
-methylBaseDB <- unite(methylRawListDB, 
-                 destrand=destrand, 
-                 suffix = suffix,
-                 dbdir=outdir,
-				 mc.cores = cores)
-
-## FIXME: check wether result has more than 1 rows and fail if not 
+  ## Read data
+  message("Importing Tabix files.")
+  methylRawListDB <- methRead(
+    location = inputs,
+    sample.id = sampleids,
+    assembly = assembly,
+    dbtype = "tabix",
+    context = context,
+    treatment = treatments
+  )
 
 ## Remove temp hardlinked files
 unlink(c(linkedFiles,paste0(linkedFiles,".tbi")))
