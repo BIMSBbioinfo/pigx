@@ -20,6 +20,7 @@ def get_unite_tabixfiles(analysis, tool, context):
     else:
         aligner_tag = ["" for sample in samplelist]
     prefix = [x+y+z for x,y,z in zip(samplelist, aligner_tag, dedup_tag)]
+    context = context.replace("_destranded","")
     files = []
     for sample in prefix:
         file = os.path.join(DIR_methcall,tool, "tabix_"+context, 
@@ -39,8 +40,8 @@ rule unite_meth_calls:
         treatments = lambda wc: ",".join([samplesheet(sample,'Treatment') for
             sample in get_sampleids_from_analysis(wc.analysis)]),
         assembly   = ASSEMBLY,
-        context    = "{context}",
-        destrand   = lambda wc: destrand(wc.context),
+        context    = lambda wc: wc.context.replace("_destranded",""),
+        destrand   = lambda wc: True if "destranded" in wc.context else False,
         cores      = int(config['general']['differential-methylation']['cores']),
         outdir     = DIR_diffmeth+"{analysis}/",
         suffix     = "{analysis}_{context}_{tool}"
@@ -79,8 +80,8 @@ rule diffmeth:
         treatments = lambda wc: ",".join([samplesheet(sample,'Treatment') for
             sample in get_sampleids_from_analysis(wc.analysis)]),
         assembly    = ASSEMBLY,
-        context    = "{context}",
-        destranded = lambda wc: destrand(wc.context),
+        context    = lambda wc: wc.context.replace("_destranded",""),
+        destranded = lambda wc: True if "destranded" in wc.context else False,
         treatment_group = lambda wc: config["DManalyses"][wc.analysis]["treatment_sample_groups"],
         control_group = lambda wc: config["DManalyses"][wc.analysis]["control_sample_groups"],
         cores       = int(config['general']['differential-methylation']['cores']),
@@ -126,8 +127,8 @@ rule diffmeth_report:
         treatments             = lambda wc: ",".join([samplesheet(sample,'Treatment') for
             sample in get_sampleids_from_analysis(wc.analysis)]),
         assembly               = ASSEMBLY,
-        context                = "{context}",
-        destranded             = lambda wc: destrand(wc.context),
+        context                = lambda wc: wc.context.replace("_destranded",""),
+        destranded             = lambda wc: True if "destranded" in wc.context else False,
         treatment_group        = lambda wc: config["DManalyses"][wc.analysis]["treatment_sample_groups"],
         control_group          = lambda wc: config["DManalyses"][wc.analysis]["control_sample_groups"],
         scripts_dir            = DIR_scripts,

@@ -446,34 +446,41 @@ def files_for_treatment(proc):
     else:
         return []
 
+# FIXME: create files dependend on context
 def list_files_unite_bismark(treatment):
     PATH = DIR_diffmeth + treatment + "/"  
-    return [ PATH + "methylBase_"+treatment+"_cpg_methylKit.txt.bgz" ] 
+    DESTRAND = "_destranded" if destrand("cpg") else ""
+    return [ PATH + "methylBase_"+treatment+"_cpg"+DESTRAND+"_methylKit.txt.bgz" ] 
      
 def list_files_unite_bwameth(treatment):
     PATH = DIR_diffmeth + treatment + "/"  
-    return [ PATH + "methylBase_"+treatment+"_CpG_methylDackel.txt.bgz" ] 
+    DESTRAND = "_destranded" if destrand("cpg") else ""
+    return [ PATH + "methylBase_"+treatment+"_CpG"+DESTRAND+"_methylDackel.txt.bgz" ] 
 
 
 def list_files_diffmeth_bismark(treatment):
     PATH = DIR_diffmeth + treatment + "/"  
+    DESTRAND = "_destranded" if destrand("cpg") else ""
     return [ 
-            PATH + "methylDiff_"+treatment+"_cpg_methylKit_full.txt.bgz",
-            PATH + "methylDiff_"+treatment+"_cpg_methylKit_results.tsv"
+            PATH + "methylDiff_"+treatment+"_cpg"+DESTRAND+"_methylKit_full.txt.bgz",
+            PATH + "methylDiff_"+treatment+"_cpg"+DESTRAND+"_methylKit_results.tsv"
             ]
 
     
 def list_files_diffmeth_bwameth(treatment):
     PATH = DIR_diffmeth + treatment + "/"  
+    DESTRAND = "_destranded" if destrand("cpg") else ""
     return [ 
-            PATH + "methylDiff_"+treatment+"_CpG_methylDackel_full.txt.bgz",
-            PATH + "methylDiff_"+treatment+"_CpG_methylDackel_results.tsv"
+            PATH + "methylDiff_"+treatment+"_CpG"+DESTRAND+"_methylDackel_full.txt.bgz",
+            PATH + "methylDiff_"+treatment+"_CpG"+DESTRAND+"_methylDackel_results.tsv"
             ]
 
 def list_files_diffmeth_report_bwameth(treatment):
     PATH = DIR_final 
-    return [ PATH + treatment + "/" + treatment + "_CpG_methylDackel"+ ".diffmeth-report.html"]
+    DESTRAND = "_destranded" if destrand("cpg") else ""
+    return [ PATH + treatment + "/" + treatment + "_CpG"+DESTRAND+"_methylDackel"+ ".diffmeth-report.html"]
 
 def list_files_diffmeth_report_bismark(treatment):
     PATH = DIR_final 
-    return [ PATH + treatment + "/" + treatment + "_cpg_methylKit" +".diffmeth-report.html"]
+    DESTRAND = "_destranded" if destrand("cpg") else ""
+    return [ PATH + treatment + "/" + treatment + "_cpg"+DESTRAND+"_methylKit" +".diffmeth-report.html"]
