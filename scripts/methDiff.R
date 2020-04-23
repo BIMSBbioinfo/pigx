@@ -22,8 +22,8 @@
 
 
 # This file was inspired by
-# https://github.com/katwre/makeWGBSnake/blob/master/Scripts/MethDiff.R 
-# taken from 
+# https://github.com/katwre/makeWGBSnake/blob/master/Scripts/MethDiff.R
+# taken from
 
 # WGBS pipeline
 #
@@ -31,20 +31,20 @@
 # This pipeline is heavily based on the PiGx BSseq pipeline github.com/BIMSBbioinfo/pigx_bsseq
 
 
-#methDiff.R - takes a methylKit methylBaseDB tabix file and performs
-#	differential methylation testing
+# methDiff.R - takes a methylKit methylBaseDB tabix file and performs
+# 	differential methylation testing
 # ---last updated Oct. 2019 by A. Blume
 
 ## Collect arguments
 args <- commandArgs(TRUE)
 
 ## Default setting when no arguments passed
-if(length(args) < 1) {
+if (length(args) < 1) {
   args <- c("--help")
 }
 
 ## Help section
-if("--help" %in% args) {
+if ("--help" %in% args) {
   cat("
       Calculate Differential Methylation
       
@@ -69,25 +69,27 @@ if("--help" %in% args) {
       
       Example:
       ./test.R --arg1=1 --arg2='output.txt' --arg3=TRUE \n\n")
-  
-  q(save="no")
+
+  q(save = "no")
 }
 
 
-parseArgs     <- function(x) strsplit(sub("^--", "", x), "=")
+parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
 parseArgsList <- function(x) strsplit(as.character(x), " ")
 
 ## Parse arguments (we expect the form --arg=value)
 argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
-argsL <- sapply(argsL,parseArgsList)
+argsL <- sapply(argsL, parseArgsList)
 
 
 ## catch output and messages into log file
 out <- file(argsL$logFile, open = "wt")
-sink(out,type = "output")
+sink(out, type = "output")
 sink(out, type = "message")
+
+print(argsL)
 
 # Prepare Variables -----------------------------------------------------------
 
@@ -96,86 +98,97 @@ suppressPackageStartupMessages(library("methylKit"))
 data.table::setDTthreads(8)
 
 # load variables
-input       <- argsL$inputfile
-sampleids   <- strsplit(argsL$sampleids, ",", fixed            = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
-assembly    <- argsL$assembly
-destranded  <- ifelse(tolower(argsL$destranded) %in% c("true","yes"),TRUE,FALSE)
-outdir      <- argsL$outdir
+input <- argsL$inputfile
+sampleids <- strsplit(argsL$sampleids, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+assembly <- argsL$assembly
+destranded <- ifelse(tolower(argsL$destranded) %in% c("true", "yes"), TRUE, FALSE)
+outdir <- argsL$outdir
 resultsFile <- argsL$resultsFile
 
 # split all treatment values, could be numeric or not
-treatmentsStr  <- strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
+treatmentsStr <- strsplit(argsL$treatments, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 
 treatment_group <- strsplit(argsL$treatment_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 control_group <- strsplit(argsL$control_group, ",", fixed = FALSE, perl = FALSE, useBytes = FALSE)[[1]]
 
-if (!setequal(control_group,treatment_group)) {
-  
+if (!setequal(control_group, treatment_group)) {
   message("Remapping Treatments Descriptions into treatment and control groups.")
-  # reorganize samples into treatment and control groups 
-  treatments <- ifelse(treatmentsStr %in% treatment_group,1,0)
-  
-  message("Control group (0): ", paste0(control_group,collapse = ", "))
-  message("Treatment group (1): ", paste0(treatment_group,collapse = ", "))
+  # reorganize samples into treatment and control groups
+  treatments <- ifelse(treatmentsStr %in% treatment_group, 1, 0)
+
+  message("Control group (0): ", paste0(control_group, collapse = ", "))
+  message("Treatment group (1): ", paste0(treatment_group, collapse = ", "))
 } else {
-  
   message("Remapping Treatment Description to number.")
   # convert into named numeric vector
-  treatments <- as.numeric( as.factor( treatmentsStr ))
+  treatments <- as.numeric(as.factor(treatmentsStr))
   names(treatments) <- treatmentsStr
-  
+
   message(paste(sort(unique(treatmentsStr)),
-                sort(unique(treatments)), 
-                sep = ": ",collapse = "\n"))
-  
+    sort(unique(treatments)),
+    sep = ": ", collapse = "\n"
+  ))
 }
 
 
 # convert variables and perform checks
 context <- switch(tolower(argsL$context),
-	cpg = "CpG",
-	chh = "CHH",
-	chg = "CHG",
-	NULL
-	)
+  cpg = "CpG",
+  chh = "CHH",
+  chg = "CHG",
+  NULL
+)
 
-if(is.null(context)) {	
-	stop("The given context <",argsL$context,
-		 "> is not among the supported ones ('CpG','CHG','CHH')")}
+if (is.null(context)) {
+  stop(
+    "The given context <", argsL$context,
+    "> is not among the supported ones ('CpG','CHG','CHH')"
+  )
+}
 
-qvalue     <- as.numeric(argsL$qvalue)
-difference <- as.numeric(argsL$difference)
-cores      <- as.numeric(argsL$cores)
+cores <- as.numeric(argsL$cores)
 
-methylDiff_results_suffix   <- argsL$methylDiff_results_suffix
+methylDiff_results_suffix <- argsL$methylDiff_results_suffix
 
 # Run Functions -----------------------------------------------------------
+st <- system.time({
 
-# Read input files
-message("Reading united samples ...")
-methylBaseDB <- methylKit:::readMethylBaseDB(dbpath = input,
-											 dbtype = "tabix",
-											 sample.ids = sampleids,
-											 assembly = assembly,
-											 context = context,
-											 resolution = "base",
-											 treatment = treatments,
-											 destranded = destranded)
+  # Read input files
+  message("Reading united samples ...")
+  methylBaseDB <- methylKit:::readMethylBaseDB(
+    dbpath = input,
+    dbtype = "tabix",
+    sample.ids = sampleids,
+    assembly = assembly,
+    context = context,
+    resolution = "base",
+    treatment = treatments,
+    destranded = destranded
+  )
 
 
-# Find differentially methylated cytosines
-message("Calculating differential methylation ...")
-methylDiffDB <- methylKit::calculateDiffMeth(.Object = methylBaseDB,
-											 overdispersion = "MN",
-											 test = "Chisq",
-											 mc.cores = cores,
-											 save.db = TRUE,
-											 dbdir = outdir,
-											 suffix = methylDiff_results_suffix)
+  # Find differentially methylated cytosines
+  message("Calculating differential methylation ...")
+  methylDiffDB <- methylKit::calculateDiffMeth(
+    .Object = methylBaseDB,
+    overdispersion = "MN",
+    test = "Chisq",
+    mc.cores = cores,
+    save.db = TRUE,
+    dbdir = outdir,
+    suffix = methylDiff_results_suffix
+  )
 
-message("Exporting results to tsv...")
-methylKit:::.write.table.noSci(getData(methylDiffDB), 
-							   sep="\t", 
-							   row.names=FALSE, 
-							   quote=FALSE,
-							   file = resultsFile)
+
+  message("Exporting results to tsv...")
+  methylKit:::.write.table.noSci(methylKit::getData(methylDiffDB),
+    sep = "\t",
+    row.names = FALSE,
+    quote = FALSE,
+    file = resultsFile
+  )
+})
+
+message("Done.")
+message("Process finished in (seconds): \n")
+print(st)
