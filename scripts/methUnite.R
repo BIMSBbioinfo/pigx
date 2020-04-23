@@ -181,7 +181,6 @@ st <- system.time({
     new.list <- suppressMessages(lapply(methylRawListDB, destrandFun, cores = cores))
     methylRawListDB <- new("methylRawListDB", new.list, treatment = methylRawListDB@treatment)
     destrandFiles <- getDBPath(methylRawListDB)
-    suffix <- sprintf("%s_destranded", suffix)
   }
 
   ## Unite
@@ -197,27 +196,6 @@ st <- system.time({
   ## FIXME: check wether result has more than 1 rows and fail if not
 
   if (destrand) {
-    message("Linking destranded tabix file.")
-    file.symlink(
-      from = getDBPath(methylBaseDB),
-      to = file.path(
-        outdir,
-        sprintf(
-          "methylBase_%s.txt.bgz",
-          gsub("_destranded", "", suffix)
-        )
-      )
-    )
-    file.symlink(
-      from = paste0(getDBPath(methylBaseDB), ".tbi"),
-      to = file.path(
-        outdir,
-        sprintf(
-          "methylBase_%s.txt.bgz.tbi",
-          gsub("_destranded", "", suffix)
-        )
-      )
-    )
 
     ## Remove temp destrand files
     unlink(c(destrandFiles, paste0(destrandFiles, ".tbi")))
