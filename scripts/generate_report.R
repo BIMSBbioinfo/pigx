@@ -57,8 +57,7 @@ render2HTML <- function(reportFile,
                         quiet = FALSE,
 						clean = FALSE)
 {
-  
-  
+
   if (is.null(report.params)) report.params <- list()
   
   ## render single report
@@ -69,7 +68,7 @@ render2HTML <- function(reportFile,
     input = reportFile,
     output_dir = workdir,
     intermediates_dir = file.path(workdir, prefix),
-	output_file = outFile,
+    output_file = outFile,
     output_format = rmarkdown::html_document(
       toc = TRUE,
       depth = 2,
@@ -79,7 +78,7 @@ render2HTML <- function(reportFile,
       code_folding = "hide",
       bibliography = bibTexFile
     ),
-	output_options = list(self_contained = selfContained),
+    output_options = list(self_contained = selfContained),
     params = c(report.params,
                logo = logo,
                prefix = prefix,
