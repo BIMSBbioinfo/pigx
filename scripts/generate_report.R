@@ -54,8 +54,8 @@ render2HTML <- function(reportFile,
                         bibTexFile,
                         prefix,
                         selfContained=TRUE,
-                        quiet = FALSE,
-						clean = FALSE)
+                        quiet = FALSE
+                        )
 {
 
   if (is.null(report.params)) report.params <- list()
@@ -84,7 +84,7 @@ render2HTML <- function(reportFile,
                prefix = prefix,
                workdir = workdir),
     quiet  = quiet,
-    clean  = clean
+    clean  = TRUE
   )
 	if(dir.exists(file.path(workdir, prefix))) {
 			unlink(file.path(workdir, prefix), recursive = TRUE)
@@ -180,11 +180,10 @@ cat(paste(
 
 
 render2HTML(reportFile = normalizePath(argsL$reportFile),
-            outFile = basename(argsL$outFile),
-            workdir = argsL$workdir,
-            report.params = argsL$report.params,
-            logo = argsL$logo,
-            bibTexFile = argsL$bibTexFile,
-            prefix = argsL$prefix,
-			selfContained = TRUE,
-			clean =FALSE)
+      outFile = basename(argsL$outFile),
+      workdir = argsL$workdir,
+      report.params = argsL$report.params,
+      logo = argsL$logo,
+      bibTexFile = argsL$bibTexFile,
+      prefix = argsL$prefix,
+      selfContained = TRUE)
