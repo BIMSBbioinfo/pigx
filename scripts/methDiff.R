@@ -165,7 +165,16 @@ st <- system.time({
     treatment = treatments,
     destranded = destranded
   )
-
+  
+  # remove output file if already exists
+  methylDiff_outFile <- gsub("results.tsv",
+                             sprintf("%s.txt.bgz",
+                                     methylDiff_results_suffix),
+                             resultsFile)
+  
+  if( file.exists(methylDiff_outFile)) {
+    unlink(c(methylDiff_outFile, paste0(methylDiff_outFile, ".tbi")))
+  }
 
   # Find differentially methylated cytosines
   message("Calculating differential methylation ...")

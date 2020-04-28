@@ -184,6 +184,12 @@ st <- system.time({
     destrandFiles <- getDBPath(methylRawListDB)
   }
 
+  # remove output file if already exists
+  outFile <- file.path(outdir,sprintf("methylBase_%s.txt.bgz",suffix))
+  if( file.exists(outFile)) {
+    unlink(c(outFile, paste0(outFile, ".tbi")))
+  }
+  
   ## Unite
   message("Merging samples.")
   methylBaseDB <- unite(methylRawListDB,
