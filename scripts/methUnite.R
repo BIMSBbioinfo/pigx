@@ -160,6 +160,7 @@ st <- system.time({
           dir = dir, filename = filename,
           return.type = "tabix",
           FUN = function(x) {
+            options(scipen = 999)
             methylKit:::.CpG.dinuc.unifyOld(methylKit:::.setMethylDBNames(
               x,
               "methylRawDB"
