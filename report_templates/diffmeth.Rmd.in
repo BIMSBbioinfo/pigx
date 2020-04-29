@@ -94,7 +94,7 @@ This report was generated with PiGx BSseq version @VERSION@.
 
 hyper.col <- "magenta"
 hypo.col <- "darkolivegreen4"
-nTop <- 1000
+nTop <- 5000
 
 cpgIsland_bedfile       <- params$cpgIsland_bedfile
 refGenes_bedfile        <- params$refGenes_bedfile
