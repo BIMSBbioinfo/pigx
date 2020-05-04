@@ -138,8 +138,11 @@ if (length(control_group) > 0) {
 prefix <-  params$prefix
 workdir <- params$workdir
 
+## Some sections are only run if respective output is available
 ExtractDiffMeth   <- TRUE
 AnnotateDiffMeth  <- TRUE
+ExportDMR <- TRUE
+AnnotateDMR <- TRUE
 
 if(! (all(file.exists(cpgIsland_bedfile,refGenes_bedfile)) | webfetch )) {
   AnnotateDiffMeth <- FALSE
@@ -283,7 +286,7 @@ ggsave(plot = p, filename = file.path(imagesDir,paste0(prefix,".pca.png")),
 
 For each treatment vector specified in the  settings file, the ratio of methylation between the control (i.e. the first entry), and the treatment (i.e. the second entry) is calculated across the genome. Logistic regression is then applied to model the log-odds probability of observing this ratio, by chance, in any given location (p-value) as well as the probability of observing it *somewhere* within the genome (q-value). The resulting probabilities are then tabulated below.
 
-After q-value calculation, differentially methylated bases are extracted based on q-value and percent methylation difference cutoffs. Here we select bases that have q-value < 0.01 and percent methylation difference larger than 25%. Futhermore, we calculate hyper-methylated or hypo-methylated bases.
+After q-value calculation, differentially methylated bases are extracted based on q-value and percent methylation difference cutoffs. Here we select bases that have q-value < `r qvalue` and percent methylation difference larger than `r difference`%. Furthermore, we calculate hyper-methylated or hypo-methylated bases.
 
 Overdispersion occurs when there is more variability in the data than assumed by the distribution and is here included in the differentially methylatation calculation.
 
@@ -344,7 +347,7 @@ if (! nrow(methylDiff.obj.all)>1 ) {
 
 ```
 
-```{r DiffMeth.export_text, results='asis', eval=ExtractDiffMeth}
+```{r DiffMeth.export_dmc_text, results='asis', eval=ExtractDiffMeth}
 cat('### Export Differentially Methylated Cytosines\n\n')
 
 cat('We export differentially-methylated CpG sites (DMC) to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n\n')
@@ -353,7 +356,7 @@ cat('- **DmC BED file**:\n',file.path(workdir,paste0(prefix,".dmc.bed")),'\n')
 
 ```
 
-```{r Diffmeth.extract, eval=ExtractDiffMeth}
+```{r Diffmeth.extract_dmc, eval=ExtractDiffMeth}
 
 # Get hyper-methylated
 methylDiff.obj.hyper <- getMethylDiff(.Object = methylDiff.obj.all,
@@ -369,7 +372,7 @@ methylDiff.obj.hypo <- getMethylDiff(.Object = methylDiff.obj.all,
 ```
 
 
-```{r DiffMeth.export, eval=ExtractDiffMeth, echo=FALSE}
+```{r DiffMeth.export_dmc, eval=ExtractDiffMeth, echo=FALSE}
 
 #-------------------------------------------------------------------
 #' Export windows to a BED file
@@ -404,41 +407,87 @@ meth2bed<-function(windows,filename,
     windows=as(windows, "GRanges")
   }
 
-  ## case if only one line is exported
-  if(is.null(colramp) | length(windows)==1){
-    trackLine <- gsub(pattern = "itemRgb=On",replacement = "",x = trackLine)
-  } else {
-    ramp <- colramp
-    score(windows)=range01(windows$meth.diff)
-    mcols(windows)$itemRgb= rgb(ramp(score(windows)), maxColorValue = 255)
-  }
+```{r DiffMeth.find_dmr_text, results='asis', eval=ExtractDiffMeth}
+cat('## Finding Regions of Differential Methylation\n\n')
 
-  strand(windows)="*"
-  score(windows)=range01(windows$meth.diff)
+cat('We use the `methSeg()` function to perform an unsupervised segmentation of the methylation differences calculated from `calculateDiffMeth()`. Then we classify hyper and hypo methylated segments based on the methylation difference threshold and join neighbouring segments with the same class. For details about the segmentation see [Wreczycka, et al (2017)](https://www.sciencedirect.com/science/article/pii/S0168165617315936). ')
 
-  if(is.null(trackLine)){
-
-    export.bed(windows,filename)
-  }else{
-    export.bed(windows,filename,
-               trackLine=as(trackLine, "BasicTrackLine"))
-  }
-}
-
-
-# Export differentially methylated cytosines to a bed file
-trackLine = paste0("track name='differentially methylated cytosines ' ",
-                   "description='diff. meth. between ",
-                   treatment_group_str, "and", control_group_str,
-                   "' itemRgb=On")
-
-bedFile <- file.path(workdir,paste0(prefix,".dmc.bed"))
-meth2bed(windows = methylDiff.obj.all,
-         trackLine=trackLine,
-         colramp=colorRamp(c("gray","green", "darkgreen")),
-         filename = bedFile) 
 ```
 
+```{r DiffMeth.find_dmr, eval=ExtractDiffMeth, echo=FALSE,warning=FALSE,message=FALSE}
+#' Find regions of differential methylation
+#' 
+#' This function performs unsupervised segmentation of 
+#' the methylation differences calculated from calculateDiffMeth.
+#' Then it classifies hyper and hypo methylated segments based 
+#' on a methylation difference threshold and joins 
+#' neighbouring segments with the same class. 
+#'
+#' @param methylDiff methylDiff or methylDiffDB object generated with calculateDiffMeth
+#' @param meth.diff integer methylation difference threshold
+#'
+#' @return A GRanges object with segment classification and information. 
+#' 'seg.mean' column shows the mean methylation per segment. 
+#' 'seg.group' column shows the segment groups obtained by mixture modeling
+#' @export
+#'
+#' @examples
+find_DMR <- function(methylDiff, meth.diff = 25) {
+    
+    # segment first
+    mDiffRegion <- methSeg(methylDiff)
+    
+    if (! length(unique(mDiffRegion$seg.group)) > 1 ){
+        message("WARNING: Unsupervised clustering of the segments was not successful.\n",
+                "To be sure that the algorithm will work on your data,\n",
+                "the given object should have at least 5000 records.")
+    }
+    # assign clusters based on meth.diff cutoff
+    mDiffRegion$seg.group <- "none"
+    if( any(mDiffRegion$seg.mean < -meth.diff))
+        mDiffRegion[mDiffRegion$seg.mean < -meth.diff]$seg.group <- "hypo"
+    if( any(mDiffRegion$seg.mean > meth.diff))
+        mDiffRegion[mDiffRegion$seg.mean > meth.diff]$seg.group <- "hyper"
+    # join neighbouring with same groups
+    mDiffRegion <- joinSegmentNeighbours(mDiffRegion)
+    
+    return(mDiffRegion)
+    
+}
+
+pdf(file.path(workdir,paste0(prefix,".find_dmr.pdf")))
+
+dmrs <- find_DMR(methylDiffDB)
+dev.off()
+
+if(! length(unique(dmrs$seg.group)) > 1 ) {
+	cat("\n**The Segmentation was not successful.\n",
+	    "Most probably the difference in methylation is not high enough.**")
+	ExportDMR <- FALSE
+	AnnotateDMR <- FALSE
+}
+```
+
+```{r DiffMeth.export_dmr_text, results='asis', eval=ExportDMR}
+cat('### Export Differentially Methylated Regions\n\n')
+
+cat('We export the regions of differentially-methylated cytosines (DMRs) to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n\n')
+
+cat('- **DMR BED file**:\n',file.path(workdir,paste0(prefix,".dmc.bed")),'\n')
+
+```
+
+```{r DiffMeth.export_dmr, eval=ExportDMR, echo=FALSE}
+
+dmrFile <- file.path(workdir,paste0(prefix,".dmr.bed"))
+meth2bed(dmrs,
+         scoreCol = "seg.mean",
+         filename = dmrFile,
+         colramp = colorRamp(c(hypo.col,"grey",hyper.col)),
+         track_name = "DMR (RP vs Res 2)",
+         description = "Differentially methylated regions"
+            )
+```
 
 
 
@@ -492,9 +541,9 @@ cat('This chromosome ideogram represents differential methylation, where only Cp
 
 if(length(GRanges.diffmeth.hypo)>1 & length(GRanges.diffmeth.hyper)>1){
 
-source(file.path(params$scripts_dir, "ideoDMC.R"))
-ideoDMC_hyper_hypo(methylDiff.obj.hyper, 
-                   methylDiff.obj.hypo, 
+source(file.path(scripts_dir, "ideoDMC.R"))
+ideoDMC_hyper_hypo(hyper = GRanges.diffmeth.hyper, 
+                   hypo = GRanges.diffmeth.hypo, 
                    chrom.length = seqlengths( sortSeqlevels(myseqinfo) ),
                    circos = FALSE, 
                    title = "Genome Wide Differential Methylation", 
@@ -910,6 +959,352 @@ if( (fetch_refgen_success) & length(GRanges.diffmeth)!=0)
 
   assoTSS$dmc.type <- "hypermethylated" 
   assoTSS$dmc.type[ GRanges.diffmeth[assoTSS$target.row]$meth.diff < 0] <- "hypomethylated" 
+  
+  p <- ggplot(assoTSS, aes(x = dist.to.feature, fill = dmc.type)) +
+    geom_histogram(color = "black", position = position_dodge()) +
+    scale_fill_manual(values = c(hyper.col,hypo.col)) +
+    labs(x="Base Pairs", y="Frequency" ) +
+    ggtitle("Distance to the nearest TSS") + 
+    theme_bw() +
+    theme(legend.position = "bottom", 
+          legend.title = element_blank(),
+          )
+  
+  print(p)
+  
+  }
+
+```
+
+
+```{r AnnotateDMR.Header,results='asis', eval=AnnotateDMR}
+cat('## Annotation of Differentially Methylated Regions\n\n')
+
+cat('Once regions of consecutive differential methylation (DMR) have been found for the comparison of treatment - control, those regions are classified into hyper- and hypo-methylated or unchanged regions, based on the minimal methylation difference as shown in the parameter table. Hypermethylation indicates increasingly-methylated sites, while hypomethylation indicates lowered methylation when performing the comparison of treatment - control.\n\n')
+```
+
+```{r AnnotateDMR.convert, eval=AnnotateDMR}
+
+# DMRs are already GRanges
+GRanges.dmr <- sortSeqlevels(dmrs)
+names(mcols(GRanges.dmr)) <- gsub("seg.mean","meth.diff", names(mcols(GRanges.dmr)))
+
+# subset to all available chromosomes
+seqinfo(GRanges.dmr) <- myseqinfo
+
+# Subset DMRs 
+GRanges.dmr.hyper  = GRanges.dmr[GRanges.dmr$seg.group == "hyper"]
+GRanges.dmr.hyper <- sortSeqlevels(GRanges.dmr.hyper)
+
+GRanges.dmr.hypo   = GRanges.dmr[GRanges.dmr$seg.group == "hypo"]
+GRanges.dmr.hypo <- sortSeqlevels(GRanges.dmr.hypo)
+```
+
+```{r AnnotateDMR.overview_descr, results='asis', eval=AnnotateDMR}
+
+if(length(GRanges.dmr.hypo)>1 & length(GRanges.dmr.hyper)>1){
+  
+cat('### Overview of Hyper- and Hypo-Methylated DMRs Over the Genome\n\n')
+  
+cat('This chromosome ideogram represents differential methylation, where only regions of Cytosines fulfilling the cutoff of methylation difference of at least ', difference,'% are shown.\n' )
+  
+}
+```
+
+```{r AnnotateDMR.overview_plot, eval=AnnotateDMR, echo=FALSE, message=FALSE, warning=FALSE,fig.width= 8, fig.height=10}
+
+if(length(GRanges.dmr.hypo)>1 & length(GRanges.dmr.hyper)>1){
+
+source(file.path(scripts_dir, "ideoDMC.R"))
+ideoDMC_hyper_hypo(hyper = GRanges.dmr.hyper, 
+                   hypo = GRanges.dmr.hypo, 
+                   chrom.length = seqlengths( sortSeqlevels(myseqinfo) ),
+                   circos = FALSE, 
+                   title = "Genome Wide Differential Methylation (DMRs)", 
+                   hyper.col = hyper.col, hypo.col = hypo.col) + theme_classic()
+
+}
+
+```
+
+
+```{r AnnotateDMR.annotateWithGeneParts,  eval=AnnotateDMR, echo=FALSE, message=FALSE, results='asis'}
+if( (fetch_refgen_success) & length(GRanges.dmr)!=0){
+  ## now we parse the gene features
+  # refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
+
+  annot.dmr.gene <- annotateWithGeneParts(target = GRanges.dmr,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+  
+  if( length(GRanges.dmr.hypo)!=0 & length(GRanges.dmr.hyper)!=0){
+  
+  annot.dmr.gene.hyper <- annotateWithGeneParts(target = GRanges.dmr.hyper,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+  
+  annot.dmr.gene.hypo <- annotateWithGeneParts(target = GRanges.dmr.hypo,
+                                         feature = refgenes.grl,
+                                         intersect.chr = TRUE)
+  }
+  
+
+  cat('### Differentially Methylated Regions per Genomic Feature\n\n')
+  
+  cat('The distribution of regions of differentially methylated cytosines over the genomic features should match the annotation based on DMCs and provides an additional confirmation for the stated hypothesis.\n\n')
+  
+}
+```
+
+```{r AnnotateDMR.annotateWithGenePartsPlot1,  eval=AnnotateDMR, echo=FALSE, results='asis'}
+if( (fetch_refgen_success) & length(GRanges.dmr)!=0){
+  
+  cat('#### Piechart\n\n')
+  # # plot the target overlap for each
+  genomation::plotTargetAnnotation(annot.dmr.gene,
+                       main="Differentially methylated Regions\nper Genomic Feature")
+  
+  cat('\n\n')
+}
+
+```
+
+
+```{r AnnotateDMR.annotateWithGenePartsPlot2,  eval=AnnotateDMR, echo=FALSE, results='asis'}
+
+if( (fetch_refgen_success) & length(GRanges.dmr)!=0){
+  
+  # construct dataframe for ggplot
+  df <- reshape2::melt(getTargetAnnotationStats(annot.dmr.gene))
+  df$variable <- factor(names(getTargetAnnotationStats(annot.dmr.gene)),
+                        levels = rev(names(getTargetAnnotationStats(annot.dmr.gene))))
+  df$count <- annot.dmr.gene@num.annotation
+  
+  cols <- getColors(length(getTargetAnnotationStats(annot.dmr.gene)))
+  
+
+  
+  p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+    scale_fill_manual(values = rev(cols)) +
+    geom_bar(stat = "identity" ,color = "black", position = position_dodge()) +
+    geom_text(aes(y = -10, label = count), hjust = 0,size = 5) +
+    ggtitle(label = "Differentially methylated Regions per Genomic Feature") +
+    labs(y = "Percentage", x = "Feature") + 
+    coord_flip() +
+    theme_bw() +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    theme(legend.position = "bottom", legend.title = element_blank())  
+
+  cat('#### Barchart\n\n')
+
+  print(p)
+  
+  cat('\n\n')
+  
+
+}
+```
+
+
+```{r AnnotateDMR.annotateWithGenePartsPlot3,  eval=AnnotateDMR, echo=FALSE, results='asis'}
+  if( length(GRanges.dmr.hypo)!=0 & length(GRanges.dmr.hyper)!=0){
+  
+    
+    df <- reshape2::melt(cbind(getTargetAnnotationStats(annot.dmr.gene.hyper),
+                               getTargetAnnotationStats(annot.dmr.gene.hypo)))
+    names(df) <- c("variable","type","value")
+    df$variable <- factor(df$variable,
+                        levels = rev(names(getTargetAnnotationStats(annot.dmr.gene))))
+    df$type <- factor(ifelse(df$type == 1,"hypermethylated","hypomethylated"),
+                      levels = c("hypomethylated","hypermethylated"))
+    df$count <- c(annot.dmr.gene.hyper@num.annotation,
+                      annot.dmr.gene.hypo@num.annotation)
+    
+    p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+      scale_fill_manual(values = rev(cols)) +
+      geom_bar(mapping = aes(group = type), stat = "identity" ,color = "black",  position = position_dodge()) +
+      geom_text(mapping = aes(group = type, color = type , y = -10, label = count), size = 5, 
+                  position = position_dodge(width= 1)) +
+      scale_color_manual(values = c(hypo.col,hyper.col)) + 
+      ggtitle(label = "Differentially methylated Regions per Genomic Feature") +
+      labs(y = "Percentage", x = "Feature") + 
+      coord_flip() +
+      theme_bw() +
+      guides(fill = guide_legend(reverse = TRUE)) +
+      theme(legend.position = "bottom", legend.title = element_blank(),
+            legend.text = element_text(colour=c(rep(times = length(cols),"black"),
+                                                c(hypo.col,hyper.col))))
+      
+    cat('#### Barchart (Split per DMR Type)\n\n')
+    
+    p <- p + facet_wrap( ~ type,nrow = 2)
+    
+    print(p)
+    
+    # png(filename = file.path(imagesDir,paste0(prefix,"DMCperGenomicFeat.type.png")),
+    #        height = 4.5, width = 8)
+    # g <- fill_strip(p, fills = rev(c(hypo.col,hyper.col)),plot = TRUE)
+    # dev.off()
+    # # ggsave(plot = g, filename = file.path(imagesDir,paste0(prefix,"DMCperGenomicFeat.type.png")),
+    #        # width = 7,height = 6)
+    # 
+    # cat('![](',file.path(imagesDir,paste0(prefix,"DMCperGenomicFeat.type.png")),')')
+    
+    cat('\n\n')
+  }
+```
+
+
+```{r AnnotateDMR.annotateWithFeatureFlank,  eval=AnnotateDMR, echo=FALSE, warning=FALSE, message=FALSE ,results='asis'}
+if( (fetch_cpgi_success) & length(GRanges.dmr)!=0){
+
+  # read the shores and flanking regions and name the flanks as shores
+  # and CpG islands as CpGi
+    # cpg.obj=readFeatureFlank(fetched.cpgi,
+    #                        feature.flank.name=c("CpGi","shores"))
+  #
+  # convert methylDiff object to GRanges and annotate
+  diffCpGann.dmr=annotateWithFeatureFlank(target = GRanges.dmr,
+                                      feature = cpg.obj$CpGi, 
+                                      flank = cpg.obj$shores,
+                                      feature.name="CpGi",flank.name="shores")
+  
+  if( length(GRanges.dmr.hypo)!=0 & length(GRanges.dmr.hyper)!=0){
+    
+      diffCpGann.dmr.hypo=annotateWithFeatureFlank(target = GRanges.dmr.hypo,
+                                          feature = cpg.obj$CpGi, 
+                                          flank = cpg.obj$shores,
+                                          feature.name="CpGi",flank.name="shores")
+      
+      diffCpGann.dmr.hyper=annotateWithFeatureFlank(target = GRanges.dmr.hyper,
+                                          feature = cpg.obj$CpGi, 
+                                          flank = cpg.obj$shores,
+                                          feature.name="CpGi",flank.name="shores")
+  }
+
+  
+  cat('### Differentially Methylated Regions over CpG Islands\n\n')
+  
+    cat("CpG islands are genomic features of 200 to 2000 base pairs that have an increased CG base pair content and show abundant CpG sequences. A large fraction (~70%) of human promoters of a gene contain a CpG island ([Deaton, A. M., & Bird, A. (2011)](http://genesdev.cshlp.org/content/25/10/1010.short)). Silencing of genes is often achieved by methylation in CpG Islands, so observation of hypomethylation in CpG Islands could indicate effects on the expression of a gene.\n\n")
+
+
+}
+```
+
+
+```{r AnnotateDMR.annotateWithFeatureFlankPlot1,  eval=AnnotateDMR, echo=FALSE, results='asis'}
+if( (fetch_cpgi_success) & length(GRanges.dmr)!=0){
+
+  cat('#### Piechart\n\n')  
+  
+  # plot the target overlap for each
+  genomation::plotTargetAnnotation(diffCpGann.dmr,
+                       col=c("green","gray","white"),
+                       main="Differentially methylated Regions over CpG Islands\n")
+  
+  cat('\n\n')
+}
+```
+
+
+```{r AnnotateDMR.annotateWithFeatureFlankPlot2,  eval=AnnotateDMR, echo=FALSE, results='asis'}
+
+if( (fetch_cpgi_success) & length(GRanges.dmr)!=0){
+    
+  # construct dataframe for ggplot
+  df <- reshape2::melt(getTargetAnnotationStats(diffCpGann.dmr))
+  df$variable <- factor(names(getTargetAnnotationStats(diffCpGann.dmr)),
+                        levels = rev(names(getTargetAnnotationStats(diffCpGann.dmr))))
+  df$count <- diffCpGann.dmr@num.annotation
+  
+  p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+  scale_fill_manual(values = c("white","gray","green")) +
+  geom_bar(stat = "identity" ,color = "black", position = position_dodge()) +
+    geom_text(aes(y = -10, label = count), hjust = 0,size = 5) +
+  coord_flip() +
+  labs(y = "Percentage", x = "Feature") + 
+  ggtitle(label = "Differentially methylated Regions per CpG Island Feature") +
+  theme_bw() +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        # axis.title.y = element_blank(), axis.ticks.y = element_blank(),
+        # axis.text.y = element_blank()
+        )
+
+  cat('#### Barchart\n\n')
+
+  print(p)
+  
+  cat('\n\n')
+}
+
+```
+
+```{r AnnotateDMR.annotateWithFeatureFlankPlot3,  eval=AnnotateDMR, echo=FALSE, results='asis'}
+  
+if( length(GRanges.dmr.hypo)!=0 & length(GRanges.dmr.hyper)!=0){
+    
+  # construct dataframe for ggplot
+  df <- reshape2::melt(cbind(getTargetAnnotationStats(diffCpGann.dmr.hyper),
+                             getTargetAnnotationStats(diffCpGann.dmr.hypo)))
+  names(df) <- c("variable","type","value")
+  df$variable <- factor(df$variable,
+                        levels = rev(names(getTargetAnnotationStats(diffCpGann.dmr))))
+  df$type <- factor(ifelse(df$type == 1,"hypermethylated","hypomethylated"),
+                    levels = c("hypomethylated","hypermethylated"))
+  df$count <- c(diffCpGann.dmr.hyper@num.annotation,diffCpGann.hypo@num.annotation)
+  
+  
+  p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
+  scale_fill_manual(values = c("white","gray","green")) +
+  geom_bar(mapping = aes(group = type), stat = "identity" ,color = "black",  position = position_dodge()) +
+  geom_text(mapping = aes(group = type, color = type , y = -10, label = count), size = 5, 
+            position = position_dodge(width= 1)) +
+  scale_color_manual(values = c(hypo.col,hyper.col)) +
+  coord_flip() +
+  labs(y = "Percentage", x = "Feature") + 
+  ggtitle(label = "Differentially methylated Regions per CpG Island Feature") +
+  theme_bw() +
+  guides(fill = guide_legend(reverse = TRUE),color = FALSE) +
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        # axis.title.y = element_blank(), axis.ticks.y = element_blank(),
+        # axis.text.y = element_blank()
+        )
+
+  cat('#### Barchart (Split per DMR Type)\n\n')
+
+  p <- p + facet_wrap(~type, nrow = 2)
+  
+  print(p)
+  
+  cat('\n\n')
+  
+}
+
+```
+
+```{r AnnotateDMR.annotateTSS,  eval=AnnotateDMR, echo=FALSE,results='asis'}
+if( (fetch_refgen_success) & length(GRanges.dmr)!=0){
+
+  cat('### Distribution of differential methylation around TSS\n\n')
+  
+  cat("This histogram of differential CpG methylation show how far the different types of differentially methylated regions are distributed around the closest transcription start site of the nearest genes.\n\n")
+
+}
+```
+
+
+```{r AnnotateDMR.annotateTSSPlot,  eval=AnnotateDMR, echo=FALSE}
+if( (fetch_refgen_success) & length(GRanges.dmr)!=0)
+  {
+  # Get distance to nearest TSS and gene id from AnnotationByGeneParts
+  # target.row is the row number in diffmeth.gr
+  assoTSS = getAssociationWithTSS(annot.dmr.gene)
+
+  assoTSS$dmc.type <- "hypermethylated" 
+  assoTSS$dmc.type[ GRanges.dmr[assoTSS$target.row]$meth.diff < 0] <- "hypomethylated" 
   
   p <- ggplot(assoTSS, aes(x = dist.to.feature, fill = dmc.type)) +
     geom_histogram(color = "black", position = position_dodge()) +
