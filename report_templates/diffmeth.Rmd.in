@@ -377,15 +377,24 @@ methylDiff.obj.hypo <- getMethylDiff(.Object = methylDiff.obj.all,
 #-------------------------------------------------------------------
 #' Export windows to a BED file
 #'
-#' The windows are color coded based on their score (methylation or differential
-#' methylation value).
+#' The windows are color coded based on their score (methylation or 
+#' differential methylation value). If score is only positive 
+#' (e.g. methylation value) score range will be mapped to [0,1] range, 
+#' if score contains negative values (e.g. methylation difference) colors are 
+#' centered first to [-1,1] and then mapped to [0,1] range.
 #'
 #' @param windows \code{\link[GenomicRanges]{GRanges}} object with information about
 #' differentially methylated regions
 #' @param filename name of the output data
-#' @param trackLine UCSC browser trackline
 #' @param colramp color scale to be used in the BED display
 #' defaults to gray,green, darkgreen scale.
+#' You may use divergent color scale as well, e.g. 
+#' colorRamp(c("darkolivegreen4","grey","magenta")).
+#' @param scoreCol name of the column to use as score, 
+#' defaults to "meth.diff"
+#' @param normalize_score should the score be normalized to range [0,1] ? 
+#' @param track_name name of the track display 
+#' @param description additional description
 #'
 #' @return A BED files with the differentially methylated regions
 #' which can be visualized in the UCSC browser
@@ -396,16 +405,78 @@ methylDiff.obj.hypo <- getMethylDiff(.Object = methylDiff.obj.all,
 #' @docType methods
 #' @rdname meth2bed
 meth2bed<-function(windows,filename,
-                   trackLine="track name='meth windows' description='meth windows' itemRgb=On",
+                   scoreCol = "meth.diff",
+                   normalize_score = FALSE,
+                   track_name='meth windows', 
+                   description = 'meth windows',
                    colramp=colorRamp(c("gray","green", "darkgreen"))
 ){
-  require(rtracklayer)
+    require(rtracklayer)
+    
+    range01 <- function(x){ (x-min(x)+1)/(max(x)-min(x)+1) }
+    rangePlusMinus <- function(x) { ((x + 1 ) / 2 ) }
+    
+    
+    if(class(windows)!="GRanges"){
+        windows=as(windows, "GRanges")
+    }
+    
+    strand(windows)="*"
+    if(! scoreCol %in% names(mcols(windows)) ) {
+        stop("Could not find column ",scoreCol," in given windows.")
+    } else {
+        score(windows)=mcols(windows)[[scoreCol]]
+        score_temp <-  score(windows)
+        if( any(score_temp < 0 ) ) {
+            if(any(score_temp > 1)) {score_temp = score_temp/100 }
+           score_temp=rangePlusMinus(score_temp)
+        } else {
+           score_temp=range01(score_temp)
+        }
+    }
+    
+    trackLine <- sprintf("track name='%s' description='%s' itemRgb=On",
+                         track_name,
+                         description)
+    
+    ## case if only one line is exported
+    if(is.null(colramp) | length(windows)==1){
+        trackLine <- gsub(pattern = "itemRgb=On",replacement = "",x = trackLine)
+    } else {
+        ramp <- colramp
+        mcols(windows)$itemRgb= rgb(ramp(score_temp), maxColorValue = 255)
+    }
+    
+    if(normalize_score) {
+        score(windows) <- score_temp
+    }
+    
+    if(is.null(filename)) {
+        return(as.data.frame(windows))
+    }
+    
+    if(is.null(trackLine)){
+        
+        export.bed(windows,filename)
+    }else{
+        export.bed(windows,filename,
+                   trackLine=as(trackLine, "BasicTrackLine"))
+    }
+}
 
-  range01 <- function(x){(x-min(x)+1)/(max(x)-min(x)+1)}
+# Export differentially methylated cytosines to a bed file
+bedFile <- file.path(workdir,paste0(prefix,".dmc.bed"))
+meth2bed(windows = methylDiff.obj.all,
+         track_name = sprintf("DMC (%s)",
+                              gsub("_destranded|methylDackel","",prefix)),
+         description = sprintf("Differential methylation between %s and %s ",
+                               treatment_group_str,control_group_str),
+         scoreCol = "meth.diff",
+         colramp=colorRamp(c("gray","green", "darkgreen")),
+         filename = bedFile) 
 
-  if(class(windows)!="GRanges"){
-    windows=as(windows, "GRanges")
-  }
+
+```
 
 ```{r DiffMeth.find_dmr_text, results='asis', eval=ExtractDiffMeth}
 cat('## Finding Regions of Differential Methylation\n\n')
