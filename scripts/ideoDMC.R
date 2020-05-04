@@ -98,8 +98,10 @@ ideoDMC <- function(methylDiff.obj, chrom.length, difference = 25,
   }
 }
 
-ideoDMC_hyper_hypo <- function(methylDiff.hyper, methylDiff.hypo, chrom.length, 
-                               circos = FALSE, title = "Differentially methylated cytosines", hyper.col = "magenta", 
+ideoDMC_hyper_hypo <- function(hyper, hypo, chrom.length, 
+                               circos = FALSE, 
+                               title = "Differentially methylated cytosines", 
+                               hyper.col = "magenta", 
                                hypo.col = "green") {
   require(methylKit)
   require(GenomicRanges)
@@ -112,14 +114,18 @@ ideoDMC_hyper_hypo <- function(methylDiff.hyper, methylDiff.hypo, chrom.length,
   seqlengths(myIdeo) = (chrom.length)
   
   
-  hypo = methylDiff.hypo
-  hyper = methylDiff.hyper
+  if(class(hypo) %in% c("methylDiffDB","methylDiff")) {
+    hypo <- as(hypo, "GRanges")
+  }
+  if(class(hyper) %in% c("methylDiffDB","methylDiff")) {
+    hyper <- as(hyper, "GRanges")
+  }
   
-  g.per = as(hyper, "GRanges")
+  g.per = hyper
   seqlevels(g.per) = seqlevels(myIdeo)
   seqlengths(g.per)=(chrom.length)
   
-  g.po = as(hypo, "GRanges")
+  g.po = hypo
   seqlevels(g.po) = seqlevels(myIdeo)
   seqlengths(g.po)=(chrom.length)
   
