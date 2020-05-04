@@ -48,11 +48,7 @@ rule methyldackel_extract_methylKit:
                       ['methylation-calling']['minimum-quality'])
     log:
         DIR_methcall + "{sample}.methyldackel_calls.log"
-    message:
-        """
-        Extract methylation calls from bam file using MethylDackel.
-            Protocol: {params.protocol}
-        """
+    message: fmt("Extract methylation calls from bam file using MethylDackel for sample {sample} and protocol {params.protocol}")
     shell:
         nice("methyldackel",
              ["extract", "{input.genome}", "{input.bamfile}",
@@ -82,17 +78,14 @@ rule methyldackel_extract_methylKit_deduped:
                       ['methylation-calling']['minimum-quality'])
     log:
         DIR_methcall + "{sample}.deduped.methyldackel_calls.log"
-    message:
-        """
-        Extract methylation calls from bam file using MethylDackel.
-            Protocol: {params.protocol}
-        """
+    message: fmt("Extract methylation calls from bam file using MethylDackel for sample {sample} and protocol {params.protocol}")
     shell:
         nice("methyldackel",
              ["extract", "{input.genome}", "{input.bamfile}",
               "-o {params.prefix}", "-@ {params.threads}", "{params.keepDups}",
               "--methylKit", "--CHH", "--CHG", "-q {params.minqual}"],
              ("{log}"))
+
 
 # ==========================================================================================
 # Extract methylation bias with methylDackel
@@ -115,7 +108,7 @@ rule methyldackel_mbias:
                       ['methylation-calling']['minimum-quality'])
     log:
         DIR_methcall + "{sample}.methyldackel_mbias.log"
-    message: "Calculate methylation bias using MethylDackel."
+    message: fmt("Calculate methylation bias using MethylDackel for sample {sample}.")
     shell:
         nice("methyldackel",
              ["mbias", "{input.genome}", "{input.bamfile}",
@@ -123,6 +116,7 @@ rule methyldackel_mbias:
               "-@ {params.threads}", "--txt",
               "-q {params.minqual}", "> {output.txt}",
               "2> {log}"])
+
 
 # ==========================================================================================
 # Extract methylation bias with methylDackel
@@ -143,11 +137,7 @@ rule methyldackel_cytosine_report:
                       ['methylation-calling']['minimum-quality'])
     log:
         DIR_methcall + "{sample}.methyldackel_cytosine_report.log"
-    message:
-        """
-        Extract cytosine report from bam file using MethylDackel.
-        Protocol: {params.protocol}
-        """
+    message: fmt("Extract cytosine report from bam file using MethylDackel for sample {sample} and context {params.context}")
     shell:
         nice("methyldackel",
              ["extract", "{input.genome}", "{input.bamfile}",
@@ -177,11 +167,7 @@ rule tabix_methyldackelfile:
                      ['minimum-coverage'])
     log:
         DIR_methcall + "methylDackel/" + "tabix_{context}/{prefix}_{context}.makeTabix.log"
-    message:
-        """
-        Create Tabix file from MethylDackel file.
-        Context: {params.context}
-        """
+    message: fmt("Create Tabix file from MethylDackel file for sample {sample} and context {params.context}")
     shell:
         nice('Rscript', ["{DIR_scripts}/makeTabix.R",
                          "--location={input}",

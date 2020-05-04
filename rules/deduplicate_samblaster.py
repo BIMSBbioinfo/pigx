@@ -15,6 +15,7 @@ rule samblaster_markdup_sort:
         tmpdir=DIR_sorted+"{sample}/"
     log:
         DIR_sorted+"{sample}_markdups.log"
+    message: fmt("Deduplicating reads with samblaster for sample {sample}")
     shell:
         nice("samtools", 
         ["view -h {input}"," | ", 

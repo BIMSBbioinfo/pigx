@@ -47,7 +47,7 @@ rule unite_meth_calls:
         suffix     = "{analysis}_{context}_{tool}"
     log: 
         DIR_diffmeth+"{analysis}/{analysis}_{context}_{tool}_unite.log"
-    message: fmt("Uniting samples for differential analysis.")
+    message: fmt("Uniting samples for differential analysis {wildcards.analysis}")
     shell:
         nice('Rscript',
                 ["{DIR_scripts}/methUnite.R",
@@ -89,7 +89,7 @@ rule diffmeth:
         outdir     = DIR_diffmeth+"{analysis}/"
     log:
         os.path.join(DIR_diffmeth,"{analysis}","{analysis}_{context}_{tool}_diffmeth.log")
-    message: fmt("Calculating differential methylation.")
+    message: fmt("Calculating differential methylation for analysis {wildcards.analysis}")
     shell:
         nice('Rscript', 
                 ['{DIR_scripts}/methDiff.R',
