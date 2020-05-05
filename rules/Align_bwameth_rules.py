@@ -54,7 +54,7 @@ rule bwameth_genome_preparation:
         GENOMEFILE+".bwameth.c2t.bwt",
         GENOMEFILE+".bwameth.c2t"
     log:
-        GENOMEPATH+'bwameth_genome_preparation.output_'+ASSEMBLY+'.log'
+        os.path.join(GENOMEPATH,'bwameth_genome_preparation.output_'+ASSEMBLY+'.log')
     message: "Converting {ASSEMBLY} Genome into Bisulfite analogue with bwa-meth"
     shell:
         nice("bwameth", ["index {input}"],"{log}")
@@ -94,7 +94,7 @@ rule bwameth_align_trimmed:
         threads = config['execution']['rules']['bwameth_align_trimmed']['threads']
     log:
         DIR_mapped+"{sample}_bwameth_mapping.log"
-    message: "Mapping reads to genome using bwa-meth for sample {sample}."
+    message: "Mapping reads to genome using bwa-meth for sample {{sample}}."
     shell:
       nice("bwameth",["--reference {GENOMEFILE}","-t {params.threads}",
           "{input.files}","2> {log}","|",
