@@ -515,12 +515,29 @@ find_DMR <- function(methylDiff, meth.diff = 25) {
     }
     # assign clusters based on meth.diff cutoff
     mDiffRegion$seg.group <- "none"
-    if( any(mDiffRegion$seg.mean < -meth.diff))
+    if( any(mDiffRegion$seg.mean < -meth.diff)) {
         mDiffRegion[mDiffRegion$seg.mean < -meth.diff]$seg.group <- "hypo"
-    if( any(mDiffRegion$seg.mean > meth.diff))
+    }
+    if( any(mDiffRegion$seg.mean > meth.diff)) {
         mDiffRegion[mDiffRegion$seg.mean > meth.diff]$seg.group <- "hyper"
+    }
     # join neighbouring with same groups
-    mDiffRegion <- joinSegmentNeighbours(mDiffRegion)
+    if ( length(unique(mDiffRegion$seg.group)) > 1 ){
+      mDiffRegion <- joinSegmentNeighbours(mDiffRegion)
+    } else if ( length(unique(mDiffRegion$seg.group)) == 1 && length(mDiffRegion) > 1) {
+      mDiffRegion <- GRanges(
+        seqnames = unique(seqnames(mDiffRegion)),
+        ranges = IRanges(start = min(start(mDiffRegion)),
+                         end = max(end(mDiffRegion))),
+        strand = "*",
+        ID = unique(mDiffRegion$ID),
+        num.mark = sum(as.numeric(mDiffRegion$num.mark)),
+        seg.mean = mean(mDiffRegion$seg.mean),
+        startRow = min(mDiffRegion$startRow),
+        endRow = max(mDiffRegion$endRow),
+        seg.group = unique(mDiffRegion$seg.group)
+        )
+    }
     
     return(mDiffRegion)
     
@@ -529,7 +546,7 @@ find_DMR <- function(methylDiff, meth.diff = 25) {
 pdf(file.path(workdir,paste0(prefix,".find_dmr.pdf")))
 
 dmrs <- find_DMR(methylDiffDB)
-dev.off()
+invisible(dev.off())
 
 if(! length(unique(dmrs$seg.group)) > 1 ) {
 	cat("\n**The Segmentation was not successful.\n",
