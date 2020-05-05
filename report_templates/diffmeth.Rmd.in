@@ -1341,7 +1341,7 @@ if( length(GRanges.dmr.hypo)!=0 & length(GRanges.dmr.hyper)!=0){
                         levels = rev(names(getTargetAnnotationStats(diffCpGann.dmr))))
   df$type <- factor(ifelse(df$type == 1,"hypermethylated","hypomethylated"),
                     levels = c("hypomethylated","hypermethylated"))
-  df$count <- c(diffCpGann.dmr.hyper@num.annotation,diffCpGann.hypo@num.annotation)
+  df$count <- c(diffCpGann.dmr.hyper@num.annotation,diffCpGann.dmr.hypo@num.annotation)
   
   
   p <- ggplot(df, aes(x = variable, y = value, fill = variable)) + 
