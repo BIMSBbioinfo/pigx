@@ -59,12 +59,14 @@ def samplesheet(name, item=None):
 
 # Generate a command line string that can be passed to snakemake's
 # "shell".  The string is prefixed with an invocation of "nice".
-def nice(cmd, args, log=None):
+def nice(cmd, args, log=None, fallback=None):
     executable = tool(cmd)
     line = ["nice -" + str(config['execution']['nice']),
             executable] + [toolArgs(cmd)] + args
     if log:
         line.append("> {} 2>&1".format(log))
+    if fallback:
+        line.append(" || {} ".format(fallback))
     return " ".join(line)
 
 

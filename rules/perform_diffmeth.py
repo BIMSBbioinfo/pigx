@@ -179,4 +179,4 @@ rule diffmeth_report:
                                '"difference":"{params.difference}"',
                                '"webfetch":"{params.webfetch}"'
                            ])+"}}'",
-                           "--logFile={log}"], "{log}")
+                           "--logFile={log}"], "{log}", "echo 'something went wrong' ")
