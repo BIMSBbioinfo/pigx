@@ -343,6 +343,8 @@ if (! nrow(methylDiff.obj.all)>1 ) {
 	cat("\n**There are no differentially methylated cytosines.**")
 	ExtractDiffMeth <- FALSE
 	AnnotateDiffMeth <- FALSE
+} else {
+    cat("\n**We found ",nrow(methylDiff.obj.all)," cytosines to be differentially methylated .**")
   }
 
 ```
@@ -580,6 +582,8 @@ meth2bed(dmrs,
 
 
 ```{r AnnotateDiffMethHeader,results='asis', eval=ExtractDiffMeth}
+cat('# Annotation of Differential Methylation\n\n')
+
 cat('## Annotation of Differentially Methylated Cytosines\n\n')
 
 cat('Once differentially-methylated CpG sites (DMC) have been found, the sites are classified into hyper- and hypo-methylated sites, based on two cutoffs: the minimal  methylation difference and the qvalue cutoff as shown in the parameter table. Hypermethylation indicates increasingly-methylated sites, while hypomethylation indicates lowered methylation when performing the comparison of treatment - control.\n\n')
@@ -1078,6 +1082,7 @@ GRanges.dmr <- sortSeqlevels(dmrs)
 names(mcols(GRanges.dmr)) <- gsub("seg.mean","meth.diff", names(mcols(GRanges.dmr)))
 
 # subset to all available chromosomes
+seqlevels(GRanges.dmr, pruning.mode = "coarse") <- seqlevels(myseqinfo)
 seqinfo(GRanges.dmr) <- myseqinfo
 
 # Subset DMRs 
