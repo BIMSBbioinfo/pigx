@@ -1,4 +1,4 @@
-export GUIX_PROFILE=~/projects/pigx/pigx_bsseq_production/dev/guix/.guix-profile 
+export GUIX_PROFILE=$PWD/dev/guix/.guix-profile 
 source ${GUIX_PROFILE}/etc/profile
 export GUIX_LOCPATH=${GUIX_PROFILE}/lib/locale
 export PIGX_UNINSTALLED=1
