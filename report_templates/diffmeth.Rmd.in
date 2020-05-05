@@ -510,11 +510,6 @@ find_DMR <- function(methylDiff, meth.diff = 25) {
     # segment first
     mDiffRegion <- methSeg(methylDiff)
     
-    if (! length(unique(mDiffRegion$seg.group)) > 1 ){
-        message("WARNING: Unsupervised clustering of the segments was not successful.\n",
-                "To be sure that the algorithm will work on your data,\n",
-                "the given object should have at least 5000 records.")
-    }
     # assign clusters based on meth.diff cutoff
     mDiffRegion$seg.group <- "none"
     if( any(mDiffRegion$seg.mean < -meth.diff)) {
@@ -526,7 +521,8 @@ find_DMR <- function(methylDiff, meth.diff = 25) {
     # join neighbouring with same groups
     if ( length(unique(mDiffRegion$seg.group)) > 1 ){
       mDiffRegion <- joinSegmentNeighbours(mDiffRegion)
-    } else if ( length(unique(mDiffRegion$seg.group)) == 1 && length(mDiffRegion) > 1) {
+    } else if ( length(unique(mDiffRegion$seg.group)) == 1 &&
+                length(mDiffRegion) > 1) {
       mDiffRegion <- GRanges(
         seqnames = unique(seqnames(mDiffRegion)),
         ranges = IRanges(start = min(start(mDiffRegion)),
@@ -551,11 +547,19 @@ dmrs <- find_DMR(methylDiffDB)
 invisible(dev.off())
 
 if(! length(unique(dmrs$seg.group)) > 1 ) {
-	cat("\n**The Segmentation was not successful.\n",
-	    "Most probably the difference in methylation is not high enough.**")
+  cat(
+    "\n**The segments belong only to a single class,\n",
+    "This could indicate the unsupervised clustering of the ",
+    "segments was not successful or the difference in methylation ",
+    "is not high enough.**"
+  )
 	ExportDMR <- FALSE
 	AnnotateDMR <- FALSE
-}
+} else {
+    cat("\n**The segmentation was successful, out of ",nrow(dmrs)," regions ",
+    "we found ",sum(dmrs$seg.group == "hyper") ,"to be hyper-methylated and ",
+    sum(dmrs$seg.group == "hypo"), " to be hypo-methylated.**")
+  }
 ```
 
 ```{r DiffMeth.export_dmr_text, results='asis', eval=ExportDMR}
