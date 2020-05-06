@@ -611,10 +611,14 @@ cat('### Export Differentially Methylated Regions\n\n')
 
 cat('We export the regions of differentially-methylated cytosines (DMRs) to a *BED* file; it can be loaded into a genome browser such as [IGV](http://software.broadinstitute.org/software/igv/) or [UCSC](https://genome.ucsc.edu/) to allow for further analysis, annotation and visualisation.\n\n')
 
+cat('If you intend to perform online enrichment analysis using webservices like [GREAT](http://great.stanford.edu/public/html/index.php) or [Enrichr](http://amp.pharm.mssm.edu/Enrichr/) please use the \'coordOnly\' BED file.\n\n')
+
 dmSegmentFile <- file.path(workdir,paste0(prefix,".diffmethSegments.bed"))
+dmrCoordOnlyFile <- file.path(workdir,paste0(prefix,".coordOnly.bed"))
 dmrFile <- file.path(workdir,paste0(prefix,".dmr.bed"))
 
 cat('- **DMR BED file**:\n',dmrFile,'\n')
+cat('- **DMR BED file (coordinates only) **:\n',dmrCoordOnlyFile,'\n')
 cat('- **Genome Wide Differential Methylation BED file**:\n',dmSegmentFile,'\n')
 
 ```
@@ -622,28 +626,41 @@ cat('- **Genome Wide Differential Methylation BED file**:\n',dmSegmentFile,'\n')
 ```{r DiffMeth.export_dmr, eval=ExportDMR, echo=FALSE}
 
 
-meth2bed(dmrs,
-         scoreCol = "seg.mean",
-         filename = dmSegmentFile,
-         colramp = colorRamp(c(hypo.col,"grey",hyper.col)),
-         track_name = sprintf("DMR (%s)",
-                              gsub(pattern = sprintf("_%s_.*",context),
-                                   "",
-                                   prefix)),
-         description = paste("Differentially methylated regions with",
-                             "methylation difference > ",difference)
-            )
+meth2bed(
+  dmrs,
+  scoreCol = "seg.mean",
+  filename = dmSegmentFile,
+  colramp = colorRamp(c(hypo.col, "grey", hyper.col)),
+  track_name = sprintf("DM (%s)",
+                       gsub(pattern = sprintf("_%s_.*", context),
+                            "",
+                            prefix)),
+  description = "Genome Wide Differential Methylation"
+  
+)
 
-meth2bed(dmrs[dmrs$seg.group %in% c("hyper","hypo")],
-         scoreCol = "seg.mean",
-         filename = dmrFile,
-         colramp = colorRamp(c(hypo.col,"grey",hyper.col)),
-         track_name = sprintf("DM (%s)",
-                              gsub(pattern = sprintf("_%s_.*",context),
-                                   "",
-                                   prefix)),
-         description = "Genome Wide Differential Methylation"
-            )
+meth2bed(
+  dmrs[dmrs$seg.group %in% c("hyper", "hypo")],
+  scoreCol = "seg.mean",
+  filename = dmrFile,
+  colramp = colorRamp(c(hypo.col, "grey", hyper.col)),
+  track_name = sprintf("DMR (%s)",
+                       gsub(pattern = sprintf("_%s_.*", context),
+                            "",
+                            prefix)),
+  description = paste(
+    "Differentially methylated regions with",
+    "methylation difference > ",
+    difference
+  )
+)
+
+meth2bed(
+  windows = dmrs[dmrs$seg.group %in% c("hyper", "hypo")],
+  scoreCol = "seg.mean",
+  filename = dmrCoordOnlyFile,
+  coord_only = TRUE
+)
 ```
 
 
