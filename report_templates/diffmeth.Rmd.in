@@ -397,6 +397,9 @@ methylDiff.obj.hypo <- getMethylDiff(.Object = methylDiff.obj.all,
 #' @param normalize_score should the score be normalized to range [0,1] ? 
 #' @param track_name name of the track display 
 #' @param description additional description
+#' @param skipTrackLine do not write trackline
+#' @param coord_only generate a plain BED file with only ranges, 
+#' for direct use in Great or Enrichr webservers
 #'
 #' @return A BED files with the differentially methylated regions
 #' which can be visualized in the UCSC browser
@@ -411,7 +414,9 @@ meth2bed<-function(windows,filename,
                    normalize_score = FALSE,
                    track_name='meth windows', 
                    description = 'meth windows',
-                   colramp=colorRamp(c("gray","green", "darkgreen"))
+                   colramp=colorRamp(c("gray","green", "darkgreen")),
+                   skipTrackLine = FALSE,
+                   coord_only = FALSE
 ){
     require(rtracklayer)
     
@@ -456,11 +461,12 @@ meth2bed<-function(windows,filename,
     if(is.null(filename)) {
         return(as.data.frame(windows))
     }
-    
-    if(is.null(trackLine)){
-        
+
+    if(coord_only){
+        export.bed(granges(windows),filename)
+    } else if(skipTrackLine){
         export.bed(windows,filename)
-    }else{
+    } else {
         export.bed(windows,filename,
                    trackLine=as(trackLine, "BasicTrackLine"))
     }
