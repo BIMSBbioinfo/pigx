@@ -614,12 +614,14 @@ cat('We export the regions of differentially-methylated cytosines (DMRs) to a *B
 cat('If you intend to perform online enrichment analysis using webservices like [GREAT](http://great.stanford.edu/public/html/index.php) or [Enrichr](http://amp.pharm.mssm.edu/Enrichr/) please use the \'coordOnly\' BED file.\n\n')
 
 dmSegmentFile <- file.path(workdir,paste0(prefix,".diffmethSegments.bed"))
+dmSegmentTable <- file.path(workdir,paste0(prefix,".diffmethSegments.tsv"))
 dmrCoordOnlyFile <- file.path(workdir,paste0(prefix,".coordOnly.bed"))
 dmrFile <- file.path(workdir,paste0(prefix,".dmr.bed"))
 
 cat('- **DMR BED file**:\n',dmrFile,'\n')
 cat('- **DMR BED file (coordinates only) **:\n',dmrCoordOnlyFile,'\n')
 cat('- **Genome Wide Differential Methylation BED file**:\n',dmSegmentFile,'\n')
+cat('- **Genome Wide Differential Methylation TSV file**:\n',dmSegmentTable,'\n')
 
 ```
 
@@ -638,6 +640,19 @@ meth2bed(
   description = "Genome Wide Differential Methylation"
   
 )
+
+dmrs.df <- as.data.frame(dmrs)
+colnames(dmrs.df) <- gsub("seg.mean","meth.diff",colnames(dmrs.df))
+dmrs.df$ID <- NULL
+dmrs.df <- dmrs.df[order(dmrs.df$meth.diff,decreasing = TRUE),]
+write.table(
+  x = as.data.frame(dmrs.df),
+  file = dmSegmentTable,
+  sep = "\t",
+  row.names = FALSE,
+  quote = FALSE
+)
+rm(dmrs.df)
 
 meth2bed(
   dmrs[dmrs$seg.group %in% c("hyper", "hypo")],
