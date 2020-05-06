@@ -83,10 +83,6 @@ joinSegmentNeighbours <- function(res) {
     }
 }
 
-reg <- dmrs[61864]
-reg.orig <- selectByOverlap(methylDiffDB,reg)
-reg.pval <- reg.orig$pvalue
-
 #' Find regions of differential methylation
 #' 
 #' This function performs unsupervised segmentation of 
