@@ -738,7 +738,7 @@ p <- ggplot(stats.DMC.df, aes(x = chr, y = perc, fill = variable)) +
 print(p)
 ```
 
-```{r AnnotateDiffMeth.annotate_with_refseq_genes, eval=AnnotateDiffMeth}
+```{r AnnotateDiffMeth.fetch_annotations, eval=AnnotateDiffMeth}
 source(file.path(scripts_dir, "fetch_procedures.R"))
 fetched.refgenes <- lookupBedFile(type = "knownGene",
                                filename = refGenes_bedfile,
@@ -1092,7 +1092,7 @@ cat('Once regions of consecutive differential methylation (DMR) have been found 
 ```{r AnnotateDMR.convert, eval=AnnotateDMR}
 
 # DMRs are already GRanges
-GRanges.dmr <- sortSeqlevels(dmrs)
+GRanges.dmr <- sortSeqlevels(dmrs[dmrs$seg.group!="none"])
 names(mcols(GRanges.dmr)) <- gsub("seg.mean","meth.diff", names(mcols(GRanges.dmr)))
 
 # subset to all available chromosomes
@@ -1138,7 +1138,7 @@ ideoDMC_hyper_hypo(hyper = GRanges.dmr.hyper,
 ```{r AnnotateDMR.annotateWithGeneParts,  eval=AnnotateDMR, echo=FALSE, message=FALSE, results='asis'}
 if( (fetch_refgen_success) & length(GRanges.dmr)!=0){
   ## now we parse the gene features
-  # refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
+  refgenes.grl <- readTranscriptFeatures(fetched.refgenes)
 
   annot.dmr.gene <- annotateWithGeneParts(target = GRanges.dmr,
                                          feature = refgenes.grl,
@@ -1267,9 +1267,9 @@ if( (fetch_cpgi_success) & length(GRanges.dmr)!=0){
 
   # read the shores and flanking regions and name the flanks as shores
   # and CpG islands as CpGi
-    # cpg.obj=readFeatureFlank(fetched.cpgi,
-    #                        feature.flank.name=c("CpGi","shores"))
-  #
+  cpg.obj=readFeatureFlank(fetched.cpgi,
+                         feature.flank.name=c("CpGi","shores"))
+
   # convert methylDiff object to GRanges and annotate
   diffCpGann.dmr=annotateWithFeatureFlank(target = GRanges.dmr,
                                       feature = cpg.obj$CpGi, 
