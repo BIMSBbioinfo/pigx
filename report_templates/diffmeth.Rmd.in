@@ -38,6 +38,7 @@ params:
   prefix:                 ''
   workdir:                ''
   logo:                   ''
+  cores:                  8
 ---
 
 
@@ -80,7 +81,7 @@ library("ggplot2")
 library("ggrepel")
 require("matrixStats")
 require("data.table")
-data.table::setDTthreads(8)
+data.table::setDTthreads(params$cores)
 
 ```
 
@@ -137,6 +138,7 @@ if (length(control_group) > 0) {
 
 prefix <-  params$prefix
 workdir <- params$workdir
+cores <-   params$cores
 
 ## Some sections are only run if respective output is available
 ExtractDiffMeth   <- TRUE
@@ -500,7 +502,7 @@ cat('To aggregate the region level statistics we use Stouffer’s weighted Z-met
 source(file.path(scripts_dir, "find_dmrs.R"))
 
 pdf(file.path(workdir,paste0(prefix,".find_dmr.pdf")))
-dmrs <- find_DMR(methylDiffDB)
+dmrs <- find_DMR(methylDiffDB,cores = cores)
 invisible(dev.off())
 
 if(! length(unique(dmrs$seg.group)) > 1 ) {

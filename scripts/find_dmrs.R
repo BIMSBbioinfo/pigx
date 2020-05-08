@@ -100,8 +100,14 @@ joinSegmentNeighbours <- function(res) {
 #' @export
 #'
 #' @examples
-find_DMR <- function(methylDiff, meth.diff = 25, regionStatMethod=c("Stouffer","Fisher")) {
-    
+find_DMR <- function(methylDiff,
+                     meth.diff = 25,
+                     regionStatMethod = c("Stouffer", "Fisher"),
+                     cores = 1) {
+  
+    require("methylKit")
+    require("parallel")
+  
     # segment first
     mDiffRegion <- methSeg(methylDiff)
     
@@ -121,15 +127,17 @@ find_DMR <- function(methylDiff, meth.diff = 25, regionStatMethod=c("Stouffer","
                              Fisher = .calcFisherPval
     )
     
-    mDiffRegion$pvalue <- sapply(seq_along(mDiffRegion), 
+    mDiffRegion$pvalue <- mclapply(seq_along(mDiffRegion), 
                FUN = function(i,.fun) { 
                     mDiff = selectByOverlap(methylDiff,mDiffRegion[i])
                     return(.fun(mDiff$pvalue))
            },
-           .fun = regionStatFun
+           .fun = regionStatFun,
+           mc.cores = cores
            )
+    mDiffRegion$pvalue <- unlist(mDiffRegion$pvalue)
     
-    mDiffRegion$qvalue <- p.adjust(p =mDiffRegion$pvalue, method = "fdr")
+    mDiffRegion$qvalue <- p.adjust(p = mDiffRegion$pvalue, method = "fdr")
         
     
     return(mDiffRegion)
