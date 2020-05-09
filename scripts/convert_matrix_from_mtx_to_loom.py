@@ -43,31 +43,57 @@ def dict_to_array(d):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Convert STAR mtx to loom')
+    # sample name
     parser.add_argument('--sample_id',         action="store", dest='sample_id')
+    # location of the star solo output
     parser.add_argument('--input_dir',         action="store", dest="input_dir")
+    # location of the gtf file
     parser.add_argument('--gtf_file',          action="store", dest="gtf_file")
-    parser.add_argument('--star_output_types', action="store", dest="star_output_types", nargs='+')
+    # names of star solo output directories
+    parser.add_argument('--star_output_types_keys', action="store",
+    dest="star_output_types_keys", nargs='+')
+    # internal names for star solo output - exists because of velocity
+    parser.add_argument('--star_output_types_vals', action="store", dest="star_output_types_vals", nargs='+')
     parser.add_argument('--output_file',       action="store", dest="output_file")
     parser.add_argument('--sample_sheet_file', action="store", dest="sample_sheet_file")
+    parser.add_argument('--path_script', action="store", dest="PATH_SCRIPT")
 
     args = parser.parse_args()
     # -------------------------------------------------------------- #
-    sample_id         = args.sample_id
-    basepath          = args.input_dir
-    gtf_file          = args.gtf_file
-    star_output_types = args.star_output_types
-    output_file       = args.output_file
-    sample_sheet_file = args.sample_sheet_file
+    sample_id              = args.sample_id
+    basepath               = args.input_dir
+    gtf_file               = args.gtf_file
+    star_output_types_keys = args.star_output_types_keys
+    star_output_types_vals = args.star_output_types_vals
+    output_file            = args.output_file
+    sample_sheet_file      = args.sample_sheet_file
+
+    # -------------------------------------------------------------- #
+    # implements custom mmread function - enables multi column mm files
+    sys.path.append(args.PATH_SCRIPT)
+    import matrix_market_IO
+
 
     # -------------------------------------------------------------- #
     print("Parsing gene ids from gtf file",gtf_file)
     gene_ids = get_gtf_gene_ids(gtf_file)
 
     # -------------------------------------------------------------- #
-    dge_list = {}
+    dge_dict = {}
     print("Reading input files ...")
-    for star_output_type in star_output_types:
-        print(star_output_type)
+    for index in range(len(star_output_types_keys)):
+
+        star_output_type  = star_output_types_keys[index]
+        star_output_value = star_output_types_vals[index]
+
+        # reads in multi column mtx for velocity
+        # column_to_read == 2 corresponds to spliced
+        # column_to_read == 3 corresponds to unspliced
+        column_to_read = 2
+        if(star_output_value == 'Unspliced'):
+            column_to_read = 3
+
+        print(star_output_value)
         path_input    = os.path.join(basepath, star_output_type, 'raw')
 
         print('Features ...')
@@ -95,32 +121,29 @@ if __name__ == '__main__':
         # -------------------------------------------------------------- #
         # fills the GENE matrix with zeros for missing genes
         print('Matrix ...')
-        matrix_gene = mmread(os.path.join(path_input, 'matrix.mtx'))
-
+        matrix = matrix_market_IO.mmread_pigx(os.path.join(path_input, 'matrix.mtx'), column_to_read = column_to_read)
         # row_names_gene needs to be a named pandas object
-        matrix_gene_umi, row_names_gene = fill_missing_genes_into_matrix(gene_ids, matrix_gene.toarray(), genes['gene_id'], barcode['cell_id'])
+        matrix_gene_umi, row_names_gene = fill_missing_genes_into_matrix(gene_ids, matrix.toarray(), genes['gene_id'], barcode['cell_id'])
 
-        dge_list[star_output_type] = {'matrix' : matrix_gene, 'barcode' : barcode, 'genes' : row_names_gene}
+        dge_dict[star_output_value] = {'matrix' : matrix_gene_umi, 'barcode' : barcode, 'genes' : row_names_gene}
 
     # ADD: test to check that the rownames and the column names correspond
     # between diferent matrices
 
     # -------------------------------------------------------------- #
     print('Creating loompy file')
-    matrix_list = {'' : dge_list['Gene']['matrix']}
+    # extracts the exon count matrix
+    matrix_list = {'' : dge_dict[star_output_types_vals[0]]['matrix']}
 
-    # checks whether the Velocyto and GeneFull outputs
-    # are in the STAR output folder
-    if 'Velocyto' in set(star_output_types):
-        matrix_list['unspliced'] = dge_list['Velocyto']['matrix']
+    # extracts the exon + intron count matrix
+    # extracts the velocyto matrices
+    for i in range(1,len(star_output_types_vals)):
+        matrix_list[star_output_types_vals[i]] = dge_dict[star_output_types_vals[i]]['matrix']
 
-    if 'GeneFull' in set(star_output_types):
-        matrix_list['total'] = dge_list['GeneFull']['matrix']
-
-    col_attrs = dge_list['Gene']['barcode'].to_dict("list")
+    col_attrs = dge_dict[star_output_types_vals[0]]['barcode'].to_dict("list")
     col_attrs = dict_to_array(col_attrs)
 
-    row_attrs = dge_list['Gene']['genes'].to_dict("list")
+    row_attrs = dge_dict[star_output_types_vals[0]]['genes'].to_dict("list")
     row_attrs = dict_to_array(row_attrs)
 
     loompy.create(output_file, matrix_list, row_attrs, col_attrs)

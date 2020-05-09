@@ -44,7 +44,11 @@ ADAPTER_PARAMETERS = config['adapter_parameters']
 # output count matrices for STAR solo
 # Gene and GeneFull is obligatory, the rest might be set as params in conig
 # SJ matrix is absent because STAR output is currently wrong
-STAR_OUTPUT_TYPES = ['Gene','GeneFull'] + ['Velocyto']
+# implemented in two lists because it's the easiest way to pass to functions
+STAR_OUTPUT_TYPES_KEYS = ['Gene', 'GeneFull', 'Velocyto', 'Velocyto']
+STAR_OUTPUT_TYPES_VALS = ['Counts', 'GeneFull', 'Spliced', 'Unspliced']
+# This is a relict variable
+STAR_OUTPUT_TYPES = STAR_OUTPUT_TYPES_KEYS
 
 # ----------------------------------------------------------------------------- #
 # PATHS
@@ -735,11 +739,12 @@ rule convert_matrix_from_mtx_to_loom:
         indir   = os.path.join(PATH_MAPPED, "{name}", "{genome}",'{name}_Solo.out'),
 
         # STARsolo output types
-        star_output_types = " ".join(STAR_OUTPUT_TYPES),
+        star_output_types_keys = " ".join(STAR_OUTPUT_TYPES_KEYS),
+        star_output_types_vals = " ".join(STAR_OUTPUT_TYPES_VALS),
 
         # input gtf
-        gtf     = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf'])),
-        script  = PATH_SCRIPT,
+        gtf               = lambda wildcards: os.path.join(PATH_ANNOTATION, wildcards.genome, '.'.join([wildcards.genome, 'gtf'])),
+        script            = PATH_SCRIPT,
         sample_sheet_file = PATH_SAMPLE_SHEET
     log:
         logfile = os.path.join(PATH_LOG, "{name}.{genome}.convert_matrix_from_mtx_to_loom.log")
@@ -751,12 +756,14 @@ rule convert_matrix_from_mtx_to_loom:
     run:
         command = ' '.join([
             params.python, os.path.join(params.script, 'convert_matrix_from_mtx_to_loom.py'),
-            '--sample_id',         params.name,
-            '--input_dir',         params.indir,
-            '--gtf_file',          params.gtf,
-            '--star_output_types', params.star_output_types,
-            '--output_file',       output.outfile,
-            '--sample_sheet_file', params.sample_sheet_file,
+            '--sample_id',              params.name,
+            '--input_dir',              params.indir,
+            '--gtf_file',               params.gtf,
+            '--star_output_types_keys', params.star_output_types_keys,
+            '--star_output_types_vals', params.star_output_types_vals,
+            '--output_file',            output.outfile,
+            '--sample_sheet_file',      params.sample_sheet_file,
+            '--path_script',            params.script,
             '&>', str(log.logfile)
         ])
         print_shell(command)
@@ -828,7 +835,8 @@ rule convert_loom_to_singleCellExperiment:
         script            = PATH_SCRIPT,
         Rscript           = PATH_RSCRIPT,
         threads  = config['execution']['rules']['convert_loom_to_singleCellExperiment']['threads'],
-        mem      = config['execution']['rules']['convert_loom_to_singleCellExperiment']['memory']
+        mem      = config['execution']['rules']['convert_loom_to_singleCellExperiment']['memory'],
+        star_output_types_vals = " ".join(STAR_OUTPUT_TYPES_VALS)
     message: """
             convert_loom_to_singleCellExperiment:
                 input:  {input.infile}
@@ -851,7 +859,8 @@ rule convert_loom_to_seurat:
         Rscript           = PATH_RSCRIPT,
         genome_version    = "{genome}",
         threads  = config['execution']['rules']['convert_loom_to_seurat']['threads'],
-        mem      = config['execution']['rules']['convert_loom_to_seurat']['memory']
+        mem      = config['execution']['rules']['convert_loom_to_seurat']['memory'],
+        star_output_types_vals = " ".join(STAR_OUTPUT_TYPES_VALS)
 
     message: """
             convert_loom_to_seurat:

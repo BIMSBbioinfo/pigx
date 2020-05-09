@@ -115,11 +115,11 @@ getCellStats = function(m) {
 
 # ---------------------------------------------------------------------------- #
 loomToSingleCellExperiment = function(
-    loom_file         = NULL,
-    gtf_file          = NULL,
-    outfile           = NULL,
-    genome_version    = NULL,
-    script_path       = NULL
+    loom_file              = NULL,
+    gtf_file               = NULL,
+    outfile                = NULL,
+    genome_version         = NULL,
+    script_path            = NULL
 
 ){
 
@@ -203,9 +203,8 @@ loomToSingleCellExperiment = function(
 
 # -------------------------------------------------------------------------- #
 loomToSingleCellExperiment(
-    loom_file         = argv$input[['infile']],
-    outfile           = argv$output[['outfile']],
-    genome_version    = argv$params[['genome_version']],
-    script_path       = argv$params[['script']],
-    gtf_file          = argv$params[['gtf_file']]
-)
+    loom_file              = argv$input[['infile']],
+    outfile                = argv$output[['outfile']],
+    genome_version         = argv$params[['genome_version']],
+    script_path            = argv$params[['script']],
+    gtf_file               = argv$params[['gtf_file']])
