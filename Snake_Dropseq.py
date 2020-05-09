@@ -48,7 +48,7 @@ ADAPTER_PARAMETERS = config['adapter_parameters']
 STAR_OUTPUT_TYPES_KEYS = ['Gene', 'GeneFull', 'Velocyto', 'Velocyto']
 STAR_OUTPUT_TYPES_VALS = ['Counts', 'GeneFull', 'Spliced', 'Unspliced']
 # This is a relict variable
-STAR_OUTPUT_TYPES = STAR_OUTPUT_TYPES_KEYS
+STAR_OUTPUT_TYPES = list(set(STAR_OUTPUT_TYPES_KEYS))
 
 # ----------------------------------------------------------------------------- #
 # PATHS
