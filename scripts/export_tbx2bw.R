@@ -126,11 +126,12 @@ methList <- lapply(SinfoList,
               return.type = "data.table", 
               chunk.size = 1e9, 
               FUN = function(dt){
+                options(scipen = 999)
                 methylKit:::.setMethylDBNames(dt)
                 # merge strands if destrand==TRUE
-                if(destrand) dt <- methylKit:::.CpG.dinuc.unify(dt)
-                dt[,score:=numCs/coverage]
-                dt[,c("coverage","numCs","numTs") :=NULL] 
+                if(destrand) dt <- methylKit:::.CpG.dinuc.unifyOld(dt)
+                dt[,score := numCs/coverage]
+                dt[,c("coverage","numCs","numTs") := NULL] 
                 return(dt)    
                 })
             return(GenomicRanges::makeGRangesFromDataFrame(
