@@ -26,7 +26,7 @@ def destrand(context):
 rule export_tabix_bigwig:
     input:
         seqlengths = os.path.join(
-            DIR_mapped, "Refgen_" + ASSEMBLY + "_chromlengths.csv"),
+            DIR_mapped, ASSEMBLY + "_chromlengths.csv"),
         filepath = os.path.join(
             DIR_methcall, "{tool}", "tabix_{context}/{prefix}_{context}.txt.bgz")
     output:

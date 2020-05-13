@@ -310,13 +310,13 @@ rule final_report:
         bedfile     = os.path.join(DIR_seg,"{prefix}_meth_segments.bed"),
         template            = os.path.join(DIR_templates,"index.Rmd"),
         bigwigFile          = os.path.join(DIR_bigwig,   "{prefix}.bw"),
-        chrom_seqlengths    = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+        chrom_seqlengths    = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv")
     output:
         report        = os.path.join(DIR_final, "{prefix}_{assembly}_final.html")
     params:
         ## absolute path to bamfiles
         Samplename  = lambda wc: get_fastq_name( wc.prefix ),
-        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        chrom_seqlengths  = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv"),
         source_dir  = config['locations']['input-dir'],
         out_dir     = OUTDIR,
         bigwigFile  = os.path.join(DIR_bigwig,   "{prefix}.bw"),
@@ -571,7 +571,7 @@ rule tabulate_seqlengths:
         GENOMEFILE
     output:
         index       = GENOMEFILE+".fai",
-        chrom_seqlengths  = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+        chrom_seqlengths  = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv")
     message: fmt("Tabulating chromosome lengths in genome: {ASSEMBLY} for later reference.")
     shell:
         nice('samtools', 

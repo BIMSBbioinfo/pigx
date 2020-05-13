@@ -118,7 +118,7 @@ rule diffmeth_report:
         methylDiff_tabix_file   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_full.txt.bgz"),
         methylDiff_results_file   = os.path.join(DIR_diffmeth,"{analysis}","methylDiff_{analysis}_{context}_{tool}_results.tsv"),
         template           = os.path.join(DIR_templates,"diffmeth.Rmd"),
-        chrom_seqlengths   = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv")
+        chrom_seqlengths   = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv")
     output:
         report        = os.path.join(DIR_final, "{analysis}", "{analysis}_{context}_{tool}.diffmeth-report.html")
     params:
@@ -134,7 +134,7 @@ rule diffmeth_report:
         scripts_dir            = DIR_scripts,
         cpgIsland_bedfile      = CPGISLAND_BEDFILE,
         refGenes_bedfile       = REFGENES_BEDFILE,
-        chrom_seqlengths       = os.path.join(DIR_mapped,"Refgen_"+ASSEMBLY+"_chromlengths.csv"),
+        chrom_seqlengths       = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv"),
         qvalue                 = float(config['general']['differential-methylation']['qvalue']),
         difference             = float(config['general']['differential-methylation']['difference']),
         webfetch               = config['general']['differential-methylation']['annotation']['webfetch'],
