@@ -342,15 +342,13 @@ def bigwig_exporting_bismark(files, sampleID, protocol):
 # FIXME: contexts should be generate output based on settings file
 def bigwig_exporting_bwameth(files, sampleID, protocol):
     PATH = DIR_bigwig
+    DESTRAND = "_destranded" if destrand("cpg") else ""
     if len(files) == 1:
         # ---- single end
-        return []
+        return [PATH+sampleID+dedupe_tag(protocol) + ".CpG" + DESTRAND + "_methylDackel" + ".bw"]
     elif len(files) == 2:
         # ---- paired end
-        return [PATH+sampleID+dedupe_tag(protocol) + ".CpG" + ".methylDackel" + ".bw",
-                PATH+sampleID+dedupe_tag(protocol) + ".CHG" + ".methylDackel" + ".bw",
-                PATH+sampleID+dedupe_tag(protocol) + ".CHH" + ".methylDackel" + ".bw"
-                ]
+        return [PATH+sampleID+dedupe_tag(protocol) + ".CpG" + DESTRAND + "_methylDackel" + ".bw"]
     else:
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")

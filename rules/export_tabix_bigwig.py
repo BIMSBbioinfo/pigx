@@ -30,7 +30,30 @@ rule export_tabix_bigwig:
         filepath = os.path.join(
             DIR_methcall, "{tool}", "tabix_{context}/{prefix}_{context}.txt.bgz")
     output:
-        bw = os.path.join(DIR_bigwig, "{prefix}.{context}.{tool}.bw")
+        bw = os.path.join(DIR_bigwig, "{prefix}.{context}_{tool}.bw")
+    params:
+        assembly = ASSEMBLY,
+        destrand = lambda wc: destrand(wc.context)
+    log:
+        DIR_bigwig + "{prefix}.{context}.{tool}.export_tbx2bw.log"
+    message: fmt("exporting bigwig files.")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/export_tbx2bw.R",
+                         "--filepath={input.filepath}",
+                         "--seqlengths_path={input.seqlengths}",
+                         "--assembly={params.assembly}",
+                         "--destrand={params.destrand}",
+                         "--out_path={output}",
+                         "--logFile={log}"], "{log}")
+
+rule export_tabix_bigwig_destrand:
+    input:
+        seqlengths = os.path.join(
+            DIR_mapped, ASSEMBLY + "_chromlengths.csv"),
+        filepath = os.path.join(
+            DIR_methcall, "{tool}", "tabix_{context}/{prefix}_{context}.txt.bgz")
+    output:
+        bw = os.path.join(DIR_bigwig, "{prefix}.{context}_destranded_{tool}.bw")
     params:
         assembly = ASSEMBLY,
         destrand = lambda wc: destrand(wc.context)
