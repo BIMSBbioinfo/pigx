@@ -18,5 +18,6 @@ tools:
   gatk: /home/buyar/tools/GenomeAnalysisTK.jar
   bbmap:
     memory: "-Xmx20G" 
-
+  reformat:
+    memory: "-Xmx1G"
 comparisonsFile: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/comparisons.tsv
