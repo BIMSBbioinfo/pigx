@@ -61,7 +61,7 @@ TARGET_NAMES = [line['target_name'] for line in SAMPLE_SHEET]
 def reads_input(wc):
   sample = wc.sample
   #print("sample:",sample)
-  return [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads']) if f]
+  return [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads', 'reads2']) if f]
 
 def get_bbmap_command(wc):
     sample = wc.sample
@@ -71,6 +71,25 @@ def get_bbmap_command(wc):
     elif tech == 'pacbio':
         return('mapPacBio.sh maxlen=6000')
 
+# determine if the sample library is single end or paired end
+def libType(wc):
+  sample = wc.sample
+  files = lookup('sample_name', sample, ['reads', 'reads2'])
+  #print(files)
+  count = sum(1 for f in files if f)
+  if count == 2:
+      return 'paired'
+  elif count == 1:
+      return 'single'
+
+def map_input(wc):
+  sample = wc.sample
+  if libType(wc) == 'paired':
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz".format(sample=sample))]
+  elif libType(wc) == 'single':
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz".format(sample=sample))]
+
+
 rule all:
     input:
         #expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
@@ -78,7 +97,7 @@ rule all:
         #expand(os.path.join(GATK_DIR, "{sample}.indels.realigned.bam"), sample = SAMPLES),
         expand(os.path.join(OUTPUT_DIR,  "aln_merged", "{sample}.bam"), sample = SAMPLES),
         #expand(os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES),
-        os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
+        #os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         #expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES),
         os.path.join(REPORT_DIR, "index.html")
         #get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
@@ -95,8 +114,10 @@ rule reformatFasta:
     input: REFERENCE_FASTA
     output: os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
     log: os.path.join(LOG_DIR, ".".join(["reformatFasta", os.path.basename(REFERENCE_FASTA), "log"]))
+    params:
+        memory = config['tools']['reformat']['memory']
     shell:
-        "reformat.sh in={input} out={output} tuc > {log} 2>&1"
+        "reformat.sh {params.memory} in={input} out={output} tuc > {log} 2>&1"
 
 rule getFastaIndex:
     input: os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
@@ -120,18 +141,23 @@ rule fastqc:
     log: os.path.join(LOG_DIR, "FASTQC", "{sample}.fastqc.log")
     shell: "fastqc -o {FASTQC_DIR} {input} > {log} 2>&1; touch {output}"
 
-rule trimmomatic:
-    input: reads_input
-    output: os.path.join(TRIMMED_READS_DIR, "{sample}.fastq.gz")
-    log: os.path.join(LOG_DIR, "TRIM", "trimmomatic.{sample}.log")
-    params:
-        tech = lambda wildcards: lookup('sample_name', wildcards.sample, ['tech'])[0]
-    run:
-        if params.tech == 'illumina':
-            shell("trimmomatic SE -threads 2 {input} {output} \
-            ILLUMINACLIP:{ADAPTERS}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 > {log} 2>&1")
-        elif params.tech == 'pacbio':
-            shell("ln -s {input} {output}")
+rule trim_galore_pe:
+  input: reads_input
+  output:
+    r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
+    r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
+  params:
+    tmp1=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('sample_name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_val_1.fq.gz'),
+    tmp2=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('sample_name', wildcards[0], ['reads2'])[0]).replace('.fastq.gz','_val_2.fq.gz')
+  log: os.path.join(LOG_DIR, "TRIM", "trimgalore.{sample}.log")
+  shell: "trim_galore -o {TRIMMED_READS_DIR} --paired {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
+
+rule trim_galore_se:
+  input: reads_input
+  output: os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz"),
+  params: tmp=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('sample_name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_trimmed.fq.gz'),
+  log: os.path.join(LOG_DIR, "TRIM", "trimgalore.{sample}.log")
+  shell: "trim_galore -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
 
 rule bbmap_indexgenome:
     input: os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
@@ -141,16 +167,21 @@ rule bbmap_indexgenome:
 
 rule bbmap_map:
     input:
-        reads = os.path.join(TRIMMED_READS_DIR, '{sample}.fastq.gz'),
+        reads = map_input,
         ref = os.path.join(BBMAP_INDEX_DIR, re.sub("\.fa(sta)?$", "", os.path.basename(REFERENCE_FASTA)))
     output:
         os.path.join(MAPPED_READS_DIR, "{sample}", "{sample}.sam")
     params:
         aligner = lambda wildcards: get_bbmap_command(wildcards),
-        memory = config['tools']['bbmap']['memory']
+        memory = config['tools']['bbmap']['memory'],
+        libtype = lambda wildcards: libType(wildcards)
     log: os.path.join(LOG_DIR, "BBMAP", "bbmap_align.{sample}.log")
-    shell:
-        "{params.aligner} {params.memory} path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1"
+    run:
+        if params.libtype == 'single':
+            shell("{params.aligner} {params.memory} path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1")
+        elif params.libtype == 'paired':
+            shell("{params.aligner} {params.memory} path={input.ref} in1={input.reads[0]} in2={input.reads[1]} keepnames=t outm={output} t=2 > {log} 2>&1")
+
 
 # GATK requires read groups, so here we add some dummy read group information to the bam files
 rule samtools_addReadGroups:
@@ -268,7 +299,7 @@ rule samtools_stats:
 rule multiqc:
     input:
         fastqc = expand(os.path.join(FASTQC_DIR, "{sample}.fastqc.done"), sample = SAMPLES),
-        trimmomatic = expand(os.path.join(TRIMMED_READS_DIR, "{sample}.fastq.gz"), sample = SAMPLES),
+        trim = expand(os.path.join(TRIMMED_READS_DIR, "{sample}.fastq.gz"), sample = SAMPLES),
         samtools = expand(os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES)
     output:
         os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html")
