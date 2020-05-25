@@ -1,6 +1,7 @@
 Reading Config File: 
 
 ```{r}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 suppressMessages(suppressWarnings(library(knitr)))
 suppressMessages(suppressWarnings(library(ggplot2)))
 suppressMessages(suppressWarnings(library(ggrepel)))
@@ -10,6 +11,7 @@ suppressMessages(suppressWarnings(library(plotly)))
 suppressMessages(suppressWarnings(library(GenomicRanges)))
 suppressMessages(suppressWarnings(library(parallel)))
 suppressMessages(suppressWarnings(library(pbapply)))
+suppressMessages(suppressWarnings(library(DT)))
 
 targetName <- params$target_name
 config <- yaml::read_yaml('./config.yml')
