@@ -85,9 +85,10 @@ def libType(wc):
 def map_input(wc):
   sample = wc.sample
   if libType(wc) == 'paired':
-    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz".format(sample=sample))]
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}_val_1.fq.gz".format(sample=sample)),
+            os.path.join(TRIMMED_READS_DIR, "{sample}_val_2.fq.gz".format(sample=sample))]
   elif libType(wc) == 'single':
-    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz".format(sample=sample))]
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed.fq.gz".format(sample=sample))]
 
 
 rule all:
@@ -144,20 +145,22 @@ rule fastqc:
 rule trim_galore_pe:
   input: reads_input
   output:
-    r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
-    r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
-  params:
-    tmp1=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('sample_name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_val_1.fq.gz'),
-    tmp2=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('sample_name', wildcards[0], ['reads2'])[0]).replace('.fastq.gz','_val_2.fq.gz')
+    r1=os.path.join(TRIMMED_READS_DIR, "{sample}_val_1.fq.gz"),
+    r2=os.path.join(TRIMMED_READS_DIR, "{sample}_val_2.fq.gz")
   log: os.path.join(LOG_DIR, "TRIM", "trimgalore.{sample}.log")
-  shell: "trim_galore -o {TRIMMED_READS_DIR} --paired {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
+  shell: "trim_galore -o {TRIMMED_READS_DIR} --basename {wildcards.sample} --paired {input[0]} {input[1]} >> {log} 2>&1"
 
 rule trim_galore_se:
   input: reads_input
-  output: os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz"),
-  params: tmp=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('sample_name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_trimmed.fq.gz'),
+  output: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed.fq.gz"),
   log: os.path.join(LOG_DIR, "TRIM", "trimgalore.{sample}.log")
-  shell: "trim_galore -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
+  params:
+    tech = lambda wildcards: lookup('sample_name', wildcards[0], ['tech'])[0]
+  run:
+    if params.tech == 'illumina':
+        shell("trim_galore -o {TRIMMED_READS_DIR} --basename {wildcards.sample} {input[0]} >> {log} 2>&1")
+    elif params.tech == 'pacbio':
+        shell("ln -s {input} {output}")
 
 rule bbmap_indexgenome:
     input: os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
