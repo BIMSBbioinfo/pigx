@@ -4,6 +4,8 @@ additional_args=$1
 
 echo "ARGS: ${additional_args}"
 
+export PYTHONPATH='~/.conda/envs/pigx_crispr/lib/python3.5/site-packages/'
+
 SRCDIR="/data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr"
 
 #echo "Removing previously generated output folder"
