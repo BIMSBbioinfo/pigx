@@ -1,13 +1,16 @@
 library(GenomicRanges)
 args = commandArgs(trailingOnly=TRUE)
 
-# settings.yaml file that was used to run the pipeline 
-target_region <- args[1]
-all_intervals_file <- args[2]
+sample_sheet_file <- args[1]
+sample <- args[2]
+all_intervals_file <- args[3]
+
+sample_sheet <- read.csv(sample_sheet_file)
+sample_sheet <- sample_sheet[sample_sheet$sample_name == sample,]
 
 #subset all_intervals to only keep the ones that overlap target_region
 all_intervals <- as(readLines(all_intervals_file), "GRanges")
-target <- as(target_region, "GRanges")
+target <- as(sample_sheet$target_region, "GRanges")
 
 subset_intervals <- IRanges::subsetByOverlaps(all_intervals, target)
 

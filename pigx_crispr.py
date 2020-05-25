@@ -1,11 +1,12 @@
 """
 Snakefile for pigx crispr pipeline
 """
-
+import sys
+print(sys.version)
 import os
 import yaml
-import csv
-import inspect
+import pandas as pd
+from itertools import chain
 
 
 # tools
@@ -41,27 +42,26 @@ GATK_DIR          = os.path.join(OUTPUT_DIR, 'gatk')
 nodeN = config['nodeN']
 
 ## Load sample sheet
-with open(SAMPLE_SHEET_FILE, 'r') as fp:
-  rows =  [row for row in csv.reader(fp, delimiter=',')]
-  header = rows[0]; rows = rows[1:]
-  SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
+SAMPLE_SHEET = pd.read_csv(SAMPLE_SHEET_FILE)
+# get unique rows for only considering sample id/name/read files
+# (one sample may contain multiple target region/name fields, but we
+# don't need to process the same read files for each target region)
+SAMPLE_SHEET_tmp = SAMPLE_SHEET[['sample_name', 'reads', 'reads2', 'tech']]
+SAMPLE_SHEET = SAMPLE_SHEET_tmp.drop_duplicates()
 
-# Convenience function to access fields of sample sheet columns that
-# match the predicate.  The predicate may be a string.
+SAMPLES = SAMPLE_SHEET['sample_name'].tolist()
+
+# look up values from sample sheet (assuming it is a data frame) for multiple fields
 def lookup(column, predicate, fields=[]):
-  if inspect.isfunction(predicate):
-    records = [line for line in SAMPLE_SHEET if predicate(line[column])]
-  else:
-    records = [line for line in SAMPLE_SHEET if line[column]==predicate]
-  return [record[field] for record in records for field in fields]
-
-SAMPLES = [line['sample_name'] for line in SAMPLE_SHEET]
-TARGET_NAMES = [line['target_name'] for line in SAMPLE_SHEET]
+    values = [SAMPLE_SHEET[SAMPLE_SHEET[column] == predicate][f].tolist() for f in fields]
+    values = list(chain.from_iterable(values))
+    #remove nan values
+    return([f for f in values if str(f) != 'nan'])
 
 def reads_input(wc):
   sample = wc.sample
-  #print("sample:",sample)
-  return [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads', 'reads2']) if f]
+  files = [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads', 'reads2']) if f]
+  return files
 
 def get_bbmap_command(wc):
     sample = wc.sample
@@ -148,7 +148,7 @@ rule trim_galore_pe:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_val_1.fq.gz"),
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}_val_2.fq.gz")
   log: os.path.join(LOG_DIR, "TRIM", "trimgalore.{sample}.log")
-  shell: "trim_galore -o {TRIMMED_READS_DIR} --basename {wildcards.sample} --paired {input[0]} {input[1]} >> {log} 2>&1"
+  shell: "trim_galore -o {TRIMMED_READS_DIR} --cores 2 --basename {wildcards.sample} --paired {input[0]} {input[1]} >> {log} 2>&1"
 
 rule trim_galore_se:
   input: reads_input
@@ -158,7 +158,7 @@ rule trim_galore_se:
     tech = lambda wildcards: lookup('sample_name', wildcards[0], ['tech'])[0]
   run:
     if params.tech == 'illumina':
-        shell("trim_galore -o {TRIMMED_READS_DIR} --basename {wildcards.sample} {input[0]} >> {log} 2>&1")
+        shell("trim_galore -o {TRIMMED_READS_DIR} --cores 2 --basename {wildcards.sample} {input[0]} >> {log} 2>&1")
     elif params.tech == 'pacbio':
         shell("ln -s {input} {output}")
 
@@ -254,10 +254,9 @@ rule subset_gatk_realigner_intervals:
     output:
         os.path.join(GATK_DIR, "{sample}.gatk_realigner.target.intervals")
     params:
-        target_region = lambda wildcards: lookup('sample_name', wildcards.sample, ['target_region'])[0],
         script = os.path.join(SRC_DIR, "src", "subset_gatk_realigner_intervals.R"),
     log: os.path.join(LOG_DIR, "GATK", "subset_gatk_realigner_intervals.{sample}.log")
-    shell: "{RSCRIPT} {params.script} '{params.target_region}' {input} > {log} 2>&1"
+    shell: "{RSCRIPT} {params.script} {SAMPLE_SHEET_FILE} {wildcards.sample} {input} > {log} 2>&1"
 
 
 
