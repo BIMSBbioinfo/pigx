@@ -95,7 +95,8 @@ comparePerBaseCounts <- function(coverageStats, caseSample, controlSample, indel
   
   #p values  - for each base, compare indel probabilities 
   #and get a fisher exact's p value
-  results <- do.call(rbind, lapply(1:length(caseScore), function(i) {
+  cl <- parallel::makeForkCluster(4)
+  results <- do.call(rbind, pbapply::pblapply(cl = cl, 1:length(caseScore), function(i) {
     #contingency matrix
     M <- matrix(c(caseScore[i], controlScore[i], 
                 caseCov[i] - caseScore[i], controlCov[i] - controlScore[i]), nrow = 2)
@@ -104,6 +105,7 @@ comparePerBaseCounts <- function(coverageStats, caseSample, controlSample, indel
     pVal <- t$p.value
     return(data.frame('seqname' = case$seqname[i], 'bp' = case$bp[i], 'oddsRatio' = oddsRatio, 'pval' = pVal))
   }))
+  parallel::stopCluster(cl)
   
   results$padj <- p.adjust(results$pval)
   
