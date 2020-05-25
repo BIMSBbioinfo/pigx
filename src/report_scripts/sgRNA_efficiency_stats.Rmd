@@ -40,10 +40,42 @@ cutSiteStats$sampleMatchesGuide <- as.factor(apply(cutSiteStats, 1, function(x) 
   return(g %in% sampleGuides[[s]])
 }))
 
+```
+
+Guide RNA efficiencies across samples as a table
+```{r}
+dt <- cutSiteStats[sampleMatchesGuide == TRUE][,-4][,c(1,3,2)]
+colnames(dt)[3] <- 'percentEfficiency'
+DT::datatable(dt, 
+          extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
+          options = list(fixedColumns = TRUE, 
+                         scroller = TRUE,
+                         scrollY = 400,
+                         dom = 'Bfrtip',
+                         buttons = c('copy', 'print', 'csv','excel', 'pdf')),
+          filter = 'bottom'
+          )
+```
+
+Guide RNA efficiencies across samples displayed as a heatmap
+```{r, fig.width=8, fig.height=8}
 dt <- dcast(cutSiteStats[sampleMatchesGuide == TRUE], sample ~ sgRNA, value.var = 'scores')
 M <- as.matrix(dt[,-1])
 rownames(M) <- dt$sample
-pheatmap::pheatmap(M, cluster_rows = F, cluster_cols = F, 
-                   display_numbers = T, na_col = 'black', number_color = 'black', 
+
+pheatmap::pheatmap(t(M), cluster_rows = F, cluster_cols = F, 
+                   na_col = 'black', 
+                   display_numbers = ncol(M) < 15 & nrow(M) < 15, 
+                   number_color = 'black', 
                    main = '% Indel Efficiency Values at Cut Sites (+/- 5bp)')
+```
+
+Compare guide efficiencies across samples 
+```{r}
+ggplot(cutSiteStats[sampleMatchesGuide == TRUE], 
+       aes(x = sgRNA, y = scores)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(height = 0) + 
+  coord_flip() + 
+  labs(y = 'percent sgRNA efficiencies \n each dot represents a sample')
 ```
