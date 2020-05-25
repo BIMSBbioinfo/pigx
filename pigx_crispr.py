@@ -177,13 +177,14 @@ rule bbmap_map:
     params:
         aligner = lambda wildcards: get_bbmap_command(wildcards),
         memory = config['tools']['bbmap']['memory'],
+        threads = config['tools']['bbmap']['threads'],
         libtype = lambda wildcards: libType(wildcards)
     log: os.path.join(LOG_DIR, "BBMAP", "bbmap_align.{sample}.log")
     run:
         if params.libtype == 'single':
-            shell("{params.aligner} {params.memory} path={input.ref} in={input.reads} outm={output} t=2 > {log} 2>&1")
+            shell("{params.aligner} {params.memory} path={input.ref} in={input.reads} outm={output} t={params.threads} > {log} 2>&1")
         elif params.libtype == 'paired':
-            shell("{params.aligner} {params.memory} path={input.ref} in1={input.reads[0]} in2={input.reads[1]} keepnames=t outm={output} t=2 > {log} 2>&1")
+            shell("{params.aligner} {params.memory} path={input.ref} in1={input.reads[0]} in2={input.reads[1]} keepnames=t outm={output} t={params.threads} > {log} 2>&1")
 
 
 # GATK requires read groups, so here we add some dummy read group information to the bam files

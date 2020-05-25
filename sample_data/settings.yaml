@@ -17,6 +17,7 @@ tools:
     threads: "-XX:ParallelGCThreads=2"
   gatk: /home/buyar/tools/GenomeAnalysisTK.jar
   bbmap:
+    threads: 2
     memory: "-Xmx20G" 
   reformat:
     memory: "-Xmx1G"
