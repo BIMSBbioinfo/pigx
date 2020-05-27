@@ -25,7 +25,8 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/scrnaReport.Rmd							\
   scripts/validate_input.py \
   scripts/convert_loom_to_Seurat.R \
-  scripts/loom_Functions.R
+  scripts/loom_Functions.R \
+  scripts/matrix_market_IO.py 
 
 dist_pkgdata_DATA =					\
   etc/sample_sheet.csv.example		\
