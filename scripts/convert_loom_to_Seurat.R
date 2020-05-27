@@ -35,6 +35,7 @@ convert_loom_to_seurat = function(
                              meta.data = meta.data)
 
     # converts additional matrices to seurat objects
+    star_output_types_vals = unlist(strsplit(star_output_types_vals,' '))
     for(output_type in tail(star_output_types_vals,-1)){
         message(output_type)
         mat = Matrix(assays(loom)[[output_type]], nrow=nrow(loom), ncol=ncol(loom))
