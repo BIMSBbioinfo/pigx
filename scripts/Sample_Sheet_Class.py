@@ -40,7 +40,7 @@ class experiment:
     # required column names are hardcoded
     def validate_sheet_init(self):
         """Function to validate the sample sheet"""
-        print('Validating sample sheet ...')
+        #print('Validating sample sheet ...')
         sample_sheet = self.SAMPLE_SHEET
 
         # ----------------------------------------------------------------- #
@@ -137,7 +137,7 @@ class experiment:
     # pivots the sample_sheet by sample_name to get unique technical replicates
     def merge_technical_replicates(self):
 
-        print('Merging technical replicates ...')
+        #print('Merging technical replicates ...')
         # defines the sample descriptors
         sample_sheet = pd.pivot_table(self.SAMPLE_SHEET, index='sample_name', aggfunc=set)
         sample_sheet['sample_name'] = sample_sheet.index
