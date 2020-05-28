@@ -78,6 +78,7 @@ suppressPackageStartupMessages(expr = {
   library(GenomeInfoDb)
   library(methylKit)
   library(rtracklayer)
+  library(data.table)
 })
 
 data.table::setDTthreads(8)
