@@ -43,6 +43,8 @@ nodeN = config['nodeN']
 
 ## Load sample sheet
 SAMPLE_SHEET = pd.read_csv(SAMPLE_SHEET_FILE)
+TARGET_NAMES = list(set(SAMPLE_SHEET['target_name'].tolist()))
+print(TARGET_NAMES)
 # get unique rows for only considering sample id/name/read files
 # (one sample may contain multiple target region/name fields, but we
 # don't need to process the same read files for each target region)
@@ -50,6 +52,7 @@ SAMPLE_SHEET_tmp = SAMPLE_SHEET[['sample_name', 'reads', 'reads2', 'tech']]
 SAMPLE_SHEET = SAMPLE_SHEET_tmp.drop_duplicates()
 
 SAMPLES = SAMPLE_SHEET['sample_name'].tolist()
+#print(SAMPLES)
 
 # look up values from sample sheet (assuming it is a data frame) for multiple fields
 def lookup(column, predicate, fields=[]):
@@ -61,6 +64,7 @@ def lookup(column, predicate, fields=[]):
 def reads_input(wc):
   sample = wc.sample
   files = [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads', 'reads2']) if f]
+  print(files)
   return files
 
 def get_bbmap_command(wc):
@@ -100,13 +104,14 @@ rule all:
         #expand(os.path.join(OUTPUT_DIR, "SAMTOOLS", "{sample}.samtools.stats.txt"), sample = SAMPLES),
         #os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         #expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES),
-        os.path.join(REPORT_DIR, "index.html")
+        os.path.join(REPORT_DIR, "index.html"),
+        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
         #get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
         #get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"),
         #get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"),
-        #expand(os.path.join(REPORT_DIR, "{amplicon}.report.html"), amplicon=AMPLICONS.keys()),
-        #expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.report.comparisons.html'), amplicon=COMPARISON_AMPLICONS),
-        #expand(os.path.join(REPORT_DIR, 'comparisons', '{amplicon}.comparison.stats.tsv'), amplicon=COMPARISON_AMPLICONS)
 
 #notice that get_amplicon_file function for 'fasta' should only be used once.
 #Other rules that need the amplicon fasta sequence as input should use :
@@ -166,7 +171,7 @@ rule bbmap_indexgenome:
     input: os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
     output: os.path.join(BBMAP_INDEX_DIR, re.sub("\.fa(sta)?$", "", os.path.basename(REFERENCE_FASTA)))
     log: os.path.join(LOG_DIR, ".".join(["bbmap_index", os.path.basename(REFERENCE_FASTA), "log"]))
-    shell: "bbmap.sh ref={input} path={output} > {log} 2>&1"
+    shell: "bbmap.sh t=10 ref={input} path={output} > {log} 2>&1"
 
 rule bbmap_map:
     input:
@@ -177,14 +182,14 @@ rule bbmap_map:
     params:
         aligner = lambda wildcards: get_bbmap_command(wildcards),
         memory = config['tools']['bbmap']['memory'],
-        threads = config['tools']['bbmap']['threads'],
+        options = config['tools']['bbmap']['options'],
         libtype = lambda wildcards: libType(wildcards)
     log: os.path.join(LOG_DIR, "BBMAP", "bbmap_align.{sample}.log")
     run:
         if params.libtype == 'single':
-            shell("{params.aligner} {params.memory} path={input.ref} in={input.reads} outm={output} t={params.threads} > {log} 2>&1")
+            shell("{params.aligner} {params.memory} {params.options} path={input.ref} in={input.reads} outm={output} > {log} 2>&1")
         elif params.libtype == 'paired':
-            shell("{params.aligner} {params.memory} path={input.ref} in1={input.reads[0]} in2={input.reads[1]} keepnames=t outm={output} t={params.threads} > {log} 2>&1")
+            shell("{params.aligner} {params.memory} {params.options} keepnames=t path={input.ref} in1={input.reads[0]} in2={input.reads[1]} outm={output}> {log} 2>&1")
 
 
 # GATK requires read groups, so here we add some dummy read group information to the bam files
@@ -370,7 +375,11 @@ rule generateSiteFiles:
     output:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
-        os.path.join(REPORT_DIR, "config.yml")
+        os.path.join(REPORT_DIR, "config.yml"),
+        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
     params:
         report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts"),
         script = os.path.join(SRC_DIR, "src", "generateSiteFiles.R")
@@ -382,9 +391,17 @@ rule renderSite:
     input:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
-        os.path.join(REPORT_DIR, "config.yml")
+        os.path.join(REPORT_DIR, "config.yml"),
+        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
     output:
-        os.path.join(REPORT_DIR, "index.html")
+        os.path.join(REPORT_DIR, "index.html"),
+        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
     params:
         render_script = os.path.join(SRC_DIR, "src", "render_site.sh"),
         report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts")
