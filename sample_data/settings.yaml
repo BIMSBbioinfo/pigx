@@ -17,8 +17,8 @@ tools:
     threads: "-XX:ParallelGCThreads=2"
   gatk: /home/buyar/tools/GenomeAnalysisTK.jar
   bbmap:
-    threads: 2
-    memory: "-Xmx20G" 
+    memory: "-Xmx20G"
+    options: "threads=2" # See bbmap.sh --help for all options 
   reformat:
     memory: "-Xmx1G"
 comparisonsFile: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/comparisons.tsv
