@@ -35,7 +35,6 @@ pkgdata_report_templatesdir = $(pkgdatadir)/report_templates
 dist_pkgdata_report_templates_SCRIPTS = 			\
   report_templates/index.Rmd						\
   report_templates/diffmeth.Rmd						\
-  report_templates/pigx_bsseq_logo.html				\
   report_templates/reports.bib
 
 dist_pkgdata_DATA =							\
@@ -71,11 +70,8 @@ EXTRA_DIST += $(TESTS)
 clean-local:
 	-rm -rf .snakemake
 
-CLEANFILES = $(nodist_bin_SCRIPTS) report_templates/pigx_bsseq_logo.html config.json
+CLEANFILES = $(nodist_bin_SCRIPTS) config.json
 
-# This is a hack to embed the logo in the html file.
-report_templates/pigx_bsseq_logo.html:
-	@sed "s|#:MAKE|$(shell base64 -w0 < images/Logo_PiGx.png)|" report_templates/pigx_bsseq_logo.html.in > $@
 
 # Build docker image with Guix
 docker: dist
