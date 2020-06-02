@@ -145,10 +145,6 @@ targets = {
         'files': files_for_sample(list_files_bwameth)
     },
 
-    'sorting': {
-        'description': "Sort bam files.",
-        'files': files_for_sample(list_files_sortbam)
-    },
 
     'deduplication': {
         'description': "Deduplicate Bismark bam files.",
@@ -444,29 +440,47 @@ rule bam_methCall:
 
 rule deduplication_se:
     input:
-        DIR_sorted+"{sample}_se_bt2.sorted.bam"
+        DIR_mapped+"{sample}_trimmed_bismark_bt2.bam"
     output:
         DIR_sorted+"{sample}_se_bt2.sorted.deduped.bam"
     params:
-        bam="--bam ",
-        sampath="--samtools_path " + tool('samtools')
+        threads=config['execution']['rules']['samblaster_markdup_sort']['threads'],
+        memory=config['execution']['rules']['samblaster_markdup_sort']['memory'],
+        tmpdir=DIR_sorted+"{sample}/"
     log:
         DIR_sorted+"{sample}_deduplication.log"
     message: fmt("Deduplicating single-end aligned reads from {input}")
     shell:
-        nice('samtools', [" markdup -rs ", "{input}", "{output}"], "{log}")
+        nice("samtools", 
+        ["view -h {input}"," | ", 
+        tool("samblaster"),"-r",toolArgs("samblaster"),"2> {log}","|",
+        tool("samtools"),"sort","-T={params.tmpdir}",
+         "-o {output}", "-@ {params.threads}", 
+         "-m {params.memory}", "-l 9","2> {log}",";",
+         tool("samtools"),"index {output}"],("{log}"))
+
 
 #-----------------------
 rule deduplication_pe:
     input:
-        DIR_sorted+"{sample}_1_val_1_bt2.sorted.bam"
+        DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam"
     output:
         DIR_sorted+"{sample}_1_val_1_bt2.sorted.deduped.bam"
+    params:
+        threads=config['execution']['rules']['samblaster_markdup_sort']['threads'],
+        memory=config['execution']['rules']['samblaster_markdup_sort']['memory'],
+        tmpdir=DIR_sorted+"{sample}/"
     log:
         DIR_sorted+"{sample}_deduplication.log"
     message: fmt("Deduplicating paired-end aligned reads from {input}")
     shell:
-        nice('samtools', [" markdup -r ", "{input}", "{output}"], "{log}")
+        nice("samtools", 
+        ["view -h {input}"," | ", 
+        tool("samblaster"),"-r",toolArgs("samblaster"),"2> {log}","|",
+        tool("samtools"),"sort","-T={params.tmpdir}",
+         "-o {output}", "-@ {params.threads}", 
+         "-m {params.memory}", "-l 9","2> {log}",";",
+         tool("samtools"),"index {output}"],("{log}"))
 
 
 # ==========================================================================================
