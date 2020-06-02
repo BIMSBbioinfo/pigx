@@ -502,7 +502,7 @@ rule bismark_align_and_map_se:
         refconvert_CT = GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
         fqfile = DIR_trimmed+"{sample}_trimmed.fq.gz",
-        qc     = DIR_posttrim_QC+"{sample}_trimmed_fastqc.html"
+        qc     = DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
     output:
         DIR_mapped+"{sample}_trimmed_bismark_bt2.bam",
         DIR_mapped+"{sample}_trimmed_bismark_bt2_SE_report.txt"
@@ -528,8 +528,8 @@ rule bismark_align_and_map_pe:
 	refconvert_GA = GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa",
         fin1 = DIR_trimmed+"{sample}_1_val_1.fq.gz",
         fin2 = DIR_trimmed+"{sample}_2_val_2.fq.gz",
-        qc   = [ DIR_posttrim_QC+"{sample}_1_val_1_fastqc.html",
-                 DIR_posttrim_QC+"{sample}_2_val_2_fastqc.html"]
+        qc   = [ DIR_posttrim_QC+"{sample}_1_val_1_fastqc.zip",
+                 DIR_posttrim_QC+"{sample}_2_val_2_fastqc.zip"]
     output:
         DIR_mapped+"{sample}_1_val_1_bismark_bt2_pe.bam",
         DIR_mapped+"{sample}_1_val_1_bismark_bt2_PE_report.txt"
@@ -628,7 +628,6 @@ rule fastqc_after_trimming_se:
     input:
         DIR_trimmed+"{sample}_trimmed.fq.gz",
     output:
-    	DIR_posttrim_QC+"{sample}_trimmed_fastqc.html",
     	DIR_posttrim_QC+"{sample}_trimmed_fastqc.zip"
     params:
         fastqc_args = config['tools']['fastqc']['args'],
@@ -644,10 +643,8 @@ rule fastqc_after_trimming_pe:
         DIR_trimmed+"{sample}_1_val_1.fq.gz",
         DIR_trimmed+"{sample}_2_val_2.fq.gz"
     output:
-    	DIR_posttrim_QC+"{sample}_1_val_1_fastqc.html",
     	DIR_posttrim_QC+"{sample}_1_val_1_fastqc.zip",
-    	DIR_posttrim_QC+"{sample}_2_val_2_fastqc.zip",
-        DIR_posttrim_QC+"{sample}_2_val_2_fastqc.html"
+    	DIR_posttrim_QC+"{sample}_2_val_2_fastqc.zip"
     params:
         fastqc_args = config['tools']['fastqc']['args'],
         outdir = "--outdir "+DIR_posttrim_QC
@@ -663,7 +660,6 @@ rule fastqc_after_trimming_pe:
 
 rule trim_reads_se:
     input:
-       qc   = DIR_rawqc+"{sample}_fastqc.html",
        file = PATHIN+"{sample}.fq.gz"
     output:
        DIR_trimmed+"{sample}_trimmed.fq.gz" #---- this ALWAYS outputs .fq.qz format.
@@ -681,8 +677,6 @@ rule trim_reads_se:
 
 rule trim_reads_pe:
     input:
-        qc    = [ DIR_rawqc+"{sample}_1_fastqc.html",
-                  DIR_rawqc+"{sample}_2_fastqc.html"],
         files = [ PATHIN+"{sample}_1.fq.gz",
                   PATHIN+"{sample}_2.fq.gz"]
     output:
@@ -710,7 +704,6 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
     input:
         PATHIN+"{sample}.fq.gz"
     output:
-        DIR_rawqc+"{sample}_fastqc.html",
         DIR_rawqc+"{sample}_fastqc.zip"
     params:
         fastqc_args = config['tools']['fastqc']['args'],
