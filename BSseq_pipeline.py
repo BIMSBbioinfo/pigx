@@ -338,7 +338,7 @@ rule final_report:
         # required for any report
         bibTexFile                   = BIBTEXPATH,
         prefix                       = "{prefix}_{context}_{tool}_{assembly}_{tool}",
-        workdir                      = os.path.join(DIR_final,"{context}_{tool}_{assembly}_reports"),
+        workdir                      = os.path.join(DIR_final,"sample_reports"),
         logo                         = LOGOPATH
     log:
         os.path.join(DIR_final,"sample_reports", "{prefix}_{context}_{tool}_{assembly}_final.log")

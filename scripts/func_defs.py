@@ -366,7 +366,7 @@ def methSeg_bwameth(files, sampleID, protocol):
 
 def list_final_reports_bwameth(files, sampleID, protocol):
     SUFFIX = "CpG_methylDackel_{}".format(ASSEMBLY) 
-    PATH = os.path.join(DIR_final,SUFFIX+"_reports/" )
+    PATH = os.path.join(DIR_final,"sample_reports/" )
     if len(files) == 1:
         # ---- single end
         # return [PATH+sampleID+dedupe_tag(protocol) + ".CpG" + DESTRAND + "_methylDackel" + ".bw"]
@@ -380,7 +380,7 @@ def list_final_reports_bwameth(files, sampleID, protocol):
 
 def list_final_reports_bismark(files, sampleID, protocol):
     SUFFIX = "cpg_methylKit_{}".format(ASSEMBLY) 
-    PATH = os.path.join(DIR_final,SUFFIX+"_reports/" )
+    PATH = os.path.join(DIR_final,"sample_reports/" )
     if len(files) == 1:
         # ---- single end
         return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ SUFFIX+ "_final.html"
