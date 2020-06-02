@@ -12,12 +12,21 @@ export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))
 
 chmod -R +w ${srcdir}/tests
 
-./pigx-bsseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
+./pigx-bsseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv \
+	--target={final-report-bwameth,final-report}
 
-for base in PEsample_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
-    if ! test -f "${srcdir}/tests/out/Final_Reports/${base}.sorted.deduped_hg19_final.html"
+for base in PEsample_wgbs_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
+    if ! test -f "${srcdir}/tests/out/Final_Reports/sample_reports/${base}.sorted.deduped_cpg_methylKit_hg19_final.html"
     then
-        echo "ERROR: could not find report for ${base}"
+        echo "ERROR: could not find bismark report for ${base}"
+        exit 1
+    fi
+done
+
+for base in PEsample_wgbs SEsample SEsample_v2; do
+    if ! test -f "${srcdir}/tests/out/Final_Reports/sample_reports/${base}.deduped_CpG_methylDackel_hg19_final.html"
+    then
+        echo "ERROR: could not find bwameth report for ${base}"
         exit 1
     fi
 done
