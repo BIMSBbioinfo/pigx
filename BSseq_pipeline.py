@@ -233,14 +233,18 @@ targets = {
         'files': files_for_treatment(list_files_diffmeth_report_bismark)
     },
 
+    'final-report-bwameth': {
+        'description': "Produce a comprehensive report per Sample.",
+        'files': files_for_sample(list_final_reports_bwameth)
+    },
     'final-report': {
-        'description': "Produce a comprehensive report.  This is the default target.",
-        'files': files_for_sample(list_final_reports)
+        'description': "Produce a comprehensive report per Sample.",
+        'files': files_for_sample(list_final_reports_bismark)
     }
 }
 
-TREAT_GROUPS=config["DManalyses"]
-if TREAT_GROUPS:
+# Should we perform differential analysis?
+if config["DManalyses"]:
   selected_targets_default = ['final-report', 'diffmeth-report', 'bigwig']
 else:
   selected_targets_default = ['final-report', 'bigwig']
