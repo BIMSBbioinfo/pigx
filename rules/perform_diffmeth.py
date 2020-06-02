@@ -137,7 +137,7 @@ rule diffmeth_report:
         chrom_seqlengths       = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv"),
         qvalue                 = float(config['general']['differential-methylation']['qvalue']),
         difference             = float(config['general']['differential-methylation']['difference']),
-        webfetch               = config['general']['differential-methylation']['annotation']['webfetch'],
+        webfetch               = WEBFETCH,
         # required for any report
         bibTexFile             = BIBTEXPATH,
         prefix                 = "{analysis}_{context}_{tool}",
