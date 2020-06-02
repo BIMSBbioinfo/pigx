@@ -286,18 +286,20 @@ def bam_processing(files, sampleID, protocol):
         # ---- single end
         return [PATH+"tabix_cpg/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_cpg.txt.bgz",
                 PATH+"tabix_cpg/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_cpg.txt.bgz.tbi",
-                PATH+"tabix_chg/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz",
-                PATH+"tabix_chg/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz.tbi",
-                PATH+"tabix_chh/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz",
-                PATH+"tabix_chh/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz.tbi"]
+                # PATH+"tabix_chg/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz",
+                # PATH+"tabix_chg/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz.tbi",
+                # PATH+"tabix_chh/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz",
+                # PATH+"tabix_chh/"+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz.tbi"
+                ]
     elif len(files) == 2:
         # ---- paired end
         return [PATH+"tabix_cpg/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_cpg.txt.bgz",
                 PATH+"tabix_cpg/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_cpg.txt.bgz.tbi",
-                PATH+"tabix_chg/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz",
-                PATH+"tabix_chg/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz.tbi",
-                PATH+"tabix_chh/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz",
-                PATH+"tabix_chh/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz.tbi"]
+                # PATH+"tabix_chg/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz",
+                # PATH+"tabix_chg/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chg.txt.bgz.tbi",
+                # PATH+"tabix_chh/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz",
+                # PATH+"tabix_chh/"+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_chh.txt.bgz.tbi"
+                ]
     else:
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
