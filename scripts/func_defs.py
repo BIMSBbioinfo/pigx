@@ -316,12 +316,14 @@ def list_files_maketabix_methyldackel(files, sampleID, protocol):
 # FIXME: contexts should be generate output based on settings file
 def bigwig_exporting_bismark(files, sampleID, protocol):
     PATH = DIR_bigwig
+    DESTRAND = "_destranded" if destrand("cpg") else ""
+    print(sampleID + ":" + DESTRAND)
     if len(files) == 1:
         # ---- single end
-        return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".cpg" + ".methylKit"+ ".bw"
+        return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".cpg" + DESTRAND + "_methylKit"+ ".bw"
     elif len(files) == 2:
         # ---- paired end
-        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".cpg"  + ".methylKit" + ".bw"]
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + ".cpg" + DESTRAND +  "_methylKit" + ".bw"]
     else:
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")

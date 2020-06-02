@@ -31,6 +31,8 @@ rule export_tabix_bigwig:
             DIR_methcall, "{tool}", "tabix_{context}/{prefix}_{context}.txt.bgz")
     output:
         bw = os.path.join(DIR_bigwig, "{prefix}.{context}_{tool}.bw")
+    wildcard_constraints:
+        context=".+(?<!destranded)"
     params:
         assembly = ASSEMBLY,
         destrand = lambda wc: destrand(wc.context)
