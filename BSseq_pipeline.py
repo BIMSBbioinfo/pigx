@@ -308,42 +308,72 @@ onsuccess:
 
 rule final_report:
     input:
-        rdsfile     = os.path.join(DIR_methcall,"{prefix}_methylRaw.RDS"),
-        callFile    = os.path.join(DIR_methcall,"{prefix}_CpG.txt"),
-        grfile      = os.path.join(DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        bedfile     = os.path.join(DIR_seg,"{prefix}_meth_segments.bed"),
+        methCall_tabixfile  = os.path.join(DIR_methcall,"{tool}","tabix_{context}","{prefix}_{context}.txt.bgz"),
+        methSeg_bedfile     = os.path.join(DIR_seg,"{prefix}_{context}_{tool}.meth_segments.bed"),
         template            = os.path.join(DIR_templates,"index.Rmd"),
-        bigwigFile          = os.path.join(DIR_bigwig,   "{prefix}.bw"),
-        chrom_seqlengths    = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv")
+        bigwigFile          = os.path.join(DIR_bigwig, "{prefix}.{context}_{tool}.bw")
     output:
-        report        = os.path.join(DIR_final, "{prefix}_{assembly}_final.html")
+        report        = os.path.join(DIR_final, 
+                "{context}_{tool}_{assembly}_reports",
+                "{prefix}_{context}_{tool}_{assembly}_final.html")
     params:
         ## absolute path to bamfiles
-        Samplename  = lambda wc: get_fastq_name( wc.prefix ),
-        chrom_seqlengths  = os.path.join(DIR_mapped,ASSEMBLY+"_chromlengths.csv"),
-        source_dir  = config['locations']['input-dir'],
-        out_dir     = OUTDIR,
-        bigwigFile  = os.path.join(DIR_bigwig,   "{prefix}.bw"),
-        inBam       = os.path.join(OUTDIR, DIR_sorted,"{prefix}.bam"),
-        assembly    = ASSEMBLY,
-        mincov         = int(config['general']['methylation-calling']['minimum-coverage']),
-        minqual        = int(config['general']['methylation-calling']['minimum-quality']),
-        TSS_plotlength = int(config['general']['reports']['TSS_plotlength']),
-        ## absolute path to output folder in working dir
-        methCallRDS     = os.path.join(OUTDIR,DIR_methcall,"{prefix}_methylRaw.RDS"),
-        methSegGR       = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments_gr.RDS"),
-        methSegBed      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.bed"),
-        methSegPng      = os.path.join(OUTDIR,DIR_seg,"{prefix}_meth_segments.png"),
-        genome_dir  = config['locations']['genome-dir'],
-        scripts_dir = DIR_scripts,
-        refGene_bedfile  = REFGENES_BEDFILE,
-        webfetch    = WEBFETCH
+        sampleid                     = "{prefix}",
+        source_dir                   = config['locations']['input-dir'],
+        out_dir                      = OUTDIR,
+        inBam                        = os.path.join(OUTDIR, DIR_sorted,"{prefix}.bam"),
+        context                      = "{context}",
+        assembly                     = ASSEMBLY,
+        mincov                       = int(config['general']['methylation-calling']['minimum-coverage']),
+        minqual                      = int(config['general']['methylation-calling']['minimum-quality']),
+        TSS_plotlength               = int(config['general']['reports']['TSS_plotlength']),
+        methSegPng                   = os.path.join(DIR_seg,"{prefix}_{context}_{tool}.meth_segments.png"),
+        scripts_dir                  = DIR_scripts,
+        refGene_bedfile              = REFGENES_BEDFILE,
+        webfetch                     = WEBFETCH,
+        # required for any report
+        bibTexFile                   = BIBTEXPATH,
+        prefix                       = "{prefix}_{context}_{tool}_{assembly}_{tool}",
+        workdir                      = os.path.join(DIR_final,"{context}_{tool}_{assembly}_reports"),
+        logo                         = LOGOPATH
     log:
-        os.path.join(DIR_final,"{prefix}_{assembly}_final.log")
-    message: fmt("Compiling final report: Output log file for details (for cluster jobs, see pigx_work/cluster_log_files).")
-    run:
-        generateReport(input, output, params, log, "")
+        os.path.join(DIR_final,"{prefix}_{context}_{tool}_{assembly}_final.log")
+    # message: fmt("Compiling final report: Output log file for details (for cluster jobs, see pigx_work/cluster_log_files).")
+    # run:
+    #     generateReport(input, output, params, log, "")
+    shell:
+        nice('Rscript', ["{DIR_scripts}/generate_report.R",
+                           "--reportFile={input.template}",
+                           "--outFile={output.report}",
+                           "--workdir={params.workdir}",
+                           "--logo={params.logo}",
+                           "--bibTexFile={params.bibTexFile}",
+                           "--prefix={params.prefix}",
+                           "--report.params='{{"+
+                           ",".join([
+                               '"sampleid":"{params.sampleid}"',
+                               '"assembly":"{params.assembly}"',
+                               '"context":"{params.context}"',
+                               '"bigwigFile":"{input.bigwigFile}"',
+                               '"inBam":"{params.inBam}"',
+                               '"methCall_tabixfile":"{input.methCall_tabixfile}"',
+                               '"methSegBed":"{input.methSeg_bedfile}"',
+                               '"methSegPng":"{params.methSegPng}"',
+                              
+    
+                               '"mincov":"{params.mincov}"',
+                               '"minqual":"{params.minqual}"',
+                               '"TSS_plotlength":"{params.TSS_plotlength}"',
 
+                               '"source_dir":"{params.source_dir}"',
+                               '"out_dir":"{params.out_dir}"',
+                               '"scripts_dir":"{params.scripts_dir}"',
+                               
+                               '"refGenes_bedfile":"{params.refGene_bedfile}"',
+                               '"webfetch":"{params.webfetch}"'
+                           ])+"}}'",
+                           "--logFile={log}"], "{log}", 
+                           "echo '' ")
 
 
 
