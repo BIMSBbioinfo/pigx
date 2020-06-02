@@ -379,14 +379,29 @@ def methSeg_bwameth(files, sampleID, protocol):
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
 
-def list_final_reports(files, sampleID, protocol):
-    PATH = DIR_final
+def list_final_reports_bwameth(files, sampleID, protocol):
+    SUFFIX = "CpG_methylDackel_{}".format(ASSEMBLY) 
+    PATH = os.path.join(DIR_final,SUFFIX+"_reports/" )
     if len(files) == 1:
         # ---- single end
-        return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"
+        # return [PATH+sampleID+dedupe_tag(protocol) + ".CpG" + DESTRAND + "_methylDackel" + ".bw"]
+        return [PATH+sampleID+dedupe_tag(protocol) + "_"+ SUFFIX+ "_final.html"]
     elif len(files) == 2:
         # ---- paired end
-        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+ASSEMBLY+"_final.html"]
+        return [PATH+sampleID+dedupe_tag(protocol) + "_"+ SUFFIX+ "_final.html"]
+    else:
+        raise Exception(
+            "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
+
+def list_final_reports_bismark(files, sampleID, protocol):
+    SUFFIX = "cpg_methylKit_{}".format(ASSEMBLY) 
+    PATH = os.path.join(DIR_final,SUFFIX+"_reports/" )
+    if len(files) == 1:
+        # ---- single end
+        return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + "_"+ SUFFIX+ "_final.html"
+    elif len(files) == 2:
+        # ---- paired end
+        return [PATH+sampleID+"_1_val_1_bt2.sorted" + dedupe_tag(protocol) + "_"+SUFFIX+"_final.html"]
     else:
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
