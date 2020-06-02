@@ -324,7 +324,7 @@ rule final_report:
         bigwigFile          = os.path.join(DIR_bigwig, "{prefix}.{context}_{tool}.bw")
     output:
         report        = os.path.join(DIR_final, 
-                "{context}_{tool}_{assembly}_reports",
+                "sample_reports",
                 "{prefix}_{context}_{tool}_{assembly}_final.html")
     params:
         ## absolute path to bamfiles
@@ -347,7 +347,7 @@ rule final_report:
         workdir                      = os.path.join(DIR_final,"{context}_{tool}_{assembly}_reports"),
         logo                         = LOGOPATH
     log:
-        os.path.join(DIR_final,"{prefix}_{context}_{tool}_{assembly}_final.log")
+        os.path.join(DIR_final,"sample_reports", "{prefix}_{context}_{tool}_{assembly}_final.log")
     # message: fmt("Compiling final report: Output log file for details (for cluster jobs, see pigx_work/cluster_log_files).")
     # run:
     #     generateReport(input, output, params, log, "")
