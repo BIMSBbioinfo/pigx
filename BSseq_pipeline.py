@@ -255,6 +255,16 @@ selected_targets = config['execution']['target'] or selected_targets_default
 # if USEBWAMETH: 
 #     selected_targets.append('bwameth-mapping-stats')
 
+# Check for availability of requested target
+for target in selected_targets:
+    if not target in targets.keys():
+        target_desc = []
+        for key in targets.keys():
+            target_desc += ['{}:\t  {}'.format(key.ljust(25, ' '), targets[key]['description'])]
+        
+        bail("\n".join(["ERROR: Selected target '{}' is unknown.".format(target),
+            "Please choose from available targets:",
+            "\n"]+target_desc))
 
 # FIXME: the list of files must be flattened twice(!).  We should make
 # sure that the targets really just return simple lists.
