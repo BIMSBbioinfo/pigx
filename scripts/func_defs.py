@@ -82,7 +82,7 @@ def bail(msg):
 def validate_config(config):
     # Check that all locations exist
     for loc in config['locations']:
-        if ( (not loc == 'output-dir') and (not os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
+        if ( (not loc == 'output-dir') and (not (os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc])))):
             bail("ERROR: The following necessary directory/file does not exist: {} ({})".format(
                 config['locations'][loc], loc))
 
@@ -102,24 +102,18 @@ def validate_config(config):
         bail("ERROR: The specification of treatment groups and differential analysis has changed.\n"+
         "Please retrieve the new default settings layout with 'pigx-bsseq --init settings'.\n")
 
-    # Check for a genome fasta file
-    fasta = glob(os.path.join(config['locations']['genome-dir'], '*.fasta'))
-    fa = glob(os.path.join(config['locations']['genome-dir'], '*.fa'))
-    
     # Check for a any Assembly string
     if not config['general']['assembly']:
             bail("ERROR: Please set a genome assembly string in the settings file at general::assembly.")
 
     # Check if we have permission to write to the reference-genome directory ourselves
     # if not, then check if the ref genome has already been converted
-    if (not os.access(config['locations']['genome-dir'], os.W_OK) and
-            not os.path.isdir(os.path.join(config['locations']['genome-dir'], 'Bisulfite_Genome'))):
+    genome_dir = os.path.dirname(config['locations']['genome-fasta'])
+    if (not os.access(genome_dir, os.W_OK) and
+            not os.path.isdir(os.path.join(genome_dir, 'Bisulfite_Genome'))):
         bail("ERROR: reference genome has not been bisulfite-converted, and PiGx does not have permission to write to that directory. Please either (a) provide Bisulfite_Genome conversion directory yourself, or (b) enable write permission in {} so that PiGx can do so on its own.".format(
-            config['locations']['genome-dir']))
+            genome_dir))
 
-    if not len(fasta) + len(fa) == 1:
-        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(
-            config['locations']['genome-dir']))
 
 # --------------------------------------
 # sample related      

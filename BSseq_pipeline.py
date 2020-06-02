@@ -55,7 +55,8 @@ else:
 BIBTEXPATH  = os.path.join(config['locations']['pkgdatadir'], "report_templates/reports.bib")
 
 PATHIN     = os.path.join(OUTDIR, "pigx_work/input/")           # location of the data files to be imported (script creates symbolic link)
-GENOMEPATH = config['locations']['genome-dir']+"/"       # where the reference genome being mapped to is stored
+GENOMEFILE = config['locations']['genome-fasta']    # where the reference genome being mapped to is stored
+GENOMEPATH = os.path.dirname(GENOMEFILE) + "/"
 ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped to
 
 # FIXME: lookup and fetch now done in diffmethreport, but should they get their own rule ??
@@ -85,9 +86,6 @@ elif WEBFETCH:
   
   
 
-## FIXME: request the genome file instead of the folder in the settings file
-# this hack actually will only take the first file ending with either .fa or .fasta as reference genome
-GENOMEFILE = os.path.join(GENOMEPATH, [file for file in os.listdir(GENOMEPATH) if file.endswith((".fasta",".fa"))][0])
 
 #--- COMPATIBILTY VARIABLES FOR KASIAS WGBS PIPELINE:
 SUBSET_READS = False

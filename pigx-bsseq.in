@@ -339,7 +339,7 @@ def prepare_links():
 
     # Link the reference genome
     try:
-        os.symlink(config['locations']['genome-dir'],
+        os.symlink(os.path.dirname(config['locations']['genome-fasta']),
                    path.join(config['locations']['output-dir'], 'pigx_work/refGenome'))
     except FileExistsError:
         pass

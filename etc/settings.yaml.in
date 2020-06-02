@@ -1,7 +1,7 @@
 locations:
-  input-dir: in/
-  output-dir: out/
-  genome-dir: genome/
+  input-dir: /path/to/reads/
+  output-dir: /path/to/output/
+  genome-fasta: /path/to/genome.fasta
 
 general:
   assembly: ''

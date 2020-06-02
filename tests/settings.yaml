@@ -1,7 +1,7 @@
 locations:
   input-dir: in/
   output-dir: out/
-  genome-dir: genome/
+  genome-fasta: genome/sample.fasta
 
 general:
   assembly: hg19
