@@ -254,15 +254,15 @@ rule trim_galore_pe:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
   params:
-    tmp1=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_val_1.fq.gz'),
-    tmp2=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads2'])[0]).replace('.fastq.gz','_val_2.fq.gz')
+    tmp1=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_val_1.fq.gz',
+    tmp2=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads2'])[0]).split('.')[:-2]) + '_val_2.fq.gz',
   log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
   shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} --paired {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
 
 rule trim_galore_se:
   input: trim_galore_input
   output: os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz"),
-  params: tmp=lambda wildcards, output: os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).replace('.fastq.gz','_trimmed.fq.gz'),
+  params: tmp=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_trimmed.fq.gz'
   log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
   shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
 
