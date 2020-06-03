@@ -107,6 +107,9 @@ tools:
   fastqc:
     executable: @FASTQC@
     args: ""
+  multiqc:
+    executable: @MULTIQC@
+    args: ""
   trim-galore:
     executable: @TRIMGALORE@
     args: ""

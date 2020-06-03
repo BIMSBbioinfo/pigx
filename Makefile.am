@@ -13,7 +13,6 @@ dist_pkglibexec_scripts_SCRIPTS =	\
   scripts/fetch_procedures.R		\
   scripts/func_defs.py				\
   scripts/ideoDMC.R					\
-  scripts/report_functions.R		\
   scripts/export_tbx2bw.R         	\
   scripts/methCall.R          		\
   scripts/makeTabix.R          		\
@@ -28,6 +27,7 @@ dist_pkglibexec_rules_SCRIPTS =			\
   rules/deduplicate_samblaster.py 		\
   rules/preprocessing_methyldackel.py 	\
   rules/mapping_stats.py 				\
+  rules/multiqc.py 						\
   rules/export_tabix_bigwig.py 			\
   rules/perform_diffmeth.py
 

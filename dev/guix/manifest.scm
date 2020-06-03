@@ -26,6 +26,7 @@
 "snakemake"
 "bismark"
 "fastqc"
+"multiqc"
 "bowtie"
 "trim-galore"
 "cutadapt"

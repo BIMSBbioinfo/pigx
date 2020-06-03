@@ -41,7 +41,7 @@ DIR_posttrim_QC =  os.path.join(OUTDIR, '03_posttrimming_QC/' )
 DIR_trimmed     =  os.path.join(OUTDIR, '02_trimming/' )
 DIR_rawqc       =  os.path.join(OUTDIR, '01_raw_QC/' )
 
-DIR_final       = os.path.join(OUTDIR, "Final_Reports/")
+DIR_final       = os.path.join(OUTDIR, "Reports/")
 
 
 #--- DEFINE PATHS AND FILE NAMES:
@@ -234,7 +234,16 @@ targets = {
     'final-report': {
         'description': "Produce a comprehensive report per Sample.",
         'files': files_for_sample(list_final_reports_bismark)
+    },
+    'multiqc': {
+        'description': "Produce a summarized qc report for bismark branch.",
+        'files': [[os.path.join(DIR_final,"multiqc","bismark_multiqc_report.html")]]
+    },
+    'multiqc-bwameth': {
+        'description': "Produce a comprehensive report for bwameth branch.",
+        'files': [[os.path.join(DIR_final,"multiqc","bwameth_multiqc_report.html")]]
     }
+
 }
 
 # Should we perform differential analysis?
@@ -305,6 +314,12 @@ onsuccess:
             print("The following files have been generated:")
             for name in generated:
                 print("  - {}".format(name))
+
+
+# ==========================================================================================
+# Generate the multiqc report for all samples:
+
+include: './rules/multiqc.py'
 
 
 # ==========================================================================================

@@ -94,6 +94,7 @@
        ("snakemake" ,snakemake)
        ("bismark" ,bismark)
        ("fastqc" ,fastqc)
+       ("multiqc" ,multiqc)
        ("bowtie" ,bowtie)
        ("trim-galore" ,trim-galore)
        ("cutadapt" ,cutadapt)
