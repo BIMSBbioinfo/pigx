@@ -176,10 +176,10 @@ def files_for_sample(proc):
 def list_files_rawQC(files, sampleID, protocol):
     PATH = DIR_rawqc
     if len(files) == 1:
-        return [PATH+sampleID+"_fastqc.html"]  # ---- single end
+        return [PATH+sampleID+"_fastqc.zip"]  # ---- single end
     elif len(files) == 2:
         # ---- paired end
-        return [PATH+sampleID+"_1_fastqc.html", PATH+sampleID+"_2_fastqc.html"]
+        return [PATH+sampleID+"_1_fastqc.zip", PATH+sampleID+"_2_fastqc.zip"]
     else:
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
