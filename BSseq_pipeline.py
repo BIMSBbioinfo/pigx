@@ -86,11 +86,9 @@ elif WEBFETCH:
   
   
 
-
-#--- COMPATIBILTY VARIABLES FOR KASIAS WGBS PIPELINE:
-SUBSET_READS = False
-NOTRIMMING   = False
-USEBWAMETH   = config['general']['use_bwameth']
+#--- CHOOSE PIPELINE BRANCH
+USEBWAMETH = True if repr(config['general']['use_bwameth']).lower() in ["true","yes"] else False
+USEBISMARK = True if repr(config['general']['use_bismark']).lower() in ["true","yes"] else False
 
 
 #--- LIST THE OUTPUT FILES TO BE PRODUCED: 
@@ -246,17 +244,30 @@ targets = {
 
 }
 
-# Should we perform differential analysis?
-if config["DManalyses"]:
-  selected_targets_default = ['final-report', 'diffmeth-report', 'bigwig']
-else:
-  selected_targets_default = ['final-report', 'bigwig']
+
+
+# FIXME: add all relevant bwameth realted rules here
+# if USEBWAMETH: 
+#     d_targets.append('bwameth-mapping-stats')
+
+selected_targets_default = [] 
+
+if USEBISMARK:
+    # Should we perform differential analysis?
+    if config["DManalyses"]:
+      selected_targets_default += ['final-report', 'diffmeth-report', 'bigwig', 'multiqc']
+    else:
+      selected_targets_default += ['final-report', 'bigwig','multiqc']
+
+if USEBWAMETH:
+    # Should we perform differential analysis?
+    if config["DManalyses"]:
+      selected_targets_default += ['final-report-bwameth', 'diffmeth-report-bwameth', 'bigwig-bwameth', 'multiqc-bwameth']
+    else:
+      selected_targets_default += ['final-report-bwameth', 'bigwig-bwameth','multiqc-bwameth']
 
 # Selected output files from the above set.
 selected_targets = config['execution']['target'] or selected_targets_default
-# FIXME: add all relevant bwameth realted rules here
-# if USEBWAMETH: 
-#     selected_targets.append('bwameth-mapping-stats')
 
 # Check for availability of requested target
 for target in selected_targets:

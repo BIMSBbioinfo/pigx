@@ -5,7 +5,10 @@ locations:
 
 general:
   assembly: ''
-  use_bwameth: True
+  # use one or both bisulfite aligners
+  # bwameth is faster and uses less resources
+  use_bwameth: False
+  # bismark is gold standard and uses sensible defaults
   use_bismark: True
   methylation-calling:
     minimum-coverage: 10
