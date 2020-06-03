@@ -48,7 +48,7 @@ dist_doc_DATA = 					\
   README.md
 
 EXTRA_DIST =										\
-  tests/genome/myref_hg38_chr1_7291263_7302041.fasta	\
+  tests/genome/sample.fasta	\
   tests/genome/refGene.hg19.bed.gz                       \
   tests/genome/cpgIslandExt.hg19.bed.gz                  \
   tests/in/PE_1.fq.gz								\
