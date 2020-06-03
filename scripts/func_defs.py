@@ -328,7 +328,6 @@ def list_files_maketabix_methyldackel(files, sampleID, protocol):
 def bigwig_exporting_bismark(files, sampleID, protocol):
     PATH = DIR_bigwig
     DESTRAND = "_destranded" if destrand("cpg") else ""
-    print(sampleID + ":" + DESTRAND)
     if len(files) == 1:
         # ---- single end
         return PATH+sampleID+"_se_bt2.sorted" + dedupe_tag(protocol) + ".cpg" + DESTRAND + "_methylKit"+ ".bw"

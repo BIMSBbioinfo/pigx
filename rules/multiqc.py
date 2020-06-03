@@ -17,8 +17,6 @@ def multiqc_files(branch):
 rule multiqc:
     input:
         files = lambda wc: multiqc_files(wc.branch)
-        # bowtie_output   = expand(os.path.join(PATH_MAPPED_MAIN, "{name}", "{name}" + BAM_SUFFIX), name=NAMES),
-        # fastqc_output   = FASTQC
     output:
         os.path.join(DIR_final,"multiqc", "{branch}_multiqc_report.html")
     params:
@@ -27,6 +25,6 @@ rule multiqc:
         posttrim_qc = DIR_posttrim_QC
     log:
         os.path.join(DIR_final,"multiqc", "{branch}_multiqc.log")
-    # message: "Generating multi-sample QC report for {{tool}} branch."
+    message: "Generating multi-sample QC report for {wildcards.tool} branch."
     shell:
       nice("multiqc",["-f","-n {output}","{input.files}","{params}"],"{log}")
