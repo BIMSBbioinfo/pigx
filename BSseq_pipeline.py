@@ -627,7 +627,7 @@ rule bismark_genome_preparation:
         useBowtie2   = "--bowtie2 ",
         verbose      = "--verbose "
     log:
-        'bismark_genome_preparation_'+ASSEMBLY+'.log'
+        os.path.join(OUTDIR,'bismark_genome_preparation_'+ASSEMBLY+'.log')
     message: fmt("Converting {ASSEMBLY} Genome into Bisulfite analogue")
     shell:
         nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
