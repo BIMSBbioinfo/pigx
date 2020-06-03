@@ -12,11 +12,14 @@ general:
     minimum-quality: 10
     # this applies to bwameth only
     keep-singleton: False
-    keep-Dups: Auto                 # can be Auto/True/False, Auto decides based on protocol
+    # keep-dups can be Auto/True/False, Auto decides based on protocol
+    keep-Dups: Auto                 
   export-bigwig:
+    # extract/export contexts other than CpG? 
     context:
       cpg: 
         export: True
+        # join both strands and summarize coverage/methylation? 
         destrand: True
       chg: 
         export: False
@@ -31,9 +34,9 @@ general:
     qvalue: 0.01
     difference: 25
     annotation:
-      # download cpgIsland-bedfile or refGenes-bedfile automatically if not given?
       cpgIsland-bedfile: ''
       refGenes-bedfile: ''
+      # download cpgIsland-bedfile or refGenes-bedfile automatically if not given?
       webfetch:   no
       
 # DManalyses:
