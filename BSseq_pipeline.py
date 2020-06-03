@@ -123,7 +123,7 @@ targets = {
 
     # This rule is always executed, as trimming is a prerequisite for
     # subsequent rules
-    'trimgalore': {
+    'trimming': {
         'description': "Trim the reads.",
         'files': files_for_sample(list_files_TG)
     },
@@ -177,7 +177,7 @@ targets = {
         'files': files_for_sample(list_files_maketabix_methyldackel)
     },
 
-    'export-bigwig': {
+    'bigwig-bwameth': {
         'description': "export bigwig files from tabix files for visualization",
         'files': files_for_sample(bigwig_exporting_bwameth)
     },
