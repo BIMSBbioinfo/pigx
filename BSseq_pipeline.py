@@ -357,7 +357,7 @@ rule final_report:
         logo                         = LOGOPATH
     log:
         os.path.join(DIR_final,"sample_reports", "{prefix}_{context}_{tool}_{assembly}_final.log")
-    # message: fmt("Compiling final report: Output log file for details (for cluster jobs, see pigx_work/cluster_log_files).")
+    message: fmt("Compiling final report for sample {wildcards.prefix}.")
     # run:
     #     generateReport(input, output, params, log, "")
     shell:
@@ -411,7 +411,7 @@ rule methseg:
         assembly    = ASSEMBLY
     log:
         os.path.join(DIR_seg,"{prefix}_{context}_{tool}.meth_segments.log")
-    message: fmt("Segmenting methylation profile for {input.tabixfile}.")
+    message: fmt("Segmenting methylation profile for {wildcards.context} context of sample {wildcards.prefix}.")
     shell:
         nice('Rscript', ["{DIR_scripts}/methSeg.R",
                          "--tabix={input.tabixfile}",

@@ -67,7 +67,7 @@ rule methyldackel_extract_methylKit:
                       ['methylation-calling']['minimum-quality'])
     log:
         DIR_methcall + "{sample}.methyldackel_calls.log"
-    message: fmt("Extract methylation calls from bam file using MethylDackel for sample {{sample}} and protocol {params.protocol}")
+    message: fmt("Extract methylation calls from bam file using MethylDackel for sample {wildcards.sample} and protocol {params.protocol}")
     shell:
         nice("methyldackel",
              ["extract", "{input.genome}", "{input.bamfile}",
@@ -186,7 +186,7 @@ rule tabix_methyldackelfile:
                      ['minimum-coverage'])
     log:
         DIR_methcall + "methylDackel/" + "tabix_{context}/{prefix}_{context}.makeTabix.log"
-    message: fmt("Create Tabix file from MethylDackel file for sample {{sample}} and context {params.context}")
+    message: fmt("Create Tabix file from MethylDackel file for sample {wildcards.prefix} and context {params.context}")
     shell:
         nice('Rscript', ["{DIR_scripts}/makeTabix.R",
                          "--location={input}",

@@ -38,7 +38,7 @@ rule export_tabix_bigwig:
         destrand = lambda wc: destrand(wc.context)
     log:
         DIR_bigwig + "{prefix}.{context}.{tool}.export_tbx2bw.log"
-    message: fmt("exporting bigwig files.")
+    message: fmt("exporting methylation as bigwig for sample {wildcards.prefix}.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_tbx2bw.R",
                          "--filepath={input.filepath}",
@@ -61,7 +61,7 @@ rule export_tabix_bigwig_destrand:
         destrand = lambda wc: destrand(wc.context)
     log:
         DIR_bigwig + "{prefix}.{context}.{tool}.export_tbx2bw.log"
-    message: fmt("exporting bigwig files.")
+    message: fmt("exporting methylation as bigwig for sample {wildcards.prefix}.")
     shell:
         nice('Rscript', ["{DIR_scripts}/export_tbx2bw.R",
                          "--filepath={input.filepath}",
