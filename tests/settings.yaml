@@ -5,6 +5,9 @@ locations:
 
 general:
   assembly: hg19
+  use_bwameth: True
+  # bismark is gold standard and uses sensible defaults
+  use_bismark: True
   methylation-calling:
     minimum-coverage: 1
     minimum-quality: 10
