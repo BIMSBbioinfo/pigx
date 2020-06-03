@@ -106,6 +106,11 @@ def validate_config(config):
     if not config['general']['assembly']:
             bail("ERROR: Please set a genome assembly string in the settings file at general::assembly.")
 
+    # Check for a any Assembly string
+    if not (config['general']['use_bwameth'] or config['general']['use_bismark']):
+            bail("ERROR: Please enable one or both bisulfite aligners at general::use_bwameth/use_bismark.")
+    
+
     # Check if we have permission to write to the reference-genome directory ourselves
     # if not, then check if the ref genome has already been converted
     genome_dir = os.path.dirname(config['locations']['genome-fasta'])
@@ -113,6 +118,12 @@ def validate_config(config):
             not os.path.isdir(os.path.join(genome_dir, 'Bisulfite_Genome'))):
         bail("ERROR: reference genome has not been bisulfite-converted, and PiGx does not have permission to write to that directory. Please either (a) provide Bisulfite_Genome conversion directory yourself, or (b) enable write permission in {} so that PiGx can do so on its own.".format(
             genome_dir))
+
+    # Check for a genome fasta file
+    fasta = glob(os.path.join(genome_dir, '*.fasta'))
+    fa    = glob(os.path.join(genome_dir, '*.fa'))
+    if not len(fasta) + len(fa) == 1 :
+        bail("ERROR: Missing (or ambiguous) reference genome: The number of files ending in either '.fasta' or '.fa' in the following genome directory does not equal one: {}".format(genome_dir))
 
 
 # --------------------------------------
