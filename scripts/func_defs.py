@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from datetime import datetime
 from glob import glob
 
 # ==============================================================================
@@ -56,6 +57,11 @@ def samplesheet(name, item=None):
     else:
         config["SAMPLES"][name]
 
+# print datetime next to a message
+def log_time(text):
+    time = '$(date +"[%Y-%m-%d %T]")'
+    log = '{} {}'.format(time, text)
+    return(fmt(log))
 
 # Generate a command line string that can be passed to snakemake's
 # "shell".  The string is prefixed with an invocation of "nice".
@@ -64,11 +70,13 @@ def nice(cmd, args, log=None, fallback=None):
     line = ["nice -" + str(config['execution']['nice']),
             executable] + [toolArgs(cmd)] + args
     if log:
-        line.append("> {} 2>&1".format(log))
+        line.insert(0, "echo {} > {};".format(log_time("Starting Now"),log))
+        line.append(">> {} 2>&1".format(log))
     if fallback:
         line.append(" || {} ".format(fallback))
+    if log:
+        line.append("; echo {} >> {};".format(log_time("Done"),log)) 
     return " ".join(line)
-
 
 
 # abandone current execution with a helpful error message:
