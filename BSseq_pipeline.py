@@ -165,7 +165,7 @@ targets = {
 
      # TODO: had to add this part to call bam_methCall for diff meth rule
     'methyl-calling': {
-        'description': "Process bismark bam files.",
+        'description': "Process Bismark bam files.",
         'files': files_for_sample(bam_processing)
     },
 
