@@ -85,11 +85,13 @@ argsL <- sapply(argsL, parseArgsList)
 
 
 ## catch output and messages into log file
-out <- file(argsL$logFile, open = "wt")
+out <- file(argsL$logFile, open = "at")
 sink(out, type = "output")
 sink(out, type = "message")
 
+message("========= Given Arguments ==========")
 print(argsL)
+message("====================================")
 
 # Prepare Variables -----------------------------------------------------------
 
@@ -151,53 +153,47 @@ cores <- as.numeric(argsL$cores)
 methylDiff_results_suffix <- argsL$methylDiff_results_suffix
 
 # Run Functions -----------------------------------------------------------
-st <- system.time({
 
-  # Read input files
-  message("Reading united samples ...")
-  methylBaseDB <- methylKit:::readMethylBaseDB(
-    dbpath = input,
-    dbtype = "tabix",
-    sample.ids = sampleids,
-    assembly = assembly,
-    context = context,
-    resolution = "base",
-    treatment = treatments,
-    destranded = destranded
-  )
-  
-  # remove output file if already exists
-  methylDiff_outFile <- gsub("results.tsv",
-                             sprintf("%s.txt.bgz",
-                                     methylDiff_results_suffix),
-                             resultsFile)
-  
-  if( file.exists(methylDiff_outFile)) {
-    unlink(c(methylDiff_outFile, paste0(methylDiff_outFile, ".tbi")))
-  }
+# Read input files
+message("Reading united samples ...")
+methylBaseDB <- methylKit:::readMethylBaseDB(
+dbpath = input,
+dbtype = "tabix",
+sample.ids = sampleids,
+assembly = assembly,
+context = context,
+resolution = "base",
+treatment = treatments,
+destranded = destranded
+)
 
-  # Find differentially methylated cytosines
-  message("Calculating differential methylation ...")
-  methylDiffDB <- methylKit::calculateDiffMeth(
-    .Object = methylBaseDB,
-    overdispersion = "MN",
-    test = "Chisq",
-    mc.cores = cores,
-    save.db = TRUE,
-    dbdir = outdir,
-    suffix = methylDiff_results_suffix
-  )
+# remove output file if already exists
+methylDiff_outFile <- gsub("results.tsv",
+						 sprintf("%s.txt.bgz",
+								 methylDiff_results_suffix),
+						 resultsFile)
+
+if( file.exists(methylDiff_outFile)) {
+unlink(c(methylDiff_outFile, paste0(methylDiff_outFile, ".tbi")))
+}
+
+# Find differentially methylated cytosines
+message("Calculating differential methylation ...")
+methylDiffDB <- methylKit::calculateDiffMeth(
+.Object = methylBaseDB,
+overdispersion = "MN",
+test = "Chisq",
+mc.cores = cores,
+save.db = TRUE,
+dbdir = outdir,
+suffix = methylDiff_results_suffix
+)
 
 
-  message("Exporting results to tsv...")
-  methylKit:::.write.table.noSci(methylKit::getData(methylDiffDB),
-    sep = "\t",
-    row.names = FALSE,
-    quote = FALSE,
-    file = resultsFile
-  )
-})
-
-message("Done.")
-message("Process finished in (seconds): \n")
-print(st)
+message("Exporting results to tsv...")
+methylKit:::.write.table.noSci(methylKit::getData(methylDiffDB),
+sep = "\t",
+row.names = FALSE,
+quote = FALSE,
+file = resultsFile
+)

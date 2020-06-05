@@ -134,7 +134,7 @@ names(argsL) <- argsDF$V1
 
 ## catch output and messages into log file
 if(!is.null(argsL$logFile)) {
-  out <- file(argsL$logFile, open = "wt")
+  out <- file(argsL$logFile, open = "at")
   sink(out,type = "output")
   sink(out, type = "message")
 } else {
@@ -143,8 +143,9 @@ if(!is.null(argsL$logFile)) {
 
 # export a copy of the argument list for this rendering attempt
 saveRDS( argsL, file=paste0(argsL$outFile,".RenderArgs.rds") )
-message("Parameters")
+message("========= Given Parameters ==========")
 print(argsL)
+message("====================================")
 
 ## get deeper list elements of report params
 if(!is.null(argsL$report.params)) {

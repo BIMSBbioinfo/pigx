@@ -63,7 +63,7 @@ names(argsL) <- argsDF$V1
 
 ## catch output and messages into log file
 if(!is.null(argsL$logFile)) {
-  out <- file(argsL$logFile, open = "wt")
+  out <- file(argsL$logFile, open = "at")
   sink(out,type = "output")
   sink(out, type = "message")
 } else {
@@ -100,8 +100,6 @@ destrand <- ifelse(tolower(destrand) %in% c("true","yes"),TRUE,FALSE)
 
 
 # ---------------------------------------------------
-
-st <- system.time({
 
 message("Parsing chromosome lengths.")
 # load reference sequence info containing  
@@ -143,11 +141,5 @@ methList <- lapply(SinfoList,
 methList <- unlist(GRangesList(methList))
 
 rtracklayer::export.bw( object = methList, con = out_path )
-
-    })
-
-message("Done.")
-message("Process finished in (seconds): \n")
-print(st)
 
 # bigwig exported. Program complete.

@@ -55,15 +55,13 @@ names(argsL) <- argsDF$V1
 
 
 ## catch output and messages into log file
-out <- file(argsL$logFile, open = "wt")
+out <- file(argsL$logFile, open = "at")
 sink(out,type = "output")
 sink(out, type = "message")
 
 
 
 # Run Functions -----------------------------------------------------------
-
-st <- system.time({
 
 ## Segmentation
 
@@ -123,7 +121,3 @@ methRawDB <- methRead(location=input,
 
 
 
-                  })
-message("Done.")
-message("Process finished in (seconds): \n")
-print(st)

@@ -61,7 +61,7 @@ names(argsL) <- argsDF$V1
 
 ## catch output and messages into log file
 if(!is.null(argsL$logFile)) {
-  out <- file(argsL$logFile, open = "wt")
+  out <- file(argsL$logFile, open = "at")
   sink(out,type = "output")
   sink(out, type = "message")
 }
@@ -87,7 +87,6 @@ dbdir     <- argsL$dbdir
 message("read file <",location,"> into methylKit object")
 
 ## read file into methylKit object
-st <- system.time({
 methRaw = methylKit::methRead(location = location,
                     sample.id = sample.id,
                     assembly = assembly,
@@ -96,8 +95,4 @@ methRaw = methylKit::methRead(location = location,
                     context = context,
                     dbtype = 'tabix',
                     dbdir = dbdir)
-                    })
 
-message("Done.")
-message("Process finished in (seconds): \n")
-print(st)
