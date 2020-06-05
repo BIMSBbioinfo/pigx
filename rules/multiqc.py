@@ -25,6 +25,6 @@ rule multiqc:
         posttrim_qc = DIR_posttrim_QC
     log:
         os.path.join(DIR_final,"multiqc", "{branch}_multiqc.log")
-    message: "Generating multi-sample QC report for {wildcards.tool} branch."
+    message: "Generating multi-sample QC report for {wildcards.branch} branch."
     shell:
       nice("multiqc",["-f","-n {output}","{input.files}","{params}"],"{log}")
