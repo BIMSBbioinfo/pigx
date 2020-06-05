@@ -15,8 +15,8 @@ general:
     minimum-quality: 10
     # this applies to bwameth only
     keep-singleton: False
-    # keep-dups can be Auto/True/False, Auto decides based on protocol
-    keep-Dups: Auto                 
+    # keep-duplicates can be Auto/True/False, Auto decides based on protocol
+    keep-duplicates: Auto                 
   export-bigwig:
     # extract/export contexts other than CpG? 
     context:

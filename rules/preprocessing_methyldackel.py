@@ -35,7 +35,7 @@ def protocol(wc):
 
 
 def keepDups(protocol):
-    keepDupsFlag = str(config["general"]["methylation-calling"]["keep-Dups"]).lower()
+    keepDupsFlag = str(config["general"]["methylation-calling"]["keep-duplicates"]).lower()
     keepDups = ""
     if keepDupsFlag == 'auto':
         if (protocol == "RRBS"):
