@@ -60,7 +60,7 @@ ASSEMBLY   = config['general']['assembly'] # version of the genome being mapped 
 
 # FIXME: lookup and fetch now done in diffmethreport, but should they get their own rule ??
 ## should we do fetching at all? would be maybe more stable if we require people to download themselves.
-WEBFETCH = True if repr(config['general']['differential-methylation']['annotation']['webfetch']).lower() in ["true","yes"] else False
+WEBFETCH = TrueOrFalse(config['general']['differential-methylation']['annotation']['webfetch'])
 CPGISLAND_BEDFILE = config['general']['differential-methylation']['annotation']['cpgIsland-bedfile']
 REFGENES_BEDFILE  = config['general']['differential-methylation']['annotation']['refGenes-bedfile']
 
@@ -86,8 +86,8 @@ elif WEBFETCH:
   
 
 #--- CHOOSE PIPELINE BRANCH
-USEBWAMETH = True if repr(config['general']['use_bwameth']).lower() in ["true","yes"] else False
-USEBISMARK = True if repr(config['general']['use_bismark']).lower() in ["true","yes"] else False
+USEBWAMETH = TrueOrFalse(config['general']['use_bwameth'])
+USEBISMARK = TrueOrFalse(config['general']['use_bismark'])
 
 
 #--- LIST THE OUTPUT FILES TO BE PRODUCED: 

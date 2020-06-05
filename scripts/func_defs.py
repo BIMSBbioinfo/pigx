@@ -77,6 +77,14 @@ def bail(msg):
     print(msg, file=sys.stderr)
     exit(1)
 
+def TrueOrFalse(value):
+    value = repr(value)
+    if value:
+        answer = value.lower() in ["true","yes"]
+    else:
+        answer = False
+    return(answer)
+
 
 # check for common input/configuration errors:
 def validate_config(config):
