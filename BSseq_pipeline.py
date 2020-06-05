@@ -619,7 +619,7 @@ include: './rules/export_tabix_bigwig.py'
 # ==========================================================================================
 # Merge methylation samples and perform differential analysis:
 
-include: 'rules/perform_diffmeth.py'
+include: './rules/perform_diffmeth.py'
 
 
 # ==========================================================================================
