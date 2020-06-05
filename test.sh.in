@@ -16,7 +16,7 @@ chmod -R +w ${srcdir}/tests
 	--target={final-report-bwameth,final-report}
 
 for base in PEsample_wgbs_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
-    if ! test -f "${srcdir}/tests/out/Final_Reports/sample_reports/${base}.sorted.deduped_cpg_methylKit_hg19_final.html"
+    if ! test -f "${srcdir}/tests/out/Reports/sample_reports/${base}.sorted.deduped_cpg_methylKit_hg19_final.html"
     then
         echo "ERROR: could not find bismark report for ${base}"
         exit 1
@@ -24,7 +24,7 @@ for base in PEsample_wgbs_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
 done
 
 for base in PEsample_wgbs SEsample SEsample_v2; do
-    if ! test -f "${srcdir}/tests/out/Final_Reports/sample_reports/${base}.deduped_CpG_methylDackel_hg19_final.html"
+    if ! test -f "${srcdir}/tests/out/Reports/sample_reports/${base}.deduped_CpG_methylDackel_hg19_final.html"
     then
         echo "ERROR: could not find bwameth report for ${base}"
         exit 1
