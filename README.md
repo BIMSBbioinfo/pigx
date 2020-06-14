@@ -1,6 +1,9 @@
 <a name="logo"/>
 <div align="center">
-<img src="logos/logo.png" alt="crispr_dart logo"  width="35%" height="35%" ></img>
+<figure>
+<img src="logos/logo.png" alt="crispr_dart logo"  width="35%" height="35%"</img>
+<figcaption> testcaption </figcaption>
+</figure>
 </a>
 </div>
 
