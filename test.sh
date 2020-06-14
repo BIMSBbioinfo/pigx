@@ -4,16 +4,16 @@ additional_args=$1
 
 echo "ARGS: ${additional_args}"
 
-export PYTHONPATH='~/.conda/envs/pigx_crispr/lib/python3.5/site-packages/'
+export PYTHONPATH='~/.conda/envs/crispr_dart/lib/python3.5/site-packages/'
 
-SRCDIR="/data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr"
+SRCDIR="/data/local/buyar/collaborations/jonathan/pipeline/crispr_DART"
 
 #echo "Removing previously generated output folder"
 #rm -rf ${SRCDIR}/sample_data/output
 
 settings="${SRCDIR}/sample_data/settings.yaml"
-snakefile="${SRCDIR}/pigx_crispr.py"
-snakemake='/home/buyar/.conda/envs/pigx_crispr/bin/snakemake'
+snakefile="${SRCDIR}/snakefile.py"
+snakemake='/home/buyar/.conda/envs/crispr_dart/bin/snakemake'
 
 
 ${snakemake} ${additional_args} -p --configfile ${settings}  --snakefile ${snakefile} -j 4 
