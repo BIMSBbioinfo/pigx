@@ -1,24 +1,22 @@
-sample_sheet: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/sample_sheet.csv
-cutsites: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/cutsites.bed
-reads-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/reads
-reference_fasta: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/fasta/chrI_II.fa
-output-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/output
-source-dir: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/
-
-adapters: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/adapters/TruSeq2-SE.fa
+sample_sheet: ./sample_data/sample_sheet.csv
+cutsites: ./sample_data/cutsites.bed
+reads-dir: ./sample_data/reads
+reference_fasta: ./sample_data/fasta/chrI_II.fa
+output-dir: ./output_test
+source-dir: '.'
 
 nodeN: 4
 
 tools:
   Rscript: /usr/bin/Rscript
   java:
-    path: /home/buyar/.conda/envs/pigx_crispr/bin/java
+    path: ~/.conda/envs/test_dart/bin/java
     mem: "-Xmx8G"
     threads: "-XX:ParallelGCThreads=2"
-  gatk: /home/buyar/tools/GenomeAnalysisTK.jar
+  gatk: ~/tools/GenomeAnalysisTK.jar
   bbmap:
     memory: "-Xmx20G"
     options: "threads=2" # See bbmap.sh --help for all options 
   reformat:
     memory: "-Xmx1G"
-comparisonsFile: /data/local/buyar/collaborations/jonathan/pipeline/pigx_crispr/sample_data/comparisons.tsv
+comparisonsFile: ./sample_data/comparisons.tsv
