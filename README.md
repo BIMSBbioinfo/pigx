@@ -1,11 +1,8 @@
-<a name="logo"/>
-<div align="center">
-<figure>
-<img src="logos/logo.png" alt="crispr_dart logo"  width="35%" height="35%"</img>
-<figcaption> testcaption </figcaption>
-</figure>
-</a>
-</div>
+<p align="center">
+  <img alt="logo" src="logos/logo.png" width="35%" height="35%">
+  <br>
+    <em> Logo design by Jonathan Froehlich </em>
+</p>
 
 # crispr-DART (Downstream Analysis and Reporting Tool)
 
