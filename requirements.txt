@@ -6,21 +6,9 @@ samtools=1.3.1
 snakemake=3.5.5
 pyyaml=3.11
 bbmap=37.17
-trimmomatic=0.36
+trim-galore
 fastqc=0.11.5
-freebayes
 bedops
 gatk=3.8 #also download GenomeAnalysisToolKit.jar file from https://software.broadinstitute.org/gatk/download/archive
-
-
-#R libraries
-r-crosstalk
-r-data.table
-r-dt
-bioconductor-genomicranges
-bioconductor-genomicalignments
-r-ggplot2
-r-ggrepel
-r-knitr
-r-plotly
-bioconductor-rtracklayer
+multiqc
+pandas
