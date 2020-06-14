@@ -2,7 +2,7 @@
 Snakefile for pigx crispr pipeline
 """
 import sys
-print(sys.version)
+#print(sys.version)
 import os
 import yaml
 import pandas as pd
@@ -19,7 +19,6 @@ GATK = config['tools']['gatk']
 # input locations
 SRC_DIR = config['source-dir']
 READS_DIR = config['reads-dir']
-ADAPTERS = config['adapters']
 SAMPLE_SHEET_FILE = config['sample_sheet']
 CUT_SITES_FILE = config['cutsites']
 COMPARISONS_FILE = config.get('comparisonsFile', {})
@@ -44,7 +43,7 @@ nodeN = config['nodeN']
 ## Load sample sheet
 SAMPLE_SHEET = pd.read_csv(SAMPLE_SHEET_FILE)
 TARGET_NAMES = list(set(SAMPLE_SHEET['target_name'].tolist()))
-print(TARGET_NAMES)
+#print(TARGET_NAMES)
 # get unique rows for only considering sample id/name/read files
 # (one sample may contain multiple target region/name fields, but we
 # don't need to process the same read files for each target region)
@@ -64,7 +63,7 @@ def lookup(column, predicate, fields=[]):
 def reads_input(wc):
   sample = wc.sample
   files = [os.path.join(READS_DIR, f) for f in lookup('sample_name', sample, ['reads', 'reads2']) if f]
-  print(files)
+  #print(files)
   return files
 
 def get_bbmap_command(wc):
@@ -105,10 +104,10 @@ rule all:
         #os.path.join(OUTPUT_DIR, "multiqc", "multiqc_report.html"),
         #expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES),
         os.path.join(REPORT_DIR, "index.html"),
-        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
+        #expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
         #get_output_file_list(INDELS_DIR, "freeBayes_variants.vcf"),
         #get_output_file_list(INDELS_DIR, "freeBayes_deletions.bed"),
         #get_output_file_list(INDELS_DIR, "freeBayes_insertions.bed"),
@@ -376,10 +375,10 @@ rule generateSiteFiles:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
-        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
+        #expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
     params:
         report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts"),
         script = os.path.join(SRC_DIR, "src", "generateSiteFiles.R")
@@ -392,16 +391,16 @@ rule renderSite:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
-        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
+        #expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
     output:
         os.path.join(REPORT_DIR, "index.html"),
-        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
-        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
+        #expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
+        #expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
     params:
         render_script = os.path.join(SRC_DIR, "src", "render_site.sh"),
         report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts")
