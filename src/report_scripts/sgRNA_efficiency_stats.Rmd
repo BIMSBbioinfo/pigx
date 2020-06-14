@@ -58,7 +58,7 @@ DT::datatable(dt,
 ```
 
 Guide RNA efficiencies across samples displayed as a heatmap
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=8, fig.height=8, eval=FALSE}
 dt <- dcast(cutSiteStats[sampleMatchesGuide == TRUE], sample ~ sgRNA, value.var = 'scores')
 M <- as.matrix(dt[,-1])
 rownames(M) <- dt$sample
@@ -71,7 +71,7 @@ pheatmap::pheatmap(t(M), cluster_rows = F, cluster_cols = F,
 ```
 
 Compare guide efficiencies across samples 
-```{r}
+```{r, eval=FALSE}
 ggplot(cutSiteStats[sampleMatchesGuide == TRUE], 
        aes(x = sgRNA, y = scores)) +
   geom_boxplot(outlier.shape = NA) + 
