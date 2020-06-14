@@ -85,11 +85,11 @@ The `sample_data/reads` folder contains sample read files (fastq.gz files from I
 
 Once the `settings.yaml` file is configured with paths to all the other required files, the pipeline can simply be run using the bash script `run.sh` requesting 2 cpus. 
 
-> bash run.sh <path to settings.yaml> 2  
+> bash run.sh */path/to/settings.yaml* 2  
 
 If you would like to do a dry-run, meaning that the list of jobs are created but not executed, you can do 
 
-> bash run.sh <path to settings.yaml> 2 --dry
+> bash run.sh */path/to/settings.yaml* 2 --dry
 
 Any additional arguments to `run.sh` after the argument for the number of cpus are passed as arguments to `snakemake`. 
 
@@ -97,29 +97,4 @@ Any additional arguments to `run.sh` after the argument for the number of cpus a
 
 The software has been developed by Bora Uyar from the Akalin Lab with significant conceptual contributions by Jonathan Froehlich from the N.Rajewsky Lab 
 at the Berlin Institute of Medical Systems Biology of the Max-Delbruck-Center for Molecular Medicine. 
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
 
