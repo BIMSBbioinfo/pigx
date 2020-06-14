@@ -17,15 +17,15 @@ JAVA_THREADS = config['tools']['java']['threads']
 GATK = config['tools']['gatk']
 
 # input locations
-SRC_DIR = config['source-dir']
-READS_DIR = config['reads-dir']
-SAMPLE_SHEET_FILE = config['sample_sheet']
-CUT_SITES_FILE = config['cutsites']
-COMPARISONS_FILE = config.get('comparisonsFile', {})
-REFERENCE_FASTA = config['reference_fasta']
+SRC_DIR = os.path.abspath(config['source-dir'])
+READS_DIR = os.path.abspath(config['reads-dir'])
+SAMPLE_SHEET_FILE = os.path.abspath(config['sample_sheet'])
+CUT_SITES_FILE = os.path.abspath(config['cutsites'])
+COMPARISONS_FILE = os.path.abspath(config.get('comparisonsFile', {}))
+REFERENCE_FASTA = os.path.abspath(config['reference_fasta'])
 
 #output locations
-OUTPUT_DIR = config['output-dir']
+OUTPUT_DIR = os.path.abspath(config['output-dir'])
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 FASTA_DIR         = os.path.join(OUTPUT_DIR, 'fasta')
@@ -164,7 +164,7 @@ rule trim_galore_se:
     if params.tech == 'illumina':
         shell("trim_galore -o {TRIMMED_READS_DIR} --cores 2 --basename {wildcards.sample} {input[0]} >> {log} 2>&1")
     elif params.tech == 'pacbio':
-        shell("ln -s {input} {output}")
+        shell("cp {input} {output}")
 
 rule bbmap_indexgenome:
     input: os.path.join(FASTA_DIR, os.path.basename(REFERENCE_FASTA))
