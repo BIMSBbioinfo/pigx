@@ -40,7 +40,7 @@ for(f in rmd_files) {
 # 2. Create a config.yml file that is a global configuration file that is
 # re-used by separate Rmd files in the target site
 config_yml <- list('sample_sheet' = sampleSheetFile,
-                   'pigx_output_dir' = pipelineOutputDir,
+                   'pipeline_output_dir' = pipelineOutputDir,
                    'cut_sites_file' = cutSitesFile, 
                    'comparisons_file' = comparisonsFile)
 yaml::write_yaml(config_yml, file = file.path(siteDir, "config.yml"))

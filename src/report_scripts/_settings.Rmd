@@ -16,7 +16,7 @@ suppressMessages(suppressWarnings(library(DT)))
 targetName <- params$target_name
 config <- yaml::read_yaml('./config.yml')
 sampleSheet <- data.table::fread(config$sample_sheet)
-pipeline_output_dir <- config$pigx_output_dir
+pipeline_output_dir <- config$pipeline_output_dir
 cut_sites <- rtracklayer::import.bed(config$cut_sites_file)
 sampleComparisons <- data.table::fread(config$comparisons_file)
 ```
