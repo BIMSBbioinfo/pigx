@@ -95,6 +95,5 @@ Any additional arguments to `run.sh` after the argument for the number of cpus a
 
 # Credits
 
-The software has been developed by Bora Uyar from the Akalin Lab with significant conceptual contributions by Jonathan Froehlich from the N.Rajewsky Lab 
-at the Berlin Institute of Medical Systems Biology of the Max-Delbruck-Center for Molecular Medicine. 
+The software has been developed by [Bora Uyar](https://scholar.google.com/citations?user=YEZr1LUAAAAJ&hl=en) from the [Akalin Lab](https://bioinformatics.mdc-berlin.de) with significant conceptual contributions by [Jonathan Froehlich](https://scholar.google.com/citations?user=aXWiWfcAAAAJ&hl=en) from the [N.Rajewsky Lab](https://www.mdc-berlin.de/n-rajewsky) at the Berlin Institute of Medical Systems Biology of the Max-Delbruck-Center for Molecular Medicine. 
 
