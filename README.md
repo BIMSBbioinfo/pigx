@@ -1,22 +1,36 @@
-# pigx_crispr
+# CRISPR-DART (Downstream Analysis and Reporting Tool)
+
+crispr-DART is a pipeline to process, analyse, and report about the 
+CRISPR-Cas9 induced genome editing outcomes from high-throughput sequencing
+of target regions of interest. 
+
+The pipeline allows single/paired-end Illumina reads or long PacBio reads from 
+both DNA and RNA samples. 
+
+The pipeline consists of the following steps:
+- Quality control (fastqc/multiqc) and improvement (TrimGalore!) of raw reads 
+- Mapping the reads to the genome of interest (BBMap)
+- Re-alignment of reads with insertions/deletions (GATK)
+- Extracting statistics about the detected insertions and deletions
+(various R libraries including GenomicAlignments and RSamtools)
+- Reporting of the editing outcomes in interactive reports organized into a 
+website. (rmarkdown::render_site) 
 
 ## Installation
 
+1. Download the source code:
 
-1. Download the source code: 
+> git clone https://github.com/BIMSBbioinfo/crispr_DART.git
 
-git clone https://github.com/BIMSBbioinfo/pigx_crispr.git 
+2. Install R/Bioconductor packages
 
-2. Install Miniconda 3
+3. Use [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) to install the remaining dependencies
 
-See https://snakemake.bitbucket.io/snakemake-tutorial.html 
+- Create an isolated Conda environment with dependencies
+> conda create -n crispr_dart --file requirements.txt
 
-3. Create an isolated environment with dependencies
+- Activate the environment
+> source activate crispr_dart
 
-conda create -n pigx_crispr -c bioconda --file requirements.txt
-
-4. Activate the environment
-
-source activate pigx_crispr
 
 
