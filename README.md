@@ -1,4 +1,8 @@
-![logo](logos/logo.png)
+<a name="logo"/>
+<div align="center">
+<img src="logos/logo.png" alt="crispr_dart logo"  width="35%" height="35%" ></img>
+</a>
+</div>
 
 # crispr-DART (Downstream Analysis and Reporting Tool)
 
