@@ -1,7 +1,5 @@
 <p align="center">
   <img alt="logo" src="logos/logo.png" width="35%" height="35%">
-  <br>
-    <em> Logo design by Jonathan Froehlich </em>
 </p>
 
 # crispr-DART (Downstream Analysis and Reporting Tool)
@@ -97,7 +95,7 @@ Any additional arguments to `run.sh` after the argument for the number of cpus a
 
 # Credits
 
-The software has been developed by Bora Uyar from the Akalin Lab with significant conceptual contributions by Jonathan Froelich from the N. Rajewsky Lab. 
+The software has been developed by Bora Uyar from the Akalin Lab with significant conceptual contributions by Jonathan Froehlich from the N.Rajewsky Lab 
 at the Berlin Institute of Medical Systems Biology of the Max-Delbruck-Center for Molecular Medicine. 
 
 
