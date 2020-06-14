@@ -1,4 +1,6 @@
-# CRISPR-DART (Downstream Analysis and Reporting Tool)
+![logo]('./logo.svg')
+
+# crispr-DART (Downstream Analysis and Reporting Tool)
 
 crispr-DART is a pipeline to process, analyse, and report about the 
 CRISPR-Cas9 induced genome editing outcomes from high-throughput sequencing
@@ -24,6 +26,13 @@ website. (rmarkdown::render_site)
 
 2. Install R/Bioconductor packages
 
+> if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+> BiocManager::install(c('data.table', 'yaml', 'ggplot2', 'knitr', 'ggrepel', 'pbapply', 'DT', 
+'Biostrings', 'GenomicAlignments', 'rtracklayer', 'GenomicRanges', 'Rsamtools', 'reshape2', 'GenomeInfoDb',
+'fastseg', 'gtools', 'IRanges', 'rmarkdown'))
+
 3. Use [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) to install the remaining dependencies
 
 - Create an isolated Conda environment with dependencies
@@ -31,6 +40,9 @@ website. (rmarkdown::render_site)
 
 - Activate the environment
 > source activate crispr_dart
+
+
+
 
 
 
