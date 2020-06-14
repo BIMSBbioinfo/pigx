@@ -1,5 +1,5 @@
 """
-Snakefile for pigx crispr pipeline
+Snakefile for crispr-DART pipeline
 """
 import sys
 #print(sys.version)
@@ -198,7 +198,7 @@ rule samtools_addReadGroups:
     log: os.path.join(LOG_DIR, "SAMTOOLS", "samtools_addReadGroups.{sample}.log")
     shell:
         """
-        samtools addreplacerg -m overwrite_all -o {output} -r ID:pigx_crispr -r PL:illumina -r SM:{wildcards.sample} {input} > {log} 2>&1
+        samtools addreplacerg -m overwrite_all -o {output} -r ID:crips_dart -r PL:illumina -r SM:{wildcards.sample} {input} > {log} 2>&1
         rm {input}
         """
 
