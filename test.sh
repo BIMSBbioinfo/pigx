@@ -21,7 +21,7 @@ ${snakemake} ${additional_args} -p --configfile ${settings}  --snakefile ${snake
 
 # build DAG of the pipeline
 
-${snakemake} --configfile ${settings} --snakefile ${snakefile} --dag | dot -Tpdf >dag.pdf
+# ${snakemake} --configfile ${settings} --snakefile ${snakefile} --dag | dot -Tpdf >dag.pdf
 
 #${snakemake} --forceall -p --configfile ${settings}  --snakefile ${snakefile} -j 4 --dryrun
 #	${snakemake} --forceall -p --configfile ${settings}  --snakefile ${snakefile} -j 4
