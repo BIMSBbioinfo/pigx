@@ -45,6 +45,20 @@ website. (rmarkdown::render_site)
 - Activate the environment
 > source activate crispr_dart
 
+## Test installation
+
+The pipeline can be simply tested by running the bash script `test.sh`. 
+
+The test script uses the necessary input files available in the `sample_data` folder 
+and runs the pipeline. If this test runs to completion, you should be ready to analyse your own
+data. 
+
+> bash ./test.sh
+
+
+
+
+
 
 
 
