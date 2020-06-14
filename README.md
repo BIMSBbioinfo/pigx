@@ -1,4 +1,4 @@
-![logo](logo.svg)
+![logo](logos/logo.png)
 
 # crispr-DART (Downstream Analysis and Reporting Tool)
 
