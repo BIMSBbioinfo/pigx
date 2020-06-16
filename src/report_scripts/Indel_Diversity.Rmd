@@ -130,6 +130,11 @@ names(plots) <- unique(deletionCutsiteOverlaps$sample)
 # Deletion diversity at cut sites
 
 ```{r plotDeletionDiversity, results='asis', fig.height=8, fig.width=10}
+# folder to save pdf versions of the segment plots
+dirPath <- paste(targetName, 'Indel_Diversity.deletion_segment_plots', sep = '.')
+if(!dir.exists(dirPath)) {
+  dir.create(dirPath)
+}
 for (sample in names(plots)) {
   cat('## ',sample,'{.tabset .tabset-fade .tabset-pills}\n\n')
   for(i in names(plots[[sample]])) {
@@ -137,6 +142,8 @@ for (sample in names(plots)) {
     p <- plots[[sample]][[i]]
     if(!is.null(p)) {
       print(p)
+      ggsave(filename = file.path(dirPath, paste(sample, 'freq', i, 'pdf', sep = '.')), 
+             plot = p, width = 10, height = 8, units = 'in')
     } else {
       cat("No plot to show\n\n")
     }
@@ -244,6 +251,8 @@ plots <- lapply(unique(insertions$sample), function(sampleName) {
   segmentPlots <- lapply(unique(as.character(dt$freqInterval)), function(x) {
     if(nrow(dt[freqInterval == x]) > 0) {
       p <-  plotInsertions(dt[freqInterval == x], cutSites, sampleGuides[[sampleName]])
+      p <- p + labs(title = 'Insertions at cut sites', 
+                    subtitle = paste(targetName, targetRegion))
     } else {
       p <- NULL
     }
@@ -259,6 +268,11 @@ names(plots) <- unique(insertions$sample)
 ```
 
 ```{r plotInsertionDiversity, results='asis', fig.height=8, fig.width=10}
+# folder to save pdf versions of the segment plots
+dirPath <- paste(targetName, 'Indel_Diversity.insertion_segment_plots', sep = '.')
+if(!dir.exists(dirPath)) {
+  dir.create(dirPath)
+}
 for (sample in names(plots)) {
   cat('## ',sample,'{.tabset .tabset-fade .tabset-pills}\n\n')
   for(i in names(plots[[sample]])) {
@@ -266,6 +280,8 @@ for (sample in names(plots)) {
     p <- plots[[sample]][[i]]
     if(!is.null(p)) {
       print(p)
+      ggsave(filename = file.path(dirPath, paste(sample, 'freq', i, 'pdf', sep = '.')), 
+             plot = p, width = 10, height = 8, units = 'in')
     } else {
       cat("No plot to show\n\n")
     }
