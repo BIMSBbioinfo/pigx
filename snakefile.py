@@ -369,16 +369,16 @@ rule getIndelStats:
 
 #prepare _site.yml and other Rmd files to be rendered into a html report (see renderSite rule)
 rule generateSiteFiles:
-    input: #TODO: print a file that flags all getIndelStats jobs are finished.
+    input: 
         expand(os.path.join(INDELS_DIR, "{sample}", "{sample}.sgRNA_efficiency.tsv"), sample = SAMPLES)
     output:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
-        #expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
+        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
     params:
         report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts"),
         script = os.path.join(SRC_DIR, "src", "generateSiteFiles.R")
@@ -386,25 +386,55 @@ rule generateSiteFiles:
     shell:
         "{RSCRIPT} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_FILE} {CUT_SITES_FILE} {COMPARISONS_FILE} {OUTPUT_DIR} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
 
+rule renderReport_coverage:
+    input:
+        os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd")
+    output:
+        os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html")
+    log: os.path.join(LOG_DIR, "renderReports", "{target}.coverage_profile.log")
+    shell:
+        "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"
+
+rule renderReport_indeldiversity:
+    input:
+        os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd")
+    output:
+        os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html")
+    log: os.path.join(LOG_DIR, "renderReports", "{target}.indel_diversity.log")
+    shell:
+        "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"
+
+rule renderReport_sgRNA:
+    input:
+        os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd")
+    output:
+        os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html")
+    log: os.path.join(LOG_DIR, "renderReports", "{target}.sgRNA_efficiency_stats.log")
+    shell:
+        "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"
+
+rule renderReport_comparison:
+    input:
+        os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd")
+    output:
+        os.path.join(REPORT_DIR, "{target}.SampleComparisons.html")
+    log: os.path.join(LOG_DIR, "renderReports", "{target}.comparison.log")
+    shell:
+        "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"
+
 rule renderSite:
     input:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
-        #expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.Rmd"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.Rmd"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.Rmd"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.Rmd"), target = TARGET_NAMES)
+        expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
+        expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
     output:
-        os.path.join(REPORT_DIR, "index.html"),
-        #expand(os.path.join(REPORT_DIR, "{target}.CoverageProfiles.html"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.SampleComparisons.html"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.sgRNA_efficiency_stats.html"), target = TARGET_NAMES),
-        #expand(os.path.join(REPORT_DIR, "{target}.Indel_Diversity.html"), target = TARGET_NAMES)
+        os.path.join(REPORT_DIR, "index.html")
     params:
-        render_script = os.path.join(SRC_DIR, "src", "render_site.sh"),
         report_scripts_dir = os.path.join(SRC_DIR, "src", "report_scripts")
     log: os.path.join(LOG_DIR, "renderSite.log")
     shell:
-        "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{REPORT_DIR}\')\" > {log} 2>&1"
-#        "bash {params.render_script} {REPORT_DIR} {RSCRIPT} > {log} 2>&1"
+        "{RSCRIPT} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[1]}\')\" > {log} 2>&1"
