@@ -24,28 +24,38 @@ website. (rmarkdown::render_site)
 
 1. Download the source code:
 
+```
 > git clone https://github.com/BIMSBbioinfo/crispr_DART.git
+```
 
 2. Install R/Bioconductor packages
 
+```
 > if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 > BiocManager::install(c('data.table', 'yaml', 'ggplot2', 'knitr', 'ggrepel', 'pbapply', 'DT', 
 'Biostrings', 'GenomicAlignments', 'rtracklayer', 'GenomicRanges', 'Rsamtools', 'reshape2', 'GenomeInfoDb',
 'fastseg', 'gtools', 'IRanges', 'rmarkdown'))
+```
 
 3. Use [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) to install the remaining dependencies
 
 - Create an isolated Conda environment with dependencies
+
+```
 > conda create -n crispr_dart --file requirements.txt
+```
 
 In addition, for the indel re-alignment step, GenomeAnalysisToolKit.jar file for the GATK version 3.8.0 is required. 
 The GenomeAnalysisToolKit.jar file needs to be downloaded from 
 https://software.broadinstitute.org/gatk/download/archive and stored somewhere that is accessible to the pipeline (e.g. ~/tools/)
 
 - Activate the environment
+
+```
 > source activate crispr_dart
+```
 
 4. Test the installation
 
@@ -55,7 +65,10 @@ The test script uses the necessary input files available in the `sample_data` fo
 and runs the pipeline. If this test runs to completion, you should be ready to analyse your own
 data. 
 
+
+```
 > bash ./test.sh
+```
 
 ## How to run the pipeline 
 
@@ -85,11 +98,16 @@ The `sample_data/reads` folder contains sample read files (fastq.gz files from I
 
 Once the `settings.yaml` file is configured with paths to all the other required files, the pipeline can simply be run using the bash script `run.sh` requesting 2 cpus. 
 
+```
 > bash run.sh */path/to/settings.yaml* 2  
+```
 
 If you would like to do a dry-run, meaning that the list of jobs are created but not executed, you can do 
 
+
+```
 > bash run.sh */path/to/settings.yaml* 2 --dry
+```
 
 Any additional arguments to `run.sh` after the argument for the number of cpus are passed as arguments to `snakemake`. 
 
