@@ -686,7 +686,7 @@ rule sort_bam:
 
     run:
         command = ' '.join([
-            'samtools sort',
+            params.samtools, 'sort',
             '-@', str(params.threads),
             '-o', str(output.outfile),
             str(input.infile)
@@ -714,7 +714,7 @@ rule index_bam:
 
     run:
         command = ' '.join([
-            'samtools index',
+            params.samtools, 'index',
             '-b',
             '-@', str(params.threads),
             str(input.infile),
