@@ -2,7 +2,7 @@
 #
 # Copyright © 2017, 2018 Bora Uyar <bora.uyar@mdc-berlin.de>
 # Copyright © 2017, 2018 Jonathan Ronen <yablee@gmail.com>
-# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+# Copyright © 2017-2020 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
 # This file is part of the PiGx RNAseq Pipeline.
 #
@@ -67,7 +67,8 @@ FASTQC_EXEC  = tool('fastqc')
 MULTIQC_EXEC = tool('multiqc')
 STAR_EXEC_MAP    = tool('star_map')
 STAR_EXEC_INDEX  = tool('star_index')
-SALMON_EXEC  = tool('salmon')
+SALMON_INDEX_EXEC  = tool('salmon_index')
+SALMON_QUANT_EXEC  = tool('salmon_quant')
 TRIM_GALORE_EXEC = tool('trim-galore')
 SAMTOOLS_EXEC    = tool('samtools')
 HTSEQ_COUNT_EXEC = tool('htseq-count')
@@ -325,7 +326,7 @@ rule salmon_index:
   params:
       salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index')
   log: os.path.join(LOG_DIR, 'salmon_index.log')
-  shell: "{SALMON_EXEC} index -t {input} -i {params.salmon_index_dir} -p {SALMON_INDEX_THREADS} >> {log} 2>&1"
+  shell: "{SALMON_INDEX_EXEC} -t {input} -i {params.salmon_index_dir} -p {SALMON_INDEX_THREADS} >> {log} 2>&1"
 
 rule salmon_quant:
   input:
@@ -343,9 +344,9 @@ rule salmon_quant:
   log: os.path.join(LOG_DIR, 'salmon_quant_{sample}.log')
   run:
     if(len(input.reads) == 1):
-        COMMAND = "{SALMON_EXEC} quant -i {params.index_dir} -l A -p {SALMON_QUANT_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+        COMMAND = "{SALMON_QUANT_EXEC} -i {params.index_dir} -l A -p {SALMON_QUANT_THREADS} -r {input.reads} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
     elif(len(input.reads) == 2):
-        COMMAND = "{SALMON_EXEC} quant -i {params.index_dir} -l A -p {SALMON_QUANT_THREADS} -1 {input.reads[0]} -2 {input.reads[1]} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
+        COMMAND = "{SALMON_QUANT_EXEC} -i {params.index_dir} -l A -p {SALMON_QUANT_THREADS} -1 {input.reads[0]} -2 {input.reads[1]} -o {params.outfolder} --seqBias --gcBias -g {GTF_FILE} >> {log} 2>&1"
     shell(COMMAND)
 
 rule counts_from_SALMON:

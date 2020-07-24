@@ -105,9 +105,12 @@ tools:
   htseq-count:
     executable: @HTSEQ_COUNT@
     args: "-f bam -t exon -i gene_id --order pos --stranded no --mode union --nonunique none"
-  salmon:
+  salmon_index:
     executable: @SALMON@
-    args: ""
+    args: "index"
+  salmon_quant:
+    executable: @SALMON@
+    args: "quant"
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla"
