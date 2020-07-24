@@ -16,3 +16,7 @@ config.json
 scripts/deseqReport.Rmd
 build-aux/*
 aclocal.m4
+test*.sh
+test*.log
+test*.trs
+tests/output/
