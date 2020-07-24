@@ -4,7 +4,7 @@ nodist_bin_SCRIPTS = \
   pigx-rnaseq
 
 dist_pkglibexec_SCRIPTS = \
-  pigx_rnaseq.py			\
+  snakefile.py			\
   qsub-template.sh
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
