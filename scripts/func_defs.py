@@ -216,10 +216,10 @@ def list_files_TG(files, sampleID, protocol):
 def list_files_posttrim_QC(files, sampleID, protocol):
     PATH = DIR_posttrim_QC
     if len(files) == 1:
-        return [PATH+sampleID+"_trimmed_fastqc.html"]  # ---- single end
+        return [PATH+sampleID+"_trimmed_fastqc.zip"]  # ---- single end
     elif len(files) == 2:
         # ---- paired end
-        return [PATH+sampleID+"_1_val_1_fastqc.html", PATH+sampleID+"_2_val_2_fastqc.html"]
+        return [PATH+sampleID+"_1_val_1_fastqc.zip", PATH+sampleID+"_2_val_2_fastqc.zip"]
     else:
         raise Exception(
             "=== ERROR: file list is neither 1 nor 2 in length. STOP! ===")
