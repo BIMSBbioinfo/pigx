@@ -1,0 +1,13 @@
+
+## sample.fasta
+
+The `sample.fasta` is extracted from chr1:7291263-7302041 of the hg38 human genome assembly.
+
+## cpgIslandExt.hg19.bed.gz
+
+The `cpgIslandExt.hg19.bed.gz` is downloaded from UCSC.
+
+## refGene.hg19.bed.gz
+
+The `refGene.hg19.bed.gz` is downloaded from UCSC.
+
