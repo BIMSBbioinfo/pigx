@@ -673,7 +673,7 @@ rule fastqc_after_trimming_se:
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-    message: fmt("Quality checking trimmmed single-end data from sample {{sample}}")
+    message: fmt("Quality checking trimmmed single-end data from sample {wildcards.sample}")
     shell:
         nice('fastqc', ["{params}", "{input}"], "{log}")
 
@@ -689,7 +689,7 @@ rule fastqc_after_trimming_pe:
         outdir = "--outdir "+DIR_posttrim_QC
     log:
    	    DIR_posttrim_QC+"{sample}_trimmed_fastqc.log"
-    message: fmt("Quality checking trimmmed paired-end data from sample {{sample}}")
+    message: fmt("Quality checking trimmmed paired-end data from sample {wildcards.sample}")
     shell:
         nice('fastqc', ["{params}", "{input}"], "{log}")
 
@@ -710,7 +710,7 @@ rule trim_reads_se:
        cutadapt   = "--path_to_cutadapt " + tool('cutadapt'),
     log:
        DIR_trimmed+"{sample}.trimgalore.log"
-    message: fmt("Trimming raw single-end read data from sample {{sample}}")
+    message: fmt("Trimming raw single-end read data from sample {wildcards.sample}")
     shell:
        nice('trim-galore', ["{params}", "{input.file}"], "{log}")
 
@@ -731,7 +731,7 @@ rule trim_reads_pe:
     log:
         DIR_trimmed+"{sample}.trimgalore.log"
     message:
-        fmt("Trimming raw paired-end read data from sample {{sample}}")
+        fmt("Trimming raw paired-end read data from sample {wildcards.sample}")
     shell:
         nice('trim-galore', ["{params}", "{input.files}"], "{log}")
 
@@ -749,7 +749,7 @@ rule fastqc_raw: #----only need one: covers BOTH pe and se cases.
         outdir      = "--outdir "+ DIR_rawqc     # usually pass params as strings instead of wildcards.
     log:
         DIR_rawqc+"{sample}_fastqc.log"
-    message: fmt("Quality checking raw read data from sample {{sample}}")
+    message: fmt("Quality checking raw read data from sample {wildcards.sample}")
     shell:
         nice('fastqc', ["{params}", "{input}"], "{log}")
 
