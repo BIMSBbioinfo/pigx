@@ -8,6 +8,11 @@ crispr-DART is a pipeline to process, analyse, and report about the
 CRISPR-Cas9 induced genome editing outcomes from high-throughput sequencing
 of target regions of interest. 
 
+crispr-DART has been developed as part of the study "Parallel genetics of regulatory sequences in vivo"
+by Froehlich & Uyar et al, 2020 ([pre-print available on Biorxiv](https://www.biorxiv.org/content/10.1101/2020.07.28.224998v2)). 
+
+## Pipeline scheme
+
 The pipeline allows single/paired-end Illumina reads or long PacBio reads from 
 both DNA and RNA samples. 
 
@@ -23,7 +28,19 @@ website. (rmarkdown::render_site)
 ![pipeline]("img/pipeline_scheme.jpg")
 
 
-## Installation
+## Example HTML report output
+
+The HTML reports produced by the pipeline are automatically organised as a website. 
+Example report website can be browsed [here](): 
+
+## Example screenshots from the reports
+
+You can find below some example screenshots from the HTML reports:
+
+![screenshots]("img/reports_screenshots.jpg")
+
+
+# Installation
 
 1. Download the source code:
 
@@ -73,9 +90,9 @@ data.
 > bash ./test.sh
 ```
 
-## How to run the pipeline 
+# How to run the pipeline 
 
-### Preparing the input files
+## Preparing the input files
 
 The pipeline currently requires four different input files. 
 1. A sample sheet file, which describes the samples, associated fastq files, the sets of sgRNAs used in the sample and the list of regions of interest. 
@@ -97,7 +114,7 @@ Please see the example file under `sample_data/settings.yaml`
 The `sample_data/fasta` folder contains fasta format sequence files that are used as the target genome sequence. 
 The `sample_data/reads` folder contains sample read files (fastq.gz files from Illumina and PacBio sequenced samples). 
 
-### Running the pipeline
+## Running the pipeline
 
 Once the `settings.yaml` file is configured with paths to all the other required files, the pipeline can simply be run using the bash script `run.sh` requesting 2 cpus. 
 
@@ -113,6 +130,10 @@ If you would like to do a dry-run, meaning that the list of jobs are created but
 ```
 
 Any additional arguments to `run.sh` after the argument for the number of cpus are passed as arguments to `snakemake`. 
+
+# How to cite
+
+See the pre-print on [Biorxiv](https://www.biorxiv.org/content/10.1101/2020.07.28.224998v2)
 
 # Credits
 
