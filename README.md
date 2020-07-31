@@ -25,19 +25,19 @@ The pipeline consists of the following steps:
 - Reporting of the editing outcomes in interactive reports organized into a 
 website. (rmarkdown::render_site) 
 
-![pipeline]("img/pipeline_scheme.jpg")
+![pipeline](./img/pipeline_scheme.jpg)
 
 
 ## Example HTML report output
 
 The HTML reports produced by the pipeline are automatically organised as a website. 
-Example report website can be browsed [here](): 
+Example report website can be browsed [here](https://bimsbstatic.mdc-berlin.de/akalin/buyar/froehlich_uyar_et_al_2020/reports/index.html): 
 
 ## Example screenshots from the reports
 
 You can find below some example screenshots from the HTML reports:
 
-![screenshots]("img/reports_screenshots.jpg")
+![screenshots](./img/reports_screenshots.jpg)
 
 
 # Installation
