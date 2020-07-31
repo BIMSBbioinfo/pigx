@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="logo" src="logos/logo.png" width="35%" height="35%">
+  <img alt="logo" src="img/logo.png" width="35%" height="35%">
 </p>
 
 # crispr-DART (Downstream Analysis and Reporting Tool)
@@ -19,6 +19,9 @@ The pipeline consists of the following steps:
 (various R libraries including GenomicAlignments and RSamtools)
 - Reporting of the editing outcomes in interactive reports organized into a 
 website. (rmarkdown::render_site) 
+
+![pipeline]("img/pipeline_scheme.jpg")
+
 
 ## Installation
 
