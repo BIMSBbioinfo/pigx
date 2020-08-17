@@ -20,6 +20,11 @@ def validate_config(config, structure_variables):
         message = 'ERROR: Sample Sheet is not properly formated:\n' + message
         sys.exit(message)
 
+    message = check_locations(sample_sheet_dict, config, structure_variables , message)
+    if len(message) > 0:
+        message = 'ERROR: Invalid Location given in settings file:\n' + message
+        sys.exit(message)
+
     message = check_settings(sample_sheet_dict, config, structure_variables , message)
     if len(message) > 0:
         message = 'ERROR: Settings file is not properly formated:\n' + message
@@ -43,6 +48,24 @@ def check_sample_sheet(sample_sheet_dict, config, structure_variables, message):
 
     return message
 
+# ---------------------------------------------------------------------------- #
+# checks the locations defined in settings file
+# ---------------------------------------------------------------------------- #
+def check_locations(sample_sheet_dict, config, structure_variables, message):
+
+    # ---------------------------------------------------------------------------- #
+    # sets obligatory genome files
+    # checks for index or genome specification - obligatory
+    locations_dict = config['locations']
+    for obligatory_file in structure_variables['OBLIGATORY_FILES']:
+        if not obligatory_file in locations_dict:
+            message = message + "\t" + obligatory_file + " is not specified\n"
+
+    # checks whether the locations files exist if they are specified
+    for location in sorted(list(set(locations_dict.keys()))):
+        message = check_file_exists(locations_dict, location, message)
+    
+    return message 
 
 # ---------------------------------------------------------------------------- #
 # checks the proper structure of the settings file
@@ -52,20 +75,6 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
     # ---------------------------------------------------------------------------- #
     # checks for proper top level config categories
     message = check_params(config, structure_variables['SETTING_SUBSECTIONS'], message)
-
-    # ---------------------------------------------------------------------------- #
-    # sets obligatory genome files
-    # checks for index or genome specification - obligatory
-    locations_dict = config['locations']
-    for obligatory_file in structure_variables['OBLIGATORY_FILES']:
-        if locations_dict[obligatory_file] == None:
-            message = message + "\t" + obligatory_file + " is not specified\n"
-
-
-    # checks whether the locations files exist if they are specified
-    for location in sorted(list(set(locations_dict.keys()))):
-        message = check_file_exists(locations_dict, location, message)
-
 
     # ---------------------------------------------------------------------------- #
     # checks whether the fasta header contains whitespaces
