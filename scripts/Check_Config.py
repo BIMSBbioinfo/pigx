@@ -175,9 +175,8 @@ def check_file_exists(locations_dict, file_name, message=''):
 
     if not locations_dict[file_name] == None:
        dirfile = locations_dict[file_name]
-       dir_ind = os.path.isfile(dirfile) or os.path.isdir(dirfile)
-       if not dir_ind:
-           message = message + "\t" + file_name + " is not a valid file\n"
+       if not ( os.path.isfile(dirfile) or os.path.isdir(dirfile)):
+           message = message + "\t" + "{} ({}) is not a valid file/directory\n".format(file_name,dirfile)
 
     return(message)
 
