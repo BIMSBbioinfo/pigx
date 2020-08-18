@@ -411,8 +411,8 @@ else:
     if args.reason:
         command.append("--reason")
     if args.unlock:
-		command.append("--unlock")
-	if args.printshellcmds:
+        command.append("--unlock")
+    if args.printshellcmds:
         command.append("--printshellcmds")
     if args.target and 'help' in args.target:
         command.append("help")
