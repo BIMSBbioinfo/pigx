@@ -171,17 +171,20 @@ def join_params(app, app_params, params_set):
     app_name    = os.path.basename(app)
     params_all  = get_app_params(app_name)
     names       = set(params_all.keys())
-    params_diff = set(params_set) - names
-    if len(params_diff) > 0:
-        print(app_name + 'contains unknown parameters:' + ", ".join(list(params_diff)))
-        return(0)
-    params_set_keys = set(params_set.keys())
-    # check whether some of the arguments are not allowed
-    if 'remove' in SOFTWARE[app_name].keys():
-        params_set_keys = params_set_keys- set(SOFTWARE[app_name]['remove'])
-    params_set_keys = list(params_set_keys)
-    params = [params_all[i] +' '+ str(params_set[i]) for i in params_set_keys]
-    params = " ".join(params)
+    if params_set:
+        params_diff = set(params_set) - names
+        if len(params_diff) > 0:
+            print(app_name + 'contains unknown parameters:' + ", ".join(list(params_diff)))
+            return(0)
+        params_set_keys = set(params_set.keys())
+        # check whether some of the arguments are not allowed
+        if 'remove' in SOFTWARE[app_name].keys():
+            params_set_keys = params_set_keys- set(SOFTWARE[app_name]['remove'])
+        params_set_keys = list(params_set_keys)
+        params = [params_all[i] +' '+ str(params_set[i]) for i in params_set_keys]
+        params = " ".join(params)
+    else: 
+        params = ""
     return(params)
 
 # ---------------------------------------------------------------------------- #
