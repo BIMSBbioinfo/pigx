@@ -260,7 +260,14 @@ targets = {
 # GENERAL MAPPING OUTPUT FILES
 GENOME_FASTA    = [GENOME_HASH[GENOME_TYPES['Main']]['genome_link']]
 INDEX           = [GENOME_HASH[GENOME_TYPES['Main']]['bowtie_index']]
-TRIMMING        = [flatten(TRIM_GALORE_DICT.values())]
+TRIMMING        = [flatten(TRIM_GALORE_FILES.values())]
+
+targets['trimming'] = {
+        'description': "Trim reads with Trim Galore.",
+        'files':
+            TRIMMING
+}
+
 # maps the reads to the main genome
 BOWTIE2         = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
