@@ -117,6 +117,10 @@ parser.add_argument('--unlock', dest='unlock', action='store_true',
                     help="""\
 Recover after a snakemake crash.""")
 
+parser.add_argument('--printshellcmds', dest='printshellcmds', action='store_true',
+                    help="""\
+Print commands being executed by snakemake.""")
+
 args = parser.parse_args()
 
 
@@ -407,7 +411,9 @@ else:
     if args.reason:
         command.append("--reason")
     if args.unlock:
-        command.append("--unlock")
+		command.append("--unlock")
+	if args.printshellcmds:
+        command.append("--printshellcmds")
     if args.target and 'help' in args.target:
         command.append("help")
         while "--dryrun" in command: command.remove("--dryrun")
