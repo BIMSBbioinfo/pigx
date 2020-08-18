@@ -78,6 +78,7 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
 
     # ---------------------------------------------------------------------------- #
     # checks whether the fasta header contains whitespaces
+    locations_dict = config['locations']
     message = check_fasta_header(locations_dict['genome-file'], message, locations_dict['gff-file'])
 
     # ---------------------------------------------------------------------------- #
