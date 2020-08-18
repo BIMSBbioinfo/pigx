@@ -260,7 +260,7 @@ targets = {
 # GENERAL MAPPING OUTPUT FILES
 GENOME_FASTA    = [GENOME_HASH[GENOME_TYPES['Main']]['genome_link']]
 INDEX           = [GENOME_HASH[GENOME_TYPES['Main']]['bowtie_index']]
-TRIMMING        = [flatten(TRIM_GALORE_FILES.values())]
+TRIMMING        = flatten(TRIM_GALORE_FILES.values())
 
 targets['trimming'] = {
         'description': "Trim reads with Trim Galore.",
