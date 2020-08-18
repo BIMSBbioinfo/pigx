@@ -111,7 +111,7 @@ def generate_genome_files(genome_location, index_path, genome_type, genome_name=
 
     GENOME_HASH[genome_type] = {}
     if genome_name == None:
-        genome_name = os.path.basename(GENOME_LOCATION)
+        genome_name = os.path.basename(genome_location)
 
     GENOME_HASH[genome_type]['genome_location'] = genome_location
     GENOME_HASH[genome_type]['genome_name']   = genome_name
