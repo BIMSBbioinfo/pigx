@@ -8,7 +8,7 @@ rule trim_galore_pe:
     params:
         tmp1 = lambda wildcards: os.path.join(PATH_TRIMMED, wildcards.sample, replace_fastq_ext(os.path.basename(get_fastq_input(wildcards.sample,wildcards.prefix)[0]),'_val_1.fq.gz')),
         tmp2 = lambda wildcards: os.path.join(PATH_TRIMMED, wildcards.sample, replace_fastq_ext(os.path.basename(get_fastq_input(wildcards.sample,wildcards.prefix)[1]),'_val_2.fq.gz')),
-        trim_galore = SOFTWARE['trim_galore']['executable'],
+        trim_galore = SOFTWARE['trim_galore']['executable'] + ' ' + SOFTWARE['trim_galore']['args'],
         mv = SOFTWARE['mv']['executable']
     message:"""
         Trimming Fastq files:
@@ -27,7 +27,7 @@ rule trim_galore_se:
         read = os.path.join(PATH_TRIMMED,"{sample}", "{prefix}_R.fastq.gz")
     params: 
         tmp = lambda wildcards: os.path.join(PATH_TRIMMED, wildcards.sample, replace_fastq_ext(os.path.basename(get_fastq_input(wildcards.sample,wildcards.prefix)[0]),'_trimmed.fq.gz')),
-        trim_galore = SOFTWARE['trim_galore']['executable'],
+        trim_galore = SOFTWARE['trim_galore']['executable'] + ' ' + SOFTWARE['trim_galore']['args'],
         mv = SOFTWARE['mv']['executable']
     message:"""
         Trimming Fastq files:
