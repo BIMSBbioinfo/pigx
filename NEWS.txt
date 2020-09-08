@@ -127,7 +127,13 @@ Initial commit
 []. write markdown
         - Sample Specific
 
-
+[]. add differential analysis feature
+	[x] add section to settings file
+	- add counting rules 
+	- add report 
+		- add DEseq2
+		- add edger
+	- explain issues with different normalizations
 
 
 
