@@ -1,0 +1,169 @@
+locations:
+  input-dir: sample_data/reads/
+  output-dir: out/
+  genome-file: sample_data/genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz
+  index-dir:
+  gff-file: sample_data/genome/mm_chr19.gtf
+  spikein-file: sample_data/genome/genome_subset_hg38_chr1_35287632_37056684.fa.gz
+
+
+general:
+  assembly: mm9
+  spikein_name: hg38
+  params:
+    export_bigwig:
+        extend: 200
+        scale_bw: 'yes'
+    bowtie2:
+        N: 0
+        k: 1
+    idr:
+        idr-threshold: 0.1
+    macs2:
+        #        g: mm
+        keep-dup: auto
+        q: 0.05
+        nomodel: ''
+    extract_signal:
+        expand_peak: 200
+        bin_num: 20
+
+execution:
+  submit-to-cluster: no
+  rules:
+    __default__:
+      queue: all.q
+      memory: 8G
+    bowtie2:
+      queue: all.q
+      memory: 16G
+      threads: 8
+
+# ------------------------------------------------------------ #
+# ChIP and Cont are hardcoded and must exist in the config file
+peak_calling:
+    Peaks1:
+        ChIP: ChIP1
+        Cont: Cont1
+    Peaks2:
+        ChIP: ChIP2
+        Cont: Cont2
+        params:
+            macs2:
+                nomodel: ''
+                extsize: 147
+    Peaks3:
+        ChIP: ChIPpe
+        Cont: Cont2
+        params:
+            macs2:
+                nomodel: ''
+
+    Peaks4:
+        ChIP:
+            - ChIP1
+            - ChIP2
+        Cont:
+            - Cont1
+            - Cont2
+        params:
+            macs2:
+                nomodel: ''
+
+    Peaks5:
+        ChIP: ChIP2
+        Cont:
+            - Cont1
+            - Cont2
+        params:
+            macs2:
+                nomodel: ''
+
+    Peaks6:
+        ChIP: ChIP1
+        Cont:
+        params:
+            macs2:
+                nomodel: ''
+    Peaks7:
+        ChIP: ChIP1
+        Cont:
+        params:
+            macs2:
+                broad: ''
+                nomodel: ''
+
+# ------------------------------------------------------------ #
+idr:
+    ChIP_IDR:
+        ChIP1: Peaks1
+        ChIP2: Peaks2
+    ChIP_IDR2:
+        ChIP1: Peaks1
+        ChIP3: Peaks2
+
+# ------------------------------------------------------------ #
+hub:
+    name: Pix_Hub
+    shortLabel: Pix_Short
+    longLabel: Pix_Hub_Long
+    email: vedran.franke@mdc-berlin.de
+    descriptionUrl: hub.html
+    super_tracks:
+        Tracks1:
+            track11:
+                name: Peaks1
+                type: macs
+            track12:
+                name: ChIP1
+                type: bigWig
+            long_label: Tracks1_long
+        Tracks2:
+            track21:
+                name: Peaks2
+                type: macs
+            track22:
+                name: ChIP2
+                type: bigWig
+            track23:
+                name: Peaks3
+                type: macs
+            track24:
+                name: ChIPpe
+                type: bigWig
+# ------------------------------------------------------------ #
+feature_combination:
+    Feature1:
+        - ChIP_IDR
+    Feature2:
+        - Peaks6
+        - Peaks5
+    Feature3:
+        - ChIP_IDR
+        - Peaks5
+
+# ------------------------------------------------------------ #
+differential_analysis:
+    Analysis1:
+        Case:
+            - ChIP1 
+            - ChIP2
+        Control:
+            - ChIPpe
+        Peakset: # choose peaks to define consensus peak set
+            - ChIP_IDR
+            - Peaks6
+            - Peaks5
+    Analysis2:
+        Case:
+            - ChIP1 
+            - ChIP2
+        Control:
+            - ChIPpe
+        Peakset: # if no peaks given call joint peaks for given samples
+    Analysis3:
+        Case:
+            - ChIP1 
+            - ChIP2
+        Control:
+            - ChIPpe

@@ -18,7 +18,7 @@ STRUCTURE_VARIABLES = {
 'SAMPLE_SHEET_COLUMN_NAMES' : ['SampleName', 'Read', 'Read2'],
 
 # defines the allowed execution parameters list for the config file
-'SETTING_SUBSECTIONS'       : ['locations', 'general', 'execution', 'tools', 'peak_calling', 'idr', 'hub', 'feature_combination'],
+'SETTING_SUBSECTIONS'       : ['locations', 'general', 'execution', 'tools', 'peak_calling', 'idr', 'hub', 'feature_combination', 'differential_analysis'],
 
 # sets the obligatory files for the pipeline
 'OBLIGATORY_FILES'          : ['genome-file','gff-file'],
@@ -457,6 +457,48 @@ if 'feature_combination' in set(config.keys()):
             'description': "Identify overlapping features based on feature_combination section.",
             'files': FEATURE
             }
+
+# ---------------------------------------------------------------------------- #
+if 'differential_analysis' in set(config.keys()):
+    DIFF_ANALYSIS_NAMES = config['differential_analysis'].keys()
+    if len(DIFF_ANALYSIS_NAMES) > 0:
+
+        DIFF_ANALYSIS_CONSENSENSUS = []
+
+        for diffAnn in DIFF_ANALYSIS_NAMES:
+
+            diffAnnDict = config['differential_analysis'][diffAnn]
+
+            print(diffAnnDict)
+            # if no peaks given call joint peaks for given samples  
+            if ( not 'Peakset' in diffAnnDict ) or ( not diffAnnDict['Peakset']):
+                DIFF_ANALYSIS_CONSENSENSUS += [ 
+                        os.path.join(PATH_PEAK,  diffAnn, diffAnn + "_peaks.narrowPeak"),
+                        os.path.join(PATH_PEAK,  diffAnn, diffAnn + "_qsort.bed" )
+                ]
+                ## TODO find less hacky way to add to peak dict 
+                config['peak_calling'].update(
+                        { diffAnn : {
+                    'ChIP': diffAnnDict['Case'] + diffAnnDict['Control'],
+                    'Cont': None}})
+                print(config['peak_calling'][diffAnn])
+            else:
+                DIFF_ANALYSIS_CONSENSENSUS += expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
+                     name = diffAnn)
+                
+                ## TODO find less hacky way to add to feature_combination dict 
+                config['feature_combination'].update(
+                        { diffAnn : diffAnnDict['Peakset']})
+                print(config['feature_combination'][diffAnn])
+
+                include: os.path.join(RULES_PATH, 'Feature_Combination.py')
+
+        print(DIFF_ANALYSIS_CONSENSENSUS)
+        targets['differential-analysis'] = {
+            'description': "Identify peaks with differential read occupancy.",
+            'files': DIFF_ANALYSIS_CONSENSENSUS
+            }
+
 
 # ----------------------------------------------------------------------------- #
 # REPORT INPUT
