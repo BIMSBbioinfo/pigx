@@ -11,6 +11,8 @@ pandas
 yaml
 snakemake
 fastqc
+flexbar
+jellyfish
 
 #R dependencies
 #dplyr
@@ -24,6 +26,7 @@ fastqc
 #rtracklayer
 #stringr
 #yaml
+#Seurat
 
 #cowplot
 #data.table
