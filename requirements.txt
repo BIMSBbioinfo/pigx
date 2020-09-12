@@ -12,6 +12,7 @@ flexbar
 jellyfish
 
 #R dependencies
+#argparser
 #dplyr
 #dropbead
 #GenomicAlignments
