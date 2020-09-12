@@ -1,7 +1,4 @@
 STAR
-java
-picard
-Drop-seq_tools-1.12 #see software at http://mccarrolllab.com/dropseq/
 
 snakemake=4.0.0
 python=3.6*
