@@ -136,6 +136,9 @@ Initial commit
 	- explain issues with different normalizations
 
 
+[]. omit manually filtering bam files
+	- verify downstream tools can filter mapq and duplicates if needed
+
 
 
 []. write yaml schema
