@@ -139,9 +139,31 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
             samps = set(samps)
 
             for key in feature_keys:
-                key_diff = len(set(config['feature_combination'][key])  - samps)
-                if(key_diff > 0):
-                    message = message + "\tfeature_combination contains unknown peak files"
+                key_diff = set(config['feature_combination'][key])  - samps
+                if(len(key_diff) > 0):
+                        message = message + "\tdifferential_analysis contains unknown peak files: " + " ".join(key_diff) +"\n"
+
+    # ------------------------------------------------------------------------ #
+    # checks for proper differential analysis
+    # This check is temporary. Once Check_sample_sheet_dict is updated, can be removed.
+    if 'differential_analysis' in set(config.keys()):
+        if len(config['differential_analysis']) > 0:
+            feature_keys = config['differential_analysis'].keys()
+            samps = []
+            if 'idr' in set(config.keys()):
+                samps = samps + list(config['idr'].keys())
+
+            if 'peak_calling' in set(config.keys()):
+                samps = samps + list(config['peak_calling'].keys())
+
+            samps = set(samps)
+
+            for key in feature_keys:
+                diffAnnDict = config['differential_analysis'][key]
+                if ( 'Peakset' in diffAnnDict ) and ( diffAnnDict['Peakset']):
+                    key_diff = set(diffAnnDict['Peakset'])  - samps
+                    if(len(key_diff) > 0):
+                        message = message + "\tdifferential_analysis contains unknown peak files: " + " ".join(key_diff) +"\n"
 
     # ---------------------------------------------------------------------------- #
     # checks for correspondence between Spike-in in sample_sheet_dict and settings
