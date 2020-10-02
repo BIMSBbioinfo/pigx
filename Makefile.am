@@ -20,10 +20,12 @@ dist_pkglibexec_scripts_SCRIPTS =		\
   scripts/Extract_Signal_Annotation.R	\
   scripts/Extract_Signal_Peaks.R		\
   scripts/Feature_Combination.R			\
+  scripts/Feature_Counting.R			\
   scripts/Functions_Helper.R			\
   scripts/Functions_Sample_Report.R		\
   scripts/Knit_Report.R					\
   scripts/Make_UCSC_HUB.R				\
+  scripts/Merge_Counts.R				\
   scripts/Parse_Bowtie2log.R			\
   scripts/Peak_Statistics.R				\
   scripts/Prepare_Annotation.R			\
@@ -37,6 +39,7 @@ dist_pkglibexec_rules_SCRIPTS =   		\
   Rules/Annotate_Peaks.py       		\
   Rules/BamToBigWig.py          		\
   Rules/ChIPQC.py           			\
+  Rules/Differential_Analysis.py		\
   Rules/Extract_Signal_Annotation.py  	\
   Rules/FastQC.py           			\
   Rules/Feature_Combination.py      	\
