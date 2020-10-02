@@ -90,6 +90,7 @@ AX_R_PACKAGE([chipseq])
 AX_R_PACKAGE([heatmaply])
 AX_R_PACKAGE([ggplot2])
 AX_R_PACKAGE([plotly])
+AX_R_PACKAGE([Rsubread])
   ])
 
 

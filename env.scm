@@ -4,4 +4,7 @@
 (packages->manifest
  (append (map cadr (package-direct-inputs
                     (specification->package "pigx-chipseq")))
-         (map specification->package '("autoconf" "automake"))))
+         (map specification->package '("autoconf" "automake"))
+		 ;; additional dependencies
+         (map specification->package '("r-rsubread" "samblaster"))
+		 ))

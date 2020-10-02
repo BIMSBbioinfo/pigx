@@ -29,6 +29,9 @@
     (source (string-append (getcwd) "/pigx_chipseq-" version ".tar.gz"))
     (native-inputs
      `(("autoconf" ,(specification->package "autoconf"))
-       ("automake" ,(specification->package "automake"))))))
+       ("automake" ,(specification->package "automake"))
+       ("r-rsubread" ,(specification->package "r-rsubread"))
+	   )
+	 )))
 
 pigx-chipseq-development
