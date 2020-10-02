@@ -109,6 +109,7 @@ PATH_REPORTS    = os.path.join(OUTPUT_DIR, 'Reports')
 PATH_RDS            = os.path.join(PATH_ANALYSIS, 'RDS')
 PATH_RDS_ANNOTATION = os.path.join(PATH_RDS, 'Annotation')
 PATH_RDS_FEATURE    = os.path.join(PATH_RDS, 'Feature_Combination')
+PATH_RDS_COUNTS     = os.path.join(PATH_RDS, 'Feature_Counts')
 PATH_RDS_CHIPQC     = os.path.join(PATH_RDS, 'ChIPQC')
 PATH_RDS_TEMP       = os.path.join(PATH_RDS, 'Temp')
 
@@ -463,13 +464,15 @@ if 'differential_analysis' in set(config.keys()):
     DIFF_ANALYSIS_NAMES = config['differential_analysis'].keys()
     if len(DIFF_ANALYSIS_NAMES) > 0:
 
+        include: os.path.join(RULES_PATH, 'Differential_Analysis.py')
+
         DIFF_ANALYSIS_CONSENSENSUS = []
+        DIFF_ANALYSIS_COUNTS = []
 
         for diffAnn in DIFF_ANALYSIS_NAMES:
 
             diffAnnDict = config['differential_analysis'][diffAnn]
 
-            print(diffAnnDict)
             # if no peaks given call joint peaks for given samples  
             if ( not 'Peakset' in diffAnnDict ) or ( not diffAnnDict['Peakset']):
                 DIFF_ANALYSIS_CONSENSENSUS += [ 
@@ -481,12 +484,14 @@ if 'differential_analysis' in set(config.keys()):
                         { diffAnn : {
                     'ChIP': diffAnnDict['Case'] + diffAnnDict['Control'],
                     'Cont': None}})
-                print(config['peak_calling'][diffAnn])
             else:
-                DIFF_ANALYSIS_CONSENSENSUS += expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
-                     name = diffAnn)
+                DIFF_ANALYSIS_CONSENSENSUS += expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.{type}'),
+                     name = diffAnn, type = ['rds','txt'])
                 
-                ## TODO find less hacky way to add to feature_combination dict 
+                if not 'feature_combination' in set(config.keys()):
+                    include: os.path.join(RULES_PATH, 'Feature_Combination.py')
+                    config.update({'feature_combination':dict()}) 
+                    ## TODO find less hacky way to add to feature_combination dict 
                 config['feature_combination'].update(
                         { diffAnn : diffAnnDict['Peakset']})
                 print(config['feature_combination'][diffAnn])
