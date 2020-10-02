@@ -12,7 +12,8 @@ rule feature_combination:
     input:
         unpack(get_feature_combination_infiles)
     output:
-        outfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds')
+        outfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
+        txtfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.txt')
     params:
         scriptdir   = SCRIPT_PATH,
         Rscript     = SOFTWARE['Rscript']['executable']
@@ -22,7 +23,7 @@ rule feature_combination:
         """
             Running: feature_combination:
                 features:   {input}
-                output:     {output.outfile}
+                output:     {output}
             """
     run:
         RunRscript(input, output, params, log.logfile, 'Feature_Combination.R')
