@@ -449,8 +449,8 @@ if peak_index:
 if 'feature_combination' in set(config.keys()):
     FEATURE_NAMES = config['feature_combination'].keys()
     if len(FEATURE_NAMES) > 0:
-        FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
-                         name = FEATURE_NAMES)
+        FEATURE = expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.{type}'),
+                         name = FEATURE_NAMES, type = ['rds','txt'])
 
         include: os.path.join(RULES_PATH, 'Feature_Combination.py')
 
