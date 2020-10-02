@@ -25,7 +25,7 @@ The pipeline consists of the following steps:
 - Reporting of the editing outcomes in interactive reports organized into a 
 website. (rmarkdown::render_site) 
 
-![pipeline](./img/crispr-DART_infographic_Sept13_2020_V5_1.jpg) 
+![pipeline](./img/crispr-DART_infographic_Sept13_2020_V5_1_RGB.jpg) 
 
 
 ## Example HTML report output
