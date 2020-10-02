@@ -27,6 +27,9 @@ general:
     extract_signal:
         expand_peak: 200
         bin_num: 20
+    feature_counting:
+        minFragLength: 50
+        maxFragLength: 600
 
 execution:
   submit-to-cluster: no
@@ -52,23 +55,23 @@ peak_calling:
             macs2:
                 nomodel: ''
                 extsize: 147
-    Peaks3:
-        ChIP: ChIPpe
-        Cont: Cont2
-        params:
-            macs2:
-                nomodel: ''
+    # Peaks3:
+    #     ChIP: ChIPpe
+    #     Cont: Cont2
+    #     params:
+    #         macs2:
+    #             nomodel: ''
 
-    Peaks4:
-        ChIP:
-            - ChIP1
-            - ChIP2
-        Cont:
-            - Cont1
-            - Cont2
-        params:
-            macs2:
-                nomodel: ''
+    # Peaks4:
+    #     ChIP:
+    #         - ChIP1
+    #         - ChIP2
+    #     Cont:
+    #         - Cont1
+    #         - Cont2
+    #     params:
+    #         macs2:
+    #             nomodel: ''
 
     Peaks5:
         ChIP: ChIP2
@@ -98,49 +101,50 @@ idr:
     ChIP_IDR:
         ChIP1: Peaks1
         ChIP2: Peaks2
-    ChIP_IDR2:
-        ChIP1: Peaks1
-        ChIP3: Peaks2
+    # ChIP_IDR2:
+    #     ChIP1: Peaks1
+    #     ChIP3: Peaks2
 
-# ------------------------------------------------------------ #
-hub:
-    name: Pix_Hub
-    shortLabel: Pix_Short
-    longLabel: Pix_Hub_Long
-    email: vedran.franke@mdc-berlin.de
-    descriptionUrl: hub.html
-    super_tracks:
-        Tracks1:
-            track11:
-                name: Peaks1
-                type: macs
-            track12:
-                name: ChIP1
-                type: bigWig
-            long_label: Tracks1_long
-        Tracks2:
-            track21:
-                name: Peaks2
-                type: macs
-            track22:
-                name: ChIP2
-                type: bigWig
-            track23:
-                name: Peaks3
-                type: macs
-            track24:
-                name: ChIPpe
-                type: bigWig
-# ------------------------------------------------------------ #
-feature_combination:
-    Feature1:
-        - ChIP_IDR
-    Feature2:
-        - Peaks6
-        - Peaks5
-    Feature3:
-        - ChIP_IDR
-        - Peaks5
+# # ------------------------------------------------------------ #
+# hub:
+#     name: Pix_Hub
+#     shortLabel: Pix_Short
+#     longLabel: Pix_Hub_Long
+#     email: vedran.franke@mdc-berlin.de
+#     descriptionUrl: hub.html
+#     super_tracks:
+#         Tracks1:
+#             track11:
+#                 name: Peaks1
+#                 type: macs
+#             track12:
+#                 name: ChIP1
+#                 type: bigWig
+#             long_label: Tracks1_long
+#         Tracks2:
+#             track21:
+#                 name: Peaks2
+#                 type: macs
+#             track22:
+#                 name: ChIP2
+#                 type: bigWig
+#             track23:
+#                 name: Peaks3
+#                 type: macs
+#             track24:
+#                 name: ChIPpe
+#                 type: bigWig
+ 
+# # ------------------------------------------------------------ #
+# feature_combination:
+#     Feature1:
+#         - ChIP_IDR
+#     Feature2:
+#         - Peaks6
+#         - Peaks5
+#     Feature3:
+#         - ChIP_IDR
+#         - Peaks5
 
 # ------------------------------------------------------------ #
 differential_analysis:
@@ -154,6 +158,10 @@ differential_analysis:
             - ChIP_IDR
             - Peaks6
             - Peaks5
+        params:
+            feature_counting:
+                minFragLength: 50
+                maxFragLength: 150
     Analysis2:
         Case:
             - ChIP1 
@@ -167,3 +175,7 @@ differential_analysis:
             - ChIP2
         Control:
             - ChIPpe
+        params:
+            macs2:
+                nomodel: ''
+                extsize: 147

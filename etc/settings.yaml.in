@@ -221,6 +221,9 @@ execution:
     feature_combination:
       threads:   1
       memory:    8G
+    feature_counting:
+      threads:   1
+      memory:    8G
     idr:
       threads:   1
       memory:    8G
