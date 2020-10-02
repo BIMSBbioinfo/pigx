@@ -494,14 +494,14 @@ if 'differential_analysis' in set(config.keys()):
                     ## TODO find less hacky way to add to feature_combination dict 
                 config['feature_combination'].update(
                         { diffAnn : diffAnnDict['Peakset']})
-                print(config['feature_combination'][diffAnn])
+        
+            ## define count matrix 
+            DIFF_ANALYSIS_COUNTS += expand(os.path.join(PATH_REPORTS,'{name}','{name}_FeatureCounts.tsv'), name = diffAnn)
 
-                include: os.path.join(RULES_PATH, 'Feature_Combination.py')
 
-        print(DIFF_ANALYSIS_CONSENSENSUS)
         targets['differential-analysis'] = {
             'description': "Identify peaks with differential read occupancy.",
-            'files': DIFF_ANALYSIS_CONSENSENSUS
+            'files': DIFF_ANALYSIS_CONSENSENSUS + DIFF_ANALYSIS_COUNTS
             }
 
 
