@@ -13,7 +13,8 @@ rule feature_combination:
         unpack(get_feature_combination_infiles)
     output:
         outfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.rds'),
-        txtfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.txt')
+        txtfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.txt'),
+        bedfile  = os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.bed')
     params:
         scriptdir   = SCRIPT_PATH,
         Rscript     = SOFTWARE['Rscript']['executable']

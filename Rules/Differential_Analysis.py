@@ -3,7 +3,7 @@ def get_differential_analysis_bedfile(wc):
     analysisDict = config['differential_analysis'][wc.analysis]
     if ('Peakset' in analysisDict) and ( analysisDict['Peakset']):
         infiles = os.path.join(PATH_RDS_FEATURE,
-                wc.analysis + '_FeatureCombination.txt'),
+                wc.analysis + '_FeatureCombination.bed'),
     else:
         infiles = os.path.join(PATH_PEAK,  
                 wc.analysis, 

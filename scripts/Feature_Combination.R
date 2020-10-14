@@ -6,9 +6,8 @@ argv = Parse_Arguments('Feature_Combination')
 # ---------------------------------------------------------------------------- #
 Feature_Combination = function(
   features,
-  scriptdir,
   outfile,
-  txtfile
+  scriptdir
 ){
 
     suppressPackageStartupMessages(library('genomation'))
@@ -35,12 +34,22 @@ Feature_Combination = function(
           feat.comb = findFeatureComb(feat.list, use.names=TRUE)
       }
       feat.comb$peak_id = paste0('Peak',sprintf('%07d', seq_along(feat.comb)))
-
+        
+      # export RDS
       saveRDS(feat.comb, file = outfile)
+      # export txt file with class
       write.table(x = as.data.frame(feat.comb)[, c("seqnames", "start",
                                                    "end", "peak_id",
                                                    "class")],
-                  file = txtfile, sep = "\t", append = TRUE,
+                  file = gsub("\\.rds","\\.txt",outfile, ignore.case = TRUE), 
+                  sep = "\t", append = TRUE,
+                  quote = FALSE, row.names = FALSE, col.names = FALSE) 
+      # export BED format file
+      write.table(x = as.data.frame(feat.comb)[, c("seqnames", "start",
+                                                   "end", "peak_id"
+                                                   )],
+                  file = gsub("\\.rds","\\.bed",outfile, ignore.case = TRUE), 
+                  sep = "\t", append = TRUE,
                   quote = FALSE, row.names = FALSE, col.names = FALSE) 
 }
 
@@ -49,6 +58,5 @@ Feature_Combination = function(
 Feature_Combination(
     features         = argv$input,
     outfile          = argv$output[['outfile']],
-    txtfile          = argv$output[['txtfile']],
     scriptdir        = argv$params[['scriptdir']]
 )

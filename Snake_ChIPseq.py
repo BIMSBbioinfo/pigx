@@ -486,7 +486,7 @@ if 'differential_analysis' in set(config.keys()):
                     'Cont': None}})
             else:
                 DIFF_ANALYSIS_CONSENSENSUS += expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.{type}'),
-                     name = diffAnn, type = ['rds','txt'])
+                     name = diffAnn, type = ['rds','txt','bed'])
                 
                 if not 'feature_combination' in set(config.keys()):
                     include: os.path.join(RULES_PATH, 'Feature_Combination.py')
