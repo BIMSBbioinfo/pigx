@@ -1,6 +1,7 @@
 # ---------------------------------------------------------------------------- #
 Parse_Arguments = function(
-    name = NULL
+    name = NULL,
+    parseFlags = FALSE
 ){
     if(is.null(name))
         stop('Please use a valid function name')
@@ -17,5 +18,26 @@ Parse_Arguments = function(
     argv = parse_args(p)[]
     snames = c('input','output','params')
     argv = lapply(setNames(snames, snames), function(x)jsonlite::fromJSON(argv[[x]][[1]]))
+    if(parseFlags) 
+        argv[['params']] = lapply(argv[['params']], .readFlags)
     return(argv)
 }
+
+
+## convert flags into bools
+.readFlags <- function(flag) {
+    if(is.list(flag)) {
+        return(lapply(flag, .readFlags))
+    } else {
+        if (nchar(flag) == 0) flag <- TRUE
+        switch(EXPR = tolower(flag),
+               "yes" = TRUE,
+
+               "true" = TRUE,
+               "false" = FALSE,
+               "no" = FALSE,
+               flag
+        )
+    }
+}
+

@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 options = commandArgs(trailingOnly=TRUE)
 source(file.path(options[2],'/Argument_Parser.R'))
-argv = Parse_Arguments('runFeatureCounts')
+argv = Parse_Arguments('runFeatureCounts', parseFlags = TRUE)
 
 # ---------------------------------------------------------------------------- #
 ## Count reads using Rsubread
