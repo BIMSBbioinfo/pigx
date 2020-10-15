@@ -17,6 +17,9 @@ STRUCTURE_VARIABLES = {
 # Spike-in is a non-compulsory column: values: No/Yes
 'SAMPLE_SHEET_COLUMN_NAMES' : ['SampleName', 'Read', 'Read2'],
 
+# Group is a non-compulsory column: values: flexible
+'SAMPLE_SHEET_GROUP_NAME' : 'Group',
+
 # defines the allowed execution parameters list for the config file
 'SETTING_SUBSECTIONS'       : ['locations', 'general', 'execution', 'tools', 'peak_calling', 'idr', 'hub', 'feature_combination', 'differential_analysis'],
 
@@ -480,9 +483,15 @@ if 'differential_analysis' in set(config.keys()):
                         os.path.join(PATH_PEAK,  diffAnn, diffAnn + "_qsort.bed" )
                 ]
                 ## TODO find less hacky way to add to peak dict 
+                samps = [lookup(
+                            STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME'],
+                            sample,
+                            ['SampleName']
+                            ) for sample in diffAnnDict['Case'] + diffAnnDict['Control']]
+                samps = flatten(samps)
                 config['peak_calling'].update(
                         { diffAnn : {
-                    'ChIP': diffAnnDict['Case'] + diffAnnDict['Control'],
+                    'ChIP': samps,
                     'Cont': None}})
             else:
                 DIFF_ANALYSIS_CONSENSENSUS += expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.{type}'),

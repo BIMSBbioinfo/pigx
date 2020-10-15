@@ -150,10 +150,10 @@ idr:
 differential_analysis:
     Analysis1:
         Case:
-            - ChIP1 
-            - ChIP2
+            - Group1 
+            - Group2
         Control:
-            - ChIPpe
+            - Group3
         Peakset: # choose peaks to define consensus peak set
             - ChIP_IDR
             - Peaks6
@@ -164,17 +164,17 @@ differential_analysis:
                 maxFragLength: 150
     Analysis2:
         Case:
-            - ChIP1 
-            - ChIP2
+            - Group1 
+            - Group2
         Control:
-            - ChIPpe
+            - Group3
         Peakset: # if no peaks given call joint peaks for given samples
     Analysis3:
         Case:
-            - ChIP1 
-            - ChIP2
+            - Group1 
+            - Group2
         Control:
-            - ChIPpe
+            - Group3
         params:
             macs2:
                 nomodel: ''

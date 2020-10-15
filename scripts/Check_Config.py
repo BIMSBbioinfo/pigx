@@ -148,6 +148,17 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
     # This check is temporary. Once Check_sample_sheet_dict is updated, can be removed.
     if 'differential_analysis' in set(config.keys()):
         if len(config['differential_analysis']) > 0:
+            
+            # check for grouping column in sample sheet
+            sample_sheet_group_name = structure_variables['SAMPLE_SHEET_GROUP_NAME']
+            if not sample_sheet_group_name in sample_sheet_dict[0].keys():
+                message = ''.join([
+                    message, "\t'", str(sample_sheet_group_name),
+                    "' column specifying grouping for differential analysis ",
+                    "was not found in sample sheet: ",
+                    config['locations']['sample-sheet'], "\n"])
+            
+            # check that peak calling used are already defined
             feature_keys = config['differential_analysis'].keys()
             samps = []
             if 'idr' in set(config.keys()):

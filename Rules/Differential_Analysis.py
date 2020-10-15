@@ -12,12 +12,19 @@ def get_differential_analysis_bedfile(wc):
 
 def get_differential_analysis_countfiles(wc):
     analysisDict = config['differential_analysis'][wc.analysis]
+    samps = [lookup(
+                STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME'],
+                sample,
+                ['SampleName']
+                ) for sample in analysisDict['Case'] + analysisDict['Control']]
+    samps = flatten(samps)
     infiles = expand(
             os.path.join(
                 PATH_RDS_COUNTS,
                 '{analysis}_{name}_FeatureCounts.rds'), 
             analysis = wc.analysis, 
-            name = analysisDict['Case'] + analysisDict['Control']
+            name = samps
+
             )
     print(infiles)
     return(infiles)
