@@ -12,15 +12,24 @@ import csv
 # sample_sheet_column_names - list of allowed column names for sample sheet
 def validate_config(config, structure_variables):
 
+    # Checks whether the sample sheet file exists
+    if config['locations']['sample-sheet'] == None:
+        message = 'ERROR: sample-sheet file is not defined\n'
+        sys.exit(message)
+    elif not os.path.isfile(config['locations']['sample-sheet']):
+        message = 'ERROR: sample-sheet file does not exist\n'
+        sys.exit(message)
+
     sample_sheet_dict = read_SAMPLE_SHEET(config)
 
     message = ''
-    message = check_sample_sheet(sample_sheet_dict, config,  structure_variables, message)
+    message = check_sample_sheet(sample_sheet_dict,  structure_variables, message)
     if len(message) > 0:
         message = 'ERROR: Sample Sheet is not properly formated:\n' + message
         sys.exit(message)
 
-    message = check_locations(sample_sheet_dict, config, structure_variables , message)
+
+    message = check_locations(config, structure_variables , message)
     if len(message) > 0:
         message = 'ERROR: Invalid Location given in settings file:\n' + message
         sys.exit(message)
@@ -36,7 +45,7 @@ def validate_config(config, structure_variables):
 # ---------------------------------------------------------------------------- #
 # checks the proper structure of the sample_sheet file
 # ---------------------------------------------------------------------------- #
-def check_sample_sheet(sample_sheet_dict, config, structure_variables, message):
+def check_sample_sheet(sample_sheet_dict, structure_variables, message):
 
     sample_sheet_column_names = set(structure_variables['SAMPLE_SHEET_COLUMN_NAMES'])
     if len(sample_sheet_dict) > 0:
@@ -51,7 +60,7 @@ def check_sample_sheet(sample_sheet_dict, config, structure_variables, message):
 # ---------------------------------------------------------------------------- #
 # checks the locations defined in settings file
 # ---------------------------------------------------------------------------- #
-def check_locations(sample_sheet_dict, config, structure_variables, message):
+def check_locations(config, structure_variables, message):
 
     # ---------------------------------------------------------------------------- #
     # sets obligatory genome files
@@ -141,11 +150,10 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
             for key in feature_keys:
                 key_diff = set(config['feature_combination'][key])  - samps
                 if(len(key_diff) > 0):
-                        message = message + "\tdifferential_analysis contains unknown peak files: " + " ".join(key_diff) +"\n"
+                        message = message + "\tfeature_combination contains unknown peak files: " + " ".join(key_diff) +"\n"
 
     # ------------------------------------------------------------------------ #
     # checks for proper differential analysis
-    # This check is temporary. Once Check_sample_sheet_dict is updated, can be removed.
     if 'differential_analysis' in set(config.keys()):
         if len(config['differential_analysis']) > 0:
             
@@ -160,21 +168,39 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
             
             # check that peak calling used are already defined
             feature_keys = config['differential_analysis'].keys()
-            samps = []
             if 'idr' in set(config.keys()):
-                samps = samps + list(config['idr'].keys())
+                idr_samps = list(config['idr'].keys())
 
             if 'peak_calling' in set(config.keys()):
-                samps = samps + list(config['peak_calling'].keys())
+                peak_samps = list(config['peak_calling'].keys())
 
-            samps = set(samps)
-
+            samps = set(idr_samps + peak_samps)
+            
+            samples_da = []
             for key in feature_keys:
                 diffAnnDict = config['differential_analysis'][key]
                 if ( 'Peakset' in diffAnnDict ) and ( diffAnnDict['Peakset']):
                     key_diff = set(diffAnnDict['Peakset'])  - samps
                     if(len(key_diff) > 0):
                         message = message + "\tdifferential_analysis contains unknown peak files: " + " ".join(key_diff) +"\n"
+                groups = diffAnnDict['Case'] + diffAnnDict['Control']
+                groupCol = STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME']
+                for group in groups:
+                    samples_da += [sample['SampleName'] for sample in sample_sheet_dict if sample[groupCol]==group]
+            
+            samples_da = flatten(samples_da)
+
+            # check if samples used as Control for ChIP are used for differential analysis 
+            if 'peak_calling' in set(config.keys()) and peak_samps:
+                peakInput = [ config['peak_calling'][peak]['Cont'] for peak in peak_samps if config['peak_calling'][peak]['Cont']]
+                peakInput = flatten(peakInput) 
+                samples_cont = set(samples_da).intersection(set(peakInput))
+                if(len(samples_cont) > 0):
+                    message = ''.join([
+                    message, "\tChIP input samples should not be used for differential analysis, ",
+                    "Please remove or change value for '", groupCol,"' column ",
+                    "in samplesheet for those samples: "," ".join(samples_cont), "\n"])
+
 
     # ---------------------------------------------------------------------------- #
     # checks for correspondence between Spike-in in sample_sheet_dict and settings
