@@ -29,6 +29,14 @@ def get_differential_analysis_countfiles(wc):
     print(infiles)
     return(infiles)
 
+def get_differential_analysis_settings(wc, setting):
+    analysisDict = config['differential_analysis'][wc.analysis]
+    if setting in analysisDict.keys():
+        value = ','.join(analysisDict[setting])
+    else:
+        value = ''
+    return(value)
+
 # ----------------------------------------------------------------------------- #
 rule feature_counting:
     input:
@@ -96,3 +104,33 @@ rule translate_sample_sheet_for_report:
             writer.writerow([''] + header)
             for sample in SAMPLE_NAMES:
                 writer.writerow(lookup('SampleName', sample, ['SampleName'] + header))
+
+#----------------------------------------------------------------------------- #
+rule knit_differential_analysis_report:
+    input:
+        countDataFile = os.path.join(PATH_REPORTS,'{analysis}','{analysis}_FeatureCounts.tsv'),
+        colDataFile   = os.path.join(PATH_REPORTS, "colData.tsv"),
+        gtfFile       = rules.prepare_annotation.output.outfile
+    output:
+        outfile    = os.path.join(PATH_REPORTS,'{analysis}','{analysis}_DeseqReport.html')
+    params:
+        report_template     = REPORT_DA_TEMPLATE,
+        peakFile            = lambda wc: get_differential_analysis_bedfile(wc),
+        caseSampleGroups    = lambda wc: get_differential_analysis_settings(wc,'Case'),
+        controlSampleGroups = lambda wc: get_differential_analysis_settings(wc,'Control'),
+        covariates          = lambda wc: get_differential_analysis_settings(wc,'Covariates'),
+        groupCol            = STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME'],
+        prefix              = '{analysis}', 
+        workdir             = os.path.join(PATH_REPORTS, '{analysis}'),
+        scriptdir           = SCRIPT_PATH,
+        organism            = config['general']['organism'] if 'organism' in config['general'] else '',
+        logo                = LOGO_PATH 
+    log:
+        logfile = os.path.join(PATH_LOG, '{analysis}_knit_deseq_report.log')
+    message:"""
+            Running: knit_differential_analysis_report:
+                Analysis:   {wildcards.analysis}
+                output:     {output.outfile}
+        """
+    run:
+        RunRscript(input, output, params, log.logfile, 'Knit_Report.R')

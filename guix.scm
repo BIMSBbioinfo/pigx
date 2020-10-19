@@ -31,7 +31,20 @@
      `(("autoconf" ,(specification->package "autoconf"))
        ("automake" ,(specification->package "automake"))
        ("r-rsubread" ,(specification->package "r-rsubread"))
-	   )
-	 )))
+       ;; add pacages for Deseq Report
+       (map specification->package '(
+                                     "r-ggrepel"
+                                     "r-deseq2"
+                                     "r-dt"
+                                     "r-pheatmap"
+                                     "r-corrplot"
+                                     "r-reshape2"
+                                     "r-scales"
+                                     "r-crosstalk"
+                                     "r-gprofiler2"
+                                     "r-summarizedexperiment"
+                                     ))
+       )
+     )))
 
 pigx-chipseq-development

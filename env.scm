@@ -7,4 +7,17 @@
          (map specification->package '("autoconf" "automake"))
 		 ;; additional dependencies
          (map specification->package '("r-rsubread" "samblaster"))
+         ;; add pacages for Deseq Report
+         (map specification->package '(
+                                       "r-ggrepel"
+                                       "r-deseq2"
+                                       "r-dt"
+                                       "r-pheatmap"
+                                       "r-corrplot"
+                                       "r-reshape2"
+                                       "r-scales"
+                                       "r-crosstalk"
+                                       "r-gprofiler2"
+                                       "r-summarizedexperiment"
+                                       ))
 		 ))

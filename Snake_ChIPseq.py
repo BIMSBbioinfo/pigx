@@ -48,10 +48,12 @@ validate_config(config, STRUCTURE_VARIABLES)
 
 SAMPLE_SHEET = read_SAMPLE_SHEET(config)
 # ---------------------------------------------------------------------------- #
-SCRIPT_PATH       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
-RULES_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'Rules/')
-REPORT_TEMPLATE   = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
-LIB_TYPE          = dict(zip([i['SampleName'] for i in SAMPLE_SHEET],[i['library_type'] for i in SAMPLE_SHEET]))
+SCRIPT_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
+RULES_PATH         = os.path.join(config['locations']['pkglibexecdir'], 'Rules/')
+REPORT_QC_TEMPLATE = os.path.join(SCRIPT_PATH,'Sample_Report.rmd')
+REPORT_DA_TEMPLATE = os.path.join(SCRIPT_PATH,'Deseq_Report.Rmd')
+LOGO_PATH          = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png" if os.getenv("PIGX_UNINSTALLED") else "Logo_PiGx.png")
+LIB_TYPE           = dict(zip([i['SampleName'] for i in SAMPLE_SHEET],[i['library_type'] for i in SAMPLE_SHEET]))
 
 
 # ---------------------------------------------------------------------------- #
@@ -472,6 +474,7 @@ if 'differential_analysis' in set(config.keys()):
         DIFF_ANALYSIS_CONSENSENSUS = []
         DIFF_ANALYSIS_COUNTS = []
         COLDATA_FILE = [os.path.join(PATH_REPORTS,"colData.tsv")]
+	REPORT_DIFF_ANALYSIS = []
 
         for diffAnn in DIFF_ANALYSIS_NAMES:
 
@@ -508,10 +511,15 @@ if 'differential_analysis' in set(config.keys()):
             ## define count matrix 
             DIFF_ANALYSIS_COUNTS += expand(os.path.join(PATH_REPORTS,'{name}','{name}_FeatureCounts.tsv'), name = diffAnn)
 
+            REPORT_DIFF_ANALYSIS += expand(os.path.join(PATH_REPORTS,'{name}','{name}_DeseqReport.html'), name = diffAnn)
 
         targets['differential-analysis'] = {
             'description': "Identify peaks with differential read occupancy.",
-            'files': DIFF_ANALYSIS_CONSENSENSUS + DIFF_ANALYSIS_COUNTS
+            'files': 
+            DIFF_ANALYSIS_CONSENSENSUS + 
+            DIFF_ANALYSIS_COUNTS + 
+            COLDATA_FILE + 
+            REPORT_DIFF_ANALYSIS
             }
 
 

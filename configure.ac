@@ -90,6 +90,16 @@ AX_R_PACKAGE([chipseq])
 AX_R_PACKAGE([heatmaply])
 AX_R_PACKAGE([ggplot2])
 AX_R_PACKAGE([plotly])
+AX_R_PACKAGE([ggrepel])
+AX_R_PACKAGE([DESeq2])
+AX_R_PACKAGE([DT])
+AX_R_PACKAGE([pheatmap])
+AX_R_PACKAGE([corrplot])
+AX_R_PACKAGE([reshape2])
+AX_R_PACKAGE([scales])
+AX_R_PACKAGE([crosstalk])
+AX_R_PACKAGE([gprofiler2])
+AX_R_PACKAGE([SummarizedExperiment])
 AX_R_PACKAGE([Rsubread])
   ])
 
@@ -118,6 +128,7 @@ AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
 AC_SUBST([capture_environment])
 AC_CONFIG_FILES([etc/settings.yaml
                  scripts/Sample_Report.rmd
+                 scripts/Deseq_Report.Rmd
                  Makefile
                  qsub-template.sh])
 AC_CONFIG_FILES([Tests/test.sh], [chmod +x Tests/test.sh])
