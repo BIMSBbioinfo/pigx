@@ -34,23 +34,21 @@ Feature_Combination = function(
           feat.comb = findFeatureComb(feat.list, use.names=TRUE)
       }
       feat.comb$peak_id = paste0('Peak',sprintf('%07d', seq_along(feat.comb)))
-        
+
       # export RDS
       saveRDS(feat.comb, file = outfile)
       # export txt file with class
-      write.table(x = as.data.frame(feat.comb)[, c("seqnames", "start",
-                                                   "end", "peak_id",
-                                                   "class")],
-                  file = gsub("\\.rds","\\.txt",outfile, ignore.case = TRUE), 
+      write.table(x = as.data.frame(feat.comb),
+                  file = gsub("\\.rds","\\.txt",outfile, ignore.case = TRUE),
                   sep = "\t", append = TRUE,
-                  quote = FALSE, row.names = FALSE, col.names = FALSE) 
+                  quote = FALSE, row.names = FALSE, col.names = FALSE)
       # export BED format file
       write.table(x = as.data.frame(feat.comb)[, c("seqnames", "start",
                                                    "end", "peak_id"
                                                    )],
-                  file = gsub("\\.rds","\\.bed",outfile, ignore.case = TRUE), 
+                  file = gsub("\\.rds","\\.bed",outfile, ignore.case = TRUE),
                   sep = "\t", append = TRUE,
-                  quote = FALSE, row.names = FALSE, col.names = FALSE) 
+                  quote = FALSE, row.names = FALSE, col.names = FALSE)
 }
 
 # ---------------------------------------------------------------------------- #
