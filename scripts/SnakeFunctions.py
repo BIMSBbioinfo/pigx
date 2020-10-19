@@ -225,7 +225,7 @@ def RunRscript(input, output, params, logfile, script):
                        separators=(",",":"), ensure_ascii=True)
 
     cmd = " ".join([SOFTWARE['nice']['executable'],SOFTWARE['nice']['args'],
-                    str(params.Rscript),
+                    SOFTWARE['Rscript']['executable'],
                     SOFTWARE['Rscript']['args'],
                     os.path.join(SCRIPT_PATH, script),
                     "--basedir", SCRIPT_PATH,
