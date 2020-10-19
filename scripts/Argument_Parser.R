@@ -32,7 +32,6 @@ Parse_Arguments = function(
         if (nchar(flag) == 0) flag <- TRUE
         switch(EXPR = tolower(flag),
                "yes" = TRUE,
-
                "true" = TRUE,
                "false" = FALSE,
                "no" = FALSE,
