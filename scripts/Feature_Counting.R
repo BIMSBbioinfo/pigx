@@ -9,7 +9,7 @@ runFeatureCounts <- function(peaks,
                              bam_files,
                              outRDS,
                              tempDir = tempdir("featureCounts_temp"),
-                             ..., 
+                             fc_args = NULL, 
                              blacklisted = NULL,
                              n.cores = 1
                              ) {
@@ -21,12 +21,10 @@ runFeatureCounts <- function(peaks,
     })
 
     if(!all(file.exists(bam_files))){
-        stop(ipaste("Given bam files do not exist.","\n\t",
+        stop(paste("Given bam files do not exist.","\n\t",
                     head(bam_files[!file.exists(bam_files)])
                     ))
     }
-
-    fc_args <- list(...)
     
     message(paste("Started at ",timestamp(quiet = TRUE)))
 
@@ -66,13 +64,14 @@ runFeatureCounts <- function(peaks,
     if(!dir.exists(tempDir)) dir.create(tempDir)    
 
     ## start counting
-    fc <- Rsubread::featureCounts(bam_files,
-                                  annot.ext = peaks_saf,
-                                  ...,
-                                  tmpDir = tempDir,
-                                  nthreads = n.cores)
-    fc$targets <- basename(bam_files)
-    saveRDS(fc,outRDS) 
+	fc <- do.call(Rsubread::featureCounts,
+				  c(list(files = bam_files,
+						 annot.ext = peaks_saf,
+						 tmpDir = tempDir,
+						 nthreads = n.cores),
+					fc_args))
+	fc$targets <- basename(bam_files)
+	saveRDS(fc,outRDS) 
 
     message("Counting done.")
     message(timestamp(quiet = TRUE))
@@ -87,6 +86,23 @@ runFeatureCounts <- function(peaks,
 # print(argv)
 ## END debug
 
+fc_params <- argv$params[["params_tool"]]
+
+## add isPairedEnd flag if required
+PE_flags <- c("requireBothEndsMapped",
+              "countChimericFragments",
+              "checkFragLength",
+              "minFragLength",
+              "maxFragLength")
+
+if(any(names(fc_params) %in% PE_flags) & argv$params[['library_type']] == "paired") {
+	fc_params <- c(fc_params,
+				   list(isPairedEnd = TRUE,
+						checkFragLength  = TRUE,
+						requireBothEndsMapped = TRUE)
+	)
+}
+
 runFeatureCounts(
                  peaks = argv$input[['bedfile']],
                  bam_files =  argv$input[['bamfile']],
@@ -94,5 +110,5 @@ runFeatureCounts(
                  tempDir = dirname(argv$output[["outfile"]]),
                  blacklisted = NULL,
                  n.cores = argv$params[["threads"]],
-                 argv$params[["params_tool"]]
+                 fc_args = fc_params
 )
