@@ -108,6 +108,73 @@ setMethod("AnnotateRanges",signature("GRanges","GRangesList"),
 
               if(class(annotation) != 'GRangesList')
                   annotation = GRangesList(lapply(annotation, function(x){values(x)=NULL;x}))
+                
+              annot = .AnnotateRanges(
+                                  region        = region,
+                                  annotation    = annotation,
+                                  ignore.strand = ignore.strand,
+                                  type          = type,
+                                  null.fact     = null.fact,
+                                  collapse.char = collapse.char
+              )
+
+              return(annot)
+
+})
+
+setMethod("AnnotateRanges",signature("GRanges","GRanges"),
+          function(
+              region,
+              annotation,
+              ignore.strand = FALSE,
+              type          = 'precedence',
+              null.fact     = 'None',
+              collapse.char = ':',
+              id.col        = NULL 
+              
+          ){
+              
+              if(! class(region) == 'GRanges')
+                  stop('Ranges to be annotated need to be GRanges')
+              
+              if(! class(annotation) == 'GRanges')
+                  stop('Annotating ranges need to be GRanges')
+              
+              if(!type %in% c('precedence','all'))
+                  stop('type may only be precedence and all')
+              
+              cat('Overlapping...\n')
+              if(any(names(is.null(annotation))))
+                  stop('All annotations need to have names')
+              
+              annot = .AnnotateRanges(
+                                  region        = region,
+                                  annotation    = annotation,
+                                  ignore.strand = ignore.strand,
+                                  type          = type,
+                                  null.fact     = null.fact,
+                                  collapse.char = collapse.char
+              )
+
+              return(annot)
+              
+          })
+
+
+
+
+
+.AnnotateRanges <- function(
+              region,
+              annotation,
+              ignore.strand = FALSE,
+              type          = 'precedence',
+              null.fact     = 'None',
+              collapse.char = ':'
+
+            ){
+              suppressPackageStartupMessages(require(data.table))
+              suppressPackageStartupMessages(require(GenomicRanges))
 
               a = suppressWarnings(data.table(as.matrix(findOverlaps(region, annotation, ignore.strand=ignore.strand))))
               a$id = names(annotation)[a$subjectHits]
@@ -129,8 +196,7 @@ setMethod("AnnotateRanges",signature("GRanges","GRangesList"),
               }
               return(annot)
 
-})
-
+}
 # ---------------------------------------------------------------------------- #
 GTFGetAnnotation = function(
   g,
