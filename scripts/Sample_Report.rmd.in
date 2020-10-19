@@ -402,6 +402,7 @@ ncat(message)
 ```{r Signal_profiles_in_genomic_features, include=TRUE, fig.align='center', eval=analysis_ind['Extract_Signal_Annotation'], results='asis'}
 tab = lstats$Extract_Signal_Annotation$profiles
 genomic_locations = unique(tab$genomic_location)
+width_params = params$width_params
 
 genomic_coordinates = lapply(setNames(genomic_locations,genomic_locations), function(x){
 
