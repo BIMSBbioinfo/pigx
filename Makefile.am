@@ -16,7 +16,7 @@ dist_pkglibexec_scripts_SCRIPTS =		\
   scripts/ChIPQC_Functions.R			\
   scripts/Check_Config.py				\
   scripts/ConstructGenomicWindows.R		\
-  scripts/Deseq_Report.Rmd
+  scripts/Deseq_Report.Rmd				\
   scripts/Extract_Nucleotide_Frequency.R\
   scripts/Extract_Signal_Annotation.R	\
   scripts/Extract_Signal_Peaks.R		\
