@@ -471,6 +471,7 @@ if 'differential_analysis' in set(config.keys()):
 
         DIFF_ANALYSIS_CONSENSENSUS = []
         DIFF_ANALYSIS_COUNTS = []
+        COLDATA_FILE = [os.path.join(PATH_REPORTS,"colData.tsv")]
 
         for diffAnn in DIFF_ANALYSIS_NAMES:
 

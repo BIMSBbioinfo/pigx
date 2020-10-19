@@ -78,3 +78,21 @@ rule merge_counts:
             """
     run:
         RunRscript(input, output, params, log.logfile, 'Merge_Counts.R')
+
+#----------------------------------------------------------------------------- #
+rule translate_sample_sheet_for_report:
+    input: 
+        SAMPLE_SHEET_FILE
+    output: 
+        outfile = os.path.join(PATH_REPORTS, "colData.tsv")
+    run:
+        import csv
+        with open(output.outfile, 'w', newline='') as file:
+            writer = csv.writer(file, delimiter = "\t")
+            header = list(set(SAMPLE_SHEET[0].keys()) - 
+                    set(STRUCTURE_VARIABLES['SAMPLE_SHEET_COLUMN_NAMES']+
+                        [STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME']]))  
+            header =[STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME']] + header        
+            writer.writerow([''] + header)
+            for sample in SAMPLE_NAMES:
+                writer.writerow(lookup('SampleName', sample, ['SampleName'] + header))
