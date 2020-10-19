@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 rule multiqc:
     input:
-        bowtie_output   = expand(os.path.join(PATH_MAPPED_MAIN, "{name}", "{name}" + BAM_SUFFIX), name=NAMES),
+        bowtie_output   = BOWTIE2,
         fastqc_output   = FASTQC
     output:
         os.path.join(PATH_REPORTS, "multiqc.html")
