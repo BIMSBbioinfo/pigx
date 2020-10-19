@@ -46,6 +46,7 @@ localrules: makelinks
 # check settings and sample_sheet validity
 validate_config(config, STRUCTURE_VARIABLES)
 
+SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 SAMPLE_SHEET = read_SAMPLE_SHEET(config)
 # ---------------------------------------------------------------------------- #
 SCRIPT_PATH        = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
