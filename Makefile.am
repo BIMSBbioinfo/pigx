@@ -70,6 +70,8 @@ TESTS = \
 EXTRA_DIST =												    \
   Tests/sample_sheet.csv									    \
   Tests/settings.yaml										    \
+  Tests/sample_sheet_DBA.csv									\
+  Tests/settings_DBA.yaml										\
   Tests/genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz	\
   Tests/genome/genome_subset_hg38_chr1_35287632_37056684.fa.gz  \
   Tests/genome/mm_chr19.gtf									    \
