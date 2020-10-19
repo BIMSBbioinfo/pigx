@@ -69,6 +69,7 @@ rule feature_counting:
         threads   = config['execution']['rules']['feature_counting']['threads'],
         name = "{analysis}", 
         params_tool  = PARAMS['feature_counting'],
+        library_type = lambda wc: get_library_type(wc.name),
         scriptdir = SCRIPT_PATH,
         Rscript   = SOFTWARE['Rscript']['executable']
     log:
