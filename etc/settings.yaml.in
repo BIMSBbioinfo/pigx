@@ -18,6 +18,12 @@ general:
     ChIP
   assembly:
   spikein_name:
+  # The "organism" field is needed for GO term analysis in the 
+  # differential analysis report. Leave it empty if not interested 
+  # in GO analysis.  Otherwise provide a string with the initial 
+  # of genus and the species name (e.g. hsapiens, mmusculus,
+  # dmelanogaster, celegans)
+  # organism: 'mmusculus'
   params:
     # adjust export of bigwig coverage tracks
     export_bigwig:
@@ -65,6 +71,9 @@ general:
         discard_chrM: 'no'
         # analyse only longest chr for speeding up
         use_longest_chr: 'yes'
+    feature_counting:
+        countMultiMappingReads: 'no'
+        minMQS: 20
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~ANALYSIS~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section needs to be adjusted to the planned analysis.   #
