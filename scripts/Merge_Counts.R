@@ -16,7 +16,7 @@ mergeFeatureCounts <- function(countFiles, outFile, statFile) {
 
     fc <- lapply(countFiles,readRDS)
 
-    names(fc) <- sapply(fc, function(x) x$targets)
+    names(fc) <- gsub(".sorted.bam","",sapply(fc, function(x) x$targets))
 
     counts <- data.frame(sapply(fc,function(x) x$counts),row.names = rownames(fc[[1]]$counts))
 
