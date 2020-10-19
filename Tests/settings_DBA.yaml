@@ -10,6 +10,11 @@ locations:
 general:
   assembly: mm9
   spikein_name: hg38
+  # The "organism" field is needed for GO term analysis. Leave it empty
+  # if not interested in GO analysis.  Otherwise provide a string with
+  # the initial of genus and the species name (e.g. hsapiens, mmusculus,
+  # dmelanogaster, celegans)
+  organism: 'mmusculus'
   params:
     export_bigwig:
         extend: 200
