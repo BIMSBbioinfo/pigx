@@ -30,6 +30,7 @@ general:
     feature_counting:
         minFragLength: 50
         maxFragLength: 600
+        countChimericFragments: ''
 
 execution:
   submit-to-cluster: no
@@ -154,6 +155,7 @@ differential_analysis:
             - Group2
         Control:
             - Group3
+        Covariates: ''
         Peakset: # choose peaks to define consensus peak set
             - ChIP_IDR
             - Peaks6
@@ -162,6 +164,7 @@ differential_analysis:
             feature_counting:
                 minFragLength: 50
                 maxFragLength: 150
+
     Analysis2:
         Case:
             - Group1 
@@ -169,6 +172,7 @@ differential_analysis:
         Control:
             - Group3
         Peakset: # if no peaks given call joint peaks for given samples
+
     Analysis3:
         Case:
             - Group1 
