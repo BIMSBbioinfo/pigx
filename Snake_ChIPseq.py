@@ -132,8 +132,8 @@ if ANALYSIS == 'ATAC':
     SHIFT_WINDOW = 2000
     DISCARD_CHRM = 'yes'
     ANALYSIS_MODE = "ATAC"
-    
-    
+
+
 
 # ---------------------------------------------------------------------------- #
 # ACCESSORY VARIABLES
@@ -279,7 +279,7 @@ targets['trimming'] = {
 BOWTIE2         = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
     "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=SAMPLE_NAMES)
-    
+
 BAMFILES_LIST.append(BOWTIE2)
 
 BOWTIE2_STATS   = [os.path.join(PATH_RDS, "BowtieLog.rds")]
@@ -290,10 +290,10 @@ FASTQC          = [FASTQC_DICT[i]['fastqc'] for i in list(FASTQC_DICT.keys())]
 MULTIQC         = [os.path.join(PATH_REPORTS, "multiqc.html")]
 ChIPQC          = expand(
     os.path.join(
-        PATH_RDS_CHIPQC, 
-        GENOME_TYPES['Main'], 
-        GENOME_HASH['Main']['genome_name'], 
-        "{name}_ChIPQC.rds"), 
+        PATH_RDS_CHIPQC,
+        GENOME_TYPES['Main'],
+        GENOME_HASH['Main']['genome_name'],
+        "{name}_ChIPQC.rds"),
     name=SAMPLE_NAMES)
 BW              = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
@@ -475,19 +475,19 @@ if 'differential_analysis' in set(config.keys()):
         DIFF_ANALYSIS_CONSENSENSUS = []
         DIFF_ANALYSIS_COUNTS = []
         COLDATA_FILE = [os.path.join(PATH_REPORTS,"colData.tsv")]
-	REPORT_DIFF_ANALYSIS = []
+        REPORT_DIFF_ANALYSIS = []
 
         for diffAnn in DIFF_ANALYSIS_NAMES:
 
             diffAnnDict = config['differential_analysis'][diffAnn]
 
-            # if no peaks given call joint peaks for given samples  
+            # if no peaks given call joint peaks for given samples
             if ( not 'Peakset' in diffAnnDict ) or ( not diffAnnDict['Peakset']):
-                DIFF_ANALYSIS_CONSENSENSUS += [ 
+                DIFF_ANALYSIS_CONSENSENSUS += [
                         os.path.join(PATH_PEAK,  diffAnn, diffAnn + "_peaks.narrowPeak"),
                         os.path.join(PATH_PEAK,  diffAnn, diffAnn + "_qsort.bed" )
                 ]
-                ## TODO find less hacky way to add to peak dict 
+                ## TODO find less hacky way to add to peak dict
                 samps = [lookup(
                             STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME'],
                             sample,
@@ -501,25 +501,25 @@ if 'differential_analysis' in set(config.keys()):
             else:
                 DIFF_ANALYSIS_CONSENSENSUS += expand(os.path.join(PATH_RDS_FEATURE,'{name}_FeatureCombination.{type}'),
                      name = diffAnn, type = ['rds','txt','bed'])
-                
+
                 if not 'feature_combination' in set(config.keys()):
                     include: os.path.join(RULES_PATH, 'Feature_Combination.py')
-                    config.update({'feature_combination':dict()}) 
-                    ## TODO find less hacky way to add to feature_combination dict 
+                    config.update({'feature_combination':dict()})
+                    ## TODO find less hacky way to add to feature_combination dict
                 config['feature_combination'].update(
                         { diffAnn : diffAnnDict['Peakset']})
-        
-            ## define count matrix 
+
+            ## define count matrix
             DIFF_ANALYSIS_COUNTS += expand(os.path.join(PATH_REPORTS,'{name}','{name}_FeatureCounts.tsv'), name = diffAnn)
 
             REPORT_DIFF_ANALYSIS += expand(os.path.join(PATH_REPORTS,'{name}','{name}_DeseqReport.html'), name = diffAnn)
 
         targets['differential-analysis'] = {
             'description': "Identify peaks with differential read occupancy.",
-            'files': 
-            DIFF_ANALYSIS_CONSENSENSUS + 
-            DIFF_ANALYSIS_COUNTS + 
-            COLDATA_FILE + 
+            'files':
+            DIFF_ANALYSIS_CONSENSENSUS +
+            DIFF_ANALYSIS_COUNTS +
+            COLDATA_FILE +
             REPORT_DIFF_ANALYSIS
             }
 
