@@ -92,7 +92,7 @@ ANALYSIS     = config['general']['analysis'].upper()
 
 # Sample name definition
 PEAK_NAMES   = []
-NAMES = [line['SampleName'] for line in SAMPLE_SHEET]
+SAMPLE_NAMES = [line['SampleName'] for line in SAMPLE_SHEET]
 
 # Directory structure definition
 OUTPUT_DIR      = config['locations']['output-dir']
@@ -181,7 +181,7 @@ PATH_MAPPED_MAIN = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'])
 # due to the iditotic namig scheme in FASTQC the next lines construct
 # FASTQC output files
 FASTQC_DICT = {}
-for i in NAMES:
+for i in SAMPLE_NAMES:
     for fqfile in lookup('SampleName',i,['Read','Read2']):
         if not fqfile == '':
             prefix  = fqfile
@@ -196,7 +196,7 @@ for i in NAMES:
 # Trim Galore output files
 TRIM_GALORE_DICT = {}
 TRIM_GALORE_FILES = {}
-for name in NAMES:
+for name in SAMPLE_NAMES:
     TRIM_GALORE_DICT[name] = get_trimming_dict(name)
     TRIM_GALORE_FILES[name] = flatten([TRIM_GALORE_DICT[name][rep]['trimmed'] for rep in TRIM_GALORE_DICT[name].keys()])
 
@@ -278,7 +278,7 @@ targets['trimming'] = {
 # maps the reads to the main genome
 BOWTIE2         = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
-    "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES)
+    "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=SAMPLE_NAMES)
     
 BAMFILES_LIST.append(BOWTIE2)
 
@@ -294,12 +294,12 @@ ChIPQC          = expand(
         GENOME_TYPES['Main'], 
         GENOME_HASH['Main']['genome_name'], 
         "{name}_ChIPQC.rds"), 
-    name=NAMES)
+    name=SAMPLE_NAMES)
 BW              = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
-    "{name}", "{name}.bw"),  name=NAMES)
-LINKS           = expand(
-    os.path.join(PATH_BW, GENOME_TYPES['Main'], "{ex_name}.bw"),  ex_name=NAMES)
+    "{name}", "{name}.bw"),  name=SAMPLE_NAMES)
+BW_LINKS           = expand(
+    os.path.join(PATH_BW, GENOME_TYPES['Main'], "{ex_name}.bw"),  ex_name=SAMPLE_NAMES)
 
 
 
@@ -312,7 +312,7 @@ targets['mapping'] = {
 targets['export-bw'] = {
         'description': "Take the bowtie2 mapping results in BAM format and create bigWig Tracks.",
         'files':
-            BW + LINKS
+            BW + BW_LINKS
 }
 
 targets['multiqc'] = {
@@ -356,7 +356,7 @@ if 'spikein-file' in set(config['locations'].keys()):
         targets['spike-in'] = {
             'description' : 'map reads to the spike-in genome and calculate normalization factors',
             'files':
-                SPIKE_IN_RULES + BW + LINKS
+                SPIKE_IN_RULES + BW + BW_LINKS
         }
 
 
@@ -377,7 +377,7 @@ include: os.path.join(RULES_PATH, 'Extract_Signal_Annotation.py')
 
 LINK_ANNOTATION           = [os.path.join(PATH_ANNOTATION, 'GTF_Link.gtf')]
 PREPARE_ANNOTATION        = [os.path.join(PATH_ANNOTATION, 'Processed_Annotation.rds')]
-EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=NAMES)
+EXTRACT_SIGNAL_ANNOTATION = expand(os.path.join(PATH_RDS_TEMP,'{name}','{name}.Extract_Signal_Annotation.rds'), name=SAMPLE_NAMES)
 
 # ---------------------------------------------------------------------------- #
 # does the chipqc
