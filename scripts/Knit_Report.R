@@ -27,15 +27,8 @@ argv = Parse_Arguments('Knit_Report')
 #' @examples
 Knit_Report = function(
     report_template = NULL,
-    analysis_path   = NULL,
-    analysis_names  = NULL,
-    analysis_mode   = NULL,
-    report_chunks   = NULL,
-    script_path     = NULL,
-    width_params    = NULL,
-    infile,
+    report_params = NULL,
     outfile,
-    logo,
     selfContained = TRUE,
     quiet         = FALSE
 ){
@@ -60,13 +53,7 @@ Knit_Report = function(
             number_sections = TRUE
         ),
         output_options = list(self_contained = selfContained),
-        params = list(analysis_path  = analysis_path,
-                      analysis_names = analysis_names,
-                      report_chunks  = report_chunks,
-                      analysis_mode   = analysis_mode,
-                      script_path    = script_path,
-                      infile         = infile,
-                      logo           = logo),
+        params = report_params,
         quiet = quiet
     )
 
@@ -77,16 +64,23 @@ Knit_Report = function(
 
 
 # ---------------------------------------------------------------------------- #
+## check wether all required report params are given 
+defined_params <- knitr::knit_params(readLines(argv$params[['report_template']]),
+                                 evaluate = TRUE)
+
+given_params <- names(defined_params) %in% names(c(argv[["params"]],argv[["input"]]))
+if( !all(given_params ))  {
+      warning("Missing values for parameters: ",
+                        paste(names(defined_params)[!given_params],collapse = ", "))
+}
+report_params <- c(argv[["params"]],argv[["input"]])[names(c(argv[["params"]],argv[["input"]])) %in% names(defined_params)]
+
+print(report_params)
+
+# ---------------------------------------------------------------------------- #
 Knit_Report(
     report_template = argv$params[['report_template']],
-    analysis_path   = argv$params[['analysis_path']],
-    analysis_names  = argv$params[['analysis_names']],
-    analysis_mode   = argv$params[['analysis_mode']],
-    report_chunks   = argv$params[['report_chunks']],
-    script_path     = argv$params[['script_path']],
-    width_params    = argv$params[['width_params']],
-    logo            = argv$params[['logo']],
-    infile          = argv$input[['infile']],
+    report_params   = report_params,
     outfile         = argv$output[['outfile']]
 )
 
