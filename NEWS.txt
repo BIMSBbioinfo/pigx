@@ -1,6 +1,12 @@
 
 # --------------------------------------------------------------------- #
 # DONE
+201910
+[*]. Add rule for FeatureCombination.rds -> txt
+    - export directly in function call
+[*]. Configure the pipeline for differential peak calling - ask Alex
+
+
 181603
 [*]. Add peak QC
 [*]. Run multiqc
@@ -91,7 +97,6 @@ Initial commit
 []. Feature combination:
     - construct default feature combination for all peaks
     
-[]. Add rule for FeatureCombination.rds -> txt
 
 
     
@@ -100,7 +105,6 @@ Initial commit
 []. Feature combination singnal extraction 200
 []. QC for Peaks - ask alex for Peak QC rule
 []. Report with figures
-[]. Configure the pipeline for differential peak calling - ask Alex
 
 
 
