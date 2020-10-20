@@ -14,3 +14,11 @@ then
   echo "ERROR: the pipeline failed with an unspecified error"
   exit 1
 fi
+
+${builddir}/pigx-chipseq -s ${srcdir}/Tests/settings_DBA.yaml ${srcdir}/Tests/sample_sheet_DBA.csv
+
+if ! test -f "${srcdir}/Tests/out/Reports/Analysis1/Analysis1_DeseqReport.html"
+then
+  echo "ERROR: the pipeline failed at the differential analysis"
+  exit 1
+fi
