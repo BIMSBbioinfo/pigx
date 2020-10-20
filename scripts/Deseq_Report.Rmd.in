@@ -172,7 +172,7 @@ countData = read.table(countDataFile, header=TRUE, row.names=1, sep='\t', string
 colData$group = colData[[groupCol]] 
 
 #subset colData and countData - only keep case and control samples
-colData <- colData[colData$group %in% c(caseSamples, controlSamples),]
+colData <- subset(colData, subset =  colData$group %in% c(caseSamples, controlSamples))
 countData <- subset(countData, select = rownames(colData))
 
 #split samples as case/control for deseq
@@ -195,6 +195,11 @@ Reads were counted over the given consensus peaks using featureCounts from the [
 
  - **Raw Count Data File**: 
  `r countDataFile`
+ 
+ ## Peak to Gene Assignment
+
+Peaks are overlapped with respective genomic features of genes (TSS+-1kb, exon, intron, tts), thereby genes get assigned to peaks, with all overlapping genes being assigned to the peak. 
+
 
 ```{r run_deseq2}
 
@@ -277,13 +282,14 @@ write.table(x = DE,
             file = DEresultsFile, 
             quote = FALSE, sep = '\t')
 
-DP <- DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 0,]
+DP <- DE[!is.na(DE$padj) & DE$padj < 0.1,]
 if(nrow(DP) > 0) {
   DEPeakFile <- file.path(workdir, paste0(prefix, '.deseq_peaks.bed')) 
   DP$name <- rownames(DP)
   write.table(x =  DP[,c("seqnames","start","end","name")], 
               file = DEPeakFile, 
-              quote = FALSE, sep = '\t')
+              quote = FALSE, sep = '\t',
+              col.names = FALSE,row.names = FALSE)
 }
 
 ```
@@ -546,7 +552,7 @@ invisible(dev.off())
 This interactive plot lets you see peaks' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest. Notice that only top 1000 peaks that have an adjusted p-value less than 0.1 and absolute log2 fold change value of greater than 1 are plotted. 
 
 ```{r plot_interactive_boxplots}
-select <- rownames(DEsubset)
+select <- rownames(DEsubset[!is.na(DEsubset$padj) & DEsubset$padj < 0.1,])
 if(length(select) > 1) {
   expressionLevels <- reshape2::melt(norm.counts[select,])
   colnames(expressionLevels) <- c('geneId', 'sampleName', 'expressionLevel')
