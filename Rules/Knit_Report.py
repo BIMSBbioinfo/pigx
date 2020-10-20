@@ -5,7 +5,7 @@ rule knit_report:
         output:
             outfile    = REPORT
         params:
-            report_template = REPORT_TEMPLATE,
+            report_template = REPORT_QC_TEMPLATE,
             analysis_path   = PATH_RDS,
             # analysis names are parts of the analysis that are executed
             analysis_names  = ANALISYS_NAMES,
