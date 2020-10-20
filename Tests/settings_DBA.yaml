@@ -1,10 +1,10 @@
 locations:
-  input-dir: sample_data/reads/
+  input-dir: in/
   output-dir: out/
-  genome-file: sample_data/genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz
+  genome-file: genome/genome_subset_mm9_chr1_13590945_17791527.fa.gz
   index-dir:
-  gff-file: sample_data/genome/mm_chr19.gtf
-  spikein-file: sample_data/genome/genome_subset_hg38_chr1_35287632_37056684.fa.gz
+  gff-file: genome/mm_chr19.gtf
+  spikein-file: genome/genome_subset_hg38_chr1_35287632_37056684.fa.gz
 
 
 general:
