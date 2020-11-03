@@ -2,7 +2,7 @@
 rule bam2bigWig:
     input:
         # bam files
-        bamfile = os.path.join(PATH_MAPPED, "{genome_type}", "{name}","{name}" + BAM_SUFFIX),
+        bamfile = os.path.join(PATH_MAPPED, "{genome_type}", "{name}","{name}.sorted.bam"),
         # chromosome lengths
         chrlen  = lambda wc: GENOME_HASH[wc.genome_type]['genome_prefix'] + '.chrlen.txt',
         # bowtie mapping stats

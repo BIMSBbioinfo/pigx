@@ -34,10 +34,6 @@ general:
         # set k if you want to report at most k alignments per read
         #k: 4
         N: 0
-    # quality filtering after alignment
-    bam_filter:
-        mapq: 0
-        deduplicate: no
     # adjust sensitivity in idr
     idr:
         idr-threshold: 0.1
@@ -259,9 +255,6 @@ execution:
       memory:    16G
     prepare_annotation:
       threads:   1
-      memory:    16G
-    samtools_deduplicate:
-      threads:   4
       memory:    16G
     samtools_index:
       threads:   1

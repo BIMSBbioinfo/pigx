@@ -144,7 +144,11 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
 
             if 'peak_calling' in set(config.keys()):
                 samps = samps + list(config['peak_calling'].keys())
-
+            
+            ## TODO: check that there are no duplicated samples given
+            # if len(samps) != len(set(samps)):
+            #     message = message + "\tfeature_combination contains samples defined in both idr and peak calling"
+                 
             samps = set(samps)
 
             for key in feature_keys:
@@ -361,10 +365,6 @@ def check_general_section(general_dict, structure_variables, message):
     # checks whether bigwig extend is a number
     if not (is_number(general_dict['params']['export_bigwig']['extend'])):
         message = message + "GENERAL PARAMS: export_bigwig: extend must be a number\n"
-
-    # checks whether mapq is a number
-    if not (is_number(general_dict['params']['bam_filter']['mapq'])):
-        message = message + "GENERAL PARAMS: bam_filter: mapq must be a number\n"
 
     # checks whether idr-threshold is a number
     if not (is_number(general_dict['params']['idr']['idr-threshold'])):

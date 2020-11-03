@@ -1,8 +1,8 @@
 # ----------------------------------------------------------------------------- #
 rule chipqc:
     input:
-        bamfile              = os.path.join(PATH_MAPPED, '{genome_type}', "{name}", "{name}" + BAM_SUFFIX),
-        index                = os.path.join(PATH_MAPPED, '{genome_type}', "{name}", "{name}" + BAM_SUFFIX + ".bai"),
+        bamfile              = os.path.join(PATH_MAPPED, '{genome_type}', "{name}", "{name}.sorted.bam"),
+        index                = os.path.join(PATH_MAPPED, '{genome_type}', "{name}", "{name}.sorted.bam.bai"),
         logfile              = os.path.join(PATH_RDS, "BowtieLog.rds"),
         nucleotide_frequency = os.path.join(PATH_INDEX, '{genome_type}','{genome}.NucleotideFrequency.GRanges.rds'),
         annotation           = rules.prepare_annotation.output.outfile

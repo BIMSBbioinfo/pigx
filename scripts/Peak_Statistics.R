@@ -17,7 +17,6 @@ Peak_Statistics = function(
   outfile      = NULL,
   scriptdir    = NULL,
   path_mapped  = NULL,
-  bam_suffix   = NULL,
   path_peak    = NULL,
   peaks_resize = NULL,
   ncores       = 8
@@ -55,10 +54,10 @@ Peak_Statistics = function(
             dplyr::filter(!sapply(bam_name, is.null))           %>%
             unnest(bam_name)
         })) %>%
-    merge(.list_BamFiles(path_mapped,bam_suffix), by = 'bam_name') %>%
+    merge(.list_BamFiles(path_mapped), by = 'bam_name') %>%
     merge(.list_qsortPeaks(path_peak), by.x = 'sample_name', by.y='chip_name')  %>%
     mutate(sample_id = paste(sample_name, bam_name, sep='_'))                   %>%
-    mutate(bw_files  = str_replace(bam_file,bam_suffix,'.bw'))                 %>%
+    mutate(bw_files  = str_replace(bam_file,'sorted.bam','bw'))                 %>%
     as.data.frame()
     peaks_sheet$library = unlist(lib_type_dict[peaks_sheet$bam_name])
 
@@ -98,7 +97,6 @@ Peak_Statistics = function(
       })
     cnts   = cnts[sapply(cnts, function(x)!is.null(x))]
     cntmat = as.data.frame(do.call(cbind, lapply(cnts, function(x)assays(x)[[1]]))) %>%
-      setNames( .,  str_replace(names(.),bam_suffix,'') ) %>%
       mutate(sample_name = names(peaks)) %>%
       merge(x=peaks_sheet) %>%
       mutate(peak_number = elementNROWS(peaks)[sample_name]) %>%
@@ -170,7 +168,6 @@ Peak_Statistics(
   lib_type_dict= argv$params[['lib_type_dict']],
   scriptdir    = argv$params[['scriptdir']],
   path_mapped  = argv$params[['path_mapped']],
-  bam_suffix   = argv$params[['bam_suffix']],
   path_peak    = argv$params[['path_peak']],
   peaks_resize = argv$params[['peaks_resize']],
   ncores       = argv$params[['threads']]

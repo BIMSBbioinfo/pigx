@@ -254,9 +254,6 @@ general:
         # set k if you want to report at most k alignments per read
         k: 4
         N: 0
-    bam_filter:
-        mapq: 0
-        deduplicate: no
     idr:
         idr-threshold: 0.1
     macs2:

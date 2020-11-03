@@ -224,39 +224,21 @@ rule bowtie2:
         shell(command)
 
 #----------------------------------------------------------------------------- #
-rule samtools_quality_filter:
+# TODO: once samtools 1.10 is available via guix:
+#   -   optionally tag optical duplicates '-d 100'
+#   -   save stats to file with '-f'
+rule samtools_markduplicate:
     input:
         os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.bam")
     output:
-        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.q{mapq,\d+}.bam")
+        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.sorted.bam")
     params:
-        mapq    = config['general']['params']['bam_filter']['mapq'],
-        threads  = config['execution']['rules']['samtools_quality_filter']['threads'],
+        threads  = config['execution']['rules']['samtools_sort']['threads'],
         samtools = SOFTWARE['samtools']['executable']
     log:
-        logfile = os.path.join(PATH_LOG, "{name}","{name}.{genome_type}_genome.samtools_quality_filter_{mapq}.log")
+        logfile = os.path.join(PATH_LOG, "{name}","{name}.{genome_type}_genome.samtools_markdup.log")
     message:"""
-            Filter reads by mapping quality:
-                input: {input}
-                output: {output}
-        """
-    shell: """
-        {params.samtools} view -q {params.mapq} -F4 --threads {params.threads} -o {output} {input} 2> {log}
-    """
-
-#----------------------------------------------------------------------------- #
-rule samtools_deduplicate:
-    input:
-        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.bam")
-    output:
-        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.deduplicated.sorted.bam")
-    params:
-        threads  = config['execution']['rules']['samtools_deduplicate']['threads'],
-        samtools = SOFTWARE['samtools']['executable']
-    log:
-        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.{genome_type}_genome.samtools_deduplicate.log")
-    message:"""
-            Deduplicating mapped reads:
+            Marking duplicate reads:
                 input: {input}
                 output: {output}
         """
@@ -264,7 +246,7 @@ rule samtools_deduplicate:
         {params.samtools} sort --threads {params.threads} -n {input} 2> {log}| \
         {params.samtools} fixmate --threads {params.threads}  -m - - 2> {log}| \
         {params.samtools} sort --threads {params.threads}  - 2> {log}| \
-        {params.samtools} markdup --threads {params.threads}  -r -s - {output} \
+        {params.samtools} markdup --threads {params.threads} -S -s - {output} \
         2> {log}
     """
 
@@ -293,9 +275,9 @@ rule samtools_sort:
 # ----------------------------------------------------------------------------- #
 rule samtools_index:
     input:
-        os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}" + BAM_SUFFIX )
+        os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.bam" )
     output:
-        os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}" + BAM_SUFFIX + ".bai")
+        os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.bam.bai")
     wildcard_constraints:
         genome_type = GENOME_TYPES_CONSTRAINT
     params:

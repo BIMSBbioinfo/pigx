@@ -234,25 +234,6 @@ else:
 
 
 # ---------------------------------------------------------------------------- #
-# check wether quality filtering should be performed, if yes
-# change the suffix of the output bam file
-
-BAM_SUFFIX = ''
-
-if PARAMS['bam_filter']['mapq']:
-    if PARAMS['bam_filter']['mapq'] > 0:
-        BAM_SUFFIX = '.q{}'.format(PARAMS['bam_filter']['mapq'])
-        #BAM_SUFFIX = '.qfilter'
-
-# check wether deduplication should be performed, if yes
-# change the suffix of the output bam file
-if PARAMS['bam_filter']['deduplicate']:
-    BAM_SUFFIX = BAM_SUFFIX + ".deduplicated.sorted.bam"
-else:
-    BAM_SUFFIX = BAM_SUFFIX + ".sorted.bam"
-
-
-# ---------------------------------------------------------------------------- #
 # Inline definition and description of targets
 targets = {
     # rule to print all rule descriptions
@@ -278,7 +259,7 @@ targets['trimming'] = {
 # maps the reads to the main genome
 BOWTIE2         = expand(
     os.path.join(PATH_MAPPED, GENOME_TYPES['Main'],
-    "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=SAMPLE_NAMES)
+    "{name}", "{name}.sorted.bam.bai"), name=SAMPLE_NAMES)
 
 BAMFILES_LIST.append(BOWTIE2)
 
@@ -345,7 +326,7 @@ if 'spikein-file' in set(config['locations'].keys()):
         generate_genome_files(GENOME_SPIKEIN, PATH_INDEX, GENOME_TYPES['Spike-in'], GENOME_NAME_SPIKEIN)
 
         # maps the reads to the spike in genome
-        BOWTIE2_SPIKEIN  = expand(os.path.join(PATH_MAPPED, GENOME_TYPES['Spike-in'], "{name}", "{name}" + BAM_SUFFIX + ".bai"), name=NAMES_SPIKEIN)
+        BOWTIE2_SPIKEIN  = expand(os.path.join(PATH_MAPPED, GENOME_TYPES['Spike-in'], "{name}", "{name}.sorted.bam.bai"), name=NAMES_SPIKEIN)
 
         BAMFILES_LIST.append(BOWTIE2_SPIKEIN)
         SPIKE_IN_RULES = [
