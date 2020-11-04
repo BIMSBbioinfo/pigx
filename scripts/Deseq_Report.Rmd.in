@@ -610,15 +610,25 @@ cat("\n The following tables list GO terms for up- and down-regulated peaks GO t
 
 ```{r goAnalysis, eval = runGO}
 
-geneOrPeakUp <-  with(
-  DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 0, ],
-  if(annotGene != "None") unique(unlist(strsplit(annotGene,":")))
-  else sprintf("%s:%s:%s",seqnames,start,end))
+if(filterUP(DE, 0, 0.1) > 0) {
 
-geneOrPeakDown <- with(
-  DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < 0, ],
-  if(annotGene != "None") unique(unlist(strsplit(annotGene,":")))
-  else sprintf("%s:%s:%s",seqnames,start,end))
+    geneOrPeakUp <-  with(
+                          DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange > 0, ],
+                          if(annotGene != "None") unique(unlist(strsplit(annotGene,":")))
+                          else sprintf("%s:%s:%s",seqnames,start,end))
+} else {
+    geneOrPeakUp <- ""
+}
+
+if(filterDOWN(DE, 0, 0.1) > 0) {
+
+    geneOrPeakDown <- with(
+                           DE[!is.na(DE$padj) & DE$padj < 0.1 & DE$log2FoldChange < 0, ],
+                           if(annotGene != "None") unique(unlist(strsplit(annotGene,":")))
+                           else sprintf("%s:%s:%s",seqnames,start,end))
+} else {
+    geneOrPeakDown <- ""
+} 
 
 genesBG.region <-  with(
   DE,
