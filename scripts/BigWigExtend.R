@@ -1,20 +1,22 @@
 # ---------------------------------------------------------------------------- #
 options = commandArgs(trailingOnly=TRUE)
 source(file.path(options[2],'/Argument_Parser.R'))
-argv = Parse_Arguments('Extend_Regions')
+argv = Parse_Arguments('Extend_Regions', parseFlags = TRUE)
 
 # ---------------------------------------------------------------------------- #
 Extend_Regions = function(
     input_bamfile,
     input_stats,
     outpath,
-    extend       = NULL,
-    bam_name     = NULL,
-    scale_index  = FALSE,
-    scale_factor = 1e6,
-    chunk_size   = 1e7,
-    library      = 'single',
-    spikein      = 'No'
+    extend          = NULL,
+    bam_name        = NULL,
+    scale_index     = FALSE,
+    scale_factor    = 1e6,
+    chunk_size      = 1e7,
+    library_type    = 'single',
+    spikein         = 'No',
+    deduplicate     = FALSE,
+    minmapq         = 0
 ){
 
     # ------------------------------------------------------------------------ #
@@ -33,11 +35,11 @@ Extend_Regions = function(
         stop('Extend_Regions: input file does not exist')
 
     # ------------------------------------------------------------------------ #
-    if(library == 'paired'){
-        param   = ScanBamParam(flag=scanBamFlag(isPaired = TRUE, isProperPair=TRUE))
-    }else{
-        param   = ScanBamParam(flag=scanBamFlag(isPaired = FALSE))
-    }
+    param   = ScanBamParam(flag=scanBamFlag(isPaired = (library_type == 'paired'),
+                                            isProperPair = library_type == 'paired',
+                                            isDuplicate = deduplicate),
+                           mapqFilter = minmapq)
+
     # ------------------------------------------------------------------------ #
     bamfile = BamFile(input_bamfile, yieldSize=chunk_size)
     open(bamfile)
@@ -80,12 +82,14 @@ Extend_Regions = function(
 
 # ---------------------------------------------------------------------------- #
 Extend_Regions(
-  input_bamfile = argv$input[['bamfile']],
-  input_stats   = argv$input[['stats']],
-  outpath       = argv$output[['outfile']],
-  extend        = argv$params[['extend']],
-  bam_name      = argv$params[['sample_name']],
-  scale_index   = argv$params[['scale']],
-  library       = argv$params[['library']],
-  spikein       = argv$params[['spikein']]
+  input_bamfile   = argv$input[['bamfile']],
+  input_stats     = argv$input[['stats']],
+  outpath         = argv$output[['outfile']],
+  extend          = argv$params[['extend']],
+  bam_name        = argv$params[['sample_name']],
+  scale_index     = argv$params[['scale']],
+  library_type    = argv$params[['library_type']],
+  spikein         = argv$params[['spikein']],
+  minmapq         = argv$params[['minmapq']],
+  deduplicate     = argv$params[['deduplicate']]
 )

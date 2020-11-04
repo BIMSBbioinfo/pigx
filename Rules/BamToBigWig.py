@@ -10,12 +10,14 @@ rule bam2bigWig:
     output:
         outfile = os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.bw")
     params:
-        extend      = PARAMS['export_bigwig']['extend'],
-        scale       = PARAMS['export_bigwig']['scale_bw'],
-        Rscript     = SOFTWARE['Rscript']['executable'],
-        library     = lambda wc: get_library_type(wc.name),
-        spikein     = lambda wc: get_spikein_information(wc.name),
-        sample_name = lambda wc: wc.name
+        extend          = PARAMS['export_bigwig']['extend'],
+        scale           = PARAMS['export_bigwig']['scale_bw'],
+        deduplicate     = PARAMS['export_bigwig']['deduplicate'],
+        minmapq         = PARAMS['export_bigwig']['minmapq'],
+        Rscript         = SOFTWARE['Rscript']['executable'],
+        library_type    = lambda wc: get_library_type(wc.name),
+        spikein         = lambda wc: get_spikein_information(wc.name),
+        sample_name     = lambda wc: wc.name
     log:
         logfile = os.path.join(PATH_LOG, "{name}", '{name}.{genome_type}_genome.bam2bigWig.log')
     message:"""

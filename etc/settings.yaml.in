@@ -29,6 +29,10 @@ general:
     export_bigwig:
         extend: 200
         scale_bw: 'yes'
+        # removing duplicate reads is suggested for ATACseq,
+        # should be omitted for CHIPseq
+        deduplicate: 'no'
+        minmapq: 0
     # adjust any bowtie2 parameters for mapping
     bowtie2:
         # set k if you want to report at most k alignments per read
