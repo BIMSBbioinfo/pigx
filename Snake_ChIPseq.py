@@ -459,12 +459,16 @@ if 'differential_analysis' in set(config.keys()):
     DIFF_ANALYSIS_NAMES = config['differential_analysis'].keys()
     if len(DIFF_ANALYSIS_NAMES) > 0:
 
-        include: os.path.join(RULES_PATH, 'Differential_Analysis.py')
 
         DIFF_ANALYSIS_CONSENSENSUS = []
         DIFF_ANALYSIS_COUNTS = []
         COLDATA_FILE = [os.path.join(PATH_REPORTS,"colData.tsv")]
         REPORT_DIFF_ANALYSIS = []
+
+        # wildcard constraint used for genome building and mapping
+        DIFF_ANN_CONSTRAINT = "|".join(list(DIFF_ANALYSIS_NAMES))
+        
+        include: os.path.join(RULES_PATH, 'Differential_Analysis.py')
 
         for diffAnn in DIFF_ANALYSIS_NAMES:
 

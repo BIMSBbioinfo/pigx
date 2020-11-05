@@ -65,6 +65,8 @@ rule feature_counting:
         bamfile = os.path.join(PATH_MAPPED, GENOME_TYPES['Main'], "{name}", "{name}.sorted.bam")
     output:
         outfile  = os.path.join(PATH_RDS_COUNTS,'{analysis}_{name}_FeatureCounts.rds')
+    wildcard_constraints:
+        analysis = DIFF_ANN_CONSTRAINT
     params:
         threads   = config['execution']['rules']['feature_counting']['threads'],
         name = "{analysis}", 
@@ -95,6 +97,8 @@ rule merge_counts:
     output:
         outfile  = os.path.join(PATH_REPORTS,'{analysis}','{analysis}_FeatureCounts.tsv'),
         statfile  = os.path.join(PATH_REPORTS,'{analysis}','{analysis}_FeatureCounts_Stats.tsv')
+    wildcard_constraints:
+        analysis = DIFF_ANN_CONSTRAINT
     params:
         scriptdir = SCRIPT_PATH,
         Rscript   = SOFTWARE['Rscript']['executable']
@@ -135,6 +139,8 @@ rule knit_differential_analysis_report:
         gtfFile       = rules.prepare_annotation.output.outfile
     output:
         outfile    = os.path.join(PATH_REPORTS,'{analysis}','{analysis}_DeseqReport.html')
+    wildcard_constraints:
+        analysis = DIFF_ANN_CONSTRAINT
     params:
         report_template     = REPORT_DA_TEMPLATE,
         peakFile            = lambda wc: get_differential_analysis_bedfile(wc),
