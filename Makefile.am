@@ -81,6 +81,8 @@ EXTRA_DIST =												    \
   Tests/in/Cont.fq.gz										    \
   Tests/in/ChIPpe_R1.fq.gz									    \
   Tests/in/ChIPpe_R2.fq.gz                                      \
+  Tests/in/ChIPpe_var2_R1.fq.gz									\
+  Tests/in/ChIPpe_var2_R2.fq.gz									\
   Tests/in/HEK.fq.gz
 
 clean-local:
