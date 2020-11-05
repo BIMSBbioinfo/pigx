@@ -250,27 +250,6 @@ rule samtools_markduplicate:
         2> {log}
     """
 
-#----------------------------------------------------------------------------- #
-rule samtools_sort:
-    input:
-        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.bam")
-    output:
-        os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{prefix}.sorted.bam")
-    wildcard_constraints:
-        genome_type = GENOME_TYPES_CONSTRAINT
-    params:
-        threads  = config['execution']['rules']['samtools_sort']['threads'],
-        samtools = SOFTWARE['samtools']['executable']
-    log:
-        logfile = os.path.join(PATH_LOG, "{name}","{prefix}.{genome_type}_genome.samtools_sort.log")
-    message:"""
-            Sorting mapped reads:
-                input: {input}
-                output: {output}
-        """
-    shell: """
-        {params.samtools} sort --threads {params.threads} -o {output} {input} 2> {log}
-    """
 
 # ----------------------------------------------------------------------------- #
 rule samtools_index:
