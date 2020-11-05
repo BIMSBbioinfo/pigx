@@ -175,9 +175,45 @@ general:
 #    Feature3:
 #        # define feature based on different analysis types
 #        - ChIP_IDR
-#        - Peaks5
-
-
+# 
+# # ------------------------------------------------------------ #
+# differential_analysis:
+# # to use the differential_analysis feature, 
+# # please add a 'Group' column to your sample sheet. 
+# # These defined Groups are specified here to include all
+# # samples of the given group as Case/Control samples
+#     Analysis1:
+#         Case:
+#             - Group1 
+#             - Group2
+#         Control:
+#             - Group3
+#         Covariates: ''
+#         Peakset: # choose peaks to define consensus peak set
+#             - ChIP_IDR
+#             - Peaks6
+#             - Peaks5
+#         params:
+#             feature_counting:
+#                 minFragLength: 50
+#                 maxFragLength: 150
+#     Analysis2:
+#         Case:
+#             - Group1 
+#             - Group2
+#         Control:
+#             - Group3
+#         Peakset: # if no peaks given call joint peaks for given samples
+#     Analysis3:
+#         Case:
+#             - Group1 
+#             - Group2
+#         Control:
+#             - Group3
+#         params:
+#             macs2:
+#                 nomodel: ''
+#                 extsize: 147
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~EXECUTION~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 ## This section should only be adjusted by advanced users.      #
