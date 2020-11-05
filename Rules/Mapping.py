@@ -269,3 +269,48 @@ rule samtools_index:
     """
     shell:
         "{params.samtools} index {input} 2> {log}"
+
+
+rule samtools_idxstats:
+  input:
+    os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.bam")
+  output:
+    os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.idxstats.txt")
+  wildcard_constraints:
+    genome_type = GENOME_TYPES_CONSTRAINT
+  params:
+    samtools = SOFTWARE['samtools']['executable']
+  log:
+    logfile = os.path.join(PATH_LOG, "{name}","{name}.{genome_type}_genome.samtools_idxstats.log")
+  shell:
+        "{params.samtools} idxstats {input} > {output} 2> {log}"
+
+
+rule samtools_stat:
+  input:
+    os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.bam")
+  output:
+    os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.stats.txt")
+  wildcard_constraints:
+    genome_type = GENOME_TYPES_CONSTRAINT
+  params:
+    samtools = SOFTWARE['samtools']['executable']
+  log:
+    logfile = os.path.join(PATH_LOG, "{name}","{name}.{genome_type}_genome.samtools_stats.log")
+  shell:
+        "{params.samtools} stats {input} > {output} 2> {log}"
+
+
+rule samtools_flagstat:
+  input:
+    os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.bam")
+  output:
+    os.path.join(PATH_MAPPED, "{genome_type}","{name}", "{name}.sorted.flagstat.txt")
+  wildcard_constraints:
+    genome_type = GENOME_TYPES_CONSTRAINT
+  params:
+    samtools = SOFTWARE['samtools']['executable']
+  log:
+    logfile = os.path.join(PATH_LOG, "{name}","{name}.{genome_type}_genome.samtools_flagstat.log")
+  shell:
+        "{params.samtools} flagstat {input} > {output} 2> {log}"
