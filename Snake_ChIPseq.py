@@ -307,7 +307,7 @@ targets['export-bw'] = {
 targets['multiqc'] = {
         'description': "Get multiQC report based on bowtie2 alignments and fastQC reports.",
         'files':
-            FASTQC +  MULTIQC
+            FASTQC +  MULTIQC + BAMSTATS
 }
 
 # defines the rules for spike in quantification
