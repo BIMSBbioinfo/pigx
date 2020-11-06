@@ -4,7 +4,7 @@
 </a>
 </div>
 
-**Copyright 2017-2018: Vedran Franke, Alexander Gosdschan, Ricardo Wurmus.**
+**Copyright 2017-2020: Vedran Franke, Alexander Blume, Ricardo Wurmus.**
 **This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
 -----------
@@ -13,12 +13,17 @@
 
 PiGx ChIPseq (pipelines in genomics for Chromatin Immunoprecipitation
 Sequencing) is an analysis pipeline for preprocessing, peak calling and
-reporting for ChIP sequencing experiments. It is easy to use and produces high
+reporting for ChIP or ATAC sequencing experiments. It is easy to use and produces high
 quality reports. The inputs are reads files from the sequencing experiment, and
 a configuration file that describes the experiment. In addition to quality
 control of the experiment, the pipeline enables multiple peak calling
 analysis and allows the generation of a UCSC track hub in an easily
-configurable manner.
+configurable manner. 
+Starting from *versions >= 0.0.50* the pipeline allows to perform 
+highly customizable differential analysis using DEDeq2 to detect genome regions with 
+differences in occupancy between defined groups.
+
+
 
 ## What does it do
 
@@ -28,6 +33,8 @@ configurable manner.
 - Call peaks for multiple combinations of samples using MACS2
 - Control reproducibility of experiments using IDR
 - Generate a UCSC track hub to view in Genome Browser  
+- *NEW* Highly customizable Differential Analysis
+
 
 ## What does it output
 
@@ -36,6 +43,7 @@ configurable manner.
 - bigwig files
 - narrowPeak files
 - UCSC track hub folder
+- *NEW* Differential Analysis Report
 
 # Installation of the PiGx-ChIPseq Pipeline
 
@@ -89,6 +97,7 @@ installed:
     - genomicranges
     - rsamtools
     - rtracklayer
+    - rsubread
     - s4vectors
     - stringr
     - jsonlite
@@ -98,6 +107,16 @@ installed:
     - ggrepel
     - plotly
     - rmarkdown
+    - ggrepel
+    - deseq2
+    - dt
+    - pheatmap
+    - corrplot
+    - reshape2
+    - scales
+    - crosstalk
+    - gprofiler2
+    - summarizedexperiment
 - python
     - snakemake
     - pyyaml
@@ -199,10 +218,10 @@ The sample sheet offers support for technical replicates, by repeating the sampl
 The quality check will be performed for any input file and replicates will be merged during the mapping. 
 
 
-| SampleName | Read | Read2 |
-|------|-------|--------|
-|ChIPpe| ChIPpe_R1.fq.gz | ChIPpe_R2.fq.gz |
-|ChIPpe| ChIPpe_t2_R1.fq.gz | ChIPpe_t2_R2.fq.gz |
+| SampleName | Read               | Read2              | *Group (optional)* |
+| ------     | -------            | --------           | --------           |
+| ChIPpe     | ChIPpe_R1.fq.gz    | ChIPpe_R2.fq.gz    | Group1             |
+| ChIPpe     | ChIPpe_t2_R1.fq.gz | ChIPpe_t2_R2.fq.gz | Group2             |
 
 ### Settings File
 
@@ -227,6 +246,8 @@ These are settings which apply to all analysis (unless adjusted in single analys
 | item    | required | description |
 |---------|----------|-------------|
 | _assembly_ | yes | version of reference genome (e.g. hg19,mm9, ...) |
+| *spikein_name* | no | version of spike-in genome (e.g. hg19,mm9, ...) |
+| *organism* | no | needed for GO term analysis (e.g. hsapiens, mmusculus, dmelanogaster, celegans) |
 | _params_    | no | list of default parameters for tools and scripts (for tools check respective manual for available parameters) |
 
 #### Execution
@@ -246,24 +267,34 @@ locations:
 
 general:
   assembly: mm9
+  spikein_name: hg38
+  # The "organism" field is needed for GO term analysis. Leave it empty
+  # if not interested in GO analysis.  Otherwise provide a string with
+  # the initial of genus and the species name (e.g. hsapiens, mmusculus,
+  # dmelanogaster, celegans)
+  organism: 'mmusculus'
   params:
     export_bigwig:
         extend: 200
         scale_bw: 'yes'
     bowtie2:
-        # set k if you want to report at most k alignments per read
-        k: 4
         N: 0
+        k: 1
     idr:
         idr-threshold: 0.1
     macs2:
+        #        g: mm
         keep-dup: auto
         q: 0.05
+        nomodel: ''
     extract_signal:
         expand_peak: 200
-        number_of_bins: 50
-    peak_statistics:
-        resize: 500
+        bin_num: 20
+    feature_counting:
+        minFragLength: 50
+        maxFragLength: 600
+        countChimericFragments: ''
+        requireBothEndsMapped: ''
 
 execution:
   submit-to-cluster: no
@@ -287,6 +318,7 @@ The analysis part of the setting file describes the experiment. It has following
 | _idr_ | no | specifies pairs of *peak calling* analysis that are compared to determine the reproducibilty of the general experiment ([see here for details](#optionalidr)) |
 | _hub_ | no | describes the general layout of a UCSC hub that can be created from the processed data and allows the visual inspection of results at a UCSC genome browser ([see here for details](#optional-hub)) |
 | *feature_combination* | no | defines for a list of *peak calling* and/or *idr* analysis the combination of regions shared among this list ([see here for details](#optional-feature-combination)) |
+| *differential_analysis* | no | specifies for a list of groups defined in the sample sheet which samples are used as Case or Control in the Differential Analysis  ([see here for details](#optional-differentialr-analysis)) |
 
 
 The creation of these sections is straight forward considering the following snippets as template. Comments and examples within the snippets provide guidance of what is possible and what to take care of.
@@ -426,6 +458,49 @@ feature_combination:
         - Peaks5
 ```
 
+#### (_optional_) Differential Analysis
+
+To find genomic regions that are differentially bound by a certain chipped protein or that show differential open chomatin patterns, define a differential analysis to compare *Case* and *Control* samples, with optional covariates, using the DESeq2 framework ("Love, M.I., Huber, W. and Anders, S., 2014. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome biology, 15(12), p.550."). Optionally predefined *peak calling* and/or *idr* analysis resultscan be used to specify pre-called features that are combined to regions of interest, but by default a *peak calling* analysis containing all samples of the specifed groups is performed to create the consensus peaks defining the regions of interest. Each analysis can be run with a unique set of parameters for the peak calling and read summarization, however default parameters for all analysis can be defined in the general section of the [settings file](#settings-file). Reads over features are counted using Rsubreads featureCount function, as this allows to finetune the summarization by multiple options explained in the [package's manual](https://www.bioconductor.org/packages/release/bioc/vignettes/Rsubread/inst/doc/SubreadUsersGuide.pdf), please see their publication for more details: "Liao, Y., Smyth, G.K. and Shi, W., 2019. The R package Rsubread is easier, faster, cheaper and better for alignment and quantification of RNA sequencing reads. Nucleic acids research, 47(8), pp.e47-e47.". 
+
+```yaml
+differential_analysis:
+    Analysis1:
+        Case:
+            - Group1 
+            - Group2
+        Control:
+            - Group3
+        # comma separated list of additional co-variates to control for
+        # in differential expression analysis (e.g. batch, age,
+        # temperature, sequencing_technology etc.). Must correspond to a
+        # column field in the sample_sheet.csv file.)    
+        Covariates: ''
+        Peakset: # choose peaks to define consensus peak set
+            - ChIP_IDR
+            - Peaks6
+            - Peaks5
+        params:
+            feature_counting:
+                minFragLength: 50
+                maxFragLength: 150
+    Analysis2:
+        Case:
+            - Group1 
+            - Group2
+        Control:
+            - Group3
+        Peakset: # if no peaks given call joint peaks for given samples
+    Analysis3:
+        Case: 
+            - Group1 
+            - Group2
+        Control: Group3
+        params:
+            macs2:
+                nomodel: ''
+                extsize: 147
+```
+
 ## Output Folder Structure
 
 ```
@@ -480,6 +555,8 @@ their corresponding p value.
 #### Reports
 
 Contains MultiQC and ChIP quality reports in html format.
+Optionally contains folders with Results of Differential Analysis  wth 
+DESeq2 and featureCounts tables in CSV and Reports in html format.
 
 #### Trimmed
 
