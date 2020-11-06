@@ -480,13 +480,16 @@ if 'differential_analysis' in set(config.keys()):
                         os.path.join(PATH_PEAK,  diffAnn, diffAnn + "_peaks.narrowPeak"),
                         os.path.join(PATH_PEAK,  diffAnn, diffAnn + "_qsort.bed" )
                 ]
-                ## TODO find less hacky way to add to peak dict
+                ## groups from diffAnnDict, could be list or string,
+                ## so we enforce lists and flatten afterwards
+                groups = flatten([diffAnnDict['Case']] + [diffAnnDict['Control']])
                 samps = [lookup(
                             STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME'],
                             sample,
                             ['SampleName']
-                            ) for sample in diffAnnDict['Case'] + diffAnnDict['Control']]
+                            ) for sample in groups]
                 samps = flatten(samps)
+                ## TODO find less hacky way to add to peak dict
                 config['peak_calling'].update(
                         { diffAnn : {
                     'ChIP': samps,

@@ -187,7 +187,7 @@ def check_settings(sample_sheet_dict, config, structure_variables, message):
                     key_diff = set(diffAnnDict['Peakset'])  - samps
                     if(len(key_diff) > 0):
                         message = message + "\tdifferential_analysis contains unknown peak files: " + " ".join(key_diff) +"\n"
-                groups = diffAnnDict['Case'] + diffAnnDict['Control']
+                groups = [diffAnnDict['Case']] + [diffAnnDict['Control']]
                 groupCol = STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME']
                 for group in groups:
                     samples_da += [sample['SampleName'] for sample in sample_sheet_dict if sample[groupCol]==group]

@@ -34,11 +34,12 @@ def get_differential_analysis_bedfile(wc):
 
 def get_differential_analysis_countfiles(wc):
     analysisDict = config['differential_analysis'][wc.analysis]
+    groups = flatten([analysisDict['Case']] + [analysisDict['Control']])
     samps = [lookup(
                 STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME'],
                 sample,
                 ['SampleName']
-                ) for sample in analysisDict['Case'] + analysisDict['Control']]
+                ) for sample in groups]
     samps = flatten(samps)
     infiles = expand(
             os.path.join(
@@ -53,7 +54,7 @@ def get_differential_analysis_countfiles(wc):
 def get_differential_analysis_settings(wc, setting):
     analysisDict = config['differential_analysis'][wc.analysis]
     if setting in analysisDict.keys():
-        value = ','.join(analysisDict[setting])
+        value = ','.join(flatten([analysisDict[setting]]))
     else:
         value = ''
     return(value)
