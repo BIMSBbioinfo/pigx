@@ -188,6 +188,10 @@ general:
 #             - Group2
 #         Control:
 #             - Group3
+#         # comma separated list of additional co-variates to control for
+#         # in differential expression analysis (e.g. batch, age,
+#         # temperature, sequencing_technology etc.). Must correspond to a
+#         # column field in the sample_sheet.csv file.)    
 #         Covariates: ''
 #         Peakset: # choose peaks to define consensus peak set
 #             - ChIP_IDR
