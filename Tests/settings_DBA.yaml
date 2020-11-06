@@ -179,11 +179,10 @@ differential_analysis:
         Peakset: # if no peaks given call joint peaks for given samples
 
     Analysis3:
-        Case:
+        Case: 
             - Group1 
             - Group2
-        Control:
-            - Group3
+        Control: Group3
         params:
             macs2:
                 nomodel: ''
