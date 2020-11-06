@@ -36,6 +36,7 @@ general:
         minFragLength: 50
         maxFragLength: 600
         countChimericFragments: ''
+        requireBothEndsMapped: ''
 
 execution:
   submit-to-cluster: no

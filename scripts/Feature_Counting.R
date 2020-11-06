@@ -103,6 +103,9 @@ if(any(names(fc_params) %in% PE_flags) & argv$params[['library_type']] == "paire
 	)
 }
 
+## remove duplicated arguments
+fc_params <- fc_params[!duplicated(names(fc_params))]
+
 runFeatureCounts(
                  peaks = argv$input[['bedfile']],
                  bam_files =  argv$input[['bamfile']],
