@@ -659,6 +659,11 @@ rule map_star:
             '--soloFeatures',    str(params.features),
             '--outSAMtype', 'BAM Unsorted',
             '--readFilesCommand', str(params.zcat),
+            # CR/UR: raw (uncorrected) CellBarcode/UMI
+            # CY/UY: quality score for CellBarcode/UMI
+            # GX/GN: for gene ID/names
+            # sS/sQ: for sequence/quality combined CellBarcode and UMI; sM for barcode match status.
+            '--outSAMattributes NH HI nM AS CR UR GX GN sS sQ sM',
             join_params("STAR", PARAMS, params.params_STAR),
             '2>',str(log.logfile)
         ])
