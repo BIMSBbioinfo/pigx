@@ -92,7 +92,8 @@ read_statistics %>%
     xlab('Sample') +
     ylab('Number of mapped reads (in milions)') +
     scale_fill_brewer(name='Mapped reads', palette='Set2') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    theme_minimal()
 ```
 
 
@@ -104,12 +105,13 @@ The figure shows the total number of reads mapping to exons per sample.
 read_statistics %>%
   filter(mapped == 'nCellBarcodes') %>%
   filter(type   ==  'Gene') %>%
-  ggplot(aes(sample, cnts, fill=mapped)) +
+  ggplot(aes(sample, cnts)) +
   geom_bar(stat='identity') +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   xlab('Sample Name') +
   ylab('Number of detected cells') +
-  scale_fill_manual(values=c('black','lightgray'))
+  scale_fill_manual(values=c('black','lightgray')) +
+  theme_minimal()
 ```
 
 ### Number of UMI
@@ -119,13 +121,13 @@ The figure shows the total number of detected UMIs per sample.
 ```{r exon_reads}
 read_statistics %>%
   filter(mapped == 'nUMIs') %>%
-  filter(type   ==  'Gene') %>%
-  ggplot(aes(sample, cnts, fill=mapped)) +
+  ggplot(aes(sample, cnts)) +
   geom_bar(stat='identity') +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   xlab('Sample Name') +
   ylab('Number of detected UMI') +
-  scale_fill_manual(values=c('black','lightgray'))
+  scale_fill_manual(values=c('black','lightgray')) +
+  theme_minimal()
 ```
 
 ### Read Distribution in Genomic Features
@@ -154,7 +156,8 @@ read_statistics %>%
     xlab('Sample') +
     ylab('Number of mapped reads (in milions)') +
     scale_fill_brewer(name = 'Annotation', palette='Set2') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    theme_minimal()
 ```
 
 
