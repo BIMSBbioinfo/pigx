@@ -149,8 +149,10 @@ settings.
     settings = yaml.safe_load(open(defaults, 'r'))
 
     # Load user overrides
-    if settingsfile:
+    if settingsfile and yaml.safe_load(open(settingsfile, 'r')):
         update_config(settings,yaml.safe_load(open(settingsfile, 'r')))
+    else:   
+        bail("ERROR: Settings file seems to be empty. Did you forget to uncomment lines?") 
 
     settings['execution']['target'] = args.target
     settings['locations'].update(dirs['locations'])
