@@ -133,13 +133,13 @@ class experiment:
 
 
 
+
     # ----------------------------------------------------------------------- #
     # pivots the sample_sheet by sample_name to get unique technical replicates
     def merge_technical_replicates(self):
 
-        #print('Merging technical replicates ...')
         # defines the sample descriptors
-        sample_sheet = pd.pivot_table(self.SAMPLE_SHEET, index='sample_name', aggfunc=set)
+        sample_sheet = pd.pivot_table(self.SAMPLE_SHEET, index='sample_name', aggfunc=list)
         sample_sheet['sample_name'] = sample_sheet.index
 
         column_names = set(list(self.SAMPLE_SHEET.columns))
@@ -148,13 +148,12 @@ class experiment:
         # checks whether all technical replicates have the same metadata
         for cname in column_names:
             cid = sample_sheet[cname]
-            for i in cid:
-                if(len(i) > 1):
-                    sys.exit('Technical replicates have different metadata')
+            if(len(set(list(cid)[0])) > 1):
+                sys.exit('Technical replicates have different metadata')
 
         # names for merged files
         sample_sheet['barcode_merged'] = sample_sheet['sample_name'] + '_R1.fastq.gz'
-        sample_sheet['reads_merged'] = sample_sheet['sample_name'] + '_R2.fastq.gz'
+        sample_sheet['reads_merged']   = sample_sheet['sample_name'] + '_R2.fastq.gz'
 
         # names for mapped reads
         sample_sheet['mapped_reads'] = sample_sheet['sample_name'] + '.bam'
@@ -192,8 +191,13 @@ class experiment:
             sys.exit('unindentified column selected: ' + str(column) + '\n')
 
         field = sheet[sheet['sample_name'] == sample_name][column]
-        if field[0].__class__ == set:
+
+        if field.__class__ == set:
             field = list(field[0])
+
+        elif isinstance(field, pd.Series):
+            field = list(field)[0]
+
         else:
             field = str(field[0])
 
