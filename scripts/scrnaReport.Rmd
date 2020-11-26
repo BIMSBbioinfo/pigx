@@ -92,8 +92,7 @@ read_statistics %>%
     xlab('Sample') +
     ylab('Number of mapped reads (in milions)') +
     scale_fill_brewer(name='Mapped reads', palette='Set2') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    theme_minimal()
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 
@@ -110,8 +109,7 @@ read_statistics %>%
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   xlab('Sample Name') +
   ylab('Number of detected cells') +
-  scale_fill_manual(values=c('black','lightgray')) +
-  theme_minimal()
+  scale_fill_manual(values=c('black','lightgray'))
 ```
 
 ### Number of UMI
@@ -126,8 +124,7 @@ read_statistics %>%
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   xlab('Sample Name') +
   ylab('Number of detected UMI') +
-  scale_fill_manual(values=c('black','lightgray')) +
-  theme_minimal()
+  scale_fill_manual(values=c('black','lightgray'))
 ```
 
 ### Read Distribution in Genomic Features
@@ -144,11 +141,11 @@ read_statistics %>%
   )) %>%
     dplyr::filter(type   %in% c('exon','gene','mapped')) %>%
     dplyr::filter(mapped %in% c('map.total','nUMIs')) %>%
-    dcast(sample ~ type, value.var='cnts')  %>%
+    reshape2::dcast(sample ~ type, value.var='cnts')  %>%
     mutate(intron = gene - exon) %>%
     mutate(other  = mapped - gene) %>%
     dplyr::select(sample, other, exon, intron) %>%
-    melt() %>%
+    reshape2::melt() %>%
     mutate(sample = factor(sample, ordered=TRUE, levels=unique(sample))) %>%
     mutate(value = value * 1e-6) %>%
     ggplot(aes(sample, value, fill=variable)) +
@@ -156,8 +153,7 @@ read_statistics %>%
     xlab('Sample') +
     ylab('Number of mapped reads (in milions)') +
     scale_fill_brewer(name = 'Annotation', palette='Set2') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    theme_minimal()
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 
@@ -167,7 +163,7 @@ plotCellStats = function(df, x, y, label_x, label_y, title) {
   geom_boxplot() +
   labs(x = label_x, y = label_y, title = title) +
   theme(plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 90, hjust = 1))
+        axis.text.x = element_text(angle = 45, hjust = 1))
   return(p)
 }
 
