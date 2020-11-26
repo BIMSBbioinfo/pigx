@@ -153,7 +153,6 @@ for sample_name in SAMPLE_NAMES:
         read_file    = os.path.join(PATH_MAPPED, sample_name, genome, sample_name + '_2.fastq.gz')
         FILTER_READS.append(read_file)
 
-
 # ----------------------------------------------------------------------------- #
 # MAPPING
 MAP_scRNA = expand(os.path.join(PATH_MAPPED, "{name}", "{genome}", "{name}_Aligned.out.bam"), genome = REFERENCE_NAMES, name = SAMPLE_NAMES)
@@ -211,10 +210,8 @@ RULE_ALL = RULE_ALL + [LINK_REFERENCE_PRIMARY, LINK_GTF_PRIMARY]
 if len(COMBINE_REFERENCE) > 0:
     RULE_ALL = RULE_ALL + COMBINE_REFERENCE
 
-#RULE_ALL = RULE_ALL + DICT + REFFLAT + MAKE_STAR_INDEX + FASTQC + MERGE_FASTQ_TO_BAM + MERGE_BAM_PER_SAMPLE + MAP_scRNA + BAM_HISTOGRAM + FIND_READ_CUTOFF + READS_MATRIX + UMI + READ_STATISTICS  + BIGWIG + UMI_LOOM + COMBINED_UMI_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + REPORT_FILES
 
 RULE_ALL = RULE_ALL + MAKE_STAR_INDEX + MERGE_TECHNICAL_REPLICATES + FILTER_READS + BAM_HISTOGRAM + FIND_CELL_NUMBER_CUTOFF + MAP_scRNA + SORT_BAM + INDEX_BAM + UMI_LOOM + COMBINED_LOOM_MATRICES + SCE_RDS_FILES + SEURAT_RDS_FILES + BIGWIG + READ_STATISTICS + REPORT_FILES
-
 
 # ----------------------------------------------------------------------------- #
 rule all:
@@ -392,6 +389,7 @@ if GENOME_SECONDARY_IND:
 # ----------------------------------------------------------------------------- #
 def fetch_fastq_technical_replicates(wc):
     sample_name = str(wc.name)
+
     if(str(wc.type) == 'R1'):
         input_fastq = SAMPLE_SHEET.fetch_barcode_path(sample_name)
 
@@ -400,6 +398,7 @@ def fetch_fastq_technical_replicates(wc):
 
     if not input_fastq.__class__ == list:
         input_fastq = list(input_fastq)
+
     return(input_fastq)
 
 
