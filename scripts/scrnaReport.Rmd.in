@@ -119,7 +119,7 @@ The figure shows the total number of detected UMIs per sample.
 ```{r exon_reads}
 read_statistics %>%
   filter(mapped == 'nUMIs') %>%
-  filter(type   ==  'exon') %>%
+  filter(type   ==  'Gene') %>%
   ggplot(aes(sample, cnts)) +
   geom_bar(stat='identity') +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
