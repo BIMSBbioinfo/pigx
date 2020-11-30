@@ -103,8 +103,8 @@ The figure shows the total number of detected cells per sample.
 ```{r Read_Statistics}
 read_statistics %>%
   filter(mapped == 'nCellBarcodes') %>%
-  filter(type   ==  'exon') %>%
-  ggplot(aes(sample, cnts, fill=mapped)) +
+  filter(type   ==  'Gene') %>%
+  ggplot(aes(sample, cnts)) +
   geom_bar(stat='identity') +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   xlab('Sample Name') +
@@ -120,7 +120,7 @@ The figure shows the total number of detected UMIs per sample.
 read_statistics %>%
   filter(mapped == 'nUMIs') %>%
   filter(type   ==  'exon') %>%
-  ggplot(aes(sample, cnts, fill=mapped)) +
+  ggplot(aes(sample, cnts)) + +
   geom_bar(stat='identity') +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   xlab('Sample Name') +
@@ -142,11 +142,11 @@ read_statistics %>%
   )) %>%
     dplyr::filter(type   %in% c('exon','gene','mapped')) %>%
     dplyr::filter(mapped %in% c('map.total','nUMIs')) %>%
-    dcast(sample ~ type, value.var='cnts')  %>%
+    reshape2::dcast(sample ~ type, value.var='cnts')  %>%
     mutate(intron = gene - exon) %>%
     mutate(other  = mapped - gene) %>%
     dplyr::select(sample, other, exon, intron) %>%
-    melt() %>%
+    reshape2::melt() %>%
     mutate(sample = factor(sample, ordered=TRUE, levels=unique(sample))) %>%
     mutate(value = value * 1e-6) %>%
     ggplot(aes(sample, value, fill=variable)) +
@@ -164,7 +164,7 @@ plotCellStats = function(df, x, y, label_x, label_y, title) {
   geom_boxplot() +
   labs(x = label_x, y = label_y, title = title) +
   theme(plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 90, hjust = 1))
+        axis.text.x = element_text(angle = 45, hjust = 1))
   return(p)
 }
 
