@@ -129,6 +129,7 @@ if(! dir.exists(imagesDir)) {
 
 inputParameterDesc <- c('Count Data File',
                      'Experiment Data File',
+                     'Peak Consensus File', 
                      'GTF File', 
                      'Case sample groups',
                      'Control sample groups', 
@@ -139,6 +140,7 @@ inputParameterDesc <- c('Count Data File',
                      )
 inputParameterValues <- c(countDataFile,
                           colDataFile,
+                          peakFile,
                           gtfFile, 
                           caseSampleGroups,
                           controlSampleGroups, 
