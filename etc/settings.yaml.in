@@ -98,6 +98,8 @@ tools:
   star_index:
     executable: @STAR@
     args: ""
+    # If STAR gives an error then that error message is likely suggest the parameter to adjust.
+    # args: "--limitGenomeGenerateRAM 31000000000"
   trim-galore:
     executable: @TRIMGALORE@
     args: ""
