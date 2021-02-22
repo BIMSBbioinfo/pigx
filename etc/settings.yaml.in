@@ -45,6 +45,8 @@ organism: ''
 #DEanalyses:
 #  # The names of analyses can be anything but they have to be unique
 #  # for each combination of case control group comparisons.
+#  # Every analysis also needs a covariates line with a quoted character
+#  # string value.
 #
 #  analysis1:
 #    # If multiple sample names are provided, they must be separated by comma.
@@ -55,7 +57,7 @@ organism: ''
 #    # in differential expression analysis (e.g. batch, age,
 #    # temperature, sequencing_technology etc.). Must correspond to a
 #    # column field in the sample_sheet.csv file.)
-#    covariates: ''
+#    covariates: ""
 #
 #  analysis2:
 #    case_sample_groups: "UHR"
