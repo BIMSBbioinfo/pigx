@@ -418,17 +418,17 @@ if(length(select) > 1) {
   sd <- SharedData$new(expressionLevels, ~geneId)
   
   lineplot <- plot_ly(sd, x = ~sampleName, y = ~expressionLevel) %>%
-    group_by(geneId) %>% 
-    add_lines(text = ~geneId, hoverinfo = "text", color = ~AnalysisGroup)
+    plotly::group_by(geneId) %>% 
+    plotly::add_lines(text = ~geneId, hoverinfo = "text", color = ~AnalysisGroup)
   
   volcanoPlot <- plot_ly(sd, x = ~log2FoldChange, y = ~-log10(padj)) %>% 
-      add_markers(text = ~geneId, hoverinfo = "text")
+      plotly::add_markers(text = ~geneId, hoverinfo = "text")
   
   subplot(
   plot_ly(sd, y = ~expressionLevel, color = ~AnalysisGroup) %>% 
-      add_boxplot(),  
+      plotly::add_boxplot(),  
   volcanoPlot
-  ) %>% highlight(on =  'plotly_click', off = 'plotly_doubleclick', selectize = TRUE)
+  ) %>% plotly::highlight(on =  'plotly_click', off = 'plotly_doubleclick', selectize = TRUE)
 } else {
   cat("Couldn't detect at least two genes satisfying the p-value and fold change thresholds\n")
 }
