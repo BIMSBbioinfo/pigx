@@ -87,6 +87,13 @@ SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
 
 DE_ANALYSIS_LIST = config.get('DEanalyses', {})
 
+# Explicitly check if key 'covariates' is defined, set it to empty string otherwise.
+for analysis in DE_ANALYSIS_LIST.keys():
+    DE_ANALYSIS_LIST[analysis]['covariates'] = (
+        DE_ANALYSIS_LIST[analysis]['covariates'] if 'covariates' in DE_ANALYSIS_LIST[analysis].keys()
+        else ''
+    )
+
 ## Load sample sheet
 with open(SAMPLE_SHEET_FILE, 'r') as fp:
   rows =  [row for row in csv.reader(fp, delimiter=',')]
