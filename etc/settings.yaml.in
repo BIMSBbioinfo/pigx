@@ -23,6 +23,8 @@ execution:
     star_index:
       threads: 2
       memory: 32G
+    hisat2-build:
+      threads: 2
     salmon_index:
       threads: 8
       memory: 4G
@@ -32,6 +34,8 @@ execution:
     star_map:
       threads: 2
       memory: 16G
+    hisat2:
+      threads: 2
     genomeCoverage:
       threads: 1
       memory: 64G
@@ -100,6 +104,12 @@ tools:
     args: ""
     # If STAR gives an error then that error message is likely suggest the parameter to adjust.
     # args: "--limitGenomeGenerateRAM 31000000000"
+  hisat2:
+    executable: @HISAT2@
+    args: ""
+  hisat2-build:
+    executable: @HISAT2_BUILD@
+    args: ""
   trim-galore:
     executable: @TRIMGALORE@
     args: ""
