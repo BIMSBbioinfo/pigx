@@ -125,21 +125,21 @@ targets = {
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
         'files':
-      [os.path.join(OUTPUT_DIR, 'genome_index', f"{ORGANISM}_index.1.ht2l"),
-            os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-            os.path.join(MULTIQC_DIR, 'multiqc_report.html')] +
-	  [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
-            os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
-            os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
-            os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv"),
-            os.path.join(COUNTS_DIR, "raw_counts", f"counts_from_{MAPPER}.tsv"),
-            os.path.join(COUNTS_DIR, "normalized", "deseq_normalized_counts.tsv",
-            os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt"))] +
-	  expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
-      expand(os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig'), sample = SAMPLES) +
-      expand(os.path.join(OUTPUT_DIR, "report", f'{analysis}.{MAPPER}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
-      expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
-      expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+        [os.path.join(OUTPUT_DIR, 'genome_index', f"{ORGANISM}_index.1.ht2l"),
+         os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
+         os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+         os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
+         os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
+         os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.transcripts.tsv"),
+         os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv"),
+         os.path.join(COUNTS_DIR, "raw_counts", f"counts_from_{MAPPER}.tsv"),
+         os.path.join(COUNTS_DIR, "normalized", "deseq_normalized_counts.tsv"),
+         os.path.join(COUNTS_DIR, "normalized", "deseq_size_factors.txt")] +
+        expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
+        expand(os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig'), sample = SAMPLES) +
+        expand(os.path.join(OUTPUT_DIR, "report", f'{analysis}.{MAPPER}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
+        expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
+        expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     },
     'deseq_report_star': {
         'description': "Produce one HTML report for each analysis based on STAR results.",
