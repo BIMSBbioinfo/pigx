@@ -22,7 +22,7 @@ mapping:
 # "transcript_id" for combining features.
 counting:
   counting_mode: "Union" # other options are "IntersectionStrict" and "IntersectionNotEmpty"
-  count_nonunique: TRUE # boolean (see inter.feature argument of summarizeOverlaps)
+  drop_nonunique: TRUE # boolean, When set to TRUE, multi-mapping reads are not counted (see inter.feature argument of summarizeOverlaps)
   strandedness: "unspecific" # other options are "forward" and "reverse" for strand-specific read-counting
   feature: "exon"
   group_feature_by: "gene_id"
@@ -121,9 +121,6 @@ tools:
   samtools:
     executable: @SAMTOOLS@
     args: ""
-  htseq-count:
-    executable: @HTSEQ_COUNT@
-    args: "-f bam -t exon -i gene_id --order pos --stranded no --mode union --nonunique none"
   salmon_index:
     executable: @SALMON@
     args: "index"
