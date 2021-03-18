@@ -75,7 +75,6 @@ SALMON_INDEX_EXEC  = tool('salmon_index')
 SALMON_QUANT_EXEC  = tool('salmon_quant')
 TRIM_GALORE_EXEC = tool('trim-galore')
 SAMTOOLS_EXEC    = tool('samtools')
-HTSEQ_COUNT_EXEC = tool('htseq-count')
 GUNZIP_EXEC      = tool('gunzip') # for STAR
 RSCRIPT_EXEC     = tool('Rscript')
 SED_EXEC = tool('sed')
@@ -475,27 +474,6 @@ rule collate_read_counts:
     script = os.path.join(SCRIPTS_DIR, "collate_read_counts.R")
   shell:
     "{RSCRIPT_EXEC} {params.script} {params.mapped_dir} {output} >> {log} 2>&1"
-
-
-rule htseq_count:
-  input: expand(os.path.join(MAPPED_READS_DIR, "{sample}_Aligned.sortedByCoord.out.bam"), sample = SAMPLES)
-  output:
-    stats_file = os.path.join(COUNTS_DIR, "raw_counts", "htseq_stats.txt"),
-    counts_file = os.path.join(COUNTS_DIR, "raw_counts", f"counts_from_{MAPPER}_htseq-count.txt")
-  log: os.path.join(LOG_DIR, "htseq-count.log")
-  params:
-    tmp_file = os.path.join(COUNTS_DIR, "raw_counts", "htseq_out.txt")
-  shell:
-    """
-    echo {SAMPLES} | {SED_EXEC} 's/ /\t/g' > {params.tmp_file}
-    {HTSEQ_COUNT_EXEC} {input} {GTF_FILE} 1>> {params.tmp_file} 2>> {log};
-    ## move feature count stats (e.g. __no_feature etc) to another file
-    echo {SAMPLES} > {output.stats_file}; tail -n 5 {params.tmp_file} >> {output.stats_file};
-    ## only keep feature counts in the counts table (remove stats)
-    head -n -5 {params.tmp_file} > {output.counts_file};
-    # remove temp file
-    rm {params.tmp_file}
-    """
 
 # create a normalized counts table including all samples
 # using the median-of-ratios normalization procedure of
