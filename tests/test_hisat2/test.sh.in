@@ -30,14 +30,14 @@ samplesheet=${srcdir}/tests/sample_sheet.csv
 tmp_samplesheet=${testfolder}/sample_sheet.test_star.csv
 head -n 2 ${samplesheet} > ${tmp_samplesheet}
 
-${builddir}/pigx-rnaseq -s ${tmp_settings} --target star_map ${tmp_samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target hisat2_map ${tmp_samplesheet}
 
 rm ${tmp_settings} ${tmp_samplesheet}
 
 rm -rf ${testfolder}/trimmed_reads
 
-if ! test -f ${testfolder}/mapped_reads/HBR_Rep1_Aligned.sortedByCoord.out.bam
+if ! test -f ${testfolder}/mapped_reads/hisat2/HBR_Rep1_Aligned.sortedByCoord.out.bam
 then
-  echo "ERROR: failed the STAR mapping test"
+  echo "ERROR: failed the HISAT2 mapping test"
   exit 1
 fi

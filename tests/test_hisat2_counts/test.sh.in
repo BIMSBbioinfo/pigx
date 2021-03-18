@@ -4,7 +4,7 @@ set -e
 set -u
 
 root=$(mktemp --tmpdir -d "pigx.XXXX")
-testfolder=${root}/tests/test_star_counts
+testfolder=${root}/tests/test_hisat2_counts
 mkdir -p ${testfolder}
 
 echo "TEST FOLDER: ${testfolder}"
@@ -28,14 +28,14 @@ sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
 
 samplesheet=${srcdir}/tests/sample_sheet.csv
 
-${builddir}/pigx-rnaseq -s ${tmp_settings} --target star_counts ${samplesheet}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target hisat2_counts ${samplesheet}
 
 rm ${tmp_settings}
 
 rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${testfolder}/feature_counts/raw_counts/counts_from_star.tsv
+if ! test -f ${testfolder}/feature_counts/raw_counts/hisat2/counts.tsv
 then
-  echo "ERROR: failed obtaining counts matrix from STAR results"
+  echo "ERROR: failed obtaining counts matrix from hisat2 results"
   exit 1
 fi
