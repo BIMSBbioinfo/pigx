@@ -35,13 +35,13 @@ rm ${tmp_settings}
 rm -rf ${testfolder}/salmon_output/*Rep*
 rm -rf ${testfolder}/trimmed_reads
 
-if ! test -f ${testfolder}/feature_counts/raw_counts/counts_from_SALMON.genes.tsv
+if ! test -f ${testfolder}/feature_counts/raw_counts/salmon/counts_from_SALMON.genes.tsv
 then
   echo "ERROR: failed obtaining counts matrix from SALMON gene quant files"
   exit 1
 fi
 
-if ! test -f ${testfolder}/feature_counts/raw_counts/counts_from_SALMON.transcripts.tsv
+if ! test -f ${testfolder}/feature_counts/raw_counts/salmon/counts_from_SALMON.transcripts.tsv
 then
   echo "ERROR: failed obtaining counts matrix from SALMON transcript quant files"
   exit 1
