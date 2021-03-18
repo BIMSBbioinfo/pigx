@@ -11,7 +11,7 @@ echo "TEST FOLDER: ${testfolder}"
 
 # copy necessary input files to the test folder
 # we copy them to avoid re-creating these files when testing the pipeline
-cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads/ ${testfolder}
+cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads ${testfolder}
 
 # make these copies writable
 chmod +w -R ${testfolder}
@@ -37,7 +37,7 @@ rm ${tmp_settings} ${tmp_samplesheet}
 
 rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${testfolder}/bigwig_files/HBR_Rep1.forward.bigwig
+if ! test -f ${testfolder}/bigwig_files/hisat2/HBR_Rep1.forward.bigwig
 then
   echo "ERROR: failed to create bigwig file from input BAM file"
   exit 1
