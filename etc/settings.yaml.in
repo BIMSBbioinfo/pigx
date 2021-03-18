@@ -12,7 +12,7 @@ locations:
 organism: ''
 
 mapping:
-  mapper: 'star' # options are star or hisat2
+  mapper: 'hisat2' # options are star or hisat2
   genome_build: 'GRCm38'  #genome build version identifier that is used in hisat2 index file names
 
 # Configuration for how to do read counting using
