@@ -453,7 +453,7 @@ rule count_reads:
   params:
     single_end = isSingleEnd,
     mode = config['counting']['counting_mode'],
-    nonunique = config['counting']['count_nonunique'],
+    nonunique = config['counting']['drop_nonunique'],
     strandedness = config['counting']['strandedness'],
     feature = config['counting']['feature'],
     group_by = config['counting']['group_feature_by'],
