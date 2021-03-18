@@ -239,12 +239,12 @@ TESTS = \
   tests/test_genome_coverage/test.sh					\
   tests/test_deseq_reports/test.sh					\
   tests/test_multiqc/test.sh						\
-  tests/test_star_counts/test.sh					\
+  tests/test_hisat2_counts/test.sh					\
   tests/test_fastqc/test.sh						\
   tests/test_salmon_counts/test.sh					\
   tests/test_salmon/test_salmon_index.sh				\
   tests/test_salmon/test_salmon_quant.sh				\
-  tests/test_star/test.sh						\
+  tests/test_hisat2/test.sh						\
   tests/test_trim_galore/test.sh					\
   test.sh 
 
@@ -292,20 +292,20 @@ clean-local:
 	-rm -rf tests/test_salmon/test_salmon_quant.sh
 	-rm -rf tests/test_salmon/test_salmon_quant.sh.log
 	-rm -rf tests/test_salmon/test_salmon_quant.sh.trs
-	-rm -rf tests/test_star_counts/config.json
-	-rm -rf tests/test_star_counts/pigx_work
-	-rm -rf tests/test_star_counts/preprocessed_data
-	-rm -rf tests/test_star_counts/.snakemake
-	-rm -rf tests/test_star_counts/test.sh
-	-rm -rf tests/test_star/Log.out
-	-rm -rf tests/test_star/logs/
-	-rm -rf tests/test_star/mapped_reads/
-	-rm -rf tests/test_star/pigx_work/
-	-rm -rf tests/test_star/.snakemake
-	-rm -rf tests/test_star/star_index/
-	-rm -rf tests/test_star/test.sh
-	-rm -rf tests/test_star/test.sh.log
-	-rm -rf tests/test_star/test.sh.trs
+	-rm -rf tests/test_hisat2_counts/config.json
+	-rm -rf tests/test_hisat2_counts/pigx_work
+	-rm -rf tests/test_hisat2_counts/preprocessed_data
+	-rm -rf tests/test_hisat2_counts/.snakemake
+	-rm -rf tests/test_hisat2_counts/test.sh
+	-rm -rf tests/test_hisat2/Log.out
+	-rm -rf tests/test_hisat2/logs/
+	-rm -rf tests/test_hisat2/mapped_reads/
+	-rm -rf tests/test_hisat2/pigx_work/
+	-rm -rf tests/test_hisat2/.snakemake
+	-rm -rf tests/test_hisat2/star_index/
+	-rm -rf tests/test_hisat2/test.sh
+	-rm -rf tests/test_hisat2/test.sh.log
+	-rm -rf tests/test_hisat2/test.sh.trs
 	-rm -rf tests/test_trim_galore/output_paired_end/
 	-rm -rf tests/test_trim_galore/output_single_end/
 	-rm -rf tests/test_trim_galore/test.sh

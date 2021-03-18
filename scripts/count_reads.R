@@ -29,7 +29,7 @@ bamFile <- args[2]
 gtfFile <- args[3]
 singleEnd <- as(args[4], "logical") #whether reads are single/paired end
 counting_mode <- args[5] #see "mode" in summarizeOverlaps
-count_nonunique <- as(args[6], "logical") #see "inter.feature" in summarizeOverlaps
+drop_nonunique <- as(args[6], "logical") #see "inter.feature" in summarizeOverlaps
 strandedness <- args[7] #unspecific, forward, reverse
 feature <- args[8] #which feature to count
 group_feature_by <- args[9] #group features by "transcript_id" or 'gene_id'? 
@@ -49,9 +49,9 @@ if(!counting_mode %in% c('Union', 'IntersectionStrict',
        or 'IntersectionNotEmpty'")
 }
 
-# check count_nonunique argument
-if(class(count_nonunique) != 'logical') {
-  stop("count_nonunique must be set to TRUE or FALSE")
+# check drop_nonunique argument
+if(class(drop_nonunique) != 'logical') {
+  stop("drop_nonunique must be set to TRUE or FALSE")
 }
 
 #check strandedness
@@ -89,7 +89,7 @@ if(strandedness == 'reverse') {
                           mode = counting_mode,
                           singleEnd = singleEnd,
                           ignore.strand = strand_ignore, 
-                          inter.feature = count_nonunique, 
+                          inter.feature = drop_nonunique, 
                           preprocess.reads = invertStrand)
 } else {
   se <- GenomicAlignments::summarizeOverlaps(features = feat, 
@@ -97,7 +97,7 @@ if(strandedness == 'reverse') {
                           mode = counting_mode,
                           singleEnd = singleEnd,
                           ignore.strand = strand_ignore, 
-                          inter.feature = count_nonunique)
+                          inter.feature = drop_nonunique)
 }
 
 counts <- assay(se, 'counts')

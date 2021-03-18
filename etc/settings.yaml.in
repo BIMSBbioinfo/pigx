@@ -5,42 +5,28 @@ locations:
   cdna-fasta: /path/to/sample.cdna.fasta
   gtf-file: /path/to/sample.gtf
 
-execution:
-  submit-to-cluster: no
-  jobs: 6
-  nice: 19
-  cluster:
-    missing-file-timeout: 120
-    memory: 8G
-    stack: 128M
-    queue: all
-    contact-email: none
-    args: ''
-  rules:
-    __default__:
-      threads: 1
-      memory: 8G
-    star_index:
-      threads: 2
-      memory: 32G
-    salmon_index:
-      threads: 8
-      memory: 4G
-    salmon_quant:
-      threads: 8
-      memory: 5G
-    star_map:
-      threads: 2
-      memory: 16G
-    genomeCoverage:
-      threads: 1
-      memory: 64G
-
 # The "organism" field is needed for GO term analysis. Leave it empty
 # if not interested in GO analysis.  Otherwise provide a string with
 # the initial of genus and the species name (e.g. hsapiens, mmusculus,
 # dmelanogaster, celegans)
 organism: ''
+
+mapping:
+  mapper: 'hisat2' # options are star or hisat2
+  genome_build: 'GRCm38'  #genome build version identifier that is used in hisat2 index file names
+
+# Configuration for how to do read counting using
+# GenomicAlignments::summarizeOverlaps feature type and grouping
+# features must match what is available in the GTF file most GTF files
+# will use "exon" or "CDS" as features and "gene_id", and
+# "transcript_id" for combining features.
+counting:
+  counting_mode: "Union" # other options are "IntersectionStrict" and "IntersectionNotEmpty"
+  drop_nonunique: TRUE # boolean, When set to TRUE, multi-mapping reads are not counted (see inter.feature argument of summarizeOverlaps)
+  strandedness: "unspecific" # other options are "forward" and "reverse" for strand-specific read-counting
+  feature: "exon"
+  group_feature_by: "gene_id"
+  yield_size: 2000000 # how many reads to process at a time (this impacts memory consumption)
 
 #DEanalyses:
 #  # The names of analyses can be anything but they have to be unique
@@ -69,18 +55,41 @@ organism: ''
 #    # column field in the sample_sheet.csv file.)
 #    covariates: ''
 
-# Configuration for how to do read counting using
-# GenomicAlignments::summarizeOverlaps feature type and grouping
-# features must match what is available in the GTF file most GTF files
-# will use "exon" or "CDS" as features and "gene_id", and
-# "transcript_id" for combining features.
-counting:
-  counting_mode: "Union" # other options are "IntersectionStrict" and "IntersectionNotEmpty"
-  count_nonunique: TRUE # boolean (see inter.feature argument of summarizeOverlaps)
-  strandedness: "unspecific" # other options are "forward" and "reverse" for strand-specific read-counting
-  feature: "exon"
-  group_feature_by: "gene_id"
-  yield_size: 2000000 # how many reads to process at a time (this impacts memory consumption)
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    missing-file-timeout: 120
+    memory: 8G
+    stack: 128M
+    queue: all
+    contact-email: none
+    args: ''
+  rules:
+    __default__:
+      threads: 1
+      memory: 8G
+    star_index:
+      threads: 2
+      memory: 32G
+    hisat2-build:
+      threads: 2
+    salmon_index:
+      threads: 8
+      memory: 4G
+    salmon_quant:
+      threads: 8
+      memory: 5G
+    star_map:
+      threads: 2
+      memory: 16G
+    hisat2:
+      threads: 2
+    genomeCoverage:
+      threads: 1
+      memory: 64G
+
 
 tools:
   gunzip:
@@ -100,15 +109,18 @@ tools:
     args: ""
     # If STAR gives an error then that error message is likely suggest the parameter to adjust.
     # args: "--limitGenomeGenerateRAM 31000000000"
+  hisat2:
+    executable: @HISAT2@
+    args: ""
+  hisat2-build:
+    executable: @HISAT2_BUILD@
+    args: ""
   trim-galore:
     executable: @TRIMGALORE@
     args: ""
   samtools:
     executable: @SAMTOOLS@
     args: ""
-  htseq-count:
-    executable: @HTSEQ_COUNT@
-    args: "-f bam -t exon -i gene_id --order pos --stranded no --mode union --nonunique none"
   salmon_index:
     executable: @SALMON@
     args: "index"

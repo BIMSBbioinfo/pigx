@@ -25,7 +25,7 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 
-bamFile <- args[1] #STAR alignment file 
+bamFile <- args[1] # alignment file
 sampleName <- args[2] 
 size_factors_file <- args[3] #deseq size factors for all samples
 outDir <- args[4] # where to write the bigwig files

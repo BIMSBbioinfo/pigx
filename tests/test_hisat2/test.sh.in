@@ -4,7 +4,7 @@ set -e
 set -u
 
 root=$(mktemp --tmpdir -d "pigx.XXXX")
-testfolder=${root}/tests/test_salmon_counts
+testfolder=${root}/tests/test_star
 mkdir -p ${testfolder}
 
 echo "TEST FOLDER: ${testfolder}"
@@ -12,14 +12,12 @@ echo "TEST FOLDER: ${testfolder}"
 # copy necessary input files to the test folder
 # we copy them to avoid re-creating these files when testing the pipeline
 cp -r ${srcdir}/tests/sample_data/preprocessed/trimmed_reads ${testfolder}
-mkdir ${testfolder}/salmon_output
-cp -r ${srcdir}/tests/sample_data/preprocessed/salmon_output/*Rep* ${testfolder}/salmon_output
 
 # make these copies writable
 chmod +w -R ${testfolder}
 
 # prepare temporary sample sheet and settings files
-settings=${srcdir}/tests/settings.yaml
+settings=${srcdir}/tests/settings_no_de.yaml
 tmp_settings="${testfolder}/settings.yaml"
 sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
     -e "s,genome-fasta: ,genome-fasta: ${srcdir}/tests/,g" \
@@ -28,21 +26,18 @@ sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
     -e "s,output-dir:.*,output-dir: ${testfolder},g" \
     ${settings} > ${tmp_settings}
 
-${builddir}/pigx-rnaseq -s ${tmp_settings} --target salmon_counts ${srcdir}/tests/sample_sheet.csv
+samplesheet=${srcdir}/tests/sample_sheet.csv
+tmp_samplesheet=${testfolder}/sample_sheet.test_star.csv
+head -n 2 ${samplesheet} > ${tmp_samplesheet}
 
-rm ${tmp_settings}
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target hisat2_map ${tmp_samplesheet}
 
-rm -rf ${testfolder}/salmon_output/*Rep*
+rm ${tmp_settings} ${tmp_samplesheet}
+
 rm -rf ${testfolder}/trimmed_reads
 
-if ! test -f ${testfolder}/feature_counts/raw_counts/salmon/counts_from_SALMON.genes.tsv
+if ! test -f ${testfolder}/mapped_reads/hisat2/HBR_Rep1_Aligned.sortedByCoord.out.bam
 then
-  echo "ERROR: failed obtaining counts matrix from SALMON gene quant files"
-  exit 1
-fi
-
-if ! test -f ${testfolder}/feature_counts/raw_counts/salmon/counts_from_SALMON.transcripts.tsv
-then
-  echo "ERROR: failed obtaining counts matrix from SALMON transcript quant files"
+  echo "ERROR: failed the HISAT2 mapping test"
   exit 1
 fi
