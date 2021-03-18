@@ -125,9 +125,7 @@ targets = {
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
         'files':
-        [#os.path.join(OUTPUT_DIR, 'hisat2_index', f"{GENOME_BUILD}_index.1.ht2l"),
-         #os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin"),
-         os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+        [os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.transcripts.tsv"),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.genes.tsv"),
          os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
@@ -144,53 +142,53 @@ targets = {
     'deseq_report_star': {
         'description': "Produce one HTML report for each analysis based on STAR results.",
         'files':
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.star.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+          expand(os.path.join(OUTPUT_DIR, "report", 'star', '{analysis}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     },
     'deseq_report_hisat2': {
         'description': "Produce one HTML report for each analysis based on Hisat2 results.",
         'files':
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.hisat2.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+          expand(os.path.join(OUTPUT_DIR, "report", 'hisat2', '{analysis}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     },
     'deseq_report_salmon_transcripts': {
         'description': "Produce one HTML report for each analysis based on SALMON results at transcript level.",
         'files':
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+          expand(os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     },
     'deseq_report_salmon_genes': {
         'description': "Produce one HTML report for each analysis based on SALMON results at gene level.",
         'files':
-          expand(os.path.join(OUTPUT_DIR, "report", '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
+          expand(os.path.join(OUTPUT_DIR, "report", "salmon", '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
     },
     'star_map' : {
         'description': "Produce a STAR mapping results in BAM file format.",
         'files':
-          expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
+          expand(os.path.join(MAPPED_READS_DIR, "star", '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
     },
     'star_counts': {
         'description': "Get count matrix from STAR mapping results using summarizeOverlaps.",
         'files':
-          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_star.tsv")]
+          [os.path.join(COUNTS_DIR, "raw_counts", "star", "counts.tsv")]
     },
     'hisat2_map' : {
         'description': "Produce Hisat2 mapping results in BAM file format.",
         'files':
-          expand(os.path.join(MAPPED_READS_DIR, '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
+          expand(os.path.join(MAPPED_READS_DIR, "hisat2", '{sample}_Aligned.sortedByCoord.out.bam'), sample = SAMPLES)
     },
     'hisat2_counts': {
         'description': "Get count matrix from Hisat2 mapping results using summarizeOverlaps.",
         'files':
-          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_hisat2.tsv")]
+          [os.path.join(COUNTS_DIR, "raw_counts", "hisat2", "counts.tsv")]
     },
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
         'files':
-          expand(os.path.join(BIGWIG_DIR, '{sample}.forward.bigwig'), sample = SAMPLES) +
-          expand(os.path.join(BIGWIG_DIR, '{sample}.reverse.bigwig'), sample = SAMPLES)
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'), sample = SAMPLES) +
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig'), sample = SAMPLES)
     },
     'fastqc': {
         'description': "post-mapping quality control by FASTQC.",
         'files':
-          expand(os.path.join(FASTQC_DIR, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample = SAMPLES)
+          expand(os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample = SAMPLES)
     },
     'salmon_index' : {
         'description': "Create SALMON index file.",
@@ -206,10 +204,10 @@ targets = {
     'salmon_counts': {
         'description': "Get count matrix from SALMON quant.",
         'files':
-          [os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.transcripts.tsv"),
-	   os.path.join(COUNTS_DIR, "raw_counts", "counts_from_SALMON.genes.tsv"),
-	   os.path.join(COUNTS_DIR, "normalized",  "TPM_counts_from_SALMON.transcripts.tsv"),
-	   os.path.join(COUNTS_DIR, "normalized", "TPM_counts_from_SALMON.genes.tsv")]
+          [os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.transcripts.tsv"),
+	   os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.genes.tsv"),
+	   os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
+	   os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.genes.tsv")]
     },
     'multiqc': {
         'description': "Get multiQC report based on alignments and fastQC reports.",
