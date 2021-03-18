@@ -41,7 +41,7 @@ writeCounts <- function(colDataFile, salmon_output_folder, counts_dir, type) {
   
   #save raw counts
   write.table(x = DESeq2::counts(dds), 
-              file = file.path(counts_dir, "raw_counts", paste0("counts_from_SALMON.", type,".tsv")), 
+              file = file.path(counts_dir, paste0("counts_from_SALMON.", type,".tsv")), 
               quote = F, sep = '\t')
 }
 
@@ -68,13 +68,14 @@ writeTPMcounts <- function(colDataFile, salmon_output_folder, counts_dir, type) 
   rownames(tpmMatrix) <- tpmMatrix$Name
   tpmMatrix <- tpmMatrix[-1]
   write.table(x = tpmMatrix, 
-              file = file.path(counts_dir, "normalized", paste0("TPM_counts_from_SALMON.", type,".tsv")), 
+              file = file.path(counts_dir, paste0("TPM_counts_from_SALMON.", type,".tsv")), 
               quote = F, sep = '\t')
 } 
 
-writeCounts(colDataFile, salmon_output_folder, counts_dir, type = 'transcripts')
-writeCounts(colDataFile, salmon_output_folder, counts_dir, type = 'genes')
+raw_counts_dir <- file.path(counts_dir, "raw_counts", "salmon")
+writeCounts(colDataFile, salmon_output_folder, raw_counts_dir, type = 'transcripts')
+writeCounts(colDataFile, salmon_output_folder, raw_counts_dir, type = 'genes')
 
-
-writeTPMcounts(colDataFile, salmon_output_folder, counts_dir, type = 'transcripts')
-writeTPMcounts(colDataFile, salmon_output_folder, counts_dir, type = 'genes')
+normalized_counts_dir <- file.path(counts_dir, "normalized", "salmon")
+writeTPMcounts(colDataFile, salmon_output_folder, normalized_counts_dir, type = 'transcripts')
+writeTPMcounts(colDataFile, salmon_output_folder, normalized_counts_dir, type = 'genes')
