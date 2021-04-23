@@ -48,7 +48,10 @@
                   "kraken2"
                   "prinseq"
                   "snakemake"
-                  "r-minimal")))
+                  "r-minimal"
+                  "r-plotly"
+                  "python-wrapper"
+                  "python-pyyaml")))
     (native-inputs
      (map p (list "autoconf"
                   "automake")))
