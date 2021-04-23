@@ -1,0 +1,14 @@
+.snakemake
+*~
+
+# generated files
+configure
+config.log
+config.status
+pigx-sars-cov2-ww
+Makefile.in
+Makefile
+autom4te.cache/
+config.json
+build-aux/*
+aclocal.m4
