@@ -6,7 +6,7 @@
 </a>
 </div>
 
-**Copyright 2017-2018: Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.**
+**Copyright 2017-2021: Alexander Blume, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.**
 **This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
 -----
