@@ -56,6 +56,11 @@ of all variables and options.
  - deduplicate_bismark
  - bismark
  - bowtie2
+ - bwa-meth
+ - bwa
+ - methyldackel
+ - samblaster
+ - multiqc
  - samtools [>=1.3]
  - snakemake
  - Python [>=3.5]
@@ -69,7 +74,12 @@ of all variables and options.
  - [annotationhub](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html)
  - [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html)
  - [rmarkdown](http://rmarkdown.rstudio.com/) [>=1.5]
- - [bookdown](https://github.com/rstudio/bookdown/)
+ - ggplot2
+ - ggbio
+ - ggrepel
+ - reshape2
+ - matrixstats
+ - data-table
 
 All of these dependencies must be present in the environment at
 configuration time.
