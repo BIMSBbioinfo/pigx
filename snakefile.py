@@ -279,6 +279,8 @@ rule trim_galore_pe:
   output:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
+  resources:
+    mem_mb = 100
   params:
     tmp1=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_val_1.fq.gz',
     tmp2=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads2'])[0]).split('.')[:-2]) + '_val_2.fq.gz',
@@ -288,6 +290,8 @@ rule trim_galore_pe:
 rule trim_galore_se:
   input: trim_galore_input
   output: os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz"),
+  resources:
+    mem_mb = 100
   params: tmp=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_trimmed.fq.gz'
   log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
   shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
@@ -297,6 +301,8 @@ rule star_index:
     input: GENOME_FASTA
     output:
         star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex")
+    resources:
+      mem_mb = 32000
     params:
         star_index_dir = os.path.join(OUTPUT_DIR, 'star_index')
     log: os.path.join(LOG_DIR, 'star_index.log')
@@ -306,6 +312,8 @@ rule hisat2_index:
     input: GENOME_FASTA
     output:
         [os.path.join(OUTPUT_DIR, "hisat2_index", f"{GENOME_BUILD}_index.{n}.ht2l") for n in [1, 2, 3, 4, 5, 6, 7, 8]]
+    resources:
+      mem_mb = 21000
     params:
         index_directory = os.path.join(OUTPUT_DIR, "hisat2_index"),
     log: os.path.join(LOG_DIR, 'hisat2_index.log')
@@ -336,6 +344,8 @@ rule star_map:
     reads = map_input
   output:
     os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.out.bam')
+  resources:
+    mem_mb = 16000
   params:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, 'star', '{sample}_')
@@ -348,6 +358,8 @@ rule hisat2_map:
     reads = map_input
   output:
     os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.out.bam')
+  resources:
+    mem_mb = 8000
   params:
     index_dir = rules.hisat2_index.params.index_directory,
     args = hisat2_file_arguments
@@ -357,18 +369,24 @@ rule hisat2_map:
 rule sort_bam:
   input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.out.bam')
   output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
+  resources:
+    mem_mb = 1000
   log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
   shell: "{SAMTOOLS_EXEC} sort -o {output} {input} >> {log} 2>&1"
 
 rule index_bam:
   input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
   output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
+  resources:
+    mem_mb = 100
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
 rule fastqc:
   input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
   output: os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip')
+  resources:
+    mem_mb = 400
   log: os.path.join(LOG_DIR, MAPPER, 'fastqc_{sample}.log')
   params:
     outdir = os.path.join(FASTQC_DIR, MAPPER)
@@ -379,6 +397,8 @@ rule salmon_index:
       CDNA_FASTA
   output:
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")
+  resources:
+      mem_mb = 5000
   params:
       salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index')
   log: os.path.join(LOG_DIR, "salmon", 'salmon_index.log')
@@ -394,6 +414,8 @@ rule salmon_quant:
   output:
       os.path.join(SALMON_DIR, "{sample}", "quant.sf"),
       os.path.join(SALMON_DIR, "{sample}", "quant.genes.sf")
+  resources:
+      mem_mb = 6000
   params:
       index_dir = rules.salmon_index.params.salmon_index_dir,
       outfolder = os.path.join(SALMON_DIR, "{sample}")
@@ -415,6 +437,8 @@ rule counts_from_SALMON:
       os.path.join(COUNTS_DIR, "raw_counts", "salmon","counts_from_SALMON.genes.tsv"),
       os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
       os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.genes.tsv")
+  resources:
+      mem_mb = 1000
   log: os.path.join(LOG_DIR, "salmon", 'salmon_import_counts.log')
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {COUNTS_DIR} {input.colDataFile} >> {log} 2>&1"
 
@@ -427,6 +451,8 @@ rule genomeCoverage:
   output:
     os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'),
     os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig')
+  resources:
+    mem_mb = 4000
   log: os.path.join(LOG_DIR, MAPPER, 'genomeCoverage_{sample}.log')
   params: 
     outdir = os.path.join(BIGWIG_DIR, MAPPER)
@@ -438,6 +464,8 @@ rule multiqc:
     mapping_output=expand(os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'), sample=SAMPLES),
     fastqc_output=expand(os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample=SAMPLES),
   output: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
+  resources:
+    mem_mb = 200
   log: os.path.join(LOG_DIR, f'multiqc.{MAPPER}.log')
   shell: "{MULTIQC_EXEC} -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
 
@@ -447,6 +475,8 @@ rule count_reads:
     bai = os.path.join(MAPPED_READS_DIR, MAPPER, "{sample}_Aligned.sortedByCoord.out.bam.bai")
   output:
     os.path.join(MAPPED_READS_DIR, MAPPER, "{sample}.read_counts.csv")
+  resources:
+    mem_mb = 5000
   log: os.path.join(LOG_DIR, MAPPER, "{sample}.count_reads.log")
   params:
     single_end = isSingleEnd,
@@ -466,6 +496,8 @@ rule collate_read_counts:
     expand(os.path.join(MAPPED_READS_DIR, MAPPER, "{sample}.read_counts.csv"), sample = SAMPLES)
   output:
     os.path.join(COUNTS_DIR, "raw_counts", MAPPER, "counts.tsv")
+  resources:
+    mem_mb = 200
   log: os.path.join(LOG_DIR, MAPPER, "collate_read_counts.log")
   params:
     mapped_dir = os.path.join(MAPPED_READS_DIR, MAPPER),
@@ -483,6 +515,8 @@ rule norm_counts_deseq:
     output:
         size_factors = os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_size_factors.txt"),
         norm_counts = os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_normalized_counts.tsv")
+    resources:
+      mem_mb = 1000
     log:
         os.path.join(LOG_DIR, MAPPER, "norm_counts_deseq.log")
     params:
@@ -506,6 +540,8 @@ rule report1:
   log: os.path.join(LOG_DIR, MAPPER, "{analysis}.report.log")
   output:
     os.path.join(OUTPUT_DIR, "report", MAPPER, '{analysis}.deseq.report.html')
+  resources:
+    mem_mb = 4000
   shell:
     "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}'  >> {log} 2>&1"
 
@@ -524,6 +560,8 @@ rule report2:
   log: os.path.join(LOG_DIR, "salmon", "{analysis}.report.salmon.transcripts.log")
   output:
     os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html')
+  resources:
+    mem_mb = 4000
   shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' >> {log} 2>&1"
 
 rule report3:
@@ -541,4 +579,6 @@ rule report3:
   log: os.path.join(LOG_DIR, "salmon", "{analysis}.report.salmon.genes.log")
   output:
     os.path.join(OUTPUT_DIR, "report", "salmon", '{analysis}.salmon.genes.deseq.report.html')
+  resources:
+    mem_mb = 4000
   shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' >> {log} 2>&1"
