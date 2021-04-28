@@ -33,16 +33,22 @@ AS_IF([test -z "$$1"],dnl
       ],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
 
+find_or_override_prog([BWA],          [bwa])
 find_or_override_prog([FASTQC],       [fastqc])
 find_or_override_prog([R],            [R])
 find_or_override_prog([RSCRIPT],      [Rscript])
+find_or_override_prog([PRINSEQ],      [prinseq-lite.pl])
 find_or_override_prog([KRAKEN2],      [kraken2])
+find_or_override_prog([KRONA],        [ktImportKrona])
+find_or_override_prog([LOFREQ],       [lofreq])
+find_or_override_prog([VEP],          [vep])
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
 AX_R_PACKAGE([plotly])
+AX_R_PACKAGE([rmarkdown])
   ])
 
 AC_ARG_ENABLE([environment-capture],
