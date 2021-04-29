@@ -106,6 +106,6 @@ AC_CONFIG_FILES([etc/settings.yaml
                  Makefile
                  qsub-template.sh])
 AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
-AC_CONFIG_FILES([pigx-bsseq], [chmod +x pigx-bsseq])
+AC_CONFIG_FILES([pigx-bsseq:pigx-common/common/pigx-runner.in], [chmod +x pigx-bsseq])
 
 AC_OUTPUT
