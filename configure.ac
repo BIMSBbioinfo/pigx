@@ -69,7 +69,10 @@ capture_environment=yes
 AC_ARG_VAR(R_LIBS_SITE, The search path for all R packages)
 AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
   ])
+
 AC_SUBST([capture_environment])
-AC_CONFIG_FILES([Makefile])
+AC_SUBST_FILE(PIPELINE_META)
+PIPELINE_META=$srcdir/META
+AC_CONFIG_FILES([Makefile META])
 AC_CONFIG_FILES([pigx-sars-cov2-ww:pigx-common/common/pigx-runner.in], [chmod +x pigx-sars-cov2-ww])
 AC_OUTPUT
