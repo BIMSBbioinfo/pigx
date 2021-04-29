@@ -2,6 +2,7 @@
 *~
 
 # generated files
+qsub-template.sh
 META
 configure
 config.log
