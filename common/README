@@ -1,0 +1,3 @@
+This is an attempt to unify the pipeline driver scripts.
+
+pigx-runner.in is the prospective unified driver script for all pipelines.

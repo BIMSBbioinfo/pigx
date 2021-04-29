@@ -1,0 +1,13 @@
+* rename pipelines to "snakefile.py"
+** DONE rnaseq
+** chipseq
+** scrnaseq
+** bsseq
+
+* compare pipeline runners with pigx-runner.in
+** DONE rnaseq
+** DONE chipseq
+   CLOSED: [2020-07-23 四 21:55]
+** DONE scrnaseq
+   CLOSED: [2020-07-23 四 22:57]
+** bsseq

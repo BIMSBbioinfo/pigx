@@ -1,0 +1,417 @@
+#!@PYTHON@
+# -*- python -*-
+# PiGx RNAseq Pipeline.
+#
+# Copyright © 2017 Bora Uyar <bora.uyar@mdc-berlin.de>
+# Copyright © 2017 Jonathan Ronen <yablee@gmail.com>
+# Copyright © 2017, 2018, 2020 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+#
+# This file is part of the PiGx RNAseq Pipeline.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if 'yes' == '@capture_environment@':
+    import os, sys
+    os.environ["R_LIBS_SITE"] = "@R_LIBS_SITE@"
+    os.environ["PYTHONPATH"] = "@PYTHONPATH@"
+    # Setting PYTHONPATH does not help with dependencies needed for
+    # this script.
+    for directory in "@PYTHONPATH@".split(":"):
+        try:
+            sys.path.index(directory)
+        except ValueError:
+            sys.path.insert(1, directory)
+
+
+import argparse
+from os import path
+import os, sys, json, csv, yaml, errno
+from snakemake.utils import update_config
+import shutil, filecmp
+from glob import glob
+import subprocess
+
+description = ''
+epilog = ''
+version = ''
+
+def formatter(prog):
+    return argparse.RawTextHelpFormatter(prog, max_help_position=80)
+
+parser = argparse.ArgumentParser(description=description,
+                                 epilog=epilog,
+                                 formatter_class=formatter)
+
+parser.add_argument('-v', '--version', action='version',
+                    version=version)
+
+parser.add_argument('sample_sheet', nargs='?', default='sample_sheet.csv',
+                    help="""\
+The sample sheet containing sample data in CSV format.\
+""")
+
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('--init', dest='init', choices=['settings', 'sample-sheet', 'both'], const='both', nargs='?',
+                   help='Generate a template SETTINGS file, a SAMPLE-SHEET.  Leave empty for both.')
+group.add_argument('-s', '--settings', dest='settings',
+                   help='A YAML file for settings that deviate from the defaults.')
+
+parser.add_argument('-c', '--configfile', dest='configfile', default='./config.json',
+                    help="""\
+The config file used for calling the underlying snakemake process.  By
+default the file 'config.json' is dynamically created from the sample
+sheet and the settings file.
+""")
+
+parser.add_argument('--target', dest='target', action='append',
+                    help="""\
+Stop when the named target is completed instead of running the whole
+pipeline.  The default target is "final-report".  Pass "--target=help"
+to describe all available targets.""")
+
+parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
+                    help="""\
+Only show what work would be performed.  Do not actually run the
+pipeline.""")
+
+parser.add_argument('--graph', dest='graph',
+                    help="""\
+Output a graph in PDF format showing the relations between rules of
+this pipeline.  You must specify a graph file name such as
+"graph.pdf".""")
+
+parser.add_argument('--force', dest='force', action='store_true',
+                    help="""\
+Force the execution of rules, even though the outputs are considered
+fresh.""")
+
+parser.add_argument('--reason', dest='reason', action='store_true',
+                    help="""\
+Print the reason why a rule is executed.""")
+
+parser.add_argument('--unlock', dest='unlock', action='store_true',
+                    help="""\
+Recover after a snakemake crash.""")
+
+parser.add_argument('--verbose', dest='verbose', action='store_true',
+                    help="""\
+Print supplementary info on job execution.""")
+
+parser.add_argument('--printshellcmds', dest='printshellcmds', action='store_true',
+                    help="""\
+Print commands being executed by snakemake.""")
+
+
+args = parser.parse_args()
+
+
+# Generate config file
+def bail(msg):
+    """Print the error message to stderr and exit."""
+    print(msg, file=sys.stderr)
+    exit(1)
+
+
+def generate_config(configfile, sample_sheet, settingsfile, dirs):
+    """Generate a new configuration file CONFIGFILE using SAMPLE_SHEET and
+SETTINGSFILE as inputs.  Use the locations in DIRS to find default
+settings.
+    """
+    # Load defaults
+    if os.getenv('PIGX_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        defaults = path.join(where, 'etc/settings.yaml')
+    else:
+        defaults = path.join(dirs['locations']['pkgdatadir'], 'settings.yaml')
+
+    if not path.exists(defaults):
+        bail("Could not find default settings.  Did you forget to set PIGX_UNINSTALLED?")
+
+    settings = yaml.safe_load(open(defaults, 'r'))
+
+    # Load user overrides
+    if settingsfile:
+        if not os.path.isfile(settingsfile):
+            message = 'settings.yaml file not found'
+            sys.exit(message)
+        update_config(settings,yaml.safe_load(open(settingsfile, 'r')))
+
+    settings['execution']['target'] = args.target
+    settings['locations'].update(dirs['locations'])
+
+    # Resolve relative paths in the locations section
+    root = path.dirname(sample_sheet)
+    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+
+    for key in settings['locations']:
+        if settings['locations'][key]:
+            settings['locations'][key] = path.normpath(path.join(here, root, settings['locations'][key]))
+
+    # Record the location of the sample sheet.
+    if not os.path.isfile(path.abspath(sample_sheet)):
+      message = 'sample_sheet file not found'
+      sys.exit(message)
+    settings['locations']['sample-sheet'] = path.abspath(sample_sheet)
+
+    # Write the config file
+    with open(configfile, 'w') as outfile:
+        dumps = json.dumps(settings,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+
+def generate_cluster_configuration():
+    rules = config['execution']['rules']
+
+    cluster_conf = {}
+    for rule in rules:
+        if 'queue' in config['execution']['cluster']:
+            # --- User has supplied general queue name for all rules---
+            if 'queue' in rules[rule]:
+              bail("ERROR: 'queue' multiply defined in settings file.") #AND per rule ->error
+            else:
+              cluster_conf[rule] = {
+                'nthreads': rules[rule]['threads'],
+                'MEM':      rules[rule]['memory'],
+                'queue':    config['execution']['cluster']['queue'],
+                'h_stack':  config['execution']['cluster']['stack']
+                }
+        elif ( 'queue' in rules[rule] ):
+            # --- User has supplied a queue for this specific rule.
+            cluster_conf[rule] = {
+              'nthreads': rules[rule]['threads'],
+              'MEM':      rules[rule]['memory'],
+              'queue':    rules[rule]['queue'],
+              'h_stack':  config['execution']['cluster']['stack']
+              }
+        else:
+            # --- User has provided no information on queue for this rule -> default.
+        cluster_conf[rule] = {
+            'nthreads': rules[rule]['threads'],
+            'MEM': rules[rule]['memory'],
+            'h_stack': config['execution']['cluster']['stack']
+        }
+
+    cluster_config_file = "cluster_conf.json"
+    with open(cluster_config_file, 'w') as outfile:
+        dumps = json.dumps(cluster_conf,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+
+    return cluster_config_file
+
+
+# Create symbolic links to the inputs and reference genome
+
+# Create links within the output folder that point directly to the
+# reference genome, as well as to each sample input file so that it's
+# clear where the source data came from.
+
+# N.B. Any previously existing links will be kept in place, and no
+# warning will be issued if this is the case.
+
+def makelink(src, target):
+    if not path.isfile(src):
+        bail("Refusing to link non-existent file %s" % src)
+    elif not path.isdir(path.dirname(target)):
+        bail("%s or subdirectory does not exist for linking %s" % config['locations']['output-dir'], target)
+    else:
+        try:
+            os.symlink(src, target)
+        except FileExistsError:
+            pass
+
+def maybe_copy(source, target_dir):
+    target = path.join(target_dir, path.basename(source))
+    if not path.exists(target) or not filecmp.cmp(source, target):
+        shutil.copy(source, target_dir)
+
+def prepare_links():
+    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work'),
+                exist_ok=True)
+    # Ensure that we use the configured Pandoc, pandoc-citeproc
+    # ...and the configured Rscript
+    bin = path.join(config['locations']['output-dir'], 'pigx_work/bin')
+    if path.exists(bin): shutil.rmtree(bin)
+    os.makedirs(bin, exist_ok=True)
+    os.symlink('@PANDOC@', path.join(bin, "pandoc"))
+    os.symlink('@PANDOC_CITEPROC@', path.join(bin, "pandoc-citeproc"))
+    os.symlink('@RSCRIPT@', path.join(bin, "Rscript"))
+    os.environ['PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+    os.environ['PIGX_PATH'] = path.abspath(bin) + ":" + os.environ['PATH']
+    os.environ['R_LIBS_USER'] = "/dev/null"
+
+def display_logo():
+    if os.getenv('PIGX_UNINSTALLED'):
+        where = os.getenv('srcdir') if os.getenv('srcdir') else '.'
+        pretty = path.join(where, 'etc/pretty.txt')
+    else:
+        pretty = path.join(config['locations']['pkgdatadir'], 'pretty.txt')
+
+    if not os.getenv('PIGX_UGLY'):
+        # Ensure that this is printed without errors, even if the user's
+        # locale is not a UTF-8 locale.
+        p = open(pretty, 'r', encoding='utf-8').read()
+        sys.stdout.buffer.write(p.encode('utf-8'))
+
+
+
+# Determine locations
+dirs = {}
+if os.getenv('PIGX_UNINSTALLED'):
+    here = os.getenv('srcdir') if os.getenv('srcdir') else os.getcwd()
+    dirs['locations'] = {
+        'prefix'       : here,
+        'exec_prefix'  : here,
+        'libexecdir'   : here,
+        'pkglibexecdir': here,
+        'datarootdir'  : here,
+        'pkgdatadir'   : here
+    }
+else:
+    # Expand and store autoconf directory variables
+    prefix = '@prefix@'
+    exec_prefix = '@exec_prefix@'[1:].format(prefix=prefix)
+    libexecdir = '@libexecdir@'[1:].format(exec_prefix=exec_prefix)
+    pkglibexecdir = '{libexecdir}/@PACKAGE@'.format(libexecdir=libexecdir)
+    datarootdir = '@datarootdir@'[1:].format(prefix=prefix)
+    pkgdatadir = '@datadir@/@PACKAGE@'[1:].format(datarootdir=datarootdir)
+
+    dirs['locations'] = {
+        'prefix'       : '@prefix@',
+        'exec_prefix'  : exec_prefix,
+        'libexecdir'   : libexecdir,
+        'pkglibexecdir': pkglibexecdir,
+        'datarootdir'  : datarootdir,
+        'pkgdatadir'   : pkgdatadir
+    }
+
+# Init?
+if args.init:
+    init_settings = False
+    init_sample_sheet = False
+    if os.getenv('PIGX_UNINSTALLED'):
+        base = os.getcwd() + '/etc/'
+    else:
+        base = dirs['locations']['pkgdatadir']
+
+    if args.init == 'both':
+        init_settings = True
+        init_sample_sheet = True
+
+    if args.init == 'settings' or init_settings:
+        name = 'settings.yaml'
+        if path.exists(name):
+            print('Refusing to overwrite existing {}.'.format(name))
+        else:
+            with open(name, 'w') as outfile:
+                with open(path.join(base, name), 'r') as infile:
+                    for line in infile:
+                        outfile.write('# ' + line)
+            print('Generated {} template.'.format(name))
+
+    if args.init == 'sample-sheet' or init_sample_sheet:
+        name = 'sample_sheet.csv'
+        if path.exists(name):
+            print('Refusing to overwrite existing sample_sheet.csv.')
+        else:
+            shutil.copy(path.join(base, name + '.example'), name)
+            print('Generated {} template.'.format(name))
+    exit(0)
+
+# Run snakemake!
+generate_config(args.configfile,
+                args.sample_sheet,
+                args.settings,
+                dirs)
+
+config = json.load(open(args.configfile, 'r'))
+
+command = [
+    "@SNAKEMAKE@",
+    "--snakefile={}/snakefile.py".format(config['locations']['pkglibexecdir']),
+    "--configfile={}".format(args.configfile),
+    "--directory={}".format(config['locations']['output-dir']),
+    "--jobs={}".format(config['execution']['jobs']),
+]
+
+if config['execution']['submit-to-cluster']:
+    cluster_config_file = generate_cluster_configuration()
+    print("Commencing snakemake run submission to cluster", flush=True, file=sys.stderr)
+
+    if ( ('queue' in config['execution']['cluster'] )  or ( 'queue' in config['execution']['rules']['__default__'] )):
+        queue_selection_string = " -q {cluster.queue} "
+	# User has defined queue name(s) --either generally, or rule-specific.
+	# in either case, generate_cluster_configuration() (defined above) has 
+        # already printed the apropriate queue name to each rule.
+        queue_selection_string = " -q {cluster.queue} "
+    else :
+        # User has supplied no q value -> let SGE pick the the default.
+        queue_selection_string = ""
+    # --- done checking if ( queue name(s) supplied by user)
+
+    if config['execution']['cluster']['contact-email'].lower() == 'none':
+        contact_email_string = ""
+    else:
+        contact_email_string = "-m a -M %s" % config['execution']['cluster']['contact-email']
+
+    try:
+        subprocess.call(["qsub", "-help"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            print("Error: Your system does not seem to support cluster submission.\nReason: Could not find qsub executable.", file=sys.stderr)
+            exit(1)
+        else:
+            raise
+    qsub = "qsub -v R_LIBS_USER -v PIGX_PATH -v GUIX_LOCPATH -l h_stack={cluster.h_stack}  -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % contact_email_string
+    if config['execution']['cluster']['log-dir']:
+        qsub += " -o %s/ " % config['execution']['cluster']['log-dir']
+        qsub += " -e %s/ " % config['execution']['cluster']['log-dir']
+    if config['execution']['cluster']['args']:
+        qsub += " " + config['execution']['cluster']['args']
+    command += [
+        "--cluster-config={}".format(cluster_config_file),
+        "--cluster={}".format(qsub),
+        "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
+        "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
+    ]
+else:
+    print("Commencing snakemake run submission locally", flush=True, file=sys.stderr)
+
+command.append("--rerun-incomplete")
+if args.graph:
+    command.append("--dag")
+    with open(args.graph, "w") as outfile:
+        p1 = subprocess.Popen(command, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(['dot','-Tpdf'], stdin=p1.stdout, stdout=outfile)
+        p2.communicate()
+else:
+    prepare_links()
+    display_logo()
+    if args.force:
+        command.append("--forceall")
+    if args.dry_run:
+        command.append("--dryrun")
+    if args.reason:
+        command.append("--reason")
+    if args.unlock:
+        command.append("--unlock")
+    if args.verbose:
+        command.append("--verbose")
+    if args.printshellcmds:
+        command.append("--printshellcmds")
+    if args.target and 'help' in args.target:
+        command.append("help")
+    subprocess.run(command)
