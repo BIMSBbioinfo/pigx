@@ -4,7 +4,7 @@ nodist_bin_SCRIPTS = \
   pigx-bsseq
 
 dist_pkglibexec_SCRIPTS =			\
-  BSseq_pipeline.py					\
+  snakefile.py						\
   qsub-template.sh
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts

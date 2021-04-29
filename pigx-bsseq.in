@@ -459,7 +459,7 @@ config = json.load(open(args.configfile, 'r'))
 
 command = [
     "@SNAKEMAKE@",
-    "--snakefile={}/BSseq_pipeline.py".format(config['locations']['pkglibexecdir']),
+    "--snakefile={}/snakefile.py".format(config['locations']['pkglibexecdir']),
     "--configfile={}".format(args.configfile),
     "--directory={}".format(config['locations']['output-dir']),
     "--jobs={}".format(config['execution']['jobs']),
