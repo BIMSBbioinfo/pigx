@@ -71,5 +71,5 @@ AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
   ])
 AC_SUBST([capture_environment])
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([pigx-sars-cov2-ww], [chmod +x pigx-sars-cov2-ww])
+AC_CONFIG_FILES([pigx-sars-cov2-ww:pigx-common/common/pigx-runner.in], [chmod +x pigx-sars-cov2-ww])
 AC_OUTPUT
