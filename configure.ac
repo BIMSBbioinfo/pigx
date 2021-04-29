@@ -97,6 +97,9 @@ AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
   ])
 
 AC_SUBST([capture_environment])
+AC_SUBST_FILE(PIPELINE_META)
+PIPELINE_META=$srcdir/META
+AC_CONFIG_FILES([META])
 AC_CONFIG_FILES([etc/settings.yaml
                  report_templates/index.Rmd
                  report_templates/diffmeth.Rmd

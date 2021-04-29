@@ -1,0 +1,15 @@
+version = """
+PiGx BSseq Pipeline.
+Version: @PACKAGE_VERSION@
+
+Copyright © 2017-2021 Alexander Gosdschan, Katarzyna Wreczycka, Bren Osberg, Ricardo Wurmus.
+""" + license_blurb
+
+description = """
+PiGx BSseq Pipeline.
+
+PiGx BSseq is a data processing pipeline for raw fastq read data of
+bisulfite experiments.  It produces methylation and coverage
+information and can be used to produce information on differential
+methylation and segmentation.
+"""
