@@ -29,7 +29,7 @@
          (name 'guix)
          (url "https://git.savannah.gnu.org/git/guix.git")
          (commit
-          "01e33a031e493477d930b9383d397fea012a3b1a")
+          "74b3f2cbb13f197136c0215ce6156d015080a61a")
          (introduction
           (make-channel-introduction
            "9edb3f66fd807b096b48283debdcddccfea34bad"
@@ -58,8 +58,16 @@
         "samtools"
         "snakemake"
         "r-minimal"
+        "r-dplyr"
+        "r-dt"
+        "r-ggplot2"
+        "r-magrittr"
+        "r-openssl"
         "r-plotly"
+        "r-qpcr"
         "r-rmarkdown"
+        "r-stringr"
+        "r-tidyr"
         "python-wrapper"
         "python-pyyaml"))
 

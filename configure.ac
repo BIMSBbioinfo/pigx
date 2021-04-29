@@ -47,8 +47,17 @@ AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
+
+AX_R_PACKAGE([DT])
+AX_R_PACKAGE([dplyr])
+AX_R_PACKAGE([ggplot2])
+AX_R_PACKAGE([magrittr])
+AX_R_PACKAGE([openssl])
 AX_R_PACKAGE([plotly])
+AX_R_PACKAGE([qpcR])
 AX_R_PACKAGE([rmarkdown])
+AX_R_PACKAGE([stringr])
+AX_R_PACKAGE([tidyr])
   ])
 
 AC_ARG_ENABLE([environment-capture],
