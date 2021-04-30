@@ -64,9 +64,15 @@ targets = {
             expand(os.path.join(REPORT_DIR, '{sample}_variant_report.html'), sample=SAMPLES) + 
             expand(os.path.join(REPORT_DIR, '{sample}_kraken_report.html'), sample=SAMPLES)
         )
+    },
+    'lofreq': {
+        'description': "Call variants and produce .vcf file and overview .csv file.",
+        'files': (
+            expand(os.path.join(VARIANTS_DIR, '{sample}_snv.csv'), sample=SAMPLES)
+        )
     }
 }
-selected_targets = ['final_reports']
+selected_targets = ['lofreq']
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 
@@ -104,8 +110,8 @@ rule prinseq:
         r1 = os.path.join(READS_DIR, "{sample}_R1.fastq"),
         r2 = os.path.join(READS_DIR, "{sample}_R2.fastq")
     output:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq")
+        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_1.fastq"),
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq")
     params:
         len_cutoff = int(150 * 0.8) # read length * pct_cutoff
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
@@ -121,38 +127,40 @@ rule bwa_index:
 
 rule bwa_align:
     input:
-        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq"), os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq")]
-        ref = REFERENCE_FASTA
+        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_1.fastq"), os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq")],
+        ref = REFERENCE_FASTA,
         index = "{}.bwt".format(REFERENCE_FASTA)
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
     params:
         threads = 4
     log: os.path.join(LOG_DIR, 'bwa_align_{sample}.log')
-    shell: "bwa mem -t {params.threads} {input.ref} {input.fastq} > {output} >> {log} 2>&1"
+    shell: "bwa mem -t {params.threads} {input.ref} {input.fastq} > {output} 2>> {log} 3>&2"
 
 
-# TODO: also get unaligned .sam --> so far tmp.sam is used
-# check what tmp actually is -- are that really the unaligned ones?
+# TODO: also get unaligned .bam --> so far tmp.bam is used
+# same rule to get unaligned .bam
+# probably something like below, but needs to be checked for our purpose (kraken reports)
+# "samtools view -bh -F 2 {input} > {output} 2>> {log} 3>&2"
 rule samtools_filter:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
-    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.sam')
-    log: os.path.join(LOG_DIR, 'samtools_filter_{sample}.log')
-    shell: "samtools view -h -f 2 -F 2048 {input} > {output} >> {log} 2>&1"
-
-
-rule samtools_sam2bam_A:
-    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.sam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
-    log: os.path.join(LOG_DIR, 'samtools_sam2bam_{sample}.log')
-    shell: "samtools view -bS {input} > {output} >> {log} 2>&1"
+    log: os.path.join(LOG_DIR, 'samtools_filter_{sample}.log')
+    shell: "samtools view -bh -f 2 -F 2048 {input} > {output} 2>> {log} 3>&2"
+
+# probably not needed --> directly converted during filtering step (-b)
+# rule samtools_sam2bam_A:
+#     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.sam')
+#     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
+#     log: os.path.join(LOG_DIR, 'samtools_sam2bam_{sample}.log')
+#     shell: "samtools view -bS {input} > {output} >> {log} 2>&1"
 
 
-# TODO: merge rule A and B and possibly? use unaligned instead of tmp
-rule samtools_sam2bam_B:
-    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
-    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.bam')
-    log: os.path.join(LOG_DIR, 'samtools_sam2bam_B_{sample}.log')
-    shell: "samtools view -bS {input} > {output} >> {log} 2>&1"
+# # TODO: merge rule A and B and possibly? use unaligned instead of tmp
+# rule samtools_sam2bam_B:
+#     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
+#     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.bam')
+#     log: os.path.join(LOG_DIR, 'samtools_sam2bam_B_{sample}.log')
+#     shell: "samtools view -bS {input} > {output} >> {log} 2>&1"
 
 
 rule samtools_sort:
@@ -171,7 +179,7 @@ rule samtools_index:
 
 rule fastqc:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
-    output: os.path.join(FASTQC_DIR, '{sample}_aligned_sorted.fastqc.zip')
+    output: os.path.join(FASTQC_DIR, '{sample}_aligned_sorted_fastqc.zip')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}.log')
     params:
         out_dir = os.path.join(FASTQC_DIR)
@@ -181,7 +189,7 @@ rule fastqc:
 # TODO: check if --call-indels is needed?
 rule lofreq:
     input:
-        aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
+        aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam'),
         ref = REFERENCE_FASTA
     output: os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
     log: os.path.join(LOG_DIR, 'lofreq_{sample}.log')
@@ -206,7 +214,7 @@ rule vcf2csv:
 # TODO: fill in blanks, why sample_dir? where are sigmuts coming from?
 # rule variant_report:
 #     input:
-#         vep_txt = os.path.join(VARIANTS_DIR, '{sample}_vep.txt')
+#         vep_txt = os.path.join(VARIANTS_DIR, '{sample}_vep.txt'),
 #         snv_csv = os.path.join(VARIANTS_DIR, '{sample}_snv.csv')
 #     output: os.path.join(REPORT_DIR, '{sample}_variant_report.html')
 #     log: os.path.join(LOG_DIR, 'vcf2csv_{sample}.log')
@@ -224,7 +232,7 @@ rule vcf2csv:
 # TODO: check command as in miro board there where R1 & R2 inputs
 # rule kraken:
 #     input:
-#         unaligned_fastq = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.fastq')
+#         unaligned_fastq = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.fastq'),
 #         database = KRAKEN_DB
 #     output: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
 #     log: os.path.join(LOG_DIR, 'kraken_{sample}.log')
