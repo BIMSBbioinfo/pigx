@@ -22,11 +22,16 @@ Snakefile for PiGx SARS CoV2 wastewater sequencing pipeline
 """
 
 import os
+import csv
+from itertools import chain
 
-# obtain that from config file
+# TODO: 
+# 1. obtain things from config file
+# 2. make dummy samples and put them to tests/sample_data/reads
 READS_DIR = 'tests/sample_data/reads'
 REFERENCE_FASTA = 'tests/sample_data/NC_045512.2.fasta'
 KRAKEN_DB = 'tests/sample_data/kraken_db.db' # download first, where?
+SAMPLE_SHEET_CSV = 'tests/sample_sheet.csv'
 
 OUTPUT_DIR = 'output'
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
@@ -40,8 +45,29 @@ REPORT_DIR = os.path.join(OUTPUT_DIR, 'report')
 
 SCRIPTS_DIR = 'scripts'
 
-# TODO: create output_files
-OUTPUT_FILES = []
+
+# Load sample sheet
+with open(SAMPLE_SHEET_CSV, 'r') as fp:
+  sample_sheet = list(csv.DictReader(fp))
+
+SAMPLES = [row['name'] for row in sample_sheet]
+
+targets = {
+    'help': {
+        'description': "Print all rules and their descriptions.",
+        'files': []
+    },
+    'final_reports': {
+        'description': "Produce a comprehensive report. This is the default target.",
+        'files': (
+            expand(os.path.join(VARIANTS_DIR, '{sample}_snv.csv'), sample=SAMPLES) + 
+            expand(os.path.join(REPORT_DIR, '{sample}_variant_report.html'), sample=SAMPLES) + 
+            expand(os.path.join(REPORT_DIR, '{sample}_kraken_report.html'), sample=SAMPLES)
+        )
+    }
+}
+selected_targets = ['final_reports']
+OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 
 rule all:
