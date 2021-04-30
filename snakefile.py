@@ -109,7 +109,7 @@ rule prinseq:
     params:
         len_cutoff = int(150 * 0.8) # read length * pct_cutoff
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
-    shell: "prinseq-lite.pl -fastq {input.r1} -fastq2 {input.r2} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30 -trim_qual_right 30 -trim_qual_window 10 -out_format 3 -out_good {TRIMMED_READS_DIR} -out_bad null -min_len {params.len_cutoff} >> {log} 2>&1"
+    shell: "prinseq-lite.pl -fastq {input.r1} -fastq2 {input.r2} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30 -trim_qual_right 30 -trim_qual_window 10 -out_good {TRIMMED_READS_DIR}/{wildcards.sample} -out_bad null -min_len {params.len_cutoff} >> {log} 2>&1"
 
 
 rule bwa_index:
@@ -210,7 +210,7 @@ rule vcf2csv:
 #         snv_csv = os.path.join(VARIANTS_DIR, '{sample}_snv.csv')
 #     output: os.path.join(REPORT_DIR, '{sample}_variant_report.html')
 #     log: os.path.join(LOG_DIR, 'vcf2csv_{sample}.log')
-#     shell: "Rscript {SCRIPTS_DIR}/run_variant_report.R --reportFile={SCRIPTS_DIR}/variantreport_p_sample.rmd --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts=??? --sample_dir=??? --sample_name={sample} >> {log} 2>&1"
+#     shell: "Rscript {SCRIPTS_DIR}/run_variant_report.R --reportFile={SCRIPTS_DIR}/variantreport_p_sample.rmd --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts=??? --sample_dir=??? --sample_name={wildcards.sample} >> {log} 2>&1"
 
 
 # TODO: check command/output as in miro board R1 & R2 is mentioned
@@ -237,4 +237,4 @@ rule vcf2csv:
 #     input: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
 #     output: os.path.join(REPORT_DIR, '{sample}_kraken_report.html')
 #     log: os.path.join(LOG_DIR, 'kraken_report_{sample}.log')
-#     shell: "ktImportTaxonomy -m 3 -t 5 {input} -tax [taxonomy folder]??? -o {output}"
+#     shell: "ktImportTaxonomy -m 3 -t 5 {input} -tax [taxonomy folder]??? -o {output} >> {log} 2>&1"
