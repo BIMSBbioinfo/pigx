@@ -48,8 +48,17 @@ AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
   [AC_MSG_NOTICE([Skipping R packages check.  Be careful!])],
   [dnl
+
+AX_R_PACKAGE([DT])
+AX_R_PACKAGE([dplyr])
+AX_R_PACKAGE([ggplot2])
+AX_R_PACKAGE([magrittr])
+AX_R_PACKAGE([openssl])
 AX_R_PACKAGE([plotly])
+AX_R_PACKAGE([qpcR])
 AX_R_PACKAGE([rmarkdown])
+AX_R_PACKAGE([stringr])
+AX_R_PACKAGE([tidyr])
   ])
 
 AC_ARG_ENABLE([environment-capture],
@@ -61,7 +70,11 @@ capture_environment=yes
 AC_ARG_VAR(R_LIBS_SITE, The search path for all R packages)
 AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
   ])
+
 AC_SUBST([capture_environment])
-AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([pigx-sars-cov2-ww], [chmod +x pigx-sars-cov2-ww])
+AC_SUBST_FILE(PIPELINE_META)
+PIPELINE_META=$srcdir/META
+AC_CONFIG_FILES([Makefile META])
+AC_CONFIG_FILES([qsub-template.sh:pigx-common/common/qsub-template.sh.in])
+AC_CONFIG_FILES([pigx-sars-cov2-ww:pigx-common/common/pigx-runner.in], [chmod +x pigx-sars-cov2-ww])
 AC_OUTPUT
