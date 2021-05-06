@@ -369,7 +369,7 @@ rule parse_vep_output:
                 for num, line in enumerate(file, header_line):
                     clean_file.write(line)
         
-        with open('tmp.txt', 'r') as file:
+        with open(os.path.join(VEP_DIR,'tmp.txt'), 'r') as file:
             with open(output.vep_report_input, 'w') as output:
                 reader = csv.reader(file, delimiter="\t")
                 writer = csv.writer(output, lineterminator='\n')
