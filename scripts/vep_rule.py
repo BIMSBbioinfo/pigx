@@ -1,6 +1,5 @@
 
 import os
-import sys
 import re
 
 
@@ -30,11 +29,23 @@ rule parse_vep_output:
         
         # remove unnecessary lines 
         with open(input, 'r') as file:
-            with open(os.path.join(VEP_DIR, "../../tmp.txt"), 'w+') as clean_file:
+            with open(output, 'w') as output_file:
+                reader = csv.reader(file, delimiter="\t")
+                writer = csv.writer(output_file, lineterminator='\n')
         
-                for num, line in enumerate(file,header_line):
-                    if re.match("#Uploaded_variation", line):
-                        header_line = num
-                        clean_file.write(line)
-                        break
-        # TODO parse the info part of the vfc to be seperate columns
+                # make new column SYMBOL for gene names
+                gene_column = []
+                header = next(reader)
+                header.append("SYMBOL")
+                gene_column.append(header)
+        
+                for row in reader:  # fixme: I'm not sure if the following construct is ugly or not
+                    # get gene name 
+                    extra = row[13].split(";")
+                    for element in extra:
+                        if re.search(r"SYMBOL=", element):
+                            gene = element.split("=")[1:][0]
+                            row.append(gene)
+                            gene_column.append(row)
+        
+                writer.writerows(gene_column)

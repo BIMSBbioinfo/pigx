@@ -25,6 +25,7 @@ import os
 import csv
 import yaml
 from itertools import chain
+import re
 
 SAMPLE_SHEET_CSV = config['locations']['sample-sheet']
 READS_DIR        = config['locations']['reads-dir']
@@ -43,6 +44,7 @@ MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 VARIANTS_DIR      = os.path.join(OUTPUT_DIR, 'variants')
 KRAKEN_DIR        = os.path.join(OUTPUT_DIR, 'kraken')
+VEP_DIR           = os.path.join(OUTPUT_DIR, 'vep')
 COVERAGE_DIR      = os.path.join(OUTPUT_DIR, 'coverage')
 REPORT_DIR        = os.path.join(OUTPUT_DIR, 'report')
 SCRIPTS_DIR       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
@@ -113,7 +115,7 @@ targets = {
         )
     }
 }
-selected_targets = ['kraken_reports']
+selected_targets = ['parse_vep_output']
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 
@@ -243,7 +245,6 @@ rule vep:
     log: os.path.join(LOG_DIR, 'vep_{sample}.log')
     shell: "{VEP_EXEC} --verbose --offline --dir_cache {VEP_DB} --DB_VERSION 101 --appris --biotype --buffer_size 5000 --check_existing --distance 5000 --mane --protein --species {params.species} --symbol --transcript_version --tsl --input_file {input} --output_file {output} >> {log} 2>&1"
 
-
 rule parse_vep:
     input: os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2.txt')
     output: os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2_parsed.txt')
@@ -341,3 +342,36 @@ rule get_qc_table:
 #         report_rmd = os.path.join(SCRIPTS_DIR, 'qc_report_per_sample.rmd')
 #     log: os.path.join(LOG_DIR, 'qc_report_{sample}.log')
 #     shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --coverage_file={input} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1"
+
+# parse the output so it can be used as input for the rmarkdown report
+rule parse_vep_output: 
+    input: os.path.join(VEP_DIR, '{sample}_vep_sarscov2.txt')
+    output: os.path.join(VEP_DIR, '{sample}_vep_sarscov2_reportinput.txt')
+    run: 
+        header_line = None
+        
+        if not header_line:
+          raise Exception("file has a format or does not has to be parsed anymore")
+        
+        # remove unnecessary lines 
+        with open(input, 'r') as file:
+            with open(output, 'w') as output_file:
+                reader = csv.reader(file, delimiter="\t")
+                writer = csv.writer(output_file, lineterminator='\n')
+        
+                # make new column SYMBOL for gene names
+                gene_column = []
+                header = next(reader)
+                header.append("SYMBOL")
+                gene_column.append(header)
+        
+                for row in reader:  # fixme: I'm not sure if the following construct is ugly or not
+                    # get gene name 
+                    extra = row[13].split(";")
+                    for element in extra:
+                        if re.search(r"SYMBOL=", element):
+                            gene = element.split("=")[1:][0]
+                            row.append(gene)
+                            gene_column.append(row)
+        
+                writer.writerows(gene_column)
