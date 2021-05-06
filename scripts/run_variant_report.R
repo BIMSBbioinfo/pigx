@@ -18,7 +18,7 @@ runReport <- function(reportFile,
                       selfContained = TRUE, 
                       quiet = FALSE) {
   
-  # outFile <- outFile
+  outFile <- outFile
   output_dir <- dirname(outFile)
   
  # htmlwidgets::setWidgetIdSeed(1234)

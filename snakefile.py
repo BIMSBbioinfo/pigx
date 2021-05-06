@@ -406,5 +406,5 @@ rule variant_report:
         """
         {RSCRIPT_EXEC} {SCRIPTS_DIR}/run_variant_report.R --reportFile={SCRIPTS_DIR}/variantreport_p_sample.rmd \
         --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts={params.loc_sigmuts} \
-        --sample_dir={params.sample_dir} --sample_name={wildcards.sample} >> {log} 2>&1
+        --sample_dir={params.sample_dir} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1
         """
