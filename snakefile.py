@@ -349,21 +349,33 @@ rule get_qc_table:
 
 # parse the output so it can be used as input for the rmarkdown report
 rule parse_vep_output: 
-    input: os.path.join(VEP_DIR, '{sample}_vep_sarscov2.txt')
-    output: os.path.join(VEP_DIR, '{sample}_vep_sarscov2_reportinput.txt')
-    run: 
+    input: 
+        vep_file = os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2.txt')
+    output:
+        vep_report_input = os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2_reportinput.txt')
+    run:
         header_line = None
         
-        if not header_line:
-          raise Exception("file has a format or does not has to be parsed anymore")
+        with open(input.vep_file, 'r') as file:
+            if header_line:
+                raise Exception("file has not the correct format or does not has to be parsed anymore")
         
-        # remove unnecessary lines 
-        with open(input, 'r') as file:
-            with open(output, 'w') as output_file:
+            with open(os.path.join(VARIANTS_DIR, "tmp.txt"), 'w+') as clean_file:
+                for num, line in enumerate(file, 1):
+                    if re.match("#Uploaded_variation", line):
+                        header_line = num
+                        clean_file.write(line[1:])
+                        break
+                for num, line in enumerate(file, header_line):
+                    clean_file.write(line)
+        
+        with open('tmp.txt', 'r') as file:
+            with open(output.vep_report_input, 'w') as output:
                 reader = csv.reader(file, delimiter="\t")
-                writer = csv.writer(output_file, lineterminator='\n')
+                writer = csv.writer(output, lineterminator='\n')
         
-                # make new column SYMBOL for gene names
+                # make new column SYMBOL for gene names 
+                # fixme: This is redundant with the making of the header line above, but works for now
                 gene_column = []
                 header = next(reader)
                 header.append("SYMBOL")
