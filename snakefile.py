@@ -28,12 +28,15 @@ from itertools import chain
 # TODO: 
 # 1. obtain things from config file
 # 2. make dummy samples and put them to tests/sample_data/reads
+# 3. align overall appearance
 READS_DIR = 'tests/sample_data/reads'
 REFERENCE_FASTA = 'tests/sample_data/NC_045512.2.fasta'
-KRAKEN_DB = 'tests/sample_data/kraken_db.db' # download first, where?
+KRAKEN_DB = 'tests/databases/kraken_db'
+KRONA_DB = 'tests/databases/krona_db'
 SAMPLE_SHEET_CSV = 'tests/sample_sheet.csv'
 
 OUTPUT_DIR = 'output'
+OUTPUT_DIR = os.path.join(os.getcwd(), OUTPUT_DIR)
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR = os.path.join(OUTPUT_DIR, 'logs')
 FASTQC_DIR = os.path.join(OUTPUT_DIR, 'fastqc')
@@ -70,9 +73,23 @@ targets = {
         'files': (
             expand(os.path.join(VARIANTS_DIR, '{sample}_snv.csv'), sample=SAMPLES)
         )
+    },
+    'variant_report': {
+        'description': "Make variants report.",
+        'files': (
+            expand(os.path.join(REPORT_DIR, '{sample}_variant_report.html'), sample=SAMPLES)
+        )
+    },
+    'kraken_reports': {
+        'description': "Make Kraken reports.",
+        'files': (
+            expand(os.path.join(REPORT_DIR, '{sample}_kraken_report.html'), sample=SAMPLES) +
+            expand(os.path.join(REPORT_DIR, '{sample}_krona_report.html'), sample=SAMPLES)
+        )
     }
+
 }
-selected_targets = ['lofreq']
+selected_targets = ['kraken_reports']
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 
@@ -141,11 +158,18 @@ rule bwa_align:
 # same rule to get unaligned .bam
 # probably something like below, but needs to be checked for our purpose (kraken reports)
 # "samtools view -bh -F 2 {input} > {output} 2>> {log} 3>&2"
-rule samtools_filter:
+rule samtools_filter_aligned:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
-    log: os.path.join(LOG_DIR, 'samtools_filter_{sample}.log')
+    log: os.path.join(LOG_DIR, 'samtools_filter_aligned_{sample}.log')
     shell: "samtools view -bh -f 2 -F 2048 {input} > {output} 2>> {log} 3>&2"
+
+
+rule samtools_filter_unaligned:
+    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
+    output: os.path.join(MAPPED_READS_DIR, '{sample}_unaligned.bam')
+    log: os.path.join(LOG_DIR, 'samtools_filter_unaligned_{sample}.log')
+    shell: "samtools view -bh -F 2 {input} > {output} 2>> {log} 3>&2"
 
 # probably not needed --> directly converted during filtering step (-b)
 # rule samtools_sam2bam_A:
@@ -221,28 +245,37 @@ rule vcf2csv:
 #     shell: "Rscript {SCRIPTS_DIR}/run_variant_report.R --reportFile={SCRIPTS_DIR}/variantreport_p_sample.rmd --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts=??? --sample_dir=??? --sample_name={wildcards.sample} >> {log} 2>&1"
 
 
-# TODO: check command/output as in miro board R1 & R2 is mentioned
-# rule bam2fastq:
-#     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.bam')
-#     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.fastq')
-#     log: os.path.join(LOG_DIR, 'bam2fastq_{sample}.log')
-#     shell: "samtools fastq {input} > {output} >> {log} 2>&1"
+rule bam2fastq:
+    input: os.path.join(MAPPED_READS_DIR, '{sample}_unaligned.bam')
+    output: os.path.join(MAPPED_READS_DIR, '{sample}_unaligned.fastq')
+    log: os.path.join(LOG_DIR, 'bam2fastq_{sample}.log')
+    shell: "samtools fastq {input} > {output} 2>> {log} 3>&2"
 
 
-# TODO: check command as in miro board there where R1 & R2 inputs
-# rule kraken:
-#     input:
-#         unaligned_fastq = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.fastq'),
-#         database = KRAKEN_DB
-#     output: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
-#     log: os.path.join(LOG_DIR, 'kraken_{sample}.log')
-#     shell: "kraken2 --output {output} --db {input.database} --paired {input.unaligned_fastq} >> {log} 2>&1"
+rule kraken:
+    input:
+        unaligned_fastq = os.path.join(MAPPED_READS_DIR, '{sample}_unaligned.fastq'),
+        database = KRAKEN_DB
+    output: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
+    log: os.path.join(LOG_DIR, 'kraken_{sample}.log')
+    shell: "kraken2 --report {output} --db {input.database} {input.unaligned_fastq} >> {log} 2>&1"
 
 
-# TODO: adapt command and possibly input due to 'taxonomy_folder'
-# What is meant by taxonomy_folder??
-# rule kraken_report:
-#     input: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
-#     output: os.path.join(REPORT_DIR, '{sample}_kraken_report.html')
-#     log: os.path.join(LOG_DIR, 'kraken_report_{sample}.log')
-#     shell: "ktImportTaxonomy -m 3 -t 5 {input} -tax [taxonomy folder]??? -o {output} >> {log} 2>&1"
+rule kraken_report:
+    input: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
+    output: os.path.join(REPORT_DIR, '{sample}_kraken_report.html')
+    params:
+        run_report = os.path.join(SCRIPTS_DIR, 'run_kraken_report.R'),
+        report_rmd = os.path.join(SCRIPTS_DIR, 'kraken_report.Rmd'),
+        kraken_output = os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
+    log: os.path.join(LOG_DIR, 'kraken_report_{sample}.log')
+    shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --kraken_output={params.kraken_output} --sample_name={wildcards.sample} --output_file={output} >> {log} 2>&1"
+
+
+rule krona_report:
+    input: 
+        kraken_output = os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt'),
+        database = KRONA_DB
+    output: os.path.join(REPORT_DIR, '{sample}_krona_report.html')
+    log: os.path.join(LOG_DIR, 'krona_report_{sample}.log')
+    shell: "ktImportTaxonomy -m 3 -t 5 {input.kraken_output} -tax {input.database} -o {output} >> {log} 2>&1"
