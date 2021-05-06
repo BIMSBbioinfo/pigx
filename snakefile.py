@@ -44,7 +44,6 @@ MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 VARIANTS_DIR      = os.path.join(OUTPUT_DIR, 'variants')
 KRAKEN_DIR        = os.path.join(OUTPUT_DIR, 'kraken')
-VEP_DIR           = os.path.join(OUTPUT_DIR, 'vep')
 COVERAGE_DIR      = os.path.join(OUTPUT_DIR, 'coverage')
 REPORT_DIR        = os.path.join(OUTPUT_DIR, 'report')
 SCRIPTS_DIR       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
@@ -115,7 +114,7 @@ targets = {
         )
     }
 }
-selected_targets = ['parse_vep_output']
+selected_targets = ['lofreq']
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 
@@ -243,7 +242,12 @@ rule vep:
     params:
         species = "sars_cov_2"
     log: os.path.join(LOG_DIR, 'vep_{sample}.log')
-    shell: "{VEP_EXEC} --verbose --offline --dir_cache {VEP_DB} --DB_VERSION 101 --appris --biotype --buffer_size 5000 --check_existing --distance 5000 --mane --protein --species {params.species} --symbol --transcript_version --tsl --input_file {input} --output_file {output} >> {log} 2>&1"
+    shell:
+      """
+      {VEP_EXEC} --verbose --offline --dir_cache {VEP_DB} --DB_VERSION 101 --appris --biotype --buffer_size 5000 --check_existing\
+      --distance 5000 --mane --protein --species {params.species} --symbol --transcript_version --tsl\
+      --input_file {input} --output_file {output} >> {log} 2>&1
+      """
 
 rule parse_vep:
     input: os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2.txt')
