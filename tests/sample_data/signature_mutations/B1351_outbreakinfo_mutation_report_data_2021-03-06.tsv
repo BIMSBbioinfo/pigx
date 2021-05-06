@@ -1,0 +1,9 @@
+type	is_synonymous	mutation	gene	ref_aa	codon_num	alt_aa	source
+"substitution"	false	"ORF1ab:K1655N"	"ORF1ab"	"K"	1655	"N"	
+"substitution"	false	"E:P71L"	"E"	"P"	71	"L"	
+"substitution"	false	"N:T205I"	"N"	"T"	205	"I"	
+"substitution"	false	"S:K417N"	"S"	"K"	417	"N"	
+"substitution"	false	"S:E484K"	"S"	"E"	484	"K"	
+"substitution"	false	"S:N501Y"	"S"	"N"	501	"Y"	
+"substitution"	false	"S:D614G"	"S"	"D"	614	"G"	
+"substitution"	false	"S:A701V"	"S"	"A"	701	"V"	

@@ -1,0 +1,23 @@
+type	is_synonymous	mutation	gene	ref_aa	codon_num	alt_aa	source	ref_codon	pos	change_length_nt
+"substitution"	false	"N:P80R"	"N"	"P"	80	"R"				
+"substitution"	false	"ORF8:E92K"	"ORF8"	"E"	92	"K"				
+"substitution"	false	"ORF3a:G174C"	"ORF3a"	"G"	174	"C"				
+"substitution"	false	"S:L18F"	"S"	"L"	18	"F"				
+"substitution"	false	"S:T20N"	"S"	"T"	20	"N"				
+"substitution"	false	"S:P26S"	"S"	"P"	26	"S"				
+"substitution"	false	"S:D138Y"	"S"	"D"	138	"Y"				
+"substitution"	false	"S:R190S"	"S"	"R"	190	"S"				
+"substitution"	false	"S:K417T"	"S"	"K"	417	"T"				
+"substitution"	false	"S:E484K"	"S"	"E"	484	"K"				
+"substitution"	false	"S:N501Y"	"S"	"N"	501	"Y"				
+"substitution"	false	"S:D614G"	"S"	"D"	614	"G"				
+"substitution"	false	"S:H655Y"	"S"	"H"	655	"Y"				
+"substitution"	false	"S:T1027I"	"S"	"T"	1027	"I"				
+"substitution"	false	"ORF1ab:E5662D"	"ORF1ab"	"E"	5662	"D"				
+"substitution"	false	"ORF1ab:K1795Q"	"ORF1ab"	"K"	1795	"Q"				
+"substitution"	false	"ORF1ab:S1188L"	"ORF1ab"	"S"	1188	"L"				
+"substitution"	false	"ORF1ab:I760T"	"ORF1ab"	"I"	760	"T"				
+"deletion"		"ORF1a:S3675"	"ORF1a"	"S"	3675	"NA"		"TGGTTTTAA"	11288	9
+"deletion"		"ORF1a:G3676"	"ORF1a"	"G"	3676	"NA"		"TGGTTTTAA"	11288	9
+"deletion"		"ORF1a:F3677"	"ORF1a"	"F"	3677	"NA"		"TGGTTTTAA"	11288	9
+"substitution"	false	"ORF1ab:F681L"	"ORF1ab"	"F"	681	"L"				
