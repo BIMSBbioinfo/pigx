@@ -114,7 +114,7 @@ targets = {
         )
     }
 }
-selected_targets = ['lofreq']
+selected_targets = ['final_reports']
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 
@@ -235,7 +235,6 @@ rule vcf2csv:
     log: os.path.join(LOG_DIR, 'vcf2csv_{sample}.log')
     shell: "{PYTHON_EXEC} {params.script} {input} >> {log} 2>&1"
 
-
 rule vep:
     input: os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
     output: os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2.txt')
@@ -348,6 +347,7 @@ rule get_qc_table:
 #     shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --coverage_file={input} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1"
 
 # parse the output so it can be used as input for the rmarkdown report
+# TODO add log
 rule parse_vep_output: 
     input: 
         vep_file = os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2.txt')
@@ -391,3 +391,20 @@ rule parse_vep_output:
                             gene_column.append(row)
         
                 writer.writerows(gene_column)
+
+# TODO: fill in blanks, why sample_dir? where are sigmuts coming from?
+rule variant_report:
+    input:
+        vep_txt = os.path.join(VEP_DIR, '{sample}_vep_sarscov2_reportinput.txt'),
+        snv_csv = os.path.join(VARIANTS_DIR, '{sample}_snv.csv')
+    output: os.path.join(REPORT_DIR, '{sample}_variant_report.html')
+    params:
+        sample_dir = VARIANTS_DIR,
+        loc_sigmuts = SIGMUT_DB
+    log: os.path.join(LOG_DIR, 'variant_report_{sample}.log')
+    shell:
+        """
+        {RSCRIPT_EXEC} {SCRIPTS_DIR}/run_variant_report.R --reportFile={SCRIPTS_DIR}/variantreport_p_sample.rmd \
+        --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts={params.loc_sigmuts} \
+        --sample_dir={params.sample_dir} --sample_name={wildcards.sample} >> {log} 2>&1
+        """
