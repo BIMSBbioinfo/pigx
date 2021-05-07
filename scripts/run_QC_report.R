@@ -8,23 +8,18 @@
 # ! signature mutation sources are hardcoded
 
 runReport <- function(reportFile,
-                      vep_txt_file, 
-                      snv_csv_file,
-                      location_sigmuts,
-                      sample_dir,
+                      coverage_file,
                       sample_name,
                       outFile,
                       # logo,
                       selfContained = TRUE, 
                       quiet = FALSE) {
   
-  # outFile <- outFile
-  output_dir <- dirname(outFile)
+  outFile <- outFile
   
  # htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
-    input = reportFile, 
-    output_dir = output_dir,
+    input = reportFile,
   #  intermediates_dir = file.path(workdir, prefix),
     clean = TRUE,
     output_file = outFile,
@@ -37,10 +32,7 @@ runReport <- function(reportFile,
       number_sections = TRUE
     ),
     output_options = list(self_contained = selfContained),
-    params = list(vep_txt_file = vep_txt_file,
-                  snv_csv_file = snv_csv_file,
-                  location_sigmuts = location_sigmuts,
-                  sample_dir = sample_dir,
+    params = list(coverage_file = coverage_file,
                   outFile = outFile,
                   sample_name = sample_name
                #  logo = logo, 
@@ -48,10 +40,10 @@ runReport <- function(reportFile,
     quiet = quiet
   )
   
-  if(dir.exists(file.path(sample_dir, sample_name))) {
-  unlink(file.path(sample_dir, sample_name), recursive = TRUE)
-  }
-}
+#   if(dir.exists(file.path(sample_dir, sample_name))) {
+#   unlink(file.path(sample_dir, sample_name), recursive = TRUE)
+#   }
+# }
 
 #1. Collect arguments
 args <- commandArgs(TRUE)
@@ -77,18 +69,12 @@ argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 
 reportFile <- argsL$reportFile
-vep_txt_file <- argsL$vep_txt_file
-snv_csv_file <- argsL$snv_csv_file
-location_sigmuts <- argsL$location_sigmuts
-sample_dir <- argsL$sample_dir
+coverage_file <- argsL$coverage_file
 outFile <- argsL$outFile
 sample_name <- argsL$sample_name
 
 runReport(reportFile = reportFile,
-          vep_txt_file = vep_txt_file, 
-          snv_csv_file = snv_csv_file, 
-          location_sigmuts = location_sigmuts, 
-          sample_dir = sample_dir,
+          coverage_file = coverage_file,
           sample_name = sample_name,
           outFile = outFile,
           # logo = logo,

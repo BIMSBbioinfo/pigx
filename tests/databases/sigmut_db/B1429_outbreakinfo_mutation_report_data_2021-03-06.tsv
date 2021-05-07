@@ -1,0 +1,11 @@
+mutation	type	gene	ref_codon	pos	ref_aa	codon_num	alt_aa	source
+"ORF1a:T265I"	"substitution"	"ORF1a"	"ACC"	1059	"T"	265	"I"	
+"ORF1a:I4205V"	"substitution"	"ORF1a"	"ATC"	12879	"I"	4205	"V"	
+"ORF1b:P314L"	"substitution"	"ORF1b"	"CCT"	14407	"P"	314	"L"	
+"ORF1b:D1183Y"	"substitution"	"ORF1b"	"GAT"	17013	"D"	1183	"Y"	
+"S:S13I"	"substitution"	"S"	"AGT"	21599	"S"	13	"I"	
+"S:W152C"	"substitution"	"S"	"TGG"	22017	"W"	152	"C"	
+"S:L452R"	"substitution"	"S"	"CTG"	22916	"L"	452	"R"	
+"S:D614G"	"substitution"	"S"	"GAT"	23402	"D"	614	"G"	
+"ORF3a:Q57H"	"substitution"	"ORF3a"	"CAG"	25562	"Q"	57	"H"	
+"N:T205I"	"substitution"	"N"	"ACT"	28887	"T"	205	"I"	

@@ -98,7 +98,7 @@ targets = {
         )
     }
 }
-selected_targets = ['variant_reports']
+selected_targets = ['kraken_reports']
 OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in selected_targets]))
 
 
@@ -245,7 +245,7 @@ rule variant_report:
     output: os.path.join(REPORT_DIR, '{sample}_variant_report.html')
     params:
         run_report = os.path.join(SCRIPTS_DIR, 'run_variant_report.R'),
-        report_rmd = os.path.join(SCRIPTS_DIR, 'variant_report.Rmd')
+        report_rmd = os.path.join(SCRIPTS_DIR, 'variantreport_p_sample.rmd')
     log: os.path.join(LOG_DIR, 'variant_report_{sample}.log')
     shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts={SIGMUT_DB} --sample_dir={VARIANTS_DIR} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1"
 
@@ -270,8 +270,8 @@ rule kraken_report:
     input: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
     output: os.path.join(REPORT_DIR, '{sample}_kraken_report.html')
     params:
-        run_report = os.path.join(SCRIPTS_DIR, 'run_kraken_report.R'),
-        report_rmd = os.path.join(SCRIPTS_DIR, 'kraken_report.Rmd')
+        run_report = os.path.join(SCRIPTS_DIR, 'run_Kraken2-report.R'),
+        report_rmd = os.path.join(SCRIPTS_DIR, 'Kraken2-report.Rmd')
     log: os.path.join(LOG_DIR, 'kraken_report_{sample}.log')
     shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --kraken_output={input} --sample_name={wildcards.sample} --output_file={output} >> {log} 2>&1"
 
@@ -322,7 +322,7 @@ rule get_qc_table:
 #     input: os.path.join(COVERAGE_DIR, '{sample}_merged_covs.csv')
 #     output: os.path.join(REPORT_DIR, '{sample}_qc_report.html')
 #     params:
-#         run_report = os.path.join(SCRIPTS_DIR, 'run_qc_report.R'),
-#         report_rmd = os.path.join(SCRIPTS_DIR, 'qc_report.Rmd')
+#         run_report = os.path.join(SCRIPTS_DIR, 'run_QC_report.R'),
+#         report_rmd = os.path.join(SCRIPTS_DIR, 'qc_report_per_sample.rmd')
 #     log: os.path.join(LOG_DIR, 'qc_report_{sample}.log')
 #     shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --coverage_file={input} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1"
