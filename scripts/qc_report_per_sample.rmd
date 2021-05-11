@@ -1,0 +1,89 @@
+---
+title: "SARS-CoV-2 QC report"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+params:
+    coverage_file: ''
+    sample_name: ''
+theme: darkly
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+library(DT)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(qpcR)
+library(stringr)
+library(magrittr)
+library(openssl)
+```
+# Input Settings
+```{r InputSettings, echo = FALSE, include = FALSE}
+coverage_file <- params$coverage_file
+sample_name <- params$sample_name
+``` 
+```{r printInputSettings, echo = FALSE, include = FALSE}
+# coverage_file <- '/home/vfs/PycharmProjects/Akalinlab_pathogenomics/PiGx_WW/tests/coverage/Test_merged_covs.csv'
+# sample_name <- "Test"
+``` 
+### Sample: `r sample_name` 
+```{r reading data, include = FALSE}
+coverage.df <- read.table(coverage_file,sep = "\t", header = T) 
+coverage.df <- na_if(coverage.df, "[]")
+coverage.df <- gsub('\\[','',coverage.df)
+coverage.df <- gsub('\\]','',coverage.df)
+# fixme: this can be sure done in a nicer and more compact way
+```
+## Amplicon coverage  
+The information about the amplicon primer was taken from the [ARTIC bioinformatics platform](https://github.com/joshquick/artic-ncov2019/blob/master/primer_schemes/nCoV-2019/V3/nCoV-2019.bed).
+The reference name "MN908947.3" was changed to "NC_045512.2". Both are describing the same reference genome for 
+[SARS-CoV-2](https://www.ncbi.nlm.nih.gov/nuccore/1798174254). 
+ 
+```{r, message=F, warning=F, echo = FALSE}
+
+AmpliconCoverage <- data.frame("Number of amplicon fully covered" = paste0(coverage.df[1],' out of 98'), 
+                  "Anmplicons partially covered" = coverage.df[2],
+                  "Drop-out amplicons" = coverage.df[3]) # maybe more clear title stating which coverage
+
+DT::datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE))
+
+```
+
+## Coverage
+
+```{r, message=F, warning=F, echo = FALSE}
+
+Coverage <- data.frame("Total coverage" = coverage.df[4], 
+                  "Aligned reads" = paste(round(as.integer(coverage.df[5]),1),"%"),
+                  "Mean depth" = round(as.integer(coverage.df[6]))) # maybe more clear title stating which coverage
+
+DT::datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
+
+```
+## FastQC and Trimming
+
+Download: [fastqc report of unprocessed data](/path/to/fastqc.html)  
+Download: [fastqc report of pre-processes data](/path/to/fastqc.html) 
+
+
+
+The reads were pre-processed as followed:  
+
+|      |     |  
+|:-----|:----|  
+|trim length cutoff prinseq |0.2|
+
+## Download Stats csv
+```{r, include = F}
+ 
+write.csv2(coverage.df, paste0(dirname(coverage_file),"/report_download_coverage.csv")) # not sure about the funct of the dataframe here, but it works so I leave it for now
+
+readLines(coverage_file) %>% 
+  paste0(collapse="\n") %>% 
+  openssl::base64_encode() -> coverage
+```
+Coverage statistics:  
+[Download Coverage_stats.csv](`r sprintf('data:text/csv;base64,%s', coverage)`)
+

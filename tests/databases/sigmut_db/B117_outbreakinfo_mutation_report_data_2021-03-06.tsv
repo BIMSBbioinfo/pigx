@@ -1,0 +1,22 @@
+mutation	type	gene	ref_codon	pos	ref_aa	codon_num	alt_aa	source	change_length_nt
+"ORF1a:T1001I"	"substitution"	"ORF1a"	"ACT"	3266	"T"	1001	"I"		
+"ORF1a:A1708D"	"substitution"	"ORF1a"	"GCT"	5387	"A"	1708	"D"		
+"ORF1a:I2230T"	"substitution"	"ORF1a"	"ATA"	6954	"I"	2230	"T"		
+"ORF1a:S3675"	"deletion"	"ORF1a"	"TGGTTTTAA"	11288	"S"	3675	"NA"		9
+"ORF1a:G3676"	"deletion"	"ORF1a"	"TGGTTTTAA"	11288	"G"	3676	"NA"		9
+"ORF1a:F3677"	"deletion"	"ORF1a"	"TGGTTTTAA"	11288	"F"	3677	"NA"		9
+"S:H69"	"deletion"	"S"	"CATGTC"	21765	"H"	69	"NA"		6
+"S:V70"	"deletion"	"S"	"CATGTC"	21765	"V"	70	"NA"		6
+"S:Y144"	"deletion"	"S"	"TAT"	21990	"Y"	144	"NA"		3
+"S:N501Y"	"substitution"	"S"	"AAT"	23063	"N"	501	"Y"		
+"S:A570D"	"substitution"	"S"	"GCT"	23271	"A"	570	"D"		
+"S:D614G"	"substitution"	"S"	"GAT"	23402	"D"	614	"G"		
+"S:P681H"	"substitution"	"S"	"CCT"	23604	"P"	681	"H"		
+"S:T716I"	"substitution"	"S"	"ACA"	23708	"T"	716	"I"		
+"S:S982A"	"substitution"	"S"	"TCA"	24506	"S"	982	"A"		
+"S:D1118H"	"substitution"	"S"	"GAC"	24914	"D"	1118	"H"		
+"ORF8:Q27*"	"substitution"	"ORF8"	"CAA"	27971	"Q"	27	"*"		
+"ORF8:R52I"	"substitution"	"ORF8"	"AGA"	28047	"R"	52	"I"		
+"ORF8:Y73C"	"substitution"	"ORF8"	"TAC"	28111	"Y"	73	"C"		
+"N:D3L"	"substitution"	"N"	"GAT"	28280	"D"	3	"L"		
+"N:S235F"	"substitution"	"N"	"TCT"	28977	"S"	235	"F"		

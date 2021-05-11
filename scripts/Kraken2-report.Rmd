@@ -1,0 +1,58 @@
+---
+title: "Kraken2-report"
+#author: "mfaxel"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+#output: html_document
+params:
+  #sample_dir: '../../tests/sample_data/' # must be kraken REPORT file
+  #sample_name: 'tmp_unaligned_krakenReport'
+  sample_name: ""
+  kraken_output: ""
+
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+library(DT)
+```
+
+
+
+
+```{r, echo=FALSE}
+#input 
+sampleName <- params$sample_name
+#sampleDir <- params$sample_dir
+#krakenReportFile <- paste0(params$sample_dir, params$sample_name)
+# krakenReportFile <- paste0(params$sample_dir, params$sample_name, ".txt")
+krakenReportFile <- kraken_output
+```
+
+
+## Kraken2 report on unaligned reads from the Sars-Cov2 enriched samples
+
+```{r,echo=F}
+print(paste( "Sample: ",sampleName))
+```
+
+
+The Sars-Cov2 enriched wastewater samples are aligned to the Virus genome. The unaligned reads, that are left are aligned with Kraken2 against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2). This report is an overview over the species found.  
+
+A table with all the species found: 
+
+* Column explanation:   
+  + Percentage of fragments covered by the clade rooted at this taxon  
+  + Number of fragments covered by the clade rooted at this taxon  
+  + Number of fragments assigned directly to this taxon  
+  + A rank code, indicating (U)nclassified, (R)oot, (D)omain, (K)ingdom, (P)hylum, (C)lass, (O)rder, (F)amily, (G)enus, or (S)pecies.     Taxa that are not at any of these 10 ranks have a rank code that is formed by using the rank code of the closest ancestor rank         with a number indicating the distance from that rank. E.g., "G2" is a rank code indicating a taxon is between genus and species         and the grandparent taxon is at the genus rank.  
+  + NCBI taxonomic ID number  
+  + Indented scientific name  
+
+```{r, echo=FALSE}
+table<- read.table(krakenReportFile,sep = "\t")
+header_table <- c("percent","num_fragments","num_fragments_taxon","rank","NCBI_ID","scientific_name")
+colnames(table)<-header_table
+datatable(table)
+```
