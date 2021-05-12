@@ -1,0 +1,9 @@
+locations:
+  output-dir: output
+  reads-dir: tests/sample_data/reads
+  reference-fasta: tests/sample_data/NC_045512.2.fasta
+  amplicons-bed: tests/sample_data/nCoV-2019_NCref.bed
+  kraken-db-dir: tests/databases/kraken_db
+  krona-db-dir: tests/databases/krona_db
+  sigmut-db-dir: tests/databases/sigmut_db
+  vep-db-dir: tests/databases/vep_db

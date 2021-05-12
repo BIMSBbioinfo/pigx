@@ -23,22 +23,26 @@ Snakefile for PiGx SARS CoV2 wastewater sequencing pipeline
 
 import os
 import csv
+import yaml
 from itertools import chain
 
-# TODO: 
-# 1. obtain things from config file
-# 2. make dummy samples and put them to tests/sample_data/reads
-# 3. align overall appearance
-READS_DIR = os.path.join(os.getcwd(), 'tests/sample_data/reads')
-REFERENCE_FASTA = os.path.join(os.getcwd(), 'tests/sample_data/NC_045512.2.fasta')
-AMPLICONS_BED = os.path.join(os.getcwd(), 'tests/sample_data/nCoV-2019_NCref.bed')
-KRAKEN_DB = os.path.join(os.getcwd(), 'tests/databases/kraken_db')
-KRONA_DB = os.path.join(os.getcwd(), 'tests/databases/krona_db')
-SIGMUT_DB = os.path.join(os.getcwd(), 'tests/databases/sigmut_db')
-VEP_DB = os.path.join(os.getcwd(), 'tests/databases/vep_db')
+# TODO: align overall appearance
+
+# load settings here just for demonstration, do it the pigx-way later on
+with open(os.path.join(os.getcwd(), 'tests/settings.yaml'), 'r') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
+
 SAMPLE_SHEET_CSV = os.path.join(os.getcwd(), 'tests/sample_sheet.csv')
 
-OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
+READS_DIR = os.path.join(os.getcwd(), config['locations']['reads-dir'])
+REFERENCE_FASTA = os.path.join(os.getcwd(), config['locations']['reference-fasta'])
+AMPLICONS_BED = os.path.join(os.getcwd(), config['locations']['amplicons-bed'])
+KRAKEN_DB = os.path.join(os.getcwd(), config['locations']['kraken-db-dir'])
+KRONA_DB = os.path.join(os.getcwd(), config['locations']['krona-db-dir'])
+SIGMUT_DB = os.path.join(os.getcwd(), config['locations']['sigmut-db-dir'])
+VEP_DB = os.path.join(os.getcwd(), config['locations']['vep-db-dir'])
+
+OUTPUT_DIR = os.path.join(os.getcwd(), config['locations']['output-dir'])
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR = os.path.join(OUTPUT_DIR, 'logs')
