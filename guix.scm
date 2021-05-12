@@ -44,6 +44,7 @@
                                      "r-gprofiler2"
                                      "r-summarizedexperiment"
                                      ))
+       ("python-iniconfig" ,(specification->package "python-iniconfig"))
        )
      )))
 
