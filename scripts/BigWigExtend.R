@@ -85,7 +85,7 @@ Extend_Regions(
   input_bamfile   = argv$input[['bamfile']],
   input_stats     = argv$input[['stats']],
   outpath         = argv$output[['outfile']],
-  extend          = argv$params[['extend']],
+  extend          = argv$params[['extension']],
   bam_name        = argv$params[['sample_name']],
   scale_index     = argv$params[['scale']],
   library_type    = argv$params[['library_type']],

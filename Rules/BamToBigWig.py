@@ -10,7 +10,7 @@ rule bam2bigWig:
     output:
         outfile = os.path.join(PATH_MAPPED, "{genome_type}", "{name}", "{name}.bw")
     params:
-        extend          = PARAMS['export_bigwig']['extend'],
+        extension       = PARAMS['export_bigwig']['extend'],
         scale           = PARAMS['export_bigwig']['scale_bw'],
         deduplicate     = PARAMS['export_bigwig']['deduplicate'],
         minmapq         = PARAMS['export_bigwig']['minmapq'],
