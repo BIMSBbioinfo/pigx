@@ -11,8 +11,8 @@ params:
   outFile: ''
 ---
 ```{r setup, include=FALSE, messages = FALSE, warnings = FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-knitr::opts_knit$set(root.dir = params$workdir)
+# knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+# knitr::opts_knit$set(root.dir = params$workdir)
 library(DT)
 library(ggplot2)
 library(dplyr)
@@ -24,21 +24,21 @@ library(openssl)
 ```
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
-vepfile <- params$vep_txt_file
-snvfile <- params$snv_csv_file
-sampledir <- params$sample_dir
-location_sigmuts <- params$location_sigmuts
-sample_name <- params$sample_name
-outFile <- params$outFile
+# vepfile <- params$vep_txt_file
+# snvfile <- params$snv_csv_file
+# sampledir <- params$sample_dir
+# location_sigmuts <- params$location_sigmuts
+# sample_name <- params$sample_name
+# outFile <- params$outFile
 ``` 
 ### Sample: `r sample_name` 
 
 ```{r test_files, include = FALSE}
-# location_sigmuts <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/vep_mutation_matching/signature_mutations'
-# sampledir <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test'
-# # vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/Test_vep_sarscov2_reportinput.txt' 
-# vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/report_ready.txt' 
-# snvfile <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test/variants/SNVs/snvs.csv'
+location_sigmuts <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/vep_mutation_matching/signature_mutations'
+sampledir <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test'
+# vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/Test_vep_sarscov2_reportinput.txt' 
+vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/report_ready.txt' 
+snvfile <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test/variants/SNVs/snvs.csv'
 ```
 This report shows the variant analysis of SARS-CoV-2 RNA-seq samples from wastewater samples. Variants are 
 identified by SNV calling. Translated protein mutations were matched against lists of signature mutations for known
@@ -490,7 +490,7 @@ each present variant.
 ## Raw data 
 
 ```{r, include = F}
-write.csv2(mtcars, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
+# write.csv2(mtcars, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
 library(magrittr)
 readLines(snvfile) %>% 
   paste0(collapse="\n") %>% 
@@ -500,10 +500,23 @@ Called SNVs:
 [Download SNVs.csv](`r sprintf('data:text/csv;base64,%s', snvs)`)
 ```{r, include = F}
 # can possible be fused together with above. But rigth now it's safer like this. 
-write.csv2(vepfile.df, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
+# write.csv2(vepfile.df, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
 readLines(vepfile) %>% 
   paste0(collapse="\n") %>% 
   openssl::base64_encode() -> vep
 ```
 Variant effect prediction (*Ensemble VEP output*):  
 [Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)
+
+```{r csv_output_variant_plot, include = F}
+
+output_variant_plot <- data.frame(date = "21/03/2", # brauche ich als input von sample sheet 
+                                  location = character())
+
+
+# 1. get all possible variants from sig_mutations.df
+# 2. check if variant has a unique row in df (from plotting)
+#   - if yes: write value in "values"
+#   - if not: write NA
+write.csv2(vepfile.df, "./file.csv")
+```
