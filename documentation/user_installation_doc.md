@@ -58,24 +58,22 @@ It is also possible to have multiple Kraken2 databases, just be sure to provide 
 First download and unpack the database in the `tests/databases/kraken_db/`:
 
 ```
-mkdir tests/databases/kraken_db/
-cd tests/databases/kraken_db/
+DIR=tests/databases/kraken_db/
+mkdir -p $DIR
 
 # NOTE: This command will download a very large file, after unpacking this will
 # require about 100GB of disc space. If this is not feasible use another
 # database instead. For this please see link above or commented lines below.
- wget 'https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_20210127.tar.gz' --output-document 'k2_pluspfp_20210127.tar.gz'
- tar -xvf k2_pluspfp_20210127.tar.gz
+wget -qO- https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_20210127.tar.gz | tar -C $DIR -xzv
 
 # Use the following two lines to use smaller 8GB version instead.
-# wget 'https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_8gb_20210127.tar.gz' --output-document 'k2_pluspfp_8gb_20210127.tar.gz'
-# tar -xvf k2_pluspfp_8gb_20210127.tar.gz
+# wget -qO- https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_8gb_20210127.tar.gz | tar -C $DIR -xzv
 ```
 
-Next move one folder up to `databases/` and build the Kraken database. This might take a while (depends on the size of the downloaded database):
+Next go to the `tests/databases/` directory and build the Kraken database. This might take a while (depends on the size of the downloaded database):
 
 ```
-cd ..
+cd tests/databases
 DBNAME=kraken_db/
 kraken2-build --use-ftp --download-taxonomy --db $DBNAME # if this fails, you might want to try it without the --use-ftp flag
 kraken2-build --build --db $DBNAME
@@ -88,8 +86,8 @@ Kraken might tell you that it can't find a library subdirectory. If that's the c
 Krona Tools needs a two files, which have to be installed in the `tests/databases/krona_db/` folder. Also this might take a while:
 
 ```
-DBNAME=krona_db/
-mkdir $DBNAME
+DBNAME=tests/databases/krona_db/
+mkdir -p $DBNAME
 KRONA=$(dirname $(which ktImportTaxonomy))/../share/krona-tools/ # this is just a workaround until tool paths are declared
 $KRONA/updateTaxonomy.sh $DBNAME # the scripts are stored a priori in that folder
 $KRONA/updateAccessions.sh $DBNAME
@@ -97,14 +95,12 @@ $KRONA/updateAccessions.sh $DBNAME
 
 ### VEP database
 
-Just download sars_cov_2 database for VEP and unpack it in the `tests/databases/vep_db/` directory.
+Just download the `sars_cov_2` database for VEP and unpack it in the `tests/databases/vep_db/` directory.
 
 ```
-DBNAME=vep_db/
-mkdir $DBNAME
-cd $DBNAME
-wget ftp://ftp.ensemblgenomes.org/pub/viruses/variation/indexed_vep_cache/sars_cov_2_vep_101_ASM985889v3.tar.gz --output-document 'sars_cov_2_vep_101_ASM985889v3.tar.gz'
-tar -xvf sars_cov_2_vep_101_ASM985889v3.tar.gz
+DBNAME=tests/databases/vep_db/
+mkdir -p $DBNAME
+wget -qO- ftp://ftp.ensemblgenomes.org/pub/viruses/variation/indexed_vep_cache/sars_cov_2_vep_101_ASM985889v3.tar.gz | tar -C $DBNAME -xzv
 ```
 
 ### sigmut database
