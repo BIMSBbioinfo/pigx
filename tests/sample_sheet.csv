@@ -1,3 +1,2 @@
 name,reads,reads2
-SRR10903401,SRR10903401_R1.fastq,SRR10903401_R2.fastq
-SRR10903402,SRR10903402_R1.fastq,SRR10903402_R2.fastq
+Test,Test_R1.fastq,Test_R2.fastq
