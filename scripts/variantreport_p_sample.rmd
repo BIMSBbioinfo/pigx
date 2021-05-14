@@ -354,7 +354,7 @@ DT::datatable(NoSignatureTable,
                          dom = 'Bfrtip'),
               filter = "bottom")
 ```
-
+# Deconvolution
 
 
 ## Methods
@@ -376,6 +376,9 @@ DT::datatable(NoSignatureTable,
 |Restrict results by severity of consequence | no |  
 |upstream/downstream distance | 5000bp|  
 
+## Deconvolution 
+Deconvolution is done by using robust regression. The resulting coefficients are normalized to get the percentage of
+each present variant.
 
 ## Raw data 
 
