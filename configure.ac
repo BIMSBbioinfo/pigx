@@ -34,6 +34,7 @@ AS_IF([test -z "$$1"],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
 
 find_or_override_prog([SNAKEMAKE],    [snakemake])
+find_or_override_prog([SAMTOOLS],     [samtools])
 find_or_override_prog([BWA],          [bwa])
 find_or_override_prog([FASTQC],       [fastqc])
 find_or_override_prog([R],            [R])
