@@ -10,7 +10,7 @@ params:
   sample_name: ''
   outFile: ''
 ---
-```{r setup, include=FALSE, messages = FALSE, warnings = FALSE}
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 # knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 # knitr::opts_knit$set(root.dir = params$workdir)
 library(DT)
@@ -24,21 +24,21 @@ library(openssl)
 ```
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
-# vepfile <- params$vep_txt_file
-# snvfile <- params$snv_csv_file
-# sampledir <- params$sample_dir
-# location_sigmuts <- params$location_sigmuts
-# sample_name <- params$sample_name
-# outFile <- params$outFile
+vepfile <- params$vep_txt_file
+snvfile <- params$snv_csv_file
+sampledir <- params$sample_dir
+location_sigmuts <- params$location_sigmuts
+sample_name <- params$sample_name
+outFile <- params$outFile
 ``` 
 ### Sample: `r sample_name` 
 
 ```{r test_files, include = FALSE}
-location_sigmuts <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/vep_mutation_matching/signature_mutations'
-sampledir <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test'
-# vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/Test_vep_sarscov2_reportinput.txt' 
-vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/report_ready.txt' 
-snvfile <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test/variants/SNVs/snvs.csv'
+# location_sigmuts <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/vep_mutation_matching/signature_mutations'
+# sampledir <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test'
+# # vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/Test_vep_sarscov2_reportinput.txt' 
+# vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/report_ready.txt' 
+# snvfile <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test/variants/SNVs/snvs.csv'
 ```
 This report shows the variant analysis of SARS-CoV-2 RNA-seq samples from wastewater samples. Variants are 
 identified by SNV calling. Translated protein mutations were matched against lists of signature mutations for known
@@ -510,13 +510,13 @@ Variant effect prediction (*Ensemble VEP output*):
 
 ```{r csv_output_variant_plot, include = F}
 
-output_variant_plot <- data.frame(date = "21/03/2", # brauche ich als input von sample sheet 
-                                  location = character())
-
-
-# 1. get all possible variants from sig_mutations.df
-# 2. check if variant has a unique row in df (from plotting)
-#   - if yes: write value in "values"
-#   - if not: write NA
-write.csv2(vepfile.df, "./file.csv")
+# output_variant_plot <- data.frame(date = "21/03/2", # brauche ich als input von sample sheet 
+#                                   location = character())
+# 
+# 
+# # 1. get all possible variants from sig_mutations.df
+# # 2. check if variant has a unique row in df (from plotting)
+# #   - if yes: write value in "values"
+# #   - if not: write NA
+# write.csv2(vepfile.df, "./file.csv")
 ```
