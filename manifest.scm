@@ -21,15 +21,10 @@
 
 (define channels
   (list (channel
-         (name 'guix-bimsb)
-         (url "https://github.com/BIMSBbioinfo/guix-bimsb.git")
-         (commit
-          "be42b099867a29a68a9ffbf304dc7f9137b75fe3"))
-        (channel
          (name 'guix)
          (url "https://git.savannah.gnu.org/git/guix.git")
          (commit
-          "74b3f2cbb13f197136c0215ce6156d015080a61a")
+          "426bed1f39da1c0335ae501c229ad7094914b41f")
          (introduction
           (make-channel-introduction
            "9edb3f66fd807b096b48283debdcddccfea34bad"
