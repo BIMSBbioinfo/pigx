@@ -26,35 +26,26 @@ import csv
 import yaml
 from itertools import chain
 
-# TODO: align overall appearance
-
-# load settings here just for demonstration, do it the pigx-way later on
-with open(os.path.join(os.getcwd(), 'tests/settings.yaml'), 'r') as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
-
-SAMPLE_SHEET_CSV = os.path.join(os.getcwd(), 'tests/sample_sheet.csv')
-
-READS_DIR = os.path.join(os.getcwd(), config['locations']['reads-dir'])
-REFERENCE_FASTA = os.path.join(os.getcwd(), config['locations']['reference-fasta'])
-AMPLICONS_BED = os.path.join(os.getcwd(), config['locations']['amplicons-bed'])
-KRAKEN_DB = os.path.join(os.getcwd(), config['locations']['kraken-db-dir'])
-KRONA_DB = os.path.join(os.getcwd(), config['locations']['krona-db-dir'])
-SIGMUT_DB = os.path.join(os.getcwd(), config['locations']['sigmut-db-dir'])
-VEP_DB = os.path.join(os.getcwd(), config['locations']['vep-db-dir'])
-
-OUTPUT_DIR = os.path.join(os.getcwd(), config['locations']['output-dir'])
+SAMPLE_SHEET_CSV = config['locations']['sample-sheet']
+READS_DIR        = config['locations']['reads-dir']
+REFERENCE_FASTA  = config['locations']['reference-fasta']
+AMPLICONS_BED    = config['locations']['amplicons-bed']
+KRAKEN_DB        = config['locations']['kraken-db-dir']
+KRONA_DB         = config['locations']['krona-db-dir']
+SIGMUT_DB        = config['locations']['sigmut-db-dir']
+VEP_DB           = config['locations']['vep-db-dir']
+OUTPUT_DIR       = config['locations']['output-dir']
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
-LOG_DIR = os.path.join(OUTPUT_DIR, 'logs')
-FASTQC_DIR = os.path.join(OUTPUT_DIR, 'fastqc')
-MULTIQC_DIR = os.path.join(OUTPUT_DIR, 'multiqc')
-MAPPED_READS_DIR = os.path.join(OUTPUT_DIR, 'mapped_reads')
-VARIANTS_DIR = os.path.join(OUTPUT_DIR, 'variants')
-KRAKEN_DIR = os.path.join(OUTPUT_DIR, 'kraken')
-COVERAGE_DIR = os.path.join(OUTPUT_DIR, 'coverage')
-REPORT_DIR = os.path.join(OUTPUT_DIR, 'report')
-
-SCRIPTS_DIR = os.path.join(os.getcwd(), 'scripts')
+LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
+FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
+MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
+MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
+VARIANTS_DIR      = os.path.join(OUTPUT_DIR, 'variants')
+KRAKEN_DIR        = os.path.join(OUTPUT_DIR, 'kraken')
+COVERAGE_DIR      = os.path.join(OUTPUT_DIR, 'coverage')
+REPORT_DIR        = os.path.join(OUTPUT_DIR, 'report')
+SCRIPTS_DIR       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
 def toolArgs(name):
     if 'args' in config['tools'][name]:
