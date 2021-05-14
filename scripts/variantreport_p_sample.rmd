@@ -357,90 +357,6 @@ DT::datatable(NoSignatureTable,
 
 
 
-```{r deconvolution, message=F, warning=F, include = FALSE}
-# markdown text:
-# # Deconvolution
-# ## Deconvolution  
-# Deconvolution is done by using robust regression. The resulting coefficients are normalized to get the percentage of 
-# each present variant. 
-# 
-# prepare unique signature mutation dataframe
-# 
-# sig_mutations_unique.df <- sig_mutations.df 
-# unique_stuff <- unique(sig_mutations.df$value)
-# sig_mutations_unique.df <- subset(sig_mutations.df, !duplicated(value))
-# sig_mutations_unique.df <- sig_mutations_unique.df %>%
-#                                 tidyr::pivot_wider(values_fn = unlist)
-# 
-# 1. count occurences of mutation
-```
-```{r deconvolution_prep, message=F, warning=F, include = FALSE}
-# filter match table for unique mutations
-match_unique.df <- unique(dplyr::distinct(match.df[,-13]))
-# get prot.mutations only and add "WT" 
-muts_debug <- c("WT",match_unique.df$AA_mut)
-# create an empty data frame
-# !!!!!!!!
-# in theory this df has to have a column for every variant in the beginning -> can we have a "variant-sheet" in the future?
-# there have to be a check if two or more columns are the same and either have to be removed or merged
-# in case we decide for only using unique signature mutations we'll probably don't have this problem anymore 
-# I think I'll go for the "we only look for unique mutations anyway" way.
- msig_debug <- data.frame(muts_debug,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0)
-# !! dirty hack !!
-# make sigmuts per variant tables new with parsed mutations
-msig_debug[msig_debug$muts %in% b117$AA_mut,"b117"]=1
-msig_debug[msig_debug$muts %in% b1351$AA_mut,"b1351"]=1
-msig_debug[msig_debug$muts %in% b1351$AA_mut,"b1427"]=1
-msig_debug[msig_debug$muts %in% b1351$AA_mut,"b1429"]=1
-msig_debug[msig_debug$muts %in% b1351$AA_mut,"b1526"]=1
-msig_debug[msig_debug$muts %in% p1$AA_mut,"p1"]=1
-msig_debug[1,2] <- 1 # put the WT signature, ideally there should be more than 1 WT signature # ??
-```
-```{r DIRTY HACK, include = FALSE}
-msig_debug <- data.frame(muts_debug,WT=0,b117=0,b1351=0,p1=0)
-# !! dirty hack !!
-# make sigmuts per variant tables new with parsed mutations
-msig_debug[msig_debug$muts %in% b117$AA_mut,"b117"]=1
-msig_debug[msig_debug$muts %in% b1351$AA_mut,"b1351"]=1
-msig_debug[msig_debug$muts %in% p1$AA_mut,"p1"]=1
-msig_debug[1,2] <- 1 # put the WT signature, ideally there should be more than 1 WT signature # ??
-```
-```{r, message=F, warning=F, include = FALSE}
-
-```
-```{r deconvolution_debug, message=F, warning=F, include = FALSE}
-# bulk_debug <- as.numeric(c(1, match_unique.df$freq))
-# 
-# sig_debug <- msig_debug
-# 
-# # deconv_debug <- deconv(bulk_debug,sig_debug[,-1])
-```
-```{r plot, message=F, warning=F, echo = FALSE, include = F}
-# cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-# 
-# # work in progress...only to show how it theoretically can look like in the report
-# variants <- colnames(msig_debug[,-1])
-# df <- as.data.frame(rbind(as.numeric(deconv_debug)))
-# colnames(df) <- variants
-# df <- df %>% 
-#     tidyr::pivot_longer(everything())
-# 
-# ggplot(data = df, aes(name,value, 
-#                               fill = name)) +
-#             geom_bar(stat="identity") +
-#             labs(title = "Proportion of variants of concern inferred from deconvolution",
-#                  x = "Variants",
-#                  y = "Percentage") +
-#             scale_x_discrete(limits = variants) +
-#             scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1)) +
-#             scale_colour_manual(values=cbbPalette) + 
-#             geom_text(aes(label=sprintf("%0.3f", round(value, digits = 3))), 
-#                           position=position_dodge(width=0.9), 
-#                           vjust=-0.25) + 
-#             scale_fill_discrete(name = "Variants")
-```
-
-
 ## Methods
 ### LoFreq filter
 |LoFreq is used with default filter settings: |  |  
@@ -481,6 +397,3 @@ readLines(vepfile) %>%
 ```
 Variant effect prediction (*Ensemble VEP output*):  
 [Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)
-```{r}
-# rlm_model = suppressWarnings(MASS::rlm(sig_debug,bulk_debug, maxit = 100)) 
-```
