@@ -8,6 +8,21 @@ locations:
   sigmut-db-dir: databases/sigmut
   vep-db-dir: databases/vep
 
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    missing-file-timeout: 120
+    stack: 128M
+    queue: all
+    contact-email: none
+    args: ''
+  rules:
+    __default__:
+      threads: 1
+      memory: 4G
+
 tools:
   bwa:
     executable: @BWA@
