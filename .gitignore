@@ -2,6 +2,7 @@
 *~
 
 # generated files
+etc/settings.yaml
 qsub-template.sh
 META
 configure

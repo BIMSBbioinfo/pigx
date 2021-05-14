@@ -1,0 +1,32 @@
+locations:
+  output-dir: output
+  reads-dir: reads
+  reference-fasta: NC_045512.2.fasta
+  amplicons-bed: nCoV-2019_NCref.bed
+  kraken-db-dir: databases/kraken
+  krona-db-dir: databases/krona
+  sigmut-db-dir: databases/sigmut
+  vep-db-dir: databases/vep
+
+tools:
+  fastqc:
+    executable: @FASTQC@
+    args: ""
+  Rscript:
+    executable: @RSCRIPT@
+    args: "--vanilla --no-environ"
+  prinseq:
+    executable: @PRINSEQ@
+    args: ""
+  kraken:
+    executable: @KRAKEN2@
+    args: ""
+  krona:
+    executable: @KRONA@
+    args: ""
+  lofreq:
+    executable: @LOFREQ@
+    args: ""
+  vep:
+    executable: @VEP@
+    args: ""
