@@ -7,8 +7,9 @@ This step by step installation and how-to-use guide should only allow test users
 Clone repository and enter the reproducible guix environment:
 
 ```
-https://github.com/BIMSBbioinfo/pigx_sarscov2_ww.git
+git clone https://github.com/BIMSBbioinfo/pigx_sarscov2_ww.git
 cd pigx_sarscov2_ww.git
+git submodule update --init
 USE_GUIX_INFERIOR=t guix environment -m manifest.scm
 ```
 
