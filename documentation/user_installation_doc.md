@@ -107,11 +107,8 @@ wget -qO- ftp://ftp.ensemblgenomes.org/pub/viruses/variation/indexed_vep_cache/s
 
 Nothing to be done here. Necessary files are provided in `tests/databases/sigmut_db/`.
 
-## run pipeline
-
-As mentioned above this how-to-use guide will change in the near future. This step in particular. Right now it is done by manually running snakemake while providing the `snakefile.py` and at least the number of jobs. 
+## Run the pipeline
 
 ```
-NUM_JOBS = 4
-snakemake --snakefile=snakefile.py --jobs=$NUM_JOBS
+PIGX_UNINSTALLED=t ./pigx-sars-cov2-ww -s settings.yaml sample_sheet.csv
 ```
