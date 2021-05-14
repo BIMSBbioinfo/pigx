@@ -9,16 +9,22 @@ locations:
   vep-db-dir: databases/vep
 
 tools:
+  bwa:
+    executable: @BWA@
+    args: ""
   fastqc:
     executable: @FASTQC@
     args: ""
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla --no-environ"
+  samtools:
+    executable: @SAMTOOLS@
+    args: ""
   prinseq:
     executable: @PRINSEQ@
     args: ""
-  kraken:
+  kraken2:
     executable: @KRAKEN2@
     args: ""
   import_krona:
@@ -29,6 +35,9 @@ tools:
     args: ""
   lofreq:
     executable: @LOFREQ@
+    args: ""
+  python:
+    executable: @PYTHON@
     args: ""
   vep:
     executable: @VEP@
