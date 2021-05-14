@@ -56,6 +56,26 @@ REPORT_DIR = os.path.join(OUTPUT_DIR, 'report')
 
 SCRIPTS_DIR = os.path.join(os.getcwd(), 'scripts')
 
+def toolArgs(name):
+    if 'args' in config['tools'][name]:
+        return config['tools'][name]['args']
+    else:
+        return ""
+
+def tool(name):
+    cmd = config['tools'][name]['executable']
+    return cmd + " " + toolArgs(name)
+
+BWA_EXEC             = tool("bwa")
+FASTQC_EXEC          = tool("fastqc")
+IMPORT_TAXONOMY_EXEC = tool("import_taxonomy")
+KRAKEN2_EXEC         = tool("kraken2")
+LOFREQ_EXEC          = tool("lofreq")
+PRINSEQ_EXEC         = tool("prinseq")
+PYTHON_EXEC          = tool("python")
+RSCRIPT_EXEC         = tool("Rscript")
+SAMTOOLS_EXEC        = tool("samtools")
+VEP_EXEC             = tool("vep")
 
 # Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
@@ -146,14 +166,14 @@ rule prinseq:
         len_cutoff = int(150 * 0.8), # read length * pct_cutoff
         output = os.path.join(TRIMMED_READS_DIR, "{sample}")
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
-    shell: "prinseq-lite.pl -fastq {input.r1} -fastq2 {input.r2} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30 -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff} >> {log} 2>&1"
+    shell: "{PRINSEQ_EXEC} -fastq {input.r1} -fastq2 {input.r2} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30 -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff} >> {log} 2>&1"
 
 
 rule bwa_index:
     input: REFERENCE_FASTA
     output: "{}.bwt".format(REFERENCE_FASTA)
     log: os.path.join(LOG_DIR, 'bwa_index.log')
-    shell: "bwa index {input} >> {log} 2>&1"
+    shell: "{BWA_EXEC} index {input} >> {log} 2>&1"
 
 
 rule bwa_align:
@@ -165,14 +185,14 @@ rule bwa_align:
     params:
         threads = 4
     log: os.path.join(LOG_DIR, 'bwa_align_{sample}.log')
-    shell: "bwa mem -t {params.threads} {input.ref} {input.fastq} > {output} 2>> {log} 3>&2"
+    shell: "{BWA_EXEC} mem -t {params.threads} {input.ref} {input.fastq} > {output} 2>> {log} 3>&2"
 
 
 rule samtools_filter_aligned:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
     log: os.path.join(LOG_DIR, 'samtools_filter_aligned_{sample}.log')
-    shell: "samtools view -bh -f 2 -F 2048 {input} > {output} 2>> {log} 3>&2"
+    shell: "{SAMTOOLS_EXEC} view -bh -f 2 -F 2048 {input} > {output} 2>> {log} 3>&2"
 
 
 # TODO: check command to get unaligned ones
@@ -180,28 +200,28 @@ rule samtools_filter_unaligned:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_unaligned.bam')
     log: os.path.join(LOG_DIR, 'samtools_filter_unaligned_{sample}.log')
-    shell: "samtools view -bh -F 2 {input} > {output} 2>> {log} 3>&2"
+    shell: "{SAMTOOLS_EXEC} view -bh -F 2 {input} > {output} 2>> {log} 3>&2"
 
 
 rule samtools_sort:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
     log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
-    shell: "samtools sort -o {output} {input} >> {log} 2>&1"
+    shell: "{SAMTOOLS_EXEC} sort -o {output} {input} >> {log} 2>&1"
 
 
 rule samtools_index:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bai')
     log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
-    shell: "samtools index {input} {output} >> {log} 2>&1"
+    shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
 
 rule fastqc:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
     output: os.path.join(FASTQC_DIR, '{sample}_aligned_sorted_fastqc.zip')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}.log')
-    shell: "fastqc -o {FASTQC_DIR} -f bam {input} >> {log} 2>&1"
+    shell: "{FASTQC_EXEC} -o {FASTQC_DIR} -f bam {input} >> {log} 2>&1"
 
 
 # TODO: check if --call-indels is needed?
@@ -212,7 +232,7 @@ rule lofreq:
         ref = REFERENCE_FASTA
     output: os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
     log: os.path.join(LOG_DIR, 'lofreq_{sample}.log')
-    shell: "lofreq call -f {input.ref} -o {output} --verbose {input.aligned_bam} >> {log} 2>&1"
+    shell: "{LOFREQ_EXEC} call -f {input.ref} -o {output} --verbose {input.aligned_bam} >> {log} 2>&1"
 
 
 rule vcf2csv:
@@ -221,7 +241,7 @@ rule vcf2csv:
     params:
         script = os.path.join(SCRIPTS_DIR, 'vcfTocsv.py')
     log: os.path.join(LOG_DIR, 'vcf2csv_{sample}.log')
-    shell: "python {params.script} {input} >> {log} 2>&1"
+    shell: "{PYTHON_EXEC} {params.script} {input} >> {log} 2>&1"
 
 
 rule vep:
@@ -230,7 +250,7 @@ rule vep:
     params:
         species = "sars_cov_2"
     log: os.path.join(LOG_DIR, 'vep_{sample}.log')
-    shell: "vep --verbose --offline --dir_cache {VEP_DB} --DB_VERSION 101 --appris --biotype --buffer_size 5000 --check_existing --distance 5000 --mane --protein --species {params.species} --symbol --transcript_version --tsl --input_file {input} --output_file {output} >> {log} 2>&1"
+    shell: "{VEP_EXEC} --verbose --offline --dir_cache {VEP_DB} --DB_VERSION 101 --appris --biotype --buffer_size 5000 --check_existing --distance 5000 --mane --protein --species {params.species} --symbol --transcript_version --tsl --input_file {input} --output_file {output} >> {log} 2>&1"
 
 
 rule parse_vep:
@@ -239,7 +259,7 @@ rule parse_vep:
     params:
         script = os.path.join(SCRIPTS_DIR, 'parse_vep.py')
     log: os.path.join(LOG_DIR, 'parse_vep_{sample}.log')
-    shell: "python {params.script} {VARIANTS_DIR} {input} {output} >> {log} 2>&1"
+    shell: "{PYTHON_EXEC} {params.script} {VARIANTS_DIR} {input} {output} >> {log} 2>&1"
 
 
 rule variant_report:
@@ -251,14 +271,14 @@ rule variant_report:
         run_report = os.path.join(SCRIPTS_DIR, 'run_variant_report.R'),
         report_rmd = os.path.join(SCRIPTS_DIR, 'variantreport_p_sample.rmd')
     log: os.path.join(LOG_DIR, 'variant_report_{sample}.log')
-    shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts={SIGMUT_DB} --sample_dir={VARIANTS_DIR} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1"
+    shell: "{RSCRIPT_EXEC} {params.run_report} --reportFile={params.report_rmd} --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts={SIGMUT_DB} --sample_dir={VARIANTS_DIR} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1"
 
 
 rule bam2fastq:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_unaligned.bam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_unaligned.fastq')
     log: os.path.join(LOG_DIR, 'bam2fastq_{sample}.log')
-    shell: "samtools fastq {input} > {output} 2>> {log} 3>&2"
+    shell: "{SAMTOOLS_EXEC} fastq {input} > {output} 2>> {log} 3>&2"
 
 
 rule kraken:
@@ -267,7 +287,7 @@ rule kraken:
         database = KRAKEN_DB
     output: os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt')
     log: os.path.join(LOG_DIR, 'kraken_{sample}.log')
-    shell: "kraken2 --report {output} --db {input.database} {input.unaligned_fastq} >> {log} 2>&1"
+    shell: "{KRAKEN2_EXEC} --report {output} --db {input.database} {input.unaligned_fastq} >> {log} 2>&1"
 
 
 rule kraken_report:
@@ -277,7 +297,7 @@ rule kraken_report:
         run_report = os.path.join(SCRIPTS_DIR, 'run_Kraken2-report.R'),
         report_rmd = os.path.join(SCRIPTS_DIR, 'Kraken2-report.Rmd')
     log: os.path.join(LOG_DIR, 'kraken_report_{sample}.log')
-    shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --kraken_output={input} --sample_name={wildcards.sample} --output_file={output} >> {log} 2>&1"
+    shell: "{RSCRIPT_EXEC} {params.run_report} --reportFile={params.report_rmd} --kraken_output={input} --sample_name={wildcards.sample} --output_file={output} >> {log} 2>&1"
 
 
 rule krona_report:
@@ -286,7 +306,7 @@ rule krona_report:
         database = KRONA_DB
     output: os.path.join(REPORT_DIR, '{sample}_krona_report.html')
     log: os.path.join(LOG_DIR, 'krona_report_{sample}.log')
-    shell: "ktImportTaxonomy -m 3 -t 5 {input.kraken_output} -tax {input.database} -o {output} >> {log} 2>&1"
+    shell: "{IMPORT_TAXONOMY_EXEC} -m 3 -t 5 {input.kraken_output} -tax {input.database} -o {output} >> {log} 2>&1"
 
 
 # TODO: does it have to be the 'unsorted' bam file? If so, we have to do indexing on those, too
@@ -297,7 +317,7 @@ rule samtools_bedcov:
         aligned_bai = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bai')
     output: os.path.join(COVERAGE_DIR, '{sample}_amplicons.csv')
     log: os.path.join(LOG_DIR, 'samtools_bedcov_{sample}.log')
-    shell:"samtools bedcov {input.amplicons_bed} {input.aligned_bam} > {output} 2>> {log} 3>&2"
+    shell: "{SAMTOOLS_EXEC} bedcov {input.amplicons_bed} {input.aligned_bam} > {output} 2>> {log} 3>&2"
 
 
 # TODO: does it have to be the 'unsorted' bam file? If so, we have to do indexing on those, too
@@ -307,7 +327,7 @@ rule samtools_coverage:
         aligned_bai = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bai')
     output: os.path.join(COVERAGE_DIR, '{sample}_coverage.csv')
     log: os.path.join(LOG_DIR, 'samtools_coverage_{sample}.log')
-    shell: "samtools coverage {input.aligned_bam} > {output} 2>> {log} 3>&2"
+    shell: "{SAMTOOLS_EXEC} coverage {input.aligned_bam} > {output} 2>> {log} 3>&2"
 
 
 rule get_qc_table:
@@ -318,7 +338,7 @@ rule get_qc_table:
     params:
         script = os.path.join(SCRIPTS_DIR, 'get_qc_table.py')
     log: os.path.join(LOG_DIR, 'get_qc_table_{sample}.log')
-    shell: "python {params.script} {input.coverage_csv} {input.amplicon_csv} {output} >> {log} 2>&1"
+    shell: "{PYTHON_EXEC} {params.script} {input.coverage_csv} {input.amplicon_csv} {output} >> {log} 2>&1"
         
 
 # TODO: fix Error: unexpected end of input
