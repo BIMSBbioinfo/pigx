@@ -19,6 +19,12 @@ channels, just omit the `USE_GUIX_INFERIOR` shell variable:
 guix environment -m manifest.scm
 ```
 
+To fetch code that is common to all PiGx pipelines run this:
+
+```sh
+git submodule update --init
+```
+
 Inside the environment you can then perform the usual build steps:
 
 ```sh
