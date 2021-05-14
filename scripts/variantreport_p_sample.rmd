@@ -64,10 +64,7 @@ parse_snv_csv <- function (snvfile,...){ # allele frequency from v-pipe vcf
   
   return(snv.info)
 }
-```
 
-
-```{r function_get_protein_mut, message = F, include = FALSE}
 get_protein_mut <- function (vepfile){ # parse together from vep output "Protein_position" and "Amino_acid"
   
   # reading in whole vep txt output
@@ -135,6 +132,22 @@ get_protein_mut <- function (vepfile){ # parse together from vep output "Protein
   
   
   return(locations)
+}
+
+deconv <- function (bulk,sig){
+  
+  rlm_model = suppressWarnings(MASS::rlm(sig,bulk, maxit = 100))
+      
+      
+  rlm_coefficients = rlm_model$coefficients
+  
+  rlm_coefficients = ifelse(rlm_coefficients < 0, 0, rlm_coefficients)
+  
+  sumOfCof = sum(rlm_coefficients)
+  
+  rlm_coefficients = rlm_coefficients / sumOfCof  #normalize so coefficients add to 1
+  
+  as.vector(rlm_coefficients)
 }
 ```
 
@@ -362,21 +375,7 @@ msig_debug[msig_debug$muts %in% p1$AA_mut,"p1"]=1
 msig_debug[1,2] <- 1 # put the WT signature, ideally there should be more than 1 WT signature # ??
 ```
 ```{r, message=F, warning=F, include = FALSE}
-deconv <- function (bulk,sig){
-  
-  rlm_model = suppressWarnings(MASS::rlm(sig,bulk, maxit = 100))
-      
-      
-  rlm_coefficients = rlm_model$coefficients
-  
-  rlm_coefficients = ifelse(rlm_coefficients < 0, 0, rlm_coefficients)
-  
-  sumOfCof = sum(rlm_coefficients)
-  
-  rlm_coefficients = rlm_coefficients / sumOfCof  #normalize so coefficients add to 1
-  
-  as.vector(rlm_coefficients)
-}
+
 ```
 ```{r deconvolution_debug, message=F, warning=F, include = FALSE}
 # bulk_debug <- as.numeric(c(1, match_unique.df$freq))
