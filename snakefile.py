@@ -304,7 +304,6 @@ rule krona_report:
     shell: "{IMPORT_TAXONOMY_EXEC} -m 3 -t 5 {input.kraken_output} -tax {input.database} -o {output} >> {log} 2>&1"
 
 
-# TODO: does it have to be the 'unsorted' bam file? If so, we have to do indexing on those, too
 rule samtools_bedcov:
     input:
         amplicons_bed = AMPLICONS_BED,
@@ -315,7 +314,6 @@ rule samtools_bedcov:
     shell: "{SAMTOOLS_EXEC} bedcov {input.amplicons_bed} {input.aligned_bam} > {output} 2>> {log} 3>&2"
 
 
-# TODO: does it have to be the 'unsorted' bam file? If so, we have to do indexing on those, too
 rule samtools_coverage:
     input:
         aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam'),
@@ -335,16 +333,6 @@ rule get_qc_table:
     log: os.path.join(LOG_DIR, 'get_qc_table_{sample}.log')
     shell: "{PYTHON_EXEC} {params.script} {input.coverage_csv} {input.amplicon_csv} {output} >> {log} 2>&1"
         
-
-# TODO: fix Error: unexpected end of input
-# rule qc_report:
-#     input: os.path.join(COVERAGE_DIR, '{sample}_merged_covs.csv')
-#     output: os.path.join(REPORT_DIR, '{sample}_qc_report.html')
-#     params:
-#         run_report = os.path.join(SCRIPTS_DIR, 'run_QC_report.R'),
-#         report_rmd = os.path.join(SCRIPTS_DIR, 'qc_report_per_sample.rmd')
-#     log: os.path.join(LOG_DIR, 'qc_report_{sample}.log')
-#     shell: "Rscript {params.run_report} --reportFile={params.report_rmd} --coverage_file={input} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1"
 
 # parse the output so it can be used as input for the rmarkdown report
 # TODO add log
@@ -369,7 +357,7 @@ rule parse_vep_output:
                 for num, line in enumerate(file, header_line):
                     clean_file.write(line)
         
-        with open(os.path.join(VEP_DIR,'tmp.txt'), 'r') as file:
+        with open(os.path.join(VARIANTS_DIR,'tmp.txt'), 'r') as file:
             with open(output.vep_report_input, 'w') as output:
                 reader = csv.reader(file, delimiter="\t")
                 writer = csv.writer(output, lineterminator='\n')
@@ -395,7 +383,7 @@ rule parse_vep_output:
 # TODO: fill in blanks, why sample_dir? where are sigmuts coming from?
 rule variant_report:
     input:
-        vep_txt = os.path.join(VEP_DIR, '{sample}_vep_sarscov2_reportinput.txt'),
+        vep_txt = os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2_reportinput.txt'),
         snv_csv = os.path.join(VARIANTS_DIR, '{sample}_snv.csv')
     output: os.path.join(REPORT_DIR, '{sample}_variant_report.html')
     params:
@@ -407,4 +395,20 @@ rule variant_report:
         {RSCRIPT_EXEC} {SCRIPTS_DIR}/run_variant_report.R --reportFile={SCRIPTS_DIR}/variantreport_p_sample.rmd \
         --vep_txt_file={input.vep_txt} --snv_csv_file={input.snv_csv} --location_sigmuts={params.loc_sigmuts} \
         --sample_dir={params.sample_dir} --sample_name={wildcards.sample} --outFile={output} >> {log} 2>&1
+        """
+
+rule qc_report:
+    input:
+        coverage_csv = os.path.join(COVERAGE_DIR, '{sample}_merged_covs.csv'),
+        report_file = os.path.join(SCRIPTS_DIR, "qc_report_per_sample.rmd")
+    output: os.path.join(REPORT_DIR, '{sample}_qc_report.html')
+    params:
+        sample_dir = VARIANTS_DIR,
+        loc_sigmuts = SIGMUT_DB
+    log: os.path.join(LOG_DIR, 'variant_report_{sample}.log')
+    shell:
+        """
+        {RSCRIPT_EXEC} {SCRIPTS_DIR}/run_QC_report.R --reportFile={input.report_file} \
+        --coverage_file={input.coverage_csv} --sample_name={wildcards.sample} \ 
+        --outFile={output} >> {log} 2>&1
         """
