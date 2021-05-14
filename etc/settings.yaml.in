@@ -21,8 +21,11 @@ tools:
   kraken:
     executable: @KRAKEN2@
     args: ""
-  krona:
-    executable: @KRONA@
+  import_krona:
+    executable: @IMPORT_KRONA@
+    args: ""
+  import_taxonomy:
+    executable: @IMPORT_TAXONOMY@
     args: ""
   lofreq:
     executable: @LOFREQ@
