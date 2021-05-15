@@ -4,6 +4,7 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 params:
     coverage_file: ''
     sample_name: ''
+    outFile: ''
 theme: darkly
 ---
 
@@ -23,12 +24,13 @@ library(openssl)
 ```{r InputSettings, echo = FALSE, include = FALSE}
 coverage_file <- params$coverage_file
 sample_name <- params$sample_name
+outFile <- params$outFile
 ``` 
 ```{r printInputSettings, echo = FALSE, include = FALSE}
-# coverage_file <- '/home/vfs/PycharmProjects/Akalinlab_pathogenomics/PiGx_WW/tests/coverage/Test_merged_covs.csv'
-# sample_name <- "Test"
+# coverage_file <- 'tests/coverage/Test_merged_covs.csv'
+# sample_name <- 'Test'
 ``` 
-### Sample: `r sample_name` 
+### Sample: `r sample_name 
 ```{r reading data, include = FALSE}
 coverage.df <- read.table(coverage_file,sep = "\t", header = T) 
 coverage.df <- na_if(coverage.df, "[]")
