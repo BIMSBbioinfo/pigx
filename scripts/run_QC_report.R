@@ -16,10 +16,12 @@ runReport <- function(reportFile,
                       quiet = FALSE) {
   
   outFile <- outFile
+  output_dir <- dirname(outFile)
   
  # htmlwidgets::setWidgetIdSeed(1234)
   rmarkdown::render(
-    input = reportFile,
+    input = reportFile, 
+    output_dir = output_dir,
   #  intermediates_dir = file.path(workdir, prefix),
     clean = TRUE,
     output_file = outFile,
@@ -39,7 +41,7 @@ runReport <- function(reportFile,
                    ),
     quiet = quiet
   )
-  
+} 
 #   if(dir.exists(file.path(sample_dir, sample_name))) {
 #   unlink(file.path(sample_dir, sample_name), recursive = TRUE)
 #   }
