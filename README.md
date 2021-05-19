@@ -8,8 +8,13 @@ crispr-DART is a pipeline to process, analyse, and report about the
 CRISPR-Cas9 induced genome editing outcomes from high-throughput sequencing
 of target regions of interest. 
 
-crispr-DART has been developed as part of the study "Parallel genetics of regulatory sequences in vivo"
-by Froehlich & Uyar et al, 2020 ([pre-print available on Biorxiv](https://www.biorxiv.org/content/10.1101/2020.07.28.224998v2)). 
+crispr-DART has been developed as part of the study "Parallel genetics of 
+regulatory sequences using scalable genome editing in vivo" and is now 
+published at Cell Reports: 
+[Froehlich, J. & Uyar, B. *et al*, Cell Reports, 2021](https://www.cell.com/cell-reports/fulltext/S2211-1247(21)00302-8).
+
+Here is also the news coverage of our story: 
+[Scaling up genome editing big in tiny worms](https://www.mdc-berlin.de/news/press/crispr-dart-genomes-worms-edit-track). 
 
 ## Pipeline scheme
 
