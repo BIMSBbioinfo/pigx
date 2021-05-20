@@ -1,9 +1,9 @@
 ---
 title: "SARS-CoV-2 variant report"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
-theme: darkly
-params:  
-  @PARAMS_SAMPLE_NAME@
+params:
+    @PARAMS_SAMPLE_NAME@
+
 ---
 
 Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
@@ -22,12 +22,14 @@ sampledir <- variants_dir
 # all variables should be strings 
 # if nothing is given, the default should be NA
 # I filled in testing placeholder for now
+csv_output_dir <- var_timecourse_csv
+sample_sheet <- data.table::fread(sample_sheet) #read in sample file and then get the rest:
 date <- "21/03/25"
 time <- "22:00:00 - 21:00:00"
 location_name <- "BER" 
 coordinates_lat <- "52.3646054650197"
 coordinates_long <- "13.5098643274129"
-csv_output_dir <- "path/to/csv_dir"
+
 ``` 
 ### Sample: `r sample_name` 
 
