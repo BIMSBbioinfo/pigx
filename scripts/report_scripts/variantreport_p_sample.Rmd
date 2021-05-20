@@ -290,7 +290,6 @@ nomatch.df <- variant_protein_mut %>%
                         filter(is.na(name))
 ```
 
-
 ```{r, message=F, warning=F, include = FALSE}
 # Data frame to use for the tables
 lofreq.info <- as_data_frame(parse_snv_csv(snvfile))
