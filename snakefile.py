@@ -306,8 +306,9 @@ rule generate_site_files:
         expand(os.path.join(VARIANTS_DIR, '{sample}_snv.csv'), sample = SAMPLES)
     output:
         os.path.join(REPORT_DIR, "_site.yml"),
-        # os.path.join(REPORT_DIR, "index.Rmd"),
+        os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
+        os.path.join(REPORT_DIR, "overview.Rmd"),
         expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.Rmd"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.Rmd"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.Rmd"), sample = SAMPLES)
@@ -339,26 +340,29 @@ rule render_qc_report:
     shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input}\')\" > {log} 2>&1"
 
 
-# renders the timecourse rmd once all other are done rendering (!!)
+# renders the overview.rmd which are the links 
 # not yet tested
-rule render_timecourse:
+# i think it only needs to test if the csvs are generated
+rule render_overview:
     input:
-        os.path.join(REPORT_DIR, "timecourse.Rmd"),
+        os.path.join(REPORT_DIR, "overview.Rmd"),
         os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"),
         os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"),
         os.path.join(REPORT_DIR, "{sample}.Krona_report.html"),
         os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html")
-    output: os.path.join(REPORT_DIR, "timecourse.html")
-    log: os.path.join(LOG_DIR, "reports", "timecourse.log")
+    output: os.path.join(REPORT_DIR, "overview.html")
+    log: os.path.join(LOG_DIR, "reports", "overview.log")
     shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"#
 
 
-# not yet tested
+# not yet tested 
+#this renders the figures and is the landing page 
 rule render_site:
     input:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
+        os.path.join(REPORT_DIR, "overview.Rmd"),
         expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
