@@ -235,7 +235,7 @@ getIdentCols <- function (dataframe) {
 ```
 
 
-```{r processa_and_match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
+```{r process_signature_mutations, message=F, warning=F, include = FALSE}
 # reading in signature data
 # it's probably not really necessary to add the pase0 column but I like to have a full overview
 # but maybe this part could be done a bt nicer more compact with e.g. looping through the file directories?
@@ -282,6 +282,8 @@ sig_mutations.df <- as.data.frame(qpcR:::cbind.na(b117=b117$AA_mut, b1351=b1351$
 sig_mutations.df <- sig_mutations.df %>%
                           tidyr::pivot_longer(everything()) %>%
                             tidyr::drop_na(.,value)
+```
+```{r match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
 variant_protein_mut <- get_protein_mut(vepfile)
 variant_protein_mut <- dplyr::left_join(variant_protein_mut, sig_mutations.df, by = c('AA_mut'='value'))
 match.df <- variant_protein_mut %>%
