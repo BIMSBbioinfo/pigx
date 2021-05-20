@@ -1,5 +1,3 @@
-import re
-import os
 import csv
 import sys
 
@@ -26,7 +24,7 @@ def parse_vep(vep_dir, input, output):
                 # get gene name 
                 extra = row[extra_column].split(";")
                 for element in extra:
-                    if re.search(r"SYMBOL=", element):
+                    if element.startswith("SYMBOL="):
                         gene = element.split("=")[1:][0]
                         row.append(gene)
                         gene_column.append(row)
