@@ -34,6 +34,7 @@ library(openssl)
 # TODO: @Jan @Miri pls add those input values
 # all variables should be strings 
 # I filled in testing placeholder for now
+samplename <- "samplename1"
 date <- "21/03/25"
 time <- "22:00:00 - 21:00:00"
 location_name <- "BER" 
@@ -533,6 +534,9 @@ Variant effect prediction (*Ensemble VEP output*):
                                       coordinates_long = coordinates_long
                                         # the script will add columns for the variants )
     )
+# strategy: dataframe already exists
+# 1. add a new row with samplename and meta data - fill missing cols with NA
+# 2. 
 
 # 1. get all possible variants from sig_mutations.df
 all_variants <- colnames(msig_all)
@@ -541,7 +545,9 @@ for (i in all_variants){
   if (i %in% df$name){
     # check if variant already has a column
     if (i %in% colnames(output_variant_plot)) {
-        output_variant_plot$i <- df$value[i,] # TODO
+        # append a row for that variable
+        # output_variant_plot[nrow(output_variant_plot)+1,i] <- df$value[df$name == i]
+
 }
   }
 }
