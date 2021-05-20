@@ -282,7 +282,23 @@ sig_mutations.df <- as.data.frame(qpcR:::cbind.na(b117=b117$AA_mut, b1351=b1351$
 sig_mutations.df <- sig_mutations.df %>%
                           tidyr::pivot_longer(everything()) %>%
                             tidyr::drop_na(.,value)
+
+# deduplicate dataframe
+# fixme: I was not sure, how I can include this in my function but should be possible, will come back to it later
+dupes <- duplicated (sig_mutations.df$value, fromLast=TRUE)
+allDupes <- dupes | duplicated (sig_mutations.df$value, fromLast=FALSE)
+
+if (any (allDupes)) {
+    sigmuts_deduped <- sig_mutations.df[!dupes,]
+}
+
+# fixme: I think this should be done with some apply() function? 
+for (mut in sigmuts$value) {
+  sigmuts_deduped <- dedupeMuts(mut, sig_mutations.df, sigmuts_deduped)
+}
+
 ```
+
 ```{r match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
 variant_protein_mut <- get_protein_mut(vepfile)
 variant_protein_mut <- dplyr::left_join(variant_protein_mut, sig_mutations.df, by = c('AA_mut'='value'))
