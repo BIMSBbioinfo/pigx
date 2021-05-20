@@ -3,13 +3,12 @@ title: "SARS-CoV-2 variant report"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 theme: darkly
 params:  
-  vep_txt_file: ''
-  snv_csv_file: ''
-  location_sigmuts: ''
-  sample_dir: ''
-  sample_name: ''
-  outFile: ''
+  @PARAMS_SAMPLE_NAME@
 ---
+
+Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
+```{r, child="_settings.Rmd"}
+```
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 # # knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 # # knitr::opts_knit$set(root.dir = params$workdir)
