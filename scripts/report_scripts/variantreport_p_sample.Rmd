@@ -293,7 +293,7 @@ if (any (allDupes)) {
 }
 
 # fixme: I think this should be done with some apply() function? 
-for (mut in sigmuts$value) {
+for (mut in sig_mutations.df$value) {
   sigmuts_deduped <- dedupeMuts(mut, sig_mutations.df, sigmuts_deduped)
 }
 
