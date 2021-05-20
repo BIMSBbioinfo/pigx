@@ -12,7 +12,7 @@ input="${srcdir}/tests/sample_data/test_vep_parsing_input.txt"
 expected="${srcdir}/tests/sample_data/Test_vep_sarscov2_parsed.txt"
 output="${dir}/output"
 
-@PYTHON@ ${script} ${dir} ${input} ${output}
+@PYTHON@ ${script} ${input} ${output}
 
 # Ensure that the output is as expected.
 diff -u ${output} ${expected} || exit 1

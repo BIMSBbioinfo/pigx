@@ -236,7 +236,7 @@ rule parse_vep:
     params:
         script = os.path.join(SCRIPTS_DIR, 'parse_vep.py')
     log: os.path.join(LOG_DIR, 'parse_vep_{sample}.log')
-    shell: "{PYTHON_EXEC} {params.script} {VARIANTS_DIR} {input} {output} >> {log} 2>&1"
+    shell: "{PYTHON_EXEC} {params.script} {input} {output} >> {log} 2>&1"
 
 
 rule bam2fastq:

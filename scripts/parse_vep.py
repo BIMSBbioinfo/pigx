@@ -1,7 +1,7 @@
 import csv
 import sys
 
-def parse_vep(vep_dir, input, output):
+def parse_vep(input, output):
     with open(input, 'r') as file:
         with open(output, 'w') as output:
             header = None
@@ -32,7 +32,6 @@ def parse_vep(vep_dir, input, output):
             writer.writerows(gene_column)
 
 if __name__ == '__main__':
-    vep_dir = sys.argv[1]
-    input = sys.argv[2]
-    output = sys.argv[3]
-    parse_vep(vep_dir, input, output)
+    input = sys.argv[1]
+    output = sys.argv[2]
+    parse_vep(input, output)
