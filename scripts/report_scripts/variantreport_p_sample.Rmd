@@ -414,16 +414,8 @@ msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
 # between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
 # a vector with the information about which of the columns were merged. 
 
-# 1. collapsing identical columns
+msig_stable_unique <- dedupe(msig_stable)
 
-# transposing in order to be able to use the distinct functions
-msig_transposed <- as.data.frame(t(msig_stable[,-1]))
-# collaps identical columns and transpose back
-msig_stable_unique <- data.frame(muts = msig_stable[,1],t(msig_transposed %>% distinct(.keep_all = TRUE)))
-
-# 2. collaps the column names and rename the columns
-colnames_collapsed <- getIdentCols(msig_stable_complete)
-colnames(msig_stable_unique) <- colnames_collapsed
 ```
 ```{r deconvolution, message=F, warning=F, include = FALSE}
 
