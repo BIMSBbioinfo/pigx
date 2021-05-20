@@ -144,35 +144,19 @@ deconv <- function (bulk,sig){
   as.vector(rlm_coefficients)
 }
 
-getIdentCols <- function (dataframe) {
-    '* This function is for collapsing the column names of identical columns and saving them as a new column names.
-       I had the difficulty that with all the existing functions I would always would have missed the "parent" of the 
-       following duplicates. This workaround here should be definitly improved with a more R-like version, if possible. *'
-  
-    cols_new <- c()
-    all_dups <- c()
-    for (i in 1:ncol(msig)){
-      dups <- c()
-      dups <- c()
-      parent <- c()
-      for (j in 1:ncol(msig)){
-        if (i!=j && all(msig[,i] == msig[,j])){
-                parent <- colnames(msig[i])
-                if (!(colnames(msig[j]) %in% dups)) {
-                    dups <- c(dups,colnames(msig[j]))
-                }
-        }else{
-          if (!(colnames(msig[i]) %in% cols_new) && (colnames(msig[i]) %in% all_dups)==FALSE) {
-            cols_new <- c(cols_new, colnames(msig[i]))
-          }
-        }
-      }
-      if (is.null(parent)==FALSE && (colnames(msig[i]) %in% dups)==FALSE && (parent %in% all_dups)==FALSE) {
-        cols_new[i] <- paste(parent,paste(dups,collapse =','), sep = ',')
-      }
-      all_dups <- c(all_dups,dups)
+dedupe <- function (df) {
+    transposed <- t (df)
+    dupes <- duplicated (transposed, fromLast=TRUE)
+    allDupes <- dupes | duplicated (transposed, fromLast=FALSE)
+    if (any (allDupes)) {
+        grouped <- colnames (df)[allDupes]
+        groupName <- paste(grouped, collapse = ",")
+        deduped <- df[!dupes]
+        names (deduped)[names (deduped) %in% grouped] <- groupName
+        return (deduped)
+    } else {
+        return (df)
     }
-    return(cols_new)
 }
 ```
 
