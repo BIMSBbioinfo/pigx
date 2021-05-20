@@ -33,6 +33,7 @@ library(openssl)
 
 # TODO: @Jan @Miri pls add those input values
 # all variables should be strings 
+# if nothing is given, the default should be NA
 # I filled in testing placeholder for now
 samplename <- "samplename1"
 date <- "21/03/25"
