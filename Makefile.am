@@ -7,7 +7,19 @@ dist_pkglibexec_SCRIPTS = \
   snakefile.py
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
-dist_pkglibexec_scripts_SCRIPTS =
+dist_pkglibexec_scripts_SCRIPTS = \
+  scripts/report_scripts/index.Rmd \
+  scripts/report_scripts/qc_report_per_sample.Rmd \
+  scripts/report_scripts/_settings.Rmd \
+  scripts/report_scripts/taxonomic_classification.Rmd \
+  scripts/report_scripts/timecourse.Rmd \
+  scripts/report_scripts/variantreport_p_sample.Rmd \
+  scripts/generateSiteFiles.R \
+  scripts/get_qc_table.py \
+  scripts/parse_vep.py \
+  scripts/run_variant_report.R \
+  scripts/vcfTocsv.py \
+  scripts/vep_rule.py
 
 dist_pkgdata_DATA =            \
   etc/pretty.txt
