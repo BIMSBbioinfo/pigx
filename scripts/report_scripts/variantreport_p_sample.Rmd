@@ -41,7 +41,7 @@ time <- "22:00:00 - 21:00:00"
 location_name <- "BER" 
 coordinates_lat <- "52.3646054650197"
 coordinates_long <- "13.5098643274129"
-
+csv_output_dir <- "path/to/csv_dir"
 ``` 
 ### Sample: `r sample_name` 
 
