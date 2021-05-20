@@ -493,14 +493,52 @@ Variant effect prediction (*Ensemble VEP output*):
 [Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)
 
 ```{r csv_output_variant_plot, include = F}
+# get all possible variants
+all_variants <- colnames (msig_all)
+output_variants <- paste0 (csv_output_dir,"/data_variant_plot.csv")
 
-# output_variant_plot <- data.frame(date = "21/03/2", # brauche ich als input von sample sheet 
-#                                   location = character())
-# 
-# 
-# # 1. get all possible variants from sig_mutations.df
-# # 2. check if variant has a unique row in df (from plotting)
-# #   - if yes: write value in "values"
-# #   - if not: write NA
-# write.csv2(vepfile.df, "./file.csv")
+if (file.exists (output_variants)) {
+    output_variant_plot <- read.table (output_variants, 
+                                       sep = "\t", header = TRUE, colClasses = "character")
+} else {
+    output_variant_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
+                                       dates = character(),
+                                       time = character(),
+                                       location_name = character(),
+                                       coordinates_lat = character(),
+                                       coordinates_long = character())
+
+    # add columns for all possible variants to the dataframe
+    for (variant in all_variants) {
+      output_variant_plot[,variant] <- numeric()
+    }
+    
+  #write header line
+  write.table(t(colnames(output_variant_plot)), output_variants, sep = "\t", 
+            na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
+}
+# adding new row
+meta_data <- c (samplename = sample_name,
+                dates = date,
+                time = time,
+                location_name = location_name,
+                coordinates_lat = coordinates_lat,
+                coordinates_long = coordinates_long
+)
+output_variant_plot <- bind_rows(output_variant_plot, meta_data)
+
+# get rownumber for current sample
+sample_row <- which(grepl(sample_name, output_variant_plot$samplename))
+
+# write deconv values to df
+for (i in all_variants){
+  if (i %in% df$name){
+    # check if variant already has a column
+    if (i %in% colnames(output_variant_plot)) {
+        output_variant_plot[sample_row,][i] <- df$value[df$name == i]
+}
+  }
+}
+write.table(output_variant_plot[sample_row,], output_variants, sep = "\t", append = TRUE, 
+            na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
 ```
