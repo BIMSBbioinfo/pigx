@@ -7,9 +7,6 @@ def parse_vep(vep_dir, input, output):
     header_line = None
 
     with open(input, 'r') as file:
-        if header_line:
-            raise Exception("file has not the correct format or does not has to be parsed anymore")
-
         with open(os.path.join(vep_dir, "tmp.txt"), 'w+') as clean_file:
             for num, line in enumerate(file, 1):
                 if re.match("#Uploaded_variation", line):
