@@ -353,11 +353,8 @@ DT::datatable(NoSignatureTable,
 
 ```{r getting_unique_muts_bulk, message=F, warning=F, include = FALSE}
 
-# filter match table for unique mutations
-match_unique.df <- unique(dplyr::distinct(match.df$name))
-
 # get prot.mutations only 
-muts <- c(match_unique.df$AA_mut)
+muts <- c(match.df$AA_mut)
 # get bulk frequency values
 bulk <- as.numeric(match_unique.df$freq)
 
