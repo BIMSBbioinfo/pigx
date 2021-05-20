@@ -301,7 +301,7 @@ for (mut in sigmuts$value) {
 
 ```{r match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
 variant_protein_mut <- get_protein_mut(vepfile)
-variant_protein_mut <- dplyr::left_join(variant_protein_mut, sig_mutations.df, by = c('AA_mut'='value'))
+variant_protein_mut <- dplyr::left_join(variant_protein_mut, sigmuts_deduped, by = c('AA_mut'='value'))
 match.df <- variant_protein_mut %>%
                     filter(!is.na(name))
 nomatch.df <- variant_protein_mut %>%
