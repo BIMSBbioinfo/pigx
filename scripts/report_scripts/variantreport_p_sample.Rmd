@@ -165,6 +165,16 @@ dedupe <- function (df) {
         return (df)
     }
 }
+
+dedupeMuts <- function (mut, sigmut.df, dedup.df) {
+        # get variant group per mutation
+        duped_muts <- grep (mut, sigmut.df$value)
+        grouped <- sigmut.df$name[duped_muts]
+        groupName <- paste(grouped, collapse = ",")
+      
+        dedup.df$name[dedup.df$value == mut] <- groupName
+        return (dedup.df)
+}  
 ```
 
 ```{r development_parsing_deletions_properly, warning = F, include = FALSE}
