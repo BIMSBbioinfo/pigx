@@ -11,8 +11,8 @@ params:
   outFile: ''
 ---
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
-# knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-# knitr::opts_knit$set(root.dir = params$workdir)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
 library(DT)
 library(ggplot2)
 library(dplyr)
@@ -24,12 +24,13 @@ library(openssl)
 ```
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
-# vepfile <- params$vep_txt_file
-# snvfile <- params$snv_csv_file
-# sampledir <- params$sample_dir
-# location_sigmuts <- params$location_sigmuts
-# sample_name <- params$sample_name
-# outFile <- params$outFile
+sample_name <- sampleName
+location_sigmuts <- sigmut_db
+
+vepfile <- file.path(variants_dir,"/",sample_name,"_vep_sarscov2_parsed.txt")
+snvfile <- file.path(variants_dir,"/",sample_name,"_snv.csv")
+sampledir <- variants_dir
+
 ``` 
 ### Sample: `r sample_name` 
 
