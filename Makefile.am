@@ -27,7 +27,12 @@ dist_pkgdata_DATA =            \
 dist_doc_DATA = 									\
   README.md
 
-EXTRA_DIST = META.in
+EXTRA_DIST = \
+  META.in \
+  tests/sample_data/Test_vep_sarscov2_parsed.txt \
+  tests/sample_data/test_vep_parsing_input.txt \
+  tests/sample_sheet.csv \
+  tests/settings.yaml
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
 
