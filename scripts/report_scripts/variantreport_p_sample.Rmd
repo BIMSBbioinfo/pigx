@@ -356,7 +356,7 @@ DT::datatable(NoSignatureTable,
 # get prot.mutations only 
 muts <- c(match.df$AA_mut)
 # get bulk frequency values
-bulk <- as.numeric(match_unique.df$freq)
+bulk <- as.numeric(match.df$freq)
 
 ```
 
