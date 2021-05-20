@@ -31,6 +31,15 @@ library(openssl)
 # snvfile <- file.path(variants_dir,"/",sample_name,"_snv.csv")
 # sampledir <- variants_dir
 
+# TODO: @Jan @Miri pls add those input values
+# all variables should be strings 
+# I filled in testing placeholder for now
+date <- "21/03/25"
+time <- "22:00:00 - 21:00:00"
+location_name <- "BER" 
+coordinates_lat <- "52.3646054650197"
+coordinates_long <- "13.5098643274129"
+
 ``` 
 ### Sample: `r sample_name` 
 
@@ -511,13 +520,33 @@ Variant effect prediction (*Ensemble VEP output*):
 
 ```{r csv_output_variant_plot, include = F}
 
-# output_variant_plot <- data.frame(date = "21/03/2", # brauche ich als input von sample sheet 
-#                                   location = character())
-# 
-# 
-# # 1. get all possible variants from sig_mutations.df
-# # 2. check if variant has a unique row in df (from plotting)
-# #   - if yes: write value in "values"
-# #   - if not: write NA
-# write.csv2(vepfile.df, "./file.csv")
+# check if there is already a file for the output
+# if yes: load that file
+    # TODO
+    # output_variant_plot <- read.table("output/file", sep = "\t", header = TRUE)
+# if not:
+    output_variant_plot <- data.frame(samplename = sample_name, # brauche ich als input von sample sheet 
+                                      date = date,
+                                      time = time,
+                                      location_name = location_name,
+                                      coordinates_lat = coordinates_lat,
+                                      coordinates_long = coordinates_long
+                                        # the script will add columns for the variants )
+    )
+
+# 1. get all possible variants from sig_mutations.df
+all_variants <- colnames(msig_all)
+# 2. check if variant has a unique row in df (from plotting)
+for (i in all_variants){
+  if (i %in% df$name){
+    # check if variant already has a column
+    if (i %in% colnames(output_variant_plot)) {
+        output_variant_plot$i <- df$value[i,] # TODO
+}
+  }
+}
+  
+#   - if yes: write value in "values"
+#   - if not: write NA
+write.csv2(vepfile.df, "./file.csv")
 ```
