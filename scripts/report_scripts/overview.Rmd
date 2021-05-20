@@ -3,4 +3,22 @@ title: "index page"
 output: html_document
 ---
 
-# Here should the links to all reports be displayed
+Read config.yml for the locations of sample_sheet 
+```{r, child="_settings.Rmd"}
+```
+
+# Overview
+
+For each sample that was provided three report pages were generated. These can be found here as an overview or by navigating through the tabs of this website. 
+
+```{r read sample file, echo=F}
+sample_sheet <- data.table::fread(sample_sheet)
+sample_names <- sample_sheet$names
+```
+
+
+```{r}
+#todo: automatically generate the sample links
+#todo: make a table for this overview
+```
+
