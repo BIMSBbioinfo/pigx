@@ -23,5 +23,6 @@ coverage_dir <- config$coverage_dir
 variants_dir <- config$variants_dir
 sigmut_db <- config$sigmut_db
 site_dir <- config$site_dir
+var_timecourse_csv <- config$var_timecourse_csv
 
 ```

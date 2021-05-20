@@ -17,6 +17,7 @@ coverage_dir <- args[4]
 variants_dir <- args[5]
 sigmut_db <- args[6]
 siteDir <- args[7] #path to folder where the site will be generated aka report_dir ?
+var_timecourse_csv <- args[8]
 # necessary? - also see below l67
 pipelineOutputDir <- "../"
 
@@ -55,7 +56,8 @@ config_yml <- list('sample_sheet' = sampleSheetFile,
                    'variants_dir'=variants_dir,
                    'sigmut_db'=sigmut_db,
                    'pipeline_output_dir' = pipelineOutputDir,
-                   'site_dir' = siteDir)
+                   'site_dir' = siteDir,
+                   'var_timecourse_csv' = var_timecourse_csv)
 yaml::write_yaml(config_yml, file = file.path(siteDir, "config.yml"))
 
 # 3. Create a _site.yml file that determines the layout of the rendered html

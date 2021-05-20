@@ -86,7 +86,8 @@ targets = {
             expand(os.path.join(REPORT_DIR, '{sample}.qc_report_per_sample.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.variantreport_p_sample.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.taxonomic_classification.html'), sample=SAMPLES) +
-            expand(os.path.join(REPORT_DIR, '{sample}.Krona_report.html'), sample=SAMPLES)
+            expand(os.path.join(REPORT_DIR, '{sample}.Krona_report.html'), sample=SAMPLES) +
+            [os.path.join(REPORT_DIR, 'index.html')]
         )
     },
     'lofreq': {
@@ -314,9 +315,10 @@ rule generate_site_files:
         expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.Rmd"), sample = SAMPLES)
     params:
         report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts"),
-        script = os.path.join(SCRIPTS_DIR, "generateSiteFiles.R")
+        script = os.path.join(SCRIPTS_DIR, "generateSiteFiles.R"),
+        var_timecourse_csv = os.path.join(VARIANTS_DIR, 'test_var_timecourse.csv')
     log: os.path.join(LOG_DIR, "generate_site_files.log")
-    shell: "{RSCRIPT_EXEC} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_CSV} {KRAKEN_DIR} {COVERAGE_DIR} {VARIANTS_DIR} {SIGMUT_DB} {REPORT_DIR} {RSCRIPT_EXEC} > {log} 2>&1"
+    shell: "{RSCRIPT_EXEC} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_CSV} {KRAKEN_DIR} {COVERAGE_DIR} {VARIANTS_DIR} {SIGMUT_DB} {REPORT_DIR} {params.var_timecourse_csv} {RSCRIPT_EXEC} > {log} 2>&1"
 
 
 rule render_kraken2_report:
@@ -346,10 +348,10 @@ rule render_qc_report:
 rule render_overview:
     input:
         os.path.join(REPORT_DIR, "overview.Rmd"),
-        os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"),
-        os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"),
-        os.path.join(REPORT_DIR, "{sample}.Krona_report.html"),
-        os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html")
+        expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
+        expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
+        expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
+        expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     output: os.path.join(REPORT_DIR, "overview.html")
     log: os.path.join(LOG_DIR, "reports", "overview.log")
     shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"#
@@ -362,7 +364,7 @@ rule render_site:
         os.path.join(REPORT_DIR, "_site.yml"),
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
-        os.path.join(REPORT_DIR, "overview.Rmd"),
+        os.path.join(REPORT_DIR, "overview.html"),
         expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
@@ -370,5 +372,5 @@ rule render_site:
     output: os.path.join(REPORT_DIR, "index.html")
     # params:
     #     report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts")
-    log: os.path.join(LOG_DIR, "render_site.log")
+    log: os.path.join(LOG_DIR, "reports", "index.log")
     shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[1]}\')\" > {log} 2>&1"
