@@ -25,7 +25,7 @@ def parse_vep(vep_dir, input, output):
                 extra = row[extra_column].split(";")
                 for element in extra:
                     if element.startswith("SYMBOL="):
-                        gene = element.split("=")[1:][0]
+                        (_, gene) = element.split("=")
                         row.append(gene)
                         gene_column.append(row)
 
