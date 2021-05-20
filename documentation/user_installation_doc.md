@@ -38,9 +38,9 @@ tests/
 ``` 
 
 
-## Settings and Sample file
+## Settings file and sample sheet
 
-A draft for these two files are given in the `tests/` directory. The pre-filled rows should work but feel free to modify either locations in the settings file or given samples in the sample sheet. These files can not yet be provided as arguments in the final run command of the pipeline. Instead the `snakefile.py` relies on these two files to be in the `tests/` directory. 
+A draft for these two files are given in the `tests/` directory. The pre-filled rows should work but feel free to modify either locations in the settings file or given samples in the sample sheet.
 
 ## Dummy sample fastq file
 
