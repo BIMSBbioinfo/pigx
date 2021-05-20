@@ -29,7 +29,7 @@ sampleSheet <- data.table::fread(sampleSheetFile)
 rmd_files <- dir(reportsScriptDir, pattern = '.Rmd$', full.names = T)
 
 for(f in rmd_files) {
-  if(basename(f) == 'timecourse.Rmd') {
+  if(basename(f) == 'overview.Rmd') {
     file.copy(from = f, to = siteDir)
   } else if (basename(f) == 'index.Rmd'){
     file.copy(from = f, to = siteDir)
@@ -82,11 +82,11 @@ site_yml <- list("name" = "Results",
 #depending on the available samples in the pipeline's output
 navbar_yml <- list('title' = 'Reports',
                    'left' = list(
-                     list("text" = "timecourse", "href" = "timecourse.html")))
+                     list("text" = "Overview", "href" = "overview.html")))
 
 #for all rmd files except index.Rmd(timecourse) and child Rmd files (beginning with "_"), 
 # create a navbar item (for each sample in sample sheet)
-tabs <- grep("(^timecourse.Rmd$)|(^_.+.Rmd$)", basename(rmd_files), invert = T, value = T)
+tabs <- grep("(^overview.Rmd$)|(^_.+.Rmd$)", basename(rmd_files), invert = T, value = T)
 tabs <- grep("(^index.Rmd$)|(^_.+.Rmd$)", basename(tabs), invert = T, value = T)
 
 navbar_yml$left <- c(navbar_yml$left, lapply(tabs,
