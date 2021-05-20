@@ -17,7 +17,6 @@ dist_pkglibexec_scripts_SCRIPTS = \
   scripts/generateSiteFiles.R \
   scripts/get_qc_table.py \
   scripts/parse_vep.py \
-  scripts/run_variant_report.R \
   scripts/vcfTocsv.py \
   scripts/vep_rule.py
 

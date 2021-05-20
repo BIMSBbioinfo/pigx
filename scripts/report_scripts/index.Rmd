@@ -149,6 +149,11 @@ plots_line_locations <- lapply(locations, function(location) {
 
 ```{r plot mutations over time, echo=F}
 plots_line_locations
+
+for (i in length(plots_line_locations)){
+  a <-plots_line_locations[[i]]
+  print(a)
+}
 ```
 
 ## mutations on the map for each data/location

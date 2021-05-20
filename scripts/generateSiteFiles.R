@@ -12,14 +12,12 @@ args = commandArgs(trailingOnly=TRUE)
 
 reportsScriptDir <- args[1] #folder that contains the Rmd reports that will be rendered into a site
 sampleSheetFile <- args[2] #path to sample_sheet.csv file
-krakenDir <- args[3]
+krakenDir <- args[3] #path to kraken output files
 coverage_dir <- args[4]
 variants_dir <- args[5]
 sigmut_db <- args[6]
 siteDir <- args[7] #path to folder where the site will be generated aka report_dir ?
 var_timecourse_csv <- args[8]
-# necessary? - also see below l67
-pipelineOutputDir <- "../"
 
 
 #read sample sheet
