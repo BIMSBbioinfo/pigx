@@ -527,33 +527,58 @@ Variant effect prediction (*Ensemble VEP output*):
     # TODO
     # output_variant_plot <- read.table("output/file", sep = "\t", header = TRUE)
 # if not:
-    output_variant_plot <- data.frame(samplename = sample_name, # brauche ich als input von sample sheet 
-                                      date = date,
-                                      time = time,
-                                      location_name = location_name,
-                                      coordinates_lat = coordinates_lat,
-                                      coordinates_long = coordinates_long
-                                        # the script will add columns for the variants )
-    )
-# strategy: dataframe already exists
-# 1. add a new row with samplename and meta data - fill missing cols with NA
-# 2. 
+output_variant_plot <- data.frame(samplename = samplename, # brauche ich als input von sample sheet 
+                                  dates = date,
+                                  time = time,
+                                  location_name = location_name,
+                                  coordinates_lat = coordinates_lat,
+                                  coordinates_long = coordinates_long)
 
-# 1. get all possible variants from sig_mutations.df
+
+# get all possible variants from sig_mutations.df
 all_variants <- colnames(msig_all)
-# 2. check if variant has a unique row in df (from plotting)
+
+# add columns for all possible variants to the dataframe
+for (variant in all_variants) {
+  output_variant_plot[,variant] <- NA
+}
+# adding new row
+#new_row <- c(samplename = "sample2", dates = "2021/04/23", location_name = "Blob", WT = as.character(0.23), b117 = as.character(0.67))
+meta_data <- c(
+        samplename = samplename,
+        dates = date,
+        time = time,
+        location_name = location_name,
+        coordinates_lat = coordinates_lat,
+        coordinates_long = coordinates_long
+)
+
+variant_values <- c()
 for (i in all_variants){
   if (i %in% df$name){
-    # check if variant already has a column
-    if (i %in% colnames(output_variant_plot)) {
+      variant_values <- c(variant_values, i = )
         # append a row for that variable
         # output_variant_plot[nrow(output_variant_plot)+1,i] <- df$value[df$name == i]
 
 }
   }
+
+output_variant_plot <- bind_rows(output_variant_plot, meta_data)
+# get rownumber for sample
+sample_row <- which(grepl(samplename, output_variant_plot$samplename))
+
+# write deconv values to df
+for (i in all_variants){
+  if (i %in% df$name){
+    # check if variant already has a column
+    if (i %in% colnames(output_variant_plot)) {
+        output_variant_plot[sample_row,][i] <- df$value[df$name == i]
 }
-  
+  }
+}
+
+
 #   - if yes: write value in "values"
 #   - if not: write NA
-write.csv2(vepfile.df, "./file.csv")
+write.csv2(vepfile.df, "../file.csv")
 ```
