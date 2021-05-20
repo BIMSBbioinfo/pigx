@@ -31,5 +31,5 @@ Inside the environment you can then perform the usual build steps:
 ./bootstrap.sh # to generate the "configure" script
 ./configure
 make
-
+make check
 ```
