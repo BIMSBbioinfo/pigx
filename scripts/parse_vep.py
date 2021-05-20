@@ -20,9 +20,11 @@ def parse_vep(vep_dir, input, output):
             header.append("SYMBOL")
             gene_column.append(header)
 
-            for row in reader:  # fixme: I'm not sure if the following construct is ugly or not
+            extra_column = header.index("Extra")
+
+            for row in reader:
                 # get gene name 
-                extra = row[13].split(";")
+                extra = row[extra_column].split(";")
                 for element in extra:
                     if re.search(r"SYMBOL=", element):
                         gene = element.split("=")[1:][0]
