@@ -35,7 +35,6 @@ sampledir <- variants_dir
 # all variables should be strings 
 # if nothing is given, the default should be NA
 # I filled in testing placeholder for now
-samplename <- "samplename1"
 date <- "21/03/25"
 time <- "22:00:00 - 21:00:00"
 location_name <- "BER" 
@@ -546,7 +545,7 @@ if (file.exists (output_variants)) {
             na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 # adding new row
-meta_data <- c (samplename = samplename,
+meta_data <- c (samplename = sample_name,
                 dates = date,
                 time = time,
                 location_name = location_name,
@@ -556,7 +555,7 @@ meta_data <- c (samplename = samplename,
 output_variant_plot <- bind_rows(output_variant_plot, meta_data)
 
 # get rownumber for current sample
-sample_row <- which(grepl(samplename, output_variant_plot$samplename))
+sample_row <- which(grepl(sample_name, output_variant_plot$samplename))
 
 # write deconv values to df
 for (i in all_variants){
