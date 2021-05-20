@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+set -u
+
+root=$(mktemp --tmpdir -d "pigx.XXXX")
+dir=${root}/tests/test_vep
+mkdir -p ${dir}
+
+script="${srcdir}/scripts/parse_vep.py"
+input="${srcdir}/tests/sample_data/test_vep_parsing_input.txt"
+expected="${srcdir}/tests/sample_data/Test_vep_sarscov2_parsed.txt"
+output="${dir}/output"
+
+@PYTHON@ ${script} ${dir} ${input} ${output}
+
+# Ensure that the output is as expected.
+diff ${output} ${expected} || exit 1

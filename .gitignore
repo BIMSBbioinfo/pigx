@@ -15,3 +15,9 @@ autom4te.cache/
 config.json
 build-aux/*
 aclocal.m4
+
+# test files
+test-suite.log
+tests/tests/*trs
+tests/tests/*log
+tests/tests/*sh

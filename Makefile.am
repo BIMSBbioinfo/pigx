@@ -19,7 +19,8 @@ EXTRA_DIST = META.in
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
 
-TESTS =
+TESTS = \
+  tests/tests/vep.sh
 
 clean-local:
 	-rm -rf .snakemake
