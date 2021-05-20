@@ -1,45 +1,29 @@
 ---
-title: "SARS-CoV-2 variant report"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+title: "SARS-CoV-2 variant report"                                                                                                  
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
-theme: darkly
 params:  
-  vep_txt_file: ''
-  snv_csv_file: ''
-  location_sigmuts: ''
-  sample_dir: ''
-  sample_name: ''
-  outFile: ''
+  @PARAMS_SAMPLE_NAME@
 ---
-```{r setup, include=FALSE, message = FALSE, warning = FALSE}
-# knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-# knitr::opts_knit$set(root.dir = params$workdir)
-library(DT)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(qpcR)
-library(stringr)
-library(magrittr)
-library(openssl)
+
+Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
+```{r, child="_settings.Rmd"}
 ```
+
+
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
-vepfile <- params$vep_txt_file
-snvfile <- params$snv_csv_file
-sampledir <- params$sample_dir
-location_sigmuts <- params$location_sigmuts
-sample_name <- params$sample_name
-outFile <- params$outFile
+sample_name <- sampleName
+location_sigmuts <- sigmut_db
+
+vepfile <- file.path(variants_dir,"/",sample_name,"_vep_sarscov2_parsed.txt")
+snvfile <- file.path(variants_dir,"/",sample_name,"_snv.csv")
+sampledir <- variants_dir
+
 ``` 
+
 ### Sample: `r sample_name` 
 
-```{r test_files, include = FALSE}
-# location_sigmuts <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/vep_mutation_matching/signature_mutations'
-# sampledir <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test'
-# # vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/Test_vep_sarscov2_reportinput.txt' 
-# vepfile <- '/mnt/beast/pathogenomics/pigx_sarscov2_ww/output/vep/report_ready.txt' 
-# snvfile <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/samples/wastewater_all/Test/variants/SNVs/snvs.csv'
-```
+
 This report shows the variant analysis of SARS-CoV-2 RNA-seq samples from wastewater samples. Variants are 
 identified by SNV calling. Translated protein mutations were matched against lists of signature mutations for known
 variants of concern (VOC) as found on [outbreak.info](https://outbreak.info/situation-reports) and [CoVariant.org](https://covariants.org/variants/S.501Y.V1).

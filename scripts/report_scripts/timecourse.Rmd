@@ -1,0 +1,102 @@
+---
+title: "Timecourse"
+output: html_document
+---
+
+Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
+#```{r, child="_settings.Rmd"}
+#```
+
+# dummy data
+```{r libraries and input}
+library(plotly)
+
+#for testing
+#df <- read.table("../../tests/sample_data/test_var_timecourse.csv",sep = "\t",header = T)
+df <- read.table(file.path(variants_dir,"test_var_timecourse.csv"),sep = "\t",header = T)
+print(df)
+```
+
+```{r rafael and plot, echo=F}
+forplot<- reshape2::melt(df,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
+forplot$dates <- as.Date(forplot$dates)
+
+locations <- unique(forplot$location_name)
+
+plots_locations <- lapply(locations, function(location) {
+  tmp <- forplot  %>% filter(location_name ==location) 
+  fig <- plot_ly(x = tmp$dates,name=tmp$variable,y = tmp$value, type = 'scatter',mode = 'lines') %>%    
+  layout(title = location)
+  fig <- fig %>% add_markers(marker = list(line = list(color = "black", width = 1)))
+})
+
+```
+
+# plotting the figures
+```{r plot, echo=F}
+for (i in plots_locations){
+  print(i)
+}
+```
+
+# fancy plots to come: maps
+
+
+
+## plot bubble plot
+
+```{r,echo=F}
+
+
+forplot<- reshape2::melt(df,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long","WT","b1351","b117"))
+forplot$dates <- as.Date(forplot$dates)
+
+#subset it also to time
+
+#var <- unique(forplot$variable)
+
+#forplot <- forplot[forplot$variable==var[1],]
+
+bubble<-plot_ly (
+  data= forplot,
+  type = 'scattergeo',
+  mode='markers')
+
+bubble <- bubble %>% add_trace(
+  lon =forplot$coordinates_long ,
+  lat =forplot$coordinates_lat,
+  marker = list (
+  color =c( 'red','red','red','red','red','red','red','red','red','red' ) ,
+  size = forplot$WT*100,
+  mode = 'markers' )
+  )
+
+bubble <- bubble %>% layout(
+  title= "Variant x detected",
+  updatemenus = list(
+    list(
+      type = "buttons",
+      y = 1,
+      buttons = list(
+        
+        list(method = "update",
+             args = list("size","forplot$b1351*100"),
+             label= "b1351"),
+        
+        list(method = "update",
+             args = list("size","forplot$WT*100"),
+             label= "WT"),
+        
+        list(method = "update",
+             args = list("size","forplot$b117*100"),
+             label= "b117")
+      )
+    )
+  )
+)
+
+bubble
+```
+
+
+

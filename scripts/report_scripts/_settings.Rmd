@@ -1,0 +1,29 @@
+
+Reading Config File: 
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(data.table)))
+suppressMessages(suppressWarnings(library(plotly)))
+suppressMessages(suppressWarnings(library(DT)))
+suppressMessages(suppressWarnings(library(dplyr)))
+suppressMessages(suppressWarnings(library(tidyr)))
+suppressMessages(suppressWarnings(library(qpcR)))
+suppressMessages(suppressWarnings(library(stringr)))
+suppressMessages(suppressWarnings(library(magrittr)))
+suppressMessages(suppressWarnings(library(openssl)))
+
+if (exists("params")){
+  sampleName <- params$sample_name
+}
+config <- yaml::read_yaml('./config.yml')
+pipeline_output_dir <- config$pipeline_output_dir
+krakenDir <- config$krakenDir
+coverage_dir <- config$coverage_dir
+variants_dir <- config$variants_dir
+sigmut_db <- config$sigmut_db
+site_dir <- config$site_dir
+
+```

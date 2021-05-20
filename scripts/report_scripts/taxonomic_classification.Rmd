@@ -1,39 +1,29 @@
 ---
-title: "Kraken2-report"
-#author: "mfaxel"
+title: "taxonomic classification"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 #output: html_document
 params:
-  #sample_dir: '../../tests/sample_data/' # must be kraken REPORT file
-  #sample_name: 'tmp_unaligned_krakenReport'
-  sample_name: ""
-  kraken_output: ""
+  @PARAMS_SAMPLE_NAME@
 
 ---
 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-knitr::opts_knit$set(root.dir = params$workdir)
-library(DT)
+Read config.yml for the locations of sample sheet, pipeline output and krakenDir. 
+```{r, child="_settings.Rmd"}
 ```
 
-
-
-
-```{r, echo=FALSE}
+```{r input, echo=FALSE}
 #input 
 sampleName <- params$sample_name
-#sampleDir <- params$sample_dir
-#krakenReportFile <- paste0(params$sample_dir, params$sample_name)
-# krakenReportFile <- paste0(params$sample_dir, params$sample_name, ".txt")
-krakenReportFile <- kraken_output
+krakenDir <- config$kraken_dir
+
+krakenReportFile <- paste0(krakenDir,sampleName,'_classified_unaligned_reads.txt')  
+kronaFile <- paste0(site_dir,sampleName,'_krona_report.html')
 ```
 
 
-## Kraken2 report on unaligned reads from the Sars-Cov2 enriched samples
+# Kraken2 report on unaligned reads from the Sars-Cov2 enriched samples
 
-```{r,echo=F}
+```{r print sample name,echo=F}
 print(paste( "Sample: ",sampleName))
 ```
 
@@ -50,9 +40,21 @@ A table with all the species found:
   + NCBI taxonomic ID number  
   + Indented scientific name  
 
-```{r, echo=FALSE}
+```{r plot table, echo=FALSE}
 table<- read.table(krakenReportFile,sep = "\t")
 header_table <- c("percent","num_fragments","num_fragments_taxon","rank","NCBI_ID","scientific_name")
 colnames(table)<-header_table
 datatable(table)
 ```
+
+# visualization of all unaligned reads are available with Krona:
+
+The data can be explored with a multi-layered pie chart, which was created with [KronaTools](https://github.com/marbl/Krona/wiki). It is an interactive chart of all the classificated species found with Kraken2.  
+
+```{r paste krona link,echo=F}
+#TODO: should display a link to the krona html, which should be in the same folder with this file and per sample 
+#krona_html_link <- paste0(sampleName,"krona_report.html")
+
+#[Krona graph of this sample](`r krona_html_link`)
+```
+

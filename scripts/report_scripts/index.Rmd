@@ -1,0 +1,6 @@
+---
+title: "index page"
+output: html_document
+---
+
+# Here should the links to all reports be displayed
