@@ -322,21 +322,21 @@ rule render_kraken2_report:
     input: os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.Rmd")
     output: os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_taxonomic_classification.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"#
+    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input}\')\" > {log} 2>&1"
 
 
 rule render_variant_report:
     input: os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.Rmd")
     output: os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_variant_report.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"#
+    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input}\')\" > {log} 2>&1"
         
 
 rule render_qc_report:
     input: os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.Rmd")
     output: os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_qc_report.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"#
+    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input}\')\" > {log} 2>&1"
 
 
 # renders the timecourse rmd once all other are done rendering (!!)
