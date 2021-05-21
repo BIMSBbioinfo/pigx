@@ -555,12 +555,11 @@ write.table(output_variant_plot[sample_row,], output_variants, sep = "\t", appen
             na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
 ```
 ```{r csv_output_mutation_plot, message = FALSE, warning = FALSE, include = FALSE}
-match.df <- read.table("match.csv", sep = ",", header = TRUE, colClasses = "character")
-sigmuts_deduped <- read.table("sigmuts.csv", sep = ",", header = TRUE, colClasses = "character")
+match.df <- unique(match.df)
   
 # get all possible mutations
 all_mutations <- sigmuts_deduped$value
-output_mutations <- paste0 (csv_output_dir,"/data_mutation_plot.csv")
+output_mutations <- file.path(csv_output_dir, "data_mutation_plot.csv")
 
 
 if (file.exists (output_mutations)) {
