@@ -85,7 +85,7 @@ targets = {
         'files': (
             expand(os.path.join(REPORT_DIR, '{sample}.qc_report_per_sample.html'), sample=SAMPLES) + 
             expand(os.path.join(REPORT_DIR, '{sample}.variantreport_p_sample.html'), sample=SAMPLES) + 
-            expand(os.path.join(REPORT_DIR, '{sample}.Kraken2_report.html'), sample=SAMPLES) + 
+            expand(os.path.join(REPORT_DIR, '{sample}.taxonomic_classification.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.Krona_report.html'), sample=SAMPLES)
         )
     },
