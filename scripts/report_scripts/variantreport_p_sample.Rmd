@@ -23,7 +23,7 @@ Read config.yml for the locations of sample sheet, pipeline output and sigmut lo
 ```
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
-sample_name <- sampleName
+sample_name <- params$sample_name
 location_sigmuts <- sigmut_db
 
 vepfile <- file.path(variants_dir,paste0(sample_name,"_vep_sarscov2_parsed.txt"))

@@ -17,7 +17,7 @@ knitr::opts_knit$set(root.dir = params$workdir)
 
 # Input Settings
 ```{r InputSettings, echo = FALSE, include = FALSE}
-sample_name <- sampleName
+sample_name <- params$sample_name
 coverage_file <- file.path(coverage_dir,paste0(sample_name, "_merged_covs.csv"))
 ``` 
 

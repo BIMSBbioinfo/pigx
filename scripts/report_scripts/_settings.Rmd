@@ -15,9 +15,6 @@ suppressMessages(suppressWarnings(library(stringr)))
 suppressMessages(suppressWarnings(library(magrittr)))
 suppressMessages(suppressWarnings(library(openssl)))
 
-if (exists("params")){
-  sampleName <- params$sample_name
-}
 config <- yaml::read_yaml('./config.yml')
 pipeline_output_dir <- config$pipeline_output_dir
 krakenDir <- config$krakenDir
