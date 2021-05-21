@@ -18,7 +18,7 @@ knitr::opts_knit$set(root.dir = params$workdir)
 # Input Settings
 ```{r InputSettings, echo = FALSE, include = FALSE}
 sample_name <- sampleName
-coverage_file <- paste0(coverage_dir,"/",sample_name,"_merged_covs.csv")
+coverage_file <- file.path(coverage_dir,paste0(sample_name, "_merged_covs.csv"))
 ``` 
 
 ```{r printInputSettings, echo = FALSE, include = FALSE}
@@ -75,7 +75,7 @@ The reads were pre-processed as followed:
 ## Download Stats csv
 ```{r, include = F}
  
-write.csv2(coverage.df, paste0(dirname(coverage_file),"/report_download_coverage.csv")) # not sure about the funct of the dataframe here, but it works so I leave it for now
+write.csv2(coverage.df, file.path(dirname(coverage_file), "report_download_coverage.csv")) # not sure about the funct of the dataframe here, but it works so I leave it for now
 
 readLines(coverage_file) %>% 
   paste0(collapse="\n") %>% 

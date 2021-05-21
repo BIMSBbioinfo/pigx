@@ -26,8 +26,8 @@ Read config.yml for the locations of sample sheet, pipeline output and sigmut lo
 sample_name <- sampleName
 location_sigmuts <- sigmut_db
 
-vepfile <- file.path(variants_dir,"/",sample_name,"_vep_sarscov2_parsed.txt")
-snvfile <- file.path(variants_dir,"/",sample_name,"_snv.csv")
+vepfile <- file.path(variants_dir,paste0(sample_name,"_vep_sarscov2_parsed.txt"))
+snvfile <- file.path(variants_dir,paste0(sample_name,"_snv.csv"))
 sampledir <- variants_dir
 
 # TODO: @Jan @Miri pls add those input values
@@ -250,7 +250,7 @@ dedupeMuts <- function (mut, sigmut.df, dedup.df) {
 # it's probably not really necessary to add the pase0 column but I like to have a full overview
 # but maybe this part could be done a bt nicer more compact with e.g. looping through the file directories?
 ################
-b117 <- read.table(paste0(location_sigmuts,"/B117_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
+b117 <- read.table(file.path(location_sigmuts,"B117_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
                 sep="\t",header=T)
 # modifiyng deletions, subsitute "nothing" with a - e.g: D789 -> D789-
 b117$alt_aa <- na_if(b117$alt_aa, '')
@@ -258,27 +258,27 @@ b117$alt_aa[is.na(b117$alt_aa)] <- "-"
 #pasting column with correct prot mutation notation
 b117$AA_mut <- paste0(b117$ref_aa, b117$codon_num, b117$alt_aa)
 #####################
-b1351 <- read.table(paste0(location_sigmuts,"/B1351_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
+b1351 <- read.table(file.path(location_sigmuts,"B1351_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
                 sep="\t",header=T)
 b1351$alt_aa <- na_if(b1351$alt_aa, '')
 b1351$alt_aa[is.na(b1351$alt_aa)] <- "-"
 b1351$AA_mut <- paste0(b1351$ref_aa, b1351$codon_num, b1351$alt_aa)
-b1427 <- read.table(paste0(location_sigmuts,"/B1427_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
+b1427 <- read.table(file.path(location_sigmuts,"B1427_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
                 sep="\t",header=T)
 b1427$alt_aa <- na_if(b1427$alt_aa, '')
 b1427$alt_aa[is.na(b1427$alt_aa)] <- "-"
 b1427$AA_mut <- paste0(b1427$ref_aa, b1427$codon_num, b1427$alt_aa)
-b1429 <- read.table(paste0(location_sigmuts,"/B1429_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
+b1429 <- read.table(file.path(location_sigmuts,"B1429_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
                 sep="\t",header=T)
 b1429$alt_aa <- na_if(b1429$alt_aa, '')
 b1429$alt_aa[is.na(b1429$alt_aa)] <- "-"
 b1429$AA_mut <- paste0(b1429$ref_aa, b1429$codon_num, b1429$alt_aa)
-b1526 <- read.table(paste0(location_sigmuts,"/B1526_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
+b1526 <- read.table(file.path(location_sigmuts,"B1526_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
                 sep="\t",header=T)
 b1526$alt_aa <- na_if(b1526$alt_aa, '')
 b1526$alt_aa[is.na(b1526$alt_aa)] <- "-"
 b1526$AA_mut <- paste0(b1526$ref_aa, b1526$codon_num, b1526$alt_aa)
-p1 <- read.table(paste0(location_sigmuts,"/P1_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
+p1 <- read.table(file.path(location_sigmuts,"P1_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
                 sep="\t",header=T)
 p1$alt_aa <- na_if(p1$alt_aa, '')
 p1$alt_aa[is.na(p1$alt_aa)] <- "-"
@@ -521,7 +521,7 @@ Variant effect prediction (*Ensemble VEP output*):
 ```{r csv_output_variant_plot, include = F}
 # get all possible variants
 all_variants <- colnames (msig_all)
-output_variants <- paste0 (csv_output_dir,"/data_variant_plot.csv")
+output_variants <- file.path(csv_output_dir,"data_variant_plot.csv")
 
 if (file.exists (output_variants)) {
     output_variant_plot <- read.table (output_variants, 

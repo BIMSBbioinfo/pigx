@@ -16,8 +16,8 @@ Read config.yml for the locations of sample sheet, pipeline output and krakenDir
 sampleName <- params$sample_name
 krakenDir <- config$kraken_dir
 
-krakenReportFile <- paste0(krakenDir,sampleName,'_classified_unaligned_reads.txt')  
-kronaFile <- paste0(site_dir,sampleName,'_krona_report.html')
+krakenReportFile <- file.path(krakenDir, paste0(sampleName, '_classified_unaligned_reads.txt'))
+kronaFile <- file.path(site_dir, paste0(sampleName, '_krona_report.html'))
 ```
 
 
