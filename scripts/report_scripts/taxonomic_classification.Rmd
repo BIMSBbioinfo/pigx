@@ -28,7 +28,7 @@ print(paste( "Sample: ",sampleName))
 ```
 
 
-The Sars-Cov2 enriched wastewater samples are aligned to the Virus genome. The unaligned reads, that are left are aligned with Kraken2 against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2). This report is an overview over the species found.  
+The SARS-CoV-2 enriched wastewater samples are aligned to the virus genome. The unaligned reads, that are left are aligned with Kraken2 against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2). This report is an overview over the species found.  
 
 A table with all the species found: 
 
