@@ -29,3 +29,5 @@ Inside the environment you can then perform the usual build steps:
 make
 make check
 ```
+
+Please, also see https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md for setting up the pipeline and the needed databases.
