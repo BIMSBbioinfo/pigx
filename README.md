@@ -11,8 +11,9 @@
 
 -----------
 
-This is an awesome pipeline to which this part will contain a short and sweet introduction
-
+PiGx SARS-CoV-2 is a pipeline for analysing data from sequenced wastewater samples and identifying 
+given variants-of-concern of SARS-CoV-2. The pipeline can be used for continuous sampling. The output report will provide 
+an intuitive visual overview about the development of variant abundance over time and location. 
 # Documentation
 
 Please see our documentation in order to find out more about how to install and run the PiGx-RNAseq pipeline:
@@ -21,17 +22,16 @@ https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_in
 # Sample Reports
 
 See sample HTML reports produced by PiGx pipelines:
-http://bioinformatics.mdc-berlin.de/pigx/supplementary-materials.html
+http://bioinformatics.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/index.html
 
 # Getting help
 
 If you have any questions please e-mail: pigx@googlegroups.com or use the web form to ask questions https://groups.google.com/forum/#!forum/pigx/. 
 
-If you run into any bugs, please open an issue here: https://github.com/BIMSBbioinfo/pigx_rnaseq/issues. 
+If you run into any bugs, please open an issue here: https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/issues. 
 
 # Links
 
-- [The Bioinformatics and Omics Data Science Platform](https://bioinformatics.mdc-berlin.de) 
-- [The German Network for Bioinformatics Infrastructure](https://www.denbi.de)
+- [The Bioinformatics and Omics Data Science Platform](https://bioinformatics.mdc-berlin.de)
 
 -----------
