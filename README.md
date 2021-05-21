@@ -23,10 +23,6 @@ https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_in
 See sample HTML reports produced by PiGx pipelines:
 http://bioinformatics.mdc-berlin.de/pigx/supplementary-materials.html
 
-# Citing PiGx-RNAseq
-
-Wurmus, Ricardo, Bora Uyar, Brendan Osberg, Vedran Franke, Alexander Gosdschan, Katarzyna Wreczycka, Jonathan Ronen, and Altuna Akalin. 2018. ?PiGx: Reproducible Genomics Analysis Pipelines with GNU Guix.? GigaScience, October. https://doi.org/10.1093/gigascience/giy123.
-
 # Getting help
 
 If you have any questions please e-mail: pigx@googlegroups.com or use the web form to ask questions https://groups.google.com/forum/#!forum/pigx/. 
