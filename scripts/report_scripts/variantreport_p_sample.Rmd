@@ -554,3 +554,57 @@ for (i in all_variants){
 write.table(output_variant_plot[sample_row,], output_variants, sep = "\t", append = TRUE, 
             na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
 ```
+```{r csv_output_mutation_plot, message = FALSE, warning = FALSE, include = FALSE}
+match.df <- read.table("match.csv", sep = ",", header = TRUE, colClasses = "character")
+sigmuts_deduped <- read.table("sigmuts.csv", sep = ",", header = TRUE, colClasses = "character")
+  
+# get all possible mutations
+all_mutations <- sigmuts_deduped$value
+output_mutations <- paste0 (csv_output_dir,"/data_mutation_plot.csv")
+
+
+if (file.exists (output_mutations)) {
+    output_mutation_plot <- read.table (output_mutations, 
+                                       sep = "\t", header = TRUE, colClasses = "character")
+} else {
+    output_mutation_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
+                                       dates = character(),
+                                       time = character(),
+                                       location_name = character(),
+                                       coordinates_lat = character(),
+                                       coordinates_long = character())
+
+    # add columns for all possible variants to the dataframe
+    for (mutation in all_mutations) {
+      output_mutation_plot[,mutation] <- numeric()
+    }
+    #write header line
+    write.table(t(colnames(output_mutation_plot)), output_mutations, sep = "\t", 
+                  row.names = FALSE, col.names = FALSE, quote = FALSE)
+}
+
+# adding new row
+meta_data <- c (samplename = sample_name,
+                dates = date,
+                time = time,
+                location_name = location_name,
+                coordinates_lat = coordinates_lat,
+                coordinates_long = coordinates_long
+)
+output_mutation_plot <- bind_rows(output_mutation_plot, meta_data)
+
+# get rownumber for current sample
+sample_row <- which(grepl(sample_name, output_mutation_plot$samplename))
+
+# write mutation frequency values to df
+for (i in all_mutations){
+  if (i %in% match.df$AA_mut){
+    # check if variant already has a column
+    if (i %in% colnames(output_mutation_plot)) {
+        output_mutation_plot[sample_row,][i] <- match.df$freq[match.df$AA_mut == i]
+}
+  }
+}
+write.table(output_mutation_plot[sample_row,], output_mutations, sep = "\t", append = TRUE, 
+            na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
+```
