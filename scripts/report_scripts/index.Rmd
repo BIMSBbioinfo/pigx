@@ -92,9 +92,9 @@ plots_line_locations <- lapply(locations, function(location) {
 plots_line_locations[[1]]
 plots_line_locations[[2]]
 plots_line_locations[[3]]
-plots_line_locations[[4]]
-plots_line_locations[[5]]
-plots_line_locations[[6]]
+#plots_line_locations[[4]]
+#plots_line_locations[[5]]
+#plots_line_locations[[6]]
 ```
 
 
@@ -141,6 +141,8 @@ plots_maps[[5]]
 plots_maps[[6]]
 plots_maps[[7]]
 plots_maps[[8]]
+plots_maps[[9]]
+plots_maps[[10]]
 ```
 
 
@@ -164,9 +166,9 @@ plots_line_locations <- lapply(locations, function(location) {
 plots_line_locations[[1]]
 plots_line_locations[[2]]
 plots_line_locations[[3]]
-plots_line_locations[[4]]
-plots_line_locations[[5]]
-plots_line_locations[[6]]
+#plots_line_locations[[4]]
+#plots_line_locations[[5]]
+#plots_line_locations[[6]]
 ```
 
 ## mutations on the map for each data/location
@@ -211,6 +213,8 @@ plots_maps[[5]]
 plots_maps[[6]]
 plots_maps[[7]]
 plots_maps[[8]]
+plots_maps[[9]]
+plots_maps[[10]]
 ```
 
 
