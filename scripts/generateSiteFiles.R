@@ -10,28 +10,16 @@ library(yaml)
 
 args = commandArgs(trailingOnly=TRUE)
 
-# reportsScriptDir <- args[1] #folder that contains the Rmd reports that will be rendered into a site
-# sampleSheetFile <- args[2] #path to sample_sheet.csv file
-# krakenDir <- args[3]
-# coverage_dir <- args[4]
-# variants_dir <- args[5]
-# # remove line, as soon as we can create variant csv-files!!
-# # variants_dir <- "../tests/sample_data"
-# sigmut_db <- args[6] 
-# siteDir <- args[7] #path to folder where the site will be generated aka report_dir ?
-# # necessary? - also see below l67
-# pipelineOutputDir <- "../"
+reportsScriptDir <- args[1] #folder that contains the Rmd reports that will be rendered into a site
+sampleSheetFile <- args[2] #path to sample_sheet.csv file
+krakenDir <- args[3]
+coverage_dir <- args[4]
+variants_dir <- args[5]
+sigmut_db <- args[6]
+siteDir <- args[7] #path to folder where the site will be generated aka report_dir ?
+# necessary? - also see below l67
+pipelineOutputDir <- "../"
 
-# #for testing
-# setwd("/home/mfaxel/pigx_sarscov2_ww/")
- reportsScriptDir <- "scripts/report_scripts" #folder that contains the Rmd reports that will be rendered into a site
- #sampleSheetFile <-  "tests/sample_sheet.csv" #path to sample_sheet.csv file
- krakenDir <- "../tests/sample_data/" #path to kraken output files
- coverage_dir <- "../tests/coverage/"
- variants_dir <- "../tests/sample_data/"
- sigmut_db <-"../tests/databases/sigmut_db/"
-# #pipelineOutputDir <- "../" #root folder where the pipeline is written to
- siteDir <- "test_render" #path to folder where the site will be generated
 
 #read sample sheet
 sampleSheet <- data.table::fread(sampleSheetFile)
