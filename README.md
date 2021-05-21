@@ -1,35 +1,41 @@
-# pigx_sarscov2_ww
+<a name="logo"/>
+<div align="center">
+<img src="images/Logo_PiGx.png" alt="PiGx Logo"  width="30%" height="30%" ></img>
+</a>
+</div>
 
-PiGx SARS-CoV2 wastewater sequencing pipeline
+# PiGx SARS-CoV-2 Wastewater Sequencing Pipeline
 
-## Hacking
+**Copyright 2021: Altuna Akalin, Jan Drohmen, Miriam Faxel, Rafael Cuadrat, Ricardo Wurmus, Vic-Fabienne Schumann.**  
+**This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
-We recommend using Guix to hack on this pipeline.  To enter a
-reproducible environment with a known-good version of Guix use this
-(slow) command:
+-----------
 
-```sh
-USE_GUIX_INFERIOR=t guix environment -m manifest.scm
-```
+This is an awesome pipeline to which this part will contain a short and sweet introduction
 
-To use your current Guix channels instead of the fixed set of
-channels, just omit the `USE_GUIX_INFERIOR` shell variable:
+# Documentation
 
-```sh
-guix environment -m manifest.scm
-```
+Please see our documentation in order to find out more about how to install and run the PiGx-RNAseq pipeline:
+https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md
 
-To fetch code that is common to all PiGx pipelines run this:
+# Sample Reports
 
-```sh
-git submodule update --init
-```
+See sample HTML reports produced by PiGx pipelines:
+http://bioinformatics.mdc-berlin.de/pigx/supplementary-materials.html
 
-Inside the environment you can then perform the usual build steps:
+# Citing PiGx-RNAseq
 
-```sh
-./bootstrap.sh # to generate the "configure" script
-./configure
-make
-make check
-```
+Wurmus, Ricardo, Bora Uyar, Brendan Osberg, Vedran Franke, Alexander Gosdschan, Katarzyna Wreczycka, Jonathan Ronen, and Altuna Akalin. 2018. ?PiGx: Reproducible Genomics Analysis Pipelines with GNU Guix.? GigaScience, October. https://doi.org/10.1093/gigascience/giy123.
+
+# Getting help
+
+If you have any questions please e-mail: pigx@googlegroups.com or use the web form to ask questions https://groups.google.com/forum/#!forum/pigx/. 
+
+If you run into any bugs, please open an issue here: https://github.com/BIMSBbioinfo/pigx_rnaseq/issues. 
+
+# Links
+
+- [The Bioinformatics and Omics Data Science Platform](https://bioinformatics.mdc-berlin.de) 
+- [The German Network for Bioinformatics Infrastructure](https://www.denbi.de)
+
+-----------
