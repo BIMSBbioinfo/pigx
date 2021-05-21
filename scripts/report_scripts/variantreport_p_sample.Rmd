@@ -9,18 +9,6 @@ params:
 Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
 ```{r, child="_settings.Rmd"}
 ```
-```{r setup, include=FALSE, message = FALSE, warning = FALSE}
-# # knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-# # knitr::opts_knit$set(root.dir = params$workdir)
-# library(DT)
-# library(ggplot2)
-# library(dplyr)
-# library(tidyr)
-# library(qpcR)
-# library(stringr)
-# library(magrittr)
-# library(openssl)
-```
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
 sample_name <- params$sample_name
