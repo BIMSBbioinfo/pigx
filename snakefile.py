@@ -295,9 +295,6 @@ rule get_qc_table:
     shell: "{PYTHON_EXEC} {params.script} {input.coverage_csv} {input.amplicon_csv} {output} >> {log} 2>&1"
 
 
-#TODO index.Rmd !
-#TODO site_DiR - folder which contains the generated site as an extra folder/settings file?
-#TODO check whether Site_dir should be REPORT dir
 rule generate_site_files:
     input:
         expand(os.path.join(COVERAGE_DIR, '{sample}_merged_covs.csv'), sample = SAMPLES),
@@ -316,9 +313,10 @@ rule generate_site_files:
     params:
         report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts"),
         script = os.path.join(SCRIPTS_DIR, "generateSiteFiles.R"),
-        var_timecourse_csv = os.path.join(VARIANTS_DIR, 'test_var_timecourse.csv')
+        var_timecourse_csv = os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
+        mut_timecourse_csv = os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv')
     log: os.path.join(LOG_DIR, "generate_site_files.log")
-    shell: "{RSCRIPT_EXEC} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_CSV} {KRAKEN_DIR} {COVERAGE_DIR} {VARIANTS_DIR} {SIGMUT_DB} {REPORT_DIR} {params.var_timecourse_csv} {RSCRIPT_EXEC} > {log} 2>&1"
+    shell: "{RSCRIPT_EXEC} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_CSV} {KRAKEN_DIR} {COVERAGE_DIR} {VARIANTS_DIR} {SIGMUT_DB} {REPORT_DIR} {params.var_timecourse_csv} {params.mut_timecourse_csv} {RSCRIPT_EXEC} > {log} 2>&1"
 
 
 rule render_kraken2_report:
@@ -357,8 +355,6 @@ rule render_overview:
     shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"#
 
 
-# not yet tested 
-#this renders the figures and is the landing page 
 rule render_site:
     input:
         os.path.join(REPORT_DIR, "_site.yml"),
@@ -370,7 +366,5 @@ rule render_site:
         expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     output: os.path.join(REPORT_DIR, "index.html")
-    # params:
-    #     report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts")
     log: os.path.join(LOG_DIR, "reports", "index.log")
     shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[1]}\')\" > {log} 2>&1"

@@ -8,7 +8,7 @@ output:
     number_sections: FALSE
     code_folding: "hide"
     self_contained: TRUE
-date:
+date: "r Sys.Date()"
 ---
 
 ```{r, child="_settings.Rmd"}
@@ -16,8 +16,8 @@ date:
 ```
 
 ```{r libraries and input,echo=F}
-df_var <- read.table(paste0(variants_dir,"test_var_timecourse.csv"),sep = "\t",header = T)
-df_mut <- read.table(paste0(variants_dir,"test_mut_timecourse.csv"),sep="\t",header = T)
+df_var <- read.table(var_timecourse_csv, sep = "\t", header=T)
+df_mut <- read.table(mut_timecourse_csv, sep = "\t", header=T)
 ```
 
 # VARIANTS

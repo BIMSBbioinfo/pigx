@@ -12,13 +12,15 @@ args = commandArgs(trailingOnly=TRUE)
 
 reportsScriptDir <- args[1] #folder that contains the Rmd reports that will be rendered into a site
 sampleSheetFile <- args[2] #path to sample_sheet.csv file
-krakenDir <- args[3] #path to kraken output files
+krakenDir <- args[3]
 coverage_dir <- args[4]
 variants_dir <- args[5]
 sigmut_db <- args[6]
 siteDir <- args[7] #path to folder where the site will be generated aka report_dir ?
 var_timecourse_csv <- args[8]
-
+mut_timecourse_csv <- args[9]
+# necessary? - also see below l67
+pipelineOutputDir <- "../"
 
 #read sample sheet
 sampleSheet <- data.table::fread(sampleSheetFile)
@@ -55,7 +57,8 @@ config_yml <- list('sample_sheet' = sampleSheetFile,
                    'sigmut_db'=sigmut_db,
                    'pipeline_output_dir' = pipelineOutputDir,
                    'site_dir' = siteDir,
-                   'var_timecourse_csv' = var_timecourse_csv)
+                   'var_timecourse_csv' = var_timecourse_csv,
+                   'mut_timecourse_csv' = mut_timecourse_csv)
 yaml::write_yaml(config_yml, file = file.path(siteDir, "config.yml"))
 
 # 3. Create a _site.yml file that determines the layout of the rendered html
