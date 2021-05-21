@@ -18,17 +18,13 @@ vepfile <- file.path(variants_dir, paste0(sample_name, "_vep_sarscov2_parsed.txt
 snvfile <- file.path(variants_dir, paste0(sample_name, "_snv.csv"))
 sampledir <- variants_dir
 
-# TODO: @Jan @Miri pls add those input values
-# all variables should be strings 
-# if nothing is given, the default should be NA
-# I filled in testing placeholder for now
-csv_output_dir <- var_timecourse_csv
+csv_output_dir <- variants_dir
 sample_sheet <- data.table::fread(sample_sheet) #read in sample file and then get the rest:
-date <- "21/03/25"
-time <- "22:00:00 - 21:00:00"
-location_name <- "BER" 
-coordinates_lat <- "52.3646054650197"
-coordinates_long <- "13.5098643274129"
+date <- as.character(sample_sheet[name==sample_name]$date)
+time <- as.character(sample_sheet[name==sample_name]$time)
+location_name <- as.character(sample_sheet[name==sample_name]$location_name)
+coordinates_lat <- as.character(sample_sheet[name==sample_name]$coordinates_lat)
+coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_long)
 
 ``` 
 ### Sample: `r sample_name` 
@@ -511,7 +507,7 @@ Variant effect prediction (*Ensemble VEP output*):
 ```{r csv_output_variant_plot, include = F}
 # get all possible variants
 all_variants <- colnames (msig_all)
-output_variants <- file.path(csv_output_dir,"data_variant_plot.csv")
+output_variants <- file.path(csv_output_dir, "data_variant_plot.csv")
 
 if (file.exists (output_variants)) {
     output_variant_plot <- read.table (output_variants, 
