@@ -19,6 +19,7 @@ params:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(knitr)
 library(dplyr)
+library(DT)
 ```
 
 # Input Settings
@@ -42,7 +43,7 @@ AmpliconCoverage <- data.frame("Number of amplicon fully covered" = paste0(cover
                   "Anmplicons partially covered" = coverage.df[2],
                   "Drop-out amplicons" = coverage.df[3]) # maybe more clear title stating which coverage
 
-DT::datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE))
+datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE))
 
 ```
 
@@ -54,7 +55,7 @@ Coverage <- data.frame("Total coverage" = coverage.df[4],
                   "Aligned reads" = paste(round(as.integer(coverage.df[5]),1),"%"),
                   "Mean depth" = round(as.integer(coverage.df[6]))) # maybe more clear title stating which coverage
 
-DT::datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
+datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
 
 ```
 ## FastQC and Trimming
