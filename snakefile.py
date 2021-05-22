@@ -47,6 +47,7 @@ KRAKEN_DIR        = os.path.join(OUTPUT_DIR, 'kraken')
 COVERAGE_DIR      = os.path.join(OUTPUT_DIR, 'coverage')
 REPORT_DIR        = os.path.join(OUTPUT_DIR, 'report')
 SCRIPTS_DIR       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
+TMP_DIR           = os.path.join(config['locations']['output-dir'], 'pigx_work')
 
 def toolArgs(name):
     if 'args' in config['tools'][name]:
@@ -307,7 +308,6 @@ rule generate_site_files:
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
         os.path.join(REPORT_DIR, "overview.Rmd"),
-        expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.Rmd"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.Rmd"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.Rmd"), sample = SAMPLES)
     params:
@@ -320,10 +320,21 @@ rule generate_site_files:
 
 
 rule render_kraken2_report:
-    input: os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.Rmd")
+    input:
+      report=os.path.join(SCRIPTS_DIR, "report_scripts", "taxonomic_classification.Rmd"),
+      header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
+      kraken=os.path.join(KRAKEN_DIR, "{sample}_classified_unaligned_reads.txt"),
+      krona=os.path.join(REPORT_DIR, "{sample}.Krona_report.html")
     output: os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_taxonomic_classification.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input}\')\" > {log} 2>&1"
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  intermediates_dir='{TMP_DIR}/{wildcards.sample}.taxonomic_classification', \
+  params=list(sample_name='{wildcards.sample}', \
+              site_dir='{REPORT_DIR}', \
+              krona_file='{input.krona}', \
+              kraken_file='{input.kraken}'))\" > {log} 2>&1"
 
 
 rule render_variant_report:

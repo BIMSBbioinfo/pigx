@@ -1,30 +1,31 @@
 ---
 title: "taxonomic classification"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
-#output: html_document
+output:
+  html_document:
+    theme: lumen
+    highlight: monochrome
+    code_folding: hide
+    depth: '3'
+    toc: yes
+    toc_float: yes
+    number_sections: yes
 params:
-  @PARAMS_SAMPLE_NAME@
-
+  sample_name: ''
+  site_dir: ''
+  kraken_file: ''
+  krona_file: ''
 ---
 
-Read config.yml for the locations of sample sheet, pipeline output and krakenDir. 
-```{r, child="_settings.Rmd"}
-```
-
-```{r input, echo=FALSE}
-#input 
-sampleName <- params$sample_name
-krakenDir <- config$kraken_dir
-
-krakenReportFile <- file.path(krakenDir, paste0(sampleName, '_classified_unaligned_reads.txt'))
-kronaFile <- file.path(site_dir, paste0(sampleName, '_krona_report.html'))
+```{r libs, echo=FALSE}
+suppressMessages(suppressWarnings(library(DT)))
 ```
 
 
 # Kraken2 report on unaligned reads from the SARS-CoV-2 enriched samples
 
 ```{r print sample name,echo=F}
-print(paste( "Sample: ",sampleName))
+print(paste( "Sample: ", params$sample_name))
 ```
 
 
@@ -52,7 +53,7 @@ The table below lists all the species found.
   + Indented scientific name
 
 ```{r plot table, echo=FALSE}
-table<- read.table(krakenReportFile,sep = "\t")
+table<- read.table(params$kraken_file, sep = "\t")
 colnames(table) <- c("percent", "num_fragments", "num_fragments_taxon", "rank", "NCBI_ID", "scientific_name")
 datatable(table)
 ```
@@ -61,5 +62,8 @@ datatable(table)
 
 The data can be explored with a multi-layered pie chart, which was created with [KronaTools](https://github.com/marbl/Krona/wiki). It is an interactive chart of all the classificated species found with Kraken2.  
 
+```{r paste krona link,echo=F}
+kronaFile <- params$krona_file
+```
 
 [Krona graph of this sample](`r kronaFile`)
