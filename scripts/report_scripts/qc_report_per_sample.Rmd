@@ -1,33 +1,31 @@
 ---
 title: "SARS-CoV-2 QC report"                                                                                                                                                                 
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+output:
+  html_document:
+    theme: lumen
+    highlight: monochrome
+    code_folding: hide
+    depth: '3'
+    toc: yes
+    toc_float: yes
+    number_sections: yes
 params:
-    @PARAMS_SAMPLE_NAME@
-
+  sample_name: ''
+  coverage_file: ''
 ---
 
-Read config.yml for the locations of sample sheet, pipeline output and coverage_file. 
-```{r, child="_settings.Rmd"}
-```
-
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-knitr::opts_knit$set(root.dir = params$workdir)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(dplyr)))
 ```
 
 # Input Settings
-```{r InputSettings, echo = FALSE, include = FALSE}
-sample_name <- params$sample_name
-coverage_file <- file.path(coverage_dir,paste0(sample_name, "_merged_covs.csv"))
-``` 
 
-```{r printInputSettings, echo = FALSE, include = FALSE}
-# coverage_file <- 'tests/coverage/Test_merged_covs.csv'
-# sample_name <- 'Test'
-``` 
-### Sample: `r sample_name 
+### Sample: `r params$sample_name`
 ```{r reading data, include = FALSE}
-coverage.df <- read.table(coverage_file,sep = "\t", header = T) 
+coverage.df <- read.table(params$coverage_file, sep = "\t", header = T)
 coverage.df <- na_if(coverage.df, "[]")
 coverage.df <- gsub('\\[','',coverage.df)
 coverage.df <- gsub('\\]','',coverage.df)
@@ -74,10 +72,10 @@ The reads were pre-processed as followed:
 
 ## Download Stats csv
 ```{r, include = F}
- 
-write.csv2(coverage.df, file.path(dirname(coverage_file), "report_download_coverage.csv")) # not sure about the funct of the dataframe here, but it works so I leave it for now
 
-readLines(coverage_file) %>% 
+write.csv2(coverage.df, file.path(dirname(params$coverage_file), "report_download_coverage.csv")) # not sure about the funct of the dataframe here, but it works so I leave it for now
+
+readLines(params$coverage_file) %>%
   paste0(collapse="\n") %>% 
   openssl::base64_encode() -> coverage
 ```

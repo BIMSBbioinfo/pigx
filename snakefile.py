@@ -308,7 +308,6 @@ rule generate_site_files:
         os.path.join(REPORT_DIR, "index.Rmd"),
         os.path.join(REPORT_DIR, "config.yml"),
         os.path.join(REPORT_DIR, "overview.Rmd"),
-        expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.Rmd"), sample = SAMPLES),
         expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.Rmd"), sample = SAMPLES)
     params:
         report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts"),
@@ -345,11 +344,19 @@ rule render_variant_report:
         
 
 rule render_qc_report:
-    input: os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.Rmd")
-    output: os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html")
+    input:
+      report=os.path.join(SCRIPTS_DIR, "report_scripts", "qc_report_per_sample.Rmd"),
+      header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
+      coverage=os.path.join(COVERAGE_DIR, "{sample}_merged_covs.csv")
+    output:
+      os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_qc_report.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input}\')\" > {log} 2>&1"
-
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  intermediates_dir='{TMP_DIR}/{wildcards.sample}.qc_report', \
+  params=list(sample_name='{wildcards.sample}', \
+              coverage_file='{input.coverage}'))\" > {log} 2>&1"
 
 # renders the overview.rmd which are the links 
 # not yet tested
