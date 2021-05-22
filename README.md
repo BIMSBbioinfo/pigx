@@ -14,6 +14,7 @@
 PiGx SARS-CoV-2 is a pipeline for analysing data from sequenced wastewater samples and identifying 
 given variants-of-concern of SARS-CoV-2. The pipeline can be used for continuous sampling. The output report will provide 
 an intuitive visual overview about the development of variant abundance over time and location. 
+
 # Documentation
 
 Please see our documentation in order to find out more about how to install and run the PiGx-RNAseq pipeline:
@@ -33,5 +34,3 @@ If you run into any bugs, please open an issue here: https://github.com/BIMSBbio
 # Links
 
 - [The Bioinformatics and Omics Data Science Platform](https://bioinformatics.mdc-berlin.de)
-
------------
