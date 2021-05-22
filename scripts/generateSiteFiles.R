@@ -19,8 +19,6 @@ sigmut_db <- args[6]
 siteDir <- args[7] #path to folder where the site will be generated aka report_dir ?
 var_timecourse_csv <- args[8]
 mut_timecourse_csv <- args[9]
-# necessary? - also see below l67
-pipelineOutputDir <- "../"
 
 #read sample sheet
 sampleSheet <- data.table::fread(sampleSheetFile)
@@ -55,7 +53,6 @@ config_yml <- list('sample_sheet' = sampleSheetFile,
                    'coverage_dir'=coverage_dir,
                    'variants_dir'=variants_dir,
                    'sigmut_db'=sigmut_db,
-                   'pipeline_output_dir' = pipelineOutputDir,
                    'site_dir' = siteDir,
                    'var_timecourse_csv' = var_timecourse_csv,
                    'mut_timecourse_csv' = mut_timecourse_csv)

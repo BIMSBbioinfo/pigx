@@ -17,7 +17,6 @@ suppressMessages(suppressWarnings(library(openssl)))
 
 config <- yaml::read_yaml('./config.yml')
 sample_sheet <- config$sample_sheet
-pipeline_output_dir <- config$pipeline_output_dir
 krakenDir <- config$krakenDir
 coverage_dir <- config$coverage_dir
 variants_dir <- config$variants_dir
