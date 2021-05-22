@@ -3,13 +3,14 @@ title: "index page"
 output: html_document
 ---
 
-Read config.yml for the locations of sample_sheet 
+
 ```{r, child="_settings.Rmd"}
+#Read config.yml for the locations of sample_sheet 
 ```
 
-# Overview
+# Overview of Reports
 
-For each sample that was provided three report pages were generated. These can be found here as an overview or by navigating through the tabs of this website. 
+For each sample that was provided three report pages were generated. These can be found here by clicking on the provided link or by navigating through the tabs of this website.
 
 ```{r read sample file, echo=F}
 sample_sheet <- data.table::fread(sample_sheet)
@@ -17,8 +18,31 @@ sample_names <- sample_sheet$names
 ```
 
 
-```{r}
+```{r links, echo=FALSE}
 #todo: automatically generate the sample links
 #todo: make a table for this overview
+for (sample in sample_names){
+  print(sample)
+}
+
 ```
 
+* __BERLIN__
+  + sample 1
+    - variants report
+    - qc report
+    - taxonomic classification
+  + sample 2
+    - variants report
+    - qc report
+    - taxonomic classification
+
+* __Munich__
+  + sample 3
+    - variants report
+    - qc report
+    - taxonomic classification
+  + sample 4
+    - variants report
+    - qc report
+    - taxonomic classification

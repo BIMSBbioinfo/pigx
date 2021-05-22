@@ -11,8 +11,8 @@ output:
 date:
 ---
 
-Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
 ```{r, child="_settings.Rmd"}
+#Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
 ```
 
 ```{r libraries and input,echo=F}
@@ -88,7 +88,13 @@ plots_line_locations <- lapply(locations, function(location) {
 
 
 ```{r plot variants over time, echo=F}
-plots_line_locations
+#plots_line_locations
+plots_line_locations[[1]]
+plots_line_locations[[2]]
+plots_line_locations[[3]]
+plots_line_locations[[4]]
+plots_line_locations[[5]]
+plots_line_locations[[6]]
 ```
 
 
@@ -96,7 +102,7 @@ plots_line_locations
 ## variants on the map for each date/location
 
 ```{r maps for variants, echo=F}
-forplot<- reshape2::melt(df_mut,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
+forplot<- reshape2::melt(df_var,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
 forplot$dates <- as.Date(forplot$dates)
 locations <- unique(forplot$location_name)
 
@@ -125,9 +131,16 @@ plots_maps<- lapply(dates, function(date) {
                                                               center = list(lat =min(tmp$coordinates_lat,na.rm=TRUE), 
                                                                             lon =min(tmp$coordinates_long,na.rm=TRUE)),
                                                               style = 'open-street-map'))
-           print(bubble)
     }
   })
+plots_maps[[1]]
+plots_maps[[2]]
+plots_maps[[3]]
+plots_maps[[4]]
+plots_maps[[5]]
+plots_maps[[6]]
+plots_maps[[7]]
+plots_maps[[8]]
 ```
 
 
@@ -148,12 +161,12 @@ plots_line_locations <- lapply(locations, function(location) {
 
 
 ```{r plot mutations over time, echo=F}
-plots_line_locations
-
-for (i in length(plots_line_locations)){
-  a <-plots_line_locations[[i]]
-  print(a)
-}
+plots_line_locations[[1]]
+plots_line_locations[[2]]
+plots_line_locations[[3]]
+plots_line_locations[[4]]
+plots_line_locations[[5]]
+plots_line_locations[[6]]
 ```
 
 ## mutations on the map for each data/location
@@ -188,13 +201,20 @@ plots_maps<- lapply(dates, function(date) {
                                                               center = list(lat =min(tmp$coordinates_lat,na.rm=TRUE), 
                                                                             lon =min(tmp$coordinates_long,na.rm=TRUE)),
                                                               style = 'open-street-map'))
-           print(bubble)
     }
   })
+plots_maps[[1]]
+plots_maps[[2]]
+plots_maps[[3]]
+plots_maps[[4]]
+plots_maps[[5]]
+plots_maps[[6]]
+plots_maps[[7]]
+plots_maps[[8]]
 ```
 
 
-## mutations on map neglecting time 
+
 
 ```{r bubble mutations plot,echo=F,eval=F}
 #does not work in a loop

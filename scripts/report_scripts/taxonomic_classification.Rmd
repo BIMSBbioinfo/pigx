@@ -51,10 +51,5 @@ datatable(table)
 
 The data can be explored with a multi-layered pie chart, which was created with [KronaTools](https://github.com/marbl/Krona/wiki). It is an interactive chart of all the classificated species found with Kraken2.  
 
-```{r paste krona link,echo=F}
-#TODO: should display a link to the krona html, which should be in the same folder with this file and per sample 
-#krona_html_link <- paste0(sampleName,"krona_report.html")
 
-#[Krona graph of this sample](`r krona_html_link`)
-```
-
+[Krona graph of this sample](`r kronaFile`)
