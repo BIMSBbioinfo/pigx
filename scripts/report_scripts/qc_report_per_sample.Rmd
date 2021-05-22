@@ -17,8 +17,8 @@ params:
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-suppressMessages(suppressWarnings(library(knitr)))
-suppressMessages(suppressWarnings(library(dplyr)))
+library(knitr)
+library(dplyr)
 ```
 
 # Input Settings
