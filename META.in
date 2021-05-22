@@ -1,12 +1,16 @@
 version = """
-PiGx SARS-CoV2 wastewater sequencing Pipeline.
+PiGx SARS-CoV-2 wastewater sequencing Pipeline.
 Version: @PACKAGE_VERSION@
 
 Copyright © 2021 Akalin Lab
 """ + license_blurb
 
 description = """
-PiGx SARS-CoV2 wastewater sequencing Pipeline.
+PiGx SARS-CoV-2 wastewater sequencing Pipeline.
 
-TODO
+This is a pipeline for analyzing data from sequenced wastewater
+samples and identifying given variants-of-concern of SARS-CoV-2.  The
+pipeline can be used for continuous sampling.  The output report
+provides an intuitive visual overview about the development of variant
+abundance over time and location.
 """
