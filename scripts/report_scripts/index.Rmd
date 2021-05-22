@@ -1,5 +1,6 @@
 ---
 title: "Timecourse"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 output:
   html_notebook:
     toc:        TRUE
@@ -8,7 +9,6 @@ output:
     number_sections: FALSE
     code_folding: "hide"
     self_contained: TRUE
-date: "r Sys.Date()"
 ---
 
 ```{r, child="_settings.Rmd"}
