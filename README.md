@@ -22,7 +22,7 @@ https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_in
 # Sample Reports
 
 See sample HTML reports produced by PiGx pipelines:
-http://bioinformatics.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/index.html
+https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/index.html
 
 # Getting help
 
