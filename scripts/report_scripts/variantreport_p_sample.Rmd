@@ -1,31 +1,45 @@
 ---
 title: "SARS-CoV-2 variant report"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+output:
+  html_document:
+    theme: lumen
+    highlight: monochrome
+    code_folding: hide
+    depth: '3'
+    toc: yes
+    toc_float: yes
+    number_sections: yes
 params:
-    @PARAMS_SAMPLE_NAME@
+  sample_name: ''
+  sigmut_db: ''
+  variants_dir: ''
+  vep_file: ''
+  snv_file: ''
+  sample_sheet: ''
 
 ---
 
-Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
-```{r, child="_settings.Rmd"}
-```
-
-```{r, libs}
-library(base64url)
+```{r libs, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(knitr)
+library(dplyr)
+library(ggplot2)
+library(DT)
+library(tidyr)
+library(qpcR)
+library(stringr)
 library(magrittr)
+library(base64url)
 ```
 
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
 sample_name <- params$sample_name
-location_sigmuts <- sigmut_db
+sample_sheet <- data.table::fread(params$sample_sheet)
+location_sigmuts <- params$sigmut_db
 
-vepfile <- file.path(variants_dir, paste0(sample_name, "_vep_sarscov2_parsed.txt"))
-snvfile <- file.path(variants_dir, paste0(sample_name, "_snv.csv"))
-sampledir <- variants_dir
-
-csv_output_dir <- variants_dir
-sample_sheet <- data.table::fread(sample_sheet) #read in sample file and then get the rest:
+csv_output_dir <- params$variants_dir
 date <- as.character(sample_sheet[name==sample_name]$date)
 time <- as.character(sample_sheet[name==sample_name]$time)
 location_name <- as.character(sample_sheet[name==sample_name]$location_name)
@@ -276,7 +290,7 @@ p1$alt_aa <- na_if(p1$alt_aa, '')
 p1$alt_aa[is.na(p1$alt_aa)] <- "-"
 p1$AA_mut <- paste0(p1$ref_aa, p1$codon_num, p1$alt_aa)
 ################
-vepfile.df <- read.table(vepfile,sep = ",", header = T) #TODO - in na's umwandeln
+vepfile.df <- read.table(params$vep_file, sep = ",", header = T) #TODO - in na's umwandeln
 vepfile.df <- na_if(vepfile.df, "-")
 sig_mutations.df <- as.data.frame(qpcR:::cbind.na(b117=b117$AA_mut, b1351=b1351$AA_mut,
                                                   b1427=b1427$AA_mut, b1429=b1429$AA_mut,
@@ -302,7 +316,7 @@ for (mut in sig_mutations.df$value) {
 ```
 
 ```{r match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
-variant_protein_mut <- get_protein_mut(vepfile)
+variant_protein_mut <- get_protein_mut(params$vep_file)
 variant_protein_mut <- dplyr::left_join(variant_protein_mut, sigmuts_deduped, by = c('AA_mut'='value'))
 match.df <- variant_protein_mut %>%
                     filter(!is.na(name))
@@ -312,7 +326,7 @@ nomatch.df <- variant_protein_mut %>%
 
 ```{r, message=F, warning=F, include = FALSE}
 # Data frame to use for the tables
-lofreq.info <- as_data_frame(parse_snv_csv(snvfile))
+lofreq.info <- as_data_frame(parse_snv_csv(params$snv_file))
 # vep.info <- write the part that returns the variant_protein_mut into a function 
 vep.info <- variant_protein_mut
 # add freqency and coverage information to protein mutations
@@ -492,14 +506,14 @@ each present variant.
 ## Raw data 
 
 ```{r, include = F}
-snvs <- readLines(snvfile) %>% paste0(collapse="\n") %>% base64_urlencode()
+snvs <- readLines(params$snv_file) %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
 Called SNVs:  
 [Download SNVs.csv](`r sprintf('data:text/csv;base64,%s', snvs)`)
 ```{r, include = F}
 # can possible be fused together with above. But rigth now it's safer like this. 
 # write.csv2(vepfile.df, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
-vep <- readLines(vepfile) %>% paste0(collapse="\n") %>% base64_urlencode()
+vep <- readLines(params$vep_file) %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
 Variant effect prediction (*Ensemble VEP output*):  
 [Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)

@@ -337,11 +337,24 @@ rmarkdown::render(\'{input.report}\', \
 
 
 rule render_variant_report:
-    input: os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.Rmd")
+    input:
+      report=os.path.join(SCRIPTS_DIR,"report_scripts", "variantreport_p_sample.Rmd"),
+      header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
+      vep=os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_parsed.txt"),
+      snv=os.path.join(VARIANTS_DIR, "{sample}_snv.csv")
     output: os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_variant_report.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input}\')\" > {log} 2>&1"
-        
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  intermediates_dir='{TMP_DIR}/{wildcards.sample}.variantreport', \
+  params=list(sample_name='{wildcards.sample}', \
+              sigmut_db='{SIGMUT_DB}', \
+              variants_dir='{VARIANTS_DIR}', \
+              vep_file='{input.vep}', \
+              snv_file='{input.snv}', \
+              sample_sheet='{SAMPLE_SHEET_CSV}'))\" > {log} 2>&1"
+
 
 rule render_qc_report:
     input:
