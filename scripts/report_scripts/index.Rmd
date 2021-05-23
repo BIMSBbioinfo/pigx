@@ -2,7 +2,7 @@
 title: "Timecourse"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 output:
-  html_notebook:
+  html_document:
     toc:        TRUE
     toc_float:  TRUE
     theme:      "lumen"
