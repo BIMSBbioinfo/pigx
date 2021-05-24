@@ -30,4 +30,11 @@ make
 make check
 ```
 
+You can run the pipeline from the source directory without installing
+it by setting the `PIGX_UNINSTALLED` shell variable to any value.  This command runs the pipeline on the included test data:
+
+```sh
+PIGX_UNINSTALLED=t ./pigx-sars-cov2-ww -s tests/settings.yaml tests/sample_sheet.csv
+```
+
 Please, also see https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md for setting up the pipeline and the needed databases.
