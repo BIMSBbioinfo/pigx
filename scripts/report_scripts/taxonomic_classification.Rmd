@@ -28,17 +28,28 @@ print(paste( "Sample: ",sampleName))
 ```
 
 
-The SARS-CoV-2 enriched wastewater samples are aligned to the virus genome. The unaligned reads, that are left are aligned with Kraken2 against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2). This report is an overview over the species found.  
+The SARS-CoV-2 enriched wastewater samples are aligned to the virus
+genome. Those reads that are left unaligned are aligned with the
+[Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2)
+against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2).
+This report is an overview over the species found.
 
-A table with all the species found: 
+The table below lists all the species found.
 
-* Column explanation:   
-  + Percentage of fragments covered by the clade rooted at this taxon  
-  + Number of fragments covered by the clade rooted at this taxon  
-  + Number of fragments assigned directly to this taxon  
-  + A rank code, indicating (U)nclassified, (R)oot, (D)omain, (K)ingdom, (P)hylum, (C)lass, (O)rder, (F)amily, (G)enus, or (S)pecies.     Taxa that are not at any of these 10 ranks have a rank code that is formed by using the rank code of the closest ancestor rank         with a number indicating the distance from that rank. E.g., "G2" is a rank code indicating a taxon is between genus and species         and the grandparent taxon is at the genus rank.  
-  + NCBI taxonomic ID number  
-  + Indented scientific name  
+* Column explanation:
+  + Percentage of fragments covered by the clade rooted at this taxon
+  + Number of fragments covered by the clade rooted at this taxon
+  + Number of fragments assigned directly to this taxon
+  + A rank code, indicating **U**nclassified, **R**oot, **D**omain,
+    **K**ingdom, **P**hylum, **C**lass, **O**rder, **F**amily,
+    **G**enus, or **S**pecies.  Taxa that are not at any of these 10
+    ranks have a rank code that is formed by using the rank code of
+    the closest ancestor rank with a number indicating the distance
+    from that rank. E.g., "G2" is a rank code indicating a taxon is
+    between genus and species and the grandparent taxon is at the
+    genus rank.
+  + NCBI taxonomic ID number
+  + Indented scientific name
 
 ```{r plot table, echo=FALSE}
 table<- read.table(krakenReportFile,sep = "\t")
