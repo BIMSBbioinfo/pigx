@@ -21,7 +21,7 @@ kronaFile <- file.path(site_dir, paste0(sampleName, '_krona_report.html'))
 ```
 
 
-# Kraken2 report on unaligned reads from the Sars-Cov2 enriched samples
+# Kraken2 report on unaligned reads from the SARS-CoV-2 enriched samples
 
 ```{r print sample name,echo=F}
 print(paste( "Sample: ",sampleName))
