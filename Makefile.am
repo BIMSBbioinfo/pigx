@@ -43,6 +43,9 @@ clean-local:
 
 CLEANFILES = $(nodist_bin_SCRIPTS) config.json		
 
+integration:
+	$(AM_TESTS_ENVIRONMENT) $(abs_top_srcdir)/pigx-sars-cov2-ww --printshellcmds -s tests/settings.yaml tests/sample_sheet.csv
+
 # Build docker image with Guix
 docker: dist
 	guix pack -C none -e '(load "guix.scm")' --with-source=pigx_sars-cov2-ww-$(VERSION).tar.gz -f docker -S /bin=bin -S /lib=lib -S /share=share glibc-utf8-locales tzdata coreutils bash
