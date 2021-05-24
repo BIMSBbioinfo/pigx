@@ -9,6 +9,12 @@ params:
 Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
 ```{r, child="_settings.Rmd"}
 ```
+
+```{r, libs}
+library(base64url)
+library(magrittr)
+```
+
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
 sample_name <- params$sample_name
@@ -486,20 +492,14 @@ each present variant.
 ## Raw data 
 
 ```{r, include = F}
-# write.csv2(mtcars, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
-library(magrittr)
-readLines(snvfile) %>% 
-  paste0(collapse="\n") %>% 
-  openssl::base64_encode() -> snvs
+snvs <- readLines(snvfile) %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
 Called SNVs:  
 [Download SNVs.csv](`r sprintf('data:text/csv;base64,%s', snvs)`)
 ```{r, include = F}
 # can possible be fused together with above. But rigth now it's safer like this. 
 # write.csv2(vepfile.df, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
-readLines(vepfile) %>% 
-  paste0(collapse="\n") %>% 
-  openssl::base64_encode() -> vep
+vep <- readLines(vepfile) %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
 Variant effect prediction (*Ensemble VEP output*):  
 [Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)

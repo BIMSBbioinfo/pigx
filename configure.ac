@@ -52,10 +52,10 @@ AC_ARG_ENABLE([r-packages-check],
   [dnl
 
 AX_R_PACKAGE([DT])
+AX_R_PACKAGE([base64url])
 AX_R_PACKAGE([dplyr])
 AX_R_PACKAGE([ggplot2])
 AX_R_PACKAGE([magrittr])
-AX_R_PACKAGE([openssl])
 AX_R_PACKAGE([plotly])
 AX_R_PACKAGE([qpcR])
 AX_R_PACKAGE([rmarkdown])
