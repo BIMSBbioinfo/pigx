@@ -20,6 +20,8 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(knitr)
 library(dplyr)
 library(DT)
+library(magrittr)
+library(base64url)
 ```
 
 # Input Settings
@@ -76,9 +78,7 @@ The reads were pre-processed as followed:
 
 write.csv2(coverage.df, file.path(dirname(params$coverage_file), "report_download_coverage.csv")) # not sure about the funct of the dataframe here, but it works so I leave it for now
 
-readLines(params$coverage_file) %>%
-  paste0(collapse="\n") %>% 
-  openssl::base64_encode() -> coverage
+coverage <- readLines(params$coverage_file) %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
 Coverage statistics:  
 [Download Coverage_stats.csv](`r sprintf('data:text/csv;base64,%s', coverage)`)
