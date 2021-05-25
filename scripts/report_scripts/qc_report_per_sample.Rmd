@@ -17,7 +17,6 @@ params:
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-library(knitr)
 library(dplyr)
 library(DT)
 library(magrittr)
