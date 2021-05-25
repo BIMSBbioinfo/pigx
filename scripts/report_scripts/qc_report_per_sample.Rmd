@@ -13,6 +13,8 @@ output:
 params:
   sample_name: ''
   coverage_file: ''
+  fastqc_unprocessed: ''
+  fastqc_processed: ''
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
@@ -61,8 +63,8 @@ datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
 ```
 ## FastQC and Trimming
 
-Download: [fastqc report of unprocessed data](/path/to/fastqc.html)  
-Download: [fastqc report of pre-processes data](/path/to/fastqc.html) 
+Download: [FastQC report of unprocessed data](`r params$fastqc_unprocessed`)
+Download: [FastQC report of pre-processes data](`r params$fastqc_processed`)
 
 
 
