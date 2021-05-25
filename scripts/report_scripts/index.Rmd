@@ -15,6 +15,18 @@ library(reshape2)
 df_var <- read.table(params$variants_csv, sep = "\t", header=T)
 df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
 ```
+PiGx ww sars-cov-2 performs mutation analysis of SARS-CoV-2 and reports and quantifies the occurrence of 
+variants of concern (VOC) and signature mutations by which they are characterised. For each sample three reports are 
+generated:  
+* a qc-report reporting general statistics and amplicon coverage
+* a variant-report which including tables summarizing the mutation calling and the deconvolution results for the abundance of VOCs
+* a *Kraken2* report including a krona plot showing the analysis of the unaligned reads
+
+The visualizations below provide an overview of the evolution of VOCs found
+in the analysed samples across given time points and locations. The abundance values for the variants are derived 
+by deconvolution (for details please see the variantreport_p_sample) The frequencies of the mutations 
+are the output of [LoFreq](https://csb5.github.io/lofreq/) (for details please see the documentation).
+
 
 # VARIANTS
 
