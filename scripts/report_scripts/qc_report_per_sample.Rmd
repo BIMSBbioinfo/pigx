@@ -42,8 +42,8 @@ The reference name "MN908947.3" was changed to "NC_045512.2". Both are describin
 ```{r, message=F, warning=F, echo = FALSE}
 
 AmpliconCoverage <- data.frame("Number of amplicon fully covered" = paste0(coverage.df[1],' out of 98'), 
-                  "Anmplicons partially covered" = coverage.df[2],
-                  "Drop-out amplicons" = coverage.df[3]) # maybe more clear title stating which coverage
+                               "Amplicons partially covered" = coverage.df[2],
+                               "Drop-out amplicons" = coverage.df[3]) # maybe more clear title stating which coverage
 
 datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE))
 
@@ -54,8 +54,8 @@ datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE)
 ```{r, message=F, warning=F, echo = FALSE}
 
 Coverage <- data.frame("Total coverage" = coverage.df[4], 
-                  "Aligned reads" = paste(round(as.integer(coverage.df[5]),1),"%"),
-                  "Mean depth" = round(as.integer(coverage.df[6]))) # maybe more clear title stating which coverage
+                       "Aligned reads" = paste(round(as.integer(coverage.df[5]),1),"%"),
+                       "Mean depth" = round(as.integer(coverage.df[6]))) # maybe more clear title stating which coverage
 
 datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
 
