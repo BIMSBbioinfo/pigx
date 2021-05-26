@@ -389,16 +389,23 @@ rmarkdown::render(\'{input.report}\', \
   output_file='{output}', \
   params=list(sample_sheet='{SAMPLE_SHEET_CSV}'))\" > {log} 2>&1"
 
-rule render_site:
+rule render_timecourse_report:
     input:
-        os.path.join(REPORT_DIR, "_site.yml"),
-        os.path.join(REPORT_DIR, "index.Rmd"),
-        os.path.join(REPORT_DIR, "config.yml"),
-        os.path.join(REPORT_DIR, "overview.html"),
-        expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
-        expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
-        expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
-        expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
+      report=os.path.join(SCRIPTS_DIR, "report_scripts", "index.Rmd"),
+      header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
+      # TODO: see comment below
+      side_effects=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
+    # TODO: these CSV files should be declared as inputs!  Due to
+    # https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/issues/19 we
+    # cannot do this yet, so we just add the variant reports for all
+    # samples as inputs.
+    params:
+      variants=os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
+      mutations=os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv')
     output: os.path.join(REPORT_DIR, "index.html")
     log: os.path.join(LOG_DIR, "reports", "index.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[1]}\')\" > {log} 2>&1"
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  params=list(variants_csv='{params.variants}', \
+              mutations_csv='{params.mutations}'))\" > {log} 2>&1"
