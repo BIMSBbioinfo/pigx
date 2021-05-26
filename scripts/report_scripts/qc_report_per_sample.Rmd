@@ -54,7 +54,7 @@ datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
 ```
 ## MultiQC and Trimming
 
-Download: [MultiQC report of raw and processed data](`r file.path('multiqc', params$sample_name, 'multiqc_report.html')`)
+Download: [MultiQC report of raw and processed data](`r params$multiqc_report`)
 
 
 
