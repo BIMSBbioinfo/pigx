@@ -5,6 +5,7 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 params:
   sample_name: ''
   coverage_file: ''
+  multiqc_report: ''
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
