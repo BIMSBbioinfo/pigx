@@ -376,15 +376,18 @@ rmarkdown::render(\'{input.report}\', \
 # i think it only needs to test if the csvs are generated
 rule render_overview:
     input:
-        os.path.join(REPORT_DIR, "overview.Rmd"),
-        expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
-        expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
-        expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
-        expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
+        report=os.path.join(REPORT_DIR, "overview.Rmd"),
+        header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
+        taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
+        krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
+        qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
+        variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     output: os.path.join(REPORT_DIR, "overview.html")
     log: os.path.join(LOG_DIR, "reports", "overview.log")
-    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[0]}\')\" > {log} 2>&1"#
-
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  params=list(sample_sheet='{SAMPLE_SHEET_CSV}'))\" > {log} 2>&1"
 
 rule render_site:
     input:

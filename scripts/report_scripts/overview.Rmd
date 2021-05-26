@@ -1,19 +1,29 @@
 ---
 title: "index page"
-output: html_document
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+output:
+  html_document:
+    theme: lumen
+    highlight: monochrome
+    code_folding: hide
+    depth: '3'
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+params:
+  sample_sheet: ''
 ---
 
 
-```{r, child="_settings.Rmd"}
-#Read config.yml for the locations of sample_sheet 
-```
+
 
 # Overview of Reports
 
 For each sample that was provided three report pages were generated. These can be found here by clicking on the provided link or by navigating through the tabs of this website.
 
 ```{r read sample file, echo=F}
-sample_sheet <- data.table::fread(sample_sheet)
+library(data.table)
+sample_sheet <- fread(params$sample_sheet)
 sample_names <- sample_sheet$names
 ```
 
