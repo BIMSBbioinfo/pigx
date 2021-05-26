@@ -1,0 +1,22 @@
+mutation	mutation_count	lineage_count	gene	ref_aa	alt_aa	codon_num	codon_end	type	prevalence	change_length_nt	pangolin_lineage	id	source
+ORF1B:P314L	7503	7518	ORF1b	P	L	314	None	substitution	0.998004788507582	None	B.1.617.2	orf1b_p314l	
+M:I82T	7497	7518	M	I	T	82	None	substitution	0.997206703910614	None	B.1.617.2	m_i82t	
+N:R203M	7497	7518	N	R	M	203	None	substitution	0.997206703910614	None	B.1.617.2	n_r203m	
+S:D614G	7497	7518	S	D	G	614	None	substitution	0.997206703910614	None	B.1.617.2	s_d614g	
+ORF3A:S26L	7456	7518	ORF3a	S	L	26	None	substitution	0.991753125831338	None	B.1.617.2	orf3a_s26l	
+S:P681R	7431	7518	S	P	R	681	None	substitution	0.988427773343974	None	B.1.617.2	s_p681r	
+S:L452R	7424	7518	S	L	R	452	None	substitution	0.987496674647513	None	B.1.617.2	s_l452r	
+S:T478K	7403	7518	S	T	K	478	None	substitution	0.984703378558127	None	B.1.617.2	s_t478k	
+N:D377Y	7395	7518	N	D	Y	377	None	substitution	0.983639265762171	None	B.1.617.2	n_d377y	
+S:T19R	7353	7518	S	T	R	19	None	substitution	0.9780526735834	None	B.1.617.2	s_t19r	
+N:D63G	7305	7518	N	D	G	63	None	substitution	0.971667996807662	None	B.1.617.2	n_d63g	
+ORF7A:T120I	7279	7518	ORF7a	T	I	120	None	substitution	0.968209630220803	None	B.1.617.2	orf7a_t120i	
+ORF7A:V82A	7260	7518	ORF7a	V	A	82	None	substitution	0.965682362330407	None	B.1.617.2	orf7a_v82a	
+S:D950N	7141	7518	S	D	N	950	None	substitution	0.949853684490556	None	B.1.617.2	s_d950n	
+ORF1B:G662S	7010	7518	ORF1b	G	S	662	None	substitution	0.93242883745677	None	B.1.617.2	orf1b_g662s	
+ORF1B:P1000L	7009	7518	ORF1b	P	L	1000	None	substitution	0.932295823357276	None	B.1.617.2	orf1b_p1000l	
+ORF8:D119	6344	7518	ORF8	D	NA	119	120	deletion	0.843841447193402	6	B.1.617.2	orf8_del119_120	covariants
+ORF8:F120	6344	7518	ORF8	F	NA	120	120	deletion	0.843841447193402	6	B.1.617.2	orf8_del119_120	covariants
+S:E156	6314	7518	S	E	NA	156	158	deletion			B.1.617.2		covariants
+S:F157	6314	7518	S	F	NA	157	158	deletion	0.839851024208566	6	B.1.617.2	s_del157_158	covariants
+S:R158G	6314	7518	S	R	G	157	158	deletion	0.839851024208566	6	B.1.617.2	s_del157_158	covariants
