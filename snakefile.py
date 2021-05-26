@@ -39,13 +39,13 @@ OUTPUT_DIR       = config['locations']['output-dir']
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
-FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
-MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 VARIANTS_DIR      = os.path.join(OUTPUT_DIR, 'variants')
 KRAKEN_DIR        = os.path.join(OUTPUT_DIR, 'kraken')
 COVERAGE_DIR      = os.path.join(OUTPUT_DIR, 'coverage')
 REPORT_DIR        = os.path.join(OUTPUT_DIR, 'report')
+FASTQC_DIR        = os.path.join(REPORT_DIR, 'fastqc')
+MULTIQC_DIR       = os.path.join(REPORT_DIR, 'multiqc')
 SCRIPTS_DIR       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 TMP_DIR           = os.path.join(config['locations']['output-dir'], 'pigx_work')
 
