@@ -64,6 +64,7 @@ datatable(table)
 
 # Visualization of taxonomic abundance
 
-The data can be explored with a multi-layered pie chart, which was created with [KronaTools](https://github.com/marbl/Krona/wiki). It is an interactive chart of all the classificated species found with Kraken2.  
+This interactive multi-layered pie chart shows the proportions of the classified taxons shown in the table above which 
+were found by *Kraken 2*. It was created using [KronaTools](https://github.com/marbl/Krona/wiki).  
 
 <iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>
