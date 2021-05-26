@@ -88,7 +88,8 @@ targets = {
             expand(os.path.join(REPORT_DIR, '{sample}.variantreport_p_sample.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.taxonomic_classification.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.Krona_report.html'), sample=SAMPLES) +
-            [os.path.join(REPORT_DIR, 'index.html')]
+            [os.path.join(REPORT_DIR, 'index.html'),
+             os.path.join(REPORT_DIR, 'overview.html')]
         )
     },
     'lofreq': {
@@ -362,16 +363,14 @@ rmarkdown::render(\'{input.report}\', \
               coverage_file='{input.coverage}'))\" > {log} 2>&1"
 
 # renders the overview.rmd which are the links 
-# not yet tested
-# i think it only needs to test if the csvs are generated
 rule render_overview:
     input:
-        report=os.path.join(REPORT_DIR, "overview.Rmd"),
-        taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
-        krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
-        qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
-        variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
-        header=os.path.join(REPORT_DIR, "_navbar.html"),
+      report=os.path.join(SCRIPTS_DIR, "report_scripts", "overview.Rmd"),
+      header=os.path.join(REPORT_DIR, "_navbar.html"),
+      taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
+      krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
+      qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
+      variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     output: os.path.join(REPORT_DIR, "overview.html")
     log: os.path.join(LOG_DIR, "reports", "overview.log")
     shell: "{RSCRIPT_EXEC} -e \"\
