@@ -34,7 +34,9 @@ The SARS-CoV-2 enriched wastewater samples are aligned to the virus
 genome. Those reads that are left unaligned are aligned with the
 [Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2)
 against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2).
-This report is an overview over the species found.
+This report is an overview over the species found. It provides insight about possible biases and contamination of the 
+samples. Furthermore, it provides insights about species or taxonomic families that could possibly make a proper detection of SARS-CoV-2 realted
+read impossible because of their high similarity to SARS-CoV-2.
 
 The table below lists all the species found.
 
