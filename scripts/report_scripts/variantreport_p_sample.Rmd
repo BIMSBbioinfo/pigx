@@ -40,9 +40,13 @@ coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_lon
 ``` 
 ### Sample: `r sample_name` 
 
-This report shows the variant analysis of SARS-CoV-2 RNA-seq samples from wastewater samples. Variants are 
-identified by SNV calling. Translated protein mutations were matched against lists of signature mutations for known
-variants of concern (VOC) as found on [outbreak.info](https://outbreak.info/situation-reports) and [CoVariant.org](https://covariants.org/variants/S.501Y.V1).
+
+This report shows the variant analysis of SARS-CoV-2 from wastewater samples. Mutations are 
+identified by single-nucleotide-variant (SNV) calling performed by [LoFreq](https://csb5.github.io/lofreq/). 
+Translated to amino acid mutations by using [Ensemble VEP - COVID-19](https://covid-19.ensembl.org/info/docs/tools/vep/index.html).
+The list of found mutations (including synonymous and non-synonymous mutations) were matched against lists of 
+signature mutations characterising variants of concern (VOC) of SARS-CoV-19 provided by [outbreak.info](https://outbreak.info/situation-reports) 
+and [CoVariant.org](https://covariants.org/variants/S.501Y.V1).
 
 ```{r function_parse_snv_csv, include = FALSE, warning = F, message = F}
 parse_snv_csv <- function (snvfile,...){ # allele frequency from v-pipe vcf
@@ -214,8 +218,15 @@ p1 <- read.table(file.path(location_sigmuts,"P1_outbreakinfo_mutation_report_dat
 p1$alt_aa <- na_if(p1$alt_aa, '')
 p1$alt_aa[is.na(p1$alt_aa)] <- "-"
 p1$AA_mut <- paste0(p1$ref_aa, p1$codon_num, p1$alt_aa)
-################
+######
+b16172 <- read.table(file.path(location_sigmuts,"B16172_outbreakinfo_mutation_report_data_2021-05-26.tsv"),
+                sep="\t",header=T)
+b16172$alt_aa <- na_if(b16172$alt_aa, '')
+b16172$alt_aa[is.na(b16172$alt_aa)] <- "-"
+b16172$AA_mut <- paste0(b16172$ref_aa, b16172$codon_num, b16172$alt_aa)
+######
 vepfile.df <- read.table(params$vep_file, sep = ",", header = T) #TODO - in na's umwandeln
+
 vepfile.df <- na_if(vepfile.df, "-")
 sig_mutations.df <- as.data.frame(qpcR:::cbind.na(b117=b117$AA_mut, b1351=b1351$AA_mut,
                                                   b1427=b1427$AA_mut, b1429=b1429$AA_mut,
