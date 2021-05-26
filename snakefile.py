@@ -98,6 +98,12 @@ targets = {
         'files': (
             expand(os.path.join(VARIANTS_DIR, '{sample}_snv.csv'), sample=SAMPLES)
         )
+    },
+    'multiqc': {
+        'description': "Create MultiQC reports for including raw and trimmed reads.",
+        'files': (
+            expand(os.path.join(MULTIQC_DIR, '{sample}', 'multiqc_report.html'), sample=SAMPLES)
+        )
     }
 }
 selected_targets = ['final_reports']
