@@ -1,5 +1,6 @@
 ---
 title: "SARS-CoV-2 QC report"
+nav: "Quality control"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 output:
   html_document:
