@@ -203,11 +203,38 @@ rule samtools_index:
     shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
 
-rule fastqc:
-    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
-    output: os.path.join(FASTQC_DIR, '{sample}_aligned_sorted_fastqc.zip')
-    log: os.path.join(LOG_DIR, 'fastqc_{sample}.log')
-    shell: "{FASTQC_EXEC} -o {FASTQC_DIR} -f bam {input} >> {log} 2>&1"
+rule fastqc_raw:
+    input: os.path.join(READS_DIR, "{sample}_R{read_num}.fastq")
+    output:
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.zip'),
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.html')
+    log: os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R{read_num}.log')
+    params:
+        output_dir = os.path.join(FASTQC_DIR, '{sample}')
+    shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
+
+
+rule fastqc_trimmed:
+    input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq")
+    output:
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip'),
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html')
+    log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_R{read_num}.log')
+    params:
+        output_dir = os.path.join(FASTQC_DIR, '{sample}')
+    shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
+
+
+rule multiqc:
+  input:
+    fastqc_raw_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.zip'), sample=SAMPLES, read_num=[1, 2]),
+    fastqc_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip'), sample=SAMPLES, read_num=[1, 2])
+  output: os.path.join(MULTIQC_DIR, '{sample}', 'multiqc_report.html')
+  params:
+    fastqc_dir = os.path.join(FASTQC_DIR, '{sample}'),
+    output_dir = os.path.join(MULTIQC_DIR, '{sample}')
+  log: os.path.join(LOG_DIR, 'multiqc_{sample}.log')
+  shell: "{MULTIQC_EXEC} -o {params.output_dir} {params.fastqc_dir} >> {log} 2>&1"
 
 
 # TODO: check if --call-indels is needed?
