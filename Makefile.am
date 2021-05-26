@@ -31,7 +31,8 @@ EXTRA_DIST = \
   tests/sample_data/Test_vep_sarscov2_parsed.txt \
   tests/sample_data/test_vep_parsing_input.txt \
   tests/sample_sheet.csv \
-  tests/settings.yaml
+  tests/settings.yaml \
+  $(wildcard tests/databases/sigmut_db/*)
 
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
 
