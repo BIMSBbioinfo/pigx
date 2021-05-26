@@ -59,10 +59,11 @@ tagList(lapply(locations,
 
 ## Virus strains per date and location
 
-On this map you can see where different virus strains and their
-relative frequencies have been detected at specific locations over
-time.  Use the slider to select a specific date or hit the Play button
-to display all snapshots successively.
+On this map you can see the relative frequencies of identified variants of concern (VOC) of SARS-CoV-2 and at specific 
+wastewater sampling locations over time. The diameter of the circles displays the variant frequency. Colors of overlapping variants 
+are adding up. This plot visualizes the development of local outbreaks and variant abundance.  
+
+Use the slider to select a specific date or hit the Play button to display all snapshots successively.
 
 ```{r maps for variants, echo=F, message=FALSE, warning=FALSE}
 
@@ -134,9 +135,12 @@ tagList(lapply(locations,
 
 ## mutations on the map for each data/location
 
-On this map you see the detected genetic mutations at specific
-locations over time.  Use the slider to select a specific date or hit
-the Play button to display all snapshots successively.
+This map shows the frequency values of signature mutations which are characterising variants of concern (VOC) of SARS-CoV-2 for
+samples at specific wastewater sampling locations over time. The diameter of the circles displays the mutation frequency. 
+Colors of overlapping variants are adding up. This plot visualizes the development of local outbreaks on the level of 
+single mutations. So far the map can only display signature mutations which where reported for VOCs.
+
+Use the slider to select a specific date or hit the Play button to display all snapshots successively.
 
 ```{r mutations for locations and date, echo=F, message=F, warning=F}
 melted <- melt(df_mut,
