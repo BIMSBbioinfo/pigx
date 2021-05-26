@@ -10,7 +10,8 @@ params:
 
 
 
-For each sample that was provided three report pages were generated. These can be found here by clicking on the provided link or by navigating through the tabs of this website.
+For each sample that was provided three report pages were generated. These can be found here by clicking on the provided
+link or by navigating through the tabs in the menu bar. 
 
 ```{r libs, echo=F, warning=F, message=F}
 library(data.table)
