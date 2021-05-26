@@ -26,9 +26,16 @@ coverage.df <- gsub('\\[','',coverage.df)
 coverage.df <- gsub('\\]','',coverage.df)
 # fixme: this can be sure done in a nicer and more compact way
 ```
-## Amplicon coverage  
+# Coverage reports
+## Number of amplicons covered
+
+The table below shows how many amplicons are covered. Since paired read alignement is used it is distiguished between:  
+* **fully covered** - covered by both strands  
+* **partially covered** - covered only by one strand  
+* **drop out** - not covered.  
+This is important to know to see if regions and genes which could carry mutations of particular interest are covered or not. 
 The information about the amplicon primer was taken from the [ARTIC bioinformatics platform](https://github.com/joshquick/artic-ncov2019/blob/master/primer_schemes/nCoV-2019/V3/nCoV-2019.bed).
-The reference name "MN908947.3" was changed to "NC_045512.2". Both are describing the same reference genome for 
+The reference name "MN908947.3" was changed to "NC_045512.2". Both genome assemblies are describing the same reference genome for 
 [SARS-CoV-2](https://www.ncbi.nlm.nih.gov/nuccore/1798174254). 
  
 ```{r, message=F, warning=F, echo = FALSE}
