@@ -24,6 +24,7 @@ library(stringr)
 library(magrittr)
 library(base64url)
 ```
+### Sample: `r sample_name` 
 
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
@@ -38,7 +39,7 @@ coordinates_lat <- as.character(sample_sheet[name==sample_name]$coordinates_lat)
 coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_long)
 
 ``` 
-### Sample: `r sample_name` 
+
 
 
 This report shows the variant analysis of SARS-CoV-2 from wastewater samples. Mutations are 
