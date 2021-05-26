@@ -5,8 +5,6 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 params:
   sample_name: ''
   coverage_file: ''
-  fastqc_unprocessed: ''
-  fastqc_processed: ''
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
