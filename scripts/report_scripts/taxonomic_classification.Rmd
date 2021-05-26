@@ -42,10 +42,10 @@ percentage of read matching SARS-CoV-2 a refining of trimming parameters should 
 The table below lists all the species found.
 
 * Column explanation:
-  + Percentage of fragments covered by the clade rooted at this taxon
-  + Number of fragments covered by the clade rooted at this taxon
+  + **Percentage** of fragments covered by the clade rooted at this taxon
+  + **Number of fragments** covered by the clade rooted at this taxon
   + Number of fragments assigned directly to this taxon
-  + A rank code, indicating **U**nclassified, **R**oot, **D**omain,
+  + **A rank code**, indicating **U**nclassified, **R**oot, **D**omain,
     **K**ingdom, **P**hylum, **C**lass, **O**rder, **F**amily,
     **G**enus, or **S**pecies.  Taxa that are not at any of these 10
     ranks have a rank code that is formed by using the rank code of
@@ -54,15 +54,15 @@ The table below lists all the species found.
     between genus and species and the grandparent taxon is at the
     genus rank.
   + NCBI taxonomic ID number
-  + Indented scientific name
+  + Taxonomic class
 
 ```{r plot table, echo=FALSE}
 table<- read.table(params$kraken_file, sep = "\t")
-colnames(table) <- c("percent", "num_fragments", "num_fragments_taxon", "rank", "NCBI_ID", "scientific_name")
+colnames(table) <- c("percent", "num_fragments", "num_fragments_taxon", "rank", "NCBI_ID", "taxon_class")
 datatable(table)
 ```
 
-# visualization of all unaligned reads are available with Krona:
+# Visualization of taxonomic abundance
 
 The data can be explored with a multi-layered pie chart, which was created with [KronaTools](https://github.com/marbl/Krona/wiki). It is an interactive chart of all the classificated species found with Kraken2.  
 
