@@ -48,7 +48,10 @@ datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE)
 
 ```
 
-## Coverage
+## Read coverage  
+This table shows the number of aligned reads, the mean coverage depth and percentage of the reference genome covered by 
+pre-processed reads. Preprocessing was done by [*Prinseq*](http://prinseq.sourceforge.net/index.html) with setting given by 
+the [setting_file](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md#settings-file-and-sample-sheet).  
 
 ```{r, message=F, warning=F, echo = FALSE}
 
