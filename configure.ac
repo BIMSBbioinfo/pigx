@@ -45,6 +45,7 @@ find_or_override_prog([IMPORT_KRONA],    [ktImportKrona])
 find_or_override_prog([IMPORT_TAXONOMY], [ktImportTaxonomy])
 find_or_override_prog([LOFREQ],       [lofreq])
 find_or_override_prog([VEP],          [vep])
+find_or_override_prog([MULTIQC],      [multiqc])
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),

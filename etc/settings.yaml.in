@@ -30,6 +30,9 @@ tools:
   fastqc:
     executable: @FASTQC@
     args: ""
+  multiqc:
+    executable: @MULTIQC@
+    args: ""
   Rscript:
     executable: @RSCRIPT@
     args: "--vanilla --no-environ"

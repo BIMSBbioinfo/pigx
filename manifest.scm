@@ -46,6 +46,7 @@
   (list "bwa"
         "ensembl-vep"
         "fastqc"
+        "multiqc"
         "kraken2"
         "krona-tools"
         "lofreq"

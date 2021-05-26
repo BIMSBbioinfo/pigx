@@ -61,6 +61,7 @@ def tool(name):
 
 BWA_EXEC             = tool("bwa")
 FASTQC_EXEC          = tool("fastqc")
+MULTIQC_EXEC         = tool("multiqc")
 IMPORT_TAXONOMY_EXEC = tool("import_taxonomy")
 KRAKEN2_EXEC         = tool("kraken2")
 LOFREQ_EXEC          = tool("lofreq")
