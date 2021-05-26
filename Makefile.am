@@ -10,7 +10,6 @@ pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS = \
   scripts/report_scripts/overview.Rmd \
   scripts/report_scripts/qc_report_per_sample.Rmd \
-  scripts/report_scripts/_settings.Rmd \
   scripts/report_scripts/taxonomic_classification.Rmd \
   scripts/report_scripts/index.Rmd \
   scripts/report_scripts/variantreport_p_sample.Rmd \
