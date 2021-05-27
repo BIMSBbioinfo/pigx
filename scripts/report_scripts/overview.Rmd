@@ -6,17 +6,14 @@ params:
 ---
 
 
-
-
-
-
-For each sample that was provided three report pages were generated. These can be found here by clicking on the provided link or by navigating through the tabs of this website.
-
-```{r libs, echo=F, warning=F, message=F}
-library(data.table)
-library(DT)
+```{r, child="_settings.Rmd"}
+#Read config.yml for the locations of sample_sheet 
 ```
 
+# Overview of Reports
+
+For each sample that was provided three report pages were generated. These can be found here by clicking on the provided
+link or by navigating through the tabs in the menu bar. 
 
 ```{r read sample file, echo=F}
 
@@ -28,30 +25,31 @@ report_link <- c(".variantreport_p_sample.html",".qc_report_per_sample.html",".t
 ```
 
 
-```{r table with links, echo=FALSE}
-df <- as.data.frame(dplyr::select(sample_sheet,location_name, date, name))
-
-#todo: make links correct
-#loop over the three reports and each sample and create the link
-for (i in (1:length(report_name))){
-  #print(i)
-  colname<- report_name[i]
-  col <- c()
-  for (sample in sample_names){
-    #print(sample)
-    link <- paste0("<a href=",sample,report_link[i],">",report_name[i],"</a>")
-    col <- c(col,link)
-  }
-  df[[colname]] <-col
+```{r links, echo=FALSE}
+#todo: automatically generate the sample links
+#todo: make a table for this overview
+for (sample in sample_names){
+  print(sample)
 }
 
-
-#reshape into long format
-df <- reshape2::melt(df, id.vars= c("location_name","date","name"), value.name = "link")
-df <- df[,-5]
 ```
 
-```{r plot table}
-DT::datatable(df,filter = "bottom",escape=F)
+* __BERLIN__
+  + sample 1
+    - variants report
+    - qc report
+    - taxonomic classification
+  + sample 2
+    - variants report
+    - qc report
+    - taxonomic classification
 
-```
+* __Munich__
+  + sample 3
+    - variants report
+    - qc report
+    - taxonomic classification
+  + sample 4
+    - variants report
+    - qc report
+    - taxonomic classification

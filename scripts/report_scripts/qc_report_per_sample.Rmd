@@ -17,9 +17,7 @@ library(magrittr)
 library(base64url)
 ```
 
-# Input Settings
-
-### Sample: `r params$sample_name`
+Sample: `r params$sample_name`
 ```{r reading data, include = FALSE}
 coverage.df <- read.table(params$coverage_file, sep = "\t", header = T)
 coverage.df <- na_if(coverage.df, "[]")
@@ -27,10 +25,18 @@ coverage.df <- gsub('\\[','',coverage.df)
 coverage.df <- gsub('\\]','',coverage.df)
 # fixme: this can be sure done in a nicer and more compact way
 ```
-## Amplicon coverage  
+# Coverage reports
+## Number of amplicons covered
+
+The table below shows how many amplicons are covered. Since paired read alignement is used it is distiguished between:  
+* **fully covered** - covered by both strands  
+* **partially covered** - covered only by one strand  
+* **drop out** - not covered.  
+This is important to know to see if regions and genes which could carry mutations of particular interest are covered or not. 
 The information about the amplicon primer was taken from the [ARTIC bioinformatics platform](https://github.com/joshquick/artic-ncov2019/blob/master/primer_schemes/nCoV-2019/V3/nCoV-2019.bed).
-The reference name "MN908947.3" was changed to "NC_045512.2". Both are describing the same reference genome for 
-[SARS-CoV-2](https://www.ncbi.nlm.nih.gov/nuccore/1798174254). 
+The name of the reference sequence version ["MN908947.3"](https://www.ncbi.nlm.nih.gov/nuccore/MN908947) was changed 
+to ["NC_045512.2"](https://www.ncbi.nlm.nih.gov/nuccore/1798174254). Those versions of the SARS-CoV-2 reference genome 
+are identical.
  
 ```{r, message=F, warning=F, echo = FALSE}
 
@@ -42,7 +48,10 @@ datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE)
 
 ```
 
-## Coverage
+## Read coverage  
+This table shows the number of aligned reads, the mean coverage depth and percentage of the reference genome covered by 
+pre-processed reads. Preprocessing was done by [*Prinseq*](http://prinseq.sourceforge.net/index.html) with setting given by 
+the [setting_file](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md#settings-file-and-sample-sheet).  
 
 ```{r, message=F, warning=F, echo = FALSE}
 
@@ -53,14 +62,23 @@ Coverage <- data.frame("Total coverage" = coverage.df[4],
 datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
 
 ```
-## FastQC and Trimming
+# Quality control and preprocessing
+
+## FastQC 
+
+FastQC reports have been created using [*fastqc*](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) first on
+the raw data files and again after pre-processing the reads. The reports should be consulted in particular if there are
+any issues with low alignment rates or a high match rate of SARS-CoV-2 by *Kraken2* (see Kraken reports). 
 
 Download: [FastQC report of unprocessed data](`r params$fastqc_unprocessed`)
 Download: [FastQC report of pre-processes data](`r params$fastqc_processed`)
 
+## Trimming
 
+To improve alignment rates and mutation calling proper trimming of reads should be considered e.g. based on the provided
+fastqc-reports. Read preprocessing is performed by [*Prinseq*](http://prinseq.sourceforge.net/index.html).
 
-The reads were pre-processed as followed:  
+This sample was processed with these settings:
 
 |      |     |  
 |:-----|:----|  

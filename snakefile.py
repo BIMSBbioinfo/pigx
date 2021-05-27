@@ -88,8 +88,7 @@ targets = {
             expand(os.path.join(REPORT_DIR, '{sample}.variantreport_p_sample.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.taxonomic_classification.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.Krona_report.html'), sample=SAMPLES) +
-            [os.path.join(REPORT_DIR, 'index.html'),
-             os.path.join(REPORT_DIR, 'overview.html')]
+            [os.path.join(REPORT_DIR, 'index.html')]
         )
     },
     'lofreq': {
@@ -297,35 +296,44 @@ rule get_qc_table:
     shell: "{PYTHON_EXEC} {params.script} {input.coverage_csv} {input.amplicon_csv} {output} >> {log} 2>&1"
 
 
-rule generate_navbar:
+rule generate_site_files:
     input:
-      script = os.path.join(SCRIPTS_DIR, "generateNavigation.R")
+        expand(os.path.join(COVERAGE_DIR, '{sample}_merged_covs.csv'), sample = SAMPLES),
+        expand(os.path.join(REPORT_DIR, '{sample}.Krona_report.html'), sample = SAMPLES),
+        expand(os.path.join(KRAKEN_DIR, '{sample}_classified_unaligned_reads.txt'), sample = SAMPLES),
+        expand(os.path.join(VARIANTS_DIR, '{sample}_vep_sarscov2_parsed.txt'), sample = SAMPLES),
+        expand(os.path.join(VARIANTS_DIR, '{sample}_snv.csv'), sample = SAMPLES)
     output:
-      os.path.join(REPORT_DIR, "_navbar.html")
+        os.path.join(REPORT_DIR, "_site.yml"),
+        os.path.join(REPORT_DIR, "index.Rmd"),
+        os.path.join(REPORT_DIR, "config.yml"),
+        os.path.join(REPORT_DIR, "overview.Rmd"),
+        expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.Rmd"), sample = SAMPLES)
     params:
-      report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts")
-    log: os.path.join(LOG_DIR, "generate_navigation.log")
-    shell: "{RSCRIPT_EXEC} {input.script} \
-{params.report_scripts_dir} {SAMPLE_SHEET_CSV} {output} > {log} 2>&1"
+        report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts"),
+        script = os.path.join(SCRIPTS_DIR, "generateSiteFiles.R"),
+        var_timecourse_csv = os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
+        mut_timecourse_csv = os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv')
+    log: os.path.join(LOG_DIR, "generate_site_files.log")
+    shell: "{RSCRIPT_EXEC} {params.script} {params.report_scripts_dir} {SAMPLE_SHEET_CSV} {KRAKEN_DIR} {COVERAGE_DIR} {VARIANTS_DIR} {SIGMUT_DB} {REPORT_DIR} {params.var_timecourse_csv} {params.mut_timecourse_csv} {RSCRIPT_EXEC} > {log} 2>&1"
 
 
 rule render_kraken2_report:
     input:
-      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "taxonomic_classification.Rmd"),
-      header=os.path.join(REPORT_DIR, "_navbar.html"),
+      header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
       kraken=os.path.join(KRAKEN_DIR, "{sample}_classified_unaligned_reads.txt"),
       krona=os.path.join(REPORT_DIR, "{sample}.Krona_report.html")
     output: os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_taxonomic_classification.log")
-    shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header} \
-'{{\
-  "sample_name": "{wildcards.sample}",  \
-  "site_dir":    "{REPORT_DIR}",        \
-  "krona_file":  "{input.krona}",       \
-  "kraken_file": "{input.kraken}"       \
-}}' > {log} 2>&1"""
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  intermediates_dir='{TMP_DIR}/{wildcards.sample}.taxonomic_classification', \
+  params=list(sample_name='{wildcards.sample}', \
+              site_dir='{REPORT_DIR}', \
+              krona_file='{input.krona}', \
+              kraken_file='{input.kraken}'))\" > {log} 2>&1"
 
 
 rule render_variant_report:
@@ -351,55 +359,47 @@ rule render_variant_report:
 
 rule render_qc_report:
     input:
-      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "qc_report_per_sample.Rmd"),
-      header=os.path.join(REPORT_DIR, "_navbar.html"),
+      header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
       coverage=os.path.join(COVERAGE_DIR, "{sample}_merged_covs.csv")
     output:
       os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_qc_report.log")
-    shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header} \
-'{{\
-  "sample_name": "{wildcards.sample}",  \
-  "coverage_file": "{input.coverage}"   \
-}}' > {log} 2>&1"""
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  intermediates_dir='{TMP_DIR}/{wildcards.sample}.qc_report', \
+  params=list(sample_name='{wildcards.sample}', \
+              coverage_file='{input.coverage}'))\" > {log} 2>&1"
 
 # renders the overview.rmd which are the links 
+# not yet tested
+# i think it only needs to test if the csvs are generated
 rule render_overview:
     input:
-      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
-      report=os.path.join(SCRIPTS_DIR, "report_scripts", "overview.Rmd"),
-      header=os.path.join(REPORT_DIR, "_navbar.html"),
-      taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
-      krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
-      qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
-      variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
+        report=os.path.join(REPORT_DIR, "overview.Rmd"),
+        header=os.path.join(SCRIPTS_DIR, "report_scripts", "_navbar.html"),
+        taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
+        krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
+        qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
+        variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     output: os.path.join(REPORT_DIR, "overview.html")
     log: os.path.join(LOG_DIR, "reports", "overview.log")
-    shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header} \
-'{{"sample_sheet": "{SAMPLE_SHEET_CSV}"}}' > {log} 2>&1"""
+    shell: "{RSCRIPT_EXEC} -e \"\
+rmarkdown::render(\'{input.report}\', \
+  output_file='{output}', \
+  params=list(sample_sheet='{SAMPLE_SHEET_CSV}'))\" > {log} 2>&1"
 
-rule render_timecourse_report:
+rule render_site:
     input:
-      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
-      report=os.path.join(SCRIPTS_DIR, "report_scripts", "index.Rmd"),
-      header=os.path.join(REPORT_DIR, "_navbar.html"),
-      # TODO: see comment below
-      side_effects=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
-    # TODO: these CSV files should be declared as inputs!  Due to
-    # https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/issues/19 we
-    # cannot do this yet, so we just add the variant reports for all
-    # samples as inputs.
-    params:
-      variants=os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
-      mutations=os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv')
+        os.path.join(REPORT_DIR, "_site.yml"),
+        os.path.join(REPORT_DIR, "index.Rmd"),
+        os.path.join(REPORT_DIR, "config.yml"),
+        os.path.join(REPORT_DIR, "overview.html"),
+        expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
+        expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
+        expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
+        expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     output: os.path.join(REPORT_DIR, "index.html")
     log: os.path.join(LOG_DIR, "reports", "index.log")
-    shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header}  \
-'{{                                     \
-  "variants_csv": "{params.variants}",  \
-  "mutations_csv": "{params.mutations}" \
-}}' > {log} 2>&1"""
+    shell: "{RSCRIPT_EXEC} -e \"library(rmarkdown); rmarkdown::render_site(\'{input[1]}\')\" > {log} 2>&1"

@@ -1,5 +1,5 @@
 ---
-title: "Timecourse"
+title: "SARS-CoV-2 Variants of Concern - Time series report"
 nav: "Timecourse"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 params:
@@ -7,124 +7,123 @@ params:
   mutations_csv: ''
 ---
 
-```{r libraries and input, echo=F, message=F, warning=F}
+```{r, child="_settings.Rmd"}
+#Read config.yml for the locations of sample sheet, pipeline output and sigmut loc and variants_dir
+```
+
+```{r libraries and input,echo=F}
 library(plotly)
-library(htmltools)
 library(reshape2)
 
-df_var <- read.table(params$variants_csv, sep = "\t", header=T)
-df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
+df_var <- read.table(var_timecourse_csv, sep = "\t", header=T)
+df_mut <- read.table(mut_timecourse_csv, sep = "\t", header=T)
 ```
+This pipeline performs mutation analysis of SARS-CoV-2 and reports and quantifies the occurrence of 
+variants of concern (VOC) and signature mutations by which they are characterised. For each sample three reports are 
+generated:  
+* a QC-report reporting general statistics and amplicon coverage
+* a variant-report which including tables summarizing the mutation calling and the deconvolution results for the abundance of VOCs
+* a taxonomic classification report including a pie chart showing the analysis of the unaligned reads
+
+The visualizations below provide an overview of the evolution of VOCs found
+in the analyzed samples across given time points and locations. The abundance values for the variants are derived 
+by deconvolution (for details please see the [variant report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/WW_210304_KW1.variantreport_p_sample.html#22_Deconvolution)) 
+The frequencies of the mutations are the output of [LoFreq](https://csb5.github.io/lofreq/).
+
 
 # VARIANTS
 
-## Frequency of virus strains over time for each location
-```{r variants, echo=F, message=F, warning=F}
+## Show Variants (all timepoints)
 
-melted <- reshape2::melt(df_var,
-                         id.vars = c("dates", "samplename", "location_name",
-                                     "coordinates_lat", "coordinates_long"))
-melted$dates <- as.Date(melted$dates)
-locations <- unique(melted$location_name)
+When you click on the legend the trace are set ON/ OFF. 
 
-tagList(lapply(locations,
-               function (location) {
-                   subset(melted, location_name == location) %>%
-                       group_by(dates) %>%
-                       arrange(variable) %>%
-                       mutate (value = round (value, 4)) %>%
-                       plot_ly (type = 'scatter',
-                                mode = 'line',
-                                stackgroup = 'one',
-                                showlegend = TRUE,
-                                x = ~dates,
-                                y = ~value,
-                                color = ~variable) %>%
-                       layout (title = location)
-               }))
+```{r bubble plot,echo=F}
+forplot<- reshape2::melt(df_var,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long","WT","b1351","b117"))
+forplot$dates <- as.Date(forplot$dates)
+
+bubble<-plot_ly (
+  data= forplot,
+  type = 'scattergeo',
+  mode='markers')
+
+bubble <- bubble %>% add_trace(
+  lon =forplot$coordinates_long ,
+  lat =forplot$coordinates_lat,
+  marker = list (
+  color =rep("red",10) ,
+  size = forplot$WT*100,
+  mode = 'markers'),
+  name= "WT",
+  visible=TRUE
+  ) %>%
+
+add_trace(
+  lon =forplot$coordinates_long ,
+  lat =forplot$coordinates_lat,
+  marker = list (
+  color =rep("blue",10) ,
+  size = forplot$b1351*100,
+  mode = 'markers'),
+  name= "b1351",
+  visible=TRUE
+  ) %>% 
+  
+add_trace(
+  lon =forplot$coordinates_long ,
+  lat =forplot$coordinates_lat,
+  marker = list (
+  color =rep("green",10) ,
+  size = forplot$b117*100,
+  mode = 'markers'),
+  name= "b117",
+  visible=TRUE
+  )
+
+
+bubble
 ```
+
+## variants over time for each location 
+```{r variants, echo=F}
+#from rafael
+forplot<- reshape2::melt(df_var,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
+forplot$dates <- as.Date(forplot$dates)
+locations <- unique(forplot$location_name)
+plots_line_locations <- lapply(locations, function(location) {
+  tmp <- forplot  %>% filter(location_name ==location) 
+  fig <- plot_ly(x = tmp$dates,name=tmp$variable,y = tmp$value, type = 'scatter',mode = 'lines') %>%    
+  layout(title = location)
+  fig <- fig %>% add_markers(marker = list(line = list(color = "black", width = 1)))
+})
+```
+
+
+```{r plot variants over time, echo=F}
+#plots_line_locations
+plots_line_locations[[1]]
+plots_line_locations[[2]]
+plots_line_locations[[3]]
+#plots_line_locations[[4]]
+#plots_line_locations[[5]]
+#plots_line_locations[[6]]
+```
+
 
 
 ## Virus strains per date and location
 
-On this map you can see where different virus strains and their
-relative frequencies have been detected at specific locations over
-time.  Use the slider to select a specific date or hit the Play button
-to display all snapshots successively.
+On this map you can see the relative frequencies of identified variants of concern (VOC) of SARS-CoV-2 at specific 
+wastewater sampling locations over time. This plot 
+visualizes the development of local outbreaks and the proportions of identified VOCs in that area.  
 
-```{r maps for variants, echo=F, message=FALSE, warning=FALSE}
+Use the slider to select a specific date or hit the Play button to display all snapshots successively. By 
+double-clicking on the variants displayed on the legend the chosen variants can be disabled.
+
+```{r maps for variants, echo=F}
 
 melted <- melt(df_var,
-               id.vars = c("dates", "samplename", "location_name",
-                           "coordinates_lat", "coordinates_long"))
-plot_ly (data = melted,
-         type = 'scattermapbox',
-         mode = 'markers') %>%
-    add_trace(size = 1,
-              lon = ~coordinates_long,
-              lat = ~coordinates_lat,
-              name = ~variable,
-              legendgroup = ~variable,
-              opacity = 0.1,
-              showlegend = FALSE,
-              marker = list(sizemode = 'diameter',
-                            color = 'rgb(150, 150, 150)',
-                            opacity = 0.1)) %>%
-    add_trace(lat = ~coordinates_lat,
-              lon = ~coordinates_long,
-              legendgroup = ~variable,
-              showlegend = TRUE,
-              frame = ~dates,
-              size = ~value,
-              text = ~value,
-              color = ~variable,
-              hovertemplate = 'Frequency: %{text}',
-              marker = list (sizemode = 'diameter')) %>%
-    layout (mapbox = list (zoom = 5.5,
-                           center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
-                                         lon = ~median(coordinates_long, na.rm=TRUE)),
-                           style = 'open-street-map'))
-```
-
-
-# MUTATIONS
-
-## mutations  over time for each location 
-```{r mutations, echo=F, message=F, warning=F}
-melted <- reshape2::melt(df_mut,
-                         id.vars = c("dates", "samplename", "location_name",
-                                     "coordinates_lat", "coordinates_long"))
-melted$dates <- as.Date(melted$dates)
-
-# sort by dates
-idx <- order(melted$dates)
-melted <- melted[idx, ]
-
-locations <- unique(melted$location_name)
-
-tagList(lapply(locations,
-               function (location) {
-                   subset(melted, location_name == location) %>%
-                       group_by(dates) %>%
-                       arrange(variable) %>%
-                       plot_ly(type = 'scatter',
-                               mode = 'line',
-                               name = ~variable,
-                               x = ~dates,
-                               y = ~value) %>%
-                       layout(title = location)
-               }))
-```
-
-## mutations on the map for each data/location
-
-On this map you see the detected genetic mutations at specific
-locations over time.  Use the slider to select a specific date or hit
-the Play button to display all snapshots successively.
-
-```{r mutations for locations and date, echo=F, message=F, warning=F}
-melted <- melt(df_mut,
-               id.vars = c("dates", "samplename", "location_name",
+               id.vars = c("dates", "samplename",
+                           "time", "location_name",
                            "coordinates_lat", "coordinates_long"))
 plot_ly (data = melted,
          type = 'scattermapbox',
@@ -146,3 +145,92 @@ plot_ly (data = melted,
                                          lon = ~median(coordinates_long, na.rm=TRUE)),
                            style = 'open-street-map'))
 ```
+
+
+# MUTATIONS
+
+## mutations  over time for each location 
+```{r mutations, echo=F}
+forplot<- reshape2::melt(df_mut,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
+forplot$dates <- as.Date(forplot$dates)
+locations <- unique(forplot$location_name)
+plots_line_locations <- lapply(locations, function(location) {
+  tmp <- forplot  %>% filter(location_name ==location) 
+  fig <- plot_ly(x = tmp$dates,name=tmp$variable,y = tmp$value, type = 'scatter',mode = 'lines') %>%    
+  layout(title = location)
+  fig <- fig %>% add_markers(marker = list(line = list(color = "black", width = 1)))
+})
+```
+
+
+```{r plot mutations over time, echo=F}
+plots_line_locations[[1]]
+plots_line_locations[[2]]
+plots_line_locations[[3]]
+#plots_line_locations[[4]]
+#plots_line_locations[[5]]
+#plots_line_locations[[6]]
+```
+
+## mutations on the map for each data/location
+
+This map shows the frequencies of signature mutations which are characterizing variants of concern (VOC) of SARS-CoV-2 for
+samples at specific wastewater sampling locations over time. This plot visualizes the development of local outbreaks on the level of 
+single mutations. So far the map can only display signature mutations which where reported for VOCs.
+
+Use the slider to select a specific date or hit the Play button to display all snapshots successively.
+
+```{r mutations for locations and date, echo=F}
+melted <- melt(df_mut,
+               id.vars = c("dates", "samplename",
+                           "time", "location_name",
+                           "coordinates_lat", "coordinates_long"))
+plot_ly (data = melted,
+         type = 'scattermapbox',
+         mode = 'markers',
+         size = ~value,
+         lon = ~coordinates_long,
+         lat = ~coordinates_lat,
+         name = ~variable,
+         color = ~variable,
+         text = ~value,
+         fill = 'none',
+         frame = ~dates,
+         marker = list (sizemode = 'diameter',
+                        opacity = 0.4),
+         hovertemplate = 'Frequency: %{text}') %>%
+    layout (title = ~dates,
+            mapbox = list (zoom = 5.5,
+                           center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
+                                         lon = ~median(coordinates_long, na.rm=TRUE)),
+                           style = 'open-street-map'))
+```
+
+
+```{r bubble mutations plot,echo=F,eval=F}
+#does not work in a loop
+forplot<- reshape2::melt(df_mut,id.vars=colnames(df_mut))
+forplot$dates <- as.Date(forplot$dates)
+
+b<-plot_ly (
+  data= forplot,
+  type = 'scattergeo',
+  mode='markers')
+
+mutations <- colnames(df_mut)[7:length(colnames(df_mut))]
+for (mut in mutations){
+  print(mut)
+  b <- b %>% add_trace(
+    lon =forplot$coordinates_long ,
+    lat =forplot$coordinates_lat,
+    marker = list(size = forplot[[as.name(mut)]]*100, mode = 'markers',color=rep("red",length(rownames(df_mut)))),
+    name = mut,
+    visible = F)
+}
+
+b <- b %>% layout(title = "Varints")
+
+
+b
+```
+
