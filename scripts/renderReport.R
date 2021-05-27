@@ -17,7 +17,7 @@ span.header-section-number { \
   text-align: right; \
   width: 2em; \
   margin-left: -2.5em } \
-div#TOC { font-size: smaller } \
+div#TOC { font-size: smaller; margin-top: 175px; } \
 div#TOC span.header-section-number { display: none } \
 p { line-height: 1.5 } \
 h1 { margin-top: 2em } \

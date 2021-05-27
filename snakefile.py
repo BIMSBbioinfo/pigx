@@ -49,6 +49,12 @@ MULTIQC_DIR       = os.path.join(REPORT_DIR, 'multiqc')
 SCRIPTS_DIR       = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 TMP_DIR           = os.path.join(config['locations']['output-dir'], 'pigx_work')
 
+if os.getenv("PIGX_UNINSTALLED"):
+    LOGO = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png")
+else:
+    LOGO = os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
+
+
 def toolArgs(name):
     if 'args' in config['tools'][name]:
         return config['tools'][name]['args']
@@ -359,7 +365,8 @@ rule render_kraken2_report:
   "sample_name": "{wildcards.sample}",  \
   "site_dir":    "{REPORT_DIR}",        \
   "krona_file":  "{input.krona}",       \
-  "kraken_file": "{input.kraken}"       \
+  "kraken_file": "{input.kraken}",      \
+  "logo": "{LOGO}" \
 }}' > {log} 2>&1"""
 
 
@@ -380,7 +387,8 @@ rule render_variant_report:
   "variants_dir": "{VARIANTS_DIR}",      \
   "vep_file":     "{input.vep}",         \
   "snv_file":     "{input.snv}",         \
-  "sample_sheet": "{SAMPLE_SHEET_CSV}"   \
+  "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
+  "logo": "{LOGO}" \
 }}' > {log} 2>&1"""
 
 
@@ -401,7 +409,8 @@ rule render_qc_report:
 '{{\
   "sample_name": "{wildcards.sample}",  \
   "coverage_file": "{input.coverage}",   \
-  "multiqc_report": "{params.multiqc_rel_path}" \
+  "multiqc_report": "{params.multiqc_rel_path}", \
+  "logo": "{LOGO}" \
 }}' > {log} 2>&1"""
 
 
@@ -432,5 +441,6 @@ rule render_index:
 '{{                                      \
   "variants_csv": "{params.variants}",   \
   "mutations_csv": "{params.mutations}", \
-  "sample_sheet": "{SAMPLE_SHEET_CSV}"   \
+  "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
+  "logo": "{LOGO}" \
 }}' > {log} 2>&1"""

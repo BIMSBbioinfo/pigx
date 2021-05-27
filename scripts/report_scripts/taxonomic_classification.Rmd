@@ -7,7 +7,23 @@ params:
   site_dir: ''
   kraken_file: ''
   krona_file: ''
+  logo: ''
 ---
+
+<style>
+#logo { position: relative; }
+#logo img {
+  top: 75px;
+  left: 50px;
+  position: fixed;
+  width: 125px;
+}
+</style>
+
+<div id="logo" align="top">
+`r knitr::include_graphics(params$logo)`
+</div>
+
 
 ```{r libs, echo=FALSE}
 suppressMessages(suppressWarnings(library(DT)))

@@ -6,7 +6,23 @@ params:
   variants_csv: ''
   mutations_csv: ''
   sample_sheet: ''
+  logo: ''
 ---
+
+<style>
+#logo { position: relative; }
+#logo img {
+  top: 75px;
+  left: 50px;
+  position: fixed;
+  width: 125px;
+}
+</style>
+
+<div id="logo" align="top">
+`r knitr::include_graphics(params$logo)`
+</div>
+
 
 ```{r libraries and input, echo=F, message=F, warning=F}
 library(plotly)

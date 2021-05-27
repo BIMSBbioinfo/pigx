@@ -6,7 +6,23 @@ params:
   sample_name: ''
   coverage_file: ''
   multiqc_report: ''
+  logo: ''
 ---
+
+<style>
+#logo { position: relative; }
+#logo img {
+  top: 75px;
+  left: 50px;
+  position: fixed;
+  width: 125px;
+}
+</style>
+
+<div id="logo" align="top">
+`r knitr::include_graphics(params$logo)`
+</div>
+
 
 This is the QC report for sample: `r params$sample_name`.
 

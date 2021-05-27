@@ -9,8 +9,23 @@ params:
   vep_file: ''
   snv_file: ''
   sample_sheet: ''
-
+  logo: ''
 ---
+
+<style>
+#logo { position: relative; }
+#logo img {
+  top: 75px;
+  left: 50px;
+  position: fixed;
+  width: 125px;
+}
+</style>
+
+<div id="logo" align="top">
+`r knitr::include_graphics(params$logo)`
+</div>
+
 
 ```{r libs, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
