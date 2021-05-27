@@ -56,7 +56,10 @@ to display all snapshots successively.
 
 melted <- melt(df_var,
                id.vars = c("dates", "samplename", "location_name",
-                           "coordinates_lat", "coordinates_long"))
+                           "coordinates_lat", "coordinates_long"),
+               rm.NA = TRUE) %>%
+    mutate (value = round (value, 4))
+
 plot_ly (data = melted,
          type = 'scattermapbox',
          mode = 'markers') %>%
@@ -126,7 +129,10 @@ the Play button to display all snapshots successively.
 ```{r mutations for locations and date, echo=F, message=F, warning=F}
 melted <- melt(df_mut,
                id.vars = c("dates", "samplename", "location_name",
-                           "coordinates_lat", "coordinates_long"))
+                           "coordinates_lat", "coordinates_long"),
+               rm.NA = TRUE) %>%
+    mutate (value = round (value, 4))
+
 plot_ly (data = melted,
          type = 'scattermapbox',
          mode = 'markers') %>%
