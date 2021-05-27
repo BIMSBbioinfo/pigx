@@ -18,56 +18,6 @@ df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
 
 # VARIANTS
 
-## Show Variants (all timepoints)
-
-When you click on the legend the trace are set ON/ OFF. 
-
-```{r bubble plot,echo=F}
-forplot<- reshape2::melt(df_var,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long","WT","b1351","b117"))
-forplot$dates <- as.Date(forplot$dates)
-
-bubble<-plot_ly (
-  data= forplot,
-  type = 'scattergeo',
-  mode='markers')
-
-bubble <- bubble %>% add_trace(
-  lon =forplot$coordinates_long ,
-  lat =forplot$coordinates_lat,
-  marker = list (
-  color =rep("red",10) ,
-  size = forplot$WT*100,
-  mode = 'markers'),
-  name= "WT",
-  visible=TRUE
-  ) %>%
-
-add_trace(
-  lon =forplot$coordinates_long ,
-  lat =forplot$coordinates_lat,
-  marker = list (
-  color =rep("blue",10) ,
-  size = forplot$b1351*100,
-  mode = 'markers'),
-  name= "b1351",
-  visible=TRUE
-  ) %>% 
-  
-add_trace(
-  lon =forplot$coordinates_long ,
-  lat =forplot$coordinates_lat,
-  marker = list (
-  color =rep("green",10) ,
-  size = forplot$b117*100,
-  mode = 'markers'),
-  name= "b117",
-  visible=TRUE
-  )
-
-
-bubble
-```
-
 ## Frequency of virus strains over time for each location
 ```{r variants, echo=F, message=F, warning=F}
 
