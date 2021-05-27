@@ -1,4 +1,0 @@
-name,reads,reads2,date,time,location_name,coordinates_lat,coordinates_long
-Test0,Test0_R1.fastq,Test0_R2.fastq,2021/01/01,morning,Berlin_1,52.3646054650197,13.5098643274129
-Test2,Test2_R1.fastq,Test2_R2.fastq,2021/01/03,morning,Munich,48.2084486780314,11.6282300407931
-Test5,Test5_R1.fastq,Test5_R2.fastq,2021/03/05,evening,Berlin_2,51.3646054650197,12.5098643274129
