@@ -59,11 +59,12 @@ tagList(lapply(locations,
 
 ## Virus strains per date and location
 
-On this map you can see the relative frequencies of identified variants of concern (VOC) of SARS-CoV-2 and at specific 
-wastewater sampling locations over time. The diameter of the circles displays the variant frequency. Colors of overlapping variants 
-are adding up. This plot visualizes the development of local outbreaks and variant abundance.  
+On this map you can see the relative frequencies of identified variants of concern (VOC) of SARS-CoV-2 at specific 
+wastewater sampling locations over time. This plot 
+visualizes the development of local outbreaks and the proportions of identified VOCs in that area.  
 
-Use the slider to select a specific date or hit the Play button to display all snapshots successively.
+Use the slider to select a specific date or hit the Play button to display all snapshots successively. By 
+double-clicking on the variants displayed on the legend the chosen variants can be disabled.
 
 ```{r maps for variants, echo=F, message=FALSE, warning=FALSE}
 
