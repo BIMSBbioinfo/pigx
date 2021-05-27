@@ -14,12 +14,9 @@ suppressMessages(suppressWarnings(library(DT)))
 ```
 
 
-# Kraken2 report on unaligned reads from the SARS-CoV-2 enriched samples
+# Report on unaligned reads
 
-```{r print sample name,echo=F}
-print(paste( "Sample: ", params$sample_name))
-```
-
+Sample: `r params$sample_name`
 
 The SARS-CoV-2 enriched wastewater samples are aligned to the virus
 genome. Those reads that are left unaligned are aligned with the
