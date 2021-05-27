@@ -311,60 +311,64 @@ rule generate_navbar:
 
 rule render_kraken2_report:
     input:
+      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "taxonomic_classification.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       kraken=os.path.join(KRAKEN_DIR, "{sample}_classified_unaligned_reads.txt"),
       krona=os.path.join(REPORT_DIR, "{sample}.Krona_report.html")
     output: os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_taxonomic_classification.log")
-    shell: "{RSCRIPT_EXEC} -e \"\
-rmarkdown::render(\'{input.report}\', \
-  output_file='{output}', \
-  intermediates_dir='{TMP_DIR}/{wildcards.sample}.taxonomic_classification', \
-  params=list(sample_name='{wildcards.sample}', \
-              site_dir='{REPORT_DIR}', \
-              krona_file='{input.krona}', \
-              kraken_file='{input.kraken}'))\" > {log} 2>&1"
+    shell: """{RSCRIPT_EXEC} {input.script} \
+{input.report} {output} {input.header} \
+'{{\
+  "sample_name": "{wildcards.sample}",  \
+  "site_dir":    "{REPORT_DIR}",        \
+  "krona_file":  "{input.krona}",       \
+  "kraken_file": "{input.kraken}"       \
+}}' > {log} 2>&1"""
 
 
 rule render_variant_report:
     input:
+      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR,"report_scripts", "variantreport_p_sample.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       vep=os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_parsed.txt"),
       snv=os.path.join(VARIANTS_DIR, "{sample}_snv.csv")
     output: os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_variant_report.log")
-    shell: "{RSCRIPT_EXEC} -e \"\
-rmarkdown::render(\'{input.report}\', \
-  output_file='{output}', \
-  intermediates_dir='{TMP_DIR}/{wildcards.sample}.variantreport', \
-  params=list(sample_name='{wildcards.sample}', \
-              sigmut_db='{SIGMUT_DB}', \
-              variants_dir='{VARIANTS_DIR}', \
-              vep_file='{input.vep}', \
-              snv_file='{input.snv}', \
-              sample_sheet='{SAMPLE_SHEET_CSV}'))\" > {log} 2>&1"
+    shell: """{RSCRIPT_EXEC} {input.script} \
+{input.report} {output} {input.header} \
+'{{\
+  "sample_name":  "{wildcards.sample}",  \
+  "sigmut_db":    "{SIGMUT_DB}",         \
+  "variants_dir": "{VARIANTS_DIR}",      \
+  "vep_file":     "{input.vep}",         \
+  "snv_file":     "{input.snv}",         \
+  "sample_sheet": "{SAMPLE_SHEET_CSV}"   \
+}}' > {log} 2>&1"""
 
 
 rule render_qc_report:
     input:
+      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "qc_report_per_sample.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       coverage=os.path.join(COVERAGE_DIR, "{sample}_merged_covs.csv")
     output:
       os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html")
     log: os.path.join(LOG_DIR, "reports", "{sample}_qc_report.log")
-    shell: "{RSCRIPT_EXEC} -e \"\
-rmarkdown::render(\'{input.report}\', \
-  output_file='{output}', \
-  intermediates_dir='{TMP_DIR}/{wildcards.sample}.qc_report', \
-  params=list(sample_name='{wildcards.sample}', \
-              coverage_file='{input.coverage}'))\" > {log} 2>&1"
+    shell: """{RSCRIPT_EXEC} {input.script} \
+{input.report} {output} {input.header} \
+'{{\
+  "sample_name": "{wildcards.sample}",  \
+  "coverage_file": "{input.coverage}"   \
+}}' > {log} 2>&1"""
 
 # renders the overview.rmd which are the links 
 rule render_overview:
     input:
+      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "overview.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
@@ -373,13 +377,13 @@ rule render_overview:
       variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     output: os.path.join(REPORT_DIR, "overview.html")
     log: os.path.join(LOG_DIR, "reports", "overview.log")
-    shell: "{RSCRIPT_EXEC} -e \"\
-rmarkdown::render(\'{input.report}\', \
-  output_file='{output}', \
-  params=list(sample_sheet='{SAMPLE_SHEET_CSV}'))\" > {log} 2>&1"
+    shell: """{RSCRIPT_EXEC} {input.script} \
+{input.report} {output} {input.header} \
+'{{"sample_sheet": "{SAMPLE_SHEET_CSV}"}}' > {log} 2>&1"""
 
 rule render_timecourse_report:
     input:
+      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "index.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       # TODO: see comment below
@@ -393,8 +397,9 @@ rule render_timecourse_report:
       mutations=os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv')
     output: os.path.join(REPORT_DIR, "index.html")
     log: os.path.join(LOG_DIR, "reports", "index.log")
-    shell: "{RSCRIPT_EXEC} -e \"\
-rmarkdown::render(\'{input.report}\', \
-  output_file='{output}', \
-  params=list(variants_csv='{params.variants}', \
-              mutations_csv='{params.mutations}'))\" > {log} 2>&1"
+    shell: """{RSCRIPT_EXEC} {input.script} \
+{input.report} {output} {input.header}  \
+'{{                                     \
+  "variants_csv": "{params.variants}",  \
+  "mutations_csv": "{params.mutations}" \
+}}' > {log} 2>&1"""
