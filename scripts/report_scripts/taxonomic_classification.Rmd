@@ -58,7 +58,7 @@ The table below lists all the species found.
 
 ```{r plot table, echo=FALSE}
 table<- read.table(params$kraken_file, sep = "\t")
-colnames(table) <- c("percent", "num_fragments", "num_fragments_taxon", "rank", "NCBI_ID", "taxon_class")
+colnames(table) <- c("Proportion in %", "Number of covered fragments", "Number of assigned fragments", "Rank", "NCBI tax. ID", "Taxon. class")
 datatable(table)
 ```
 
