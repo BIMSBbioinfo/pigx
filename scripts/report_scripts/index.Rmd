@@ -28,9 +28,22 @@ by deconvolution (for details please see the [variant report](https://bimsbstati
 The frequencies of the mutations are the output of [LoFreq](https://csb5.github.io/lofreq/).
 
 
-# VARIANTS
+# Virus Strains
+
+These plots provide an overview of the relative frequencies of
+identified variants of concern (VOC) of SARS-CoV-2 at specific
+wastewater sampling locations over time.
 
 ## Frequency of virus strains over time for each location
+
+These plots show the relative frequency of detected variants of
+concern in samples at specific wastewater sampling locations, and how
+the frequencies change over time.
+
+Since not all strains are listed as variants of concern, the relative
+frequencies at a given location and time will not necessarily add up
+to one.
+
 ```{r variants, echo=F, message=F, warning=F}
 
 melted <- reshape2::melt(df_var,
@@ -59,12 +72,16 @@ tagList(lapply(locations,
 
 ## Virus strains per date and location
 
-On this map you can see the relative frequencies of identified variants of concern (VOC) of SARS-CoV-2 at specific 
-wastewater sampling locations over time. This plot 
-visualizes the development of local outbreaks and the proportions of identified VOCs in that area.  
+This plot visualizes the development of local outbreaks and the
+proportions of identified VOCs in that area.  The gray marker at every
+sampling location is overlayed by a colored disks for every variant.
+The diameter of these disks corresponds to the relative frequency of
+the given variant at the specific site.
 
-Use the slider to select a specific date or hit the Play button to display all snapshots successively. By 
-double-clicking on the variants displayed on the legend the chosen variants can be disabled.
+Use the slider to select a specific date or hit the *Play* button to
+display all snapshots successively.  Click on a variant in the legend
+to toggle its visibility in the map; double-click to view only the
+selected variant.
 
 ```{r maps for variants, echo=F, message=FALSE, warning=FALSE}
 
@@ -105,9 +122,22 @@ plot_ly (data = melted,
 ```
 
 
-# MUTATIONS
+# Signature Mutations
 
-## mutations  over time for each location 
+Signature mutations are characterizing variants of concern (VOC) of
+SARS-CoV-2.  The following plots provide an overview of detected
+mutations in different locations, and how their relative frequency
+changes over time.
+
+Note that these plots only display signature mutations which where
+reported for VOCs.
+
+## Mutations by location
+
+These plots show the relative frequency of detected signature
+mutations in samples at specific wastewater sampling locations, and
+how the frequencies change over time.
+
 ```{r mutations, echo=F, message=F, warning=F}
 melted <- reshape2::melt(df_mut,
                          id.vars = c("dates", "samplename", "location_name",
@@ -134,13 +164,16 @@ tagList(lapply(locations,
                }))
 ```
 
-## mutations on the map for each data/location
+## Signature mutations by location
 
-This map shows the frequencies of signature mutations which are characterizing variants of concern (VOC) of SARS-CoV-2 for
-samples at specific wastewater sampling locations over time. This plot visualizes the development of local outbreaks on the level of 
-single mutations. So far the map can only display signature mutations which where reported for VOCs.
+This plot visualizes the development of local outbreaks on the level
+of single mutations.  The gray marker at every sampling location is
+overlayed by a colored disks for each mutation.  The diameter of these
+disks corresponds to the relative frequency of the given mutation at
+the specific site.
 
-Use the slider to select a specific date or hit the Play button to display all snapshots successively.
+Use the slider to select a specific date or hit the *Play* button to
+display all snapshots successively.
 
 ```{r mutations for locations and date, echo=F, message=F, warning=F}
 melted <- melt(df_mut,
