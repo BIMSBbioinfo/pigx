@@ -299,12 +299,12 @@ rule get_qc_table:
 
 rule generate_navbar:
     input:
-      script = os.path.join(SCRIPTS_DIR, "generateSiteFiles.R")
+      script = os.path.join(SCRIPTS_DIR, "generateNavigation.R")
     output:
       os.path.join(REPORT_DIR, "_navbar.html")
     params:
       report_scripts_dir = os.path.join(SCRIPTS_DIR, "report_scripts")
-    log: os.path.join(LOG_DIR, "generate_site_files.log")
+    log: os.path.join(LOG_DIR, "generate_navigation.log")
     shell: "{RSCRIPT_EXEC} {input.script} \
 {params.report_scripts_dir} {SAMPLE_SHEET_CSV} {output} > {log} 2>&1"
 
