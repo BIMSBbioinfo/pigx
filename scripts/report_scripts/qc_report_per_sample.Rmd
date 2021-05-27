@@ -35,8 +35,9 @@ The table below shows how many amplicons are covered. Since paired read aligneme
 * **drop out** - not covered.  
 This is important to know to see if regions and genes which could carry mutations of particular interest are covered or not. 
 The information about the amplicon primer was taken from the [ARTIC bioinformatics platform](https://github.com/joshquick/artic-ncov2019/blob/master/primer_schemes/nCoV-2019/V3/nCoV-2019.bed).
-The reference name "MN908947.3" was changed to "NC_045512.2". Both genome assemblies are describing the same reference genome for 
-[SARS-CoV-2](https://www.ncbi.nlm.nih.gov/nuccore/1798174254). 
+The name of the reference sequence version ["MN908947.3"](https://www.ncbi.nlm.nih.gov/nuccore/MN908947) was changed 
+to ["NC_045512.2"](https://www.ncbi.nlm.nih.gov/nuccore/1798174254). Those versions of the SARS-CoV-2 reference genome 
+are identical.
  
 ```{r, message=F, warning=F, echo = FALSE}
 
