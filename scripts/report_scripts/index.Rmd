@@ -171,7 +171,8 @@ plot_ly (data = melted,
               hoverinfo = 'text+name',
               hovertext = ~paste0("Frequency: ", value),
               marker = list (sizemode = 'diameter')) %>%
-    layout (mapbox = list (zoom = 5.5,
+    layout (width = 1000,
+            mapbox = list (zoom = 5.5,
                            center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
                                          lon = ~median(coordinates_long, na.rm=TRUE)),
                            style = 'open-street-map'))
@@ -264,6 +265,7 @@ plot_ly (data = melted,
               marker = list (sizemode = 'diameter')) %>%
 
     layout (title = ~dates,
+            width = 1000,
             mapbox = list (zoom = 5.5,
                            center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
                                          lon = ~median(coordinates_long, na.rm=TRUE)),
