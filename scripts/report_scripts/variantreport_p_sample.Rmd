@@ -413,6 +413,9 @@ sig <- msig_stable_unique[,-1]
 variant_abundance <- deconv(as.numeric(bulk_all),sig)
 
 ```
+The following bar plot shows the percentage of each VOCs in the sample as predicted by the deconvolution model. If it is
+not possible to identify a unique VOC from the reported mutation, the column description shows all VOCs which are realted
+to the signature mutation. 
 
 ```{r plot, message=F, warning=F, echo = FALSE}
 
