@@ -9,6 +9,7 @@ params:
 
 ```{r libraries and input,echo=F}
 library(plotly)
+library(htmltools)
 library(reshape2)
 
 df_var <- read.table(params$variants_csv, sep = "\t", header=T)
@@ -67,31 +68,32 @@ add_trace(
 bubble
 ```
 
-## variants over time for each location 
-```{r variants, echo=F}
-#from rafael
-forplot<- reshape2::melt(df_var,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
-forplot$dates <- as.Date(forplot$dates)
-locations <- unique(forplot$location_name)
-plots_line_locations <- lapply(locations, function(location) {
-  tmp <- forplot  %>% filter(location_name ==location) 
-  fig <- plot_ly(x = tmp$dates,name=tmp$variable,y = tmp$value, type = 'scatter',mode = 'lines') %>%    
-  layout(title = location)
-  fig <- fig %>% add_markers(marker = list(line = list(color = "black", width = 1)))
-})
+## Frequency of virus strains over time for each location
+```{r variants, echo=F, message=F, warning=F}
+
+melted <- reshape2::melt(df_var,
+                         id.vars = c("dates", "samplename",
+                                     "time", "location_name",
+                                     "coordinates_lat", "coordinates_long"))
+melted$dates <- as.Date(melted$dates)
+locations <- unique(melted$location_name)
+
+tagList(lapply(locations,
+               function (location) {
+                   subset(melted, location_name == location) %>%
+                       group_by(dates) %>%
+                       arrange(variable) %>%
+                       mutate (value = round (value, 4)) %>%
+                       plot_ly (type = 'scatter',
+                                mode = 'line',
+                                stackgroup = 'one',
+                                showlegend = TRUE,
+                                x = ~dates,
+                                y = ~value,
+                                color = ~variable) %>%
+                       layout (title = location)
+               }))
 ```
-
-
-```{r plot variants over time, echo=F}
-#plots_line_locations
-plots_line_locations[[1]]
-plots_line_locations[[2]]
-plots_line_locations[[3]]
-#plots_line_locations[[4]]
-#plots_line_locations[[5]]
-#plots_line_locations[[6]]
-```
-
 
 
 ## Virus strains per date and location
