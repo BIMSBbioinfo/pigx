@@ -28,10 +28,12 @@ coverage.df <- gsub('\\]','',coverage.df)
 # Coverage reports
 ## Number of amplicons covered
 
-The table below shows how many amplicons are covered. Since paired read alignement is used it is distiguished between:  
-* **fully covered** - covered by both strands  
-* **partially covered** - covered only by one strand  
-* **drop out** - not covered.  
+The table below shows how many amplicons are covered. Since paired read alignement is used it is distiguished between:
+
++ **fully covered** -- covered by both strands
++ **partially covered** -- covered only by one strand
++ **drop out** -- not covered.
+
 This is important to know to see if regions and genes which could carry mutations of particular interest are covered or not. 
 The information about the amplicon primer was taken from the [ARTIC bioinformatics platform](https://github.com/joshquick/artic-ncov2019/blob/master/primer_schemes/nCoV-2019/V3/nCoV-2019.bed).
 The name of the reference sequence version ["MN908947.3"](https://www.ncbi.nlm.nih.gov/nuccore/MN908947) was changed 
