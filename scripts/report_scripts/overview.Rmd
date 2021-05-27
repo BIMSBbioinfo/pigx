@@ -30,7 +30,7 @@ report_link <- c(".variantreport_p_sample.html",".qc_report_per_sample.html",".t
 
 
 ```{r table with links, echo=FALSE}
-df <- as.data.frame(dplyr::select(sample_sheet,location_name, date, time, name))
+df <- as.data.frame(dplyr::select(sample_sheet,location_name, date, name))
 
 #todo: make links correct
 #loop over the three reports and each sample and create the link
@@ -48,7 +48,7 @@ for (i in (1:length(report_name))){
 
 
 #reshape into long format
-df <- reshape2::melt(df, id.vars= c("location_name","date","time","name"), value.name = "link")
+df <- reshape2::melt(df, id.vars= c("location_name","date","name"), value.name = "link")
 df <- df[,-5]
 ```
 

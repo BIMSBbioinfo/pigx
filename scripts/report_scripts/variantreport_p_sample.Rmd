@@ -33,7 +33,6 @@ location_sigmuts <- params$sigmut_db
 
 csv_output_dir <- params$variants_dir
 date <- as.character(sample_sheet[name==sample_name]$date)
-time <- as.character(sample_sheet[name==sample_name]$time)
 location_name <- as.character(sample_sheet[name==sample_name]$location_name)
 coordinates_lat <- as.character(sample_sheet[name==sample_name]$coordinates_lat)
 coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_long)
@@ -455,7 +454,6 @@ if (file.exists (output_variants)) {
 } else {
     output_variant_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
                                        dates = character(),
-                                       time = character(),
                                        location_name = character(),
                                        coordinates_lat = character(),
                                        coordinates_long = character())
@@ -472,7 +470,6 @@ if (file.exists (output_variants)) {
 # adding new row
 meta_data <- c (samplename = sample_name,
                 dates = date,
-                time = time,
                 location_name = location_name,
                 coordinates_lat = coordinates_lat,
                 coordinates_long = coordinates_long
@@ -508,7 +505,6 @@ if (file.exists (output_mutations)) {
 } else {
     output_mutation_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
                                        dates = character(),
-                                       time = character(),
                                        location_name = character(),
                                        coordinates_lat = character(),
                                        coordinates_long = character())
@@ -525,7 +521,6 @@ if (file.exists (output_mutations)) {
 # adding new row
 meta_data <- c (samplename = sample_name,
                 dates = date,
-                time = time,
                 location_name = location_name,
                 coordinates_lat = coordinates_lat,
                 coordinates_long = coordinates_long

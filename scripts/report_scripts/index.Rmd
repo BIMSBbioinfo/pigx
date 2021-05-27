@@ -22,8 +22,7 @@ df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
 ```{r variants, echo=F, message=F, warning=F}
 
 melted <- reshape2::melt(df_var,
-                         id.vars = c("dates", "samplename",
-                                     "time", "location_name",
+                         id.vars = c("dates", "samplename", "location_name",
                                      "coordinates_lat", "coordinates_long"))
 melted$dates <- as.Date(melted$dates)
 locations <- unique(melted$location_name)
@@ -56,8 +55,7 @@ to display all snapshots successively.
 ```{r maps for variants, echo=F, message=FALSE, warning=FALSE}
 
 melted <- melt(df_var,
-               id.vars = c("dates", "samplename",
-                           "time", "location_name",
+               id.vars = c("dates", "samplename", "location_name",
                            "coordinates_lat", "coordinates_long"))
 plot_ly (data = melted,
          type = 'scattermapbox',
@@ -93,7 +91,7 @@ plot_ly (data = melted,
 
 ## mutations  over time for each location 
 ```{r mutations, echo=F, message=F, warning=F}
-forplot<- reshape2::melt(df_mut,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
+forplot<- reshape2::melt(df_mut,id.vars=c("dates","samplename","location_name","coordinates_lat","coordinates_long"))
 forplot$dates <- as.Date(forplot$dates)
 locations <- unique(forplot$location_name)
 tagList(lapply(locations, function(location) {
@@ -112,8 +110,7 @@ the Play button to display all snapshots successively.
 
 ```{r mutations for locations and date, echo=F, message=F, warning=F}
 melted <- melt(df_mut,
-               id.vars = c("dates", "samplename",
-                           "time", "location_name",
+               id.vars = c("dates", "samplename", "location_name",
                            "coordinates_lat", "coordinates_long"))
 plot_ly (data = melted,
          type = 'scattermapbox',
