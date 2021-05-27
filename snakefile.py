@@ -394,12 +394,15 @@ rule render_qc_report:
       multiqc=os.path.join(MULTIQC_DIR, '{sample}', 'multiqc_report.html')
     output:
       os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html")
+    params:
+      multiqc_rel_path=lambda wildcards, input: input.multiqc[len(REPORT_DIR)+1:]
     log: os.path.join(LOG_DIR, "reports", "{sample}_qc_report.log")
     shell: """{RSCRIPT_EXEC} {input.script} \
 {input.report} {output} {input.header} \
 '{{\
   "sample_name": "{wildcards.sample}",  \
-  "coverage_file": "{input.coverage}"   \
+  "coverage_file": "{input.coverage}",   \
+  "multiqc_report": "{params.multiqc_rel_path}" \
 }}' > {log} 2>&1"""
 
 # renders the overview.rmd which are the links 
