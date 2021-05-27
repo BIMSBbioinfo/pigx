@@ -184,65 +184,6 @@ dedupeMuts <- function (mut, sigmut.df, dedup.df) {
 }  
 ```
 
-```{r development_parsing_deletions_properly, warning = F, include = FALSE}
-# library(stringr)
-# library(dplyr)
-# library(tidyr)
-# library(qpcR)
-# 
-# #vepfile <- '/mnt/beast/pathogenomics/vpipe/akalinlab_pathogenomics/vep_mutation_matching/210417_VEP_results/vep_sarscov2_WW_S26.txt'
-# 
-# vepfile.df <- read.table(vepfile, sep = '\t', header = T) # you should include in the vep script to parse out the # 
-#   #in the beginning of the line or include that step here. 
-# 
-# # parsing snv and protmut location
-# locations <- data.frame(gene_mut_loc = str_split_fixed(vepfile.df$Location,"[:-]+", n=3),
-#                         prot_mut_loc = vepfile.df$Protein_position, 
-#                         AAs = str_split_fixed(vepfile.df$Amino_acids, "/",2), 
-#                         Conseq = vepfile.df$Consequence)
-# locations <- dplyr::na_if(locations,'')
-# 
-# # delete all rows with no protein position value
-# locations <- locations %>% filter(!grepl("^-", prot_mut_loc))
-# # specific B117 mutations: 21990-21993, 21764-21770, maybe also 3675-3677, 69-70 - all there
-# 
-# detectable_deletions <- function (x, colnames) { 
-#   
-#   if (x['gene_mut_loc.2'] != x['gene_mut_loc.3'] & str_detect(x['prot_mut_loc'],"-")){
-#   
-#     constant_before <- as.data.frame((cbind(x['gene_mut_loc.1'], x['gene_mut_loc.2'], x['gene_mut_loc.3'])))
-#     constant_after <- as.data.frame((x['Conseq']))
-#   
-#     split_prot_pos <- str_split(x['prot_mut_loc'],"-")
-#     list_prot_pos <- list()
-#     for (i in 1:length(split_prot_pos)){
-#       list_prot_pos[[i]] <- seq(as.numeric(split_prot_pos[[i]][1]),as.numeric(split_prot_pos[[i]][2]))
-#     }
-#     
-#     extendet <- as.data.frame(qpcR:::cbind.na(as.character(unlist(list_prot_pos)), as.character(unlist(str_split(x['AAs.1'],''))), as.character(str_split(x['AAs.2'],''))))
-#     extendet[is.na(extendet)] <- '-' 
-#     
-#     full <- as.data.frame(cbind(constant_before,extendet, constant_after))
-#     colnames(full) <- colnames
-#     full$prot_mut_loc <- vapply(full$prot_mut_loc, paste, collapse = " ", character(1L))
-#     full$AAs.1 <- vapply(full$AAs.1, paste, collapse = " ", character(1L))
-#     full$AAs.2 <- vapply(full$AAs.2, paste, collapse = " ", character(1L))
-#     
-#     return(full)
-#   }
-#   
-# }
-# deletions.df <- locations
-# deletions.df <- locations %>%
-#                     filter(gene_mut_loc.2 != gene_mut_loc.3 &
-#                             Conseq == "inframe_deletion" &
-#                             str_detect(deletions.df$prot_mut_loc,"-"))
-# colnames <- colnames(deletions.df)
-# deletions <- dplyr::bind_rows(apply(deletions.df,1, detectable_deletions, colnames = colnames))
-# locations <- dplyr::bind_rows(locations,deletions)
-```
-
-
 ```{r process_signature_mutations, message=F, warning=F, include = FALSE}
 # reading in signature data
 # it's probably not really necessary to add the pase0 column but I like to have a full overview
