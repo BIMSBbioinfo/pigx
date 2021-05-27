@@ -42,6 +42,7 @@ sample_sheet <- data.table::fread(params$sample_sheet)
 location_sigmuts <- params$sigmut_db
 
 csv_output_dir <- params$variants_dir
+sample_sheet <- data.table::fread(sample_sheet) #read in sample file and then get the rest:
 date <- as.character(sample_sheet[name==sample_name]$date)
 time <- as.character(sample_sheet[name==sample_name]$time)
 location_name <- as.character(sample_sheet[name==sample_name]$location_name)
@@ -229,8 +230,15 @@ p1 <- read.table(file.path(location_sigmuts,"P1_outbreakinfo_mutation_report_dat
 p1$alt_aa <- na_if(p1$alt_aa, '')
 p1$alt_aa[is.na(p1$alt_aa)] <- "-"
 p1$AA_mut <- paste0(p1$ref_aa, p1$codon_num, p1$alt_aa)
-################
+######
+b16172 <- read.table(file.path(location_sigmuts,"B16172_outbreakinfo_mutation_report_data_2021-05-26.tsv"),
+                sep="\t",header=T)
+b16172$alt_aa <- na_if(b16172$alt_aa, '')
+b16172$alt_aa[is.na(b16172$alt_aa)] <- "-"
+b16172$AA_mut <- paste0(b16172$ref_aa, b16172$codon_num, b16172$alt_aa)
+######
 vepfile.df <- read.table(params$vep_file, sep = ",", header = T) #TODO - in na's umwandeln
+
 vepfile.df <- na_if(vepfile.df, "-")
 sig_mutations.df <- as.data.frame(qpcR:::cbind.na(b117=b117$AA_mut, b1351=b1351$AA_mut,
                                                   b1427=b1427$AA_mut, b1429=b1429$AA_mut,
@@ -266,7 +274,7 @@ nomatch.df <- variant_protein_mut %>%
 
 ```{r, message=F, warning=F, include = FALSE}
 # Data frame to use for the tables
-lofreq.info <- as_data_frame(parse_snv_csv(params$snv_file))
+lofreq.info <- as_data_frame(parse_snv_csv(params$snv_file)
 # vep.info <- write the part that returns the variant_protein_mut into a function 
 vep.info <- variant_protein_mut
 # add freqency and coverage information to protein mutations
