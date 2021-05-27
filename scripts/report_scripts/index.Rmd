@@ -15,12 +15,18 @@ library(reshape2)
 df_var <- read.table(params$variants_csv, sep = "\t", header=T)
 df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
 ```
+
 This pipeline performs mutation analysis of SARS-CoV-2 and reports and quantifies the occurrence of
-variants of concern (VOC) and signature mutations by which they are characterised. For each sample three reports are 
-generated:  
-* a QC-report reporting general statistics and amplicon coverage
-* a variant-report which including tables summarizing the mutation calling and the deconvolution results for the abundance of VOCs
-* a taxonomic classification report including a pie chart showing the analysis of the unaligned reads
+*variants of concern* (VOC) and signature mutations by which they are characterised. For each sample three reports are 
+generated:
+
++ a QC report reporting general statistics and amplicon coverage,
+
++ a variant report including tables summarizing the mutation
+  calling and the deconvolution results for the abundance of VOCs,
+
++ a taxonomic classification report including a pie chart showing the
+  analysis of the unaligned reads.
 
 The visualizations below provide an overview of the evolution of VOCs found
 in the analyzed samples across given time points and locations. The abundance values for the variants are derived 
