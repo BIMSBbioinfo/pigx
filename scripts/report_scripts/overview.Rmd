@@ -1,5 +1,5 @@
 ---
-title: "index page"
+title: "Table of Links to Reports"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 params:
   sample_sheet: ''
@@ -8,42 +8,51 @@ params:
 
 
 
-# Overview of Reports
+
 
 For each sample that was provided three report pages were generated. These can be found here by clicking on the provided link or by navigating through the tabs of this website.
 
-```{r read sample file, echo=F}
+```{r libs, echo=F, warning=F, message=F}
 library(data.table)
-sample_sheet <- fread(params$sample_sheet)
-sample_names <- sample_sheet$names
+library(DT)
 ```
 
 
-```{r links, echo=FALSE}
-#todo: automatically generate the sample links
-#todo: make a table for this overview
-for (sample in sample_names){
-  print(sample)
+```{r read sample file, echo=F}
+#test
+sample_sheet <- data.table::fread("../../tests/sample_sheet.csv")
+#sample_sheet <- fread(params$sample_sheet)
+sample_names <- sample_sheet$name
+report_name <- c("variant_report", "qc_report","taxonomic_classification")
+report_link <- c(".variantreport_p_sample.html",".qc_report_per_sample.html",".taxonomic_classification.html")
+
+```
+
+
+```{r table with links, echo=FALSE}
+df <- as.data.frame(dplyr::select(sample_sheet,location_name, date, time, name))
+
+#todo: make links correct
+#loop over the three reports and each sample and create the link
+for (i in (1:length(report_name))){
+  #print(i)
+  colname<- report_name[i]
+  col <- c()
+  for (sample in sample_names){
+    #print(sample)
+    link <- paste0("<a href=",sample,report_link[i],">",report_name[i],"</a>")
+    col <- c(col,link)
+  }
+  df[[colname]] <-col
 }
 
+
+#reshape into long format
+df <- reshape2::melt(df, id.vars= c("location_name","date","time","name"), value.name = "link")
+df <- df[,-5]
 ```
 
-* __BERLIN__
-  + sample 1
-    - variants report
-    - qc report
-    - taxonomic classification
-  + sample 2
-    - variants report
-    - qc report
-    - taxonomic classification
+```{r plot table}
+DT::datatable(df,filter = "bottom",escape=F)
 
-* __Munich__
-  + sample 3
-    - variants report
-    - qc report
-    - taxonomic classification
-  + sample 4
-    - variants report
-    - qc report
-    - taxonomic classification
+```
