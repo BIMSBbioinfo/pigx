@@ -1,5 +1,5 @@
 ---
-title: "Taxonomic Classification"
+title: "taxonomic classification"
 nav: "Taxonomy"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 output:
@@ -19,27 +19,30 @@ params:
 ---
 
 ```{r libs, echo=FALSE}
-suppressMessages(suppressWarnings(library(DT))) 
+suppressMessages(suppressWarnings(library(DT)))
 ```
-Sample: `r params$sample_name`
 
-# Classification of unaligned reads
 
-In order to check the sample and alignment quality the unaligned reads are analysed with the
+# Kraken2 report on unaligned reads from the SARS-CoV-2 enriched samples
+
+```{r print sample name,echo=F}
+print(paste( "Sample: ", params$sample_name))
+```
+
+
+The SARS-CoV-2 enriched wastewater samples are aligned to the virus
+genome. Those reads that are left unaligned are aligned with the
 [Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2)
 against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2).
-This report is an overview over the species found. It provides insight about possible biases and contamination of the 
-samples. In case of abundance of species very similar to SARS-CoV-2 only the taxonomic family will be reported
-which could indicate that an identification/alignment of SARS-CoV-2 could be biased or impossible. In case of a high 
-percentage of read matching SARS-CoV-2 a refining of trimming parameters should be considered. 
+This report is an overview over the species found.
 
 The table below lists all the species found.
 
 * Column explanation:
-  + **Percentage** of fragments covered by the clade rooted at this taxon
-  + **Number of fragments** covered by the clade rooted at this taxon
+  + Percentage of fragments covered by the clade rooted at this taxon
+  + Number of fragments covered by the clade rooted at this taxon
   + Number of fragments assigned directly to this taxon
-  + **A rank code**, indicating **U**nclassified, **R**oot, **D**omain,
+  + A rank code, indicating **U**nclassified, **R**oot, **D**omain,
     **K**ingdom, **P**hylum, **C**lass, **O**rder, **F**amily,
     **G**enus, or **S**pecies.  Taxa that are not at any of these 10
     ranks have a rank code that is formed by using the rank code of
@@ -48,17 +51,16 @@ The table below lists all the species found.
     between genus and species and the grandparent taxon is at the
     genus rank.
   + NCBI taxonomic ID number
-  + Taxonomic class
+  + Indented scientific name
 
 ```{r plot table, echo=FALSE}
 table<- read.table(params$kraken_file, sep = "\t")
-colnames(table) <- c("Proportion in %", "Number of covered fragments", "Number of assigned fragments", "Rank", "NCBI tax. ID", "Taxon. class")
+colnames(table) <- c("percent", "num_fragments", "num_fragments_taxon", "rank", "NCBI_ID", "scientific_name")
 datatable(table)
 ```
 
-# Visualization of taxonomic abundance
+# visualization of all unaligned reads are available with Krona:
 
-This interactive multi-layered pie chart shows the proportions of the classified taxons shown in the table above which 
-were found by *Kraken 2*. It was created using [KronaTools](https://github.com/marbl/Krona/wiki).  
+The data can be explored with a multi-layered pie chart, which was created with [KronaTools](https://github.com/marbl/Krona/wiki). It is an interactive chart of all the classificated species found with Kraken2.  
 
 <iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>

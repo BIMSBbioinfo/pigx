@@ -1,16 +1,7 @@
 ---
-title: "SARS-CoV-2 Mutations and Variant report"
+title: "SARS-CoV-2 variant report"
 nav: "Variant report"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
-output:
-  html_document:
-    theme: lumen
-    highlight: monochrome
-    code_folding: hide
-    depth: '3'
-    toc: yes
-    toc_float: yes
-    number_sections: yes
 params:
   sample_name: ''
   sigmut_db: ''
@@ -33,7 +24,6 @@ library(stringr)
 library(magrittr)
 library(base64url)
 ```
-Sample: `r params$sample_name` 
 
 # Input Settings
 ```{r printInputSettings, echo = FALSE}
@@ -43,20 +33,16 @@ location_sigmuts <- params$sigmut_db
 
 csv_output_dir <- params$variants_dir
 date <- as.character(sample_sheet[name==sample_name]$date)
-time <- as.character(sample_sheet[name==sample_name]$time)
 location_name <- as.character(sample_sheet[name==sample_name]$location_name)
 coordinates_lat <- as.character(sample_sheet[name==sample_name]$coordinates_lat)
 coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_long)
 
 ``` 
+### Sample: `r sample_name` 
 
-
-This report shows the variant analysis of SARS-CoV-2 from wastewater samples. Mutations are 
-identified by single-nucleotide-variant (SNV) calling performed by [LoFreq](https://csb5.github.io/lofreq/). 
-Translated to amino acid mutations by using [Ensemble VEP - COVID-19](https://covid-19.ensembl.org/info/docs/tools/vep/index.html).
-The list of found mutations (including synonymous and non-synonymous mutations) were matched against lists of 
-signature mutations characterising variants of concern (VOC) of SARS-CoV-19 provided by [outbreak.info](https://outbreak.info/situation-reports) 
-and [CoVariant.org](https://covariants.org/variants/S.501Y.V1).
+This report shows the variant analysis of SARS-CoV-2 RNA-seq samples from wastewater samples. Variants are 
+identified by SNV calling. Translated protein mutations were matched against lists of signature mutations for known
+variants of concern (VOC) as found on [outbreak.info](https://outbreak.info/situation-reports) and [CoVariant.org](https://covariants.org/variants/S.501Y.V1).
 
 ```{r function_parse_snv_csv, include = FALSE, warning = F, message = F}
 parse_snv_csv <- function (snvfile,...){ # allele frequency from v-pipe vcf
@@ -190,7 +176,6 @@ dedupeMuts <- function (mut, sigmut.df, dedup.df) {
 }  
 ```
 
-
 ```{r process_signature_mutations, message=F, warning=F, include = FALSE}
 # reading in signature data
 # it's probably not really necessary to add the pase0 column but I like to have a full overview
@@ -279,20 +264,15 @@ nomatch.df <- complete.df %>%
 ```
 ## Mutations matching variants of concern
 
-The following tables list the called SNVs. Table 1 \@ref(fig:sig_table) shows the mutations matching signature mutations for given SARS-CoV-2 
-variants. Table 2 \@ref(fig:nonsig_table) shows all other mutations without any match. The columns are described as follows:    
-1. **SNV** - nucleotide mutation in the pattern of: reference base, position nucleotide sequence, mutation base 
-2. annotated gene  
-3. translated amino acid (AA) mutation in the pattern of: reference AA, position AA sequence, mutation AA  
-    * a asterix `*` denotes a stop codon  
-    * a dash `-` denotes a deletion   
-4. variant of concern which is described by this mutation  
-5. reported allele frequency   
-6. read coverage of that particular mutation  
+The following tables list the called SNVs found by [*LoFreq*](https://csb5.github.io/lofreq/) and translated 
+to protein mutations by [*Ensemble VEP*](https://covid-19.ensembl.org/info/docs/tools/vep/index.html). Table 1 shows 
+the mutations matching signature mutations for given SARS-CoV-2 variants. 
+Table 2 shows all other mutations without any match. 
+
 ```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
 cat("\n Table 1: SNVs from sample matching signature mutations")
 ```
-```{r sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
+```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
 SignatureTable <-  data.frame("SNV" = match.df$gene_mut, 
                   "gene" = match.df$genes,
                   "protein_mutation" = match.df$AA_mut,
@@ -308,7 +288,7 @@ DT::datatable(SignatureTable,
                          dom = 'Bfrtip'),
               filter = "bottom")
 ```
-```{r nonsig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
+```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
 cat("\n Table 2: SNVs from sample not matching any signature mutations")
 ```
 ```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
@@ -326,10 +306,7 @@ DT::datatable(NoSignatureTable,
                          dom = 'Bfrtip'),
               filter = "bottom")
 ```
-# Deconvolution 
-Deconvolution is done by using robust regression. It relies on signature mutations of each virus strain/variants. It aims 
-to predict the individual contributions of the variants of concern to the observed mutation frequencies in the bulk 
-wastewater sample.
+# Deconvolution
 
 ```{r getting_unique_muts_bulk, message=F, warning=F, include = FALSE}
 
@@ -400,9 +377,6 @@ sig <- msig_stable_unique[,-1]
 variant_abundance <- deconv(as.numeric(bulk_all),sig)
 
 ```
-The following bar plot shows the percentage of each VOCs in the sample as predicted by the deconvolution model. If it is
-not possible to identify a unique VOC from the reported mutation, the column description shows all VOCs which are realted
-to the signature mutation. 
 
 ```{r plot, message=F, warning=F, echo = FALSE}
 
@@ -422,18 +396,18 @@ df <- df %>%
              x = "Variants",
              y = "Percentage") +
         scale_x_discrete(limits = variants) +
-        scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1),
-                           labels = scales::percent_format(accuracy = 1)) +
+        scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1)) +
         scale_colour_manual(values=cbbPalette) + 
         geom_text(aes(label=sprintf("%0.3f", round(value, digits = 3))), 
                       position=position_dodge(width=0.9), 
                       vjust=-0.25) + 
-        scale_fill_discrete(name = "Variants")
+        scale_fill_discrete(name = "Variants") +
+        theme_set(theme_get() + theme(text = element_text(family = 'Open Sans'))) 
 
 ```
 
-# Methods
-## LoFreq filter
+## Methods
+### LoFreq filter
 |LoFreq is used with default filter settings: |  |  
 |:--------------------------------------------|:-|
 |minimum coverage| 10|    
@@ -441,7 +415,7 @@ df <- df %>%
 |Minimum SNV Quality (Phred)|63|  
 |Minimum Indel Quality (Phred)|47|
 
-## VEP settings  
+### VEP settings  
 * Species: SARS-CoV-2  
 * Assembly: ASM985889v3  
 
@@ -451,8 +425,11 @@ df <- df %>%
 |Restrict results by severity of consequence | no |  
 |upstream/downstream distance | 5000bp|  
 
+## Deconvolution 
+Deconvolution is done by using robust regression. The resulting coefficients are normalized to get the percentage of
+each present variant.
 
-# Raw data 
+## Raw data 
 
 ```{r, include = F}
 snvs <- readLines(params$snv_file) %>% paste0(collapse="\n") %>% base64_urlencode()
@@ -478,7 +455,6 @@ if (file.exists (output_variants)) {
 } else {
     output_variant_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
                                        dates = character(),
-                                       time = character(),
                                        location_name = character(),
                                        coordinates_lat = character(),
                                        coordinates_long = character())
@@ -495,7 +471,6 @@ if (file.exists (output_variants)) {
 # adding new row
 meta_data <- c (samplename = sample_name,
                 dates = date,
-                time = time,
                 location_name = location_name,
                 coordinates_lat = coordinates_lat,
                 coordinates_long = coordinates_long
@@ -531,7 +506,6 @@ if (file.exists (output_mutations)) {
 } else {
     output_mutation_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
                                        dates = character(),
-                                       time = character(),
                                        location_name = character(),
                                        coordinates_lat = character(),
                                        coordinates_long = character())
@@ -548,7 +522,6 @@ if (file.exists (output_mutations)) {
 # adding new row
 meta_data <- c (samplename = sample_name,
                 dates = date,
-                time = time,
                 location_name = location_name,
                 coordinates_lat = coordinates_lat,
                 coordinates_long = coordinates_long
