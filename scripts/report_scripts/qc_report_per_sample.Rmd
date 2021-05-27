@@ -8,6 +8,8 @@ params:
   multiqc_report: ''
 ---
 
+This is the QC report for sample: `r params$sample_name`.
+
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(dplyr)
@@ -16,9 +18,6 @@ library(magrittr)
 library(base64url)
 ```
 
-# Input Settings
-
-### Sample: `r params$sample_name`
 ```{r reading data, include = FALSE}
 coverage.df <- read.table(params$coverage_file, sep = "\t", header = T)
 coverage.df <- na_if(coverage.df, "[]")
