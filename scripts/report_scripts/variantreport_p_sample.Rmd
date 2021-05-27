@@ -290,10 +290,17 @@ nomatch.df <- complete.df %>%
 
 # Mutations matching variants of concern
 
-The following tables list the called SNVs found by [*LoFreq*](https://csb5.github.io/lofreq/) and translated 
-to protein mutations by [*Ensemble VEP*](https://covid-19.ensembl.org/info/docs/tools/vep/index.html). Table 1 shows 
-the mutations matching signature mutations for given SARS-CoV-2 variants. 
-Table 2 shows all other mutations without any match. 
+The following tables list the called SNVs. Table 1 \@ref(fig:sig_table) shows the mutations matching signature mutations for given SARS-CoV-2 
+variants. Table 2 \@ref(fig:nonsig_table) shows all other mutations without any match. The columns are described as follows:
+
+1. **SNV** -- nucleotide mutation in the pattern of: reference base, position nucleotide sequence, mutation base 
+2. annotated gene
+3. translated amino acid (AA) mutation in the pattern of: reference AA, position AA sequence, mutation AA
+    * a asterix `*` denotes a stop codon
+    * a dash `-` denotes a deletion
+4. variant of concern which is described by this mutation
+5. reported allele frequency
+6. read coverage of that particular mutation
 
 ```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
 cat("\n Table 1: SNVs from sample matching signature mutations")
