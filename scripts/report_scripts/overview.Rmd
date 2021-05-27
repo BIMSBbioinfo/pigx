@@ -19,9 +19,8 @@ library(DT)
 
 
 ```{r read sample file, echo=F}
-#test
-sample_sheet <- data.table::fread("../../tests/sample_sheet.csv")
-#sample_sheet <- fread(params$sample_sheet)
+
+sample_sheet <- fread(params$sample_sheet)
 sample_names <- sample_sheet$name
 report_name <- c("variant_report", "qc_report","taxonomic_classification")
 report_link <- c(".variantreport_p_sample.html",".qc_report_per_sample.html",".taxonomic_classification.html")
@@ -30,7 +29,7 @@ report_link <- c(".variantreport_p_sample.html",".qc_report_per_sample.html",".t
 
 
 ```{r table with links, echo=FALSE}
-df <- as.data.frame(dplyr::select(sample_sheet,location_name, date, name))
+df <- as.data.frame(dplyr::select(sample_sheet,location_name, date, time, name))
 
 #todo: make links correct
 #loop over the three reports and each sample and create the link
@@ -48,7 +47,7 @@ for (i in (1:length(report_name))){
 
 
 #reshape into long format
-df <- reshape2::melt(df, id.vars= c("location_name","date","name"), value.name = "link")
+df <- reshape2::melt(df, id.vars= c("location_name","date","time","name"), value.name = "link")
 df <- df[,-5]
 ```
 
