@@ -7,7 +7,7 @@ params:
   mutations_csv: ''
 ---
 
-```{r libraries and input,echo=F}
+```{r libraries and input, echo=F, message=F, warning=F}
 library(plotly)
 library(htmltools)
 library(reshape2)
@@ -142,7 +142,7 @@ plot_ly (data = melted,
 # MUTATIONS
 
 ## mutations  over time for each location 
-```{r mutations, echo=F}
+```{r mutations, echo=F, message=F, warning=F}
 forplot<- reshape2::melt(df_mut,id.vars=c("dates","samplename","time","location_name","coordinates_lat","coordinates_long"))
 forplot$dates <- as.Date(forplot$dates)
 locations <- unique(forplot$location_name)
@@ -160,7 +160,7 @@ On this map you see the detected genetic mutations at specific
 locations over time.  Use the slider to select a specific date or hit
 the Play button to display all snapshots successively.
 
-```{r mutations for locations and date, echo=F}
+```{r mutations for locations and date, echo=F, message=F, warning=F}
 melted <- melt(df_mut,
                id.vars = c("dates", "samplename",
                            "time", "location_name",
