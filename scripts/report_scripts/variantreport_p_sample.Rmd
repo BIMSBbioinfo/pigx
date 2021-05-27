@@ -401,7 +401,8 @@ df <- df %>%
         geom_text(aes(label=sprintf("%0.3f", round(value, digits = 3))), 
                       position=position_dodge(width=0.9), 
                       vjust=-0.25) + 
-        scale_fill_discrete(name = "Variants")
+        scale_fill_discrete(name = "Variants") +
+        theme_set(theme_get() + theme(text = element_text(family = 'Open Sans'))) 
 
 ```
 
