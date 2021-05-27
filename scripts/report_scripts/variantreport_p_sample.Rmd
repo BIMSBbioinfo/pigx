@@ -24,9 +24,7 @@ library(stringr)
 library(magrittr)
 library(base64url)
 ```
-### Sample: `r sample_name` 
 
-# Input Settings
 ```{r printInputSettings, echo = FALSE}
 sample_name <- params$sample_name
 sample_sheet <- data.table::fread(params$sample_sheet)
@@ -40,7 +38,7 @@ coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_lon
 
 ``` 
 
-
+Sample: `r sample_name`.
 
 This report shows the variant analysis of SARS-CoV-2 from wastewater samples. Mutations are 
 identified by single-nucleotide-variant (SNV) calling performed by [LoFreq](https://csb5.github.io/lofreq/). 
