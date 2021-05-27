@@ -101,7 +101,7 @@ relative frequencies have been detected at specific locations over
 time.  Use the slider to select a specific date or hit the Play button
 to display all snapshots successively.
 
-```{r maps for variants, echo=F}
+```{r maps for variants, echo=F, message=FALSE, warning=FALSE}
 
 melted <- melt(df_var,
                id.vars = c("dates", "samplename",
