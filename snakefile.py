@@ -89,8 +89,7 @@ targets = {
             expand(os.path.join(REPORT_DIR, '{sample}.variantreport_p_sample.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.taxonomic_classification.html'), sample=SAMPLES) +
             expand(os.path.join(REPORT_DIR, '{sample}.Krona_report.html'), sample=SAMPLES) +
-            [os.path.join(REPORT_DIR, 'index.html'),
-             os.path.join(REPORT_DIR, 'overview.html')]
+            [os.path.join(REPORT_DIR, 'index.html')]
         )
     },
     'lofreq': {
@@ -405,29 +404,20 @@ rule render_qc_report:
   "multiqc_report": "{params.multiqc_rel_path}" \
 }}' > {log} 2>&1"""
 
-# renders the overview.rmd which are the links 
-rule render_overview:
-    input:
-      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
-      report=os.path.join(SCRIPTS_DIR, "report_scripts", "overview.Rmd"),
-      header=os.path.join(REPORT_DIR, "_navbar.html"),
-      taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
-      krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
-      qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
-      variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
-    output: os.path.join(REPORT_DIR, "overview.html")
-    log: os.path.join(LOG_DIR, "reports", "overview.log")
-    shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header} \
-'{{"sample_sheet": "{SAMPLE_SHEET_CSV}"}}' > {log} 2>&1"""
 
-rule render_timecourse_report:
+rule render_index:
     input:
       script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "index.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       # TODO: see comment below
       side_effects=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
+      # This can only be done after all other reports have been built,
+      # because these reports are referenced in the overview section.
+      taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
+      krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
+      qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
+      variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
     # TODO: these CSV files should be declared as inputs!  Due to
     # https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/issues/19 we
     # cannot do this yet, so we just add the variant reports for all
@@ -438,8 +428,9 @@ rule render_timecourse_report:
     output: os.path.join(REPORT_DIR, "index.html")
     log: os.path.join(LOG_DIR, "reports", "index.log")
     shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header}  \
-'{{                                     \
-  "variants_csv": "{params.variants}",  \
-  "mutations_csv": "{params.mutations}" \
+{input.report} {output} {input.header}   \
+'{{                                      \
+  "variants_csv": "{params.variants}",   \
+  "mutations_csv": "{params.mutations}", \
+  "sample_sheet": "{SAMPLE_SHEET_CSV}"   \
 }}' > {log} 2>&1"""

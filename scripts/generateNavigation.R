@@ -1,5 +1,4 @@
 library(data.table)
-library(yaml)
 library(rmarkdown)
 
 args <- commandArgs (trailingOnly=TRUE)
@@ -11,7 +10,7 @@ sampleSheet <- fread (sampleSheetFile)
 samples <- unique (sampleSheet$name)
 
 isSampleReport <- Negate (function (file) {
-    basename (file) %in% c("overview.Rmd", "index.Rmd")
+    basename (file) %in% c("index.Rmd")
 })
 sampleReports <- Filter (isSampleReport,
                          dir (reportsScriptDir,
@@ -20,10 +19,7 @@ sampleReports <- Filter (isSampleReport,
 
 
 navbar <- list("title" = "Reports",
-               "left" = list(list("text" = "Overview",
-                                  "href" = "overview.html"),
-                             list("text" = "Timecourse",
-                                  "href" = "index.html")))
+               "left" = list())
 
 # Read the YAML front matter of all reports.  Use the "nav" or "title"
 # fields for the link text, or fall back to the basename of the report

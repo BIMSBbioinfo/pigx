@@ -1,10 +1,11 @@
 ---
-title: "Timecourse"
-nav: "Timecourse"
+title: "SARS-CoV-2 Wastewater Sampling Reports"
+nav: "Overview"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
 params:
   variants_csv: ''
   mutations_csv: ''
+  sample_sheet: ''
 ---
 
 ```{r libraries and input, echo=F, message=F, warning=F}
@@ -17,8 +18,11 @@ df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
 ```
 
 This pipeline performs mutation analysis of SARS-CoV-2 and reports and quantifies the occurrence of
-*variants of concern* (VOC) and signature mutations by which they are characterised. For each sample three reports are 
-generated:
+*variants of concern* (VOC) and signature mutations by which they are characterised.
+
+# Overview
+
+For each sample three reports are generated:
 
 + a QC report reporting general statistics and amplicon coverage,
 
@@ -27,6 +31,36 @@ generated:
 
 + a taxonomic classification report including a pie chart showing the
   analysis of the unaligned reads.
+
+The reports for each sample can be accessed here:
+
+```{r generate overview, warning=F, message=F}
+library(data.table)
+library(dplyr)
+library(DT)
+library(reshape2)
+
+sample_sheet <- fread(params$sample_sheet)
+sample_names <- sample_sheet$name
+reports <- list(list("suffix" = ".variantreport_p_sample.html",
+                     "name"   = "variant report"),
+                list("suffix" = ".qc_report_per_sample.html",
+                     "name"   = "QC report"),
+                list("suffix" = ".taxonomic_classification.html",
+                     "name"   = "taxonomic classification"))
+
+df <- as.data.frame(select(sample_sheet, name, location_name, date))
+
+links <- lapply(sample_names, function (sample) {
+    as.vector(lapply(reports, function (report) {
+        paste0("<a href=", sample, report$suffix, ">", report$name, "</a>")
+    }))
+})
+df$reports <- links
+
+datatable(df, escape=FALSE)
+```
+
 
 The visualizations below provide an overview of the evolution of VOCs found
 in the analyzed samples across given time points and locations. The abundance values for the variants are derived 
