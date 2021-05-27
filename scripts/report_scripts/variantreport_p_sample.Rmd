@@ -272,7 +272,8 @@ match.df <- complete.df %>%
 nomatch.df <- complete.df %>%
                         filter(is.na(name))
 ```
-## Mutations matching variants of concern
+
+# Mutations matching variants of concern
 
 The following tables list the called SNVs found by [*LoFreq*](https://csb5.github.io/lofreq/) and translated 
 to protein mutations by [*Ensemble VEP*](https://covid-19.ensembl.org/info/docs/tools/vep/index.html). Table 1 shows 
