@@ -135,32 +135,3 @@ plot_ly (data = melted,
                                          lon = ~median(coordinates_long, na.rm=TRUE)),
                            style = 'open-street-map'))
 ```
-
-
-```{r bubble mutations plot,echo=F,eval=F}
-#does not work in a loop
-forplot<- reshape2::melt(df_mut,id.vars=colnames(df_mut))
-forplot$dates <- as.Date(forplot$dates)
-
-b<-plot_ly (
-  data= forplot,
-  type = 'scattergeo',
-  mode='markers')
-
-mutations <- colnames(df_mut)[7:length(colnames(df_mut))]
-for (mut in mutations){
-  print(mut)
-  b <- b %>% add_trace(
-    lon =forplot$coordinates_long ,
-    lat =forplot$coordinates_lat,
-    marker = list(size = forplot[[as.name(mut)]]*100, mode = 'markers',color=rep("red",length(rownames(df_mut)))),
-    name = mut,
-    visible = F)
-}
-
-b <- b %>% layout(title = "Varints")
-
-
-b
-```
-
