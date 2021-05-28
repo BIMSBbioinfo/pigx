@@ -73,6 +73,7 @@
   (list "autoconf"
         "automake"
         "coreutils"
+        "gawk"
         "grep"
         "sed"))
 
