@@ -30,6 +30,13 @@ make
 make check
 ```
 
+To run the whole pipeline on the included test data sets execute this:
+
+```sh
+rm -r tests/output
+make integration
+```
+
 You can run the pipeline from the source directory without installing
 it by setting the `PIGX_UNINSTALLED` shell variable to any value.  This command runs the pipeline on the included test data:
 
