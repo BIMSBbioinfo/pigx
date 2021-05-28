@@ -43,7 +43,8 @@
         (format #false "Could not find package `~a'.~%" name)))))
 
 (define %packages
-  (list "bwa"
+  (list "bash-minimal"
+        "bwa"
         "ensembl-vep"
         "fastqc"
         "multiqc"
