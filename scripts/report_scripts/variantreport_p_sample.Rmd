@@ -355,9 +355,9 @@ msig <- data.frame(muts,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0)
 # make sigmuts per variant tables new with parsed mutations
 msig[msig$muts %in% b117$AA_mut,"b117"]=1
 msig[msig$muts %in% b1351$AA_mut,"b1351"]=1
-msig[msig$muts %in% b1351$AA_mut,"b1427"]=1
-msig[msig$muts %in% b1351$AA_mut,"b1429"]=1
-msig[msig$muts %in% b1351$AA_mut,"b1526"]=1
+msig[msig$muts %in% b1427$AA_mut,"b1427"]=1
+msig[msig$muts %in% b1429$AA_mut,"b1429"]=1
+msig[msig$muts %in% b1526$AA_mut,"b1526"]=1
 msig[msig$muts %in% p1$AA_mut,"p1"]=1
 msig[1,2] <- 0 # put the WT signature, here it's 0 and not 1 bc it will be inversed in the next step
 ```
