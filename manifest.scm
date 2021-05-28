@@ -72,7 +72,6 @@
 (define %native-packages
   (list "autoconf"
         "automake"
-        "cat"
         "coreutils"
         "grep"
         "sed"))
