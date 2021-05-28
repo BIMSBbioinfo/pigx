@@ -284,8 +284,8 @@ nomatch.df <- complete.df %>%
 
 # Mutations matching variants of concern
 
-The following tables list the called SNVs. Table 1 \@ref(fig:sig_table) shows the mutations matching signature mutations for given SARS-CoV-2 
-variants. Table 2 \@ref(fig:nonsig_table) shows all other mutations without any match. The columns are described as follows:
+The following tables list the called SNVs. Table 1 shows the mutations matching signature mutations for given SARS-CoV-2 
+variants. Table 2 shows all other mutations without any match. The columns are described as follows:
 
 1. **SNV** -- nucleotide mutation in the pattern of: reference base, position nucleotide sequence, mutation base 
 2. annotated gene
