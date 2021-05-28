@@ -194,53 +194,44 @@ dedupeMuts <- function (mut, sigmut.df, dedup.df) {
 ```
 
 ```{r process_signature_mutations, message=F, warning=F, include = FALSE}
-# reading in signature data
-# it's probably not really necessary to add the pase0 column but I like to have a full overview
-# but maybe this part could be done a bt nicer more compact with e.g. looping through the file directories?
-################
-b117 <- read.table(file.path(location_sigmuts,"B117_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
-                sep="\t",header=T)
-# modifiyng deletions, subsitute "nothing" with a - e.g: D789 -> D789-
-b117$alt_aa <- na_if(b117$alt_aa, '')
-b117$alt_aa[is.na(b117$alt_aa)] <- "-"
-#pasting column with correct prot mutation notation
-b117$AA_mut <- paste0(b117$ref_aa, b117$codon_num, b117$alt_aa)
-#####################
-b1351 <- read.table(file.path(location_sigmuts,"B1351_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
-                sep="\t",header=T)
-b1351$alt_aa <- na_if(b1351$alt_aa, '')
-b1351$alt_aa[is.na(b1351$alt_aa)] <- "-"
-b1351$AA_mut <- paste0(b1351$ref_aa, b1351$codon_num, b1351$alt_aa)
-b1427 <- read.table(file.path(location_sigmuts,"B1427_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
-                sep="\t",header=T)
-b1427$alt_aa <- na_if(b1427$alt_aa, '')
-b1427$alt_aa[is.na(b1427$alt_aa)] <- "-"
-b1427$AA_mut <- paste0(b1427$ref_aa, b1427$codon_num, b1427$alt_aa)
-b1429 <- read.table(file.path(location_sigmuts,"B1429_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
-                sep="\t",header=T)
-b1429$alt_aa <- na_if(b1429$alt_aa, '')
-b1429$alt_aa[is.na(b1429$alt_aa)] <- "-"
-b1429$AA_mut <- paste0(b1429$ref_aa, b1429$codon_num, b1429$alt_aa)
-b1526 <- read.table(file.path(location_sigmuts,"B1526_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
-                sep="\t",header=T)
-b1526$alt_aa <- na_if(b1526$alt_aa, '')
-b1526$alt_aa[is.na(b1526$alt_aa)] <- "-"
-b1526$AA_mut <- paste0(b1526$ref_aa, b1526$codon_num, b1526$alt_aa)
-p1 <- read.table(file.path(location_sigmuts,"P1_outbreakinfo_mutation_report_data_2021-03-06.tsv"),
-                sep="\t",header=T)
-p1$alt_aa <- na_if(p1$alt_aa, '')
-p1$alt_aa[is.na(p1$alt_aa)] <- "-"
-p1$AA_mut <- paste0(p1$ref_aa, p1$codon_num, p1$alt_aa)
-######
+
+# Read signature data
+# TODO: these should probably all be declared inputs.
+sigmuts <- list(list(file="B117_outbreakinfo_mutation_report_data_2021-03-06.tsv",
+                     name="b117"),
+                list(file="B1351_outbreakinfo_mutation_report_data_2021-03-06.tsv",
+                     name="b1351"),
+                list(file="B1427_outbreakinfo_mutation_report_data_2021-03-06.tsv",
+                     name="b1427"),
+                list(file="B1429_outbreakinfo_mutation_report_data_2021-03-06.tsv",
+                     name="b1429"),
+                list(file="B1526_outbreakinfo_mutation_report_data_2021-03-06.tsv",
+                     name="b1526"),
+                list(file="P1_outbreakinfo_mutation_report_data_2021-03-06.tsv",
+                     name="p1"))
+
+read_sigmuts <- function (sigmut) {
+    file <- sigmut$file
+
+    data <- read.table(file.path(location_sigmuts, file),
+                       sep = "\t", header = TRUE)
+    # modify deletions, substitute "nothing" with a dash e.g: D789 -> D789-
+    data$alt_aa <- na_if (data$alt_aa, "")
+    data$alt_aa[is.na(data$alt_aa)] <- "-"
+
+    # Paste column with correct prot mutation notation
+    data$AA_mut <- paste0(data$ref_aa, data$codon_num, data$alt_aa)
+
+    # Return a table mapping strain name to mutation
+    data.frame(name = sigmut$name,
+               value = data$AA_mut)
+}
+
+sig_mutations.df <- do.call(rbind, lapply(sigmuts, read_sigmuts))
+
 vepfile.df <- read.table(params$vep_file, sep = ",", header = T) #TODO - in na's umwandeln
 
 vepfile.df <- na_if(vepfile.df, "-")
-sig_mutations.df <- as.data.frame(qpcR:::cbind.na(b117=b117$AA_mut, b1351=b1351$AA_mut,
-                                                  b1427=b1427$AA_mut, b1429=b1429$AA_mut,
-                                                  b1526=b1526$AA_mut, p1=p1$AA_mut))
-sig_mutations.df <- sig_mutations.df %>%
-                          tidyr::pivot_longer(everything()) %>%
-                            tidyr::drop_na(.,value)
 
 # deduplicate dataframe
 # fixme: I was not sure, how I can include this in my function but should be possible, will come back to it later
@@ -352,12 +343,25 @@ bulk <- as.numeric(match.df$freq)
 msig <- data.frame(muts,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0)
 
 # make sigmuts per variant tables new with parsed mutations
-msig[msig$muts %in% b117$AA_mut,"b117"]=1
-msig[msig$muts %in% b1351$AA_mut,"b1351"]=1
-msig[msig$muts %in% b1427$AA_mut,"b1427"]=1
-msig[msig$muts %in% b1429$AA_mut,"b1429"]=1
-msig[msig$muts %in% b1526$AA_mut,"b1526"]=1
-msig[msig$muts %in% p1$AA_mut,"p1"]=1
+
+b117 <- filter(sig_mutations.df, name == "b117")$value
+msig[msig$muts %in% b117,"b117"]=1
+
+b1351 <- filter(sig_mutations.df, name == "b1351")$value
+msig[msig$muts %in% b1351,"b1351"]=1
+
+b1427 <- filter(sig_mutations.df, name == "b1427")$value
+msig[msig$muts %in% b1427,"b1427"]=1
+
+b1429 <- filter(sig_mutations.df, name == "b1429")$value
+msig[msig$muts %in% b1429,"b1429"]=1
+
+b1526 <- filter(sig_mutations.df, name == "b1526")$value
+msig[msig$muts %in% b1526,"b1526"]=1
+
+p1 <- filter(sig_mutations.df, name == "p1")$value
+msig[msig$muts %in% p1,"p1"]=1
+
 msig[1,2] <- 0 # put the WT signature, here it's 0 and not 1 bc it will be inversed in the next step
 ```
 ```{r adding_wt_to_sigmat, message=F, warning=F, include = FALSE}
