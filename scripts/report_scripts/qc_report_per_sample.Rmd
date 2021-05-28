@@ -24,7 +24,7 @@ params:
 </div>
 
 
-This is the QC report for sample: `r params$sample_name`.
+Sample: `r paste0('**',params$sample_name,'**')`
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)

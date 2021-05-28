@@ -26,6 +26,7 @@ params:
 `r knitr::include_graphics(params$logo)`
 </div>
 
+Sample: `r paste0('**',params$sample_name,'**')`  
 
 ```{r libs, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
@@ -52,8 +53,6 @@ coordinates_lat <- as.character(sample_sheet[name==sample_name]$coordinates_lat)
 coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_long)
 
 ``` 
-
-Sample: `r sample_name`.
 
 This report shows the variant analysis of SARS-CoV-2 from wastewater samples. Mutations are 
 identified by single-nucleotide-variant (SNV) calling performed by [LoFreq](https://csb5.github.io/lofreq/). 

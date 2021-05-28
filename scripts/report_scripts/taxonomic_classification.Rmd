@@ -24,6 +24,7 @@ params:
 `r knitr::include_graphics(params$logo)`
 </div>
 
+Sample: `r paste0('**',params$sample_name,'**')`
 
 ```{r libs, echo=FALSE}
 suppressMessages(suppressWarnings(library(DT)))
@@ -31,8 +32,6 @@ suppressMessages(suppressWarnings(library(DT)))
 
 
 # Report on unaligned reads
-
-Sample: `r params$sample_name`
 
 The SARS-CoV-2 enriched wastewater samples are aligned to the virus
 genome. Those reads that are left unaligned are aligned with the
