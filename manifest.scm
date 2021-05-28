@@ -72,6 +72,7 @@
 (define %native-packages
   (list "autoconf"
         "automake"
+        "grep"
         "sed"))
 
 (packages->manifest
