@@ -70,7 +70,8 @@
 
 (define %native-packages
   (list "autoconf"
-        "automake"))
+        "automake"
+        "sed"))
 
 (packages->manifest
  (let ((how (if (getenv "USE_GUIX_INFERIOR")
