@@ -75,6 +75,7 @@
         "coreutils"
         "gawk"
         "grep"
+        "make"
         "sed"))
 
 (packages->manifest
