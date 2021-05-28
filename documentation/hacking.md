@@ -5,14 +5,14 @@ reproducible environment with a known-good version of Guix use this
 (slow) command:
 
 ```sh
-USE_GUIX_INFERIOR=t guix environment -m manifest.scm
+USE_GUIX_INFERIOR=t guix environment --pure -m manifest.scm --preserve=GUIX_LOCPATH
 ```
 
 To use your current Guix channels instead of the fixed set of
 channels, just omit the `USE_GUIX_INFERIOR` shell variable:
 
 ```sh
-guix environment -m manifest.scm
+guix environment --pure -m manifest.scm --preserve=GUIX_LOCPATH
 ```
 
 To fetch code that is common to all PiGx pipelines run this:
