@@ -59,7 +59,7 @@ This report shows the variant analysis of SARS-CoV-2 from wastewater samples. Mu
 identified by single-nucleotide-variant (SNV) calling performed by [LoFreq](https://csb5.github.io/lofreq/). 
 Translated to amino acid mutations by using [Ensemble VEP - COVID-19](https://covid-19.ensembl.org/info/docs/tools/vep/index.html).
 The list of found mutations (including synonymous and non-synonymous mutations) were matched against lists of 
-signature mutations characterising variants of concern (VOC) of SARS-CoV-19 provided by [outbreak.info](https://outbreak.info/situation-reports) 
+signature mutations characterising variants of concern (VOC) of SARS-CoV-2 provided by [outbreak.info](https://outbreak.info/situation-reports) 
 and [CoVariant.org](https://covariants.org/variants/S.501Y.V1).
 
 ```{r function_parse_snv_csv, include = FALSE, warning = F, message = F}
