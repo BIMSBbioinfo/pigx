@@ -8,7 +8,7 @@ Clone repository and enter the reproducible guix environment:
 
 ```
 git clone https://github.com/BIMSBbioinfo/pigx_sarscov2_ww.git
-cd pigx_sarscov2_ww.git
+cd pigx_sarscov2_ww
 git submodule update --init
 USE_GUIX_INFERIOR=t guix environment -m manifest.scm
 ```
