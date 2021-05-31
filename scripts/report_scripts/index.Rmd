@@ -36,48 +36,6 @@ df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
 This pipeline performs mutation analysis of SARS-CoV-2 and reports and quantifies the occurrence of
 *variants of concern* (VOC) and signature mutations by which they are characterised.
 
-# Overview
-
-For each sample three reports are generated:
-
-+ a QC report reporting general statistics and amplicon coverage,
-
-+ a variant report including tables summarizing the mutation
-  calling and the deconvolution results for the abundance of VOCs,
-
-+ a taxonomic classification report including a pie chart showing the
-  analysis of the unaligned reads.
-
-The reports for each sample can be accessed here:
-
-```{r generate overview, warning=F, message=F}
-library(data.table)
-library(dplyr)
-library(DT)
-library(reshape2)
-
-sample_sheet <- fread(params$sample_sheet)
-sample_names <- sample_sheet$name
-reports <- list(list("suffix" = ".variantreport_p_sample.html",
-                     "name"   = "variant report"),
-                list("suffix" = ".qc_report_per_sample.html",
-                     "name"   = "QC report"),
-                list("suffix" = ".taxonomic_classification.html",
-                     "name"   = "taxonomic classification"))
-
-df <- as.data.frame(select(sample_sheet, name, location_name, date))
-
-links <- lapply(sample_names, function (sample) {
-    as.vector(lapply(reports, function (report) {
-        paste0("<a href=", sample, report$suffix, ">", report$name, "</a>")
-    }))
-})
-df$reports <- links
-
-datatable(df, escape=FALSE)
-```
-
-
 The visualizations below provide an overview of the evolution of VOCs found
 in the analyzed samples across given time points and locations. The abundance values for the variants are derived 
 by deconvolution (for details please see the [variant report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/WW_210304_KW1.variantreport_p_sample.html#22_Deconvolution)) 
@@ -270,4 +228,43 @@ plot_ly (data = melted,
                            center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
                                          lon = ~median(coordinates_long, na.rm=TRUE)),
                            style = 'open-street-map'))
+```
+
+# Detailed per-sample reports
+
+For every sample three reports are generated:
+
++ a QC report reporting general statistics and amplicon coverage,
+
++ a variant report including tables summarizing the mutation
+  calling and the deconvolution results for the abundance of VOCs,
+
++ a taxonomic classification report including a pie chart showing the
+  analysis of the unaligned reads.
+
+The reports for each sample can be accessed here:
+
+```{r generate overview, warning=F, message=F}
+library(data.table)
+library(DT)
+
+sample_sheet <- fread(params$sample_sheet)
+sample_names <- sample_sheet$name
+reports <- list(list("suffix" = ".variantreport_p_sample.html",
+                     "name"   = "variant report"),
+                list("suffix" = ".qc_report_per_sample.html",
+                     "name"   = "QC report"),
+                list("suffix" = ".taxonomic_classification.html",
+                     "name"   = "taxonomic classification"))
+
+df <- as.data.frame(select(sample_sheet, name, location_name, date))
+
+links <- lapply(sample_names, function (sample) {
+    as.vector(lapply(reports, function (report) {
+        paste0("<a href=", sample, report$suffix, ">", report$name, "</a>")
+    }))
+})
+df$reports <- links
+
+datatable(df, escape=FALSE)
 ```
