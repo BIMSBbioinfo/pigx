@@ -24,7 +24,7 @@ params:
 `r knitr::include_graphics(params$logo)`
 </div>
 
-Sample: `r paste0('**',params$sample_name,'**')`
+<sample>`r params$sample_name`</sample>
 
 ```{r libs, echo=FALSE}
 suppressMessages(suppressWarnings(library(DT)))

@@ -24,7 +24,7 @@ params:
 </div>
 
 
-Sample: `r paste0('**',params$sample_name,'**')`
+<sample>`r params$sample_name`</sample>
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)

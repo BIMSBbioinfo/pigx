@@ -25,6 +25,8 @@ h1.title { margin-top: 20px } \
 h2 { margin-top: 2em } \
 h4.date { color: #93a1a1 } \
 h4.date:before { content: \"Created: \" } \
+sample {font-weight: bold; color: #2C1966} \
+sample:before {content: \" Sample: \"} \
 ", file = css)
 
 settings <- html_document(includes=includes(before_body=header),
