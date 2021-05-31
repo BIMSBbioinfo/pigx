@@ -30,44 +30,48 @@ params:
 suppressMessages(suppressWarnings(library(DT)))
 ```
 
-
-# Report on unaligned reads
-
+This report provides an overview of the species found in the provided wastewater samples apart from SARS-Cov-2.
 The SARS-CoV-2 enriched wastewater samples are aligned to the virus
-genome. Those reads that are left unaligned are aligned with the
-[Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2)
-against the [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2).
-This report is an overview over the species found. It provides insight about possible biases and contamination of the 
+genome. It provides insight about possible biases and contamination of the 
 samples. In case of abundance of species very similar to SARS-CoV-2 only the taxonomic family will be reported
 which could indicate that an identification/alignment of SARS-CoV-2 could be biased or impossible. In case of a high 
 percentage of read matching SARS-CoV-2 a refining of trimming parameters should be considered. 
 
-The table below lists all the species found.
+# Taxonomic classification of unaligned reads
+
+The reads that are left unaligned to SARS-Cov-2 are aligned with the
+[Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2)
+against the database which was installed (https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md). The [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2) for example contains archae, bacteria, viral, plasmid, protozea, fungi & plant.
+
+The table below lists all the species found. Since all ranks are listed it can be helpful to use the provided filters at the bottom of the tableto look only at the level of Domains or a minimum pf assigned fragments.
 
 * Column explanation:
-  + **Percentage** of fragments covered by the clade rooted at this taxon
-  + **Number of fragments** covered by the clade rooted at this taxon
-  + Number of fragments assigned directly to this taxon
+  + **Proportion in %** of fragments covered by the clade rooted at this taxon
+  + **Number of covered fragments** covered by the clade rooted at this taxon
+  + **Number of assigned fragments**  directly to this taxon
   + **A rank code**, indicating **U**nclassified, **R**oot, **D**omain,
     **K**ingdom, **P**hylum, **C**lass, **O**rder, **F**amily,
-    **G**enus, or **S**pecies.  Taxa that are not at any of these 10
+    **G**enus, or **S**pecies. Taxa that are not at any of these 10
     ranks have a rank code that is formed by using the rank code of
     the closest ancestor rank with a number indicating the distance
     from that rank. E.g., "G2" is a rank code indicating a taxon is
     between genus and species and the grandparent taxon is at the
     genus rank.
-  + NCBI taxonomic ID number
-  + Taxonomic class
+  + **NCBI tax ID** NCBI taxonomic identifier number
+  + **Taxonomic class**
 
 ```{r plot table, echo=FALSE}
 table<- read.table(params$kraken_file, sep = "\t")
 colnames(table) <- c("Proportion in %", "Number of covered fragments", "Number of assigned fragments", "Rank", "NCBI tax. ID", "Taxon. class")
-datatable(table)
+datatable(table, filter="bottom")
 ```
 
 # Visualization of taxonomic abundance
 
 This interactive multi-layered pie chart shows the proportions of the classified taxons shown in the table above which 
-were found by *Kraken 2*. It was created using [KronaTools](https://github.com/marbl/Krona/wiki).  
+were found by the [Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2). 
+It was created using [KronaTools](https://github.com/marbl/Krona/wiki). Shown are the taxonomy nodes as nested sectors, where 
+the level of hierarchy is decreasing moving from the center towards the periphery. 
+Settings for the visualization of the figure can be found on the top left, while on the top right details are displayed for the selected node. 
 
 <iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>
