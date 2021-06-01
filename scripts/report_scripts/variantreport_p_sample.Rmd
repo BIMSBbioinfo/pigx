@@ -208,7 +208,9 @@ sigmuts <- list(list(file="B117_outbreakinfo_mutation_report_data_2021-03-06.tsv
                 list(file="B1526_outbreakinfo_mutation_report_data_2021-03-06.tsv",
                      name="b1526"),
                 list(file="P1_outbreakinfo_mutation_report_data_2021-03-06.tsv",
-                     name="p1"))
+                     name="p1"),
+                list(file="B16172_outbreakinfo_mutation_report_data_2021-05-26.tsv",
+                     name="b16172"))
 
 read_sigmuts <- function (sigmut) {
     file <- sigmut$file
@@ -340,7 +342,7 @@ bulk <- as.numeric(match.df$freq)
 
 ```{r creating_signature_matrix_simple, message=F, warning=F, include = FALSE}
 # create an empty data frame add a column for the Wildtype
-msig <- data.frame(muts,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0)
+msig <- data.frame(muts,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0, b16172=0)
 
 # make sigmuts per variant tables new with parsed mutations
 
@@ -361,6 +363,9 @@ msig[msig$muts %in% b1526,"b1526"]=1
 
 p1 <- filter(sig_mutations.df, name == "p1")$value
 msig[msig$muts %in% p1,"p1"]=1
+
+b16172 <- filter(sig_mutations.df, name == "b16172")$value
+msig[msig$muts %in% b16172, "b16172"]=1
 
 msig[1,2] <- 0 # put the WT signature, here it's 0 and not 1 bc it will be inversed in the next step
 ```
