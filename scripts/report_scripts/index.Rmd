@@ -236,6 +236,12 @@ plot_ly (data = melted,
                            style = 'open-street-map'))
 ```
 
+## Raw data signature mutation frequencies per sample
+```{r, include = F}
+mutation_freqs <- readLines(params$mutations_csv) %>% paste0(collapse="\n") %>% base64_urlencode()
+``` 
+[Download Mutation_frequencies.csv](`r sprintf('data:text/csv;base64,%s', mutation_freqs)`)
+
 # Detailed per-sample reports
 
 For every sample three reports are generated:
