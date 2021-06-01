@@ -337,10 +337,11 @@ muts <- c(match.df$AA_mut)
 # get bulk frequency values
 bulk <- as.numeric(match.df$freq)
 
+executeDeconvolution <- length(muts) > 0
 ```
 
 
-```{r creating_signature_matrix_simple, message=F, warning=F, include = FALSE}
+```{r creating_signature_matrix_simple, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 # create an empty data frame add a column for the Wildtype
 msig <- data.frame(muts,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0, b16172=0)
 
@@ -369,7 +370,7 @@ msig[msig$muts %in% b16172, "b16172"]=1
 
 msig[1,2] <- 0 # put the WT signature, here it's 0 and not 1 bc it will be inversed in the next step
 ```
-```{r adding_wt_to_sigmat, message=F, warning=F, include = FALSE}
+```{r adding_wt_to_sigmat, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 
 # making the WT rows
 
@@ -401,7 +402,7 @@ msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
 ```
 
 
-```{r collapse_identicals, message=F, warning=F, include = FALSE}
+```{r collapse_identicals, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 # When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
 # between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
 # a vector with the information about which of the columns were merged. 
@@ -409,7 +410,7 @@ msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
 msig_stable_unique <- dedupe(msig_stable)
 
 ```
-```{r deconvolution, message=F, warning=F, include = FALSE}
+```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 
 sig <- msig_stable_unique[,-1]
 variant_abundance <- deconv(as.numeric(bulk_all),sig)
@@ -419,7 +420,7 @@ The following bar plot shows the percentage of each VOCs in the sample as predic
 not possible to identify a unique VOC from the reported mutation, the column description shows all VOCs which are realted
 to the signature mutation. 
 
-```{r plot, message=F, warning=F, echo = FALSE}
+```{r plot, message=F, warning=F, echo = FALSE, eval = executeDeconvolution}
 
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
@@ -483,7 +484,7 @@ vep <- readLines(params$vep_file) %>% paste0(collapse="\n") %>% base64_urlencode
 Variant effect prediction (*Ensemble VEP output*):  
 [Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)
 
-```{r csv_output_variant_plot, include = F}
+```{r csv_output_variant_plot, include = F, eval = executeDeconvolution}
 # get all possible variants
 all_variants <- colnames (msig_all)
 output_variants <- file.path(csv_output_dir, "data_variant_plot.csv")
