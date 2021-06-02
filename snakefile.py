@@ -37,6 +37,10 @@ SIGMUT_DB        = config['locations']['sigmut-db-dir']
 VEP_DB           = config['locations']['vep-db-dir']
 OUTPUT_DIR       = config['locations']['output-dir']
 
+# TODO: get default read length from multiqc
+READ_LENGTH      = config['trimming']['read-length']
+CUT_OFF          = config['trimming']['cut-off']
+
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
@@ -143,7 +147,6 @@ onsuccess:
                 print("  - {}".format(name))
 
 
-# TODO: get read length and specify cut off
 rule prinseq:
     input:
         r1 = os.path.join(READS_DIR, "{sample}_R1.fastq"),
@@ -152,7 +155,7 @@ rule prinseq:
         r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq"),
         r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq")
     params:
-        len_cutoff = int(150 * 0.8), # read length * pct_cutoff
+        len_cutoff = int(READ_LENGTH * CUT_OFF),
         output = os.path.join(TRIMMED_READS_DIR, "{sample}"),
         tmp_r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_1.fastq"),
         tmp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq")

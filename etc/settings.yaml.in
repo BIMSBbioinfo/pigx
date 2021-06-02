@@ -8,6 +8,13 @@ locations:
   sigmut-db-dir: databases/sigmut
   vep-db-dir: databases/vep
 
+# These settings are used to filter raw reads when trimming. Reads
+# that are shorter than the product of read-length( the lengths in
+# basepairs) and the cut-off factor are removed.
+trimming:
+  read-length: 150
+  cut-off: 0.8
+
 execution:
   submit-to-cluster: no
   jobs: 6
