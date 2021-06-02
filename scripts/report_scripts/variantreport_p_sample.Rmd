@@ -326,7 +326,7 @@ DT::datatable(NoSignatureTable,
               filter = "bottom")
 ```
 # Deconvolution 
-Deconvolution is done by using robust regression. It relies on signature mutations of each virus strain/variants. It aims 
+Deconvolution is done by using robust regression. It relies on signature mutations of each variant. It aims 
 to predict the individual contributions of the variants of concern to the observed mutation frequencies in the bulk 
 wastewater sample.
 
