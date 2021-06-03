@@ -295,3 +295,12 @@ df$reports <- links
 
 datatable(df, escape=FALSE)
 ```
+:::{.infobox .pigx_info data-latex="{caution}"}
+**PiGx: Pipelines in Genomics**
+
+PiGx is a collection of highly reproducible genomics pipelines. The original set provides pipelines for the analysis of 
+RNA sequencing, chromatin immunoprecipitation sequencing, bisulfite-treated DNA sequencing, and single-cell 
+resolution RNA sequencing. All of them process raw experimental data and generate reports containing 
+publication-ready plots and figures, with interactive report elements and standard observables. For more information
+please see: [http://bioinformatics.mdc-berlin.de/pigx](http://bioinformatics.mdc-berlin.de/pigx)
+:::
