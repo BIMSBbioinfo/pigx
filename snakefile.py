@@ -335,19 +335,19 @@ rule star_map:
     index_file = rules.star_index.output.star_index_file,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.out.bam')
+    os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.out.sam')
   params:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, 'star', '{sample}_')
   log: os.path.join(LOG_DIR, 'star', 'star_map_{sample}.log')
-  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM Unsorted --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
+  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
 
 rule hisat2_map:
   input:
     index_files = rules.hisat2_index.output,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.out.bam')
+    os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.out.sam')
   params:
     index_dir = rules.hisat2_index.params.index_directory,
     args = hisat2_file_arguments
@@ -355,10 +355,14 @@ rule hisat2_map:
   shell: "{HISAT2_EXEC} -x {params.index_dir}/{GENOME_BUILD}_index -p {HISAT2_THREADS} -q -S {output} {params.args} >> {log} 2>&1"
 
 rule sort_bam:
-  input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.out.bam')
+  input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.out.sam')
   output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
   log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
-  shell: "{SAMTOOLS_EXEC} sort -o {output} {input} >> {log} 2>&1"
+  shell:
+    """
+    samtools view -bh {input} | samtools sort -o {output} > {log} 2>&1
+    rm {input}
+    """
 
 rule index_bam:
   input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
@@ -428,7 +432,7 @@ rule genomeCoverage:
     os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'),
     os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig')
   log: os.path.join(LOG_DIR, MAPPER, 'genomeCoverage_{sample}.log')
-  params: 
+  params:
     outdir = os.path.join(BIGWIG_DIR, MAPPER)
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/export_bigwig.R {input.bam} {wildcards.sample} {input.size_factors_file} {params.outdir} >> {log} 2>&1"
 
