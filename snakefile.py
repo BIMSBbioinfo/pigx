@@ -347,21 +347,19 @@ rule hisat2_map:
     index_files = rules.hisat2_index.output,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.out.sam')
+    os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.sortedByCoord.out.bam')
   params:
+    samfile = lambda wildcards: os.path.join(MAPPED_READS_DIR, 'hisat2', "_".join([wildcards.sample, 'Aligned.out.sam'])),
     index_dir = rules.hisat2_index.params.index_directory,
     args = hisat2_file_arguments
-  log: os.path.join(LOG_DIR, 'hisat2', 'hisat2_map_{sample}.log')
-  shell: "{HISAT2_EXEC} -x {params.index_dir}/{GENOME_BUILD}_index -p {HISAT2_THREADS} -q -S {output} {params.args} >> {log} 2>&1"
-
-rule sort_bam:
-  input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.out.sam')
-  output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
-  log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
+  log:
+    os.path.join(LOG_DIR, 'hisat2', 'hisat2_map_{sample}.log'),
+    os.path.join(LOG_DIR, 'hisat2', 'samtools.hisat2.{sample}.log')
   shell:
     """
-    samtools view -bh {input} | samtools sort -o {output} > {log} 2>&1
-    rm {input}
+    {HISAT2_EXEC} -x {params.index_dir}/{GENOME_BUILD}_index -p {HISAT2_THREADS} -q -S {params.samfile} {params.args} >> {log[0]} 2>&1
+    {SAMTOOLS_EXEC} view -bh {params.samfile} | {SAMTOOLS_EXEC} sort -o {output} >> {log[1]} 2>&1
+    rm {params.samfile}
     """
 
 rule index_bam:
