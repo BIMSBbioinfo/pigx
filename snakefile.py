@@ -335,12 +335,12 @@ rule star_map:
     index_file = rules.star_index.output.star_index_file,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.out.sam')
+    os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.sortedByCoord.out.bam')
   params:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, 'star', '{sample}_')
   log: os.path.join(LOG_DIR, 'star', 'star_map_{sample}.log')
-  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
+  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
 
 rule hisat2_map:
   input:
