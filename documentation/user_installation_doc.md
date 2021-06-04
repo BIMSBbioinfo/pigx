@@ -104,10 +104,9 @@ of the environment please address them by their absolute file name.
 Inside the environment you can then perform the usual build steps:
 
 ```sh
-./bootstrap.sh # to generate the "configure" script
-./configure
-make
-make check
+./bootstrap.sh
+./configure --prefix=/some/where
+make install
 ```
 
 # Getting started
