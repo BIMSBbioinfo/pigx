@@ -203,7 +203,7 @@ The sample sheet is a tabular file (`csv` format) describing the experiment. The
   - the location of these files is specified in the settings file
   - single-end data is not yet supported
   - compressed (`.gz`) reads are not yet supported
-- _date_ must be given in the format yyyy-mm-ddThh:mm:ss
+- _date_ is a date/time in ISO format (`yyyy-mm-ddThh:mm:ss`)
 - _location_name_ is the name of the location and should be unique per coordinates
 - _coordinates_lat_ & _coordinates_long_ correspond the latitude and longitude of the location name
 
