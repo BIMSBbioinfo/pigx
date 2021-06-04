@@ -96,10 +96,12 @@ tagList(lapply(locations,
                                 mode = 'line',
                                 stackgroup = 'one',
                                 showlegend = TRUE,
+                                name = ~variable,
                                 x = ~dates,
                                 y = ~value,
                                 color = ~variable) %>%
                        layout (title = location,
+                               showlegend = TRUE,
                                yaxis = list(title = "Frequency"))
                }))
 ```
