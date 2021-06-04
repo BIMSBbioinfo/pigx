@@ -20,7 +20,10 @@ dist_pkglibexec_scripts_SCRIPTS = \
   scripts/vep_rule.py
 
 dist_pkgdata_DATA =            \
-  etc/pretty.txt
+  etc/pretty.txt \
+  etc/settings.yaml \
+  etc/sample_sheet.csv.example \
+  images/Logo_PiGx.png
 
 dist_doc_DATA = 									\
   README.md
