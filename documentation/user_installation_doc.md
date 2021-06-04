@@ -49,6 +49,11 @@ channels, just omit the `USE_GUIX_INFERIOR` shell variable:
 guix environment --pure -m manifest.scm --preserve=GUIX_LOCPATH
 ```
 
+Note that `--pure` unsets all environment variables that are not
+explicitly preserved.  To access other executables that are not part
+of the environment please address them by their absolute file name.
+
+
 <details>
 <summary>Software dependencies</summary>
 
