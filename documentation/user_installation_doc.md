@@ -224,8 +224,8 @@ In the settings file, parameters are saved, in YAML format, to configure the exe
 
 ## Prepare databases
 
-Before the pipeline can work 3 databases must be downloaded and their location will need to be provided in the settings file. Depending on the size of the databases this can take some time.
-Be sure that the pigx-sarscov2-ww pipeline is downloaded and the tools are installed or used via the provided and suggested guix environment. One database (signature mutations, `sigmut_db`) is already provided via the repository. The folder structure is suggested like [this](#structure-overview) and pre-filled accordingly in the settings file. 
+Before the pipeline can work, three databases must be downloaded and their location will need to be provided in the settings file. Depending on the size of the databases this can take some time.
+Be sure that the pigx-sarscov2-ww pipeline is downloaded and the tools are installed or used via the provided and suggested guix environment. One database (signature mutations, `sigmut_db`) is already provided via the repository. The directory structure is suggested like [this](#structure-overview) and pre-filled accordingly in the settings file. 
 
 ### Kraken2 database
 
