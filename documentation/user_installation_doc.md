@@ -115,7 +115,7 @@ make check
 At this point you are able to run the pipeline from within the current directory `pigx_sarscov2_ww`. Use `--help` to see the available options.  To ensure that PiGx uses files from the source directory set the shell variable `PIGX_UNINSTALLED` to any value.
 
 ```sh
-PIGX_UNINSTALLED=t ./pigx-sars-cov2-ww --help
+pigx-sars-cov2-ww --help
 ```
 <details>
 <summary>toggle output</summary>
@@ -168,13 +168,13 @@ This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2021.
 Though, to actually use it on your experimental data still more setup is required. Please follow [the steps to prepare the required databases](#prepare-databases) first and [prepare the input](#preparing-the-input). Then afterwards, you can run the pipeline from the source directory.
 
 ```sh
-PIGX_UNINSTALLED=t ./pigx-sars-cov2-ww [options] sample_sheet.csv
+pigx-sars-cov2-ww [options] sample_sheet.csv
 ```
 
 For example, with this command the pipeline is used for the included test data: 
 
 ```sh
-PIGX_UNINSTALLED=t ./pigx-sars-cov2-ww -s tests/settings.yaml tests/sample_sheet.csv
+pigx-sars-cov2-ww -s tests/settings.yaml tests/sample_sheet.csv
 ```
 
 ## Preparing the input
@@ -189,7 +189,7 @@ both files are described below.
 In order to generate template settings and sample sheet files, type
 
 ```sh
-PIGX_UNINSTALLED=t ./pigx-sars-cov2-ww --init
+pigx-sars-cov2-ww --init
 ```
 
 in the shell, and a boilerplate `sample_sheet.csv` and `settings.yaml` will be written to your current directory. An example for both files is provided in the `tests/` directory.
