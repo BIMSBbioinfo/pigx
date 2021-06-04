@@ -73,10 +73,14 @@
   (list "autoconf"
         "automake"
         "coreutils"
+        "diffutils" ; for tests
+        "findutils" ; for make distcheck
         "gawk"
         "grep"
+        "gzip" ; for make distcheck
         "make"
-        "sed"))
+        "sed"
+        "tar")) ; for make distcheck
 
 (packages->manifest
  (let ((how (if (getenv "USE_GUIX_INFERIOR")
