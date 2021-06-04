@@ -36,7 +36,7 @@ To fetch code that is common to all PiGx pipelines run this:
 git submodule update --init
 ```
 
-Before setting everything up, though, make sure all dependencies are met. For this either install the following software in a directory listed in the `PATH` environment variable, or enter the provided reproducible Guix environment. If you are using Guix we definitely recommend the latter. This command spawns a sub-shell in which all dependencies are available:
+Before setting everything up, though, make sure all dependencies are met by either installing the following software manually, or by entering the provided reproducible Guix environment. If you are using Guix we definitely recommend the latter. This command spawns a sub-shell in which all dependencies are available:
 
 ```sh
 USE_GUIX_INFERIOR=t guix environment --pure -m manifest.scm --preserve=GUIX_LOCPATH
