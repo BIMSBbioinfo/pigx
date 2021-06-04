@@ -199,18 +199,6 @@ EXTRA_DIST =										\
 	tests/sample_data/preprocessed/mapped_reads/hisat2/UHR_Rep3.read_counts.csv     \
 	tests/sample_data/preprocessed/mapped_reads/hisat2/HBR_Rep3.read_counts.csv     \
 	tests/sample_data/preprocessed/mapped_reads/hisat2/HBR_Rep1.read_counts.csv     \
-	tests/sample_data/preprocessed/fastqc/hisat2/UHR_Rep2_Aligned.sortedByCoord.out_fastqc.zip     \
-	tests/sample_data/preprocessed/fastqc/hisat2/UHR_Rep1_Aligned.sortedByCoord.out_fastqc.zip     \
-	tests/sample_data/preprocessed/fastqc/hisat2/HBR_Rep2_Aligned.sortedByCoord.out_fastqc.zip     \
-	tests/sample_data/preprocessed/fastqc/hisat2/UHR_Rep1_Aligned.sortedByCoord.out_fastqc.html     \
-	tests/sample_data/preprocessed/fastqc/hisat2/UHR_Rep2_Aligned.sortedByCoord.out_fastqc.html     \
-	tests/sample_data/preprocessed/fastqc/hisat2/HBR_Rep2_Aligned.sortedByCoord.out_fastqc.html     \
-	tests/sample_data/preprocessed/fastqc/hisat2/HBR_Rep3_Aligned.sortedByCoord.out_fastqc.zip     \
-	tests/sample_data/preprocessed/fastqc/hisat2/HBR_Rep3_Aligned.sortedByCoord.out_fastqc.html     \
-	tests/sample_data/preprocessed/fastqc/hisat2/UHR_Rep3_Aligned.sortedByCoord.out_fastqc.zip     \
-	tests/sample_data/preprocessed/fastqc/hisat2/UHR_Rep3_Aligned.sortedByCoord.out_fastqc.html     \
-	tests/sample_data/preprocessed/fastqc/hisat2/HBR_Rep1_Aligned.sortedByCoord.out_fastqc.zip     \
-	tests/sample_data/preprocessed/fastqc/hisat2/HBR_Rep1_Aligned.sortedByCoord.out_fastqc.html     \
   tests/test_trim_galore/input_files/sample.read1.fastq.gz \
   tests/test_trim_galore/input_files/sample.read2.fastq.gz \
   tests/settings.yaml \
@@ -223,7 +211,6 @@ TESTS = \
   tests/test_deseq_reports/test.sh					\
   tests/test_multiqc/test.sh						\
   tests/test_hisat2_counts/test.sh					\
-  tests/test_fastqc/test.sh						\
   tests/test_salmon_counts/test.sh					\
   tests/test_salmon/test_salmon_index.sh				\
   tests/test_salmon/test_salmon_quant.sh				\
@@ -241,13 +228,6 @@ clean-local:
 	-rm -rf tests/test_deseq_reports/report
 	-rm -rf tests/test_deseq_reports/.snakemake
 	-rm -rf tests/test_deseq_reports/test.sh
-	-rm -rf tests/test_fastqc/fastqc/
-	-rm -rf tests/test_fastqc/logs/
-	-rm -rf tests/test_fastqc/pigx_work/
-	-rm -rf tests/test_fastqc/.snakemake
-	-rm -rf tests/test_fastqc/test.sh
-	-rm -rf tests/test_fastqc/test.sh.log
-	-rm -rf tests/test_fastqc/test.sh.trs
 	-rm -rf tests/test_multiqc/config.json
 	-rm -rf tests/test_multiqc/logs
 	-rm -rf tests/test_multiqc/multiqc
