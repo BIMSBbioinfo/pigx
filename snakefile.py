@@ -78,6 +78,7 @@ SAMTOOLS_EXEC    = tool('samtools')
 GUNZIP_EXEC      = tool('gunzip') # for STAR
 RSCRIPT_EXEC     = tool('Rscript')
 SED_EXEC = tool('sed')
+FASTP_EXEC = tool('fastp')
 
 STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
 HISAT2_BUILD_THREADS = config['execution']['rules']['hisat2-build']['threads']
@@ -125,7 +126,7 @@ targets = {
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
         'files':
-        [os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+        [#os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.transcripts.tsv"),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.genes.tsv"),
          os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
@@ -270,28 +271,31 @@ def isSingleEnd(args):
   elif count == 1:
       return True
 
-def trim_galore_input(args):
+# function to pass read files to trim/filter/qc improvement
+def trim_reads_input(args):
   sample = args[0]
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
-rule trim_galore_pe:
-  input: trim_galore_input
+
+rule trim_reads_pe:
+  input: trim_reads_input
   output:
-    r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
-    r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
+    r1=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R1.fq.gz"),
+    r2=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz")
+  log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
   params:
-    tmp1=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_val_1.fq.gz',
-    tmp2=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads2'])[0]).split('.')[:-2]) + '_val_2.fq.gz',
-  log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
-  shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} --paired {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
+    html_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'html'])),
+    json_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'json']))
+  shell: "{FASTP_EXEC} --in1 {input[0]} --in2 {input[1]} --out1 {output[0]} --out2 {output[1]} -h {params.html_out} -j {params.json_out} >> {log} 2>&1"
 
-rule trim_galore_se:
-  input: trim_galore_input
-  output: os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz"),
-  params: tmp=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_trimmed.fq.gz'
-  log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
-  shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
-
+rule trim_reads_se:
+  input: trim_reads_input
+  output: os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.fq.gz"),
+  log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
+  params:
+    html_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'html'])),
+    json_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'json']))
+  shell: "{FASTP_EXEC} --in1 {input[0]} --out1 {output} -h {params.html_out} -j {params.json_out} >> {log} 2>&1 "
 
 rule star_index:
     input: GENOME_FASTA
@@ -314,10 +318,11 @@ rule hisat2_index:
 def map_input(args):
   sample = args[0]
   reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
+  print(reads_files)
   if len(reads_files) > 1:
-    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz".format(sample=sample))]
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R1.fq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz".format(sample=sample))]
   elif len(reads_files) == 1:
-    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz".format(sample=sample))]
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.fq.gz".format(sample=sample))]
 
 # I cannot do function composition, so it's gotta be this awkward definition instead.
 def hisat2_file_arguments(args):
