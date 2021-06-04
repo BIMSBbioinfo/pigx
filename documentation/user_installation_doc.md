@@ -19,7 +19,12 @@ To investigate the abundance of other existing species in the wastewater samples
 
 ## Install via guix
 
-This pipeline is going to be packaged in the [GNU Guix](https://gnu.org/s/guix) package manager soon. Right now in this preliminary state it has to be installed from source manually.
+Pre-built binaries for PiGx are available through [GNU Guix](https://gnu.org/s/guix), the functional package manager for reproducible, user-controlled software management. 
+You can install the PiGx SARS-CoV-2 pipeline with
+
+```sh
+guix install pigx-sars-cov2-ww
+```
 
 ## Install from source
 
