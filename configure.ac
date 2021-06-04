@@ -43,9 +43,8 @@ find_or_override_prog([STAR],            [STAR])
 find_or_override_prog([HISAT2],          [hisat2])
 find_or_override_prog([HISAT2_BUILD],    [hisat2-build])
 find_or_override_prog([MULTIQC],         [multiqc])
-
+find_or_override_prog([FASTP],		[fastp])
 find_or_override_prog([SALMON],     [salmon])
-
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
 
