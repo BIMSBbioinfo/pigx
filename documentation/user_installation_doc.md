@@ -335,3 +335,8 @@ PIGX_UNINSTALLED=t ./pigx-sars-cov2-ww -s tests/settings.yaml tests/sample_sheet
 Inside `tests/` a new directory `output` is created, which includes specific directories containing output data for the respective step of the pipeline.    The `tests/output/reports/index.html` gives the overview over all merged reports for the test data. 
 
 # Troubleshooting
+
+If you have any questions please e-mail: pigx@googlegroups.com or use the web form to ask questions https://groups.google.com/forum/#!forum/pigx/. 
+
+If you run into any bugs, please open an issue here: https://github.com/BIMSBbioinfo/pigx_rnaseq/issues. 
+
