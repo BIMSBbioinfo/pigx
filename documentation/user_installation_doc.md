@@ -28,7 +28,7 @@ guix install pigx-sars-cov2-ww
 
 ## Install from source
 
-First, please clone this repository and change directory accordingly:
+Instead, if you want to install PiGx SARS-CoV-2 from source, please clone this repository and change directory accordingly:
 
 ```sh
 git clone https://github.com/BIMSBbioinfo/pigx_sarscov2_ww.git
