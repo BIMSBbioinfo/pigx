@@ -129,21 +129,24 @@ melted <- melt(df_var,
                rm.NA = TRUE) %>%
     mutate (value = round (value, 4))
 
-plot_ly (data = melted,
-         type = 'scattermapbox',
+locations <- unique(melt(df_var,
+                         id.vars = c("coordinates_lat",
+                                     "coordinates_long")))
+
+plot_ly (type = 'scattermapbox',
          mode = 'markers') %>%
-    add_trace(size = 1,
+    add_trace(data = locations,
+              size = 1,
               lon = ~coordinates_long,
               lat = ~coordinates_lat,
-              name = ~variable,
-              legendgroup = ~variable,
               opacity = 0.1,
               showlegend = FALSE,
               hoverinfo = 'none',
               marker = list(sizemode = 'diameter',
                             color = 'rgb(150, 150, 150)',
                             opacity = 0.1)) %>%
-    add_trace(lat = ~coordinates_lat,
+    add_trace(data = melted,
+              lat = ~coordinates_lat,
               lon = ~coordinates_long,
               legendgroup = ~variable,
               showlegend = TRUE,
@@ -230,21 +233,24 @@ melted <- melt(df_mut,
                rm.NA = TRUE) %>%
     mutate (value = round (value, 4))
 
-plot_ly (data = melted,
-         type = 'scattermapbox',
+locations <- unique(melt (df_mut,
+                          id.vars = c("coordinates_lat",
+                                      "coordinates_long")))
+
+plot_ly (type = 'scattermapbox',
          mode = 'markers') %>%
     add_trace(size = 1,
+              data = locations,
               lon = ~coordinates_long,
               lat = ~coordinates_lat,
-              name = ~variable,
-              legendgroup = ~variable,
               opacity = 0.1,
               showlegend = FALSE,
               hoverinfo = 'none',
               marker = list(sizemode = 'diameter',
                             color = 'rgb(150, 150, 150)',
                             opacity = 0.1)) %>%
-    add_trace(lat = ~coordinates_lat,
+    add_trace(data = melted,
+              lat = ~coordinates_lat,
               lon = ~coordinates_long,
               legendgroup = ~variable,
               showlegend = TRUE,
