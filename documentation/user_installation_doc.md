@@ -112,7 +112,7 @@ make check
 
 # Getting started
 
-At this point you are able to run the pipeline from within the current directory `pigx_sarscov2_ww`. Use `--help` to see the available options.  To ensure that PiGx uses files from the source directory set the shell variable `PIGX_UNINSTALLED` to any value.
+At this point you are able to run the pipeline from within the current directory `pigx_sarscov2_ww`. Use `--help` to see the available options.
 
 ```sh
 pigx-sars-cov2-ww --help
