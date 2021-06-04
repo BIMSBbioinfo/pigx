@@ -46,26 +46,6 @@ EXTRA_DIST =										\
   tests/sample_data/sample.fasta					\
   tests/sample_data/sample.cdna.fasta				\
 	tests/sample_data/preprocessed/colData.tsv     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep1.read1.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep2_R1.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep2.read1.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep3.read1.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep2.read1.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep2_R2.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep3.read1.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep2_R1.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep2.read2.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep3_R.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep2.read2.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep1.read1.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep3_R2.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep3_R1.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep2_R2.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep1_R1.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep1_R2.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep1_R.fastq.gz     \
-	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep3.read2.fastq.gz_trimming_report.txt     \
-	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep1.read2.fastq.gz_trimming_report.txt     \
 	tests/sample_data/preprocessed/salmon_output/UHR_Rep1/cmd_info.json     \
 	tests/sample_data/preprocessed/salmon_output/UHR_Rep1/quant.sf     \
 	tests/sample_data/preprocessed/salmon_output/UHR_Rep1/quant.genes.sf     \
@@ -199,8 +179,6 @@ EXTRA_DIST =										\
 	tests/sample_data/preprocessed/mapped_reads/hisat2/UHR_Rep3.read_counts.csv     \
 	tests/sample_data/preprocessed/mapped_reads/hisat2/HBR_Rep3.read_counts.csv     \
 	tests/sample_data/preprocessed/mapped_reads/hisat2/HBR_Rep1.read_counts.csv     \
-  tests/test_trim_galore/input_files/sample.read1.fastq.gz \
-  tests/test_trim_galore/input_files/sample.read2.fastq.gz \
   tests/settings.yaml \
   tests/settings_no_de.yaml
 
@@ -215,7 +193,6 @@ TESTS = \
   tests/test_salmon/test_salmon_index.sh				\
   tests/test_salmon/test_salmon_quant.sh				\
   tests/test_hisat2/test.sh						\
-  tests/test_trim_galore/test.sh					\
   test.sh
 
 clean-local:
@@ -269,11 +246,6 @@ clean-local:
 	-rm -rf tests/test_hisat2/test.sh
 	-rm -rf tests/test_hisat2/test.sh.log
 	-rm -rf tests/test_hisat2/test.sh.trs
-	-rm -rf tests/test_trim_galore/output_paired_end/
-	-rm -rf tests/test_trim_galore/output_single_end/
-	-rm -rf tests/test_trim_galore/test.sh
-	-rm -rf tests/test_trim_galore/test.sh.log
-	-rm -rf tests/test_trim_galore/test.sh.trs
 CLEANFILES = $(nodist_bin_SCRIPTS) config.json
 # Build docker image with Guix
 docker: dist
