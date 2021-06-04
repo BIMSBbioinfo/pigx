@@ -18,7 +18,7 @@ an intuitive visual overview about the development of variant abundance over tim
 # Documentation
 
 Please see our documentation in order to find out more about how to install and run the PiGx-RNAseq pipeline:
-https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md
+https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html
 
 # Sample Reports
 
