@@ -99,7 +99,8 @@ tagList(lapply(locations,
                                 x = ~dates,
                                 y = ~value,
                                 color = ~variable) %>%
-                       layout (title = location)
+                       layout (title = location,
+                               yaxis = list(title = "Frequency"))
                }))
 ```
 
@@ -203,7 +204,8 @@ tagList(lapply(locations,
                                name = ~variable,
                                x = ~dates,
                                y = ~value) %>%
-                       layout(title = location)
+                       layout(title = location,
+                              yaxis = list(title = "Frequency"))
                }))
 ```
 
