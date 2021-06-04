@@ -61,6 +61,13 @@ in the analyzed samples across given time points and locations. The abundance va
 by deconvolution (for details please see the [variant report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/WW_210304_KW1.variantreport_p_sample.html#22_Deconvolution)) 
 The frequencies of the mutations are the output of [LoFreq](https://csb5.github.io/lofreq/).
 
+This pipeline is part of
+[PiGx](https://bioinformatics.mdc-berlin.de/pigx), a collection of
+highly reproducible genomics pipelines
+[developed](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww) by the
+[Bioinformatics & Omics Data Science
+platform](https://bioinformatics.mdc-berlin.de/) at the Berlin
+Institute of Medical System Biology (BIMSB).
 
 # Variants Of Concern
 
