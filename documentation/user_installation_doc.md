@@ -14,9 +14,10 @@ To investigate the abundance of other existing species in the wastewater samples
    * Variants report per sample: variant analysis of SARS-CoV-2 from each wastewater sample and identification of variants of concern
    * Taxonomic classification: a table and pie chart of the species found in the unaligned reads
 * *SAM* / *BAM* files per sample: aligned and unaligned reads against SARS-CoV-2 
-* SNV files per sample *(vcf)*:  listing all detected SNVs (single-nucleotide-variants) in the aligned reads
-* VEP reports per sample *(csv)*: VEP (Variant effector prediction) files show the amino acid mutations by using [Ensembl VEP - COVID-19](https://covid-19.ensembl.org/info/docs/tools/vep/index.html)
-* Kraken2 files per sample *(txt)*: gives an overview of all found species in the unaligned reads together with the NCBI taxonomy ID
+* *VCF* / *CSV* files per sample:  listing all detected single nucleotide variants (SNVs) from the aligned reads
+* VEP reports per sample as *TXT* / *HTML*: report files show the [VEP output](https://www.ensembl.org/info/docs/tools/vep/vep_formats.html#output)
+  including the uploading variants, consequenting amino acid changes and consequences for the corresponding protein
+* Kraken2 files per sample *(txt)*: provides an overview of all found species in the unaligned reads together with the NCBI taxonomy ID
 * log files for all major analysis steps performed by the pipeline
 
 
