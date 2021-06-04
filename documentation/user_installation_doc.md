@@ -1,5 +1,5 @@
 # Introduction 
-PiGx SARS-CoV-2 is a pipeline for analysing data from sequenced wastewater samples and identifying given variants-of-concern of SARS-CoV-2. Currently wastewater samples are used, which are enriched for SARS-CoV-2. The pipeline can be used for continuous sampling. The output of the PiGx SARS-CoV-2 pipeline is summarized in a report which provides an intuitive visual overview about the development of variant abundance over time and location. Additionally there will be more detailed reports per sample, which cover the quality control of the samples, the detected variants and a taxonomic classification of all reads which are not aligned to SARS-CoV-2. This version of the pipeline was designed to work with target sequencing (PCR-based) and tested with data generated using the [ARTIC nCoV-2019 primers](https://github.com/artic-network/artic-ncov2019/tree/master/primer_schemes/nCoV-2019/V30).
+PiGx SARS-CoV-2 is a pipeline for analysing data from sequenced wastewater samples and identifying given variants-of-concern of SARS-CoV-2. Currently wastewater samples are used, which are enriched for SARS-CoV-2. The pipeline can be used for continuous sampling. The output of the PiGx SARS-CoV-2 pipeline is summarized in a report which provides an intuitive visual overview about the development of variant abundance over time and location. Additionally there will be more detailed reports per sample, which cover the quality control of the samples, the detected variants and a taxonomic classification of all unaligned reads. This version of the pipeline was designed to work with target sequencing (PCR-based) and tested with data generated using the [ARTIC nCoV-2019 primers](https://github.com/artic-network/artic-ncov2019/tree/master/primer_schemes/nCoV-2019/V30).
 
 ## Workflow
 
@@ -7,12 +7,17 @@ First the raw reads are trimmed by using [Prinseq](http://prinseq.sourceforge.ne
 To investigate the abundance of other existing species in the wastewater samples the **unaligned reads** will be taxonomicly classified with [Kraken2](https://github.com/DerrickWood/kraken2). The Kraken2 requires a database of the genomes against the reads are getting aligned, therefore keep in mind that you can only find those species which are included in the chosen database. For documentation how to set this up, see: [Prepare databases](#prepare-databases). For a better and interactive visualization of all species present in the wastewater [Krona](https://github.com/marbl/Krona/wiki) is used. Also here a small step of setting up a database is needed before running the pipeline, see: [Prepare databases](#prepare-databases). 
 
 ## Output
-* Merged Report including:
-   * Overview of development of variant and mutation abundance over time and locations
-   * Quality Control report of raw and processed (trimmed) reads
-   * Variant report
-   * Taxonomic classification
-* SAM/ BAM files of the aligned and unaligned reads against SARS-CoV-2
+
+* overview report including:
+   * Visualization of the development of SARS-CoV-2 variants and mutations over time and locations from all samples provided.
+   * Quality Control report per sample: number of covered amplicons, read coverage and MultiQC report for raw and trimmed reads
+   * Variants report per sample: variant analysis of SARS-CoV-2 from each wastewater sample and identification of variants of concern
+   * Taxonomic classification: a table and pie chart of the species found in the unaligned reads
+* *SAM* / *BAM* files per sample: aligned and unaligned reads against SARS-CoV-2 
+* SNV files per sample *(vcf)*:  listing all detected SNVs (single-nucleotide-variants) in the aligned reads
+* VEP reports per sample *(csv)*: VEP (Variant effector prediction) files show the amino acid mutations by using [Ensembl VEP - COVID-19](https://covid-19.ensembl.org/info/docs/tools/vep/index.html)
+* Kraken2 files per sample *(txt)*: gives an overview of all found species in the unaligned reads together with the NCBI taxonomy ID
+* log files for all major analysis steps performed by the pipeline
 
 
 # Installation
