@@ -12,7 +12,6 @@ echo "TEST FOLDER: ${testfolder}"
 # copy necessary input files to the test folder
 # we copy them to avoid re-creating these files when testing the pipeline
 cp -r ${srcdir}/tests/sample_data/preprocessed/mapped_reads ${testfolder}
-cp -r ${srcdir}/tests/sample_data/preprocessed/fastqc ${testfolder}
 
 # make these copies writable
 chmod +w -R ${testfolder}
@@ -36,7 +35,6 @@ rm ${tmp_settings}
 
 #Remove copied input files
 rm -rf ${testfolder}/mapped_reads
-rm -rf ${testfolder}/fastqc
 
 if ! test -f ${testfolder}/multiqc/multiqc_report.html
 then
