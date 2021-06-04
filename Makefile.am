@@ -179,6 +179,16 @@ EXTRA_DIST =										\
 	tests/sample_data/preprocessed/mapped_reads/hisat2/UHR_Rep3.read_counts.csv     \
 	tests/sample_data/preprocessed/mapped_reads/hisat2/HBR_Rep3.read_counts.csv     \
 	tests/sample_data/preprocessed/mapped_reads/hisat2/HBR_Rep1.read_counts.csv     \
+	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep1.trimmed.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep2.trimmed.R1.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep2.trimmed.R2.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep3.trimmed.R1.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/HBR_Rep3.trimmed.R2.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep1.trimmed.R1.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep1.trimmed.R2.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep2.trimmed.R1.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep2.trimmed.R2.fq.gz \
+	tests/sample_data/preprocessed/trimmed_reads/UHR_Rep3.trimmed.fq.gz \
   tests/settings.yaml \
   tests/settings_no_de.yaml
 
