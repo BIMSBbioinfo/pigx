@@ -30,6 +30,12 @@ params:
 .pigx_info {
   background-image: url(params$logo); 
 }
+
+.notice {
+  margin-left: -12px;
+  padding-left: 6px;
+  border-left: 6px solid #ff9999;
+}
 </style>
 
 <div id="logo" align="top">
@@ -104,8 +110,10 @@ This plot visualizes the development of local outbreaks and the
 proportions of identified VOCs in that area.  The gray marker at every
 sampling location is overlayed by a colored disks for every variant.
 
-<span style="color:darkred">Locations of wastewater processing plants have been generated arbitrarily and do 
-not correspond to actual locations.</span>
+<div class="notice">
+Locations of wastewater processing plants have been generated arbitrarily and do 
+not correspond to actual locations.
+</div>
 
 Use the slider to select a specific date or hit the *Play* button to
 display all snapshots successively.  Click on a variant in the legend
@@ -205,8 +213,10 @@ This plot visualizes the development of local outbreaks on the level
 of single mutations.  The gray marker at every sampling location is
 overlayed by a colored disks for each mutation.
 
-<span style="color:darkred">Locations of wastewater processing plants have been generated arbitrarily and do 
-not correspond to actual locations.</span>
+<div class="notice">
+Locations of wastewater processing plants have been generated arbitrarily and do 
+not correspond to actual locations.
+</div>
 
 Use the slider to select a specific date or hit the *Play* button to
 display all snapshots successively.
