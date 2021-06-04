@@ -111,7 +111,7 @@ make install
 
 # Getting started
 
-At this point you are able to run the pipeline from within the current directory `pigx_sarscov2_ww`. Use `--help` to see the available options.
+At this point you are able to run PiGx SARS-CoV-2. To see all available options type `--help`.
 
 ```sh
 pigx-sars-cov2-ww --help
@@ -164,7 +164,7 @@ This pipeline was developed by the Akalin group at MDC in Berlin in 2017-2021.
 </details>
 </br>
 
-Though, to actually use it on your experimental data still more setup is required. Please follow [the steps to prepare the required databases](#prepare-databases) first and [prepare the input](#preparing-the-input). Then afterwards, you can run the pipeline from the source directory.
+Though, to actually use it on your experimental data still more setup is required. Please follow [the steps to prepare the required databases](#prepare-databases) first and [prepare the input](#preparing-the-input). Then afterwards, you can run the pipeline:
 
 ```sh
 pigx-sars-cov2-ww [options] sample_sheet.csv
