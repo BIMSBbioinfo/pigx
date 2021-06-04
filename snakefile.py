@@ -48,7 +48,7 @@ SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
-FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
+QC_DIR        = os.path.join(OUTPUT_DIR, 'QC')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 BIGWIG_DIR      = os.path.join(OUTPUT_DIR, 'bigwig_files')
@@ -65,7 +65,6 @@ def tool(name):
     cmd = config['tools'][name]['executable']
     return cmd + " " + toolArgs(name)
 
-FASTQC_EXEC  = tool('fastqc')
 MULTIQC_EXEC = tool('multiqc')
 STAR_EXEC_MAP    = tool('star_map')
 STAR_EXEC_INDEX  = tool('star_index')
@@ -73,7 +72,6 @@ HISAT2_EXEC        = tool('hisat2')
 HISAT2_BUILD_EXEC  = tool('hisat2-build')
 SALMON_INDEX_EXEC  = tool('salmon_index')
 SALMON_QUANT_EXEC  = tool('salmon_quant')
-TRIM_GALORE_EXEC = tool('trim-galore')
 SAMTOOLS_EXEC    = tool('samtools')
 GUNZIP_EXEC      = tool('gunzip') # for STAR
 RSCRIPT_EXEC     = tool('Rscript')
@@ -126,7 +124,7 @@ targets = {
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
         'files':
-        [#os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+        [os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.transcripts.tsv"),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.genes.tsv"),
          os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
@@ -186,11 +184,6 @@ targets = {
           expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'), sample = SAMPLES) +
           expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig'), sample = SAMPLES)
     },
-    'fastqc': {
-        'description': "post-mapping quality control by FASTQC.",
-        'files':
-          expand(os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample = SAMPLES)
-    },
     'salmon_index' : {
         'description': "Create SALMON index file.",
         'files':
@@ -211,7 +204,7 @@ targets = {
 	   os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.genes.tsv")]
     },
     'multiqc': {
-        'description': "Get multiQC report based on alignments and fastQC reports.",
+        'description': "Get multiQC report based on alignments and QC reports.",
         'files':
           [os.path.join(MULTIQC_DIR, 'multiqc_report.html')]
     }
@@ -277,25 +270,26 @@ def trim_reads_input(args):
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
 
-rule trim_reads_pe:
+# fastp both trims/filters reads and outputs QC reports in html/json format
+rule trim_qc_reads_pe:
   input: trim_reads_input
   output:
     r1=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R1.fq.gz"),
-    r2=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz")
+    r2=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz"),
+    html=os.path.join(QC_DIR, "{sample}.pe.fastp.html"),
+    json=os.path.join(QC_DIR, "{sample}.pe.fastp.json") #notice that multiqc recognizes files ending with fast.json
   log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
-  params:
-    html_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'html'])),
-    json_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'json']))
-  shell: "{FASTP_EXEC} --in1 {input[0]} --in2 {input[1]} --out1 {output[0]} --out2 {output[1]} -h {params.html_out} -j {params.json_out} >> {log} 2>&1"
+  shell: "{FASTP_EXEC} --in1 {input[0]} --in2 {input[1]} --out1 {output.r1} --out2 {output.r2} -h {output.html} -j {output.json} >> {log} 2>&1"
 
-rule trim_reads_se:
+# fastp both trims/filters reads and outputs QC reports in html/json format
+rule trim_qc_reads_se:
   input: trim_reads_input
-  output: os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.fq.gz"),
+  output:
+    r = os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.fq.gz"),
+    html=os.path.join(QC_DIR, "{sample}.se.fastp.html"),
+    json=os.path.join(QC_DIR, "{sample}.se.fastp.json") #notice that multiqc recognizes files ending with fast.json
   log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
-  params:
-    html_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'html'])),
-    json_out = lambda wildcards: os.path.join(TRIMMED_READS_DIR, '.'.join([wildcards.sample, 'json']))
-  shell: "{FASTP_EXEC} --in1 {input[0]} --out1 {output} -h {params.html_out} -j {params.json_out} >> {log} 2>&1 "
+  shell: "{FASTP_EXEC} --in1 {input[0]} --out1 {output.r} -h {output.html} -j {output.json} >> {log} 2>&1 "
 
 rule star_index:
     input: GENOME_FASTA
@@ -318,7 +312,6 @@ rule hisat2_index:
 def map_input(args):
   sample = args[0]
   reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
-  print(reads_files)
   if len(reads_files) > 1:
     return [os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R1.fq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz".format(sample=sample))]
   elif len(reads_files) == 1:
@@ -372,14 +365,6 @@ rule index_bam:
   output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
-
-rule fastqc:
-  input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
-  output: os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip')
-  log: os.path.join(LOG_DIR, MAPPER, 'fastqc_{sample}.log')
-  params:
-    outdir = os.path.join(FASTQC_DIR, MAPPER)
-  shell: "{FASTQC_EXEC} -o {params.outdir} -f bam {input} >> {log} 2>&1"
 
 rule salmon_index:
   input:
@@ -442,8 +427,7 @@ rule genomeCoverage:
 rule multiqc:
   input:
     salmon_output=expand(os.path.join(SALMON_DIR, "{sample}", "quant.sf"), sample = SAMPLES),
-    mapping_output=expand(os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'), sample=SAMPLES),
-    fastqc_output=expand(os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample=SAMPLES),
+    mapping_output=expand(os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'), sample=SAMPLES)
   output: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
   log: os.path.join(LOG_DIR, f'multiqc.{MAPPER}.log')
   shell: "{MULTIQC_EXEC} -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
