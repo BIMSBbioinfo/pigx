@@ -95,9 +95,6 @@ tools:
   gunzip:
     executable: @GUNZIP@
     args: ""
-  fastqc:
-    executable: @FASTQC@
-    args: ""
   multiqc:
     executable: @MULTIQC@
     args: ""
@@ -115,9 +112,6 @@ tools:
   hisat2-build:
     executable: @HISAT2_BUILD@
     args: ""
-  trim-galore:
-    executable: @TRIMGALORE@
-    args: ""
   samtools:
     executable: @SAMTOOLS@
     args: ""
@@ -132,4 +126,7 @@ tools:
     args: "--vanilla"
   sed:
     executable: @SED@
+    args: ""
+  fastp:
+    executable: @FASTP@
     args: ""
