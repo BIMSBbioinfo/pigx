@@ -222,6 +222,14 @@ In the settings file, parameters are saved, in YAML format, to configure the exe
 - _sigmut-db-dir_, the location of the signature mutations database (provided at databases/sigmut_db/)
 - _vep-db-dir_, the location of `sars_cov_2` database for VEP (must be prepared by the user)
 
+#### Trimming
+
+These settings are used to filter raw reads when trimming. Reads
+that are shorter than the product of read-length and the cut-off factor are removed.
+
+- _read-length_ specifies the length of the basepairs
+- _cut-off_ specifies the cut-off factor
+
 ## Prepare databases
 
 Before the pipeline can work, three databases must be downloaded and their location will need to be provided in the settings file. Depending on the size of the databases this can take some time.
