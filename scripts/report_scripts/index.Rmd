@@ -121,7 +121,7 @@ display all snapshots successively.  Click on a variant in the legend
 to toggle its visibility in the map; double-click to view only the
 selected variant.
 
-```{r maps for variants, echo=F, message=FALSE, warning=FALSE}
+```{r maps for variants, echo=F, message=FALSE, warning=FALSE, out.width="900px", out.height="900px"}
 
 melted <- melt(df_var,
                id.vars = c("dates", "samplename", "location_name",
@@ -153,7 +153,7 @@ plot_ly (data = melted,
               hoverinfo = 'text+name',
               hovertext = ~paste0("Frequency: ", value),
               marker = list (sizemode = 'diameter')) %>%
-    layout (width = 1000,
+    layout (autosize = TRUE,
             mapbox = list (zoom = 5.5,
                            center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
                                          lon = ~median(coordinates_long, na.rm=TRUE)),
@@ -223,7 +223,7 @@ not correspond to actual locations.
 Use the slider to select a specific date or hit the *Play* button to
 display all snapshots successively.
 
-```{r mutations for locations and date, echo=F, message=F, warning=F}
+```{r mutations for locations and date, echo=F, message=F, warning=F, out.width="900px", out.height="900px"}
 melted <- melt(df_mut,
                id.vars = c("dates", "samplename", "location_name",
                            "coordinates_lat", "coordinates_long"),
@@ -256,7 +256,7 @@ plot_ly (data = melted,
               marker = list (sizemode = 'diameter')) %>%
 
     layout (title = ~dates,
-            width = 1000,
+            autosize = TRUE,
             mapbox = list (zoom = 5.5,
                            center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
                                          lon = ~median(coordinates_long, na.rm=TRUE)),
