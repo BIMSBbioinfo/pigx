@@ -80,7 +80,8 @@
         "gzip" ; for make distcheck
         "make"
         "sed"
-        "tar")) ; for make distcheck
+        "tar"  ; for make distcheck and db downloads
+        "wget")) ; for db downloads
 
 (packages->manifest
  (let ((how (if (getenv "USE_GUIX_INFERIOR")

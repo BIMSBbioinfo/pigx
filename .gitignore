@@ -15,6 +15,7 @@ autom4te.cache/
 config.json
 build-aux/*
 aclocal.m4
+scripts/download_databases.sh
 
 # test files
 test-suite.log

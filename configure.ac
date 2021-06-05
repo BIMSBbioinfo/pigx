@@ -33,6 +33,7 @@ AS_IF([test -z "$$1"],dnl
       ],dnl
       [AC_MSG_NOTICE([Using $$1 as $2 executable.])])])
 
+find_or_override_prog([GNUBASH],      [bash])
 find_or_override_prog([SNAKEMAKE],    [snakemake])
 find_or_override_prog([SAMTOOLS],     [samtools])
 find_or_override_prog([BWA],          [bwa])
@@ -41,11 +42,13 @@ find_or_override_prog([R],            [R])
 find_or_override_prog([RSCRIPT],      [Rscript])
 find_or_override_prog([PRINSEQ],      [prinseq-lite.pl])
 find_or_override_prog([KRAKEN2],      [kraken2])
+find_or_override_prog([KRAKEN2_BUILD], [kraken2-build])
 find_or_override_prog([IMPORT_KRONA],    [ktImportKrona])
 find_or_override_prog([IMPORT_TAXONOMY], [ktImportTaxonomy])
 find_or_override_prog([LOFREQ],       [lofreq])
 find_or_override_prog([VEP],          [vep])
 find_or_override_prog([MULTIQC],      [multiqc])
+find_or_override_prog([WGET],         [wget])
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
@@ -80,6 +83,7 @@ AC_SUBST_FILE(PIPELINE_META)
 PIPELINE_META=$srcdir/META
 AC_CONFIG_FILES([Makefile META etc/settings.yaml])
 AC_CONFIG_FILES([tests/tests/vep.sh], [chmod +x tests/tests/vep.sh])
+AC_CONFIG_FILES([scripts/download_databases.sh], [chmod +x scripts/download_databases.sh])
 AC_CONFIG_FILES([qsub-template.sh:pigx-common/common/qsub-template.sh.in])
 AC_CONFIG_FILES([pigx-sars-cov2-ww:pigx-common/common/pigx-runner.in], [chmod +x pigx-sars-cov2-ww])
 AC_OUTPUT

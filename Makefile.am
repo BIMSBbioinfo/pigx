@@ -8,6 +8,7 @@ dist_pkglibexec_SCRIPTS = \
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS = \
+  scripts/download_databases.sh \
   scripts/report_scripts/qc_report_per_sample.Rmd \
   scripts/report_scripts/taxonomic_classification.Rmd \
   scripts/report_scripts/index.Rmd \
