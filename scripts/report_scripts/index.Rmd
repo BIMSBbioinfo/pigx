@@ -11,14 +11,6 @@ params:
 ---
 
 <style>
-#logo { position: relative; }
-#logo img {
-  top: 75px;
-  left: 50px;
-  position: fixed;
-  width: 125px;
-}
-
 .infobox {
   padding: 1em 1em 1em 4em;
   margin-bottom: 10px;

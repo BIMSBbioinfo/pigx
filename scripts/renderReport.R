@@ -10,15 +10,27 @@ parameters <- fromJSON (args[4])
 
 css <- tempfile (fileext="css")
 cat ("\
-body { font-size: 20px; padding-top: 60px; position: absolute; } \
-span.header-section-number { \
-  color: #93a1a1; \
-  position: absolute; \
-  text-align: right; \
-  width: 2em; \
-  margin-left: -2.5em } \
-div#TOC { font-size: smaller; margin-top: 175px; } \
+#logo { position: relative; } \
+#logo img { \
+  width: 125px; \
+} \
+div#TOC { margin-top: 100px; } \
 div#TOC span.header-section-number { display: none } \
+span.header-section-number { color: #93a1a1; } \
+@media all and (min-width:768px){ \
+  body { font-size: 20px; padding-top: 60px; position: absolute; } \
+  div#TOC { font-size: smaller; margin-top: 175px; } \
+  #logo img { \
+    top: 75px; \
+    left: 50px; \
+    position: fixed; \
+  } \
+  span.header-section-number { \
+    position: absolute; \
+    text-align: right; \
+    width: 2em; \
+    margin-left: -2.5em } \
+} \
 p { line-height: 1.5 } \
 h1 { margin-top: 2em } \
 h1.title { margin-top: 20px } \
