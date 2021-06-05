@@ -31,8 +31,12 @@ percentage of read matching SARS-CoV-2 a refining of trimming parameters should 
 # Taxonomic classification of unaligned reads
 
 The reads that are left unaligned to SARS-Cov-2 are aligned with the
-[Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2)
-against the database which was installed (https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/documentation/user_installation_doc.md). The [database PlusPFP](https://benlangmead.github.io/aws-indexes/k2) for example contains archae, bacteria, viral, plasmid, protozea, fungi & plant.
+[Kraken2 taxonomic sequence classification
+system](https://github.com/DerrickWood/kraken2) against the [installed
+database](https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-bs-seq.html#installation). The
+[database PlusPFP](https://benlangmead.github.io/aws-indexes/k2) for
+example contains archae, bacteria, viral, plasmid, protozea, fungi &
+plant.
 
 The table below lists all the species found. Since all ranks are listed it can be helpful to use the provided filters at the bottom of the tableto look only at the level of Domains or a minimum pf assigned fragments.
 
