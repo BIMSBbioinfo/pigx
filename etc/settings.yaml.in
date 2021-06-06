@@ -108,7 +108,9 @@ tools:
     # args: "--limitGenomeGenerateRAM 31000000000"
   hisat2:
     executable: @HISAT2@
-    args: ""
+    args: "--fast" 
+    # If low alignment rates are observed with "--fast" setting, 
+    # other options to try are "--sensitive or --very-sensitive". 
   hisat2-build:
     executable: @HISAT2_BUILD@
     args: ""
@@ -129,4 +131,6 @@ tools:
     args: ""
   fastp:
     executable: @FASTP@
-    args: ""
+    args: "--adapter_sequence=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA --adapter_sequence_r2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT" 
+    # Please refer to fastp manual about setting adapter sequences: https://github.com/OpenGene/fastp#adapters
+
