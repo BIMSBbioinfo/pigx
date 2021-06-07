@@ -50,7 +50,7 @@ This pipeline performs mutation analysis of SARS-CoV-2 and reports and quantifie
 
 The visualizations below provide an overview of the evolution of VOCs found
 in the analyzed samples across given time points and locations. The abundance values for the variants are derived 
-by deconvolution (for details please see the [variant report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/WW_210304_KW1.variantreport_p_sample.html#22_Deconvolution)) 
+by deconvolution (for details please see the [variant report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/WW_210304_KW1.variantreport_p_sample.html#2_Deconvolution)) 
 The frequencies of the mutations are the output of [LoFreq](https://csb5.github.io/lofreq/).
 
 This pipeline is part of
