@@ -31,7 +31,8 @@
        ("fastp" ,(specification->package "fastp"))
        ("python-deeptools" ,(specification->package "python-deeptools"))
        ("gprofiler2", (specification->package "r-gprofiler2"))
-       ,@(package-inputs (specification->package "pigx-rnaseq"))))
+       ("ggpubr", (specification->package "r-ggpubr"))
+	,@(package-inputs (specification->package "pigx-rnaseq"))))
     (native-inputs
      `(("autoconf" ,(specification->package "autoconf"))
        ("automake" ,(specification->package "automake"))))))
