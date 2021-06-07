@@ -136,6 +136,6 @@ tools:
     # Please refer to fastp manual about setting adapter sequences: https://github.com/OpenGene/fastp#adapters
   bamCoverage:
     executable: @BAMCOVERAGE@
-    args: "--normalizeUsing BPM" 
+    args: "--normalizeUsing BPM --numberOfProcessors 2" 
     # see https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html
     # for more detailed arguments used for normalising coverage data files 
