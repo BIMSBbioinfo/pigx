@@ -189,7 +189,7 @@ targets = {
     'salmon_index' : {
         'description': "Create SALMON index file.",
         'files':
-          [os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")]
+          [os.path.join(OUTPUT_DIR, 'salmon_index', "pos.bin")]
     },
     'salmon_quant' : {
         'description': "Calculate read counts per transcript using SALMON.",
@@ -381,7 +381,7 @@ rule salmon_index:
   input:
       CDNA_FASTA
   output:
-      salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "sa.bin")
+      salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "pos.bin")
   resources:
       mem_mb = 5000
   params:
