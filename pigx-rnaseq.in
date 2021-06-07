@@ -323,6 +323,7 @@ command = [
     "--configfile={}".format(args.configfile),
     "--directory={}".format(config['locations']['output-dir']),
     "--jobs={}".format(config['execution']['jobs']),
+    "--resources", "mem_mb={}".format(config['execution']['mem_mb']),
 ]
 
 if config['execution']['submit-to-cluster']:
