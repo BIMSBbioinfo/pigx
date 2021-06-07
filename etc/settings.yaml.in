@@ -133,4 +133,8 @@ tools:
     executable: @FASTP@
     args: "--adapter_sequence=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA --adapter_sequence_r2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT" 
     # Please refer to fastp manual about setting adapter sequences: https://github.com/OpenGene/fastp#adapters
-
+  bamCoverage:
+    executable: @BAMCOVERAGE@
+    args: "--normalizeUsing BPM" 
+    # see https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html
+    # for more detailed arguments used for normalising coverage data files 
