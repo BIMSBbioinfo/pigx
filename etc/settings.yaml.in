@@ -59,6 +59,7 @@ execution:
   submit-to-cluster: no
   jobs: 6
   nice: 19
+  mem_mb: 4000
   cluster:
     missing-file-timeout: 120
     memory: 8G
