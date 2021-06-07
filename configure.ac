@@ -47,7 +47,7 @@ find_or_override_prog([FASTP],		[fastp])
 find_or_override_prog([SALMON],     [salmon])
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
-
+find_or_override_prog([BAMCOVERAGE],	 [bamCoverage])
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
