@@ -1,6 +1,7 @@
 {
-    "salmon_version": "0.9.0",
+    "salmon_version": "0.13.1",
     "samp_type": "none",
+    "opt_type": "vb",
     "quant_errors": [],
     "num_libraries": 1,
     "library_types": [
@@ -23,11 +24,16 @@
     ],
     "index_seq_hash": "686ad80d4a613d460b7b1ec2efd109d99a33274f7278d91c9da694441afe64db",
     "index_name_hash": "5d4ed39bf0bd37828aaf1fbcaf69213a2e77c0e8cc35263cdaea903cb1d59c1d",
+    "index_seq_hash512": "2201e412159392a871a7ed6a10cd6121ec06040309496c2fb22dcde593d0423b68f0f1423f7256d6cdfbeb3f89bfd26979acca0003135e92d5690e20e49b942d",
+    "index_name_hash512": "b1765932cb791297da5c45842d567e592e82ef7cbe1ffecfdfb564006af72476d71c5c7b49aa6614b2fe13a6d0ea5023f4fe3726f8e9d571d93f083ebbffa64d",
     "num_bootstraps": 0,
     "num_processed": 1208,
     "num_mapped": 534,
+    "num_dovetail_fragments": 0,
+    "num_fragments_filtered_vm": 0,
+    "num_alignments_below_threshold_for_mapped_fragments_vm": 0,
     "percent_mapped": 44.205298013245037,
     "call": "quant",
-    "start_time": "Fri Jan 12 14:52:50 2018",
-    "end_time": "Fri Jan 12 14:52:52 2018"
+    "start_time": "Thu Jun  3 12:09:23 2021",
+    "end_time": "Thu Jun  3 12:09:24 2021"
 }

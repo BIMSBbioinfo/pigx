@@ -48,7 +48,7 @@ SCRIPTS_DIR = os.path.join(config['locations']['pkglibexecdir'], 'scripts/')
 
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
-FASTQC_DIR        = os.path.join(OUTPUT_DIR, 'fastqc')
+QC_DIR        = os.path.join(OUTPUT_DIR, 'QC')
 MULTIQC_DIR       = os.path.join(OUTPUT_DIR, 'multiqc')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 BIGWIG_DIR      = os.path.join(OUTPUT_DIR, 'bigwig_files')
@@ -65,7 +65,6 @@ def tool(name):
     cmd = config['tools'][name]['executable']
     return cmd + " " + toolArgs(name)
 
-FASTQC_EXEC  = tool('fastqc')
 MULTIQC_EXEC = tool('multiqc')
 STAR_EXEC_MAP    = tool('star_map')
 STAR_EXEC_INDEX  = tool('star_index')
@@ -73,11 +72,12 @@ HISAT2_EXEC        = tool('hisat2')
 HISAT2_BUILD_EXEC  = tool('hisat2-build')
 SALMON_INDEX_EXEC  = tool('salmon_index')
 SALMON_QUANT_EXEC  = tool('salmon_quant')
-TRIM_GALORE_EXEC = tool('trim-galore')
 SAMTOOLS_EXEC    = tool('samtools')
 GUNZIP_EXEC      = tool('gunzip') # for STAR
 RSCRIPT_EXEC     = tool('Rscript')
 SED_EXEC = tool('sed')
+FASTP_EXEC = tool('fastp')
+BAMCOVERAGE_EXEC = tool('bamCoverage')
 
 STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
 HISAT2_BUILD_THREADS = config['execution']['rules']['hisat2-build']['threads']
@@ -85,7 +85,6 @@ HISAT2_THREADS       = config['execution']['rules']['hisat2']['threads']
 STAR_MAP_THREADS     = config['execution']['rules']['star_map']['threads']
 SALMON_INDEX_THREADS = config['execution']['rules']['salmon_index']['threads']
 SALMON_QUANT_THREADS = config['execution']['rules']['salmon_quant']['threads']
-
 
 GTF_FILE = config['locations']['gtf-file']
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
@@ -133,8 +132,9 @@ targets = {
          os.path.join(COUNTS_DIR, "raw_counts", MAPPER, "counts.tsv"),
          os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_normalized_counts.tsv"),
          os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_size_factors.txt")] +
-        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'), sample = SAMPLES) +
-        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig'), sample = SAMPLES) +
+        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'), sample = SAMPLES) +
+        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'), sample = SAMPLES) +
+        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw'), sample = SAMPLES) +
         expand(os.path.join(OUTPUT_DIR, "report", MAPPER, '{analysis}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
         expand(os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
         expand(os.path.join(OUTPUT_DIR, "report",  'salmon', '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
@@ -182,13 +182,9 @@ targets = {
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
         'files':
-          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'), sample = SAMPLES) +
-          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig'), sample = SAMPLES)
-    },
-    'fastqc': {
-        'description': "post-mapping quality control by FASTQC.",
-        'files':
-          expand(os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample = SAMPLES)
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'), sample = SAMPLES) +
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'), sample = SAMPLES) +
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw'), sample = SAMPLES)
     },
     'salmon_index' : {
         'description': "Create SALMON index file.",
@@ -210,7 +206,7 @@ targets = {
 	   os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.genes.tsv")]
     },
     'multiqc': {
-        'description': "Get multiQC report based on alignments and fastQC reports.",
+        'description': "Get multiQC report based on alignments and QC reports.",
         'files':
           [os.path.join(MULTIQC_DIR, 'multiqc_report.html')]
     }
@@ -270,32 +266,31 @@ def isSingleEnd(args):
   elif count == 1:
       return True
 
-def trim_galore_input(args):
+# function to pass read files to trim/filter/qc improvement
+def trim_reads_input(args):
   sample = args[0]
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
-rule trim_galore_pe:
-  input: trim_galore_input
+# fastp both trims/filters reads and outputs QC reports in html/json format
+rule trim_qc_reads_pe:
+  input: trim_reads_input
   output:
-    r1=os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz"),
-    r2=os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz")
-  resources:
-    mem_mb = 100
-  params:
-    tmp1=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_val_1.fq.gz',
-    tmp2=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads2'])[0]).split('.')[:-2]) + '_val_2.fq.gz',
-  log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
-  shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} --paired {input[0]} {input[1]} >> {log} 2>&1 && sleep 10 && mv {params.tmp1} {output.r1} && mv {params.tmp2} {output.r2}"
+    r1=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R1.fq.gz"),
+    r2=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz"),
+    html=os.path.join(QC_DIR, "{sample}.pe.fastp.html"),
+    json=os.path.join(QC_DIR, "{sample}.pe.fastp.json") #notice that multiqc recognizes files ending with fast.json
+  log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
+  shell: "{FASTP_EXEC} --in1 {input[0]} --in2 {input[1]} --out1 {output.r1} --out2 {output.r2} -h {output.html} -j {output.json} >> {log} 2>&1"
 
-rule trim_galore_se:
-  input: trim_galore_input
-  output: os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz"),
-  resources:
-    mem_mb = 100
-  params: tmp=lambda wildcards, output: '.'.join(os.path.join(TRIMMED_READS_DIR, lookup('name', wildcards[0], ['reads'])[0]).split('.')[:-2]) + '_trimmed.fq.gz'
-  log: os.path.join(LOG_DIR, 'trim_galore_{sample}.log')
-  shell: "{TRIM_GALORE_EXEC} -o {TRIMMED_READS_DIR} {input[0]} >> {log} 2>&1 && sleep 10 && mv {params.tmp} {output}"
-
+# fastp both trims/filters reads and outputs QC reports in html/json format
+rule trim_qc_reads_se:
+  input: trim_reads_input
+  output:
+    r = os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.fq.gz"),
+    html=os.path.join(QC_DIR, "{sample}.se.fastp.html"),
+    json=os.path.join(QC_DIR, "{sample}.se.fastp.json") #notice that multiqc recognizes files ending with fast.json
+  log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
+  shell: "{FASTP_EXEC} --in1 {input[0]} --out1 {output.r} -h {output.html} -j {output.json} >> {log} 2>&1 "
 
 rule star_index:
     input: GENOME_FASTA
@@ -323,9 +318,9 @@ def map_input(args):
   sample = args[0]
   reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
   if len(reads_files) > 1:
-    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R1.fastq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}_R2.fastq.gz".format(sample=sample))]
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R1.fq.gz".format(sample=sample)), os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz".format(sample=sample))]
   elif len(reads_files) == 1:
-    return [os.path.join(TRIMMED_READS_DIR, "{sample}_R.fastq.gz".format(sample=sample))]
+    return [os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.fq.gz".format(sample=sample))]
 
 # I cannot do function composition, so it's gotta be this awkward definition instead.
 def hisat2_file_arguments(args):
@@ -343,37 +338,37 @@ rule star_map:
     index_file = rules.star_index.output.star_index_file,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.out.bam')
+    os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.sortedByCoord.out.bam')
   resources:
     mem_mb = 16000
   params:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, 'star', '{sample}_')
   log: os.path.join(LOG_DIR, 'star', 'star_map_{sample}.log')
-  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM Unsorted --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
+  shell: "{STAR_EXEC_MAP} --runThreadN {STAR_MAP_THREADS} --genomeDir {params.index_dir} --readFilesIn {input.reads} --readFilesCommand '{GUNZIP_EXEC} -c' --outSAMtype BAM SortedByCoordinate --outFileNamePrefix {params.output_prefix} >> {log} 2>&1"
 
 rule hisat2_map:
   input:
     index_files = rules.hisat2_index.output,
     reads = map_input
   output:
-    os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.out.bam')
+    os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.sortedByCoord.out.bam')
   resources:
     mem_mb = 8000
   params:
+    samfile = lambda wildcards: os.path.join(MAPPED_READS_DIR, 'hisat2', "_".join([wildcards.sample, 'Aligned.out.sam'])),
     index_dir = rules.hisat2_index.params.index_directory,
     args = hisat2_file_arguments
-  log: os.path.join(LOG_DIR, 'hisat2', 'hisat2_map_{sample}.log')
-  shell: "{HISAT2_EXEC} -x {params.index_dir}/{GENOME_BUILD}_index -p {HISAT2_THREADS} -q -S {output} {params.args} >> {log} 2>&1"
-
-rule sort_bam:
-  input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.out.bam')
-  output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
-  resources:
-    mem_mb = 1000
-  log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
-  shell: "{SAMTOOLS_EXEC} sort -o {output} {input} >> {log} 2>&1"
-
+  log:
+    os.path.join(LOG_DIR, 'hisat2', 'hisat2_map_{sample}.log'),
+    os.path.join(LOG_DIR, 'hisat2', 'samtools.hisat2.{sample}.log')
+  shell:
+    """
+    {HISAT2_EXEC} -x {params.index_dir}/{GENOME_BUILD}_index -p {HISAT2_THREADS} -q -S {params.samfile} {params.args} >> {log[0]} 2>&1
+    {SAMTOOLS_EXEC} view -bh {params.samfile} | {SAMTOOLS_EXEC} sort -o {output} >> {log[1]} 2>&1
+    rm {params.samfile}
+    """
+    
 rule index_bam:
   input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
   output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
@@ -381,16 +376,6 @@ rule index_bam:
     mem_mb = 100
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
-
-rule fastqc:
-  input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
-  output: os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip')
-  resources:
-    mem_mb = 400
-  log: os.path.join(LOG_DIR, MAPPER, 'fastqc_{sample}.log')
-  params:
-    outdir = os.path.join(FASTQC_DIR, MAPPER)
-  shell: "{FASTQC_EXEC} -o {params.outdir} -f bam {input} >> {log} 2>&1"
 
 rule salmon_index:
   input:
@@ -445,24 +430,29 @@ rule counts_from_SALMON:
 
 rule genomeCoverage:
   input:
-    size_factors_file=os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_size_factors.txt"),
     bam=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'),
     bai=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
   output:
-    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'),
-    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig')
+    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'),
+    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'),
+    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw')
+  log:
+    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.forward.{sample}.log'),
+    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.reverse.{sample}.log'),
+    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.{sample}.log')
   resources:
     mem_mb = 4000
-  log: os.path.join(LOG_DIR, MAPPER, 'genomeCoverage_{sample}.log')
-  params: 
-    outdir = os.path.join(BIGWIG_DIR, MAPPER)
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/export_bigwig.R {input.bam} {wildcards.sample} {input.size_factors_file} {params.outdir} >> {log} 2>&1"
+  shell:
+    """
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[0]} --filterRNAstrand forward >> {log[0]} 2>&1
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[1]} --filterRNAstrand reverse >> {log[0]} 2>&1
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[2]} >> {log[0]} 2>&1
+    """
 
 rule multiqc:
   input:
     salmon_output=expand(os.path.join(SALMON_DIR, "{sample}", "quant.sf"), sample = SAMPLES),
-    mapping_output=expand(os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'), sample=SAMPLES),
-    fastqc_output=expand(os.path.join(FASTQC_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out_fastqc.zip'), sample=SAMPLES),
+    mapping_output=expand(os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'), sample=SAMPLES)
   output: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
   resources:
     mem_mb = 200

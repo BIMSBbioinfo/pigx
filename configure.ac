@@ -39,18 +39,15 @@ find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])
 find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
-find_or_override_prog([FASTQC],          [fastqc])
-find_or_override_prog([TRIMGALORE],      [trim_galore])
 find_or_override_prog([STAR],            [STAR])
 find_or_override_prog([HISAT2],          [hisat2])
 find_or_override_prog([HISAT2_BUILD],    [hisat2-build])
 find_or_override_prog([MULTIQC],         [multiqc])
-
+find_or_override_prog([FASTP],		[fastp])
 find_or_override_prog([SALMON],     [salmon])
-
 find_or_override_prog([R],               [R])
 find_or_override_prog([RSCRIPT],         [Rscript])
-
+find_or_override_prog([BAMCOVERAGE],	 [bamCoverage])
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
@@ -102,12 +99,10 @@ AC_CONFIG_FILES([etc/settings.yaml
                  Makefile
                  qsub-template.sh])
 AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
-AC_CONFIG_FILES([tests/test_trim_galore/test.sh], [chmod +x tests/test_trim_galore/test.sh])
 AC_CONFIG_FILES([tests/test_hisat2/test.sh], [chmod +x tests/test_hisat2/test.sh])
 AC_CONFIG_FILES([tests/test_salmon/test_salmon_index.sh], [chmod +x tests/test_salmon/test_salmon_index.sh])
 AC_CONFIG_FILES([tests/test_salmon/test_salmon_quant.sh], [chmod +x tests/test_salmon/test_salmon_quant.sh])
 AC_CONFIG_FILES([tests/test_salmon_counts/test.sh], [chmod +x tests/test_salmon_counts/test.sh])
-AC_CONFIG_FILES([tests/test_fastqc/test.sh], [chmod +x tests/test_fastqc/test.sh])
 AC_CONFIG_FILES([tests/test_hisat2_counts/test.sh], [chmod +x tests/test_hisat2_counts/test.sh])
 AC_CONFIG_FILES([tests/test_multiqc/test.sh], [chmod +x tests/test_multiqc/test.sh])
 AC_CONFIG_FILES([tests/test_deseq_reports/test.sh], [chmod +x tests/test_deseq_reports/test.sh])

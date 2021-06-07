@@ -28,6 +28,8 @@
     (source (string-append (getcwd) "/pigx_rnaseq-" version ".tar.gz"))
     (inputs
      `(("hisat2" ,(specification->package "hisat2"))
+       ("fastp" ,(specification->package "fastp"))
+       ("python-deeptools" ,(specification->package "python-deeptools"))
        ,@(package-inputs (specification->package "pigx-rnaseq"))))
     (native-inputs
      `(("autoconf" ,(specification->package "autoconf"))

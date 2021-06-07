@@ -29,7 +29,7 @@ sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
 #create links to already preprocessed sample data
 samplesheet=${srcdir}/tests/sample_sheet.csv
 tmp_samplesheet="${testfolder}/sample_sheet.csv"
-head -n 2 ${samplesheet} > ${tmp_samplesheet}
+cat ${samplesheet} > ${tmp_samplesheet}
 
 ${builddir}/pigx-rnaseq -s ${tmp_settings} --target genome_coverage ${tmp_samplesheet}
 
@@ -37,9 +37,14 @@ rm ${tmp_settings} ${tmp_samplesheet}
 
 rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${testfolder}/bigwig_files/hisat2/HBR_Rep1.forward.bigwig
+if ! test -f ${testfolder}/bigwig_files/hisat2/HBR_Rep1.bw
 then
   echo "ERROR: failed to create bigwig file from input BAM file"
   exit 1
 fi
+
+
+
+
+
 
