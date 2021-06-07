@@ -90,7 +90,9 @@ execution:
     genomeCoverage:
       threads: 1
       memory: 64G
-
+    count_reads:
+      threads: 1
+      memory: 6G
 
 tools:
   gunzip:
