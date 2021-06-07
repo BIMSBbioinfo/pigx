@@ -30,6 +30,7 @@
      `(("hisat2" ,(specification->package "hisat2"))
        ("fastp" ,(specification->package "fastp"))
        ("python-deeptools" ,(specification->package "python-deeptools"))
+       ("gprofiler2", (specification->package "r-gprofiler2"))
        ,@(package-inputs (specification->package "pigx-rnaseq"))))
     (native-inputs
      `(("autoconf" ,(specification->package "autoconf"))
