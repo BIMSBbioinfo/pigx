@@ -77,6 +77,7 @@ GUNZIP_EXEC      = tool('gunzip') # for STAR
 RSCRIPT_EXEC     = tool('Rscript')
 SED_EXEC = tool('sed')
 FASTP_EXEC = tool('fastp')
+BAMCOVERAGE_EXEC = tool('bamCoverage')
 
 STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
 HISAT2_BUILD_THREADS = config['execution']['rules']['hisat2-build']['threads']
@@ -84,7 +85,6 @@ HISAT2_THREADS       = config['execution']['rules']['hisat2']['threads']
 STAR_MAP_THREADS     = config['execution']['rules']['star_map']['threads']
 SALMON_INDEX_THREADS = config['execution']['rules']['salmon_index']['threads']
 SALMON_QUANT_THREADS = config['execution']['rules']['salmon_quant']['threads']
-
 
 GTF_FILE = config['locations']['gtf-file']
 SAMPLE_SHEET_FILE = config['locations']['sample-sheet']
@@ -132,8 +132,9 @@ targets = {
          os.path.join(COUNTS_DIR, "raw_counts", MAPPER, "counts.tsv"),
          os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_normalized_counts.tsv"),
          os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_size_factors.txt")] +
-        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'), sample = SAMPLES) +
-        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig'), sample = SAMPLES) +
+        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'), sample = SAMPLES) +
+        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'), sample = SAMPLES) +
+        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw'), sample = SAMPLES) +
         expand(os.path.join(OUTPUT_DIR, "report", MAPPER, '{analysis}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
         expand(os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
         expand(os.path.join(OUTPUT_DIR, "report",  'salmon', '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
@@ -181,8 +182,9 @@ targets = {
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
         'files':
-          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'), sample = SAMPLES) +
-          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig'), sample = SAMPLES)
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'), sample = SAMPLES) +
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'), sample = SAMPLES) +
+          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw'), sample = SAMPLES)
     },
     'salmon_index' : {
         'description': "Create SALMON index file.",
@@ -413,16 +415,24 @@ rule counts_from_SALMON:
 
 rule genomeCoverage:
   input:
-    size_factors_file=os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_size_factors.txt"),
     bam=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'),
     bai=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
   output:
-    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bigwig'),
-    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bigwig')
-  log: os.path.join(LOG_DIR, MAPPER, 'genomeCoverage_{sample}.log')
+    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'),
+    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'),
+    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw')
+  log:
+    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.forward.{sample}.log'),
+    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.reverse.{sample}.log'),
+    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.{sample}.log')
   params:
     outdir = os.path.join(BIGWIG_DIR, MAPPER)
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/export_bigwig.R {input.bam} {wildcards.sample} {input.size_factors_file} {params.outdir} >> {log} 2>&1"
+  shell:
+    """
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[0]} --filterRNAstrand forward >> {log[0]} 2>&1
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[1]} --filterRNAstrand reverse >> {log[0]} 2>&1
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[2]} >> {log[0]} 2>&1
+    """
 
 rule multiqc:
   input:
