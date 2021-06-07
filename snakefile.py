@@ -430,8 +430,8 @@ rule genomeCoverage:
   shell:
     """
     {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[0]} --filterRNAstrand forward >> {log[0]} 2>&1
-    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[1]} --filterRNAstrand reverse >> {log[0]} 2>&1
-    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[2]} >> {log[0]} 2>&1
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[1]} --filterRNAstrand reverse >> {log[1]} 2>&1
+    {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[2]} >> {log[2]} 2>&1
     """
 
 rule multiqc:
