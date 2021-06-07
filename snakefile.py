@@ -457,7 +457,7 @@ rule multiqc:
   resources:
     mem_mb = 200
   log: os.path.join(LOG_DIR, f'multiqc.{MAPPER}.log')
-  shell: "{MULTIQC_EXEC} -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
+  shell: "{MULTIQC_EXEC} -f -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
 
 rule count_reads:
   input:
