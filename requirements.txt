@@ -9,13 +9,14 @@
 #  - pypi
 #  - conda-forge
 
-snakemake=4.0.0
-multiqc=0.9 
+snakemake
+multiqc 
 star=2.5.1b
 samtools=1.3
-deeptools=2.5.3
-python=3.5.4
+deeptools
+python
 fastp
+hisat2
 
 #additional requirements for R libraries:
 #r-essentials
@@ -32,7 +33,8 @@ r-reshape2
 r-plotly
 r-scales
 r-crosstalk
-r-gprofiler
+r-gprofiler2
+r-ggpubr
 bioconductor-summarizedexperiment
 bioconductor-rtracklayer
 bioconductor-tximport
