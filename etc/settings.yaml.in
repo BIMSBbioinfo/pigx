@@ -59,7 +59,7 @@ execution:
   submit-to-cluster: no
   jobs: 6
   nice: 19
-  mem_mb: 4000
+  mem_mb: 64000
   cluster:
     missing-file-timeout: 120
     memory: 8G
@@ -89,7 +89,7 @@ execution:
       threads: 2
     genomeCoverage:
       threads: 1
-      memory: 64G
+      memory: 4G
     count_reads:
       threads: 1
       memory: 6G
