@@ -627,7 +627,8 @@ include: './rules/perform_diffmeth.py'
 
 rule bismark_genome_preparation:
     input:
-        ancient(GENOMEPATH)
+        file = GENOMEFILE,
+        path = ancient(GENOMEPATH)
     output:
         GENOMEPATH+"Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",
         GENOMEPATH+"Bisulfite_Genome/GA_conversion/genome_mfa.GA_conversion.fa"
@@ -640,7 +641,7 @@ rule bismark_genome_preparation:
         os.path.join(OUTDIR,'bismark_genome_preparation_'+ASSEMBLY+'.log')
     message: fmt("Converting {ASSEMBLY} Genome into Bisulfite analogue")
     shell:
-        nice('bismark-genome-preparation', ["{params}", "{input}"], "{log}")
+        nice('bismark-genome-preparation', ["{params}", "{input.path}"], "{log}")
 
 
 
