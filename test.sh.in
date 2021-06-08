@@ -13,7 +13,7 @@ export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))
 chmod -R +w ${srcdir}/tests
 
 ./pigx-bsseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv \
-	--target={final-report-bwameth,final-report}
+    --printshellcmds --target={final-report-bwameth,final-report}
 
 for base in PEsample_wgbs_1_val_1_bt2 SEsample_se_bt2 SEsample_v2_se_bt2; do
     if ! test -f "${srcdir}/tests/out/Reports/sample_reports/${base}.sorted.deduped_cpg_methylKit_hg19_final.html"
