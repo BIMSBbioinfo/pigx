@@ -67,8 +67,7 @@ TESTS = \
 
 EXTRA_DIST += $(TESTS)
 
-# add META from pigx-common 
-EXTRA_DIST += META
+EXTRA_DIST += META.in
 
 clean-local:
 	-rm -rf .snakemake
