@@ -453,7 +453,7 @@ cat("\n The following table list GO terms for differentially expressed genes. GO
 
 ```{r goAnalysis, eval = runGO}
 #filter genes for differential expression
-DEgenes <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.1,])
+DEgenes <- rownames(DE[!is.na(DE$padj) & DE$padj < 0.05,])
 
 go <- NULL
 
