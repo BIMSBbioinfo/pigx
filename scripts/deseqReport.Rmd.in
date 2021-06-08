@@ -207,14 +207,10 @@ The full table of DESeq2 results and normalized counts tables can be found at:
  `r DEnormalizedCountsFile`
 
 ```{r write_DEtable}
-DEsubset <- DE[!is.na(DE$padj) & abs(DE$log2FoldChange) > 1,]
-max <- 1000
-if(nrow(DEsubset) < max) {
-max <- nrow(DEsubset)
-}
-DEsubset <- DEsubset[1:max,]
+DEsubset <- DE[!is.na(DE$padj) & DE$padj < 0.05,]
+DEsubset <- DEsubset[order(DEsubset$padj),]
 
-DT::datatable(DEsubset,
+DT::datatable(DEsubset[1:min(nrow(DEsubset), 1000),],
           extensions = c('Buttons', 'FixedColumns', 'Scroller'),
           options = list(fixedColumns = TRUE,
                          scrollY = 400,
