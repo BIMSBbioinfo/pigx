@@ -11,14 +11,6 @@ params:
 ---
 
 <style>
-.infobox {
-  padding: 1em 1em 1em 4em;
-  margin-bottom: 10px;
-  border: 2px solid orange;
-  border-radius: 10px;
-  background: #f5f5f5 5px center/3em no-repeat;
-}
-
 .pigx_info {
   background-image: url(params$logo); 
 }
@@ -314,12 +306,3 @@ df$reports <- links
 
 datatable(df, escape=FALSE)
 ```
-:::{.infobox .pigx_info data-latex="{caution}"}
-**PiGx: Pipelines in Genomics**
-
-PiGx is a collection of highly reproducible genomics pipelines. The original set provides pipelines for the analysis of 
-RNA sequencing, chromatin immunoprecipitation sequencing, bisulfite-treated DNA sequencing, and single-cell 
-resolution RNA sequencing. All of them process raw experimental data and generate reports containing 
-publication-ready plots and figures, with interactive report elements and standard observables. For more information
-please see [the PiGx home page](https://bioinformatics.mdc-berlin.de/pigx).
-:::
