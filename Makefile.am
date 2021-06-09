@@ -9,16 +9,19 @@ dist_pkglibexec_SCRIPTS = \
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
 dist_pkglibexec_scripts_SCRIPTS = \
   scripts/download_databases.sh \
-  scripts/report_scripts/qc_report_per_sample.Rmd \
-  scripts/report_scripts/taxonomic_classification.Rmd \
-  scripts/report_scripts/index.Rmd \
-  scripts/report_scripts/variantreport_p_sample.Rmd \
   scripts/generateNavigation.R \
   scripts/renderReport.R \
   scripts/get_qc_table.py \
   scripts/parse_vep.py \
   scripts/vcfTocsv.py \
   scripts/vep_rule.py
+
+pkglibexec_reportsdir = $(pkglibexecdir)/scripts/report_scripts/
+dist_pkglibexec_reports_SCRIPTS = \
+  scripts/report_scripts/index.Rmd \
+  scripts/report_scripts/qc_report_per_sample.Rmd \
+  scripts/report_scripts/taxonomic_classification.Rmd \
+  scripts/report_scripts/variantreport_p_sample.Rmd
 
 dist_pkgdata_DATA =            \
   etc/pretty.txt \
