@@ -41,6 +41,7 @@ OUTPUT_DIR       = config['locations']['output-dir']
 READ_LENGTH      = config['trimming']['read-length']
 CUT_OFF          = config['trimming']['cut-off']
 
+INDEX_DIR         = os.path.join(OUTPUT_DIR, 'index')
 TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
@@ -165,16 +166,21 @@ rule prinseq:
 
 rule bwa_index:
     input: REFERENCE_FASTA
-    output: "{}.bwt".format(REFERENCE_FASTA)
+    output:
+      ref=os.path.join(INDEX_DIR, os.path.basename(REFERENCE_FASTA)),
+      index=os.path.join(INDEX_DIR, "{}.bwt".format(os.path.basename(REFERENCE_FASTA)))
     log: os.path.join(LOG_DIR, 'bwa_index.log')
-    shell: "{BWA_EXEC} index {input} >> {log} 2>&1"
+    shell: """mkdir -p {INDEX_DIR};
+ln -sf {input} {INDEX_DIR};
+cd {INDEX_DIR};
+{BWA_EXEC} index {output.ref} >> {log} 2>&1"""
 
 
 rule bwa_align:
     input:
         fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq")],
-        ref = REFERENCE_FASTA,
-        index = "{}.bwt".format(REFERENCE_FASTA)
+        ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA))),
+        index = os.path.join(INDEX_DIR, "{}.bwt".format(os.path.basename(REFERENCE_FASTA)))
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
     params:
         threads = 4
@@ -250,7 +256,7 @@ rule lofreq:
     input:
         aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam'),
         aligned_bai = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bai'),
-        ref = REFERENCE_FASTA
+        ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA)))
     output: os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
     log: os.path.join(LOG_DIR, 'lofreq_{sample}.log')
     shell: "{LOFREQ_EXEC} call -f {input.ref} -o {output} --verbose {input.aligned_bam} >> {log} 2>&1"
