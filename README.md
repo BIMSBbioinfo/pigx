@@ -17,7 +17,7 @@ an intuitive visual overview about the development of variant abundance over tim
 
 # Documentation
 
-Please see our documentation in order to find out more about how to install and run the PiGx-RNAseq pipeline:
+Please see our documentation in order to find out more about how to install and run the PiGx-SARS-CoV-2 wastewater pipeline:
 https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html
 
 # Sample Reports
