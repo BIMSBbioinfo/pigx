@@ -179,9 +179,10 @@ mutations in samples at specific wastewater sampling locations, and
 how the frequencies change over time.
 
 ```{r mutations, echo=F, message=F, warning=F}
-melted <- reshape2::melt(df_mut,
-                         id.vars = c("dates", "samplename", "location_name",
-                                     "coordinates_lat", "coordinates_long"))
+melted <- melt(df_mut,
+               id.vars = c("dates", "samplename", "location_name",
+                           "coordinates_lat", "coordinates_long"),
+               rm.NA = TRUE)
 melted$dates <- as.Date(melted$dates)
 
 # sort by dates
