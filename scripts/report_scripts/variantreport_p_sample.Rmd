@@ -424,6 +424,8 @@ colnames(df) <- variants
 df <- df %>% 
     tidyr::pivot_longer(everything())
 
+font_family <- "DejaVu Sans"
+
  ggplot(data = df, aes(name,value, 
                        fill = name)) +
         geom_bar(stat="identity") +
@@ -434,12 +436,14 @@ df <- df %>%
         scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1),
                            labels = scales::percent_format(accuracy = 1)) +
         scale_colour_manual(values=cbbPalette) + 
-        geom_text(aes(label=sprintf("%0.3f", round(value, digits = 3))), 
+        # geom_text ignores the theme's default font family, so we
+        # need to provide it here.
+        geom_text(aes(family = font_family,
+                      label = sprintf("%0.3f", round(value, digits = 3))),
                       position=position_dodge(width=0.9), 
                       vjust=-0.25) + 
         scale_fill_discrete(name = "Variants") +
-        theme_set(theme_get() + theme(text = element_text(family = 'Open Sans'))) 
-
+     theme_gray(base_family = font_family)
 ```
 
 # Methods
