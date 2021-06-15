@@ -420,7 +420,19 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 # work in progress...only to show how it theoretically can look like in the report
 variants <- colnames(msig_stable_unique[,-1])
 df <- data.frame(rbind(variant_abundance))
-colnames(df) <- variants
+
+# XXX: Replace the long column name consisting of concatenated variant
+# names with "others" and put the variant names in a label.
+# TODO: This should be done much earlier when building the data frame.
+
+condensed_variants_names <-
+    unlist(lapply(variants, function (x) { if (str_detect(x, ",")) { "others" } else { x }}))
+
+colnames(df) <- condensed_variants_names
+
+variants_labels <-
+    unlist(lapply(variants, function (x) str_replace_all(x, ",", "\n")))
+
 df <- df %>% 
     tidyr::pivot_longer(everything())
 
@@ -432,7 +444,7 @@ font_family <- "DejaVu Sans"
         labs(title = "Proportion of variants of concern inferred from deconvolution",
              x = "Variants",
              y = "Percentage") +
-        scale_x_discrete(limits = variants) +
+        scale_x_discrete(limits = condensed_variants_names) +
         scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1),
                            labels = scales::percent_format(accuracy = 1)) +
         scale_colour_manual(values=cbbPalette) + 
@@ -442,7 +454,9 @@ font_family <- "DejaVu Sans"
                       label = sprintf("%0.3f", round(value, digits = 3))),
                       position=position_dodge(width=0.9), 
                       vjust=-0.25) + 
-        scale_fill_discrete(name = "Variants") +
+     scale_fill_discrete(name = "Variants",
+                         breaks = condensed_variants_names,
+                         labels = variants_labels) +
      theme_gray(base_family = font_family)
 ```
 
