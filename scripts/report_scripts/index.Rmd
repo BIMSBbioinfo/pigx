@@ -94,7 +94,8 @@ tagList(lapply(locations,
                                 name = ~variable,
                                 x = ~dates,
                                 y = ~value,
-                                color = ~variable) %>%
+                                color = ~variable,
+                                colors = Variant_colors) %>%
                        layout (title = location,
                                showlegend = TRUE,
                                yaxis = list(title = "Frequency"))
@@ -131,7 +132,8 @@ locations <- unique(melt(df_var,
                                      "coordinates_long")))
 
 plot_ly (type = 'scattermapbox',
-         mode = 'markers') %>%
+         mode = 'markers',
+         colors = Variant_colors) %>%
     add_trace(data = locations,
               size = 1,
               lon = ~coordinates_long,
