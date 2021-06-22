@@ -63,17 +63,69 @@ parse_snv_csv <- function (snvfile,...){ # allele frequency from v-pipe vcf
   Ref <- snvtable$Ref
   Pos <- snvtable$Pos
   Var <- snvtable$Var
+  
+  # concat position value and nucleotides to nucleotide-mutation-notation 
   snvinfo.df <- data.frame(Ref = Ref,
                         Pos = Pos, 
                         Var = Var,
                         gene_mut = paste0(Ref, Pos, Var),
                         stringsAsFactors = FALSE)
+  # concat nucleotide-mutation-notation with mutation frequencies and coverage
+  # seperate posistion column will be used for joining data frames
   snv.info <- cbind(gene_pos=snvinfo.df[,"Pos"], gene_mut=snvinfo.df[,"gene_mut"],freq,cov)
   
   return(snv.info)
 }
 
+detectable_deletions <- function (x, colnames) { 
+  #' deletions can span a range of position values indicated by a dash in the prot_mut_loc column.
+  #' In those cases those ranges have to be split up in order to be able to detect single positions. This function should
+  #' be used on a already filtered set of deletions derived from the vep-output. They are then split up and expanded with the 
+  #' number of rows realted to the number of position. The function returns those extended lines as a dataframe which structure
+  #' is matching the df structure which is returned by "get_protein_mut" 
+  
+  # check that the mutations spans multiple nucleotides AND multiple Amino Acids
+  if (x['gene_mut_loc.2'] != x['gene_mut_loc.3'] & str_detect(x['prot_mut_loc'],"-")){
+  
+    # extract columns from input dataframe where the content of the rows won't change, but where rows will be duplicated 
+    # when merging back with the extended deletion rows
+    constant_before <- as.data.frame((cbind(x['gene_mut_loc.1'], x['gene_mut_loc.2'], x['gene_mut_loc.3'])))
+    constant_after <- as.data.frame((cbind(x['Conseq'],x['genes'])))
+  
+    # split the position values denoting a range and make as many new rows as positions spanned with the missing 
+    # position values e.g: 1-3 (1 row) will become 1,2,3 (3 rows)
+    split_prot_pos <- str_split(x['prot_mut_loc'],"-")
+    list_prot_pos <- list()
+    for (i in 1:length(split_prot_pos)){
+      list_prot_pos[[i]] <- seq(as.numeric(split_prot_pos[[i]][1]),as.numeric(split_prot_pos[[i]][2]))
+    }
+    
+    # TODO instead of qpcR bind_cols from dplyer
+    # split groups of reference Amino acids (AAs.1) if necessary, concat the extendet columns
+    extendet <- as.data.frame(qpcR:::cbind.na(as.character(unlist(list_prot_pos)), as.character(unlist(str_split(x['AAs.1'],''))), as.character(str_split(x['AAs.2'],''))))
+    # the dash is the sign for an Amino Acid that was deleted
+    extendet[is.na(extendet)] <- '-' 
+    
+    # join the columns with the extended rows back with the rest of the original dataframe
+    full <- as.data.frame(cbind(constant_before,extendet, constant_after))
+    colnames(full) <- colnames
+    # match the extended rows with added positions values to the Amino acids. If a group of reference Amino acids in AAs.1
+    # is given it's splitted and matched according to their order. The mutation in AAs.2 is only applied to the last position
+    # every other position get's an dash in column AAs.2
+    # e.g.: 1-3 is exended to seperate rows, if htere was ABC in AAs.1 and C in AAs.2, the results would be A1-, B2-, C3C
+    full$prot_mut_loc <- vapply(full$prot_mut_loc, paste, collapse = " ", character(1L))
+    full$AAs.1 <- vapply(full$AAs.1, paste, collapse = " ", character(1L))
+    full$AAs.2 <- vapply(full$AAs.2, paste, collapse = " ", character(1L))
+    
+    return(full)
+  }
+  
+}
+
 get_protein_mut <- function (vepfile){ # parse together from vep output "Protein_position" and "Amino_acid"
+  #' input: []_sarscov2_parsed.txt, parsed vcf from VEP CLI, comma seperated
+  #' this function is for parsing the information about mutation position in the amino acid sequence, the reference aa and
+  #' the alternative mutation into the aa-mutation-notation which is later on comparable to the lists of signature mutations
   
   # reading in whole vep txt output
     vepfile.df <- read.table(vepfile, sep = ',', header = T) # you should include in the vep script to parse out the # 
@@ -90,34 +142,7 @@ get_protein_mut <- function (vepfile){ # parse together from vep output "Protein
     # delete all rows with no protein position value
     locations <- locations %>% filter(!grepl("^-", prot_mut_loc))
     # specific B117 mutations: 21990-21993, 21764-21770, maybe also 3675-3677, 69-70 - all there
-    
-    
-    detectable_deletions <- function (x, colnames) { 
-      
-      if (x['gene_mut_loc.2'] != x['gene_mut_loc.3'] & str_detect(x['prot_mut_loc'],"-")){
-      
-        constant_before <- as.data.frame((cbind(x['gene_mut_loc.1'], x['gene_mut_loc.2'], x['gene_mut_loc.3'])))
-        constant_after <- as.data.frame((cbind(x['Conseq'],x['genes'])))
-      
-        split_prot_pos <- str_split(x['prot_mut_loc'],"-")
-        list_prot_pos <- list()
-        for (i in 1:length(split_prot_pos)){
-          list_prot_pos[[i]] <- seq(as.numeric(split_prot_pos[[i]][1]),as.numeric(split_prot_pos[[i]][2]))
-        }
-        
-        extendet <- as.data.frame(qpcR:::cbind.na(as.character(unlist(list_prot_pos)), as.character(unlist(str_split(x['AAs.1'],''))), as.character(str_split(x['AAs.2'],''))))
-        extendet[is.na(extendet)] <- '-' 
-        
-        full <- as.data.frame(cbind(constant_before,extendet, constant_after))
-        colnames(full) <- colnames
-        full$prot_mut_loc <- vapply(full$prot_mut_loc, paste, collapse = " ", character(1L))
-        full$AAs.1 <- vapply(full$AAs.1, paste, collapse = " ", character(1L))
-        full$AAs.2 <- vapply(full$AAs.2, paste, collapse = " ", character(1L))
-        
-        return(full)
-      }
-      
-    }
+  
     deletions.df <- locations
     deletions.df <- locations %>%
                         filter(gene_mut_loc.2 != gene_mut_loc.3 &
@@ -143,6 +168,9 @@ get_protein_mut <- function (vepfile){ # parse together from vep output "Protein
 }
 
 deconv <- function (bulk,sig){
+  #' This function performs the deconvolution using a signature matrix for the mutations found in the sample 
+  #' and bulk frequency values derived by the SNV caller
+  #' it was build by Altuna
   
   rlm_model = suppressWarnings(MASS::rlm(sig,bulk, maxit = 100))
       
@@ -158,6 +186,7 @@ deconv <- function (bulk,sig){
   as.vector(rlm_coefficients)
 }
 
+# TODO this does not lead to 100% correct results and has to be updated with "dedupeVariants" from PR 48
 dedupe <- function (df) {
     transposed <- t (df)
     dupes <- duplicated (transposed, fromLast=TRUE)
@@ -174,6 +203,12 @@ dedupe <- function (df) {
 }
 
 dedupeMuts <- function (mut, sigmut.df, dedup.df) {
+        #' this function is a different version of "dedupe" 
+        #' if a signature mutation is shared by multiple variants the mutation-tables
+        #' would have seperate rows for the same mutation. This function is for concatenating all the variants 
+        #' that share that mutation. It requires the original df with all mutations, the deduplicated one 
+        #' (only one row per mutation) and the mutation for which this procedure should be applied
+        #' This function is not yet completely refined and should be improved further
         # get variant group per mutation
         duped_muts <- grep (mut, sigmut.df$value)
         grouped <- sigmut.df$name[duped_muts]
@@ -330,6 +365,7 @@ muts <- c(match.df$AA_mut)
 # get bulk frequency values
 bulk <- as.numeric(match.df$freq)
 
+# only execute the deconvolution when at least one mutation was found
 executeDeconvolution <- length(muts) > 0
 ```
 
