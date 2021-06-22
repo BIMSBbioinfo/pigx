@@ -69,6 +69,10 @@ Since not all variants of concern are listed, the relative
 frequencies at a given location and time will not necessarily add up
 to one.
 
+```{r color_palette}
+Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f69e5", "#4cdab2", "#999ce4", "#2ce6f3",
+"#6638c6", "#005f29", "#5d73cc", "#616524", "#a8a041", "#e9f600", "#3eaca8", "#62a273", "#4ea5d0", "#655c95", "#67a04e")
+```
 ```{r variants, echo=F, message=F, warning=F}
 
 melted <- reshape2::melt(df_var,
