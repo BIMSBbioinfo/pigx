@@ -74,7 +74,7 @@ to one.
 melted <- reshape2::melt(df_var,
                          id.vars = c("dates", "samplename", "location_name",
                                      "coordinates_lat", "coordinates_long"))
-melted$dates <- as.Date(melted$dates)
+melted$dates <- as.POSIXct(melted$dates, format = "%Y-%m-%d %H:%M")
 locations <- unique(melted$location_name)
 
 tagList(lapply(locations,
@@ -183,7 +183,7 @@ melted <- melt(df_mut,
                id.vars = c("dates", "samplename", "location_name",
                            "coordinates_lat", "coordinates_long"),
                rm.NA = TRUE)
-melted$dates <- as.Date(melted$dates)
+melted$dates <- as.POSIXct(melted$dates, format = "%Y-%m-%d %H:%M")
 
 # sort by dates
 idx <- order(melted$dates)
