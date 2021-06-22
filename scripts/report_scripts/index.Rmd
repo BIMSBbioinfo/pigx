@@ -84,7 +84,7 @@ tagList(lapply(locations,
                        arrange(variable) %>%
                        mutate (value = round (value, 4)) %>%
                        plot_ly (type = 'scatter',
-                                mode = 'line',
+                                mode = 'lines+markers',
                                 stackgroup = 'one',
                                 showlegend = TRUE,
                                 name = ~variable,
