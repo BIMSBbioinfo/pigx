@@ -3,13 +3,13 @@
 # Created by: vfs
 # Created on: 23.06.21
 
-source("../../scripts/deconvolution.R")
+source(file.path(srcdir,"scripts/deconvolution.R"))
 
 # test building of simple signature matrix
 # test_inputs
-match.df <- read.table("../sample_data/test_match.df", sep = ",", header = TRUE)
+match.df <- read.table(file.path(srcdir,"sample_data/test_match.df") , sep = ",", header = TRUE)
 muts <- c(match.df$AA_mut)
-sig_mutations.df <- read.table( "../sample_data/test_sig_mutations.df", sep = ",", header = TRUE)
+sig_mutations.df <- read.table( file.path(srcdir,"sample_data/test_sig_mutations.df"), sep = ",", header = TRUE)
 # run function
 sig_matrix_observed <- createSigMatrix( muts, sig_mutations.df )
 # check for expected structure
