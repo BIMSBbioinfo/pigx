@@ -11,7 +11,7 @@ createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   # create an empty data frame add a column for the Wildtype
   # Wildtype in this case means the reference version of SARS-Cov-2
   msig <- data.frame(mutations.vector,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0, b16172=0)
-  
+  names(msig)[names(msig) == "mutations.vector"] <- "muts"
   # making a matrix with the signature mutations found in the sample
   # make binary matrix matching the mutations to the mutation-list per variant to see how many characterising mutations
   # where found by variant 
