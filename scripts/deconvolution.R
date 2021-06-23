@@ -3,14 +3,14 @@
 # Created by: vfs
 # Created on: 23.06.21
 
-createSigMatrix <- function ( mutations.vector ) {
+createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   #' for making the signature matrix based on the signature mutations found in the sample (given as input as a vector)
   #' TODO: The data.frame should be builded dynamically based on a vector with variants, the filter step could be a function
   #' for it self
   #' returns simple signature matrix as data.frame without frequency values
   # create an empty data frame add a column for the Wildtype
   # Wildtype in this case means the reference version of SARS-Cov-2
-  msig <- data.frame(muts,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0, b16172=0)
+  msig <- data.frame(mutations.vector,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0, b16172=0)
   
   # making a matrix with the signature mutations found in the sample
   # make binary matrix matching the mutations to the mutation-list per variant to see how many characterising mutations
