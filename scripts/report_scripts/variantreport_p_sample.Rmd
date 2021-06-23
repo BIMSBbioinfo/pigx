@@ -257,11 +257,12 @@ read_sigmuts <- function (sigmut) {
 
 sig_mutations.df <- do.call(rbind, lapply(sigmuts, read_sigmuts))
 
-vepfile.df <- read.table(params$vep_file, sep = ",", header = T) #TODO - in na's umwandeln
+vepfile.df <- read.table(params$vep_file, sep = ",", header = T) 
 
 vepfile.df <- na_if(vepfile.df, "-")
 
 # deduplicate dataframe
+# reasoning see description of "dedupeMuts"
 # fixme: I was not sure, how I can include this in my function but should be possible, will come back to it later
 dupes <- duplicated (sig_mutations.df$value, fromLast=TRUE)
 allDupes <- dupes | duplicated (sig_mutations.df$value, fromLast=FALSE)
@@ -279,21 +280,24 @@ for (mut in sig_mutations.df$value) {
 
 ```{r match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
 variant_protein_mut <- get_protein_mut(params$vep_file)
+# match the variant names according to the signature mutations, if there is no signature mutation no name will be given
 variant_protein_mut <- dplyr::left_join(variant_protein_mut, sigmuts_deduped, by = c('AA_mut'='value'))
+# filter for mutations which are signature mutations
 match.df <- variant_protein_mut %>%
                     filter(!is.na(name))
+# filter for everything that is not a signature mutation
 nomatch.df <- variant_protein_mut %>%
                         filter(is.na(name))
 ```
 
-```{r, message=F, warning=F, include = FALSE}
-# Data frame to use for the tables
-lofreq.info <- as_data_frame(parse_snv_csv(params$snv_file))
-# vep.info <- write the part that returns the variant_protein_mut into a function 
+```{r merge_vep_with_lofreq_info, message=F, warning=F, include = FALSE}
+# get the SNV frequency values and coverage information for the mutations from the LoFreq output
+lofreq.info <- as_data_frame(parse_snv_csv(params$snv_file)) 
 vep.info <- variant_protein_mut
-# add freqency and coverage information to protein mutations
-#variant_protein_mut <- dplyr::left_join(variant_protein_mut, sig_mutations.df, by = c('AA_mut'='value'))
+
 complete.df <- dplyr::left_join(lofreq.info, vep.info, by = c('gene_pos'='gene_mut_loc.2'), copy = T)
+
+# TODO: redundant step from previous chunk can be removed
 match.df <- complete.df %>%
                     filter(!is.na(name))
 nomatch.df <- complete.df %>%
@@ -318,12 +322,14 @@ variants. Table 2 shows all other mutations without any match. The columns are d
 cat("\n Table 1: SNVs from sample matching signature mutations")
 ```
 ```{r sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
+# Display the filtered signature mutations and the variants accordingly in scrollable tables
+
 SignatureTable <-  data.frame("SNV" = match.df$gene_mut, 
                   "gene" = match.df$genes,
                   "protein_mutation" = match.df$AA_mut,
-                  "variant" = match.df$name, # maybe more nice writing of it e.g B1.1.7            
-                  "frequency" = match.df$freq, # maybe more clear name stating which frequency
-                  "coverage" =  match.df$cov) # maybe more clear title stating which coverage 
+                  "variant" = match.df$name, # TODO: more nice writing of it e.g B1.1.7            
+                  "frequency" = match.df$freq, # TODO: more clear name stating which frequency
+                  "coverage" =  match.df$cov) # TODO: more clear title stating which coverage 
 DT::datatable(SignatureTable,
               extensions = c('FixedColumns', 'Scroller'),
               options = list(fixedColumns = TRUE, 
@@ -336,12 +342,14 @@ DT::datatable(SignatureTable,
 ```{r nonsig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
 cat("\n Table 2: SNVs from sample not matching any signature mutations")
 ```
-```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
+```{r non_sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
+# Display the filtered signature mutations and the variants accordingly in scrollable tables
+
 NoSignatureTable <-  data.frame("SNV" = nomatch.df$gene_mut, 
                   "gene" = nomatch.df$genes,
                   "protein_mutation" = nomatch.df$AA_mut,
-                  "frequency" = nomatch.df$freq, # maybe more clear name stating which frequency
-                  "coverage" =  nomatch.df$cov) # maybe more clear title stating which coverage
+                  "frequency" = nomatch.df$freq, # TODO more clear name stating which frequency
+                  "coverage" =  nomatch.df$cov) # TODO more clear title stating which coverage
 DT::datatable(NoSignatureTable,
               extensions = c('FixedColumns', 'Scroller'),
               options = list(fixedColumns = TRUE, 
@@ -360,9 +368,9 @@ wastewater sample.
 
 ```{r getting_unique_muts_bulk, message=F, warning=F, include = FALSE}
 
-# get prot.mutations only 
+# get prot.mutations only, input for the signature matrix 
 muts <- c(match.df$AA_mut)
-# get bulk frequency values
+# get bulk frequency values, will be input for the deconvolution function
 bulk <- as.numeric(match.df$freq)
 
 # only execute the deconvolution when at least one mutation was found
@@ -372,9 +380,12 @@ executeDeconvolution <- length(muts) > 0
 
 ```{r creating_signature_matrix_simple, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 # create an empty data frame add a column for the Wildtype
+# Wildtype in this case means the reference version of SARS-Cov-2
 msig <- data.frame(muts,WT=0,b117=0,b1351=0,b1427=0,b1429=0,b1526=0,p1=0, b16172=0)
 
-# make sigmuts per variant tables new with parsed mutations
+# making a matrix with the signature mutations found in the sample
+# make binary matrix matching the mutations to the mutation-list per variant to see how many characterising mutations
+# where found by variant 
 
 b117 <- filter(sig_mutations.df, name == "b117")$value
 msig[msig$muts %in% b117,"b117"]=1
@@ -401,7 +412,8 @@ msig[1,2] <- 0 # put the WT signature, here it's 0 and not 1 bc it will be inver
 ```
 ```{r adding_wt_to_sigmat, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 
-# making the WT rows
+# for the deconvolution to work we need the "wild type" frequencies too. The matrix from above got mirrored, 
+# wild type mutations are simulated the following: e.g. T210I (mutation) -> T210T ("wild type")
 
 # 1. make "WT mutations" 
 muts_wt <- lapply(muts,function(x) str_replace(x,regex(".$"), str_sub(x, 1,1)))
@@ -437,11 +449,11 @@ msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
 # a vector with the information about which of the columns were merged. 
 
 msig_stable_unique <- dedupe(msig_stable)
-
+# TODO this does not group columns correctly -> see comment at "dedupe" and PR #48
 ```
 ```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 
-sig <- msig_stable_unique[,-1]
+sig <- msig_stable_unique[, -which( names(msig_stable_unique) %in% "muts" )]  
 variant_abundance <- deconv(as.numeric(bulk_all),sig)
 
 ```
@@ -451,7 +463,9 @@ the column description shows all VOCs which are realted to the signature mutatio
 
 ```{r plot, message=F, warning=F, echo = FALSE, eval = executeDeconvolution}
 
-cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f69e5", "#4cdab2", "#999ce4", "#2ce6f3",
+"#6638c6", "#005f29", "#5d73cc", "#616524", "#a8a041", "#e9f600", "#3eaca8", "#62a273", "#4ea5d0", "#655c95", "#67a04e")
+# TODO this shoul be put into a seperate color palette function in a seperate file
 
 # work in progress...only to show how it theoretically can look like in the report
 variants <- colnames(msig_stable_unique[,-1])
@@ -483,7 +497,7 @@ font_family <- "DejaVu Sans"
         scale_x_discrete(limits = condensed_variants_names) +
         scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1),
                            labels = scales::percent_format(accuracy = 1)) +
-        scale_colour_manual(values=cbbPalette) + 
+        scale_colour_manual(values=Variant_colors) + 
         # geom_text ignores the theme's default font family, so we
         # need to provide it here.
         geom_text(aes(family = font_family,
@@ -518,29 +532,31 @@ font_family <- "DejaVu Sans"
 
 # Raw data 
 
-```{r, include = F}
+```{r download_raw, include = F}
+# make raw/input data downloadable
 snvs <- readLines(params$snv_file) %>% paste0(collapse="\n") %>% base64_urlencode()
+vep <- readLines(params$vep_file) %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
 Called SNVs:  
 [Download SNVs.csv](`r sprintf('data:text/csv;base64,%s', snvs)`)
-```{r, include = F}
-# can possible be fused together with above. But rigth now it's safer like this. 
-# write.csv2(vepfile.df, "./file.csv") # not sure about the funct of the dataframe here, but it works so I leave it for now
-vep <- readLines(params$vep_file) %>% paste0(collapse="\n") %>% base64_urlencode()
-```
+
 Variant effect prediction (*Ensemble VEP output*):  
 [Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)
 
 ```{r csv_output_variant_plot, include = F, eval = executeDeconvolution}
+# prepare processed variant values to output them as a csv which will be used for the plots in index.rmd
+# those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate 
+# file (and maybe rule)
 # get all possible variants
 all_variants <- colnames (msig_all)
 output_variants <- file.path(csv_output_dir, "data_variant_plot.csv")
 
+# if file exists already - grep the existing content and add a new line
 if (file.exists (output_variants)) {
     output_variant_plot <- read.table (output_variants, 
                                        sep = "\t", header = TRUE, colClasses = "character")
 } else {
-    output_variant_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
+    output_variant_plot <- data.frame (samplename = character(), 
                                        dates = character(),
                                        location_name = character(),
                                        coordinates_lat = character(),
@@ -573,15 +589,21 @@ for (i in all_variants){
     # check if variant already has a column
     if (i %in% colnames(output_variant_plot)) {
         output_variant_plot[sample_row,][i] <- df$value[df$name == i]
-}
+    }
   }
 }
 write.table(output_variant_plot[sample_row,], output_variants, sep = "\t", append = TRUE, 
             na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
 ```
 ```{r csv_output_mutation_plot, message = FALSE, warning = FALSE, include = FALSE}
+# prepare processed mutation values to output them as a csv which will be used for the plots in index.rmd
+# those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate 
+# file (and maybe rule)
+ 
+# only one mutation disregarding variants
+# TODO: that problem should be fixed already further above by deduplicating for the tables, check and consider that 
+# data frame from above
 match.df <- unique(match.df)
-  
 # get all possible mutations
 all_mutations <- sigmuts_deduped$value
 output_mutations <- file.path(csv_output_dir, "data_mutation_plot.csv")
@@ -591,7 +613,7 @@ if (file.exists (output_mutations)) {
     output_mutation_plot <- read.table (output_mutations, 
                                        sep = "\t", header = TRUE, colClasses = "character")
 } else {
-    output_mutation_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
+    output_mutation_plot <- data.frame (samplename = character(),
                                        dates = character(),
                                        location_name = character(),
                                        coordinates_lat = character(),
@@ -624,7 +646,7 @@ for (i in all_mutations){
     # check if variant already has a column
     if (i %in% colnames(output_mutation_plot)) {
         output_mutation_plot[sample_row,][i] <- match.df$freq[match.df$AA_mut == i]
-}
+    }
   }
 }
 write.table(output_mutation_plot[sample_row,], output_mutations, sep = "\t", append = TRUE, 
