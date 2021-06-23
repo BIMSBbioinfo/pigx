@@ -43,3 +43,35 @@ createSigMatrix <- function ( mutations.vector ) {
 }
 # TODO write test about the expected structure of the matrix
 
+simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataframe) {
+  # for the deconvolution to work we need the "wild type" frequencies too. The matrix from above got mirrored, 
+  # wild type mutations are simulated the following: e.g. T210I (mutation) -> T210T ("wild type")
+  
+  # 1. make "WT mutations" 
+  muts_wt <- lapply(mutations.vector,function(x) str_replace(x,regex(".$"), str_sub(x, 1,1)))
+  muts_wt.df <- data.frame(muts = unlist(muts_wt))
+  # 2. make frequency values, subtract the observed freqs for the real mutations from 1
+  bulk_wt <- lapply(bulk_freq.vector, function (x) {1-x})
+  
+  # 3. make matrix with wt mutations and inverse the values and wild type freqs
+  msig_inverse <- bind_cols(muts_wt.df, as.data.frame(+(!simple_sigmat.dataframe[,-1])))
+  
+  # fixme: not sure if this really is a nice way to concat those things...
+  muts_all <- c(muts_wt,muts)
+  muts_all.df <- data.frame(muts = unlist(muts_all))
+  
+  bulk_all <- c(bulk_wt, bulk)
+  bulk_all.df <- data.frame(freq = unlist(bulk_all))
+  
+  msig_all <- rbind(msig_inverse[,-1],msig[,-1])
+  
+  # 4. concat the data frames
+  
+  # without bulk freq for building the signature matrix
+  msig_stable <- bind_cols(muts_all.df,msig_all)
+  
+  # with bulk freq for export and overview
+  msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
+  
+  return ( msig_stable )
+}
