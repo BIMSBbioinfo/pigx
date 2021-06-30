@@ -1,10 +1,11 @@
-#!/bin/R
+#!@RSCRIPT@
 
 # Title     : test_deconvolution
 # Objective : 
 # Created by: vfs
 # Created on: 23.06.21
 
+srcdir <- Sys.getenv("srcdir")
 source(file.path(srcdir,"scripts/deconvolution.R"))
 
 # test building of simple signature matrix
