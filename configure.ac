@@ -101,10 +101,13 @@ AX_R_PACKAGE([Seurat])
 AX_R_PACKAGE([SingleCellExperiment])
   ])
 
+AC_SUBST_FILE(PIPELINE_META)
+PIPELINE_META=./META
+AC_CONFIG_FILES([META])
 AC_CONFIG_FILES([etc/settings.yaml
                  scripts/scrnaReport.Rmd
                  Makefile
                  qsub-template.sh])
 AC_CONFIG_FILES([tests/test.sh], [chmod +x tests/test.sh])
-AC_CONFIG_FILES([pigx-scrnaseq], [chmod +x pigx-scrnaseq])
+AC_CONFIG_FILES([pigx-scrnaseq:pigx-common/common/pigx-runner.in], [chmod +x pigx-scrnaseq])
 AC_OUTPUT

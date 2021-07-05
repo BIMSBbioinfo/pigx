@@ -4,7 +4,7 @@ nodist_bin_SCRIPTS = \
   pigx-scrnaseq
 
 dist_pkglibexec_SCRIPTS =			\
-  Snake_Dropseq.py \
+  snakefile.py \
   qsub-template.sh
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
@@ -37,6 +37,7 @@ dist_doc_DATA = 					\
   README.md
 
 EXTRA_DIST =										   \
+  META.in                                              \
   tests/sample_sheet.csv                               \
   tests/settings.yaml                                  \
   tests/sample_data/hg19_chr19.10094960.25108012.fa    \
