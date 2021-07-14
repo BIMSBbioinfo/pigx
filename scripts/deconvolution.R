@@ -3,6 +3,8 @@
 # Created by: vfs
 # Created on: 23.06.21
 
+library(dplyr)
+
 createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   #' for making the signature matrix based on the signature mutations found in the sample (given as input as a vector)
   #' TODO: The data.frame should be builded dynamically based on a vector with variants, the filter step could be a function
@@ -15,7 +17,6 @@ createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   # making a matrix with the signature mutations found in the sample
   # make binary matrix matching the mutations to the mutation-list per variant to see how many characterising mutations
   # where found by variant 
-  
   b117 <- filter(sig_mutations.df, name == "b117")$value
   msig[msig$muts %in% b117,"b117"]=1
   
