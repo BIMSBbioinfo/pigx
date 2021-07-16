@@ -4,7 +4,7 @@ nodist_bin_SCRIPTS = \
   pigx-chipseq
 
 dist_pkglibexec_SCRIPTS = \
-  Snake_ChIPseq.py \
+  snakefile.py \
   qsub-template.sh
 
 pkglibexec_scriptsdir = $(pkglibexecdir)/scripts
