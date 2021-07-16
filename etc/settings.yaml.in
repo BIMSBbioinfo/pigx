@@ -76,6 +76,7 @@ execution:
       memory: 32G
     hisat2-build:
       threads: 2
+      memory: 16G
     salmon_index:
       threads: 8
       memory: 4G
@@ -87,6 +88,7 @@ execution:
       memory: 16G
     hisat2:
       threads: 2
+      memory: 4G
     genomeCoverage:
       threads: 1
       memory: 4G
