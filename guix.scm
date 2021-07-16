@@ -26,13 +26,6 @@
   (package (inherit (specification->package "pigx-rnaseq"))
     (version %pigx-rnaseq-version)
     (source (string-append (getcwd) "/pigx_rnaseq-" version ".tar.gz"))
-    (inputs
-     `(("hisat2" ,(specification->package "hisat2"))
-       ("fastp" ,(specification->package "fastp"))
-       ("python-deeptools" ,(specification->package "python-deeptools"))
-       ("gprofiler2", (specification->package "r-gprofiler2"))
-       ("ggpubr", (specification->package "r-ggpubr"))
-	,@(package-inputs (specification->package "pigx-rnaseq"))))
     (native-inputs
      `(("autoconf" ,(specification->package "autoconf"))
        ("automake" ,(specification->package "automake"))))))
