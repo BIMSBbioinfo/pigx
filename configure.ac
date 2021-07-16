@@ -126,11 +126,14 @@ AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
   ])
 
 AC_SUBST([capture_environment])
+AC_SUBST_FILE(PIPELINE_META)
+PIPELINE_META=./META
+AC_CONFIG_FILES([META])
 AC_CONFIG_FILES([etc/settings.yaml
                  scripts/Sample_Report.rmd
                  scripts/Deseq_Report.Rmd
                  Makefile
                  qsub-template.sh])
 AC_CONFIG_FILES([Tests/test.sh], [chmod +x Tests/test.sh])
-AC_CONFIG_FILES([pigx-chipseq], [chmod +x pigx-chipseq])
+AC_CONFIG_FILES([pigx-chipseq:pigx-common/common/pigx-runner.in], [chmod +x pigx-chipseq])
 AC_OUTPUT

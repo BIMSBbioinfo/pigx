@@ -3,6 +3,7 @@
 # VIM swp files
 *.swp
 # autoconf generated files
+META
 qsub-template.sh
 configure
 config.status

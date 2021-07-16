@@ -68,6 +68,7 @@ TESTS = \
   Tests/test.sh
 
 EXTRA_DIST =												    \
+  META.in														\
   Tests/sample_sheet.csv									    \
   Tests/settings.yaml										    \
   Tests/sample_sheet_DBA.csv									\
