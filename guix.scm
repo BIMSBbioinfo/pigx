@@ -1,5 +1,5 @@
 ;;; PiGx_chipseq - reports pipeline for reads from ChIPseq experiments.
-;;; Copyright © 2017 Ricardo Wurmus <rekado@elephly.net>
+;;; Copyright © 2017, 2021 Ricardo Wurmus <rekado@elephly.net>
 ;;;
 ;;; This file is part of PiGx_chipseq.
 ;;;
@@ -24,28 +24,13 @@
   (symbol->string (with-input-from-file "VERSION" read)))
 
 (define-public pigx-chipseq-development
-  (package (inherit (specification->package "pigx-chipseq"))
-    (version %pigx-chipseq-version)
-    (source (string-append (getcwd) "/pigx_chipseq-" version ".tar.gz"))
-    (native-inputs
-     `(("autoconf" ,(specification->package "autoconf"))
-       ("automake" ,(specification->package "automake"))
-       ("r-rsubread" ,(specification->package "r-rsubread"))
-       ;; add pacages for Deseq Report
-       (map specification->package '(
-                                     "r-ggrepel"
-                                     "r-deseq2"
-                                     "r-dt"
-                                     "r-pheatmap"
-                                     "r-corrplot"
-                                     "r-reshape2"
-                                     "r-scales"
-                                     "r-crosstalk"
-                                     "r-gprofiler2"
-                                     "r-summarizedexperiment"
-                                     ))
-       ("python-iniconfig" ,(specification->package "python-iniconfig"))
-       )
-     )))
+  (let ((parent (specification->package "pigx-chipseq")))
+    (package (inherit parent)
+      (version %pigx-chipseq-version)
+      (source (string-append (getcwd) "/pigx_chipseq-" version ".tar.gz"))
+      (native-inputs
+       `(("autoconf" ,(specification->package "autoconf"))
+         ("automake" ,(specification->package "automake"))
+         ,@(package-native-inputs parent))))))
 
 pigx-chipseq-development
