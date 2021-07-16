@@ -95,6 +95,9 @@ AC_ARG_VAR(R_LIBS_SITE, The search path for all R packages)
 AC_ARG_VAR(PYTHONPATH, The search path for all Python packages)
   ])
 AC_SUBST([capture_environment])
+AC_SUBST_FILE(PIPELINE_META)
+PIPELINE_META=./META
+AC_CONFIG_FILES([META])
 AC_CONFIG_FILES([etc/settings.yaml
                  scripts/deseqReport.Rmd
                  Makefile
@@ -108,6 +111,6 @@ AC_CONFIG_FILES([tests/test_hisat2_counts/test.sh], [chmod +x tests/test_hisat2_
 AC_CONFIG_FILES([tests/test_multiqc/test.sh], [chmod +x tests/test_multiqc/test.sh])
 AC_CONFIG_FILES([tests/test_deseq_reports/test.sh], [chmod +x tests/test_deseq_reports/test.sh])
 AC_CONFIG_FILES([tests/test_genome_coverage/test.sh], [chmod +x tests/test_genome_coverage/test.sh])
-AC_CONFIG_FILES([pigx-rnaseq], [chmod +x pigx-rnaseq])
+AC_CONFIG_FILES([pigx-rnaseq:pigx-common/common/pigx-runner.in], [chmod +x pigx-rnaseq])
 
 AC_OUTPUT

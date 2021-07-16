@@ -28,6 +28,7 @@ dist_doc_DATA = 									\
   README.md
 
 EXTRA_DIST =										\
+  META.in											\
   tests/sample_sheet.csv							\
   tests/sample_data/sample.gtf						\
   tests/sample_data/reads/HBR_Rep1.read2.fastq.gz	\
