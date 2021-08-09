@@ -244,8 +244,8 @@ rule fastqc_trimmed:
 
 rule multiqc:
   input:
-    fastqc_raw_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.zip'), sample=SAMPLES, read_num=[1, 2]),
-    fastqc_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip'), sample=SAMPLES, read_num=[1, 2])
+    fastqc_raw_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{read}_fastqc.zip'), sample=SAMPLES, read=[READ1, READ2]),
+    fastqc_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{read}_fastqc.zip'), sample=SAMPLES, read=[READ1, READ2])
   output: os.path.join(MULTIQC_DIR, '{sample}', 'multiqc_report.html')
   params:
     fastqc_dir = os.path.join(FASTQC_DIR, '{sample}'),
