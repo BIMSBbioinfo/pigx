@@ -155,8 +155,8 @@ rule prinseq:
         r1 = expand(os.path.join(READS_DIR, "{read1}"), read1 = READ1),
         r2 = expand(os.path.join(READS_DIR, "{read2}"), read2 = READ2)
     output:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_{read1}_trimmed.fastq"), # TODO maybe trimm the naming
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_{read2}_trimmed.fastq")
+        r1 = expand(os.path.join(TRIMMED_READS_DIR, "{sample}_{read1}_trimmed.fastq"), sample=SAMPLES, read1 = READ1), # TODO maybe trimm the naming
+        r2 = expand(os.path.join(TRIMMED_READS_DIR, "{sample}_{read2}_trimmed.fastq"), sample=SAMPLES, read2 = READ2)
     params:
         len_cutoff = int(READ_LENGTH * CUT_OFF),
         output = os.path.join(TRIMMED_READS_DIR, "{sample}"),
