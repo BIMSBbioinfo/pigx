@@ -155,8 +155,8 @@ rule prinseq:
         r1 = expand(os.path.join(READS_DIR, "{read1}"), read1 = READ1),
         r2 = expand(os.path.join(READS_DIR, "{read2}"), read2 = READ2)
     output:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_{read1}_trimmed_R1.fastq"), # TODO maybe trimm the naming
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_{read2}_trimmed_R2.fastq")
+        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_{read1}_trimmed.fastq"), # TODO maybe trimm the naming
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_{read2}_trimmed.fastq")
     params:
         len_cutoff = int(READ_LENGTH * CUT_OFF),
         output = os.path.join(TRIMMED_READS_DIR, "{sample}"),
@@ -181,7 +181,7 @@ cd {INDEX_DIR};
 
 rule bwa_align:
     input:
-        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq")],
+        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq")], # TODO: match to prinseq output
         ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA))),
         index = os.path.join(INDEX_DIR, "{}.bwt".format(os.path.basename(REFERENCE_FASTA)))
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
@@ -233,7 +233,7 @@ rule fastqc_raw:
 
 rule fastqc_trimmed:
     input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq") # TODO match to prinseq output
-    output:
+    output: 
         os.path.join(FASTQC_DIR, '{sample}', 'trimmed_{read}_fastqc.zip'),
         os.path.join(FASTQC_DIR, '{sample}', 'trimmed_{read}_fastqc.html')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_{reads}.log')
