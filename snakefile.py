@@ -87,6 +87,8 @@ with open(SAMPLE_SHEET_CSV, 'r') as fp:
   sample_sheet = list(csv.DictReader(fp))
 
 SAMPLES = [row['name'] for row in sample_sheet]
+READ1 = [row['reads'] for row in sample_sheet]
+READ2 = [row['reads2'] for row in sample_sheet]
 
 targets = {
     'help': {
