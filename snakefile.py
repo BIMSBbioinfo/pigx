@@ -255,7 +255,6 @@ rule bwa_align:
     params:
         threads = 4
     log: os.path.join(LOG_DIR, 'bwa_align_{sample}.log')
-    # TODO it should be possible to add customized parameter
     shell: "{BWA_EXEC} mem -t {params.threads} {input.ref} {input.fastq} > {output} 2>> {log} 3>&2"
 
 rule samtools_filter_aligned:
@@ -406,7 +405,7 @@ rule vep:
     params:
         species = "sars_cov_2"
     log: os.path.join(LOG_DIR, 'vep_{sample}.log')
-    shell: # TODO number parameter should be customizabel by the settings file
+    shell:
       """
       {VEP_EXEC} --verbose --offline --dir_cache {VEP_DB} --DB_VERSION 101 --appris --biotype --buffer_size 5000 --check_existing\
       --distance 5000 --mane --protein --species {params.species} --symbol --transcript_version --tsl\
