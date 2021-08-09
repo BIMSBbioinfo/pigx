@@ -152,8 +152,8 @@ onsuccess:
 
 rule prinseq:
     input:
-        r1 = os.path.join(READS_DIR, "{sample}_R1.fastq"),
-        r2 = os.path.join(READS_DIR, "{sample}_R2.fastq")
+        r1 = expand(os.path.join(READS_DIR, "{read1}"), read1 = READ1),
+        r2 = expand(os.path.join(READS_DIR, "{read2}"), read2 = READ2)
     output:
         r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq"),
         r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq")
