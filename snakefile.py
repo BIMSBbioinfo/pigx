@@ -223,8 +223,8 @@ rule samtools_index:
 rule fastqc_raw:
     input: os.path.join(READS_DIR, "{reads}.fastq")
     output:
-        os.path.join(FASTQC_DIR, '{sample}', 'raw_{reads}_fastqc.zip'),
-        os.path.join(FASTQC_DIR, '{sample}', 'raw_{reads}_fastqc.html')
+        os.path.join(FASTQC_DIR, '{sample}', 'raw_{read}_fastqc.zip'),
+        os.path.join(FASTQC_DIR, '{sample}', 'raw_{read}_fastqc.html')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_raw_{reads}.log') # TODO: maybe split the name
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
@@ -232,11 +232,11 @@ rule fastqc_raw:
 
 
 rule fastqc_trimmed:
-    input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq")
+    input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq") # TODO match to prinseq output
     output:
         os.path.join(FASTQC_DIR, '{sample}', 'trimmed_{read}_fastqc.zip'),
         os.path.join(FASTQC_DIR, '{sample}', 'trimmed_{read}_fastqc.html')
-    log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_R{read_num}.log')
+    log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_{reads}.log')
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
