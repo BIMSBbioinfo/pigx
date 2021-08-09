@@ -232,7 +232,7 @@ rule fastqc_raw:
 
 
 rule fastqc_trimmed:
-    input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq") # TODO match to prinseq output
+    input: os.path.join(TRIMMED_READS_DIR, "{sample}_{read}_trimmed.fastq") 
     output: 
         os.path.join(FASTQC_DIR, '{sample}', 'trimmed_{read}_fastqc.zip'),
         os.path.join(FASTQC_DIR, '{sample}', 'trimmed_{read}_fastqc.html')
