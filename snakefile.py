@@ -240,9 +240,9 @@ rule fastqc_raw:
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     run:
-        tmp_R1_output = os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[0]}).removesuffix('.fastq') + ".zip")
-        tmp_R2_output = os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[1]}).removesuffix('.fastq') + ".zip")
-        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && mv {tmp_R1_output} {output.r1_zip} && mv {tmp_R2_output} {output.r2_zip}")
+        tmp_R1_output = os.path.basename(input[0])[:-6] + '_fastqc.zip'
+        tmp_R2_output = os.path.basename(input[1])[:-6] + '_fastqc.zip'
+        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} && mv {tmp_R1_output} {output.r1_zip} && mv {tmp_R2_output} {output.r2_zip}")
 
 
 rule fastqc_trimmed:
