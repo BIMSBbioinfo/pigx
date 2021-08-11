@@ -98,8 +98,6 @@ def lookup(column, predicate, fields=[]):
   return [record[field] for record in records for field in fields]
 
 SAMPLES = [row['name'] for row in sample_sheet]
-READ1 = [row['reads'] for row in sample_sheet] # TODO: maybe split away the suffix
-READ2 = [row['reads2'] for row in sample_sheet]
 
 targets = {
     'help': {
