@@ -234,21 +234,21 @@ rule samtools_index:
 rule fastqc_raw:
     input: trim_reads_input
     output:
-        r1_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.zip'),
-        r2_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.zip')
+        r1_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.html'),
+        r2_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.html')
     log: [os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R1.log'), os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R2.log')]
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     run:
-        tmp_R1_output = os.path.basename(input[0])[:-6] + '_fastqc.zip'
-        tmp_R2_output = os.path.basename(input[1])[:-6] + '_fastqc.zip'
-        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} && mv {tmp_R1_output} {output.r1_zip} && mv {tmp_R2_output} {output.r2_zip}")
+        tmp_R1_output = os.path.basename(input[0])[:-6] + '_fastqc.html'
+        tmp_R2_output = os.path.basename(input[1])[:-6] + '_fastqc.html'
+        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} && mv {tmp_R1_output} {output.r1_rep} && mv {tmp_R2_output} {output.r2_rep}")
 
 
 rule fastqc_trimmed:
     input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq")
     output:
-        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip')
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_R{read_num}.log')
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
@@ -257,8 +257,8 @@ rule fastqc_trimmed:
 
 rule multiqc:
   input:
-    fastqc_raw_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.zip'), sample=SAMPLES, read_num=[1, 2]),
-    fastqc_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip'), sample=SAMPLES, read_num=[1, 2])
+    fastqc_raw_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.html'), sample=SAMPLES, read_num=[1, 2]),
+    fastqc_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html'), sample=SAMPLES, read_num=[1, 2])
   output: os.path.join(MULTIQC_DIR, '{sample}', 'multiqc_report.html')
   params:
     fastqc_dir = os.path.join(FASTQC_DIR, '{sample}'),
