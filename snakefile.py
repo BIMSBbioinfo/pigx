@@ -175,7 +175,7 @@ rule prinseq:
         tmp_r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_1.fastq"),
         tmp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq")
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
-    shell: "{PRINSEQ_EXEC} -fastq {input.r1} -fastq2 {input.r2} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30 -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff} >> {log} 2>&1 && mv {params.tmp_r1} {output.r1} && mv {params.tmp_r2} {output.r2}"
+    shell: "{PRINSEQ_EXEC} -fastq {input[0]} -fastq2 {input[1]} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30 -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff} >> {log} 2>&1 && mv {params.tmp_r1} {output.r1} && mv {params.tmp_r2} {output.r2}"
 
 # TODO add gzip command after prinseq, output of prinseq rule should be fastq.gz
 
