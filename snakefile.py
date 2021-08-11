@@ -82,9 +82,9 @@ RSCRIPT_EXEC         = tool("Rscript")
 SAMTOOLS_EXEC        = tool("samtools")
 VEP_EXEC             = tool("vep")
 
-# Load sample sheet
+## Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
-  sample_sheet = list(csv.DictReader(fp))
+  rows =  [row for row in csv.reader(fp, delimiter=',')]
   header = rows[0]; rows = rows[1:]
   SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
 
@@ -97,7 +97,7 @@ def lookup(column, predicate, fields=[]):
     records = [line for line in SAMPLE_SHEET if line[column]==predicate]
   return [record[field] for record in records for field in fields]
 
-SAMPLES = [row['name'] for row in sample_sheet]
+SAMPLES = [line['name'] for line in SAMPLE_SHEET]
 
 targets = {
     'help': {
@@ -233,22 +233,21 @@ rule samtools_index:
 rule fastqc_raw:
     input: trim_reads_input
     output:
-        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[0]}), '.zip'), # TODO: maybe split the name
-        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[0]}), '.html'),
-        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[1]}), '.zip'),
-        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[1]}), '.html')
-    log: [os.path.join(LOG_DIR, 'fastqc_{sample}_raw_', os.path.basename({input[0]}), '.log'), 
-          os.path.join(LOG_DIR, 'fastqc_{sample}_raw_', os.path.basename({input[1]}), '.log')] # TODO: maybe split the name
+        r1_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.zip'),
+        r2_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.zip')
+    log: [os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R1.log'), os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R2.log')]
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
-    shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
+    run:
+        tmp_R1_output = os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[0]}).removesuffix('.fastq') + ".zip")
+        tmp_R2_output = os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[1]}).removesuffix('.fastq') + ".zip")
+        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && mv {tmp_R1_output} {output.r1_zip} && mv {tmp_R2_output} {output.r2_zip}")
 
 
 rule fastqc_trimmed:
     input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq")
     output:
-        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip'),
-        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html')
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_R{read_num}.log')
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
