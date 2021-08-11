@@ -231,11 +231,14 @@ rule samtools_index:
 
 
 rule fastqc_raw:
-    input: os.path.join(READS_DIR, "{reads}.fastq")
+    input: trim_reads_input
     output:
-        os.path.join(FASTQC_DIR, '{sample}', 'raw_{read}_fastqc.zip'),
-        os.path.join(FASTQC_DIR, '{sample}', 'raw_{read}_fastqc.html')
-    log: os.path.join(LOG_DIR, 'fastqc_{sample}_raw_{read}.log') # TODO: maybe split the name
+        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[0]}), '.zip'), # TODO: maybe split the name
+        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[0]}), '.html'),
+        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[1]}), '.zip'),
+        os.path.join(FASTQC_DIR, '{sample}', os.path.basename({input[1]}), '.html')
+    log: [os.path.join(LOG_DIR, 'fastqc_{sample}_raw_', os.path.basename({input[0]}), '.log'), 
+          os.path.join(LOG_DIR, 'fastqc_{sample}_raw_', os.path.basename({input[1]}), '.log')] # TODO: maybe split the name
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
