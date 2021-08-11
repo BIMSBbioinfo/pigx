@@ -85,6 +85,8 @@ VEP_EXEC             = tool("vep")
 # Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
   sample_sheet = list(csv.DictReader(fp))
+  header = rows[0]; rows = rows[1:]
+  SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
 
 SAMPLES = [row['name'] for row in sample_sheet]
 READ1 = [row['reads'] for row in sample_sheet] # TODO: maybe split away the suffix
