@@ -88,6 +88,15 @@ with open(SAMPLE_SHEET_CSV, 'r') as fp:
   header = rows[0]; rows = rows[1:]
   SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
 
+# Convenience function to access fields of sample sheet columns that
+# match the predicate.  The predicate may be a string.
+def lookup(column, predicate, fields=[]):
+  if inspect.isfunction(predicate):
+    records = [line for line in SAMPLE_SHEET if predicate(line[column])]
+  else:
+    records = [line for line in SAMPLE_SHEET if line[column]==predicate]
+  return [record[field] for record in records for field in fields]
+
 SAMPLES = [row['name'] for row in sample_sheet]
 READ1 = [row['reads'] for row in sample_sheet] # TODO: maybe split away the suffix
 READ2 = [row['reads2'] for row in sample_sheet]
