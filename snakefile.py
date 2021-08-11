@@ -26,6 +26,7 @@ import csv
 import yaml
 from itertools import chain
 import re
+import inspect
 
 SAMPLE_SHEET_CSV = config['locations']['sample-sheet']
 READS_DIR        = config['locations']['reads-dir']
