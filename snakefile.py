@@ -187,8 +187,6 @@ rule prinseq:
         gzip {input[0]} {input[1]};
       """
 
-# TODO add gzip command after prinseq, output of prinseq rule should be fastq.gz
-
 rule bwa_index:
     input: REFERENCE_FASTA
     output:
@@ -203,7 +201,7 @@ cd {INDEX_DIR};
 
 rule bwa_align:
     input:
-        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq")], # TODO: match to prinseq output
+        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")],
         ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA))),
         index = os.path.join(INDEX_DIR, "{}.bwt".format(os.path.basename(REFERENCE_FASTA)))
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
