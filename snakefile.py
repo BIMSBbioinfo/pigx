@@ -164,7 +164,6 @@ def trim_reads_input(args):
   sample = args[0]
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
- # TODO: add extraction rule gunzip Output should be read.fastq
 
 rule prinseq:
     input: trim_reads_input
