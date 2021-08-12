@@ -165,20 +165,27 @@ def trim_reads_input(args):
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
  # TODO: add extraction rule gunzip Output should be read.fastq
+
 rule prinseq:
     input: trim_reads_input
     output:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq")
+        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"),
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")
     params:
         len_cutoff = int(READ_LENGTH * CUT_OFF),
         output = os.path.join(TRIMMED_READS_DIR, "{sample}"),
         tmp_r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_1.fastq"),
         tmp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq")
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
-    shell: "{PRINSEQ_EXEC} -fastq {input[0]} -fastq2 {input[1]} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30\
-     -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
-      >> {log} 2>&1 && mv {params.tmp_r1} {output.r1} && mv {params.tmp_r2} {output.r2}"
+    shell: """ 
+        gunzip {input[0]} {input[1]};
+        {PRINSEQ_EXEC} -fastq {input[0]} -fastq2 {input[1]} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30\
+        -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
+        >> {log} 2>&1; 
+        gzip {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1};
+        gzip {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2};
+        gzip {input[0]} {input[1]};
+      """
 
 # TODO add gzip command after prinseq, output of prinseq rule should be fastq.gz
 
