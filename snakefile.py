@@ -174,16 +174,19 @@ rule prinseq:
         len_cutoff = int(READ_LENGTH * CUT_OFF),
         output = os.path.join(TRIMMED_READS_DIR, "{sample}"),
         tmp_r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_1.fastq"),
-        tmp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq")
+        tmp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq"), 
+        read_dir = READS_DIR
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
-    shell: """ 
+    shell: 
+      """ 
         gunzip {input[0]} {input[1]};
-        {PRINSEQ_EXEC} -fastq {input[0]} -fastq2 {input[1]} -ns_max_n 4 -min_qual_mean 30 -trim_qual_left 30\
+        read1={input[0]} && read2={input[1]} && {PRINSEQ_EXEC} -fastq ${{read1%.*}} -fastq2 ${{read2%.*}} -ns_max_n 4\
+        -min_qual_mean 30 -trim_qual_left 30\
         -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
         >> {log} 2>&1; 
         gzip {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1};
         gzip {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2};
-        gzip {input[0]} {input[1]};
+        cd {params.read_dir} && gzip *.fastq;
       """
 
 rule bwa_index:
@@ -253,7 +256,7 @@ rule fastqc_raw:
 
 
 rule fastqc_trimmed:
-    input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq")
+    input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq.gz")
     output:
         os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_R{read_num}.log')
