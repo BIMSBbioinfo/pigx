@@ -179,14 +179,13 @@ rule prinseq:
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
     shell: 
       """ 
-        gunzip {input[0]} {input[1]};
+        gunzip --keep {input[0]} {input[1]};
         read1={input[0]} && read2={input[1]} && {PRINSEQ_EXEC} -fastq ${{read1%.*}} -fastq2 ${{read2%.*}} -ns_max_n 4\
         -min_qual_mean 30 -trim_qual_left 30\
         -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
         >> {log} 2>&1; 
         gzip {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1};
         gzip {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2};
-        cd {params.read_dir} && gzip *.fastq;
       """
 
 rule bwa_index:
@@ -249,8 +248,8 @@ rule fastqc_raw:
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     run:
-        tmp_R1_output = os.path.basename(input[0])[:-6] + '_fastqc.html'
-        tmp_R2_output = os.path.basename(input[1])[:-6] + '_fastqc.html'
+        tmp_R1_output = os.path.basename(input[0])[:-9] + '_fastqc.html'
+        tmp_R2_output = os.path.basename(input[1])[:-9] + '_fastqc.html'
         shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} &&\
               mv {tmp_R1_output} {output.r1_rep} && mv {tmp_R2_output} {output.r2_rep}")
 
