@@ -211,6 +211,7 @@ rule bwa_index:
     log: os.path.join(LOG_DIR, 'bwa_index.log')
     shell: """mkdir -p {INDEX_DIR};
 ln -sf {input} {INDEX_DIR};
+cd {INDEX_DIR};
 {BWA_EXEC} index {output.ref} >> {log} 2>&1"""
 
 
