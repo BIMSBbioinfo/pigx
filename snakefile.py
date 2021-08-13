@@ -167,7 +167,15 @@ def trim_reads_input(args):
   sample = args[0]
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
-
+def map_input(args):
+    sample = args[0]
+    reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
+    if len(reads_files) > 1:
+        return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz".format(sample=sample)),
+                os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz".format(sample=sample))]
+    elif len(reads_files) == 1:
+        return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_fastq.gz".format(sample=sample))]
+    
 rule prinseq:
     input: trim_reads_input
     output:
