@@ -259,25 +259,15 @@ rule fastqc_raw_pe:
     input: trim_reads_input
     output:
         r1_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.html'),
-        r1_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.zip'),
-        r2_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.html'),
-        r2_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.zip') # all outputs are provided to ensure atomicity 
+        r2_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.html')
     log: [os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R1.log'), os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R2.log')]
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     run:
-        # renaming the ".fastq.gz" suffix to "_fastqc.html" 
         tmp_R1_output = os.path.basename(input[0])[:-9] + '_fastqc.html'
-        tmp_R1_zip = os.path.basename(input[0])[:-9] + '_fastqc.zip'
         tmp_R2_output = os.path.basename(input[1])[:-9] + '_fastqc.html'
-        tmp_R2_zip = os.path.basename(input[1])[:-9] + '_fastqc.zip'
-        shell("""{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1;
-                if [[ {tmp_R1_output} != *{wildcards.sample}* ]]; then
-                    mv {params.output_dir}/{tmp_R1_output} {output.r1_rep} &&\
-                    mv {params.output_dir}/{tmp_R1_zip} {output.r1_zip} &&\
-                    mv {params.output_dir}/{tmp_R2_output} {output.r2_rep} &&\
-                    mv {params.output_dir}/{tmp_R2_zip} {output.r2_zip}
-                fi """)
+        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} &&\
+              mv {tmp_R1_output} {output.r1_rep} && mv {tmp_R2_output} {output.r2_rep}")
 
 rule fastqc_raw_se:
     input: trim_reads_input
@@ -295,8 +285,7 @@ rule fastqc_raw_se:
 rule fastqc_trimmed_pe:
     input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq.gz")
     output:
-        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html'),
-        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.zip') # all outputs are provided to ensure atomicity 
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed_R{read_num}.log')
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
