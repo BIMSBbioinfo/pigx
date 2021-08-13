@@ -167,6 +167,7 @@ def trim_reads_input(args):
   sample = args[0]
   return [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
 
+# TODO check if it is still correct to have the fastqc outputs here too. Coul be that you don't need them here
 def map_input(args):
     sample = args[0]
     reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
@@ -214,7 +215,7 @@ ln -sf {input} {INDEX_DIR};
 cd {INDEX_DIR};
 {BWA_EXEC} index {output.ref} >> {log} 2>&1"""
 
-
+# TODO: use map_input as input 
 rule bwa_align:
     input:
         fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")],
@@ -289,7 +290,8 @@ rule fastqc_raw_se:
         tmp_output = os.path.basename(input)[:-9] + '_fastqc.html'
         shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} &&\
               mv {tmp_output} {output.rep}")
-        
+ 
+# TODO: can probably be done by using map_input, no seperate functions neccessary?        
 rule fastqc_trimmed_pe:
     input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq.gz")
     output:
@@ -306,7 +308,7 @@ rule fastqc_trimmed_se:
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed.log')
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
-        shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
+    shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
 
 
 rule multiqc:
@@ -319,7 +321,6 @@ rule multiqc:
     output_dir = os.path.join(MULTIQC_DIR, '{sample}')
   log: os.path.join(LOG_DIR, 'multiqc_{sample}.log')
   shell: "{MULTIQC_EXEC} -o {params.output_dir} {params.fastqc_dir} >> {log} 2>&1"
-
 
 # TODO: check if --call-indels is needed?
 rule lofreq:
