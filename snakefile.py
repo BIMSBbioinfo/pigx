@@ -176,7 +176,7 @@ def map_input(args):
     elif len(reads_files) == 1:
         return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_fastq.gz".format(sample=sample))]
     
-rule prinseq:
+rule prinseq_pe:
     input: trim_reads_input
     output:
         r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"),
