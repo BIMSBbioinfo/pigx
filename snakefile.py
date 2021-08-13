@@ -278,7 +278,18 @@ rule fastqc_raw_pe:
                     mv {params.output_dir}/{tmp_R2_zip} {output.r2_zip}
                 fi """)
 
-
+rule fastqc_raw_se:
+    input: trim_reads_input
+    output:
+        rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_fastqc.html')
+    log: os.path.join(LOG_DIR, 'fastqc_{sample}_raw.log')
+    params:
+        output_dir = os.path.join(FASTQC_DIR, '{sample}')
+    run:
+        tmp_output = os.path.basename(input)[:-9] + '_fastqc.html'
+        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} &&\
+              mv {tmp_output} {output.rep}")
+        
 rule fastqc_trimmed_pe:
     input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq.gz")
     output:
