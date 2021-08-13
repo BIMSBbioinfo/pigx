@@ -300,6 +300,14 @@ rule fastqc_trimmed_pe:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
 
+rule fastqc_trimmed_se:
+    input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed.fastq.gz")
+    output: os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_fastqc.html')
+    log: os.path.join(LOG_DIR, 'fastqc_{sample}_trimmed.log')
+    params:
+        output_dir = os.path.join(FASTQC_DIR, '{sample}')
+        shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
+
 
 rule multiqc:
   input:
