@@ -172,9 +172,12 @@ def map_input(args):
     reads_files = [os.path.join(READS_DIR, f) for f in lookup('name', sample, ['reads', 'reads2']) if f]
     if len(reads_files) > 1:
         return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz".format(sample=sample)),
-                os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz".format(sample=sample))]
+                os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz".format(sample=sample)),
+                os.path.join(FASTQC_DIR, "{sample}".format(sample=sample), "{sample}_trimmed_R1_fastqc.html".format(sample=sample)),
+                os.path.join(FASTQC_DIR, "{sample}".format(sample=sample), "{sample}_trimmed_R2_fastqc.html".format(sample=sample))]
     elif len(reads_files) == 1:
-        return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_fastq.gz".format(sample=sample))]
+        return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_fastq.gz".format(sample=sample)),
+                os.path.join(FASTQC_DIR,"{sample}".format(sample=sample), "{sample}_trimmed_fastqc.html".format(sample=sampel))]
     
 rule prinseq_pe:
     input: trim_reads_input
@@ -250,7 +253,7 @@ rule samtools_index:
     shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
 
-rule fastqc_raw:
+rule fastqc_raw_pe:
     input: trim_reads_input
     output:
         r1_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.html'),
@@ -275,7 +278,7 @@ rule fastqc_raw:
                 fi """)
 
 
-rule fastqc_trimmed:
+rule fastqc_trimmed_pe:
     input: os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R{read_num}.fastq.gz")
     output:
         os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html'),
