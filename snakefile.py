@@ -73,6 +73,8 @@ def tool(name):
 
 BWA_EXEC             = tool("bwa")
 FASTQC_EXEC          = tool("fastqc")
+GUNZIP_EXEC          = tool("gunzip")
+GZIP_EXEC            = tool("gzip")
 MULTIQC_EXEC         = tool("multiqc")
 IMPORT_TAXONOMY_EXEC = tool("import_taxonomy")
 KRAKEN2_EXEC         = tool("kraken2")
