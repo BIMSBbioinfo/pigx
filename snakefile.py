@@ -181,13 +181,13 @@ rule prinseq:
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
     shell: 
       """ 
-        gunzip --keep {input[0]} {input[1]};
+        {GUNZIP_EXEC} --keep {input[0]} {input[1]};
         read1={input[0]} && read2={input[1]} && {PRINSEQ_EXEC} -fastq ${{read1%.*}} -fastq2 ${{read2%.*}} -ns_max_n 4\
         -min_qual_mean 30 -trim_qual_left 30\
         -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
         >> {log} 2>&1; 
-        gzip {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1};
-        gzip {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2};
+        {GZIP_EXEC} {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1};
+        {GZIP_EXEC} {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2};
       """
 
 rule bwa_index:
