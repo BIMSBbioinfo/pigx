@@ -67,3 +67,9 @@ tools:
   vep:
     executable: @VEP@
     args: ""
+  gunzip:
+    executable: @GUNZIP@
+    args: "--keep"
+  gzip:
+    executable: @GZIP@
+    args: ""
