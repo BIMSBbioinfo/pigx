@@ -179,16 +179,17 @@ rule prinseq:
         tmp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq"), 
         read_dir = READS_DIR
     log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
-    shell: 
-      """ 
-        {GUNZIP_EXEC} --keep {input[0]} {input[1]};
-        read1={input[0]} && read2={input[1]} && {PRINSEQ_EXEC} -fastq ${{read1%.*}} -fastq2 ${{read2%.*}} -ns_max_n 4\
-        -min_qual_mean 30 -trim_qual_left 30\
-        -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
-        >> {log} 2>&1; 
-        {GZIP_EXEC} {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1};
-        {GZIP_EXEC} {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2};
-      """
+    run:
+        # prep input for prinseq, name without gz
+        read1 = input[0][:-3]
+        read2 = input[1][:-3]
+        shell("{GUNZIP_EXEC} -f {input[0]} {input[1]} && \
+            {PRINSEQ_EXEC} -fastq {read1} -fastq2 {read2} -ns_max_n 4\
+            -min_qual_mean 30 -trim_qual_left 30\
+            -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
+            >> {log} 2>&1 &&\
+            {GZIP_EXEC} {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1} && \
+            {GZIP_EXEC} {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2}")
 
 rule bwa_index:
     input: REFERENCE_FASTA
