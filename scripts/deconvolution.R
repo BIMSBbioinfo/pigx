@@ -1,5 +1,6 @@
 
 library(dplyr)
+library(stringr)
 
 # read in mutation sheet
 # TODO: look up proper handling, probably somewhat similar to sample_sheet reading
