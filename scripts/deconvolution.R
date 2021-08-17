@@ -1,9 +1,13 @@
-# Title     : TODO
-# Objective : TODO
-# Created by: vfs
-# Created on: 23.06.21
 
 library(dplyr)
+
+# read in mutation sheet
+# TODO: look up proper handling, probably somewhat similar to sample_sheet reading
+args <- commandArgs(trailingOnly = TRUE)
+
+sampleName <- args[1]
+mutation_sheet <- args[2]
+
 
 createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   #' for making the signature matrix based on the signature mutations found in the sample (given as input as a vector)
