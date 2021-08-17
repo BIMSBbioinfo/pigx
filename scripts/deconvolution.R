@@ -8,8 +8,6 @@ args <- commandArgs(trailingOnly = TRUE)
 sampleName <- args[1]
 mutation_sheet <- args[2]
 sampleName <- "testSample"
-mutation_sheet <- "../tests/mutation_sheet.csv"
-
 
 createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   #' for making the signature matrix based on the signature mutations found in the sample (given as input as a vector)
@@ -21,37 +19,20 @@ createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   mutations.df <- read.csv(mutation_sheet)
   # create an empty data frame add a column for the Wildtype
   # Wildtype in this case means the reference version of SARS-Cov-2
+  
   msig <- setNames( data.frame( matrix( ncol = ncol(mutations.df)+1, nrow = 0 )), c("WT", colnames(mutations.df)))
   msig <- bind_rows(tibble(muts=mutations.vector), msig)
   # making a matrix with the signature mutations found in the sample
   # make binary matrix matching the mutations to the mutation-list per variant to see how many characterising mutations
-  # where found by variant 
-  b117 <- filter(sig_mutations.df, name == "b117")$value
-  msig[msig$muts %in% b117,"b117"]=1
+  # where found by variant
   
-  b1351 <- filter(sig_mutations.df, name == "b1351")$value
-  msig[msig$muts %in% b1351,"b1351"]=1
+  for ( variant in names(mutations.df) ){
+    msig[[ variant ]] <- msig$muts %in% mutations.df[[ variant ]]
+  }
+  msig[is.na(msig)] <- 0
   
-  b1427 <- filter(sig_mutations.df, name == "b1427")$value
-  msig[msig$muts %in% b1427,"b1427"]=1
-  
-  b1429 <- filter(sig_mutations.df, name == "b1429")$value
-  msig[msig$muts %in% b1429,"b1429"]=1
-  
-  b1526 <- filter(sig_mutations.df, name == "b1526")$value
-  msig[msig$muts %in% b1526,"b1526"]=1
-  
-  p1 <- filter(sig_mutations.df, name == "p1")$value
-  msig[msig$muts %in% p1,"p1"]=1
-  
-  b16172 <- filter(sig_mutations.df, name == "b16172")$value
-  msig[msig$muts %in% b16172, "b16172"]=1
-  
-  msig[1,2] <- 0 # put the WT signature, here it's 0 and not 1 bc it will be inversed in the next step
-  
-  return( msig )
+  return( msig[,-match('muts', names(msig))]*1 ) # use the *1 to turn true/false to 0/1
 }
-# TODO write test about the expected structure of the matrix
 
 simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataframe) {
   # for the deconvolution to work we need the "wild type" frequencies too. The matrix from above got mirrored, 
