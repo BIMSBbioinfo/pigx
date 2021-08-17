@@ -75,8 +75,6 @@ dedupeDF <- function( msig_stable ){
   # mark duplicated columns, forward and backwards to get ALL the duplicates, otherwise the first one would missing
   dupes_variants <- duplicated ( msig_stable_transposed[,-which(names(msig_stable_transposed) %in% 'variants')], 
                                  fromLast=TRUE)
-  allDupes_variants <- dupes_variants | duplicated ( msig_stable_transposed[,-1], fromLast=FALSE ) # the 1 get's rid of the additional first row which is an transposing artifact
-
   msig_dedupe_transposed <- msig_stable_transposed[!dupes_variants,]
 
   return( list( msig_stable_transposed, msig_dedupe_transposed) )
