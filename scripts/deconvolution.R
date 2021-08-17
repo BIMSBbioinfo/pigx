@@ -56,7 +56,6 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   msig_all <- rbind(msig_inverse[,-1],msig[,-1])
   
   # 4. concat the data frames
-  
   # without bulk freq for building the signature matrix
   msig_stable <- bind_cols(muts_all.df,msig_all)
   
@@ -64,4 +63,50 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
   
   return ( msig_stable )
+}
+
+# When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
+# between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
+# a vector with the information about which of the columns were merged. 
+# deduplicate dataframe
+dedupeDF <- function( msig_stable )
+  # transpose and add mutations as first column
+  msig_stable_transposed <- as.data.frame( cbind( variants = colnames(msig_stable), t( msig_stable ) ))
+  # mark duplicated columns, forward and backwards to get ALL the duplicates, otherwise the first one would missing
+  dupes_variants <- duplicated ( msig_stable_transposed[,-which(names(msig_stable_transposed) %in% 'variants')], 
+                                 fromLast=TRUE)
+  allDupes_variants <- dupes_variants | duplicated ( msig_stable_transposed[,-1], fromLast=FALSE )
+
+  # fixme why is here this if statement? is it even necessary? Check that! 
+  # remove one less duplicated columns from dataframe (if there are any) than found
+
+  msig_dedupe_transposed <- msig_stable_transposed[!dupes_variants,]
+
+  return( msig_dedupe_transposed )
+
+dedupeVariants <- function (variant, variants.df, dedup_variants.df) {
+        # get variant group per mutation pattern
+        # duped_variants <- grep (variant, variants.df$variants)
+        duped_variants <- c()
+        row_number_variant <- which( grepl( variant, variants.df$variants ))
+        for (row in 1:nrow( variants.df )) { 
+            if (all ( variants.df[row_number_variant,-1] == variants.df[row,-1] )) {
+              duped_variants <- c(duped_variants, variants.df[row,"variants"])
+            }
+        }
+       # grouped_variants <- variants.df$variants[duped_variants]
+        groupName_variants <- paste( duped_variants, collapse = "," )
+        for ( row in dedup_variants.df$variants ){
+          if ( grepl( row,groupName_variants )) {
+            rownames ( dedup_variants.df )[rownames(dedup_variants.df) == row] <- groupName_variants
+          }
+        }
+        return ( dedup_variants.df )
+}  
+
+
+
+
+for (variant in rownames( msig_stable_transposed[-(row.names(msig_stable_transposed) %in% 'muts'),] )) {
+  msig_dedupe_transposed <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
 }
