@@ -53,7 +53,7 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   bulk_all <- c(bulk_wt, bulk_freq.vector)
   bulk_all.df <- data.frame(freq = unlist(bulk_all))
   
-  msig_all <- rbind(msig_inverse[,-1],msig[,-1])
+  msig_all <- rbind(msig_inverse[,-1],simple_sigmat.dataframe[,-1])
   
   # 4. concat the data frames
   # without bulk freq for building the signature matrix
@@ -69,7 +69,7 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
 # between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
 # a vector with the information about which of the columns were merged. 
 # deduplicate dataframe
-dedupeDF <- function( msig_stable )
+dedupeDF <- function( msig_stable ){
   # transpose and add mutations as first column
   msig_stable_transposed <- as.data.frame( cbind( variants = colnames(msig_stable), t( msig_stable ) ))
   # mark duplicated columns, forward and backwards to get ALL the duplicates, otherwise the first one would missing
@@ -82,7 +82,8 @@ dedupeDF <- function( msig_stable )
 
   msig_dedupe_transposed <- msig_stable_transposed[!dupes_variants,]
 
-  return( msig_dedupe_transposed )
+  return( list( msig_stable_transposed, msig_dedupe_transposed) )
+}
 
 dedupeVariants <- function (variant, variants.df, dedup_variants.df) {
         # get variant group per mutation pattern
@@ -121,8 +122,4 @@ deconv <- function (bulk,sig){
   rlm_coefficients = rlm_coefficients / sumOfCof  #normalize so coefficients add to 1
   
   as.vector(rlm_coefficients)
-}
-
-for (variant in rownames( msig_stable_transposed[-(row.names(msig_stable_transposed) %in% 'muts'),] )) {
-  msig_dedupe_transposed <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
 }
