@@ -8,12 +8,11 @@ args <- commandArgs(trailingOnly = TRUE)
 sampleName <- args[1]
 mutation_sheet <- args[2]
 
-createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
+createSigMatrix <- function ( mutations.vector, mutation_sheet ) {
   #' for making the signature matrix based on the signature mutations found in the sample (given as input as a vector)
-  #' TODO: The data.frame should be builded dynamically based on a vector with variants, the filter step could be a function
   #' for it self
   #' returns simple signature matrix as data.frame without frequency values
-  #' 
+  
   # read in provided mutation sheet
   mutations.df <- read.csv(mutation_sheet)
   # create an empty data frame add a column for the Wildtype
