@@ -10,6 +10,7 @@ params:
   vep_file: ''
   snv_file: ''
   sample_sheet: ''
+  mutation_sheet: ''
   logo: ''
 ---
 
