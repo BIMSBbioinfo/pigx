@@ -7,7 +7,6 @@ args <- commandArgs(trailingOnly = TRUE)
 
 sampleName <- args[1]
 mutation_sheet <- args[2]
-sampleName <- "testSample"
 
 createSigMatrix <- function ( mutations.vector, sig_mutations.df ) {
   #' for making the signature matrix based on the signature mutations found in the sample (given as input as a vector)
