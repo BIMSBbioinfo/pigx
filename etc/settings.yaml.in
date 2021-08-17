@@ -7,6 +7,7 @@ locations:
   krona-db-dir: databases/krona
   sigmut-db-dir: databases/sigmut
   vep-db-dir: databases/vep
+  mutation-sheet: databases/mutation_sheet.csv
 
 # These settings are used to filter raw reads when trimming. Reads
 # that are shorter than the product of read-length( the lengths in
