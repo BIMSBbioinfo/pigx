@@ -435,6 +435,7 @@ rule render_variant_report:
   "vep_file":     "{input.vep}",         \
   "snv_file":     "{input.snv}",         \
   "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
+  "mutation_sheet": "{MUTATION_SHEET_CSV}", \
   "logo": "{LOGO}" \
 }}' > {log} 2>&1"""
 
