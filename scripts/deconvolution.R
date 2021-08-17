@@ -62,7 +62,7 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   # with bulk freq for export and overview
   msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
   
-  return ( msig_stable )
+  return ( list(msig_stable, bulk_all) )
 }
 
 # When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
