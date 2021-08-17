@@ -1,13 +1,4 @@
-
-library(dplyr)
-library(stringr)
-
-# read in mutation sheet
-# TODO: look up proper handling, probably somewhat similar to sample_sheet reading
-args <- commandArgs(trailingOnly = TRUE)
-
-sampleName <- args[1]
-mutation_sheet <- args[2]
+# requires dplyr and stringr
 
 createSigMatrix <- function ( mutations.vector, mutation_sheet ) {
   #' for making the signature matrix based on the signature mutations found in the sample (given as input as a vector)
