@@ -47,10 +47,10 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   msig_inverse <- bind_cols(muts_wt.df, as.data.frame(+(!simple_sigmat.dataframe[,-1])))
   
   # fixme: not sure if this really is a nice way to concat those things...
-  muts_all <- c(muts_wt,muts)
+  muts_all <- c(muts_wt,mutations.vector)
   muts_all.df <- data.frame(muts = unlist(muts_all))
   
-  bulk_all <- c(bulk_wt, bulk)
+  bulk_all <- c(bulk_wt, bulk_freq.vector)
   bulk_all.df <- data.frame(freq = unlist(bulk_all))
   
   msig_all <- rbind(msig_inverse[,-1],msig[,-1])
