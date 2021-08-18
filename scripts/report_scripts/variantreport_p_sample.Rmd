@@ -11,6 +11,7 @@ params:
   snv_file: ''
   sample_sheet: ''
   mutation_sheet: ''
+  deconvolution_functions: ''
   logo: ''
 ---
 
@@ -38,6 +39,7 @@ sample_name <- params$sample_name
 sample_sheet <- data.table::fread(params$sample_sheet) # what does this do and do I need it for the mutation sheet too?
 mutation_sheet <- params$mutation_sheet # not tested
 location_sigmuts <- params$sigmut_db
+deconvolution_functions <- params$deconvolution_functions
 
 csv_output_dir <- params$variants_dir
 date <- as.character(sample_sheet[name==sample_name]$date)
@@ -390,7 +392,7 @@ executeDeconvolution <- length(muts) > 0
 
 ```{r creating_signature_matrix, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 
-source("../scripts/deconvolution.R")
+source(deconvolution_functions) # TODO should be given as input with the params section
 # create an empty data frame add a column for the Wildtype
 # Wildtype in this case means the reference version of SARS-Cov-2
 msig_simple <- createSigMatrix(mutations.vector, mutation_sheet)
@@ -406,7 +408,7 @@ msig_stable <- msig_stable_all[[1]]
 
 
 ```{r collapse_identicals, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
-source("../scripts/deconvolution.R")
+source(deconvolution_functions)
 # When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
 # between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
 # a vector with the information about which of the columns were merged. 
@@ -425,7 +427,7 @@ msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get'
 
 ```
 ```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
-source("../scripts/deconvolution.R")
+source(deconvolution_functions)
 
 # this hack is necessary because otherwise the deconvolution will throw: Error in x * wts: non-numeric argument to binary operator
 # also see: https://stackoverflow.com/questions/37707060/converting-data-frame-column-from-character-to-numeric/37707117
