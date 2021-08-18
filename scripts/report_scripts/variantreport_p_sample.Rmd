@@ -401,6 +401,7 @@ msig_simple <- createSigMatrix(mutations.vector, mutation_sheet)
 msig_stable_all <- simulateWT( mutations.vector, bulk_freq.vector, msig_simple)
 msig_stable <- msig_stable_all[[1]]
 
+ ! not tested
 ```
 
 
@@ -409,8 +410,18 @@ msig_stable <- msig_stable_all[[1]]
 # between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
 # a vector with the information about which of the columns were merged. 
 
-msig_stable_unique <- dedupe(msig_stable)
-# TODO this does not group columns correctly -> see comment at "dedupe" and PR #48
+msig_transposed <- dedupeDF( msig_stable )
+
+msig_stable_transposed <- msig_transposed[[1]]
+msig_dedupe_transposed <- msig_transposed[[2]]
+
+for (variant in rownames( msig_stable_transposed[-(row.names(msig_stable_transposed) %in% 'muts'),] )) {
+  msig_dedupe_transposed <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
+}
+
+msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get's rid of the additional first row which is an transposing artifact
+
+
 ```
 ```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 
