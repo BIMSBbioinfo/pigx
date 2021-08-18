@@ -35,7 +35,7 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   bulk_wt <- lapply(bulk_freq.vector, function (x) {1-x})
   
   # 3. make matrix with wt mutations and inverse the values and wild type freqs
-  msig_inverse <- bind_cols(muts_wt.df, as.data.frame(+(!simple_sigmat.dataframe[,-1])))
+  msig_inverse <- bind_cols(muts_wt.df, as.data.frame(+(!simple_sigmat.dataframe)))
   
   # fixme: not sure if this really is a nice way to concat those things...
   muts_all <- c(muts_wt,mutations.vector)
@@ -44,7 +44,7 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   bulk_all <- c(bulk_wt, bulk_freq.vector)
   bulk_all.df <- data.frame(freq = unlist(bulk_all))
   
-  msig_all <- rbind(msig_inverse[,-1],simple_sigmat.dataframe[,-1])
+  msig_all <- rbind(msig_inverse[,-which(names(msig_inverse) %in% 'muts')],simple_sigmat.dataframe)
   
   # 4. concat the data frames
   # without bulk freq for building the signature matrix
