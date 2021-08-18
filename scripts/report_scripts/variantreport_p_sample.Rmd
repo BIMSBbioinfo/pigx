@@ -379,11 +379,11 @@ wastewater sample.
 ```{r getting_unique_muts_bulk, message=F, warning=F, include = FALSE}
 
 # get prot.mutations only, input for the signature matrix 
-muts <- c(match.df$AA_mut)
+mutations.vector <- c(match.df$AA_mut)
 # get bulk frequency values, will be input for the deconvolution function
-bulk <- as.numeric(match.df$freq)
+bulk_freq.vector <- as.numeric(match.df$freq)
 
-# only execute the deconvolution when at least one mutation was found
+# only execute the deconvolution when at least one signature mutation was found
 executeDeconvolution <- length(muts) > 0
 ```
 
