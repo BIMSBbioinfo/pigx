@@ -12,8 +12,6 @@ params:
   sample_sheet: ''
   mutation_sheet: ''
   deconvolution_functions: ''
-  mutation_sheet: ''
-  deconvolution_functions: ''
   logo: ''
 ---
 
@@ -136,7 +134,15 @@ get_protein_mut <- function (vepfile){ # parse together from vep output "Protein
   # reading in whole vep txt output
     vepfile.df <- read.table(vepfile, sep = ',', header = T) # you should include in the vep script to parse out the # 
       #in the beginning of the line or include that step here. 
-    
+     # parsing snv and protmut location
+  
+    # parsing gene mutation
+    gene_mutation <- data.frame(gene_mut_loc = str_split_fixed(vepfile.df$Location,"[:-]+", n=3),
+                                nucleotides = str_split_fixed(
+                                                str_split_fixed(vepfile.df$Uploaded_variation, 
+                                                                "[_-]+", n=4) [,4], "/", n=2))
+    gene_mutation$gene_mut <- paste0(gene_mutation$nucleotides.1, gene_mutation$gene_mut_loc.2, gene_mutation$nucleotides.2)
+  
     # parsing snv and protmut location
     locations <- data.frame(gene_mut_loc = str_split_fixed(vepfile.df$Location,"[:-]+", n=3),
                             gene_mut = gene_mutation$gene_mut,
@@ -297,7 +303,7 @@ cat("\n Table 1: SNVs from sample matching signature mutations")
 ```{r sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
 # Display the filtered signature mutations and the variants accordingly in scrollable tables
 
-SignatureTable <-  data.frame("SNV" = match.df$gene_mut, 
+SignatureTable <-  data.frame("SNV" = match.df$gene_mut.x, 
                   "gene" = match.df$genes,
                   "protein_mutation" = match.df$AA_mut,
                   "variant" = match.df$name, # TODO: more nice writing of it e.g B1.1.7            
@@ -318,7 +324,7 @@ cat("\n Table 2: SNVs from sample not matching any signature mutations")
 ```{r non_sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
 # Display the filtered signature mutations and the variants accordingly in scrollable tables
 
-NoSignatureTable <-  data.frame("SNV" = nomatch.df$gene_mut, 
+NoSignatureTable <-  data.frame("SNV" = nomatch.df$gene_mut.x, 
                   "gene" = nomatch.df$genes,
                   "protein_mutation" = nomatch.df$AA_mut,
                   "frequency" = nomatch.df$freq, # TODO more clear name stating which frequency
@@ -417,7 +423,7 @@ df <- data.frame(rbind(variant_abundance))
 # TODO: This should be done much earlier when building the data frame.
 
 condensed_variants_names <-
-    unlist(lapply(variants, function (x) { if (str_detect(x, ",")) { "others" } else { x }}))
+    unlist(lapply(variants, function (x) { if (str_detect(x, ",{4,}")) { "others" } else { x }}))
 
 colnames(df) <- condensed_variants_names
 
