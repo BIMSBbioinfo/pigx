@@ -529,7 +529,7 @@ Variant effect prediction (*Ensemble VEP output*):
 # those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate 
 # file (and maybe rule)
 # get all possible variants
-all_variants <- colnames (msig_all)
+all_variants <- colnames (msig_stable[, -which( names(msig_stable) %in% "muts" )])
 output_variants <- file.path(csv_output_dir, "data_variant_plot.csv")
 
 # if file exists already - grep the existing content and add a new line
