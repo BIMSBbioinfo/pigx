@@ -35,7 +35,8 @@ library(base64url)
 
 ```{r printInputSettings, echo = FALSE}
 sample_name <- params$sample_name
-sample_sheet <- data.table::fread(params$sample_sheet)
+sample_sheet <- data.table::fread(params$sample_sheet) # what does this do and do I need it for the mutation sheet too?
+mutation_sheet <- params$mutation_sheet # not tested
 location_sigmuts <- params$sigmut_db
 
 csv_output_dir <- params$variants_dir
