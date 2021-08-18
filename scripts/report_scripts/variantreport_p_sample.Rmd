@@ -36,7 +36,7 @@ library(base64url)
 
 ```{r printInputSettings, echo = FALSE}
 sample_name <- params$sample_name
-sample_sheet <- data.table::fread(params$sample_sheet) # what does this do and do I need it for the mutation sheet too?
+sample_sheet <- data.table::fread(params$sample_sheet) 
 mutation_sheet <- params$mutation_sheet # not tested
 location_sigmuts <- params$sigmut_db
 deconvolution_functions <- params$deconvolution_functions
@@ -391,7 +391,6 @@ executeDeconvolution <- length(mutations.vector) > 0
 
 
 ```{r creating_signature_matrix, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
-
 source(deconvolution_functions) # TODO should be given as input with the params section
 # create an empty data frame add a column for the Wildtype
 # Wildtype in this case means the reference version of SARS-Cov-2
