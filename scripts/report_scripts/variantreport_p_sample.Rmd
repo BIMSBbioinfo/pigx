@@ -406,6 +406,7 @@ msig_stable <- msig_stable_all[[1]]
 
 
 ```{r collapse_identicals, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+source("../scripts/deconvolution.R")
 # When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
 # between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
 # a vector with the information about which of the columns were merged. 
@@ -424,9 +425,16 @@ msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get'
 
 ```
 ```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+source("../scripts/deconvolution.R")
 
-sig <- msig_stable_unique[, -which( names(msig_stable_unique) %in% "muts" )]  
-variant_abundance <- deconv(as.numeric(bulk_all),sig)
+# this hack is necessary because otherwise the deconvolution will throw: Error in x * wts: non-numeric argument to binary operator
+# also see: https://stackoverflow.com/questions/37707060/converting-data-frame-column-from-character-to-numeric/37707117
+sig <- apply(msig_stable_unique[,-which(names(msig_stable_unique) %in% 'muts')], 2 , function(x) {
+              as.numeric(as.character(x)) })
+
+bulk_all <- as.numeric(msig_stable_all[[2]])
+
+variant_abundance <- deconv(bulk_all,sig)
 
 ```
 `r if (executeDeconvolution){"The following bar plot shows the percentage of each VOCs in the sample as predicted by the
