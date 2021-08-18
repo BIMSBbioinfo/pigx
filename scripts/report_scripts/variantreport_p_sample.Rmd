@@ -12,6 +12,8 @@ params:
   sample_sheet: ''
   mutation_sheet: ''
   deconvolution_functions: ''
+  mutation_sheet: ''
+  deconvolution_functions: ''
   logo: ''
 ---
 
