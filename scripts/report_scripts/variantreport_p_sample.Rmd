@@ -386,7 +386,7 @@ mutations.vector <- c(match.df$AA_mut)
 bulk_freq.vector <- as.numeric(match.df$freq)
 
 # only execute the deconvolution when at least one signature mutation was found
-executeDeconvolution <- length(muts) > 0
+executeDeconvolution <- length(mutations.vector) > 0
 ```
 
 
