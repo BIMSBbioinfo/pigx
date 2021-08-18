@@ -403,7 +403,6 @@ msig_simple <- createSigMatrix(mutations.vector, mutation_sheet)
 msig_stable_all <- simulateWT( mutations.vector, bulk_freq.vector, msig_simple)
 msig_stable <- msig_stable_all[[1]]
 
- ! not tested
 ```
 
 
