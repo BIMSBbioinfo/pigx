@@ -27,6 +27,7 @@ import yaml
 from itertools import chain
 import re
 import inspect
+from pathlib import Path
 
 SAMPLE_SHEET_CSV = config['locations']['sample-sheet']
 MUTATION_SHEET_CSV = config['locations']['mutation-sheet']
@@ -180,6 +181,21 @@ def map_input(args):
         return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_fastq.gz".format(sample=sample)),
                 os.path.join(FASTQC_DIR,"{sample}".format(sample=sample), "{sample}_trimmed_fastqc.html".format(sample=sampel))]
     
+def vep_input(args):
+    sample = args[0]
+    lofreq_output = rules.lofreq.output # is this enough to trigger already the execution of lofreq?
+    with open(lofreq_output, 'r') as vcf:
+        content = vcf.read()
+    if re.findall('^NC', content, re.MULTILINE): # regex ok or not?
+        # trigger vep path
+        return [os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_parsed.txt".format(sample=sample)),
+                os.path.join(VARIANTS_DIR, "{sample}_snv.csv".format(sample=sample))]
+    else:
+        # skipp execution of all vep related rules and directly have smth that the report can work with
+        empty_vep_txt = Path(os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_empty.txt".format(sample=sample))).touch()
+        empty_snv_csv = Path(os.path.join(VARIANTS_DIR, "{sample}_snv_empty.csv".format(sample=sample))).touch()
+        return [empty_vep_txt, empty_snv_csv]
+                
 rule prinseq_pe:
     input: trim_reads_input
     output:
