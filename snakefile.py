@@ -180,7 +180,8 @@ def map_input(args):
     elif len(reads_files) == 1:
         return [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_fastq.gz".format(sample=sample)),
                 os.path.join(FASTQC_DIR,"{sample}".format(sample=sample), "{sample}_trimmed_fastqc.html".format(sample=sampel))]
-    
+
+# WIP - until then use hack that create a single line in the lofreq output 
 def vep_input(args):
     sample = args[0]
     lofreq_output = rules.lofreq.output.vcf # this requires the file to be there already - I have no idea how to make the decision about the further input when it requires a rule to run beforhand
@@ -328,7 +329,18 @@ rule multiqc:
   log: os.path.join(LOG_DIR, 'multiqc_{sample}.log')
   shell: "{MULTIQC_EXEC} -o {params.output_dir} {params.fastqc_dir} >> {log} 2>&1"
 
-# TODO: check if --call-indels is needed?
+# WIP create a dummy entry if no variant is found - use this as long as the input-function solution doesn't work
+def no_variant_vep(sample, lofreq_output):
+    content = open(lofreq_output.format(sample=sample), 'r').read()
+    if re.findall('^NC', content, re.MULTILINE):  # regex ok or not?
+        # trigger vep path
+        print('File can be used for downstream processing')
+    else:
+        # write smth so that vep does not crash - deal with everything later in the variant_report
+        print('adding dummy entry to vcf file, because no variants were found')
+        open(lofreq_output.format(sample=sample), 'a').write(
+            "NC_000000.0\t00\t.\tA\tA\t00\tPASS\tDP=0;AF=0;SB=0;DP4=0,0,0,0")
+        
 rule lofreq:
     input:
         aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam'),
@@ -336,7 +348,10 @@ rule lofreq:
         ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA)))
     output: vcf = os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
     log: os.path.join(LOG_DIR, 'lofreq_{sample}.log')
-    shell: "{LOFREQ_EXEC} call -f {input.ref} -o {output} --verbose {input.aligned_bam} >> {log} 2>&1"
+    run: 
+        shell("{LOFREQ_EXEC} call -f {input.ref} -o {output} --verbose {input.aligned_bam} >> {log} 2>&1")
+        # WIP create a dummy entry if no variant is found - use this as long as the input-function solution doesn't work
+        no_variant_vep(wildcards.sample, output.vcf)
 
 
 rule vcf2csv:
@@ -458,7 +473,8 @@ rule render_kraken2_report:
 
 rule render_variant_report:
     input:
-      vep_snv = vep_input,
+      vep = os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_parsed.txt"),
+      snv = os.path.join(VARIANTS_DIR, "{sample}_snv.csv"),
       deconvolution_functions = os.path.join( SCRIPTS_DIR, "deconvolution.R" ),
       script = os.path.join( SCRIPTS_DIR, "renderReport.R" ),
       report = os.path.join( SCRIPTS_DIR,"report_scripts", "variantreport_p_sample.Rmd" ),
@@ -472,8 +488,8 @@ rule render_variant_report:
               "sample_name":  "{wildcards.sample}",  \
               "sigmut_db":    "{SIGMUT_DB}",         \
               "variants_dir": "{VARIANTS_DIR}",      \
-              "vep_file":     "{input.vep_snv[0]}",         \
-              "snv_file":     "{input.vep_snv[1]}",         \
+              "vep_file":     "{input.vep}",         \
+              "snv_file":     "{input.snv}",         \
               "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
               "mutation_sheet": "{MUTATION_SHEET_CSV}", \
               "deconvolution_functions": "{input.deconvolution_functions}", \
