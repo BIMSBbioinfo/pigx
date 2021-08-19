@@ -270,9 +270,6 @@ rule fastqc_raw:
         tmp_R1_output = os.path.basename(input[0])[:-9] + '_fastqc.html'
         tmp_R1_zip = os.path.basename(input[0])[:-9] + '_fastqc.zip'
         tmp_R2_output = os.path.basename(input[1])[:-9] + '_fastqc.html'
-        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 &&\
-         mv {params.output_dir}/{tmp_R1_output} {output.r1_rep} &&\
-         mv {params.output_dir}/{tmp_R2_output} {output.r2_rep}")
         tmp_R2_zip = os.path.basename(input[1])[:-9] + '_fastqc.zip'
         shell("""{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1;
                 if [[ {tmp_R1_output} != *{wildcards.sample}* ]]; then
