@@ -455,27 +455,28 @@ rule render_kraken2_report:
 
 rule render_variant_report:
     input:
-      deconvolution_functions=os.path.join(SCRIPTS_DIR, "deconvolution.R"),
-      script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
-      report=os.path.join(SCRIPTS_DIR,"report_scripts", "variantreport_p_sample.Rmd"),
-      header=os.path.join(REPORT_DIR, "_navbar.html"),
-      vep=os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_parsed.txt"),
-      snv=os.path.join(VARIANTS_DIR, "{sample}_snv.csv")
-    output: os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html")
-    log: os.path.join(LOG_DIR, "reports", "{sample}_variant_report.log")
-    shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header} \
-'{{\
-  "sample_name":  "{wildcards.sample}",  \
-  "sigmut_db":    "{SIGMUT_DB}",         \
-  "variants_dir": "{VARIANTS_DIR}",      \
-  "vep_file":     "{input.vep}",         \
-  "snv_file":     "{input.snv}",         \
-  "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
-  "mutation_sheet": "{MUTATION_SHEET_CSV}", \
-  "deconvolution_functions": "{input.deconvolution_functions}", \
-  "logo": "{LOGO}" \
-}}' > {log} 2>&1"""
+      vep_snv = vep_input,
+      deconvolution_functions = os.path.join( SCRIPTS_DIR, "deconvolution.R" ),
+      script = os.path.join( SCRIPTS_DIR, "renderReport.R" ),
+      report = os.path.join( SCRIPTS_DIR,"report_scripts", "variantreport_p_sample.Rmd" ),
+      header = os.path.join( REPORT_DIR, "_navbar.html" )
+    output: os.path.join( REPORT_DIR, "{sample}.variantreport_p_sample.html" )
+    log: os.path.join( LOG_DIR, "reports", "{sample}_variant_report.log" )
+    shell: """
+            {RSCRIPT_EXEC} {input.script} \
+            {input.report} {output} {input.header} \
+            '{{\
+              "sample_name":  "{wildcards.sample}",  \
+              "sigmut_db":    "{SIGMUT_DB}",         \
+              "variants_dir": "{VARIANTS_DIR}",      \
+              "vep_file":     "{input.vep_snv[0]}",         \
+              "snv_file":     "{input.vep_snv[1]}",         \
+              "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
+              "mutation_sheet": "{MUTATION_SHEET_CSV}", \
+              "deconvolution_functions": "{input.deconvolution_functions}", \
+              "logo": "{LOGO}" \
+            }}' > {log} 2>&1
+           """
 
 
 rule render_qc_report:
