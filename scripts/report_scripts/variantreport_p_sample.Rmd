@@ -425,7 +425,7 @@ df <- data.frame(rbind(variant_abundance))
 # TODO: This should be done much earlier when building the data frame.
 
 condensed_variants_names <-
-    unlist(lapply(variants, function (x) { if (str_detect(x, "*,*{4,}?")) { "others" } else { x }}))
+    unlist(lapply(variants, function (x) { if (str_detect(x, ".*,.*,.*")) { "others" } else { x }}))
 
 colnames(df) <- condensed_variants_names
 
