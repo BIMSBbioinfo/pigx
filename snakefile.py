@@ -255,31 +255,32 @@ rule samtools_index:
     shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
 
-rule fastqc_raw_pe:
+rule fastqc_raw:
     input: trim_reads_input
     output:
         r1_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.html'),
-        r2_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.html')
+        r1_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R1_fastqc.zip'),
+        r2_rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.html'),
+        r2_zip = os.path.join(FASTQC_DIR, '{sample}', '{sample}_R2_fastqc.zip') # all outputs are provided to ensure atomicity 
     log: [os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R1.log'), os.path.join(LOG_DIR, 'fastqc_{sample}_raw_R2.log')]
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     run:
+        # renaming the ".fastq.gz" suffix to "_fastqc.html" 
         tmp_R1_output = os.path.basename(input[0])[:-9] + '_fastqc.html'
+        tmp_R1_zip = os.path.basename(input[0])[:-9] + '_fastqc.zip'
         tmp_R2_output = os.path.basename(input[1])[:-9] + '_fastqc.html'
-        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} &&\
-              mv {tmp_R1_output} {output.r1_rep} && mv {tmp_R2_output} {output.r2_rep}")
-
-rule fastqc_raw_se:
-    input: trim_reads_input
-    output:
-        rep = os.path.join(FASTQC_DIR, '{sample}', '{sample}_fastqc.html')
-    log: os.path.join(LOG_DIR, 'fastqc_{sample}_raw.log')
-    params:
-        output_dir = os.path.join(FASTQC_DIR, '{sample}')
-    run:
-        tmp_output = os.path.basename(input)[:-9] + '_fastqc.html'
-        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 && cd {params.output_dir} &&\
-              mv {tmp_output} {output.rep}")
+        shell("{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1 &&\
+         mv {params.output_dir}/{tmp_R1_output} {output.r1_rep} &&\
+         mv {params.output_dir}/{tmp_R2_output} {output.r2_rep}")
+        tmp_R2_zip = os.path.basename(input[1])[:-9] + '_fastqc.zip'
+        shell("""{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1;
+                if [[ {tmp_R1_output} != *{wildcards.sample}* ]]; then
+                    mv {params.output_dir}/{tmp_R1_output} {output.r1_rep} &&\
+                    mv {params.output_dir}/{tmp_R1_zip} {output.r1_zip} &&\
+                    mv {params.output_dir}/{tmp_R2_output} {output.r2_rep} &&\
+                    mv {params.output_dir}/{tmp_R2_zip} {output.r2_zip}
+                fi """)
  
 # TODO: can probably be done by using map_input, no seperate functions neccessary?        
 rule fastqc_trimmed_pe:
