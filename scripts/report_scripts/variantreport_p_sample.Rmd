@@ -165,7 +165,7 @@ get_protein_mut <- function (vepfile){ # parse together from vep output "Protein
     
     # if there is a deletion the snv would span a couple of positions, if there is not such a spanning region there are no deletions
     # ! 06/05/2021 Vic - I think, I don't know how robust this is, but it will work for the sig mutations we have so far
-    if (!(any(is.na(locations[,'gene_mut_loc.3'])))) {
+    if ( nrow(locations) >=1 && !(any(is.na(locations[,'gene_mut_loc.3'])))) {
         deletions <- dplyr::bind_rows(apply(deletions.df,1, detectable_deletions, colnames = colnames))
         locations <- dplyr::bind_rows(locations,deletions)
     }
@@ -387,7 +387,9 @@ for (variant in rownames( msig_stable_transposed[-(row.names(msig_stable_transpo
   msig_dedupe_transposed <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
 }
 
-msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get's rid of the additional first row which is an transposing artifact
+if ( length(msig_dedupe_transposed) >= 1){ 
+    msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get's rid of the additional first row which is an transposing artifact
+}
 
 
 ```
