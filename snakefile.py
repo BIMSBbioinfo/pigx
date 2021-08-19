@@ -183,18 +183,19 @@ def map_input(args):
     
 def vep_input(args):
     sample = args[0]
-    lofreq_output = rules.lofreq.output # is this enough to trigger already the execution of lofreq?
-    with open(lofreq_output, 'r') as vcf:
+    lofreq_output = rules.lofreq.output.vcf # this requires the file to be there already - I have no idea how to make the decision about the further input when it requires a rule to run beforhand
+    print(lofreq_output.format(sample=sample))
+    with open(lofreq_output.format(sample=sample), 'r') as vcf:
         content = vcf.read()
-    if re.findall('^NC', content, re.MULTILINE): # regex ok or not?
-        # trigger vep path
-        return [os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_parsed.txt".format(sample=sample)),
-                os.path.join(VARIANTS_DIR, "{sample}_snv.csv".format(sample=sample))]
-    else:
-        # skipp execution of all vep related rules and directly have smth that the report can work with
-        empty_vep_txt = Path(os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_empty.txt".format(sample=sample))).touch()
-        empty_snv_csv = Path(os.path.join(VARIANTS_DIR, "{sample}_snv_empty.csv".format(sample=sample))).touch()
-        return [empty_vep_txt, empty_snv_csv]
+        if re.findall('^NC', content, re.MULTILINE): # regex ok or not?
+            # trigger vep path
+            return [os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_parsed.txt".format(sample=sample)),
+                    os.path.join(VARIANTS_DIR, "{sample}_snv.csv".format(sample=sample))]
+        else:
+            # skipp execution of all vep related rules and directly have smth that the report can work with
+            empty_vep_txt = Path(os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_empty.txt".format(sample=sample))).touch()
+            empty_snv_csv = Path(os.path.join(VARIANTS_DIR, "{sample}_snv_empty.csv".format(sample=sample))).touch()
+            return [empty_vep_txt, empty_snv_csv]
                 
 rule prinseq_pe:
     input: trim_reads_input
@@ -331,7 +332,7 @@ rule lofreq:
         aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam'),
         aligned_bai = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bai'),
         ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA)))
-    output: os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
+    output: vcf = os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
     log: os.path.join(LOG_DIR, 'lofreq_{sample}.log')
     shell: "{LOFREQ_EXEC} call -f {input.ref} -o {output} --verbose {input.aligned_bam} >> {log} 2>&1"
 
