@@ -193,8 +193,10 @@ def vep_input(args):
                     os.path.join(VARIANTS_DIR, "{sample}_snv.csv".format(sample=sample))]
         else:
             # skipp execution of all vep related rules and directly have smth that the report can work with
-            empty_vep_txt = Path(os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_empty.txt".format(sample=sample))).touch()
-            empty_snv_csv = Path(os.path.join(VARIANTS_DIR, "{sample}_snv_empty.csv".format(sample=sample))).touch()
+            empty_vep_txt = os.path.join(VARIANTS_DIR, "{sample}_vep_sarscov2_empty.txt".format(sample=sample))
+            Path( empty_vep_txt ).touch()
+            empty_snv_csv = os.path.join(VARIANTS_DIR, "{sample}_snv_empty.csv".format(sample=sample))
+            Path( empty_snv_csv ).touch()
             return [empty_vep_txt, empty_snv_csv]
                 
 rule prinseq_pe:
