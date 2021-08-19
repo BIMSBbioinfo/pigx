@@ -281,7 +281,6 @@ complete.df <- complete.df %>%
   summarise(freq = sum(as.numeric(freq)), gene_mut = paste(gene_mut, collapse = ",")) %>%
   ungroup()
 
-# TODO: redundant step from previous chunk can be removed
 match.df <- complete.df %>%
                     filter(!is.na(name))
 nomatch.df <- complete.df %>%
@@ -308,7 +307,7 @@ cat("\n Table 1: SNVs from sample matching signature mutations")
 ```{r sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
 # Display the filtered signature mutations and the variants accordingly in scrollable tables
 
-SignatureTable <-  data.frame("SNV" = match.df$gene_mut.x, 
+SignatureTable <-  data.frame("SNV" = match.df$gene_mut, 
                   "gene" = match.df$genes,
                   "protein_mutation" = match.df$AA_mut,
                   "variant" = match.df$name, # TODO: more nice writing of it e.g B1.1.7            
@@ -329,7 +328,7 @@ cat("\n Table 2: SNVs from sample not matching any signature mutations")
 ```{r non_sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
 # Display the filtered signature mutations and the variants accordingly in scrollable tables
 
-NoSignatureTable <-  data.frame("SNV" = nomatch.df$gene_mut.x, 
+NoSignatureTable <-  data.frame("SNV" = nomatch.df$gene_mut, 
                   "gene" = nomatch.df$genes,
                   "protein_mutation" = nomatch.df$AA_mut,
                   "frequency" = nomatch.df$freq, # TODO more clear name stating which frequency
