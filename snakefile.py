@@ -266,8 +266,8 @@ rule bbduk_adapter_trimming:
         r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz"),
         adapter = 
     output:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz")
+        out1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
+        out2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz")
     params: 
         adapt_seq = "AGATCGGAAGAG" # should be "Illumina univeral adapter" after: https://www.biostars.org/p/371399/, but there is also a TrustSeq adapter in the fasttwc - maybe I have to ask Emanuel for it, 
     log: os.path.join(LOG_DIR, 'bbduk_adapter_{sample}.log')
@@ -284,8 +284,8 @@ rule bbduk_primer trimming:
         r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz"), 
         primers = os.path.join(INDEX_DIR, "primer_sequences.txt")
     output:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R1.fastq.gz"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R2.fastq.gz")
+        out1 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R1.fastq.gz"),
+        out2 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R2.fastq.gz")
     log: os.path.join(LOG_DIR, 'bbduk_primer_{sample}.log')
     shell:  """
             {BBDUK_EXECT} in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
