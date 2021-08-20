@@ -45,6 +45,8 @@
 (define %packages
   (list "bash-minimal"
         "bwa"
+        "bedtools"
+        "bbmap"
         "ensembl-vep"
         "fastqc"
         "multiqc"
