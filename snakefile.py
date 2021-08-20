@@ -279,7 +279,7 @@ rule bbduk_adapter_trimming:
     
 # TODO make se version, later input and output should be given dynamically 
 # altough the shell command is the same then with bbduk_adapter_trimming I would keep it seperate in case one of the steps isn't wanted or needed
-rule bbduk_primer timming: 
+rule bbduk_primer trimming: 
     input:
         r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
         r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz"), 
