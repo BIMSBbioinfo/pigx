@@ -273,8 +273,7 @@ rule bbduk_adapter_trimming:
     log: os.path.join(LOG_DIR, 'bbduk_adapter_{sample}.log')
     shell: """
             {BBDUK_EXECT} in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
-            ref={params.adatp_seq} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log};
-            touch {output.out1} {output.out2}
+            ref={params.adatp_seq} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log}
            """
     
 # TODO make se version, later input and output should be given dynamically 
@@ -291,7 +290,6 @@ rule bbduk_primer trimming:
     shell:  """
             {BBDUK_EXECT} in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
             ref={input.primers} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log};
-            touch {output.out1} {output.out2}
            """
 
 rule bwa_index:
