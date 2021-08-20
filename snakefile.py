@@ -199,7 +199,21 @@ def vep_input(args):
             empty_snv_csv = os.path.join(VARIANTS_DIR, "{sample}_snv_empty.csv".format(sample=sample))
             Path( empty_snv_csv ).touch()
             return [empty_vep_txt, empty_snv_csv]
-                
+        
+# Trimming in three steps: general by qual and cutoff, get remaining adapters out, get remaining primers out
+
+# TODO: do we still need prinseq?
+# TODO: add all the new tools to variable/param lists and to the manifest
+
+rule get_primer_seqs:
+    input: 
+        ref = REFERENCE_FASTA
+        bed = PRIMER_BED # TODO create
+    output: os.path.join(INDEX_DIR, "primer_sequences.txt") # is it ok to put it there it should it have it's own directory?
+    log: os.path.join(LOG_DIR, "getfasta_primers.log")
+    shell: "{bedtools-getfasta-exec} -fi  {input.ref}\
+            -bed {input.bed} -name | awk '!/^>nCoV/' > {output} 2>> {log} 3>&2"
+            
 rule prinseq_pe:
     input: trim_reads_input
     output:
@@ -223,6 +237,8 @@ rule prinseq_pe:
             >> {log} 2>&1 &&\
             {GZIP_EXEC} {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1} && \
             {GZIP_EXEC} {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2}")
+
+
 
 rule bwa_index:
     input: REFERENCE_FASTA
