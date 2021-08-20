@@ -238,23 +238,6 @@ rule prinseq_pe:
             {GZIP_EXEC} {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1} && \
             {GZIP_EXEC} {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2}")
 
-# parameters taken from here: https://github.com/AAFC-BICoE/snakemake-barcoding-assembly-pipeline/blob/3798585eb78b948116323b1f787e98bc141b518c/Snakefile#L33
-rule bbduk:
-    # Sequencing Adaptor and quality trimming
-    input:
-        r1 = 'fastq/{sample}_L001_R1_001.fastq.gz',
-        r2 = 'fastq/{sample}_L001_R2_001.fastq.gz'
-    output:
-        out1 = "trimmed/{sample}_trimmed_L001_R1_001.fastq.gz",
-        out2 = "trimmed/{sample}_trimmed_L001_R2_001.fastq.gz",
-    log: "logs/bbduk.{sample}.log"
-    conda: "pipeline_files/vsearch_env.yml"
-    shell: """
-            bbduk.sh in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
-            ref={adaptors} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log};
-            touch {output.out1} {output.out2}
-           """
-
 # TODO we have to check with some benchmark samples if - when we do only quality trimming the bbduk - if the alignment results are similar to when we do it with prinseq
 # TODO create variables 
 # parameters taken from here: https://github.com/AAFC-BICoE/snakemake-barcoding-assembly-pipeline/blob/3798585eb78b948116323b1f787e98bc141b518c/Snakefile#L33
