@@ -74,3 +74,9 @@ tools:
   gzip:
     executable: @GZIP@
     args: ""
+  bbduk:
+    executable: @BBDUK@
+    args: ""
+  bedtools:
+    executable: @BEDTOOLS@
+    args: ""
