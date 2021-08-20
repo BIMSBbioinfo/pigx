@@ -87,6 +87,7 @@ RSCRIPT_EXEC         = tool("Rscript")
 SAMTOOLS_EXEC        = tool("samtools")
 VEP_EXEC             = tool("vep")
 BBDUK_EXECT
+BBDUK_EXECT
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
@@ -209,7 +210,7 @@ def vep_input(args):
 rule get_primer_seqs:
     input: 
         ref = REFERENCE_FASTA
-        bed = PRIMER_BED # TODO create
+        bed = AMPLICONS_BED
     output: os.path.join(INDEX_DIR, "primer_sequences.txt") # is it ok to put it there it should it have it's own directory?
     log: os.path.join(LOG_DIR, "getfasta_primers.log")
     shell: "{BEDTOOLS_EXEC} -fi  {input.ref}\
