@@ -87,7 +87,7 @@ RSCRIPT_EXEC         = tool("Rscript")
 SAMTOOLS_EXEC        = tool("samtools")
 VEP_EXEC             = tool("vep")
 BBDUK_EXECT          = tool("bbduk")
-BEDTOOLS_EXEC        = tool("bedtools-getfasta")
+BEDTOOLS_EXEC        = tool("bedtool")
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
@@ -213,7 +213,7 @@ rule get_primer_seqs:
         bed = AMPLICONS_BED
     output: os.path.join(INDEX_DIR, "primer_sequences.txt") # is it ok to put it there it should it have it's own directory?
     log: os.path.join(LOG_DIR, "getfasta_primers.log")
-    shell: "{BEDTOOLS_EXEC} -fi  {input.ref}\
+    shell: "{BEDTOOLS_EXEC} getfasta -fi  {input.ref}\
             -bed {input.bed} -name | awk '!/^>nCoV/' > {output} 2>> {log} 3>&2"
             
 rule prinseq_pe:
