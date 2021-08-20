@@ -209,7 +209,7 @@ def vep_input(args):
 
 rule get_primer_seqs:
     input: 
-        ref = REFERENCE_FASTA
+        ref = REFERENCE_FASTA,
         bed = AMPLICONS_BED
     output: os.path.join(INDEX_DIR, "primer_sequences.txt") # is it ok to put it there it should it have it's own directory?
     log: os.path.join(LOG_DIR, "getfasta_primers.log")
