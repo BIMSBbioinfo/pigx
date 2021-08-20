@@ -308,7 +308,7 @@ cd {INDEX_DIR};
 # TODO: use map_input as input 
 rule bwa_align:
     input:
-        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")],
+        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R1.fastq.gz"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")],
         ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA))),
         index = os.path.join(INDEX_DIR, "{}.bwt".format(os.path.basename(REFERENCE_FASTA)))
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
