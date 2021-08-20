@@ -87,7 +87,7 @@ RSCRIPT_EXEC         = tool("Rscript")
 SAMTOOLS_EXEC        = tool("samtools")
 VEP_EXEC             = tool("vep")
 BBDUK_EXECT          = tool("bbduk")
-BEDTOOLS_EXEC        = tool("bedtool")
+BEDTOOLS_EXEC        = tool("bedtools")
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
@@ -248,8 +248,7 @@ rule prinseq_pe:
 rule bbduk_adapter_trimming: 
     input:
         r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz"),
-        adapter = 
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")
     output:
         out1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
         out2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz")
