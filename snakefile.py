@@ -86,8 +86,8 @@ PYTHON_EXEC          = tool("python")
 RSCRIPT_EXEC         = tool("Rscript")
 SAMTOOLS_EXEC        = tool("samtools")
 VEP_EXEC             = tool("vep")
-BBDUK_EXECT
-BBDUK_EXECT
+BBDUK_EXECT          = tool("bbduk")
+BEDTOOLS_EXEC        = tool("bedtools-getfasta")
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
