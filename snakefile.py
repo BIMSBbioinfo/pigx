@@ -211,10 +211,10 @@ rule get_primer_seqs:
     input: 
         ref = REFERENCE_FASTA,
         bed = AMPLICONS_BED
-    output: os.path.join(INDEX_DIR, "primer_sequences.txt") # is it ok to put it there it should it have it's own directory?
+    output: os.path.join(INDEX_DIR, "primer_sequences.fa") # is it ok to put it there it should it have it's own directory?
     log: os.path.join(LOG_DIR, "getfasta_primers.log")
     shell: "{BEDTOOLS_EXEC} getfasta -fi  {input.ref}\
-            -bed {input.bed} -name | awk '!/^>nCoV/' > {output} 2>> {log} 3>&2"
+            -bed {input.bed} -name > {output} 2>> {log} 3>&2"
             
 rule prinseq_pe:
     input: trim_reads_input
@@ -247,32 +247,32 @@ rule prinseq_pe:
 # this is just an intermediate version to get our results, it has to be reworked to fit whatever input you'd like it to get
 rule bbduk_adapter_trimming: 
     input:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")
+        bba_r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"),
+        bba_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")
     output:
-        out1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
-        out2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz")
+        out1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter-trimmed_R1.fastq.gz"),
+        out2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter-trimmed_R2.fastq.gz")
     params: 
         adapt_seq = "AGATCGGAAGAG" # should be "Illumina univeral adapter" after: https://www.biostars.org/p/371399/, but there is also a TrustSeq adapter in the fasttwc - maybe I have to ask Emanuel for it, 
     log: os.path.join(LOG_DIR, 'bbduk_adapter_{sample}.log')
     shell: """
-            {BBDUK_EXECT} in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
-            ref={params.adatp_seq} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log}
+            {BBDUK_EXECT} in1={input.bba_r1} out1={output.out1} in2={input.bba_r2} out2={output.out2}\
+            literal={params.adapt_seq} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log}
            """
     
 # TODO make se version, later input and output should be given dynamically 
 # altough the shell command is the same then with bbduk_adapter_trimming I would keep it seperate in case one of the steps isn't wanted or needed
-rule bbduk_primer trimming: 
+rule bbduk_primer_trimming: 
     input:
-        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz"), 
-        primers = os.path.join(INDEX_DIR, "primer_sequences.txt")
+        bbp_r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter-trimmed_R1.fastq.gz"),
+        bbp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter-trimmed_R2.fastq.gz"), 
+        primers = os.path.join(INDEX_DIR, "primer_sequences.fa")
     output:
-        out1 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R1.fastq.gz"),
-        out2 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R2.fastq.gz")
+        bbp_out1 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer-trimmed_R1.fastq.gz"),
+        bbp_out2 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer-trimmed_R2.fastq.gz")
     log: os.path.join(LOG_DIR, 'bbduk_primer_{sample}.log')
     shell:  """
-            {BBDUK_EXECT} in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
+            {BBDUK_EXECT} in1={input.bbp_r1} out1={output.bbp_out1} in2={input.bbp_r2} out2={output.bbp_out2}\
             ref={input.primers} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log};
            """
 
@@ -292,7 +292,7 @@ rule bwa_index:
 # TODO: use map_input as input 
 rule bwa_align:
     input:
-        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R1.fastq.gz"), os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")],
+        fastq = [os.path.join(TRIMMED_READS_DIR, "{sample}_primer-trimmed_R1.fastq.gz"), os.path.join(TRIMMED_READS_DIR, "{sample}_primer-trimmed_R2.fastq.gz")],
         ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA))),
         index = os.path.join(INDEX_DIR, "{}.bwt".format(os.path.basename(REFERENCE_FASTA)))
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
