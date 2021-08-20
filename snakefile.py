@@ -202,7 +202,7 @@ def vep_input(args):
         
 # Trimming in three steps: general by qual and cutoff, get remaining adapters out, get remaining primers out
 
-# TODO: do we still need prinseq?
+# TODO: do we still need prinseq? --> maybe check with some lowqual samples what difference it makes 
 # TODO: add all the new tools to variable/param lists and to the manifest
 
 rule get_primer_seqs:
@@ -238,7 +238,61 @@ rule prinseq_pe:
             {GZIP_EXEC} {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1} && \
             {GZIP_EXEC} {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2}")
 
+# parameters taken from here: https://github.com/AAFC-BICoE/snakemake-barcoding-assembly-pipeline/blob/3798585eb78b948116323b1f787e98bc141b518c/Snakefile#L33
+rule bbduk:
+    # Sequencing Adaptor and quality trimming
+    input:
+        r1 = 'fastq/{sample}_L001_R1_001.fastq.gz',
+        r2 = 'fastq/{sample}_L001_R2_001.fastq.gz'
+    output:
+        out1 = "trimmed/{sample}_trimmed_L001_R1_001.fastq.gz",
+        out2 = "trimmed/{sample}_trimmed_L001_R2_001.fastq.gz",
+    log: "logs/bbduk.{sample}.log"
+    conda: "pipeline_files/vsearch_env.yml"
+    shell: """
+            bbduk.sh in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
+            ref={adaptors} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log};
+            touch {output.out1} {output.out2}
+           """
 
+# TODO we have to check with some benchmark samples if - when we do only quality trimming the bbduk - if the alignment results are similar to when we do it with prinseq
+# TODO create variables 
+# parameters taken from here: https://github.com/AAFC-BICoE/snakemake-barcoding-assembly-pipeline/blob/3798585eb78b948116323b1f787e98bc141b518c/Snakefile#L33
+
+# this is just an intermediate version to get our results, it has to be reworked to fit whatever input you'd like it to get
+rule bbduk_adapter_trimming: 
+    input:
+        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"),
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz"),
+        adapter = 
+    output:
+        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz")
+    params: 
+        adapt_seq = "AGATCGGAAGAG" # should be "Illumina univeral adapter" after: https://www.biostars.org/p/371399/, but there is also a TrustSeq adapter in the fasttwc - maybe I have to ask Emanuel for it, 
+    log: os.path.join(LOG_DIR, 'bbduk_adapter_{sample}.log')
+    shell: """
+            {BBDUK_EXECT} in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
+            ref={params.adatp_seq} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log};
+            touch {output.out1} {output.out2}
+           """
+    
+# TODO make se version, later input and output should be given dynamically 
+# altough the shell command is the same then with bbduk_adapter_trimming I would keep it seperate in case one of the steps isn't wanted or needed
+rule bbduk_primer timming: 
+    input:
+        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R1.fastq.gz"),
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_adapter_trimmed_R2.fastq.gz"), 
+        primers = os.path.join(INDEX_DIR, "primer_sequences.txt")
+    output:
+        r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R1.fastq.gz"),
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_primer_trimmed_R2.fastq.gz")
+    log: os.path.join(LOG_DIR, 'bbduk_primer_{sample}.log')
+    shell:  """
+            {BBDUK_EXECT} in1={input.r1} out1={output.out1} in2={input.r2} out2={output.out2}\
+            ref={input.primers} qtrim=rl trimq=10 ktrim=r k=23 mink=11 hdist=1 tpe tbo &>{log};
+            touch {output.out1} {output.out2}
+           """
 
 rule bwa_index:
     input: REFERENCE_FASTA
