@@ -1,6 +1,6 @@
 # get a sample sheet with the basic information from a list of files 
 # this version makes a file where the sample name will match the read name
-# this will only create the basic sceleton with sample names till time, (do everything else on a spreadsheet for now)
+# this will only create the basic skeleton with sample names till time, (do everything else on a spreadsheet for now)
 
 import os
 import csv
