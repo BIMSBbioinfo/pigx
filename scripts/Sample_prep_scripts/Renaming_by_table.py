@@ -4,23 +4,27 @@ import subprocess
 
 
 def renaming(sample_dir, bash_script, naming_table):
-    os.chdir(sample_dir)
-    print("Entering ", sample_dir)
-    res = subprocess.call([bash_script, naming_table])
-    print(res)
-
-
-def merging(sample_dir):
     if os.path.isdir(sample_dir):
-        for i in os.listdir(sample_dir):
-            file1 = i.split("_R")[0]
-            for j in os.listdir(sample_dir):
-                file2 = i.split("_R")[0]
-                if file1 + "_R1.fastq.gz" == file2:
-                    new = file1.split(".", 2)[0] + "_merged.fastq.gz"
+        if len(os.listdir(sample_dir)) == 0:
+            raise Exception("Directory is empty")
+        else:   
+            os.chdir(sample_dir)
+            print("Entering ", sample_dir)
+            res = subprocess.call([bash_script, naming_table])
+            print(res)
+    else:
+        raise Exception("Directory does not exist")
+
+    
+def merging(sample_dir_1, sample_dir_2, target_dir):
+    if os.path.isdir(sample_dir_1) && os.path.isdir(sample_dir_2):
+        for file1 in os.listdir(sample_dir_1): 
+            for file2 in os.listdir(sample_dir_2):
+                if file1 == file2:
+                    new = os.path.join(target_dir, file1.split(".", 2)[0], "_merged.fastq.gz")
                     zcat_command = f'zcat {file1} {file2} > {new}'
                     res = subprocess.call(zcat_command)
-                    print(zcat)
+                    print(zcat_command)
     else:
         raise Exception("directory not found")
 
