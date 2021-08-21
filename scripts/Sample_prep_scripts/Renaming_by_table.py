@@ -35,7 +35,7 @@ def merging(sample_dir_1, sample_dir_2, target_dir):
 
 def name_split(str):
     """ depending from which dir, splits sample name so the date/time stemp only is left """
-
+    namebody = ""
     if str.startswith('P939'):
         namebody = str.split("39_")[1].split("mix_R")[0]
     elif str.startswith('WW'):
