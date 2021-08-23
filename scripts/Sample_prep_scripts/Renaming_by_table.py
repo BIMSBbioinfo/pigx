@@ -26,8 +26,8 @@ def merging(sample_dir_1, sample_dir_2, target_dir):
         for file1 in os.listdir(sample_dir_1): 
             for file2 in os.listdir(sample_dir_2):
                 if file1 == file2:
-                    new = os.path.join(target_dir, (file1.split(".", 2)[0] + "_merged.fastq.gz"))
-                    zcat_command = f'cat {os.path.join(sample_dir_1, file1)} {os.path.join(sample_dir_2, file2)}|gzip -f > {new}'
+                    new = os.path.join(target_dir, ("merged_" + file1))
+                    zcat_command = f'cat {os.path.join(sample_dir_1, file1)} {os.path.join(sample_dir_2, file2)} > {new}'
                     res = os.system(zcat_command)
                     print(zcat_command)
     else:
@@ -51,13 +51,15 @@ def merge_by_date(sample_dir_1, sample_dir_2, target_dir):
     if os.path.isdir(sample_dir_1) and os.path.isdir(sample_dir_2):
         for file1 in os.listdir(sample_dir_1):
             namebody_1 = name_split(file1)
+            suffix_1 = file1.split("_R")[1]
             
             for file2 in os.listdir(sample_dir_2):
                 namebody_2 = name_split(file2)
+                suffix_2 = file2.split("_R")[1]
                 
-                if namebody_1 == namebody_2:
-                    new = os.path.join(target_dir, (file1.split(".", 2)[0] + "_merged.fastq.gz"))
-                    zcat_command = f'zcat {os.path.join(sample_dir_1, file1)} {os.path.join(sample_dir_2, file2)}|gzip -f > {new}'
+                if namebody_1 == namebody_2 and suffix_1 == suffix_2:
+                    new = os.path.join(target_dir, ("merged_"+file1))
+                    zcat_command = f'cat {os.path.join(sample_dir_1, file1)} {os.path.join(sample_dir_2, file2)} > {new}'
                     res = os.system(zcat_command)
                     print(zcat_command)
     else:
