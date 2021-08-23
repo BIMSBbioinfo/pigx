@@ -46,7 +46,7 @@ def parsing_amplicon(amplicon_file):
                     half_covered.append(ampli)
 
     full_drop_out = list(set(full_drop_out))
-    fully_covered_amplicons = int(num_covered_amplicons) - len(drop_out_amplicons)
+    fully_covered_amplicons = (int(num_covered_amplicons) - len(drop_out_amplicons)/2)
 
     return (fully_covered_amplicons, half_covered, full_drop_out)
 
