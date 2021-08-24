@@ -52,7 +52,7 @@ lin_reg_mutation_change <- function( mutations.df ){
   pvalues_df <- do.call( rbind, pvalues ) %>% 
                 tibble::rownames_to_column( "VALUE" ) %>% 
                 filter( stringr::str_detect( VALUE, "dates" ) ) %>%
-                filter (`summary(test)$coefficients[, 4]` < 0.01)
+                filter (`summary(test)$coefficients[, 4]` < 0.05)
   
   #names of mutations get strange pattern, doing some split and getting the names correct
   pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
@@ -75,12 +75,14 @@ gather_lm_values <- function(mutations.df){
   results_lm <- list ()
   summaries <- list ()
   pvalues <- list () 
+  coeff <- list()
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names( mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length( na.omit(mutations.df[,i])) >= 2 ){
       tmp <- mutations.df %>% select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
+      coeff[[i]] <- as.data.frame(test["coefficients"]$coefficients["tmp$dates"])
       results_lm[[i]] <- test
       summaries[[i]] <- summary( test )
       pvalues[[i]] <- as.data.frame( summary( test )$coefficients[,4])
@@ -88,9 +90,57 @@ gather_lm_values <- function(mutations.df){
     }
 
   #generate a proper dataframe with pvalues without filter
+  
+  coeff_df <- as.data.frame(do.call(rbind, coeff)) %>% drop_na() %>%
+            tibble::rownames_to_column( "VALUE" )
   pvalues_df <- do.call( rbind, pvalues ) %>% 
                 tibble::rownames_to_column( "VALUE" ) %>% 
-                filter( stringr::str_detect( VALUE, "dates" ) )
+                filter( stringr::str_detect( VALUE, "dates" ) ) %>%
+                mutate(VALUE = str_split(VALUE, ".tmp", simplify = TRUE)[,1]) %>%
+                left_join(coeff_df, by = "VALUE")
+  
+  #names of mutations get strange pattern, doing some split and getting the names correct
+  pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
+  
+  #fixing the dataframe with mutations and pvalues
+  pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]`,
+                                       `test[\"coefficients\"]$coefficients[\"tmp$dates\"]` )
+  colnames(pvalues_df) <- c("mutation", "pvalues", "coefficients")
+  return ( pvalues_df)
+}
+
+lm_005_1muts <- function( mutations.df ){
+  #' takes data frames with mutations, frequency values over time
+  #' returns A) list with mutations with significant change, B) dataframe with related pvalues
+  
+  require(tidyverse)
+  require(stringr)
+  # TODO check file format assumptions
+  
+  #initialize 3 lists for results
+  results_lm <- list ()
+  summaries <- list ()
+  pvalues <- list () 
+  
+  #loop the mutations, doing the linear model, and extracting the pvalues
+  for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
+    if ( length(na.omit(mutations.df[,i])) >= 1 ){
+      tmp <- mutations.df %>% select( dates, all_of(i) )
+      test <- lm( formula = tmp[[i]] ~ tmp$dates )
+      # only write the p-values for positive coefficients
+      if (test["coefficients"]$coefficients["tmp$dates"] > 0){
+          results_lm[[i]] <- test
+          summaries[[i]] <- summary( test )
+          pvalues[[i]] <- as.data.frame( summary( test )$coefficients[,4])
+      }
+      }
+    }
+
+  #generate a proper dataframe with pvalues, filtering by significance
+  pvalues_df <- do.call( rbind, pvalues ) %>% 
+                tibble::rownames_to_column( "VALUE" ) %>% 
+                filter( stringr::str_detect( VALUE, "dates" ) ) %>%
+                filter (`summary(test)$coefficients[, 4]` < 0.05)
   
   #names of mutations get strange pattern, doing some split and getting the names correct
   pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]

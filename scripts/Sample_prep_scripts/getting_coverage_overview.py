@@ -20,10 +20,10 @@ def make_table_with_cov( coverage_dir, output_file ):
                 with open( output_file, "a") as output: 
                     wrtr = csv.writer(output)
                     wrtr.writerow(fields)
-                
-#coverage_dir = "/mnt/beast/pathogenomics/pigx_ww/210822_ww_berlin_febjune_publication/output/coverage"
-coverage_dir = "/mnt/bimsb_local/pigx_sarscov2_ww/210531_wastewaterARTICEW109_pigxsarscov2ww_default/output/coverage"
-#output_file = "/home/vfs/PycharmProjects/Akalinlab_pathogenomics/pigx_sarscov2_ww/tests/coverage_gathering.csv"
-output_file = "/home/vfs/PycharmProjects/Akalinlab_pathogenomics/pigx_sarscov2_ww/tests/coverage_gathering_oldARTIC_analysis.csv"
+            
+
+coverage_dir = "/mnt/beast/pathogenomics/pigx_ww/210902_ww_berlin_febjune_pub_fastp/output/coverage"
+
+output_file = "/mnt/beast/pathogenomics/pigx_ww/210902_ww_berlin_febjune_pub_fastp/output/coverage_gathering.csv"
 
 make_table_with_cov(coverage_dir, output_file)

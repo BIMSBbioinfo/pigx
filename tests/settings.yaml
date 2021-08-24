@@ -3,7 +3,8 @@ locations:
   reads-dir: sample_data/reads
   reference-fasta: sample_data/NC_045512.2.fasta
   amplicons-bed: sample_data/nCoV-2019_NCref.bed
-  kraken-db-dir: ../databases/kraken_db
-  krona-db-dir: ../databases/krona_db
-  sigmut-db-dir: ../databases/sigmut_db
-  vep-db-dir: ../databases/vep_db
+  mutation-sheet: sample_data/mutation_sheet.csv
+  kraken-db-dir: /local/Projects/AAkalin_pathogenomics/databases/kraken_db
+  krona-db-dir: /local/Projects/AAkalin_pathogenomics/databases/krona_db
+  sigmut-db-dir: /local/Projects/AAkalin_pathogenomics/databases/sigmut_db
+  vep-db-dir: /local/Projects/AAkalin_pathogenomics/databases/vep_db

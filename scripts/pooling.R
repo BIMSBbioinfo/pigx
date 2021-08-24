@@ -43,7 +43,7 @@ read_num_raw <- function ( raw_reads_vector, reads_dir){
 apply_fun_get_read_num <- function (read, reads_dir) {
   read_num <- as.numeric(
                       system2(command = "echo", 
-                      args = c ("$(cat ", file.path(reads_dir, read), "|wc -l)/4|bc"),
+                      args = c ("$(zcat ", file.path(reads_dir, read), "|wc -l)/4|bc"),
                       stdout = TRUE))
   data.frame( read_num )
 }
@@ -66,18 +66,23 @@ pool_by_weighted_mean <- function(df, weights, reads_dir, sample_sheet) {
   #' docstring missing
   require(dplyr)
 
-  weights <- get_num_raw_reads(reads_dir, sample_sheet) %>% 
+  weights <- weights %>% 
               dplyr::select( c(samplename, total_reads)) %>% 
               # only take weights from approved samples
               semi_join(df, by = "samplename")
+  # TODO make this proper without magic numbers
+  variants <- colnames(df[,-c(1,2,3,4,5)])
+  
   df_pooled <- group_by_date(df) %>%
-               summarise_at(vars(c("WT", "b117", "p1", "b1351","b16172")), funs(weighted.mean(.,weights$total_reads, na.rm = FALSE))) %>%
+                left_join(weights, by = "samplename")  %>%
+                relocate(total_reads) %>%
+                # summarize by calc weighted mean, with the num of raw reads as weight
+                summarise_at(vars( all_of(variants) ), list(~ weighted.mean(., total_reads))) %>%
                 # rename samples to indicated that they were pooled
                 mutate(samplename = paste0(dates, "_pooled")) %>%
                 # put names first again
                 relocate(samplename) %>%
                 ungroup()
-    
 }
 
 pool_by_mean <- function(df, na_handling) {
