@@ -27,6 +27,7 @@ lin_reg_mutation_change <- function( mutations.df ){
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
   
   require(tidyverse)
+  require(stringr)
   # TODO check file format assumptions
   
   #initialize 3 lists for results
@@ -47,7 +48,7 @@ lin_reg_mutation_change <- function( mutations.df ){
   #generate a proper dataframe with pvalues, filtering by significance
   pvalues_df <- do.call( rbind, pvalues ) %>% 
                 tibble::rownames_to_column( "VALUE" ) %>% 
-                filter( str_detect( VALUE, "dates" ) ) %>% 
+                filter( stringr::str_detect( VALUE, "dates" ) ) %>% 
                 filter( pvalues < 0.05 ) 
   
   #names of mutations get strange pattern, doing some split and getting the names correct
