@@ -59,6 +59,9 @@ tools:
   import_taxonomy:
     executable: @IMPORT_TAXONOMY@
     args: ""
+  ivar:
+    executable: @IVAR@
+    args: ""
   lofreq:
     executable: @LOFREQ@
     args: ""
