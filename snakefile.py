@@ -230,7 +230,7 @@ rule prinseq_pe:
         # prep input for prinseq, name without gz
         read1 = input[0][:-3]
         read2 = input[1][:-3]
-        shell("{GUNZIP_EXEC} -f {input[0]} {input[1]} && \
+        shell("{GUNZIP_EXEC} --keep -f {input[0]} {input[1]} && \
             {PRINSEQ_EXEC} -fastq {read1} -fastq2 {read2} -ns_max_n 4\
             -min_qual_mean 30 -trim_qual_left 30\
             -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
