@@ -353,9 +353,9 @@ rule fastqc_trimmed_pe:
     shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
 
 rule fastqc_primer_trimmed:
-    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed.bam')
+    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed_sorted.bam')
     output:
-        os.path.join(FASTQC_DIR, '{sample}', '{sample}_aligned_primer-trimmed_fastqc.html')
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_aligned_sorted_primer-trimmed_sorted_fastqc.html')
     log: os.path.join(LOG_DIR, 'fastqc_{sample}_aligned_primer-trimmed.log')
     params:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
@@ -364,7 +364,8 @@ rule fastqc_primer_trimmed:
 rule multiqc:
   input:
     fastqc_raw_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.html'), sample=SAMPLES, read_num=[1, 2]),
-    fastqc_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html'), sample=SAMPLES, read_num=[1, 2])
+    fastqc_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_trimmed_R{read_num}_fastqc.html'), sample=SAMPLES, read_num=[1, 2]),
+    fastqc_primer_trimmed_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_aligned_sorted_primer-trimmed_sorted_fastqc.html'), sample = SAMPLES)
   output: os.path.join(MULTIQC_DIR, '{sample}', 'multiqc_report.html')
   params:
     fastqc_dir = os.path.join(FASTQC_DIR, '{sample}'),
