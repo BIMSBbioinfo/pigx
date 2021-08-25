@@ -584,6 +584,6 @@ rule render_index:
   "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
   "logo": "{LOGO}", \
   "fun_cvrg_scr": "{params.fun_cvrg_scr}", \
-  "fun_lm":"{params.fun_lm}", \
+  "fun_lm": "{params.fun_lm}" \
   
 }}' > {log} 2>&1"""
