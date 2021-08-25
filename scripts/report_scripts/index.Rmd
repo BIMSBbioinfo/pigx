@@ -6,6 +6,7 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 params:
   variants_csv: ''
   mutations_csv: ''
+  coverage_dir: ''
   sample_sheet: ''
   logo: ''
 ---
@@ -32,6 +33,8 @@ library(plotly)
 library(htmltools)
 library(reshape2)
 library(base64url)
+library(DT)
+library(tidyverse)
 
 df_var <- read.table(params$variants_csv, sep = "\t", header=T)
 df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
