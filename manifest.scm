@@ -69,6 +69,7 @@
         "r-rmarkdown"
         "r-stringr"
         "r-tidyr"
+        "r-tidyverse"
         "r-reshape2"
         "python-wrapper"
         "python-pyyaml"))
