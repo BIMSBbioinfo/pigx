@@ -140,7 +140,6 @@ OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in sele
 rule all:
     input: OUTPUT_FILES
 
-
 # Record any existing output files, so that we can detect if they have
 # changed.
 expected_files = {}
@@ -149,7 +148,6 @@ onstart:
         for name in OUTPUT_FILES:
             if os.path.exists(name):
                 expected_files[name] = os.path.getmtime(name)
-
 
 # Print generated target files.
 onsuccess:
@@ -264,7 +262,6 @@ rule bwa_align:
     log: os.path.join(LOG_DIR, 'bwa_align_{sample}.log')
     shell: "{BWA_EXEC} mem -t {params.threads} {input.ref} {input.fastq} > {output} 2>> {log} 3>&2"
 
-
 rule samtools_filter_aligned:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_tmp.sam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
@@ -283,7 +280,6 @@ rule samtools_sort_preprimertrim:
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
     log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
     shell: "{SAMTOOLS_EXEC} sort -o {output} {input} >> {log} 2>&1"
-
 
 rule samtools_index_preprimertrim:
     input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
