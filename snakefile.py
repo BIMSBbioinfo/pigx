@@ -290,6 +290,17 @@ rule samtools_index:
     log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
     shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
+rule ivar_primer_trim:
+    input: 
+        primers = AMPLICONS_BED
+        aligned_reads = os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
+    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed.bam')
+    params:
+        output = os.path.join(TRIMMED_READS_DIR, "{sample}_aligned_primer-trimmed") 
+    log: os.path.join(LOG_DIR, 'ivar_{sample}.log')
+    shell: """
+        {IVAR_EXEC} trim -b {input.primers} -p {params.output} -i {input.aligned_reads} -q 15 -m 180 -s 4\ 
+        >> {log} 2>&1 """ # TODO create IVAR variable 
 
 rule fastqc_raw:
     input: trim_reads_input
