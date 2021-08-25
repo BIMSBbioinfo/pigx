@@ -9,6 +9,8 @@ params:
   coverage_dir: ''
   sample_sheet: ''
   logo: ''
+  fun_cvrg_scr: ''
+  fun_lm: ''
 ---
 
 <style>
