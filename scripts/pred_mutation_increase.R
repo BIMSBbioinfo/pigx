@@ -51,13 +51,10 @@ lin_reg_mutation_change <- function( mutations.df ){
                 filter( pvalues < 0.05 ) 
   
   #names of mutations get strange pattern, doing some split and getting the names correct
-  pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1] 
-  
-  #making a list with mutations that are significant
-  mutations_sig <- str_split_fixed( pvalues_df$VALUE, "[.]", 2 )[,1]
+  pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
   
   #fixing the dataframe with mutations and pvalues
   pvalues_df <- pvalues_df %>% select( mutation, pvalues )
   
-  return ( c(mutations_sig, pvalues_df))
+  return ( pvalues_df)
 }
