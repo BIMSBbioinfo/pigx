@@ -107,7 +107,7 @@ Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f6
 ```
 ```{r variants, echo=F, message=F, warning=F}
 
-melted <- reshape2::melt(df_var,
+melted <- reshape2::melt(approved_var_plot,
                          id.vars = c("dates", "samplename", "location_name",
                                      "coordinates_lat", "coordinates_long"))
 locations <- unique(melted$location_name)
@@ -152,13 +152,13 @@ selected variant.
 
 ```{r maps for variants, echo=F, message=FALSE, warning=FALSE, out.width="900px", out.height="900px"}
 
-melted <- melt(df_var,
+melted <- melt(approved_var_plot,
                id.vars = c("dates", "samplename", "location_name",
                            "coordinates_lat", "coordinates_long"),
                rm.NA = TRUE) %>%
     mutate (value = round (value, 4))
 
-locations <- unique(melt(df_var,
+locations <- unique(melt(approved_var_plot,
                          id.vars = c("coordinates_lat",
                                      "coordinates_long")))
 
@@ -216,7 +216,7 @@ mutations in samples at specific wastewater sampling locations, and
 how the frequencies change over time.
 
 ```{r mutations, echo=F, message=F, warning=F}
-melted <- melt(df_mut,
+melted <- melt(approved_mut_plot,
                id.vars = c("dates", "samplename", "location_name",
                            "coordinates_lat", "coordinates_long"),
                rm.NA = TRUE)
@@ -263,7 +263,7 @@ melted <- melt(df_mut,
                rm.NA = TRUE) %>%
     mutate (value = round (value, 4))
 
-locations <- unique(melt (df_mut,
+locations <- unique(melt (approved_mut_plot,
                           id.vars = c("coordinates_lat",
                                       "coordinates_long")))
 
