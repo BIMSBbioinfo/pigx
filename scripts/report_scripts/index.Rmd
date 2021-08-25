@@ -73,7 +73,29 @@ the frequencies change over time.
 Since not all variants of concern are listed, the relative
 frequencies at a given location and time will not necessarily add up
 to one.
+```{r sample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
+source(params$fun_cvrg_scr) # TODO given as input? or only the scripts dir? similar variant_report
 
+coverages.df <- get_genome_cov( params$coverage_dir )
+if ( !(length(coverages.df) == 0)){
+    good_samples.df <- coverages.df %>% filter( coverage >= 95) # TODO stringecy should be given by user, maybe even by visualization
+    bad_samples.df <- coverages.df %>% filter( coverage < 95)
+    
+    # table displaying bad samples which are not further inlcuded 
+    cat("\n Samples without sufficient genome coverage. They aren't included in the visualization or          the linear regression") # TODO refine this text 
+    # TODO refine column names --> "coverage in percent", 
+    DT::datatable(bad_samples.df,
+                  extensions = c('FixedColumns', 'Scroller'),
+                  options = list(fixedColumns = TRUE, 
+                             scrollY = 180,
+                             scrollX = TRUE,
+                             scroller = TRUE,
+                             dom = 'Bfrtip'),
+                  filter = "bottom")
+} else {
+    cat("\n No coverage values found.")
+}
+```
 ```{r color_palette}
 Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f69e5", "#4cdab2", "#999ce4", "#2ce6f3",
 "#6638c6", "#005f29", "#5d73cc", "#616524", "#a8a041", "#e9f600", "#3eaca8", "#62a273", "#4ea5d0", "#655c95", "#67a04e")
