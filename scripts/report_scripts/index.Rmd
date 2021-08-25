@@ -83,8 +83,9 @@ source(params$fun_cvrg_scr) # TODO given as input? or only the scripts dir? simi
 
 coverages.df <- get_genome_cov( params$coverage_dir )
 if ( !(length(coverages.df) == 0)){
-    good_samples.df <- coverages.df %>% filter( coverage >= 95) # TODO stringecy should be given by user, maybe even by visualization
-    bad_samples.df <- coverages.df %>% filter( coverage < 95)
+    good_samples.df <- coverages.df %>% filter( coverage >= 90) # TODO stringecy should be given by user, maybe even by visualization
+    bad_samples.df <- coverages.df %>% filter( coverage < 90)
+  # 90 was chosen because samples with 90% cov often still cover all amplicons
     
     # table displaying bad samples which are not further inlcuded 
     str <- "\n Samples without sufficient genome coverage. They aren't included in the visualization or the linear regression" # TODO refine this text, put into seperate chunk
@@ -116,25 +117,6 @@ melted <- reshape2::melt(approved_var_plot,
                          id.vars = c("dates", "samplename", "location_name",
                                      "coordinates_lat", "coordinates_long"))
 locations <- unique(melted$location_name)
-
-# summary plot all samples, location ignored
-
-subset(melted) %>%
-   group_by(dates) %>%
-   arrange(variable) %>%
-   mutate (value = round (value, 4)) %>%
-   plot_ly (type = 'scatter',
-            mode = 'lines+markers',
-            stackgroup = 'one',
-            showlegend = TRUE,
-            name = ~variable,
-            x = ~dates,
-            y = ~value,
-            color = ~variable,
-            colors = Variant_colors) %>%
-   layout (title = "Summary over time",
-           showlegend = TRUE,
-           yaxis = list(title = "Frequency"))
 
 # time series per location
 tagList(lapply(locations,
