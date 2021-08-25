@@ -79,8 +79,8 @@ source(params$fun_cvrg_scr) # TODO given as input? or only the scripts dir? simi
 
 coverages.df <- get_genome_cov( params$coverage_dir )
 if ( !(length(coverages.df) == 0)){
-    good_samples.df <- coverages.df %>% filter( coverage >= 10) # TODO stringecy should be given by user, maybe even by visualization
-    bad_samples.df <- coverages.df %>% filter( coverage < 10)
+    good_samples.df <- coverages.df %>% filter( coverage >= 95) # TODO stringecy should be given by user, maybe even by visualization
+    bad_samples.df <- coverages.df %>% filter( coverage < 95)
     
     # table displaying bad samples which are not further inlcuded 
     str <- "\n Samples without sufficient genome coverage. They aren't included in the visualization or the linear regression" # TODO refine this text, put into seperate chunk
