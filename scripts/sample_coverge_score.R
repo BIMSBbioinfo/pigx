@@ -11,7 +11,7 @@ get_genome_cov <- function ( coverage_dir ) {
   genome_cov.df <- bind_rows(genome_cov.df, lapply( files, function (x){
     rd_tbl <- read.table(x, sep = '\t') # ignores the row starting with # directly TODO: how to get column names?
     # TODO check if file has the correct header format
-    data <- c( samplename = strsplit( basename (x), "\\.csv" )[[1]],
+    data <- c( samplename = strsplit( basename (x), "\\_coverage.csv" )[[1]],
                coverage = rd_tbl$V6 )
     #df <- bind_rows(df, data)
     return(data)
