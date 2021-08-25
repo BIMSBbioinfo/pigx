@@ -570,7 +570,9 @@ rule render_index:
     # samples as inputs.
     params:
       variants=os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
-      mutations=os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv')
+      mutations=os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv'),
+      fun_cvrg_scr=os.path.join(SCRIPTS_DIR, 'sample_coverage_score.R'),
+      fun_lm=os.path.join(SCRIPTS_DIR, 'pred_mutation_increase.R')
     output: os.path.join(REPORT_DIR, "index.html")
     log: os.path.join(LOG_DIR, "reports", "index.log")
     shell: """{RSCRIPT_EXEC} {input.script} \
@@ -578,6 +580,10 @@ rule render_index:
 '{{                                      \
   "variants_csv": "{params.variants}",   \
   "mutations_csv": "{params.mutations}", \
+  "coverage_dir": "{COVERAGE_DIR}",\
   "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
-  "logo": "{LOGO}" \
+  "logo": "{LOGO}", \
+  "fun_cvrg_scr": "{params.fun_cvrg_scr}", \
+  "fun_lm":"{params.fun_lm}", \
+  
 }}' > {log} 2>&1"""
