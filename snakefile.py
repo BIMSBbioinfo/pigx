@@ -294,27 +294,26 @@ rule samtools_index_preprimertrim:
 rule ivar_primer_trim:
     input: 
         primers = AMPLICONS_BED,
-        aligned_reads = os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
-    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed.bam')
+        aligned_reads = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam')
+    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed.bam')
     params:
-        output = os.path.join(TRIMMED_READS_DIR, "{sample}_aligned_primer-trimmed") 
+        output = os.path.join(MAPPED_READS_DIR, "{sample}_aligned_sorted_primer-trimmed") 
     log: os.path.join(LOG_DIR, 'ivar_{sample}.log')
     shell: """
-        {IVAR_EXEC} trim -b {input.primers} -p {params.output} -i {input.aligned_reads} -q 15 -m 180 -s 4\ 
-        >> {log} 2>&1 """ # TODO create IVAR variable
+        {IVAR_EXEC} trim -b {input.primers} -p {params.output} -i {input.aligned_reads} -q 15 -m 180 -s 4 >> {log} 2>&1 """ # TODO create IVAR variable
 
 # Vic_0825: I don't know if this double sorting and indexing is really necessary but seemed to be since ivar as 
 # well as lofreq ask for sorted and indexed bam files
 
 rule samtools_sort_postprimertrim:
-    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed.bam')
-    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed_sorted.bam')
+    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed.bam')
+    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed_sorted.bam')
     log: os.path.join(LOG_DIR, 'samtools_sort_{sample}.log')
     shell: "{SAMTOOLS_EXEC} sort -o {output} {input} >> {log} 2>&1"
     
 rule samtools_index_postprimertrim:
-    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed_sorted.bam')
-    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed_sorted.bai')
+    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed_sorted.bam')
+    output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed_sorted.bai')
     log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
     shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
@@ -387,8 +386,8 @@ def no_variant_vep(sample, lofreq_output):
         
 rule lofreq:
     input:
-        aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed_sorted.bam'),
-        aligned_bai = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed_sorted.bai'),
+        aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed_sorted.bam'),
+        aligned_bai = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed_sorted.bai'),
         ref = os.path.join(INDEX_DIR, "{}".format(os.path.basename(REFERENCE_FASTA)))
     output: vcf = os.path.join(VARIANTS_DIR, '{sample}_snv.vcf')
     log: os.path.join(LOG_DIR, 'lofreq_{sample}.log')
