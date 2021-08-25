@@ -86,6 +86,7 @@ PYTHON_EXEC          = tool("python")
 RSCRIPT_EXEC         = tool("Rscript")
 SAMTOOLS_EXEC        = tool("samtools")
 VEP_EXEC             = tool("vep")
+IVAR_EXEC            = tool("ivar")
 
 ## Load sample sheet
 with open(SAMPLE_SHEET_CSV, 'r') as fp:
