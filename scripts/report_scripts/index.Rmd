@@ -36,7 +36,6 @@ library(htmltools)
 library(reshape2)
 library(base64url)
 library(DT)
-library(tidyverse)
 
 df_var <- read.table(params$variants_csv, sep = "\t", header=T)
 df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
@@ -215,25 +214,25 @@ WIP: To show the dynamic of significantly changing mutations over time....
 As a first step...linear regression. The following table shows the most significant mutations, also indicating if increasing or decreasing.
 
 ```{r linear_regression}
-source(params$fun_lm)
-
-changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
-mutations_sig <- lin_reg_mutation_change( changing_muts )
-
-# filter good samples for only mutations with sig pvalues for plotting
-approved_mut_plot <- select(approved_mut_plot, c(samplename, dates, location_name, 
-                                                 coordinates_lat, coordinates_long, 
-                                                 mutations_sig$mutation))
-
-cat("\n Mutations whith significant increase in frequency over time")
-DT::datatable(mutations_sig,
-              extensions = c('FixedColumns', 'Scroller'),
-              options = list(fixedColumns = TRUE, 
-                         scrollY = 180,
-                         scrollX = TRUE,
-                         scroller = TRUE,
-                         dom = 'Bfrtip'),
-              filter = "bottom") %>% formatRound(columns= "pvalues", digits=3)
+if (nrow(approved_mut_plot) > 0){
+    changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
+    mutations_sig <- lin_reg_mutation_change( changing_muts )
+    
+    # filter good samples for only mutations with sig pvalues for plotting
+    approved_mut_plot <- select(approved_mut_plot, c(samplename, dates, location_name, 
+                                                     coordinates_lat, coordinates_long, 
+                                                     mutations_sig$mutation))
+    
+    cat("\n Mutations whith significant increase in frequency over time")
+    DT::datatable(mutations_sig,
+                  extensions = c('FixedColumns', 'Scroller'),
+                  options = list(fixedColumns = TRUE, 
+                             scrollY = 180,
+                             scrollX = TRUE,
+                             scroller = TRUE,
+                             dom = 'Bfrtip'),
+                  filter = "bottom") %>% formatRound(columns= "pvalues", digits=3)
+} else { cat("\n no mutation found")}
 ```
 
 These plots show the relative frequency of detected signature
