@@ -50,6 +50,7 @@
         "ensembl-vep"
         "fastqc"
         "multiqc"
+        "ivar"
         "kraken2"
         "krona-tools"
         "lofreq"
