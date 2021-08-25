@@ -15,6 +15,12 @@ params:
   logo: ''
 ---
 
+<style>
+.dropdown-menu {
+  max-height: 200px;
+  overflow-y: scroll;}
+</style>
+
 <div id="logo" align="top">
 `r knitr::include_graphics(params$logo)`
 </div>

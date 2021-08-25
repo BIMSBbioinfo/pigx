@@ -23,6 +23,10 @@ params:
   padding-left: 6px;
   border-left: 6px solid #ff9999;
 }
+.dropdown-menu {
+  max-height: 200px;
+  overflow-y: scroll;}
+
 </style>
 
 <div id="logo" align="top">
