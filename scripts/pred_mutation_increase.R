@@ -6,21 +6,17 @@ parsing_mutation_plot_data <- function ( mutation_plot_data ){
   require(tidyverse)
   # TODO check file format assumptions
   
-  # open the table
-  mutation_freq <- read_delim( mutation_plot_data, "\t", 
-                             escape_double = FALSE, trim_ws = TRUE )
-  
   #  get names of mutations (everything after the meta info from the sample sheet)
   mutations <- names ( 
-            mutation_freq[ (which( names(mutation_freq) %in% "coordinates_long")+1) : length( names( mutation_freq ))])
+            mutation_plot_data[ (which( names(mutation_plot_data) %in% "coordinates_long")+1) : length( names( mutation_plot_data ))])
   
   # enforcing date type for column dates ...it will get rid of the time
-  mutation_freq$dates <- as.Date ( mutation_freq$dates )
+  mutation_plot_data$dates <- as.Date ( mutation_plot_data$dates )
   
   # remove mutations with NA for all rows and create a new dataframe
   # fixme Vic I think there is a more compact way for this
   not_all_na <- function( x ) any( !is.na( x ) )
-  lm_df <- mutation_freq %>% select( c( dates, all_of(mutations) )) %>% select( where( not_all_na ))
+  lm_df <- mutation_plot_data %>% select( c( dates, all_of(mutations) )) %>% select( where( not_all_na ))
   
   return ( lm_df )
 }
