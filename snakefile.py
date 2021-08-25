@@ -293,7 +293,7 @@ rule samtools_index_preprimertrim:
 
 rule ivar_primer_trim:
     input: 
-        primers = AMPLICONS_BED
+        primers = AMPLICONS_BED,
         aligned_reads = os.path.join(MAPPED_READS_DIR, '{sample}_aligned.bam')
     output: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed.bam')
     params:
