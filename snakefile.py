@@ -352,7 +352,15 @@ rule fastqc_trimmed_pe:
         output_dir = os.path.join(FASTQC_DIR, '{sample}')
     shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
 
-
+rule fastqc_primer-trimmed:
+    input: os.path.join(MAPPED_READS_DIR, '{sample}_aligned_primer-trimmed.bam')
+    output:
+        os.path.join(FASTQC_DIR, '{sample}', '{sample}_aligned_primer-trimmed_fastqc.html')
+    log: os.path.join(LOG_DIR, 'fastqc_{sample}_aligned_primer-trimmed.log')
+    params:
+        output_dir = os.path.join(FASTQC_DIR, '{sample}')
+    shell: "{FASTQC_EXEC} -o {params.output_dir} {input} >> {log} 2>&1"
+    
 rule multiqc:
   input:
     fastqc_raw_output = expand(os.path.join(FASTQC_DIR, '{sample}', '{sample}_R{read_num}_fastqc.html'), sample=SAMPLES, read_num=[1, 2]),
