@@ -30,7 +30,7 @@ params:
 </div>
 
 
-```{r libraries and input, echo=F, message=F, warning=F}
+```{r libraries_and_input, echo=F, message=F, warning=F}
 library(plotly)
 library(htmltools)
 library(reshape2)
@@ -72,16 +72,18 @@ the frequencies change over time.
 Since not all variants of concern are listed, the relative
 frequencies at a given location and time will not necessarily add up
 to one.
+
+## Quality score
 ```{r sample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
 source(params$fun_cvrg_scr) # TODO given as input? or only the scripts dir? similar variant_report
 
 coverages.df <- get_genome_cov( params$coverage_dir )
 if ( !(length(coverages.df) == 0)){
-    good_samples.df <- coverages.df %>% filter( coverage >= 95) # TODO stringecy should be given by user, maybe even by visualization
-    bad_samples.df <- coverages.df %>% filter( coverage < 95)
+    good_samples.df <- coverages.df %>% filter( coverage >= 10) # TODO stringecy should be given by user, maybe even by visualization
+    bad_samples.df <- coverages.df %>% filter( coverage < 10)
     
     # table displaying bad samples which are not further inlcuded 
-    cat("\n Samples without sufficient genome coverage. They aren't included in the visualization or          the linear regression") # TODO refine this text 
+    str <- "\n Samples without sufficient genome coverage. They aren't included in the visualization or the linear regression" # TODO refine this text, put into seperate chunk
     # TODO refine column names --> "coverage in percent", 
     DT::datatable(bad_samples.df,
                   extensions = c('FixedColumns', 'Scroller'),
@@ -95,12 +97,12 @@ if ( !(length(coverages.df) == 0)){
     cat("\n No coverage values found.")
 }
 ```
-```{r filter_plot_frames_samplescore}
+```{r filter_plot_frames_samplescore, echo=F, message=F, warning=F}
 
 approved_var_plot <- df_var %>% filter( samplename  %in% good_samples.df$samplename )
 approved_mut_plot <- df_mut %>% filter( samplename  %in% good_samples.df$samplename )
 ```
-```{r color_palette}
+```{r color_palette, echo=F, message=F, warning=F}
 Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f69e5", "#4cdab2", "#999ce4", "#2ce6f3",
 "#6638c6", "#005f29", "#5d73cc", "#616524", "#a8a041", "#e9f600", "#3eaca8", "#62a273", "#4ea5d0", "#655c95", "#67a04e")
 ```
@@ -149,47 +151,48 @@ display all snapshots successively.  Click on a variant in the legend
 to toggle its visibility in the map; double-click to view only the
 selected variant.
 
-```{r maps for variants, echo=F, message=FALSE, warning=FALSE, out.width="900px", out.height="900px"}
-
-melted <- melt(approved_var_plot,
-               id.vars = c("dates", "samplename", "location_name",
-                           "coordinates_lat", "coordinates_long"),
-               rm.NA = TRUE) %>%
-    mutate (value = round (value, 4))
-
-locations <- unique(melt(approved_var_plot,
-                         id.vars = c("coordinates_lat",
-                                     "coordinates_long")))
-
-plot_ly (type = 'scattermapbox',
-         mode = 'markers',
-         colors = Variant_colors) %>%
-    add_trace(data = locations,
-              size = 1,
-              lon = ~coordinates_long,
-              lat = ~coordinates_lat,
-              opacity = 0.1,
-              showlegend = FALSE,
-              hoverinfo = 'none',
-              marker = list(sizemode = 'diameter',
-                            color = 'rgb(150, 150, 150)',
-                            opacity = 0.1)) %>%
-    add_trace(data = melted,
-              lat = ~coordinates_lat,
-              lon = ~coordinates_long,
-              legendgroup = ~variable,
-              showlegend = TRUE,
-              frame = ~dates,
-              size = ~value,
-              color = ~variable,
-              hoverinfo = 'text+name',
-              hovertext = ~paste0("Frequency: ", value),
-              marker = list (sizemode = 'diameter')) %>%
-    layout (autosize = TRUE,
-            mapbox = list (zoom = 5.5,
-                           center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
-                                         lon = ~median(coordinates_long, na.rm=TRUE)),
-                           style = 'open-street-map'))
+```{r maps_for_variants, echo=F, message=FALSE, warning=FALSE, out.width="900px", out.height="900px"}
+if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual values
+    melted <- melt(approved_var_plot,
+                   id.vars = c("dates", "samplename", "location_name",
+                               "coordinates_lat", "coordinates_long"),
+                   rm.NA = TRUE) %>%
+        mutate (value = round (value, 4))
+    
+    locations <- unique(melt(approved_var_plot,
+                             id.vars = c("coordinates_lat",
+                                         "coordinates_long")))
+    
+    plot_ly (type = 'scattermapbox',
+             mode = 'markers',
+             colors = Variant_colors) %>%
+        add_trace(data = locations,
+                  size = 1,
+                  lon = ~coordinates_long,
+                  lat = ~coordinates_lat,
+                  opacity = 0.1,
+                  showlegend = FALSE,
+                  hoverinfo = 'none',
+                  marker = list(sizemode = 'diameter',
+                                color = 'rgb(150, 150, 150)',
+                                opacity = 0.1)) %>%
+        add_trace(data = melted,
+                  lat = ~coordinates_lat,
+                  lon = ~coordinates_long,
+                  legendgroup = ~variable,
+                  showlegend = TRUE,
+                  frame = ~dates,
+                  size = ~value,
+                  color = ~variable,
+                  hoverinfo = 'text+name',
+                  hovertext = ~paste0("Frequency: ", value),
+                  marker = list (sizemode = 'diameter')) %>%
+        layout (autosize = TRUE,
+                mapbox = list (zoom = 5.5,
+                               center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
+                                             lon = ~median(coordinates_long, na.rm=TRUE)),
+                               style = 'open-street-map'))
+}
 ```
 
 ## Raw data VOC frequencies per sample
@@ -212,8 +215,9 @@ reported for VOCs.
 
 WIP: To show the dynamic of significantly changing mutations over time.... 
 As a first step...linear regression. The following table shows the most significant mutations, also indicating if increasing or decreasing.
-
-```{r linear_regression}
+### linear regression 
+```{r linear_regression, echo=F, message=F, warning=F}
+source(params$fun_lm)
 if (nrow(approved_mut_plot) > 0){
     changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
     mutations_sig <- lin_reg_mutation_change( changing_muts )
@@ -240,30 +244,32 @@ mutations in samples at specific wastewater sampling locations, and
 how the frequencies change over time.
 
 ```{r mutations, echo=F, message=F, warning=F}
-melted <- melt(approved_mut_plot,
-               id.vars = c("dates", "samplename", "location_name",
-                           "coordinates_lat", "coordinates_long"),
-               rm.NA = TRUE)
-
-# sort by dates
-idx <- order(melted$dates)
-melted <- melted[idx, ]
-
-locations <- unique(melted$location_name)
-
-tagList(lapply(locations,
-               function (location) {
-                   subset(melted, location_name == location) %>%
-                       group_by(dates) %>%
-                       arrange(variable) %>%
-                       plot_ly(type = 'scatter',
-                               mode = 'line',
-                               name = ~variable,
-                               x = ~dates,
-                               y = ~value) %>%
-                       layout(title = location,
-                              yaxis = list(title = "Frequency"))
-               }))
+if (length(approved_mut_plot)>5){ # check if the filtered df has actual values besides meta data
+    melted <- melt(approved_mut_plot,
+                   id.vars = c("dates", "samplename", "location_name",
+                               "coordinates_lat", "coordinates_long"),
+                   rm.NA = TRUE)
+    
+    # sort by dates
+    idx <- order(melted$dates)
+    melted <- melted[idx, ]
+    
+    locations <- unique(melted$location_name)
+    
+    tagList(lapply(locations,
+                   function (location) {
+                       subset(melted, location_name == location) %>%
+                           group_by(dates) %>%
+                           arrange(variable) %>%
+                           plot_ly(type = 'scatter',
+                                   mode = 'line',
+                                   name = ~variable,
+                                   x = ~dates,
+                                   y = ~value) %>%
+                           layout(title = location,
+                                  yaxis = list(title = "Frequency"))
+                   }))
+}
 ```
 
 ## Signature mutations by location
@@ -281,46 +287,49 @@ Use the slider to select a specific date or hit the *Play* button to
 display all snapshots successively.
 
 ```{r mutations_for_locations_and_date, echo=F, message=F, warning=F, out.width="900px", out.height="900px"}
-melted <- melt(approved_mut_plot,
-               id.vars = c("dates", "samplename", "location_name",
-                           "coordinates_lat", "coordinates_long"),
-               rm.NA = TRUE) %>%
-    mutate (value = round (value, 4))
-
-locations <- unique(melt (approved_mut_plot,
-                          id.vars = c("coordinates_lat",
-                                      "coordinates_long")))
-
-plot_ly (type = 'scattermapbox',
-         mode = 'markers') %>%
-    add_trace(size = 1,
-              data = locations,
-              lon = ~coordinates_long,
-              lat = ~coordinates_lat,
-              opacity = 0.1,
-              showlegend = FALSE,
-              hoverinfo = 'none',
-              marker = list(sizemode = 'diameter',
-                            color = 'rgb(150, 150, 150)',
-                            opacity = 0.1)) %>%
-    add_trace(data = melted,
-              lat = ~coordinates_lat,
-              lon = ~coordinates_long,
-              legendgroup = ~variable,
-              showlegend = TRUE,
-              frame = ~dates,
-              size = ~value,
-              color = ~variable,
-              hoverinfo = 'text+name',
-              hovertext = ~paste0("Frequency: ", value),
-              marker = list (sizemode = 'diameter')) %>%
-
-    layout (title = ~dates,
-            autosize = TRUE,
-            mapbox = list (zoom = 5.5,
-                           center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
-                                         lon = ~median(coordinates_long, na.rm=TRUE)),
-                           style = 'open-street-map'))
+if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the filtered df has actual values besides meta data
+    melted <- melt(approved_mut_plot,
+                   id.vars = c("dates", "samplename", "location_name",
+                               "coordinates_lat", "coordinates_long"),
+                   rm.NA = TRUE) 
+     # check if there are actual values except the meta data
+      melted <- melted %>% mutate (value = round (value, 4))
+    
+    locations <- unique(melt (approved_mut_plot,
+                              id.vars = c("coordinates_lat",
+                                          "coordinates_long")))
+    
+    plot_ly (type = 'scattermapbox',
+             mode = 'markers') %>%
+        add_trace(size = 1,
+                  data = locations,
+                  lon = ~coordinates_long,
+                  lat = ~coordinates_lat,
+                  opacity = 0.1,
+                  showlegend = FALSE,
+                  hoverinfo = 'none',
+                  marker = list(sizemode = 'diameter',
+                                color = 'rgb(150, 150, 150)',
+                                opacity = 0.1)) %>%
+        add_trace(data = melted,
+                  lat = ~coordinates_lat,
+                  lon = ~coordinates_long,
+                  legendgroup = ~variable,
+                  showlegend = TRUE,
+                  frame = ~dates,
+                  size = ~value,
+                  color = ~variable,
+                  hoverinfo = 'text+name',
+                  hovertext = ~paste0("Frequency: ", value),
+                  marker = list (sizemode = 'diameter')) %>%
+    
+        layout (title = ~dates,
+                autosize = TRUE,
+                mapbox = list (zoom = 5.5,
+                               center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
+                                             lon = ~median(coordinates_long, na.rm=TRUE)),
+                               style = 'open-street-map'))
+}
 ```
 
 ## Raw data signature mutation frequencies per sample
