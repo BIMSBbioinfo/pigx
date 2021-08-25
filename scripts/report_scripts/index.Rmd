@@ -281,8 +281,8 @@ not correspond to actual locations.
 Use the slider to select a specific date or hit the *Play* button to
 display all snapshots successively.
 
-```{r mutations for locations and date, echo=F, message=F, warning=F, out.width="900px", out.height="900px"}
-melted <- melt(df_mut,
+```{r mutations_for_locations_and_date, echo=F, message=F, warning=F, out.width="900px", out.height="900px"}
+melted <- melt(approved_mut_plot,
                id.vars = c("dates", "samplename", "location_name",
                            "coordinates_lat", "coordinates_long"),
                rm.NA = TRUE) %>%
