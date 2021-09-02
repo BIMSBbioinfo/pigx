@@ -81,11 +81,18 @@ to one.
 ```{r sample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
 source(params$fun_cvrg_scr) # TODO given as input? or only the scripts dir? similar variant_report
 
-coverages.df <- get_genome_cov( params$coverage_dir )
+coverages.df <- merge(get_genome_cov( params$coverage_dir ), get_amplicon_cov( params$coverage_dir), by="samplename")
+coverages.df$proport_amps_covered <- round((as.numeric(coverages.df$amplicon_cov) * 100)/98, 1)
+# WIP version to test, amplicon values should be derived from the mutation sheet and hte rmd for getting the region overview
+important_amplicons <- c(11,18,23,37,72,73,76,77,78,81,82,92,93,95)
 if ( !(length(coverages.df) == 0)){
-    good_samples.df <- coverages.df %>% filter( coverage >= 90) # TODO stringecy should be given by user, maybe even by visualization
-    bad_samples.df <- coverages.df %>% filter( coverage < 90)
-  # 90 was chosen because samples with 90% cov often still cover all amplicons
+    # take only the sample covering all the important amplicons
+    good_samples.df <- coverages.df[which(!grepl(paste(important_amplicons, collapse="|"), 
+                                                 strsplit(coverages.df$drop_out_amps, ','))),]
+    # take only the samples with > 90% amplicon coverage
+    good_samples.df <- good_samples.df %>% filter( as.numeric(proport_amps_covered) >= 90) # TODO stringecy should be given by user, maybe even through visualization
+    bad_samples.df <- coverages.df %>% filter( !(samplename %in% good_samples.df$samplename))
+
     
     # table displaying bad samples which are not further inlcuded 
     str <- "\n Samples without sufficient genome coverage. They aren't included in the visualization or the linear regression" # TODO refine this text, put into seperate chunk
