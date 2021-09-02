@@ -35,6 +35,9 @@ tools:
   bwa:
     executable: @BWA@
     args: ""
+  fastp:
+    executable: @FASTP@
+    args: ""
   fastqc:
     executable: @FASTQC@
     args: ""
