@@ -74,6 +74,7 @@ def tool(name):
     return cmd + " " + toolArgs(name)
 
 BWA_EXEC             = tool("bwa")
+FASTP_EXEC           = tool("fastp")
 FASTQC_EXEC          = tool("fastqc")
 GUNZIP_EXEC          = tool("gunzip")
 GZIP_EXEC            = tool("gzip")
@@ -81,7 +82,6 @@ MULTIQC_EXEC         = tool("multiqc")
 IMPORT_TAXONOMY_EXEC = tool("import_taxonomy")
 KRAKEN2_EXEC         = tool("kraken2")
 LOFREQ_EXEC          = tool("lofreq")
-PRINSEQ_EXEC         = tool("prinseq")
 PYTHON_EXEC          = tool("python")
 RSCRIPT_EXEC         = tool("Rscript")
 SAMTOOLS_EXEC        = tool("samtools")
@@ -212,31 +212,22 @@ rule get_primer_seqs:
     log: os.path.join(LOG_DIR, "getfasta_primers.log")
     shell: "{BEDTOOLS_EXEC} getfasta -fi  {input.ref}\
             -bed {input.bed} -name > {output} 2>> {log} 3>&2"
-            
-rule prinseq_pe:
+        
+# TODO the output suffix should be dynamic depending on the input
+# TODO provide the adapter sequence by settings file, maybe also add option for multiple adapter if needed
+# TODO with the use of fastp the use of fastqc becomes partly reduntant, fastqc should be removed or adjusted
+rule fastp:
     input: trim_reads_input
     output:
         r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R1.fastq.gz"),
-        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz")
-    params:
-        len_cutoff = int(READ_LENGTH * CUT_OFF),
-        output = os.path.join(TRIMMED_READS_DIR, "{sample}"),
-        tmp_r1 = os.path.join(TRIMMED_READS_DIR, "{sample}_1.fastq"),
-        tmp_r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_2.fastq"), 
-        read_dir = READS_DIR
-    log: os.path.join(LOG_DIR, 'prinseq_{sample}.log')
-    run:
-        # prep input for prinseq, name without gz
-        read1 = input[0][:-3]
-        read2 = input[1][:-3]
-        shell("{GUNZIP_EXEC} --keep -f {input[0]} {input[1]} && \
-            {PRINSEQ_EXEC} -fastq {read1} -fastq2 {read2} -ns_max_n 4\
-            -min_qual_mean 30 -trim_qual_left 30\
-            -trim_qual_right 30 -trim_qual_window 10 -out_good {params.output} -out_bad null -min_len {params.len_cutoff}\
-            >> {log} 2>&1 &&\
-            {GZIP_EXEC} {params.tmp_r1} && mv {params.tmp_r1}.gz {output.r1} && \
-            {GZIP_EXEC} {params.tmp_r2} && mv {params.tmp_r2}.gz {output.r2}")
-
+        r2 = os.path.join(TRIMMED_READS_DIR, "{sample}_trimmed_R2.fastq.gz") 
+    log: os.path.join(LOG_DIR, 'fastp_{sample}.log')
+    shell: """ 
+        {FASTP_EXEC} --adapter_sequence=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA --adapter_sequence_r2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT\
+         -i {input[0]} -I {input[1]} -o {output.r1}\
+          -O {output.r2} >> {log}t 2>&1
+    """
+    
 rule bwa_index:
     input: REFERENCE_FASTA
     output:
