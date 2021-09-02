@@ -48,6 +48,7 @@
         "bedtools"
         "bbmap"
         "ensembl-vep"
+        "fastp"
         "fastqc"
         "multiqc"
         "ivar"
