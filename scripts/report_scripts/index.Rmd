@@ -77,7 +77,11 @@ Since not all variants of concern are listed, the relative
 frequencies at a given location and time will not necessarily add up
 to one.
 
-## Quality score
+## Discarded samples after alignment quality control
+```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
+    # table displaying bad samples which are not further inlcuded 
+    cat("\n Table 1: Samples without sufficient amplicon coverage. They aren't included in the visualization or the linear regression") # TODO refine this text
+ ```
 ```{r sample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
 source(params$fun_cvrg_scr) # TODO given as input? or only the scripts dir? similar variant_report
 
@@ -92,11 +96,8 @@ if ( !(length(coverages.df) == 0)){
     # take only the samples with > 90% amplicon coverage
     good_samples.df <- good_samples.df %>% filter( as.numeric(proport_amps_covered) >= 90) # TODO stringecy should be given by user, maybe even through visualization
     bad_samples.df <- coverages.df %>% filter( !(samplename %in% good_samples.df$samplename))
-
-    
-    # table displaying bad samples which are not further inlcuded 
-    str <- "\n Samples without sufficient genome coverage. They aren't included in the visualization or the linear regression" # TODO refine this text, put into seperate chunk
-    # TODO refine column names --> "coverage in percent", 
+  
+    # TODO refine column names --> e.g "coverage in percent", 
     DT::datatable(bad_samples.df,
                   extensions = c('FixedColumns', 'Scroller'),
                   options = list(fixedColumns = TRUE, 
