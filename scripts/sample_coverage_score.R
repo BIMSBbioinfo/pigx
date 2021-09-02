@@ -34,9 +34,9 @@ get_amplicon_cov <- function ( coverage_dir ) {
   amplicon_cov.df <- bind_rows(amplicon_cov.df, lapply( files, function (x){
     rd_tbl <- read.table(x, sep = '\t', header = TRUE) 
     # TODO check if file has the correct header format
-    data <- c( samplename = strsplit( basename (x), "\\amplicon_cov.csv" )[[1]],
+    data <- c( samplename = strsplit( basename (x), "\\_merged_covs.csv" )[[1]],
                amplicon_cov = rd_tbl$Total.number.of.amplicons.fully.covered,
-               drop_out_amps = rd_tbl$Drop.out.amplicons)
+               drop_out_amps = str_remove_all(rd_tbl$Drop.out.amplicons,"\\[|\\]|\\s"))
     return(data)
   }))
   
