@@ -40,6 +40,7 @@ library(htmltools)
 library(reshape2)
 library(base64url)
 library(DT)
+library(stringr)
 
 df_var <- read.table(params$variants_csv, sep = "\t", header=T)
 df_mut <- read.table(params$mutations_csv, sep = "\t", header=T)
@@ -78,7 +79,7 @@ frequencies at a given location and time will not necessarily add up
 to one.
 
 ## Discarded samples after alignment quality control
-```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
+```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE, results = 'asis'}
     # table displaying bad samples which are not further inlcuded 
     cat("\n Table 1: Samples without sufficient amplicon coverage. They aren't included in the visualization or the linear regression") # TODO refine this text
  ```
