@@ -208,6 +208,9 @@ dedupeMuts <- function (mut, sigmut.df, dedup.df) {
 
 # Read signature data
 sig_mutations.df <- read.csv(mutation_sheet, header = TRUE)
+if ("source" %% colnames(sig_mutations.df)){
+  sig_mutations.df <- sig_mutations.df[,-(which(names(sigmuts.df) %in% "source"))]
+}
 sig_mutations.df <- sig_mutations.df %>% 
                     dplyr::na_if('') %>%
                     tidyr::pivot_longer(everything(), values_drop_na = TRUE)
