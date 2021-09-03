@@ -208,8 +208,8 @@ dedupeMuts <- function (mut, sigmut.df, dedup.df) {
 
 # Read signature data
 sig_mutations.df <- read.csv(mutation_sheet, header = TRUE)
-if ("source" %% colnames(sig_mutations.df)){
-  sig_mutations.df <- sig_mutations.df[,-(which(names(sigmuts.df) %in% "source"))]
+if ("source" %in% colnames(sig_mutations.df)){
+  sig_mutations.df <- sig_mutations.df[,-(which(names(sig_mutations.df) %in% "source"))]
 }
 sig_mutations.df <- sig_mutations.df %>% 
                     dplyr::na_if('') %>%
@@ -344,8 +344,6 @@ executeDeconvolution <- length(mutations.vector) > 0
 source(deconvolution_functions) # TODO should be given as input with the params section
 # create an empty data frame add a column for the Wildtype
 # Wildtype in this case means the reference version of SARS-Cov-2
-msig_simple <- createSigMatrix(mutations.vector, mutation_sheet)
-
 # for the deconvolution to work we need the "wild type" frequencies too. The matrix from above got mirrored, 
 # wild type mutations are simulated the following: e.g. T210I (mutation) -> T210T ("wild type")
 msig_simple <- createSigMatrix(mutations.vector, mutation_sheet)
