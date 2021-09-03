@@ -7,6 +7,9 @@ createSigMatrix <- function ( mutations.vector, mutation_sheet ) {
   
   # read in provided mutation sheet
   mutations.df <- read.csv(mutation_sheet)
+  if ("source" %in% colnames(mutations.df)){
+      mutations.df <- mutations.df[,-(which(names(mutations.df) %in% "source"))]
+  }
   # create an empty data frame add a column for the Wildtype
   # Wildtype in this case means the reference version of SARS-Cov-2
   
