@@ -43,7 +43,7 @@ library(base64url)
 ```{r printInputSettings, echo = FALSE}
 sample_name <- params$sample_name
 sample_sheet <- data.table::fread(params$sample_sheet) 
-mutation_sheet <- params$mutation_sheet # not tested
+mutation_sheet <- params$mutation_sheet 
 location_sigmuts <- params$sigmut_db
 deconvolution_functions <- params$deconvolution_functions
 
@@ -207,40 +207,10 @@ dedupeMuts <- function (mut, sigmut.df, dedup.df) {
 ```{r process_signature_mutations, message=F, warning=F, include = FALSE}
 
 # Read signature data
-# TODO: these should probably all be declared inputs.
-sigmuts <- list(list(file="B117_outbreakinfo_mutation_report_data_2021-03-06.tsv",
-                     name="b117"),
-                list(file="B1351_outbreakinfo_mutation_report_data_2021-03-06.tsv",
-                     name="b1351"),
-                list(file="B1427_outbreakinfo_mutation_report_data_2021-03-06.tsv",
-                     name="b1427"),
-                list(file="B1429_outbreakinfo_mutation_report_data_2021-03-06.tsv",
-                     name="b1429"),
-                list(file="B1526_outbreakinfo_mutation_report_data_2021-03-06.tsv",
-                     name="b1526"),
-                list(file="P1_outbreakinfo_mutation_report_data_2021-03-06.tsv",
-                     name="p1"),
-                list(file="B16172_outbreakinfo_mutation_report_data_2021-05-26.tsv",
-                     name="b16172"))
-
-read_sigmuts <- function (sigmut) {
-    file <- sigmut$file
-
-    data <- read.table(file.path(location_sigmuts, file),
-                       sep = "\t", header = TRUE)
-    # modify deletions, substitute "nothing" with a dash e.g: D789 -> D789-
-    data$alt_aa <- na_if (data$alt_aa, "")
-    data$alt_aa[is.na(data$alt_aa)] <- "-"
-
-    # Paste column with correct prot mutation notation
-    data$AA_mut <- paste0(data$ref_aa, data$codon_num, data$alt_aa)
-
-    # Return a table mapping strain name to mutation
-    data.frame(name = sigmut$name,
-               value = data$AA_mut)
-}
-
-sig_mutations.df <- do.call(rbind, lapply(sigmuts, read_sigmuts))
+sig_mutations.df <- read.csv(mutation_sheet, header = TRUE)
+sig_mutations.df <- sig_mutations.df %>% 
+                    dplyr::na_if('') %>%
+                    tidyr::pivot_longer(everything(), values_drop_na = TRUE)
 
 vepfile.df <- read.table(params$vep_file, sep = ",", header = T) 
 
