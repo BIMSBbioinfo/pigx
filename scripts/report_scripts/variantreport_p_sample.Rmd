@@ -568,10 +568,10 @@ sample_row <- which(grepl(sample_name, output_mutation_plot$samplename))
 
 # write mutation frequency values to df
 for (i in all_mutations){
-  if (str_split(i,':')[[1]][2] %in% match.df$AA_mut){ # split gene name to match with AA mut
+  if (str_split(i,':')[[1]][2] %in% complete.df$AA_mut){ # split gene name to match with AA mut
     # check if variant already has a column
-    if (i %in% colnames(output_mutation_plot)) {
-        output_mutation_plot[sample_row,][i] <- match.df$freq[match.df$AA_mut == str_split(i,':')[[1]][2]]
+    if ( i %in% colnames(output_mutation_plot)) {
+        output_mutation_plot[sample_row,i] <- complete.df$freq[which(complete.df$AA_mut == str_split(i,':')[[1]][2])]
 }
   }
 }
