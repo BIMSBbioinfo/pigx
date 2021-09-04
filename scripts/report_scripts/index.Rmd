@@ -68,6 +68,12 @@ These plots provide an overview of the relative frequencies of
 identified variants of concern (VOC) of SARS-CoV-2 at specific
 wastewater sampling locations over time.
 
+## Discarded samples after alignment quality control
+```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE, results = 'asis'}
+    # table displaying bad samples which are not further inlcuded 
+    cat("\n Table 1: Samples without sufficient amplicon coverage. They aren't included in the visualization or the linear regression") # TODO refine this text
+ ```
+
 ## Frequency of variants of concern over time for each location
 
 These plots show the relative frequency of detected variants of
@@ -78,11 +84,7 @@ Since not all variants of concern are listed, the relative
 frequencies at a given location and time will not necessarily add up
 to one.
 
-## Discarded samples after alignment quality control
-```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE, results = 'asis'}
-    # table displaying bad samples which are not further inlcuded 
-    cat("\n Table 1: Samples without sufficient amplicon coverage. They aren't included in the visualization or the linear regression") # TODO refine this text
- ```
+
 ```{r sample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
 source(params$fun_cvrg_scr) # TODO given as input? or only the scripts dir? similar variant_report
 
