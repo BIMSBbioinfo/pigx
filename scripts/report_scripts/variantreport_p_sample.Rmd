@@ -529,32 +529,20 @@ write.table(output_variant_plot[sample_row,], output_variants, sep = "\t", appen
 # prepare processed mutation values to output them as a csv which will be used for the plots in index.rmd
 # those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate 
 # file (and maybe rule)
-
 # get all possible mutations
 all_mutations <- paste(complete.df$genes, complete.df$AA_mut, sep = ":")
 output_mutations <- file.path(csv_output_dir, "data_mutation_plot.csv")
 
-
-if (file.exists (output_mutations)) {
-    output_mutation_plot <- read.table (output_mutations, 
-                                       sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
-} else {
-    output_mutation_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
-                                       dates = character(),
-                                       location_name = character(),
-                                       coordinates_lat = character(),
-                                       coordinates_long = character())
-
-    # add columns for all possible variants to the dataframe
-    for (mutation in all_mutations) {
-      output_mutation_plot[,mutation] <- numeric()
-    }
-    #write header line
-    write.table(t(colnames(output_mutation_plot)), output_mutations, sep = "\t", 
-                  row.names = FALSE, col.names = FALSE, quote = FALSE)
+# 1. write dataframe with this information here
+output_mutation_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
+                                   dates = character(),
+                                   location_name = character(),
+                                   coordinates_lat = character(),
+                                   coordinates_long = character())
+# add columns for all possible variants to the dataframe
+for (mutation in all_mutations) {
+  output_mutation_plot[,mutation] <- numeric()
 }
-
-# adding new row
 meta_data <- c (samplename = sample_name,
                 dates = date,
                 location_name = location_name,
@@ -572,9 +560,21 @@ for (i in all_mutations){
     # check if variant already has a column
     if ( i %in% colnames(output_mutation_plot)) {
         output_mutation_plot[sample_row,i] <- complete.df$freq[which(complete.df$AA_mut == str_split(i,':')[[1]][2])]
+}}}
+colnames(output_mutation_plot) <- as.character(colnames(output_mutation_plot))
+
+# 2. check if file exists already
+if (file.exists (output_mutations)) {
+  previous_df <- read.table (output_mutations, 
+                             sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
+  # convert numeric values to character
+  output_mutation_plot <- as.data.frame(lapply(output_mutation_plot, as.character), check.names = FALSE)
+  # merge with adding cols and rows
+  output_mutation_plot <- full_join(previous_df, output_mutation_plot, 
+                                    by = intersect(colnames(previous_df), colnames(output_mutation_plot)), copy = TRUE)
 }
-  }
-}
-write.table(output_mutation_plot[sample_row,], output_mutations, sep = "\t", append = TRUE, 
-            na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+# 3. write to output file
+   write.table(output_mutation_plot, output_mutations, sep = "\t",
+            na = "NA", row.names = FALSE, quote = FALSE)
 ```
