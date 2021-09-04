@@ -537,7 +537,7 @@ output_mutations <- file.path(csv_output_dir, "data_mutation_plot.csv")
 
 if (file.exists (output_mutations)) {
     output_mutation_plot <- read.table (output_mutations, 
-                                       sep = "\t", header = TRUE, colClasses = "character")
+                                       sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
 } else {
     output_mutation_plot <- data.frame (samplename = character(), # brauche ich als input von sample sheet 
                                        dates = character(),
