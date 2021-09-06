@@ -52,8 +52,8 @@ lin_reg_mutation_change <- function( mutations.df ){
   #generate a proper dataframe with pvalues, filtering by significance
   pvalues_df <- do.call( rbind, pvalues ) %>% 
                 tibble::rownames_to_column( "VALUE" ) %>% 
-                filter( stringr::str_detect( VALUE, "dates" ) ) %>% 
-                filter( pvalues < 0.05 ) 
+                filter( stringr::str_detect( VALUE, "dates" ) ) %>%
+                filter (`summary(test)$coefficients[, 4]` < 0.01) 
   
   #names of mutations get strange pattern, doing some split and getting the names correct
   pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
