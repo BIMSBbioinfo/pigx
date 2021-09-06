@@ -254,10 +254,15 @@ lofreq.info <- as_data_frame(parse_snv_csv(params$snv_file))
 vep.info <- variant_protein_mut
 
 complete.df <- dplyr::left_join(lofreq.info, vep.info, by = c('gene_mut'='gene_mut'), copy = T)
+# fixme Not sure if there could be a more elegant way to do this
 # one aa mutation can have different codon mutations reported with different freqs- those have to be summed up
-complete.df <- complete.df %>%
-  group_by(across(c(-freq,-gene_mut,AA_mut))) %>%
-  summarise(freq = sum(as.numeric(freq)), gene_mut = paste(gene_mut, collapse = ",")) %>%
+complete.df <- complete.df %>% # ! hack? (to discard genes)
+  group_by(across(c(-freq,-gene_mut,-genes, -gene_pos, -gene_mut_loc.2, -cov, AA_mut))) %>%
+  summarise(freq = sum(as.numeric(freq)),
+            gene_mut = paste(gene_mut, collapse = ","), genes = paste(genes, collapse = ","),
+            gene_pos = paste(gene_pos, collapse = ","), 
+            gene_mut_loc.2 = paste(gene_mut_loc.2, collapse = ","), 
+            cov = paste(cov, collapse = ",")) %>%
   ungroup()
 
 match.df <- complete.df %>%
