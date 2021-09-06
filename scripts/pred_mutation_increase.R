@@ -37,12 +37,16 @@ lin_reg_mutation_change <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    tmp <- mutations.df %>% select( dates, all_of(i) )
-    test <- lm( formula = tmp[[i]] ~ tmp$dates )
-    results_lm[[i]] <- test
-    summaries[[i]] <- summary( test )
-    pvalues[[i]] <- as.data.frame( summary( test )$coefficients[,4]) 
-    colnames( pvalues[[i]] ) <- "pvalues"
+    if ( length(na.omit(mutations.df[,i])) >= 3 ){
+      tmp <- mutations.df %>% select( dates, all_of(i) )
+      test <- lm( formula = tmp[[i]] ~ tmp$dates )
+      results_lm[[i]] <- test
+      summaries[[i]] <- summary( test )
+      # only write the p-values for positive coefficients
+      if ( (all(as.data.frame( summary( test )$coefficients[,4]) != "NaN" ))){
+        if ( all(as.data.frame( summary( test )$coefficients[,4]) >= 0 )) pvalues[[i]] <- as.data.frame( summary( test )$coefficients[,4])
+      }
+    }
   }
   
   #generate a proper dataframe with pvalues, filtering by significance
