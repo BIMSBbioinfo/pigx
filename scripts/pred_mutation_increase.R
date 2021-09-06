@@ -56,10 +56,10 @@ lin_reg_mutation_change <- function( mutations.df ){
                 filter (`summary(test)$coefficients[, 4]` < 0.01) 
   
   #names of mutations get strange pattern, doing some split and getting the names correct
-  pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
+  pvalues_df$mutation <- as_vector(as.character(str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]))
   
   #fixing the dataframe with mutations and pvalues
-  pvalues_df <- pvalues_df %>% select( mutation, pvalues )
-  
+  pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]` )
+  colnames(pvalues_df) <- c("mutation", "pvalues")
   return ( pvalues_df)
 }
