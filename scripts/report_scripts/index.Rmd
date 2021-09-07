@@ -41,6 +41,8 @@ library(reshape2)
 library(base64url)
 library(DT)
 library(stringr)
+library(ggplot2)
+library(dplyr)
 
 df_var <- read.table(params$variants_csv, sep = "\t", header=TRUE, check.names = FALSE)
 df_mut <- read.table(params$mutations_csv, sep = "\t", header=TRUE, check.names = FALSE)
