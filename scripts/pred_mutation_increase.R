@@ -40,11 +40,11 @@ lin_reg_mutation_change <- function( mutations.df ){
     if ( length(na.omit(mutations.df[,i])) >= 3 ){
       tmp <- mutations.df %>% select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
-      results_lm[[i]] <- test
-      summaries[[i]] <- summary( test )
       # only write the p-values for positive coefficients
-      if ( (all(as.data.frame( summary( test )$coefficients[,4]) != "NaN" ))){
-        if ( all(as.data.frame( summary( test )$coefficients[,4]) >= 0 )) pvalues[[i]] <- as.data.frame( summary( test )$coefficients[,4])
+      if (test["coefficients"]$coefficients["tmp$dates"] > 0){
+          results_lm[[i]] <- test
+          summaries[[i]] <- summary( test )
+          pvalues[[i]] <- as.data.frame( summary( test )$coefficients[,4])
       }
     }
   }
