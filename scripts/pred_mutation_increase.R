@@ -37,7 +37,7 @@ lin_reg_mutation_change <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    if ( length(na.omit(mutations.df[,i])) >= 3 ){
+    if ( length(na.omit(mutations.df[,i])) >= 5 ){
       tmp <- mutations.df %>% select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
       # only write the p-values for positive coefficients
