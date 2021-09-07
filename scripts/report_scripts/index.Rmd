@@ -8,7 +8,7 @@ params:
   mutations_csv: ''
   coverage_dir: ''
   sample_sheet: ''
-  mutation_sheet:''
+  mutation_sheet: ''
   logo: ''
   fun_cvrg_scr: ''
   fun_lm: ''
@@ -246,7 +246,6 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
     locations <- unique(melt(approved_var_plot,
                              id.vars = c("coordinates_lat",
                                          "coordinates_long")))
-    
     plot_ly (type = 'scattermapbox',
              mode = 'markers',
              colors = Variant_colors) %>%
@@ -308,15 +307,16 @@ sigmuts.df <- read.csv(mutation_sheet, header = TRUE)
 if (nrow(approved_mut_plot) > 0){
     changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
     mutations_sig <- lin_reg_mutation_change( changing_muts )
+  if (nrow(mutations_sig) > 0){
   # flag if mutation is signature mutation
     mutations_sig <- mutations_sig %>% 
       rowwise() %>%
-      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') )
+      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') )}
     # filter good samples for only mutations with sig pvalues for plotting
     approved_mut_plot <- select(approved_mut_plot, c(samplename, dates, location_name, 
                                                      coordinates_lat, coordinates_long, 
                                                      mutations_sig$mutation))
-    approved_mut_plot_pooled <- pool(approved_mut_plot)
+    approved_mut_plot_pooled <- pool(approved_mut_plot, na_handling = TRUE)
     cat("\n Mutations whith significant increase in frequency over time")
     DT::datatable(mutations_sig,
                   extensions = c('FixedColumns', 'Scroller'),
