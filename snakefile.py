@@ -582,6 +582,7 @@ rule render_index:
   "mutations_csv": "{params.mutations}", \
   "coverage_dir": "{COVERAGE_DIR}",\
   "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
+  "mutation_sheet": "{MUTATION_SHEET_CSV}", \
   "logo": "{LOGO}", \
   "fun_cvrg_scr": "{params.fun_cvrg_scr}", \
   "fun_lm": "{params.fun_lm}" \
