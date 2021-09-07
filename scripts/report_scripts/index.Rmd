@@ -333,33 +333,36 @@ These plots show the relative frequency of detected signature
 mutations in samples at specific wastewater sampling locations, and
 how the frequencies change over time.
 
-```{r mutations, echo=F, message=F, warning=F}
-if (length(approved_mut_plot)>5){ # check if the filtered df has actual values besides meta data
-    melted <- melt(approved_mut_plot,
-                   id.vars = c("dates", "samplename", "location_name",
-                               "coordinates_lat", "coordinates_long"),
+```{r mutations_pooled, echo = FALSE, message = FALSE, warning = FALSE}
+
+if (length(approved_mut_plot_pooled) > 2){
+  melted <- melt(approved_mut_plot_pooled,
+                   id.vars = c("dates", "samplename"),
                    rm.NA = TRUE)
-    
+# flag if mutation is signature mutation
+  melted <- melted %>% 
+  rowwise() %>%
+  mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, ":")[[1]][2]), "SigMut",'') )  
     # sort by dates
     idx <- order(melted$dates)
     melted <- melted[idx, ]
-    
-    locations <- unique(melted$location_name)
-    
-    tagList(lapply(locations,
-                   function (location) {
-                       subset(melted, location_name == location) %>%
-                           group_by(dates) %>%
-                           arrange(variable) %>%
-                           plot_ly(type = 'scatter',
-                                   mode = 'line',
-                                   name = ~variable,
-                                   x = ~dates,
-                                   y = ~value) %>%
-                           layout(title = location,
-                                  yaxis = list(title = "Frequency"))
-                   }))
-}
+p_mutations_pooled <- subset(melted) %>%
+       group_by(dates) %>%
+       arrange(variable) %>%
+       ungroup() %>%
+       plot_ly(type = 'scatter', 
+               mode = "lines+markes",
+               symbol = ~sigflag,
+               symbols = c('circle','hourglass'),
+               x = ~dates,
+               y = ~value,
+               name = ~variable,
+               connectgaps = TRUE
+       ) %>%
+       layout(title = summary,
+              yaxis = list(title = "Frequency"))
+} # mke sure there are other columns except the name and date
+
 ```
 
 ## Signature mutations by location
