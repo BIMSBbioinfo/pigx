@@ -364,7 +364,59 @@ p_mutations_pooled <- subset(melted) %>%
 } # mke sure there are other columns except the name and date
 
 ```
+## Significantly increasing mutations over time {.tabset .tabset-fade}
+```{r tab_plotting_mutations, echo = FALSE, message = FALSE, warning = FALSE, results='asis', fig.width=4, fig.height=4}
 
+plot_muts <- function (location) {
+                       subset(melted, location_name == location) %>%
+                           group_by(dates) %>%
+                           arrange(variable) %>%
+                           ungroup() %>%
+                       plot_ly(type = 'scatter', 
+                               mode = "lines+markes",
+                               symbol = ~sigflag,
+                               symbols = c('circle','hourglass'),
+                               x = ~dates,
+                               y = ~value,
+                               name = ~variable,
+                               connectgaps = TRUE) %>%
+                           layout(title = location,
+                                  yaxis = list(title = "Frequency"))
+}
+
+if (length(approved_mut_plot)>5){ # TODO check if the filtered df has actual values besides meta data
+  
+    melted <- melt(approved_mut_plot,
+                   id.vars = c("dates", "samplename", "location_name",
+                               "coordinates_lat", "coordinates_long"),
+                   rm.NA = TRUE) %>%
+             rowwise() %>%
+             mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, ":")[[1]][2]), "SigMut",'') )
+    # sort by dates
+    idx <- order(melted$dates)
+    melted <- melted[idx, ]
+    
+    locations <- unique(melted$location_name)
+
+    plot_list <- list()
+    for ( i in seq_along(locations)) {
+      plot_name <- locations[i]
+      df <- paste0(locations[i],".df")
+      plot_name <- plot_muts(locations[i])
+      plot_list[[i]] <- plot_name
+    }
+    
+    cat("###", 'Summary over all locations', '{-}', '\n\n')
+    print(htmltools::tagList(ggplotly(p_mutations_pooled)))
+    cat('\n\n')
+    for (i in 1:length(locations)){
+      cat("###", locations[i], '{-}', '\n\n')
+      print(htmltools::tagList( ggplotly ( plot_list[[i]])))
+        cat('\n\n')
+    }
+}
+
+```
 ## Signature mutations by location
 
 This plot visualizes the development of local outbreaks on the level
