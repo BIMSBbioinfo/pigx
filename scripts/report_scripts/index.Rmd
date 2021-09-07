@@ -107,9 +107,29 @@ if ( !(length(coverages.df) == 0)){
 }
 ```
 ```{r filter_plot_frames_samplescore, echo=F, message=F, warning=F}
+pool <- function(df, na_handling) {
+    df_pooled <- df %>% 
+                # discard location
+                select ( -location_name, -coordinates_long, -coordinates_lat) %>%
+                # discard time only keep day
+                mutate(dates = as.Date( dates )) %>%
+                # pool samples per date and calc. the mean for every mutation column
+                group_by(dates) %>%
+                summarize(across(where(is.numeric), mean, na.rm = na_handling)) %>%
+                # rename samples to indicated that they were pooled
+                mutate(samplename = paste0(dates, "_pooled")) %>%
+                # put names first again
+                relocate(samplename)
+    return (df_pooled)
+}
 
+# only use good samples for processing and visualiztaion
 approved_var_plot <- df_var %>% filter( samplename  %in% good_samples.df$samplename )
+approved_var_plot <- unique(approved_var_plot)
 approved_mut_plot <- df_mut %>% filter( samplename  %in% good_samples.df$samplename )
+# pool the samples per day, discard locations
+approved_var_plot_pooled <- pool(approved_var_plot, FALSE)
+
 ```
 ```{r color_palette, echo=F, message=F, warning=F}
 Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f69e5", "#4cdab2", "#999ce4", "#2ce6f3",
