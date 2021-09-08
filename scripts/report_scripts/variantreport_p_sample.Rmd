@@ -561,19 +561,19 @@ sample_row <- which(grepl(sample_name, output_mutation_plot$samplename))
 
 # write mutation frequency values to df
 for (i in all_mutations){
-  if (str_split(i,':')[[1]][2] %in% complete.df$AA_mut){ # split gene name to match with AA mut
+  if (str_split(i,':')[[1]][2] %in% complete.df$AA_mut ){ # split gene name to match with AA mut
     # check if variant already has a column
     if ( i %in% colnames(output_mutation_plot)) {
-        output_mutation_plot[sample_row,i] <- complete.df$freq[which(complete.df$AA_mut == str_split(i,':')[[1]][2])]
+        output_mutation_plot[sample_row,i] <- complete.df$freq[ which( complete.df$AA_mut == str_split(i,':')[[1]][2])]
 }}}
-colnames(output_mutation_plot) <- as.character(colnames(output_mutation_plot))
+colnames( output_mutation_plot ) <- as.character( colnames( output_mutation_plot ))
 
 # 2. check if file exists already
 if (file.exists (output_mutations)) {
   previous_df <- read.table (output_mutations, 
                              sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
   # convert numeric values to character
-  output_mutation_plot <- as.data.frame(lapply(output_mutation_plot, as.character), check.names = FALSE)
+  output_mutation_plot <- as.data.frame( lapply( output_mutation_plot, as.character ), check.names = FALSE)
   # merge with adding cols and rows
   output_mutation_plot <- full_join(previous_df, output_mutation_plot, 
                                     by = intersect(colnames(previous_df), colnames(output_mutation_plot)), copy = TRUE)
