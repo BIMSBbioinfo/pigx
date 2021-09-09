@@ -483,6 +483,23 @@ mutation_freqs <- readLines(params$mutations_csv) %>% paste0(collapse="\n") %>% 
 ``` 
 [Download Mutation_frequencies.csv](`r sprintf('data:text/csv;base64,%s', mutation_freqs)`)
 
+# Summarizing mutation counts
+```{r mutation_counts, message = FALSE, echo = FALSE}
+# get functions for counting and writing
+source(params$fun_tbls)
+
+# make the mutation count frame
+count_frame <- write_mutations_count(df_mut, sigmuts.df, mutations_sig)
+output_dir <- params$output_dir
+
+write.csv(count_frame, file.path(output_dir, "mutations_counts.csv"), 
+         na = "NA", row.names = FALSE, quote = FALSE)
+write.csv(mutations_sig_unfiltered, file.path(output_dir, "linear_regression_results.csv"),
+          na = "NA", row.names = FALSE, quote = FALSE)
+``` 
+[Download Mutation_counts.csv](`r sprintf('data:text/csv;base64,%s', count_frame)`)
+
+
 # Detailed per-sample reports
 
 For every sample three reports are generated:
