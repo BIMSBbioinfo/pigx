@@ -304,7 +304,7 @@ As a first step...linear regression. The following table shows the most signific
 ```{r linear_regression, echo=F, message=F, warning=F}
 source(params$fun_lm)
 mutation_sheet <- params$mutation_sheet
-sigmuts.df <- read.csv(mutation_sheet, header = TRUE)
+sigmuts.df <- na_if( read.csv(mutation_sheet, header = TRUE), "" ) 
 
 if (nrow(approved_mut_plot) > 0){
     changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
