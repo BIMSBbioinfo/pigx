@@ -563,20 +563,23 @@ rule render_index:
       taxonomy=expand(os.path.join(REPORT_DIR, "{sample}.taxonomic_classification.html"), sample = SAMPLES),
       krona=expand(os.path.join(REPORT_DIR, "{sample}.Krona_report.html"), sample = SAMPLES),
       qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
-      variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
+      variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES)
     # TODO: these CSV files should be declared as inputs!  Due to
     # https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/issues/19 we
     # cannot do this yet, so we just add the variant reports for all
     # samples as inputs.
     params:
-      variants=os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
-      mutations=os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv'),
-      fun_cvrg_scr=os.path.join(SCRIPTS_DIR, 'sample_coverage_score.R'),
-      fun_lm=os.path.join(SCRIPTS_DIR, 'pred_mutation_increase.R')
-    output: os.path.join(REPORT_DIR, "index.html")
+      variants = os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
+      mutations = os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv'),
+      fun_cvrg_scr = os.path.join(SCRIPTS_DIR, 'sample_coverage_score.R'),
+      fun_lm = os.path.join(SCRIPTS_DIR, 'pred_mutation_increase.R'),
+      fun_tbls = os.path.join(SCRIPTS_DIR, 'table_extraction.R')
+    output: report = os.path.join(REPORT_DIR, "index.html"), 
+            tbl_mut_count = os.path.join(OUTPUT_DIR, "mutations_counts.csv"),
+            tbl_lm_res = os.path.join(OUTPUT_DIR, "linear_regression_results.csv")
     log: os.path.join(LOG_DIR, "reports", "index.log")
     shell: """{RSCRIPT_EXEC} {input.script} \
-{input.report} {output} {input.header}   \
+{input.report} {output.report} {input.header}   \
 '{{                                      \
   "variants_csv": "{params.variants}",   \
   "mutations_csv": "{params.mutations}", \
@@ -585,6 +588,7 @@ rule render_index:
   "mutation_sheet": "{MUTATION_SHEET_CSV}", \
   "logo": "{LOGO}", \
   "fun_cvrg_scr": "{params.fun_cvrg_scr}", \
-  "fun_lm": "{params.fun_lm}" \
-  
+  "fun_lm": "{params.fun_lm}", \
+  "fun_tbls": "{params.fun_tbls}", \
+  "output_dir": "{OUTPUT_DIR}" \
 }}' > {log} 2>&1"""
