@@ -336,6 +336,7 @@ if (nrow(approved_mut_plot) > 0){
                   filter = "bottom") %>% formatRound(columns= "pvalues", digits=3)
 }
 ```
+[Download linear_regression_results.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered)`)
 
 These plots show the relative frequency of detected signature
 mutations in samples at specific wastewater sampling locations, and
