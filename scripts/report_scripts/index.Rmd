@@ -309,12 +309,18 @@ sigmuts.df <- na_if( read.csv(mutation_sheet, header = TRUE), "" )
 if (nrow(approved_mut_plot) > 0){
     changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
     mutations_sig <- lin_reg_mutation_change( changing_muts )
+    mutations_sig_unfiltered <- gather_lm_values( changing_muts )  
+  
   if (nrow(mutations_sig) > 0){
   # flag if mutation is signature mutation
     mutations_sig <- mutations_sig %>% 
       rowwise() %>%
+      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') )
+  
+    mutations_sig_unfiltered <- mutations_sig_unfiltered %>%
+      rowwise() %>%
       mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') )}
-    # filter good samples for only mutations with sig pvalues for plotting
+  # filter good samples for only mutations with sig pvalues for plotting
     approved_mut_plot <- select(approved_mut_plot, c(samplename, dates, location_name, 
                                                      coordinates_lat, coordinates_long, 
                                                      mutations_sig$mutation))
