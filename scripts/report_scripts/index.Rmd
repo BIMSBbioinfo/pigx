@@ -12,6 +12,8 @@ params:
   logo: ''
   fun_cvrg_scr: ''
   fun_lm: ''
+  fun_tbls: ''
+  output_dir: ''
 ---
 
 <style>
