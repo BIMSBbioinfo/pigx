@@ -86,7 +86,6 @@ gather_lm_values <- function(mutations.df){
       pvalues[[i]] <- as.data.frame( summary( test )$coefficients[,4])
       }
     }
-  }
 
   #generate a proper dataframe with pvalues without filter
   pvalues_df <- do.call( rbind, pvalues ) %>% 

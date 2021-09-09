@@ -5,9 +5,13 @@ write_lm_results <- function ( df, output ){
   write.csv(df, output, na = "NA", row.names = FALSE, quote = FALSE)
 }
 
-count_muts <- function (x) { # x = sample row
+count_muts <- function (x, mutation_sheet.df) { # x = sample row
   #' function used in rowwise apply() call
   #' takes row as input, calculates mutation counts and returns a dataframe
+  #' 
+  # transform mutation_sheet to one comparable vector
+  mutation_sheet.v <- unique( unlist( mutation_sheet.df, use.names = FALSE))
+  mutation_sheet.v <- mutation_sheet.v[!is.na(mutation_sheet.v)] 
   
   # transform char. vector into dataframe
   x <- as_tibble(t(as.matrix(x)))
@@ -31,7 +35,7 @@ count_muts <- function (x) { # x = sample row
   return(count_frame)
 }
 
-write_mutations_count <- function ( mutation_plot_data, mutation_sheet.df, mutations_sig, output ){
+write_mutations_count <- function ( mutation_plot_data, mutation_sheet.df, mutations_sig ){
   #' takes data_mut_plot.csv df, mutation_sheet.df with NAs at empty cells, mutations_sig.df as input
   #' counts mutations and return them as a dataframe
   
@@ -59,6 +63,8 @@ write_mutations_count <- function ( mutation_plot_data, mutation_sheet.df, mutat
     count_frame[,paste("sigmuts_",var)] <- length(sigmut_pv)
   }
   
-  counts_per_sample <- do.call(bind_rows, apply(mutation_plot_data,1, count_muts))
+  counts_per_sample <- do.call(bind_rows, apply(mutation_plot_data,1, count_muts, mutation_sheet.df))
   count_frame <- bind_rows(count_frame, counts_per_sample)
+  
+  return(count_frame)
 }
