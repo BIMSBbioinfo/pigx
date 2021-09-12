@@ -567,7 +567,7 @@ for (i in all_mutations){
         output_mutation_plot[sample_row,i] <- complete.df$freq[ which( complete.df$AA_mut == str_split(i,':')[[1]][2])]
 }}}
 colnames( output_mutation_plot ) <- as.character( colnames( output_mutation_plot ))
-
+output_mutation_plot <- output_mutation_plot %>% dplyr::select( -contains("NA" , ignore.case = FALSE))
 # 2. check if file exists already
 if (file.exists (output_mutations)) {
   previous_df <- read.table (output_mutations, 
@@ -581,5 +581,5 @@ if (file.exists (output_mutations)) {
 
 # 3. write to output file
    write.table(output_mutation_plot, output_mutations, sep = "\t",
-            na = "NA", row.names = FALSE, quote = FALSE)
+            row.names = FALSE, quote = FALSE)
 ```
