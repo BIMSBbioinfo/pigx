@@ -336,7 +336,7 @@ if (nrow(approved_mut_plot) > 0){
                   filter = "bottom") %>% formatRound(columns= "pvalues", digits=3)
 }
 ```
-[Download linear_regression_results.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered)`)
+
 
 These plots show the relative frequency of detected signature
 mutations in samples at specific wastewater sampling locations, and
@@ -505,9 +505,13 @@ write.csv(count_frame, file.path(output_dir, "mutations_counts.csv"),
          na = "NA", row.names = FALSE, quote = FALSE)
 write.csv(mutations_sig_unfiltered, file.path(output_dir, "linear_regression_results.csv"),
           na = "NA", row.names = FALSE, quote = FALSE)
+
+# prepare the frames for downloadable output
+count_frame <- count_frame %>% paste0(collapse="\n") %>% base64_urlencode()
+mutations_sig_unfiltered <- mutations_sig_unfiltered %>% paste0(collapse="\n") %>% base64_urlencode()
 ``` 
 [Download Mutation_counts.csv](`r sprintf('data:text/csv;base64,%s', count_frame)`)
-
+[Download linear_regression_results.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered)`)
 
 # Detailed per-sample reports
 
