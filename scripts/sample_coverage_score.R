@@ -6,16 +6,18 @@ get_genome_cov <- function ( coverage_dir ) {
                       pattern = "_coverage.csv",
                       full.names = TRUE, 
                       recursive = FALSE) # why false?
-  genome_cov.df <- data.frame(samplename = c(),
-                              coverage = c())
-  genome_cov.df <- bind_rows(genome_cov.df, lapply( files, function (x){
-    rd_tbl <- read.table(x, sep = '\t') # ignores the row starting with # directly TODO: how to get column names?
-    # TODO check if file has the correct header format
-    data <- c( samplename = strsplit( basename (x), "\\_coverage.csv" )[[1]],
-               coverage = rd_tbl$V6 )
-    #df <- bind_rows(df, data)
-    return(data)
-  }))
+  if (length(files) > 0) { 
+    genome_cov.df <- data.frame(samplename = c(),
+                                coverage = c())
+    genome_cov.df <- bind_rows(genome_cov.df, lapply( files, function (x){
+      rd_tbl <- read.table(x, sep = '\t') # ignores the row starting with # directly TODO: how to get column names?
+      # TODO check if file has the correct header format
+      data <- c( samplename = strsplit( basename (x), "\\_coverage.csv" )[[1]],
+                 coverage = rd_tbl$V6 )
+      #df <- bind_rows(df, data)
+      return(data)
+    }))
+  }else{ stop("coverage directory is empty or does not exist")}
   
   return(genome_cov.df) 
 }
