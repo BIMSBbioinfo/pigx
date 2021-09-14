@@ -277,12 +277,6 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
 }
 ```
 
-## Raw data VOC frequencies per sample
-```{r, include = F}
-variant_freqs <- readLines(params$variants_csv) %>% paste0(collapse="\n") %>% base64_urlencode()
-``` 
-[Download Variant_frequencies.csv](`r sprintf('data:text/csv;base64,%s', variant_freqs)`)
-
 # Signature Mutations
 
 Signature mutations are characterizing variants of concern (VOC) of
@@ -476,13 +470,23 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
 }
 ```
 
-## Raw data signature mutation frequencies per sample
-```{r, include = F}
-mutation_freqs <- readLines(params$mutations_csv) %>% paste0(collapse="\n") %>% base64_urlencode()
-``` 
-[Download Mutation_frequencies.csv](`r sprintf('data:text/csv;base64,%s', mutation_freqs)`)
+## Raw data summary and download
+```{r title_var_freq_table, echo = FALSE, results = 'asis'}
+cat("Table x: Frequencies per variant per sample, derived by deconvollution, pooled by weighted mean by read number")
+```
+```{r table_var_frqs, echo = FALSE}
+create_dt(df_var)
+```
+```{r title_mutfreq_table, echo = FALSE, results = 'asis'}
+cat("Table x: Frequencies per mutation per sample")
+```
+```{r table_mut_freqs, echo = FALSE}
+create_dt(df_mut)
+```
+```{r title_mt_coun, echo=FALSE, esults = 'asis'}
+cat("Table x: Counts of mutations found across all sample and per sample")
+```
 
-# Summarizing mutation counts
 ```{r mutation_counts, message = FALSE, echo = FALSE}
 # get functions for counting and writing
 source(params$fun_tbls)
@@ -491,17 +495,21 @@ source(params$fun_tbls)
 count_frame <- write_mutations_count(df_mut, sigmuts.df, mutations_sig)
 output_dir <- params$output_dir
 
+# write to file
 write.csv(count_frame, file.path(output_dir, "mutations_counts.csv"), 
          na = "NA", row.names = FALSE, quote = FALSE)
 write.csv(mutations_sig_unfiltered, file.path(output_dir, "linear_regression_results.csv"),
           na = "NA", row.names = FALSE, quote = FALSE)
 
-# prepare the frames for downloadable output
-count_frame <- count_frame %>% paste0(collapse="\n") %>% base64_urlencode()
-mutations_sig_unfiltered <- mutations_sig_unfiltered %>% paste0(collapse="\n") %>% base64_urlencode()
+# show and make downloadable
+create_dt(count_frame)
 ``` 
-[Download Mutation_counts.csv](`r sprintf('data:text/csv;base64,%s', count_frame)`)
-[Download linear_regression_results.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered)`)
+```{r title_lin_reg_table, echo = FALSE, results = 'asis'}
+cat("Table x: results of linear regression for all samples and all mutations hat appear at least two times")
+```
+```{r lin_reg_download, echo = FALSE}
+create_dt(mutations_sig_unfiltered)
+```
 
 # Detailed per-sample reports
 
