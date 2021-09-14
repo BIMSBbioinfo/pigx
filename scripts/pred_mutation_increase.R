@@ -78,7 +78,7 @@ gather_lm_values <- function(mutations.df){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names( mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    if ( length( na.omit(mutations.df[,i])) >= 5 ){
+    if ( length( na.omit(mutations.df[,i])) >= 2 ){
       tmp <- mutations.df %>% select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
       results_lm[[i]] <- test
