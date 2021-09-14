@@ -513,21 +513,17 @@ create_dt(mutations_sig_unfiltered)
 
 # Detailed per-sample reports
 
-For every sample three reports are generated:
-
-+ a QC report reporting general statistics and amplicon coverage,
-
-+ a variant report including tables summarizing the mutation
-  calling and the deconvolution results for the abundance of VOCs,
-
-+ a taxonomic classification report including a pie chart showing the
-  analysis of the unaligned reads.
+For every sample three reports are generated:  
+    
+  * a QC report reporting general statistics and amplicon coverage  
+  * a variant report including tables summarizing the mutation
+    calling and the deconvolution results for the abundance of VOCs  
+  * a taxonomic classification report including a pie chart showing the
+    analysis of the unaligned reads.
 
 The reports for each sample can be accessed here:
 
 ```{r generate overview, warning=F, message=F}
-library(data.table)
-library(DT)
 
 sample_sheet <- fread(params$sample_sheet)
 sample_names <- sample_sheet$name
