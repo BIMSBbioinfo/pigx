@@ -312,26 +312,19 @@ if (nrow(approved_mut_plot) > 0){
   # flag if mutation is signature mutation
     mutations_sig <- mutations_sig %>% 
       rowwise() %>%
-      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') )
-  
-    mutations_sig_unfiltered <- mutations_sig_unfiltered %>%
-      rowwise() %>%
-      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') )}
+      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') ) }
   # filter good samples for only mutations with sig pvalues for plotting
     approved_mut_plot <- select(approved_mut_plot, c(samplename, dates, location_name, 
                                                      coordinates_lat, coordinates_long, 
                                                      mutations_sig$mutation))
     approved_mut_plot_pooled <- pool(approved_mut_plot, na_handling = TRUE)
     cat("\n Mutations whith significant increase in frequency over time")
-    DT::datatable(mutations_sig,
-                  extensions = c('FixedColumns', 'Scroller'),
-                  options = list(fixedColumns = TRUE, 
-                             scrollY = 180,
-                             scrollX = TRUE,
-                             scroller = TRUE,
-                             dom = 'Bfrtip'),
-                  filter = "bottom") %>% formatRound(columns= "pvalues", digits=3)
+    create_dt(mutations_sig)
 }
+if (nrow(mutations_sig_unfiltered) > 0){  
+    mutations_sig_unfiltered <- mutations_sig_unfiltered %>%
+      rowwise() %>%
+      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "sigmut", ''))}
 ```
 
 
