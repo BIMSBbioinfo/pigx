@@ -52,8 +52,7 @@ write_mutations_count <- function ( mutation_plot_data, mutation_sheet.df, mutat
                              total_muts = length(mutations),
                              total_sigmuts = length(sigmuts_found.df),
                              # get how many of all found mutations will be tracked because of significant increase over time
-                             tracked_muts_after_lm = sum( str_count( colnames(mutation_plot_data), 
-                                                                    paste(mutations_sig$mutation, collapse = "|" )))
+                             tracked_muts_after_lm = length(mutation_plot_data %>% select( contains(mutations_sig$mutation)))
   )
   # get number of mutations which aren't signature mutations
   count_frame <- count_frame %>% mutate( non_sigmuts = total_muts - total_sigmuts)
