@@ -485,40 +485,28 @@ Variant effect prediction (*Ensemble VEP output*):
 # get all possible variants
 all_variants <- colnames (msig_stable[, -which( names(msig_stable) %in% "muts" )])
 output_variants <- file.path(csv_output_dir, "data_variant_plot.csv")
-
-# if file exists already - grep the existing content and add a new line
-if (file.exists (output_variants)) {
-    output_variant_plot <- read.table (output_variants, 
-                                       sep = "\t", header = TRUE, colClasses = "character")
-} else {
-    output_variant_plot <- data.frame (samplename = character(), 
-                                       dates = character(),
-                                       location_name = character(),
-                                       coordinates_lat = character(),
-                                       coordinates_long = character())
-
-    # add columns for all possible variants to the dataframe
-    for (variant in all_variants) {
-      output_variant_plot[,variant] <- numeric()
-    }
-    
-  #write header line
-  write.table(t(colnames(output_variant_plot)), output_variants, sep = "\t", 
-            na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
+# 1. write dataframe with this information here
+output_variant_plot <- data.frame (samplename = character(),
+                                   dates = character(),
+                                   location_name = character(),
+                                   coordinates_lat = character(),
+                                   coordinates_long = character())
+# add columns for all possible variants to the dataframe
+for (variant in all_variants) {
+  output_variant_plot[,variant] <- numeric()
 }
-# adding new row
 meta_data <- c (samplename = sample_name,
                 dates = date,
                 location_name = location_name,
                 coordinates_lat = coordinates_lat,
-                coordinates_long = coordinates_long
-)
+                coordinates_long = coordinates_long)
+
 output_variant_plot <- bind_rows(output_variant_plot, meta_data)
 
 # get rownumber for current sample
 sample_row <- which(grepl(sample_name, output_variant_plot$samplename))
 
-# write deconv values to df
+# write mutation frequency values to df
 for (i in all_variants){
   if (i %in% df$name){
     # check if variant already has a column
@@ -527,8 +515,21 @@ for (i in all_variants){
     }
   }
 }
-write.table(output_variant_plot[sample_row,], output_variants, sep = "\t", append = TRUE, 
-            na = "NA", row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+# 2. check if file exists already
+if (file.exists (output_variants)) {
+  previous_df <- read.table (output_variants, 
+                             sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
+  # convert numeric values to character
+  output_variant_plot <- as.data.frame(lapply(output_variant_plot, as.character), check.names = FALSE)
+  # merge with adding cols and rows
+  output_variant_plot <- full_join(previous_df, output_variant_plot, by = colnames(previous_df), copy = TRUE)
+}
+
+# 3. write to output file
+   write.table(output_variant_plot, output_variants, sep = "\t",
+            na = "NA", row.names = FALSE, quote = FALSE)
+
 ```
 ```{r csv_output_mutation_plot, message = FALSE, warning = FALSE, include = FALSE}
 # prepare processed mutation values to output them as a csv which will be used for the plots in index.rmd
