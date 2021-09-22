@@ -47,19 +47,21 @@ lin_reg_mutation_change <- function( mutations.df ){
       }
       }
     }
-
-  #generate a proper dataframe with pvalues, filtering by significance
-  pvalues_df <- do.call( rbind, pvalues ) %>% 
-                tibble::rownames_to_column( "VALUE" ) %>% 
-                filter( stringr::str_detect( VALUE, "dates" ) ) %>%
-                filter (`summary(test)$coefficients[, 4]` < 0.05)
   
-  #names of mutations get strange pattern, doing some split and getting the names correct
-  pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
-  
-  #fixing the dataframe with mutations and pvalues
-  pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]` )
-  colnames(pvalues_df) <- c("mutation", "pvalues")
+  if (length(pvalues) > 0){
+    #generate a proper dataframe with pvalues, filtering by significance
+    pvalues_df <- do.call( rbind, pvalues ) %>% 
+                  tibble::rownames_to_column( "VALUE" ) %>% 
+                  filter( stringr::str_detect( VALUE, "dates" ) ) %>%
+                  filter (`summary(test)$coefficients[, 4]` < 0.05)
+    
+    #names of mutations get strange pattern, doing some split and getting the names correct
+    pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
+    
+    #fixing the dataframe with mutations and pvalues
+    pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]` )
+    colnames(pvalues_df) <- c("mutation", "pvalues")
+  } else{  pvalues_df <- data.frame() }
   return ( pvalues_df)
 }
 
