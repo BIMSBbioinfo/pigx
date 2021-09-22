@@ -93,7 +93,7 @@ gather_lm_values <- function(mutations.df){
 
   #generate a proper dataframe with pvalues without filter
   
-  coeff_df <- as.data.frame(do.call(rbind, coeff)) %>% drop_na() %>%
+  coeff_df <- as.data.frame(do.call(rbind, coeff)) %>% tidyr::drop_na() %>%
             tibble::rownames_to_column( "VALUE" )
   pvalues_df <- do.call( rbind, pvalues ) %>% 
                 tibble::rownames_to_column( "VALUE" ) %>% 
