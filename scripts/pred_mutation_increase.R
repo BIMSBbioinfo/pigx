@@ -47,7 +47,6 @@ lin_reg_mutation_change <- function( mutations.df ){
       }
       }
     }
-  
   if (length(pvalues) > 0){
     #generate a proper dataframe with pvalues, filtering by significance
     pvalues_df <- do.call( rbind, pvalues ) %>% 
@@ -63,6 +62,92 @@ lin_reg_mutation_change <- function( mutations.df ){
     colnames(pvalues_df) <- c("mutation", "pvalues")
   } else{  pvalues_df <- data.frame() }
   return ( pvalues_df)
+}
+
+
+robust_reg_mutation_change <- function( mutations.df ){
+  #' takes data frames with mutations, frequency values over time
+  #' returns A) list with mutations with significant change, B) dataframe with related pvalues
+  
+  require(tidyverse)
+  require(stringr)
+  require(sfsmisc)
+  # TODO check file format assumptions
+  
+  #initialize 3 lists for results
+  results_lm <- list ()
+  summaries <- list ()
+  pvalues <- list () 
+  coeff <- list()
+  
+  #loop the mutations, doing the linear model, and extracting the pvalues
+  for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
+    if ( length(na.omit(mutations.df[,i])) >= 5 ){
+      tmp <- mutations.df %>% select( dates, all_of(i) )
+      test <- rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare )
+      # only write the p-values for positive coefficients
+      if (!(any(is.na(summary(test)$coefficients))) ){
+        if (test["coefficients"]$coefficients["tmp$dates"] > 0){
+          coeff[[i]] <- as.data.frame(test["coefficients"]$coefficients["tmp$dates"])
+          results_lm[[i]] <- test
+          summaries[[i]] <- summary( test )
+          pvalues[[i]] <- f.robftest( test )$p.value
+        }
+      }
+      }
+  }
+  coeff_df <- as.data.frame(do.call(rbind, coeff)) %>% tidyr::drop_na() %>%
+          tibble::rownames_to_column( "VALUE" )
+  pvalues.df <- data.frame(do.call(rbind, pvalues)) %>%
+                tibble::rownames_to_column( "VALUE" ) %>%
+                left_join(coeff_df, by = "VALUE")
+  
+  colnames(pvalues.df) <- c("mutation", "value", "coefficient")
+  pvalues.df <- pvalues.df %>% filter(value < 0.05)
+  
+  return(pvalues.df)
+}
+
+robust_reg_variant_change <- function( mutations.df ){
+  #' takes data frames with mutations, frequency values over time
+  #' returns A) list with mutations with significant change, B) dataframe with related pvalues
+  
+  require(tidyverse)
+  require(stringr)
+  require(sfsmisc)
+  # TODO check file format assumptions
+  
+  #initialize 3 lists for results
+  results_lm <- list ()
+  summaries <- list ()
+  pvalues <- list () 
+  coeff <- list()
+  
+  #loop the mutations, doing the linear model, and extracting the pvalues
+  for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
+    if ( length(na.omit(mutations.df[,i])) >= 5 ){
+      tmp <- mutations.df %>% select( dates, all_of(i) )
+      test <- rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare )
+      # only write the p-values for positive coefficients
+      if (!(any(is.na(summary(test)$coefficients))) ){
+        if (test["coefficients"]$coefficients["tmp$dates"] > 0){
+          coeff[[i]] <- as.data.frame(test["coefficients"]$coefficients["tmp$dates"])
+          results_lm[[i]] <- test
+          summaries[[i]] <- summary( test )
+          pvalues[[i]] <- f.robftest( test )$p.value
+        }
+      }
+      }
+  }
+  coeff_df <- as.data.frame(do.call(rbind, coeff)) %>% tidyr::drop_na() %>%
+          tibble::rownames_to_column( "VALUE" )
+  pvalues.df <- data.frame(do.call(rbind, pvalues)) %>%
+                tibble::rownames_to_column( "VALUE" ) %>%
+                left_join(coeff_df, by = "VALUE")
+  
+  colnames(pvalues.df) <- c("mutation", "value", "coefficient")
+  
+  return(pvalues.df)
 }
 
 gather_lm_values <- function(mutations.df){
