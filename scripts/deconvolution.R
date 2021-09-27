@@ -32,7 +32,8 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   # wild type mutations are simulated the following: e.g. T210I (mutation) -> T210T ("wild type")
   
   # 1. make "WT mutations" 
-  muts_wt <- lapply(mutations.vector,function(x) str_replace(x,regex(".$"), str_sub(x, 1,1)))
+  muts_wt <- lapply(mutations.vector,function(x) str_replace(x,regex(".$"), 
+                                                             str_sub(str_split(x,":")[[1]][2], 1,1)))
   muts_wt.df <- data.frame(muts = unlist(muts_wt))
   # 2. make frequency values, subtract the observed freqs for the real mutations from 1
   bulk_wt <- lapply(bulk_freq.vector, function (x) {1-x})
