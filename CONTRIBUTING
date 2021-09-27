@@ -3,7 +3,7 @@
 First clone the upstream repository from GitHub:
 
 ```
-git clone https://github.com/BIMSBbioinfo/pigx_chipseq.git
+git clone https://github.com/BIMSBbioinfo/pigx_chipseq.git --recursive
 ```
 
 ## Configure
@@ -13,11 +13,20 @@ build system first with the `bootstrap.sh` script.  Bootstrapping
 requires GNU Autoconf and GNU Automake.
 
 ```
+cd pigx_chipseq
 ./bootstrap.sh
 ```
 
 Bootstrapping creates the `configure` script, a portable shell script.
 You need to run the script to configure the package before building.
+The configure script will check for all required dependencies, 
+so make sure you have them set up with guix or using any other package manager.
+Assuming you have Guix installed, the following command spawns a
+sub-shell in which all dependencies are available:
+
+```
+guix environment -l guix.scm
+```
 
 **IMPORTANT**: The default prefix (path to where tools are installed
 to) for installation will be `/usr/local/`, so if you do not have
@@ -59,6 +68,10 @@ to build a couple of files.  Do that by running `make`.
 If you want to skip the installation step, you will need to set the
 environment variable `PIGX_UNINSTALLED` to any value before running
 the executable from the current working directory.
+
+```
+export PIGX_UNINSTALLED=1
+```
 
 Now finally you can call the executable:
 
