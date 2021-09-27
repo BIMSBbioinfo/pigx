@@ -121,6 +121,7 @@ suppressPackageStartupMessages({
     library(ggplot2)
     library(heatmaply)
     library(plotly)
+    library(hexbin)
 })
 ```
 

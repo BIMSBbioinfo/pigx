@@ -101,6 +101,7 @@ AX_R_PACKAGE([crosstalk])
 AX_R_PACKAGE([gprofiler2])
 AX_R_PACKAGE([SummarizedExperiment])
 AX_R_PACKAGE([Rsubread])
+AX_R_PACKAGE([hexbin])
   ])
 
 

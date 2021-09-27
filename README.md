@@ -117,6 +117,7 @@ installed:
     - crosstalk
     - gprofiler2
     - summarizedexperiment
+    - hexbin
 - python
     - snakemake
     - pyyaml
