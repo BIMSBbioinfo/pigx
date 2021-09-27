@@ -70,7 +70,11 @@ dedupeDF <- function( msig_stable ){
   # mark duplicated columns, forward and backwards to get ALL the duplicates, otherwise the first one would missing
   dupes_variants <- duplicated ( msig_stable_transposed[,-which(names(msig_stable_transposed) %in% 'variants')], 
                                  fromLast=TRUE)
-  msig_dedupe_transposed <- msig_stable_transposed[!dupes_variants,]
+  # merged the deduplicated data frame with the WT row again, because WT always have to be there
+  # in case the duplication was with WT the variant row will be set to 0 in dedupeVariatns() and only the valid WT row
+  # will be used
+  msig_dedupe_transposed <- rbind(msig_stable_transposed %>% filter(row.names(msig_stable_transposed) %in% c("muts", "WT")), 
+                                  msig_dedupe_transposed %>% filter(!(row.names(msig_dedupe_transposed) %in% "muts")))
 
   return( list( msig_stable_transposed, msig_dedupe_transposed) )
 }
@@ -81,15 +85,24 @@ dedupeVariants <- function (variant, variants.df, dedup_variants.df) {
         duped_variants <- c()
         row_number_variant <- which( grepl( variant, variants.df$variants ))
         for (row in 1:nrow( variants.df )) { 
-            if (all ( variants.df[row_number_variant,-1] == variants.df[row,-1] )) {
+            if (all ( variants.df[row_number_variant,-1] == variants.df[row,-1] )) { # TODO: what are those magic numbers?
               duped_variants <- c(duped_variants, variants.df[row,"variants"])
             }
         }
        # grouped_variants <- variants.df$variants[duped_variants]
         groupName_variants <- paste( duped_variants, collapse = "," )
-        for ( row in dedup_variants.df$variants ){
-          if ( grepl( row,groupName_variants )) {
-            rownames ( dedup_variants.df )[rownames(dedup_variants.df) == row] <- groupName_variants
+        
+        # if variants are getting pooled with WT they are just WT and nothing else and also not "others" 
+        if (str_detect(groupName_variants, "WT")){
+          groupName_variants <- "WT"
+          variants_to_drop <- duped_variants[!grepl("WT", duped_variants)] # if they are WT, the variant it self is 0
+          dedup_variants.df[which(rownames(dedup_variants.df) == all_of(variants_to_drop)),-1] <- 0
+        }else{
+          for ( row in dedup_variants.df$variants ){
+            if ( grepl( row,groupName_variants )) {
+              rownames ( dedup_variants.df )[rownames(dedup_variants.df) == row] <- groupName_variants
+              # TODO you can stop after this ( I think)
+            }
           }
         }
         return ( dedup_variants.df )
