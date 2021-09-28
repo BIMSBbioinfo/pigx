@@ -368,14 +368,19 @@ msig_transposed <- dedupeDF( msig_stable )
 msig_stable_transposed <- msig_transposed[[1]]
 msig_dedupe_transposed <- msig_transposed[[2]]
 
+dropped_variants <- c()
+# for every variant update the rownames with the group they are in
 for (variant in rownames( msig_stable_transposed[-(row.names(msig_stable_transposed) %in% 'muts'),] )) {
-  msig_dedupe_transposed <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
+  grouping_res <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
+  msig_dedupe_transposed <- grouping_res[[1]]
+  dropped_variants <- c(dropped_variants, grouping_res[[2]])
 }
-
+# transpose the data frame back to column format for additional processing
 if ( length(msig_dedupe_transposed) >= 1){ 
     msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get's rid of the additional first row which is an transposing artifact
+    # clean the vector to know which variants has to be add with value 0 after deconvolution
+    dropped_variants <- unique(dropped_variants)[!is.na(dropped_variants)]
 }
-
 
 ```
 ```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
