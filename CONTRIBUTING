@@ -28,6 +28,14 @@ sub-shell in which all dependencies are available:
 guix environment -l guix.scm
 ```
 
+If you would like to add new dependencies on top, you may add them 
+to the env.scm file and spawn a sub-shell using guix:
+
+```
+guix environment -m env.scm
+```
+
+
 **IMPORTANT**: The default prefix (path to where tools are installed
 to) for installation will be `/usr/local/`, so if you do not have
 permissions to write to this location (i.e. do not have root
