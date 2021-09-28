@@ -180,6 +180,7 @@ get_protein_mut <- function (vepfile){ # parse together from vep output "Protein
   locations$AAs.2[is.na(locations$AAs.2)] <- "-"
   # clean - characters 
   locations$AA_mut <- paste(locations$AAs.1,locations$prot_mut_loc,locations$AAs.2, sep = "")
+  locations$AA_mut <- paste(locations$genes, locations$AA_mut, sep = ":")
   # adding gene information
   
   
