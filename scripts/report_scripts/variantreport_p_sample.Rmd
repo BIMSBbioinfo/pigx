@@ -415,15 +415,38 @@ df <- data.frame(rbind(variant_abundance))
 # TODO: This should be done much earlier when building the data frame.
 
 condensed_variants_names <-
-    unlist(lapply(variants, function (x) { if (str_detect(x, ".*,.*,.*")) { "others" } else { x }}))
+    unlist( lapply(variants, function (x) { if (str_detect(x, ".*,.*,.*")) { "others" } else { x }}) )
 
 colnames(df) <- condensed_variants_names
 
 variants_labels <-
-    unlist(lapply(variants, function (x) str_replace_all(x, ",", "\n")))
+    unlist( lapply(variants, function (x) str_replace_all(x, ",", "\n")) )
 
 df <- df %>% 
-    tidyr::pivot_longer(everything())
+    tidyr::pivot_longer( everything() )
+
+# add dropped variants again with value 0 in case all of the other variants add up to 1
+if ( round( sum(df$value),1) == 1 ){
+  for ( variant in dropped_variants ){
+    df <- rbind( df, c(variant, 0) )
+  }
+}
+
+# in case "others" == 0, both variants can be split up again and being given the value 0 # ? I think so?
+if ( any(str_detect(variants, ",")) ) {
+    grouped_rows <- which(str_detect(variants, ","))
+    for ( row in grouped_rows ){
+       if ( df[row,"value"] == 0 ){ 
+            grouped_variants <- unlist( str_split(df[row,"name"], ",") )
+            for ( variant in grouped_variants ){
+                # add new rows, one for each variant
+                df <- rbind(df, c(variant, 0))
+                # drop grouped row
+                df <- df[-row,]
+            }
+       }
+    }
+}
 
 font_family <- "DejaVu Sans"
 
