@@ -19,5 +19,6 @@
                                        "r-crosstalk"
                                        "r-gprofiler2"
                                        "r-summarizedexperiment"
+                                       "r-hexbin"
                                        ))
 		 ))
