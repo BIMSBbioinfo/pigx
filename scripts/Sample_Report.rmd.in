@@ -541,9 +541,8 @@ dd = lstats$Peak_Statistics$peaks_sample %>%
   mutate(mapped_total = as.numeric(mapped_total)) %>%
   mutate(value      = round(value/mapped_total,2))
 
-dd$sample_cnt <- sub("*.sorted.bam", "", dd$sample_cnt)
-
 g = dd %>%
+  mutate(sample_cnt = gsub("*.sorted.bam", "", sample_cnt))  %>%
   dplyr::filter(bam_name == sample_cnt)                          %>%
   ggplot(aes(x = sample_name, y = value, fill=bam_name)) +
   geom_bar(stat='identity', position='dodge') +
