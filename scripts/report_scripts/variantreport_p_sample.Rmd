@@ -378,10 +378,10 @@ for (variant in rownames( msig_stable_transposed[-(row.names(msig_stable_transpo
 # transpose the data frame back to column format for additional processing
 if ( length(msig_dedupe_transposed) >= 1){ 
     msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get's rid of the additional first row which is an transposing artifact
-    # clean the vector to know which variants has to be add with value 0 after deconvolution
-    dropped_variants <- unique(dropped_variants)[!is.na(dropped_variants)]
-}
 
+}
+dropped_variants <- unique(dropped_variants)
+dropped_variants <- dropped_variants[!is.na(dropped_variants)]
 ```
 ```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 source(deconvolution_functions)
@@ -447,7 +447,7 @@ if ( any(str_detect(variants, ",")) ) {
        }
     }
 }
-
+df <- transform(df, value = as.numeric(value))
 font_family <- "DejaVu Sans"
 
  ggplot(data = df, aes(name,value, 
@@ -564,7 +564,7 @@ if (file.exists (output_variants)) {
 # those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate 
 # file (and maybe rule)
 # get all possible mutations
-all_mutations <- paste(complete.df$genes, complete.df$AA_mut, sep = ":")
+all_mutations <- complete.df$AA_mut[!is.na(complete.df$AA_mut)]
 output_mutations <- file.path(csv_output_dir, "data_mutation_plot.csv")
 
 # 1. write dataframe with this information here
@@ -590,10 +590,10 @@ sample_row <- which(grepl(sample_name, output_mutation_plot$samplename))
 
 # write mutation frequency values to df
 for (i in all_mutations){
-  if (str_split(i,':')[[1]][2] %in% complete.df$AA_mut ){ # split gene name to match with AA mut
+  if (i %in% complete.df$AA_mut ){ # split gene name to match with AA mut
     # check if variant already has a column
     if ( i %in% colnames(output_mutation_plot)) {
-        output_mutation_plot[sample_row,i] <- complete.df$freq[ which( complete.df$AA_mut == str_split(i,':')[[1]][2])]
+        output_mutation_plot[sample_row,i] <- complete.df$freq[ which(complete.df$AA_mut == i)]
 }}}
 colnames( output_mutation_plot ) <- as.character( colnames( output_mutation_plot ))
 output_mutation_plot <- output_mutation_plot %>% dplyr::select( -contains("NA" , ignore.case = FALSE))
