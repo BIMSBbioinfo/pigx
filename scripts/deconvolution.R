@@ -101,6 +101,8 @@ dedupeVariants <- function (variant, variants.df, dedup_variants.df) {
             }
         }
         }
+        # clean the vector to know which variants has to be add with value 0 after deconvolution
+        variants_to_drop <- unique(variants_to_drop)[!is.na(variants_to_drop)]
         return ( list(dedup_variants.df, variants_to_drop) )
 }  
 
