@@ -96,14 +96,19 @@ robust_reg_mutation_change <- function( mutations.df ){
       }
       }
   }
+  if ( length(coeff) > 0){
   coeff_df <- as.data.frame(do.call(rbind, coeff)) %>% tidyr::drop_na() %>%
           tibble::rownames_to_column( "VALUE" )
+  } else { coeff_df <- data.frame()}
+  if ( length(pvalues) > 0) {
   pvalues.df <- data.frame(do.call(rbind, pvalues)) %>%
                 tibble::rownames_to_column( "VALUE" ) %>%
                 left_join(coeff_df, by = "VALUE")
-  
+
   colnames(pvalues.df) <- c("mutation", "value", "coefficient")
   pvalues.df <- pvalues.df %>% filter(value < 0.05)
+  } else {pvalues.df <- data.frame() }
+
   
   return(pvalues.df)
 }
