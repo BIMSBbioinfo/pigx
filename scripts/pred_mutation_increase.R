@@ -72,6 +72,7 @@ robust_reg_mutation_change <- function( mutations.df ){
   require(tidyverse)
   require(stringr)
   require(sfsmisc)
+  require(MASS)
   # TODO check file format assumptions
   
   #initialize 3 lists for results
@@ -84,7 +85,7 @@ robust_reg_mutation_change <- function( mutations.df ){
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length(na.omit(mutations.df[,i])) >= 5 ){
       tmp <- mutations.df %>% select( dates, all_of(i) )
-      test <- rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare)
+      test <- MASS::rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare)
       # only write the p-values for positive coefficients
       if (!(any(is.na(summary(test)$coefficients))) ){
         if (test["coefficients"]$coefficients["tmp$dates"] > 0){
@@ -121,6 +122,7 @@ robust_reg_variant_change <- function( mutations.df ){
   require(tidyverse)
   require(stringr)
   require(sfsmisc)
+  require(MASS)
   # TODO check file format assumptions
   
   #initialize 3 lists for results
@@ -133,7 +135,7 @@ robust_reg_variant_change <- function( mutations.df ){
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length(na.omit(mutations.df[,i])) >= 5 ){
       tmp <- mutations.df %>% select( dates, all_of(i) )
-      test <- rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare )
+      test <- MASS::rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare )
       # only write the p-values for positive coefficients
       if (!(any(is.na(summary(test)$coefficients))) ){
         if (test["coefficients"]$coefficients["tmp$dates"] > 0){
