@@ -78,29 +78,29 @@ def parsing_mut_loc_coverage(muts_loc_coverage):
     # get number of actual covered locations by subtracting 0 covered locations from total checked locations
     covered_mutation_locations = (int(num_covered_mutations_locations) - len(drop_out_mutation_locations))
 
-    return (covered_mutation_locations, drop_out_mutation_locations, num_covered_mutations_locations)
+    return (num_covered_mutations_locations, covered_mutation_locations, drop_out_mutation_locations)
 
-def make_report_input_csv(coverage_file, amplicon_file, output_file):
-    coverage_info = parsing_cov(coverage_file)
-    amplicon_info = parsing_amplicon(amplicon_file)
-    print(coverage_info)
-    print(amplicon_info)
+def make_report_input_csv(genome_coverage_file, muts_loc_coverage_file, output_file):
+    genome_coverage_info = parsing_cov(genome_coverage_file)
+    mut_loc_cov_info = parsing_mut_loc_coverage(muts_loc_coverage_file)
+    print(genome_coverage_info)
+    print(mut_loc_cov_info)
 
     header = [
-        "Total number of amplicons fully covered",
-        "Amplicons partially covered",
-        "Drop-out amplicons",
+        "Total number of tracked mutations",
+        "Total number of mutations covered",
+        "Number of mutations not covered",
         "Total number aligned reads",
-        "Coverage",
-        "Mean depth",
+        "Percentage ref.genome covered",
+        "Mean depth ref.genome coverage",
     ]
     fields = [
-        amplicon_info[0],
-        amplicon_info[1],
-        amplicon_info[2],
-        coverage_info[0],
-        coverage_info[1],
-        coverage_info[2],
+        mut_loc_cov_info[0],
+        mut_loc_cov_info[1],
+        mut_loc_cov_info[2],
+        genome_coverage_info[0],
+        genome_coverage_info[1],
+        genome_coverage_info[2],
     ]
 
     with open(output_file, "a") as f:
@@ -109,7 +109,7 @@ def make_report_input_csv(coverage_file, amplicon_file, output_file):
         writer.writerow(fields)
 
 if __name__ == '__main__':
-    coverage_file = sys.argv[1]
-    amplicon_file = sys.argv[2]
+    genome_coverage_file = sys.argv[1]
+    muts_loc_coverage_file = sys.argv[2]
     output = sys.argv[3]
-    make_report_input_csv(coverage_file, amplicon_file, output)
+    make_report_input_csv(genome_coverage_file, muts_loc_coverage_file, output)
