@@ -84,7 +84,7 @@ robust_reg_mutation_change <- function( mutations.df ){
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length(na.omit(mutations.df[,i])) >= 5 ){
-      tmp <- mutations.df %>% select( dates, all_of(i) )
+      tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
       test <- MASS::rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare)
       # only write the p-values for positive coefficients
       if (!(any(is.na(summary(test)$coefficients))) ){
@@ -134,7 +134,7 @@ robust_reg_variant_change <- function( mutations.df ){
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length(na.omit(mutations.df[,i])) >= 5 ){
-      tmp <- mutations.df %>% select( dates, all_of(i) )
+      tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
       test <- MASS::rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare )
       # only write the p-values for positive coefficients
       if (!(any(is.na(summary(test)$coefficients))) ){
