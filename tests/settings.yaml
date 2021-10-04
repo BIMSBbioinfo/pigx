@@ -4,7 +4,7 @@ locations:
   reference-fasta: sample_data/NC_045512.2.fasta
   amplicons-bed: sample_data/nCoV-2019_NCref.bed
   mutations-bed: sample_data/Covid_CG_NTmutation_t07.bed
-  mutation-sheet: sample_data/mutation_sheet.csv
+  mutation-sheet: sample_data/mutation_sheet_210927.csv
   kraken-db-dir: /local/Projects/AAkalin_pathogenomics/databases/kraken_db
   krona-db-dir: /local/Projects/AAkalin_pathogenomics/databases/krona_db
   sigmut-db-dir: /local/Projects/AAkalin_pathogenomics/databases/sigmut_db
