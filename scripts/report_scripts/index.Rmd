@@ -18,7 +18,7 @@ params:
 
 <style>
 .pigx_info {
-  background-image: url(params$logo); 
+  background-image: url(params$logo);
 }
 
 .notice {
@@ -295,8 +295,8 @@ sigmuts.df <- na_if( read.csv(mutation_sheet, header = TRUE), "" )
 
 if (nrow(approved_mut_plot) > 0){
     changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
-    mutations_sig <- lin_reg_mutation_change( changing_muts )
-    mutations_sig_unfiltered <- gather_lm_values( changing_muts )  
+    mutations_sig <- robust_reg_mutation_change( changing_muts )
+    mutations_sig_unfiltered <- robust_reg_variant_change( changing_muts ) # TODO function structure will be changed, see comments in function file
   
   if (nrow(mutations_sig) > 0){
   # flag if mutation is signature mutation
