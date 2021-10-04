@@ -75,7 +75,7 @@ robust_reg_mutation_change <- function( mutations.df ){
   # TODO check file format assumptions
   
   #initialize 3 lists for results
-  results_lm <- list ()
+  results_rlm <- list ()
   summaries <- list ()
   pvalues <- list () 
   coeff <- list()
@@ -89,7 +89,7 @@ robust_reg_mutation_change <- function( mutations.df ){
       if (!(any(is.na(summary(test)$coefficients))) ){
         if (test["coefficients"]$coefficients["tmp$dates"] > 0){
           coeff[[i]] <- as.data.frame(test["coefficients"]$coefficients["tmp$dates"])
-          results_lm[[i]] <- test
+          results_rlm[[i]] <- test
           summaries[[i]] <- summary( test )
           pvalues[[i]] <- f.robftest( test )$p.value
         }
@@ -108,6 +108,7 @@ robust_reg_mutation_change <- function( mutations.df ){
   return(pvalues.df)
 }
 
+# TODO this is reduntant, better only one function for unfiltered pvalues and add the filter step later
 robust_reg_variant_change <- function( mutations.df ){
   #' takes data frames with mutations, frequency values over time
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
@@ -118,7 +119,7 @@ robust_reg_variant_change <- function( mutations.df ){
   # TODO check file format assumptions
   
   #initialize 3 lists for results
-  results_lm <- list ()
+  results_rlm <- list ()
   summaries <- list ()
   pvalues <- list () 
   coeff <- list()
@@ -132,7 +133,7 @@ robust_reg_variant_change <- function( mutations.df ){
       if (!(any(is.na(summary(test)$coefficients))) ){
         if (test["coefficients"]$coefficients["tmp$dates"] > 0){
           coeff[[i]] <- as.data.frame(test["coefficients"]$coefficients["tmp$dates"])
-          results_lm[[i]] <- test
+          results_rlm[[i]] <- test
           summaries[[i]] <- summary( test )
           pvalues[[i]] <- f.robftest( test )$p.value
         }
@@ -149,6 +150,8 @@ robust_reg_variant_change <- function( mutations.df ){
   
   return(pvalues.df)
 }
+
+
 
 gather_lm_values <- function(mutations.df){
  #' takes data frames with mutations, frequency values over time
