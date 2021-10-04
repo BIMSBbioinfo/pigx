@@ -25,7 +25,7 @@ lin_reg_mutation_change <- function( mutations.df ){
   #' takes data frames with mutations, frequency values over time
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
   
-  require(tidyverse)
+  require(dplyr)
   require(stringr)
   # TODO check file format assumptions
   
@@ -69,7 +69,7 @@ robust_reg_mutation_change <- function( mutations.df ){
   #' takes data frames with mutations, frequency values over time
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
   
-  require(tidyverse)
+  require(dplyr)
   require(stringr)
   require(sfsmisc)
   require(MASS)
@@ -119,7 +119,7 @@ robust_reg_variant_change <- function( mutations.df ){
   #' takes data frames with mutations, frequency values over time
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
   
-  require(tidyverse)
+  require(dplyr)
   require(stringr)
   require(sfsmisc)
   require(MASS)
@@ -166,7 +166,7 @@ gather_lm_values <- function(mutations.df){
  #' takes data frames with mutations, frequency values over time
   #' returns dataframe with related pvalues
   
-  require(tidyverse)
+  require(dplyr)
   require(stringr)
   # TODO check file format assumptions
   
