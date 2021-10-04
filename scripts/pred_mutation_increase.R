@@ -16,7 +16,7 @@ parsing_mutation_plot_data <- function ( mutation_plot_data ){
   # remove mutations with NA for all rows and create a new dataframe
   # fixme Vic I think there is a more compact way for this
   not_all_na <- function( x ) any( !is.na( x ) )
-  lm_df <- mutation_plot_data %>% select( c( dates, all_of(mutations) )) %>% select( where( not_all_na ))
+  lm_df <- mutation_plot_data %>% dplyr::select( c( dates, all_of(mutations) )) %>% dplyr::select( where( not_all_na ))
   
   return ( lm_df )
 }
@@ -37,7 +37,7 @@ lin_reg_mutation_change <- function( mutations.df ){
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length(na.omit(mutations.df[,i])) >= 5 ){
-      tmp <- mutations.df %>% select( dates, all_of(i) )
+      tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
       # only write the p-values for positive coefficients
       if (test["coefficients"]$coefficients["tmp$dates"] > 0){
@@ -58,7 +58,7 @@ lin_reg_mutation_change <- function( mutations.df ){
     pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
     
     #fixing the dataframe with mutations and pvalues
-    pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]` )
+    pvalues_df <- pvalues_df %>% dplyr::select( mutation, `summary(test)$coefficients[, 4]` )
     colnames(pvalues_df) <- c("mutation", "pvalues")
   } else{  pvalues_df <- data.frame() }
   return ( pvalues_df)
@@ -179,7 +179,7 @@ gather_lm_values <- function(mutations.df){
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names( mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length( na.omit(mutations.df[,i])) >= 2 ){
-      tmp <- mutations.df %>% select( dates, all_of(i) )
+      tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
       coeff[[i]] <- as.data.frame(test["coefficients"]$coefficients["tmp$dates"])
       results_lm[[i]] <- test
@@ -202,7 +202,7 @@ gather_lm_values <- function(mutations.df){
   pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
   
   #fixing the dataframe with mutations and pvalues
-  pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]`,
+  pvalues_df <- pvalues_df %>% dplyr::select( mutation, `summary(test)$coefficients[, 4]`,
                                        `test[\"coefficients\"]$coefficients[\"tmp$dates\"]` )
   colnames(pvalues_df) <- c("mutation", "pvalues", "coefficients")
   return ( pvalues_df)
