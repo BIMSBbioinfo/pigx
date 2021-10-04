@@ -5,6 +5,7 @@
 # This file is part of the PiGx SARS-CoV2 wastewater sequencing pipeline.
 #
 # This program is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -34,6 +35,7 @@ MUTATION_SHEET_CSV = config['locations']['mutation-sheet']
 READS_DIR        = config['locations']['reads-dir']
 REFERENCE_FASTA  = config['locations']['reference-fasta']
 AMPLICONS_BED    = config['locations']['amplicons-bed']
+MUTATIONS_BED    = config['locations']['mutations-bed']
 KRAKEN_DB        = config['locations']['kraken-db-dir']
 KRONA_DB         = config['locations']['krona-db-dir']
 SIGMUT_DB        = config['locations']['sigmut-db-dir']
@@ -442,12 +444,12 @@ rule krona_report:
 
 rule samtools_bedcov:
     input:
-        amplicons_bed = AMPLICONS_BED,
+        mutations_bed = MUTATIONS_BED,
         aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bam'),
         aligned_bai = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted.bai')
     output: os.path.join(COVERAGE_DIR, '{sample}_amplicons.csv')
     log: os.path.join(LOG_DIR, 'samtools_bedcov_{sample}.log')
-    shell: "{SAMTOOLS_EXEC} bedcov {input.amplicons_bed} {input.aligned_bam} > {output} 2>> {log} 3>&2"
+    shell: "{SAMTOOLS_EXEC} bedcov {input.mutations_bed} {input.aligned_bam} > {output} 2>> {log} 3>&2"
 
 
 rule samtools_coverage:
