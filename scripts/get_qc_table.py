@@ -51,6 +51,35 @@ def parsing_amplicon(amplicon_file):
     return (fully_covered_amplicons, half_covered, full_drop_out)
 
 
+def parsing_mut_loc_coverage(muts_loc_coverage):
+    ''' takes the output of samtools bedcov with 5 columns and parses how many locations are covered,
+    how much and sums this up'''
+    with open(muts_loc_coverage, "r") as muts_loc_coverage:
+        reader = csv.reader(muts_loc_coverage, delimiter="\t")
+
+        num_covered_mutations_locations = 0
+        covered_mutation_locations = 0
+        drop_out_mutation_locations = []
+
+        for row in reader:
+
+            mut_location = row[3].split("_")[1]
+            coverage_value = 0
+
+            if mut_location != str(covered_mutation_locations):
+                # count total amount of locations to check
+                num_covered_mutations_locations += 1
+                # track coverage per base
+                coverage_value = int(row[4]) / 10  # reported sum per base, we use 10 base range
+                # track muations with no coverage
+                if coverage_value == 0:
+                    drop_out_mutation_locations.append(mut_location)
+
+    # get number of actual covered locations by subtracting 0 covered locations from total checked locations
+    covered_mutation_locations = (int(num_covered_mutations_locations) - len(drop_out_mutation_locations))
+
+    return (covered_mutation_locations, drop_out_mutation_locations, num_covered_mutations_locations)
+
 def make_report_input_csv(coverage_file, amplicon_file, output_file):
     coverage_info = parsing_cov(coverage_file)
     amplicon_info = parsing_amplicon(amplicon_file)
