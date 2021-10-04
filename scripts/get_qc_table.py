@@ -15,42 +15,6 @@ def parsing_cov(coverage_file):
                     mean_depth = row[6]
         return (aligned_reads, total_cov, mean_depth)
 
-
-def parsing_amplicon(amplicon_file):
-    with open(amplicon_file, "r") as amp_file:
-        reader = csv.reader(amp_file, delimiter="\t")
-
-        num_covered_amplicons = 0
-        covered_amplicon = 0
-        drop_out_amplicons = []
-        full_drop_out = []
-        half_covered = []
-
-        for row in reader:
-
-            amplicon = row[3].split("_")[1]
-
-            if amplicon != str(covered_amplicon):
-                covered_amplicon = amplicon
-                num_covered_amplicons += 1
-
-            if int(row[6]) == 0:
-                drop_out_amplicons.append(amplicon)
-
-        if len(drop_out_amplicons) != 0:
-            for ampli in drop_out_amplicons:
-                cnt = drop_out_amplicons.count(ampli)
-                if cnt == 2:
-                    full_drop_out.append(ampli)
-                if cnt == 1:
-                    half_covered.append(ampli)
-
-    full_drop_out = list(set(full_drop_out))
-    fully_covered_amplicons = (int(num_covered_amplicons) - len(drop_out_amplicons)/2)
-
-    return (fully_covered_amplicons, half_covered, full_drop_out)
-
-
 def parsing_mut_loc_coverage(muts_loc_coverage):
     ''' takes the output of samtools bedcov with 5 columns and parses how many locations are covered,
     how much and sums this up'''
