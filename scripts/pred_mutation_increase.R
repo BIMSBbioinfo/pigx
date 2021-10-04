@@ -16,7 +16,7 @@ parsing_mutation_plot_data <- function ( mutation_plot_data ){
   # remove mutations with NA for all rows and create a new dataframe
   # fixme Vic I think there is a more compact way for this
   not_all_na <- function( x ) any( !is.na( x ) )
-  lm_df <- mutation_plot_data %>% dplyr::select( c( dates, all_of(mutations) )) %>% dplyr::select( where( not_all_na ))
+  lm_df <- mutation_plot_data %>% select( c( dates, all_of(mutations) )) %>% select( where( not_all_na ))
   
   return ( lm_df )
 }
@@ -25,7 +25,7 @@ lin_reg_mutation_change <- function( mutations.df ){
   #' takes data frames with mutations, frequency values over time
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
   
-  require(dplyr)
+  require(tidyverse)
   require(stringr)
   # TODO check file format assumptions
   
@@ -36,10 +36,8 @@ lin_reg_mutation_change <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    # check for sufficient amount of values to do the regression model
-    tmp <- data.frame(values <- mutations.df[,i]) # maybe not the most elegant way to do this
-    if ( nrow(filter(tmp, values > 0)) >= 5 ){
-      tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
+    if ( length(na.omit(mutations.df[,i])) >= 5 ){
+      tmp <- mutations.df %>% select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
       # only write the p-values for positive coefficients
       if (test["coefficients"]$coefficients["tmp$dates"] > 0){
@@ -54,13 +52,13 @@ lin_reg_mutation_change <- function( mutations.df ){
     pvalues_df <- do.call( rbind, pvalues ) %>% 
                   tibble::rownames_to_column( "VALUE" ) %>% 
                   filter( stringr::str_detect( VALUE, "dates" ) ) %>%
-                  filter (`summary(test)$coefficients[, 4]` < 0.01)
+                  filter (`summary(test)$coefficients[, 4]` < 0.05)
     
     #names of mutations get strange pattern, doing some split and getting the names correct
     pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
     
     #fixing the dataframe with mutations and pvalues
-    pvalues_df <- pvalues_df %>% dplyr::select( mutation, `summary(test)$coefficients[, 4]` )
+    pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]` )
     colnames(pvalues_df) <- c("mutation", "pvalues")
   } else{  pvalues_df <- data.frame() }
   return ( pvalues_df)
@@ -71,10 +69,9 @@ robust_reg_mutation_change <- function( mutations.df ){
   #' takes data frames with mutations, frequency values over time
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
   
-  require(dplyr)
+  require(tidyverse)
   require(stringr)
   require(sfsmisc)
-  require(MASS)
   # TODO check file format assumptions
   
   #initialize 3 lists for results
@@ -85,11 +82,9 @@ robust_reg_mutation_change <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    # check for sufficient amount of values to do the regression model
-    tmp <- data.frame(values <- mutations.df[,i]) # maybe not the most elegant way to do this
     if ( length(na.omit(mutations.df[,i])) >= 5 ){
-      tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
-      test <- MASS::rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare)
+      tmp <- mutations.df %>% select( dates, all_of(i) )
+      test <- rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare)
       # only write the p-values for positive coefficients
       if (!(any(is.na(summary(test)$coefficients))) ){
         if (test["coefficients"]$coefficients["tmp$dates"] > 0){
@@ -123,10 +118,9 @@ robust_reg_variant_change <- function( mutations.df ){
   #' takes data frames with mutations, frequency values over time
   #' returns A) list with mutations with significant change, B) dataframe with related pvalues
   
-  require(dplyr)
+  require(tidyverse)
   require(stringr)
   require(sfsmisc)
-  require(MASS)
   # TODO check file format assumptions
   
   #initialize 3 lists for results
@@ -170,7 +164,7 @@ gather_lm_values <- function(mutations.df){
  #' takes data frames with mutations, frequency values over time
   #' returns dataframe with related pvalues
   
-  require(dplyr)
+  require(tidyverse)
   require(stringr)
   # TODO check file format assumptions
   
@@ -183,7 +177,7 @@ gather_lm_values <- function(mutations.df){
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names( mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
     if ( length( na.omit(mutations.df[,i])) >= 2 ){
-      tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
+      tmp <- mutations.df %>% select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
       coeff[[i]] <- as.data.frame(test["coefficients"]$coefficients["tmp$dates"])
       results_lm[[i]] <- test
@@ -193,26 +187,21 @@ gather_lm_values <- function(mutations.df){
     }
 
   #generate a proper dataframe with pvalues without filter
-  if ( length(coeff) > 0){
+  
   coeff_df <- as.data.frame(do.call(rbind, coeff)) %>% tidyr::drop_na() %>%
-            tibble::rownames_to_column( "VALUE" ) 
-  } else { 
-    coeff_df <- data.frame() }
+            tibble::rownames_to_column( "VALUE" )
+  pvalues_df <- do.call( rbind, pvalues ) %>% 
+                tibble::rownames_to_column( "VALUE" ) %>% 
+                filter( stringr::str_detect( VALUE, "dates" ) ) %>%
+                mutate(VALUE = str_split(VALUE, ".tmp", simplify = TRUE)[,1]) %>%
+                left_join(coeff_df, by = "VALUE")
   
-  if ( length(pvalues) > 0){
-    pvalues_df <- do.call( rbind, pvalues ) %>% 
-                  tibble::rownames_to_column( "VALUE" ) %>% 
-                  filter( stringr::str_detect( VALUE, "dates" ) ) %>%
-                  mutate(VALUE = str_split(VALUE, ".tmp", simplify = TRUE)[,1]) %>%
-                  left_join(coeff_df, by = "VALUE")
-        #names of mutations get strange pattern, doing some split and getting the names correct
-    pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
-    
-    #fixing the dataframe with mutations and pvalues
-    pvalues_df <- pvalues_df %>% dplyr::select( mutation, `summary(test)$coefficients[, 4]`,
-                                         `test[\"coefficients\"]$coefficients[\"tmp$dates\"]` )
-    colnames(pvalues_df) <- c("mutation", "pvalues", "coefficients")
-  } else { pvalues_df <- data.frame() }
+  #names of mutations get strange pattern, doing some split and getting the names correct
+  pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
   
+  #fixing the dataframe with mutations and pvalues
+  pvalues_df <- pvalues_df %>% select( mutation, `summary(test)$coefficients[, 4]`,
+                                       `test[\"coefficients\"]$coefficients[\"tmp$dates\"]` )
+  colnames(pvalues_df) <- c("mutation", "pvalues", "coefficients")
   return ( pvalues_df)
 }
