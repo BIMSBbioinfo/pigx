@@ -328,12 +328,12 @@ if (length(approved_mut_plot_pooled) > 2){
   melted <- melt(approved_mut_plot_pooled,
                    id.vars = c("dates", "samplename"))
 # flag if mutation is signature mutation
-  melted <- melted %>% 
+  melted <- melted %>%
   rowwise() %>%
-  mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, ":")[[1]][2]), "SigMut",'') )  
-    # sort by dates
-    idx <- order(melted$dates)
-    melted <- melted[idx, ]
+  mutate( sigflag = ifelse( any( grepl( variable,sigmuts.df )), "SigMut",'') )
+  # sort by dates
+  idx <- order(melted$dates)
+  melted <- melted[idx, ]
 p_mutations_pooled <- subset(melted) %>%
        group_by(dates) %>%
        arrange(variable) %>%
@@ -376,10 +376,9 @@ if (length(approved_mut_plot)>5){ # TODO check if the filtered df has actual val
   
     melted <- melt(approved_mut_plot,
                    id.vars = c("dates", "samplename", "location_name",
-                               "coordinates_lat", "coordinates_long"),
-                   rm.NA = TRUE) %>%
+                               "coordinates_lat", "coordinates_long")) %>%
              rowwise() %>%
-             mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, ":")[[1]][2]), "SigMut",'') )
+             mutate( sigflag = ifelse( any( grepl( variable,sigmuts.df )), "SigMut",'') )
     # sort by dates
     idx <- order(melted$dates)
     melted <- melted[idx, ]
