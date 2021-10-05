@@ -555,12 +555,22 @@ rule render_qc_report:
   "logo": "{LOGO}" \
 }}' > {log} 2>&1"""
 
+rule create_mutations_summary:
+    input:
+        script = os.path.join(SCRIPTS_DIR, "creating_mutation_summary_table.R"),
+        files = expand(os.path.join(MUTATIONS_DIR, "{sample}_mutations.csv"), sample = SAMPLES)
+    output: os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv')
+    log: os.path.join(LOG_DIR, "create_mutations_summary.log")
+    shell: """
+        {RSCRIPT_EXEC} {input.script} "{MUTATIONS_DIR}" {output} > {log} 2>&1
+        """
 
 rule render_index:
     input:
       script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "index.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
+      mutations = os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv'),
       # TODO: see comment below
       side_effects=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
       # This can only be done after all other reports have been built,
@@ -575,7 +585,6 @@ rule render_index:
     # samples as inputs.
     params:
       variants = os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
-      mutations = os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv'),
       fun_cvrg_scr = os.path.join(SCRIPTS_DIR, 'sample_coverage_score.R'),
       fun_lm = os.path.join(SCRIPTS_DIR, 'pred_mutation_increase.R'),
       fun_tbls = os.path.join(SCRIPTS_DIR, 'table_extraction.R')
@@ -587,7 +596,7 @@ rule render_index:
 {input.report} {output.report} {input.header}   \
 '{{                                      \
   "variants_csv": "{params.variants}",   \
-  "mutations_csv": "{params.mutations}", \
+  "mutations_csv": "{input.mutations}", \
   "coverage_dir": "{COVERAGE_DIR}",\
   "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
   "mutation_sheet": "{MUTATION_SHEET_CSV}", \
