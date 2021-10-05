@@ -6,7 +6,7 @@ date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.nume
 params:
   sample_name: ''
   sigmut_db: ''
-  variants_dir: ''
+  output_dir: ''
   vep_file: ''
   snv_file: ''
   sample_sheet: ''
@@ -47,7 +47,8 @@ mutation_sheet <- params$mutation_sheet
 location_sigmuts <- params$sigmut_db
 deconvolution_functions <- params$deconvolution_functions
 
-csv_output_dir <- params$variants_dir
+csv_output_dir <- file.path(params$output_dir,'variants')
+mutation_output_dir <- file.path(params$output_dir,'mutations')
 date <- as.character(sample_sheet[name==sample_name]$date)
 location_name <- as.character(sample_sheet[name==sample_name]$location_name)
 coordinates_lat <- as.character(sample_sheet[name==sample_name]$coordinates_lat)
