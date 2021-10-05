@@ -596,7 +596,7 @@ for (i in all_mutations){
 colnames( output_mutation_frame ) <- as.character( colnames( output_mutation_frame ))
 output_mutation_frame <- output_mutation_frame %>% dplyr::select( -contains("NA" , ignore.case = FALSE))
 # convert numeric values to character
-output_mutation_frame <- as.data.frame( lapply( output_mutation_plot, as.character ), check.names = FALSE)
+output_mutation_frame <- as.data.frame( lapply( output_mutation_frame, as.character ), check.names = FALSE)
 
 # 3. write to output file
 write.table(output_mutation_frame, output_mutations, sep = "\t",
