@@ -36,7 +36,9 @@ lin_reg_mutation_change <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    if ( length(na.omit(mutations.df[,i])) >= 5 ){
+    # check for sufficient amount of values to do the regression model
+    tmp <- data.frame(values <- mutations.df[,i]) # maybe not the most elegant way to do this
+    if ( nrow(filter(tmp, values > 0)) >= 5 ){
       tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
       test <- lm( formula = tmp[[i]] ~ tmp$dates )
       # only write the p-values for positive coefficients
@@ -83,6 +85,8 @@ robust_reg_mutation_change <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
+    # check for sufficient amount of values to do the regression model
+    tmp <- data.frame(values <- mutations.df[,i]) # maybe not the most elegant way to do this
     if ( length(na.omit(mutations.df[,i])) >= 5 ){
       tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
       test <- MASS::rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare)
@@ -133,7 +137,7 @@ robust_reg_variant_change <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names(mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    if ( length(na.omit(mutations.df[,i])) >= 5 ){
+    if ( length(na.omit(mutations.df[,i])) >= 5 ){ # this is basically unfiltered (because without NA this line doesn't make sense, an unfiltered version should not need this line
       tmp <- mutations.df %>% dplyr::select( dates, all_of(i) )
       test <- MASS::rlm( formula = tmp[[i]] ~ tmp$dates, maxit = 100, psi = psi.bisquare )
       # only write the p-values for positive coefficients
