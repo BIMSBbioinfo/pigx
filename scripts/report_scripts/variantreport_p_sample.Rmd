@@ -426,14 +426,16 @@ variants_labels <-
 df <- df %>% 
     tidyr::pivot_longer( everything() )
 
-# add dropped variants again with value 0 in case all of the other variants add up to 1
+# Handling of ambigues cases and grouped variants
+
+# case 1: add dropped variants again with value 0 in case all of the other variants add up to 1
 if ( round( sum(df$value),1) == 1 ){
   for ( variant in dropped_variants ){
     df <- rbind( df, c(variant, 0) )
   }
 }
 
-# in case "others" == 0, both variants can be split up again and being given the value 0 # ? I think so?
+# case 2: in case "others" == 0, both variants can be split up again and being given the value 0
 if ( any(str_detect(variants, ",")) ) {
     grouped_rows <- which(str_detect(variants, ","))
     for ( row in grouped_rows ){
@@ -448,6 +450,24 @@ if ( any(str_detect(variants, ",")) ) {
        }
     }
 }
+# case 3: in case multiple vars can really not be distinguished from each other they will be distributed normaly
+if ( any(str_detect(variants, ",")) ) {
+    grouped_rows <- which(str_detect(variants, ","))
+    for ( row in grouped_rows ){
+       if ( df[row,"value"] != 0 ){
+            grouped_variants <- unlist( str_split(df[row,"name"], ",") )
+            # normal distribution, devide deconv value by number of grouped variants
+            distributed_freq_value <- ( df[row,"value"] / length(grouped_variants))
+            for ( variant in grouped_variants ){
+                # add new rows, one for each variant
+                df <- rbind(df, c(variant, distributed_freq_value))
+                # drop grouped row
+                df <- df[-row,]
+            }
+       }
+    }
+}
+
 df <- transform(df, value = as.numeric(value))
 font_family <- "DejaVu Sans"
 
