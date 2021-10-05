@@ -14,7 +14,7 @@ create_summary <- function ( files, output_file ){
 
   require(dplyr)
 
-  cat( paste("Summarizing", length(files), "mutation files.", collapse = "\s") )
+  cat( paste("Summarizing", length(files), "mutation files.") )
 
   i <- 0
   while ( i != length(files)){
