@@ -23,7 +23,8 @@ create_summary <- function ( files, output_file ){
       df1 <- read.table( output_file,
                          sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE )
     } else {
-      df1 <- read.csv(files[1], header = TRUE, colClasses = "character", check.names = FALSE)
+      df1 <- read.table(files[1],
+                        sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
         # write to output file
       write.table(df1, output_file, sep = "\t",
           row.names = FALSE, quote = FALSE)
@@ -31,7 +32,8 @@ create_summary <- function ( files, output_file ){
     }
 
     i <- i + 1
-    df2 <- read.csv(files[i], header = TRUE, colClasses = "character", check.names = FALSE)
+    df2 <- read.table(files[i],
+                      sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
     output_df <- dplyr::full_join(df1, df2, by = intersect(colnames(df1),
                                                     colnames(df2)), copy = TRUE)
     # write to output file
