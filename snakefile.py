@@ -51,6 +51,7 @@ TRIMMED_READS_DIR = os.path.join(OUTPUT_DIR, 'trimmed_reads')
 LOG_DIR           = os.path.join(OUTPUT_DIR, 'logs')
 MAPPED_READS_DIR  = os.path.join(OUTPUT_DIR, 'mapped_reads')
 VARIANTS_DIR      = os.path.join(OUTPUT_DIR, 'variants')
+MUTATIONS_DIR     = os.path.join(OUTPUT_DIR, 'mutations')
 KRAKEN_DIR        = os.path.join(OUTPUT_DIR, 'kraken')
 COVERAGE_DIR      = os.path.join(OUTPUT_DIR, 'coverage')
 REPORT_DIR        = os.path.join(OUTPUT_DIR, 'report')
@@ -512,11 +513,13 @@ rule render_variant_report:
       script = os.path.join( SCRIPTS_DIR, "renderReport.R" ),
       report = os.path.join( SCRIPTS_DIR,"report_scripts", "variantreport_p_sample.Rmd" ),
       header = os.path.join( REPORT_DIR, "_navbar.html" )
-    output: os.path.join( REPORT_DIR, "{sample}.variantreport_p_sample.html" )
+    output:
+      varreport = os.path.join( REPORT_DIR, "{sample}.variantreport_p_sample.html" ),
+      mutations = os.path.join( MUTATIONS_DIR, "{sample}_mutations.csv")
     log: os.path.join( LOG_DIR, "reports", "{sample}_variant_report.log" )
     shell: """
             {RSCRIPT_EXEC} {input.script} \
-            {input.report} {output} {input.header} \
+            {input.report} {output.varreport} {input.header} \
             '{{\
               "sample_name":  "{wildcards.sample}",  \
               "sigmut_db":    "{SIGMUT_DB}",         \
