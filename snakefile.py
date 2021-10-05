@@ -520,7 +520,7 @@ rule render_variant_report:
             '{{\
               "sample_name":  "{wildcards.sample}",  \
               "sigmut_db":    "{SIGMUT_DB}",         \
-              "variants_dir": "{VARIANTS_DIR}",      \
+              "output_dir": "{OUTPUT_DIR}",      \
               "vep_file":     "{input.vep}",         \
               "snv_file":     "{input.snv}",         \
               "sample_sheet": "{SAMPLE_SHEET_CSV}",  \
