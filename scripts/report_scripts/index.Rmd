@@ -326,8 +326,7 @@ how the frequencies change over time.
 
 if (length(approved_mut_plot_pooled) > 2){
   melted <- melt(approved_mut_plot_pooled,
-                   id.vars = c("dates", "samplename"),
-                   rm.NA = TRUE)
+                   id.vars = c("dates", "samplename"))
 # flag if mutation is signature mutation
   melted <- melted %>% 
   rowwise() %>%
