@@ -236,7 +236,7 @@ for (mut in sig_mutations.df$value) {
   sigmuts_deduped <- dedupeMuts(mut, sig_mutations.df, sigmuts_deduped)
 }
 sigmuts_deduped_no_gene <- sigmuts_deduped %>% rowwise() %>% mutate(mutation = str_split(value, ":")[[1]][2]) %>% 
-                           select(name, mutation)
+                           dplyr::select(name, mutation)
 
 ```
 
