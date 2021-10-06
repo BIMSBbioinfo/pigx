@@ -435,7 +435,8 @@ if ( round( sum(df$value),1) == 1 ){
   }
 }
 
-# case 2: in case "others" == 0, both variants can be split up again and being given the value 0
+# case 2: in case "others" == 0, both variants can be split up again and being given the value 0 OR
+# case 3: in case multiple vars can really not be distinguished from each other they will be distributed normaly
 if ( any(str_detect(variants, ",")) ) {
     grouped_rows <- which(str_detect(variants, ","))
     for ( row in grouped_rows ){
@@ -444,27 +445,19 @@ if ( any(str_detect(variants, ",")) ) {
             for ( variant in grouped_variants ){
                 # add new rows, one for each variant
                 df <- rbind(df, c(variant, 0))
-                # drop grouped row
-                df <- df[-row,]
+
             }
-       }
-    }
-}
-# case 3: in case multiple vars can really not be distinguished from each other they will be distributed normaly
-if ( any(str_detect(variants, ",")) ) {
-    grouped_rows <- which(str_detect(variants, ","))
-    for ( row in grouped_rows ){
-       if ( df[row,"value"] != 0 ){
+       } else if (df[row,"value"] != 0){
             grouped_variants <- unlist( str_split(df[row,"name"], ",") )
             # normal distribution, devide deconv value by number of grouped variants
-            distributed_freq_value <- ( df[row,"value"] / length(grouped_variants))
+            distributed_freq_value <- as.numeric( df[row,"value"] / length(grouped_variants))
             for ( variant in grouped_variants ){
                 # add new rows, one for each variant
                 df <- rbind(df, c(variant, distributed_freq_value))
-                # drop grouped row
-                df <- df[-row,]
             }
-       }
+         }
+      # drop grouped row
+      df <- df[-row,]
     }
 }
 
