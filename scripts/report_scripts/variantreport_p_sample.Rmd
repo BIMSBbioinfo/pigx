@@ -579,6 +579,8 @@ complete.df <- complete.df  %>%
   summarise(freq = sum(as.numeric(freq)), gene_mut = paste(gene_mut, collapse = ",")) %>%
   rowwise() %>%
   mutate(AA_mut = replace(AA_mut,is.na(AA_mut), '\\:\\')) %>%
+  # 211006 this exclusion is necessary because this mutation has a wrong entry in VEP which gives two AA_muts instead of probably 1 deletion
+  filter(!(gene_mut %in% "G13477A")) %>%
   ungroup()
 
 # report the gene, translated_AA_mut and NT mut accordingly
