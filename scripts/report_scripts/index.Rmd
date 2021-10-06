@@ -292,7 +292,8 @@ As a first step...linear regression. The following table shows the most signific
 source(params$fun_lm)
 mutation_sheet <- params$mutation_sheet
 sigmuts.df <- na_if( read.csv(mutation_sheet, header = TRUE), "" ) 
-
+# split gene name of for easier matching
+sigmuts.df <- sigmuts.df %>% mutate_all( funs(str_replace(.,'^[^:]*:','')))
 if (nrow(approved_mut_plot) > 0){
     changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
     mutations_sig <- lin_reg_mutation_change( changing_muts )
@@ -302,7 +303,7 @@ if (nrow(approved_mut_plot) > 0){
   # flag if mutation is signature mutation
     mutations_sig <- mutations_sig %>% 
       rowwise() %>%
-      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "SigMut",'') ) }
+      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, "::")[[1]][2]), "SigMut",'') ) }
   # filter good samples for only mutations with sig pvalues for plotting
     approved_mut_plot <- dplyr::select(approved_mut_plot, c(samplename, dates, location_name,
                                                      coordinates_lat, coordinates_long, 
@@ -314,7 +315,7 @@ if (nrow(approved_mut_plot) > 0){
 if (nrow(mutations_sig_unfiltered) > 0){  
     mutations_sig_unfiltered <- mutations_sig_unfiltered %>%
       rowwise() %>%
-      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, ":")[[1]][2]), "sigmut", ''))}
+      mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, "::")[[1]][2]), "sigmut", ''))}
 ```
 
 
@@ -330,10 +331,10 @@ if (length(approved_mut_plot_pooled) > 2){
 # flag if mutation is signature mutation
   melted <- melted %>%
   rowwise() %>%
-  mutate( sigflag = ifelse( any( grepl( variable,sigmuts.df )), "SigMut",'') )
-  # sort by dates
-  idx <- order(melted$dates)
-  melted <- melted[idx, ]
+  mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, "::")[[1]][2]), "SigMut",'') )  
+    # sort by dates
+    idx <- order(melted$dates)
+    melted <- melted[idx, ]
 p_mutations_pooled <- subset(melted) %>%
        group_by(dates) %>%
        arrange(variable) %>%
@@ -378,7 +379,7 @@ if (length(approved_mut_plot)>5){ # TODO check if the filtered df has actual val
                    id.vars = c("dates", "samplename", "location_name",
                                "coordinates_lat", "coordinates_long")) %>%
              rowwise() %>%
-             mutate( sigflag = ifelse( any( grepl( variable,sigmuts.df )), "SigMut",'') )
+             mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, "::")[[1]][2]), "SigMut",'') )
     # sort by dates
     idx <- order(melted$dates)
     melted <- melted[idx, ]
