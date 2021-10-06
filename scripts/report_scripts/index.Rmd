@@ -331,20 +331,22 @@ if (length(approved_mut_plot_pooled) > 2){
 # flag if mutation is signature mutation
   melted <- melted %>%
   rowwise() %>%
-  mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, "::")[[1]][2]), "SigMut",'') )  
+  mutate( sigflag = ifelse( any(sigmuts.df == str_split(variable, "::")[[1]][2]), "SigMut",'') ) %>%
+  ungroup()  
     # sort by dates
     idx <- order(melted$dates)
     melted <- melted[idx, ]
+    melted$sigflag[is.na(melted$sigflag)] <- "nosigmut"
 p_mutations_pooled <- subset(melted) %>%
        group_by(dates) %>%
        arrange(variable) %>%
        ungroup() %>%
        plot_ly(type = 'scatter', 
                mode = "lines+markes",
-               symbol = ~sigflag,
-               symbols = c('circle','hourglass'),
-               x = ~dates,
-               y = ~value,
+               symbol = ~ sigflag,
+               symbols = c('circle','square'),
+               x = ~ dates,
+               y = ~ value,
                name = ~variable,
                connectgaps = TRUE
        ) %>%
