@@ -450,7 +450,7 @@ if ( any(str_detect(variants, ",")) ) {
        } else if (df[row,"value"] != 0){
             grouped_variants <- unlist( str_split(df[row,"name"], ",") )
             # normal distribution, devide deconv value by number of grouped variants
-            distributed_freq_value <- as.numeric( df[row,"value"] / length(grouped_variants))
+            distributed_freq_value <- as.numeric( as.numeric(df[row,"value"]) / length(grouped_variants))
             for ( variant in grouped_variants ){
                 # add new rows, one for each variant
                 df <- rbind(df, c(variant, distributed_freq_value))
