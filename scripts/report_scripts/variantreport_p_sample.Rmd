@@ -571,6 +571,14 @@ if (file.exists (output_variants)) {
 # those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate
 # file (and maybe rule)
 # get all possible mutations
+
+# one aa mutation can have different codon mutations reported with different freqs- for the summary table they have to be summed up
+# (process see line 1872 of documentation)
+complete.df <- complete.df  %>%
+  group_by(across(c(-freq,-gene_mut, -gene_mut_collapsed, AA_mut))) %>%
+  summarise(freq = sum(as.numeric(freq)), gene_mut = paste(gene_mut, collapse = ",")) %>%
+  ungroup()
+
 all_mutations <- complete.df$AA_mut[!is.na(complete.df$AA_mut)]
 output_mutations <- file.path(mutation_output_dir, paste0(sample_name, "_mutations.csv"))
 
