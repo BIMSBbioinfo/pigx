@@ -577,7 +577,9 @@ if (file.exists (output_variants)) {
 complete.df <- complete.df  %>%
   group_by(across(c(-freq,-gene_mut, -gene_mut_collapsed, AA_mut))) %>%
   summarise(freq = sum(as.numeric(freq)), gene_mut = paste(gene_mut, collapse = ",")) %>%
-  ungroup()
+  ungroup() %>%
+  rowwise() %>%
+  mutate(AA_mut = replace(AA_mut,is.na(AA_mut), '\\:\\'))
 
 # report the gene, translated_AA_mut and NT mut accordingly
 # easier to spot translation inconsitentcies that way
