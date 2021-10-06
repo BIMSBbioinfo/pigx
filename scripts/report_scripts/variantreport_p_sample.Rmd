@@ -373,6 +373,7 @@ if ( length(msig_dedupe_transposed) >= 1){
     msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get's rid of the additional first row which is an transposing artifact
 
 }
+# clean the vector to know which variants has to be add with value 0 after deconvolution
 dropped_variants <- unique(dropped_variants)
 dropped_variants <- dropped_variants[!is.na(dropped_variants)]
 ```
@@ -456,13 +457,13 @@ if ( any(str_detect(variants, ",")) ) {
 df <- transform(df, value = as.numeric(value))
 font_family <- "DejaVu Sans"
 
- ggplot(data = df, aes(name,value, 
+ggplot(data = df, aes(name,value, 
                        fill = name)) +
         geom_bar(stat="identity") +
         labs(title = "Proportion of variants of concern inferred from deconvolution",
              x = "Variants",
              y = "Percentage") +
-        scale_x_discrete(limits = condensed_variants_names) +
+        scale_x_discrete(limits = df$name) +
         scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1),
                            labels = scales::percent_format(accuracy = 1)) +
         scale_colour_manual(values=Variant_colors) + 
@@ -473,8 +474,8 @@ font_family <- "DejaVu Sans"
                       position=position_dodge(width=0.9), 
                       vjust=-0.25) + 
      scale_fill_discrete(name = "Variants",
-                         breaks = condensed_variants_names,
-                         labels = variants_labels) +
+                         breaks = df$name,
+                         labels = df$name) +
      theme_gray(base_family = font_family)
 ```
 
