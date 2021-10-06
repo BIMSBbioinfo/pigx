@@ -579,7 +579,9 @@ complete.df <- complete.df  %>%
   summarise(freq = sum(as.numeric(freq)), gene_mut = paste(gene_mut, collapse = ",")) %>%
   ungroup()
 
-all_mutations <- complete.df$AA_mut[!is.na(complete.df$AA_mut)]
+# report the gene, translated_AA_mut and NT mut accordingly
+# easier to spot translation inconsitentcies that way
+all_mutations <- paste(complete.df$AA_mut[!is.na(complete.df$AA_mut)],complete.df$gene_mut,sep = "::")
 output_mutations <- file.path(mutation_output_dir, paste0(sample_name, "_mutations.csv"))
 
 # 1. write dataframe with this information here
@@ -602,10 +604,11 @@ output_mutation_frame <- bind_rows(output_mutation_frame, meta_data)
 
 # write mutation frequency values to df
 for (i in all_mutations){
-  if (i %in% complete.df$AA_mut ){ # split gene name to match with AA mut
+  i_AA <- str_split(i,"::")[[1]][1]
+  if (i_AA %in% complete.df$AA_mut ){ # split gene name to match with AA mut
     # check if variant already has a column
     if ( i %in% colnames(output_mutation_frame)) {
-        output_mutation_frame[sample_row,i] <- complete.df$freq[ which(complete.df$AA_mut == i)]
+        output_mutation_frame[,i] <- complete.df$freq[ which(complete.df$AA_mut == i_AA)]
 }}}
 colnames( output_mutation_frame ) <- as.character( colnames( output_mutation_frame ))
 output_mutation_frame <- output_mutation_frame %>% dplyr::select( -contains("NA" , ignore.case = FALSE))
