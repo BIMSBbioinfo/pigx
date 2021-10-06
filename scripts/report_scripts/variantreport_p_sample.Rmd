@@ -327,8 +327,8 @@ wastewater sample.
 
 ```{r getting_unique_muts_bulk, message=F, warning=F, include = FALSE}
 
-# get prot.mutations only, input for the signature matrix 
-mutations.vector <- c(match.df$AA_mut)
+# get  NT mutations only, input for the signature matrix
+mutations.vector <- match.df$gene_mut_collapsed
 # get bulk frequency values, will be input for the deconvolution function
 bulk_freq.vector <- as.numeric(match.df$freq)
 
