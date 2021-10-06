@@ -243,13 +243,8 @@ sigmuts_deduped_no_gene <- sigmuts_deduped %>% rowwise() %>% mutate(mutation = s
 ```{r match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
 variant_protein_mut <- get_protein_mut(params$vep_file)
 # match the variant names according to the signature mutations, if there is no signature mutation no name will be given
-variant_protein_mut <- dplyr::left_join(variant_protein_mut, sigmuts_deduped, by = c('AA_mut'='value'))
-# filter for mutations which are signature mutations
-match.df <- variant_protein_mut %>%
-                    filter(!is.na(name))
-# filter for everything that is not a signature mutation
-nomatch.df <- variant_protein_mut %>%
-                        filter(is.na(name))
+# variant characterizing is done by NT mutations
+variant_protein_mut <- dplyr::left_join(variant_protein_mut, sigmuts_deduped_no_gene, by = c('gene_mut'='mutation'))
 ```
 
 ```{r merge_vep_with_lofreq_info, message=F, warning=F, include = FALSE}
