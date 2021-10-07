@@ -68,7 +68,8 @@ apply_fun_parse_coverage_file <- function ( sample, sample_dir ){
   coverage.df[] <- lapply(coverage.df, function (x) gsub('(\\[|\\])','', x))
   data.frame( samplename = sample,
               aligned_reads = coverage.df$Total.number.aligned.reads,
-              num_amplicons_covered = coverage.df$Total.number.of.amplicons.fully.covered) # fixme is actually amplicons covered --> see line 49 of get_qc_table )
+              num_sigmuts_covered = coverage.df$Total.number.of.mutations.covered,
+              percentage_refgenome_covered = coverage.df$Percentage.ref.genome.covered)
 }   
 
 args <- commandArgs(trailingOnly = TRUE)
