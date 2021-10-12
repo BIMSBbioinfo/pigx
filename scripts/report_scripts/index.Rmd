@@ -257,8 +257,7 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
                   hoverinfo = 'text+name',
                   hovertext = ~paste0("Frequency: ", value),
                   marker = list (sizemode = 'diameter')) %>%
-        layout (autosize = TRUE,
-                mapbox = list (zoom = 5.5,
+        layout (mapbox = list (zoom = 5.5,
                                center = list(lat = ~median(coordinates_lat, na.rm=TRUE),
                                              lon = ~median(coordinates_long, na.rm=TRUE)),
                                style = 'open-street-map'))
