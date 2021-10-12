@@ -200,19 +200,19 @@ gather_lm_values <- function(mutations.df){
     coeff_df <- data.frame() }
   
   if ( length(pvalues) > 0){
-  pvalues_df <- do.call( rbind, pvalues ) %>% 
-                tibble::rownames_to_column( "VALUE" ) %>% 
-                filter( stringr::str_detect( VALUE, "dates" ) ) %>%
-                mutate(VALUE = str_split(VALUE, ".tmp", simplify = TRUE)[,1]) %>%
-                left_join(coeff_df, by = "VALUE") 
+    pvalues_df <- do.call( rbind, pvalues ) %>% 
+                  tibble::rownames_to_column( "VALUE" ) %>% 
+                  filter( stringr::str_detect( VALUE, "dates" ) ) %>%
+                  mutate(VALUE = str_split(VALUE, ".tmp", simplify = TRUE)[,1]) %>%
+                  left_join(coeff_df, by = "VALUE")
+        #names of mutations get strange pattern, doing some split and getting the names correct
+    pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
+    
+    #fixing the dataframe with mutations and pvalues
+    pvalues_df <- pvalues_df %>% dplyr::select( mutation, `summary(test)$coefficients[, 4]`,
+                                         `test[\"coefficients\"]$coefficients[\"tmp$dates\"]` )
+    colnames(pvalues_df) <- c("mutation", "pvalues", "coefficients")
   } else { pvalues_df <- data.frame() }
   
-  #names of mutations get strange pattern, doing some split and getting the names correct
-  pvalues_df$mutation <- str_split_fixed( pvalues_df$VALUE, "[.]",2 )[,1]
-  
-  #fixing the dataframe with mutations and pvalues
-  pvalues_df <- pvalues_df %>% dplyr::select( mutation, `summary(test)$coefficients[, 4]`,
-                                       `test[\"coefficients\"]$coefficients[\"tmp$dates\"]` )
-  colnames(pvalues_df) <- c("mutation", "pvalues", "coefficients")
   return ( pvalues_df)
 }
