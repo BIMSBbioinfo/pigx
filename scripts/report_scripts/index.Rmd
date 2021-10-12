@@ -298,7 +298,7 @@ if (nrow(approved_mut_plot) > 0){
     approved_mut_plot <- dplyr::select(approved_mut_plot, c(samplename, dates, location_name,
                                                      coordinates_lat, coordinates_long, 
                                                      mutations_sig$mutation))
-    approved_mut_plot_pooled <- pool(approved_mut_plot, na_handling = TRUE)
+    approved_mut_plot_pooled <- pool_by_mean(approved_mut_plot, na_handling = TRUE)
     cat("\n Mutations whith significant increase in frequency over time")
     create_dt(mutations_sig)
 }
