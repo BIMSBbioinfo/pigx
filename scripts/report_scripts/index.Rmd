@@ -14,6 +14,7 @@ params:
   fun_lm: ''
   fun_tbls: ''
   fun_pool: ''
+  overviewQC: ''
   output_dir: ''
 ---
 
@@ -110,7 +111,7 @@ approved_var_plot <- df_var %>% filter( samplename  %in% good_samples.df$samplen
 approved_var_plot <- unique(approved_var_plot)
 approved_mut_plot <- df_mut %>% filter( samplename  %in% good_samples.df$samplename )
 # pool the samples per day, discard locations
-approved_var_plot_pooled <- pool(approved_var_plot, FALSE)
+approved_var_plot_pooled <- pool_by_weighted_mean(approved_var_plot, params$overviewQC)
 
 ```
 ## Frequency of variants of concern over time for each location
