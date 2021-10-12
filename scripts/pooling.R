@@ -64,11 +64,12 @@ get_num_raw_reads <- function (reads_dir, sample_sheet){
 
 pool_by_weighted_mean <- function(df, weights) {
   #' docstring missing
-  #' weigths is the overview_QC_file
+  #' weigths is a dataframe with minimum samplenames and total_reads as column 
+  #' total reads is the number of reads used for alignment of one sample, should be the sum of read1 and read2 with 
+  #' paired end data
   require(dplyr)
 
-  weights <- weights %>% 
-              dplyr::select( c(samplename, total_reads)) %>% 
+  weights <- weights  %>% 
               # only take weights from approved samples
               semi_join(df, by = "samplename")
   # TODO make this proper without magic numbers
