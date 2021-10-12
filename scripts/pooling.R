@@ -62,8 +62,9 @@ get_num_raw_reads <- function (reads_dir, sample_sheet){
   return(read_counts)
 }
 
-pool_by_weighted_mean <- function(df, weights, reads_dir, sample_sheet) {
+pool_by_weighted_mean <- function(df, weights) {
   #' docstring missing
+  #' weigths is the overview_QC_file
   require(dplyr)
 
   weights <- weights %>% 
