@@ -245,7 +245,7 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
                   hoverinfo = 'none',
                   marker = list(sizemode = 'diameter',
                                 color = 'rgb(150, 150, 150)',
-                                opacity = 0.1)) %>%
+                                opacity = 0)) %>%
         add_trace(data = melted,
                   lat = ~coordinates_lat,
                   lon = ~coordinates_long,
