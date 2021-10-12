@@ -13,6 +13,7 @@ params:
   fun_cvrg_scr: ''
   fun_lm: ''
   fun_tbls: ''
+  fun_pool: ''
   output_dir: ''
 ---
 
@@ -102,21 +103,7 @@ identified variants of concern (VOC) of SARS-CoV-2 at specific
 wastewater sampling locations over time.
 
 ```{r filter_plot_frames_samplescore, echo=F, message=F, warning=F}
-pool <- function(df, na_handling) {
-    df_pooled <- df %>% 
-                # discard location
-                dplyr::select ( -location_name, -coordinates_long, -coordinates_lat) %>%
-                # discard time only keep day
-                mutate(dates = as.Date( dates )) %>%
-                # pool samples per date and calc. the mean for every mutation column
-                group_by(dates) %>%
-                summarize(across(where(is.numeric), mean, na.rm = na_handling)) %>%
-                # rename samples to indicated that they were pooled
-                mutate(samplename = paste0(dates, "_pooled")) %>%
-                # put names first again
-                relocate(samplename)
-    return (df_pooled)
-}
+source(params$fun_pool)
 
 # only use good samples for processing and visualiztaion
 approved_var_plot <- df_var %>% filter( samplename  %in% good_samples.df$samplename )
