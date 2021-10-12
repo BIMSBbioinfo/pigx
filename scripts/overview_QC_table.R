@@ -19,8 +19,8 @@ concat_overview_table <- function ( sample_sheet, reads_dir, sample_dir ) {
                           function (x){paste0(x,"_trimmed_R1.fastq.gz")}))
   trimmed_reads_r2 <- unlist(lapply(unique(read_counts$samplename), 
                           function (x){paste0(x,"_trimmed_R2.fastq.gz")}))
-  read_counts$read_num_trimmed_r1 <- read_num_raw( trimmed_reads_r1, file.path(sample_dir,"output/trimmed_reads"))$read_num
-  read_counts$read_num_trimmed_r2 <- read_num_raw( trimmed_reads_r2, file.path(sample_dir,"output/trimmed_reads"))$read_num
+  read_counts$read_num_trimmed_r1 <- read_num_raw( trimmed_reads_r1, file.path(sample_dir,"trimmed_reads"))$read_num
+  read_counts$read_num_trimmed_r2 <- read_num_raw( trimmed_reads_r2, file.path(sample_dir,"trimmed_reads"))$read_num
   
   cat("join counts together...\n")
   read_counts<- left_join(read_counts, parse_amplicons( sample_sheet.df, sample_dir), by = "samplename")
@@ -61,7 +61,7 @@ apply_fun_get_read_num <- function (read, reads_dir) {
 
 apply_fun_parse_coverage_file <- function ( sample, sample_dir ){
   
-  coverage_file <- file.path(sample_dir, "output/coverage", paste0(sample, "_merged_covs.csv"))
+  coverage_file <- file.path(sample_dir, "coverage", paste0(sample, "_merged_covs.csv"))
   
   coverage.df <- read.table(coverage_file, sep = "\t", header = TRUE)
   coverage.df <- dplyr::na_if(coverage.df, "[]")
