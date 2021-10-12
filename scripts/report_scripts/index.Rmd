@@ -233,7 +233,9 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
                                          "coordinates_long")))
     plot_ly (type = 'scattermapbox',
              mode = 'markers',
-             colors = Variant_colors) %>%
+             colors = Variant_colors,
+                               width = 900,
+                               height = 500) %>%
         add_trace(data = locations,
                   size = 1,
                   lon = ~coordinates_long,
