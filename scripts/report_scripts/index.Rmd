@@ -539,7 +539,11 @@ links <- lapply(sample_names, function (sample) {
 })
 df$reports <- links
 
-datatable(df, escape=FALSE)
+datatable(df, options = list( fixedColumns = TRUE, 
+                               scrollY = 180,
+                               scrollX = TRUE,
+                               scroller = TRUE,
+                               dom = 'lfrtip'))
 ```
 ## Discarded samples after alignment quality control
 ```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE, results = 'asis'}
