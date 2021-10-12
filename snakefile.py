@@ -564,14 +564,25 @@ rule create_mutations_summary:
     shell: """
         {RSCRIPT_EXEC} {input.script} "{MUTATIONS_DIR}" {output} > {log} 2>&1
         """
-
+rule create_overviewQC_table: 
+    input:
+        script = os.path.join(SCRIPTS_DIR, "overview_QC_table.R"),
+        # only run after having read trimming and coverage analysis done for all samples
+        trimmed_reads = expand(os.path.join(TRIMMED_READS_DIR, '{sample}_trimmed_R{read_num}.fastq.gz'), sample=SAMPLES, read_num=[1, 2]),
+        cov_summary = expand(os.path.join(COVERAGE_DIR, '{sample}_merged_covs.csv'), sample=SAMPLES)
+    output:  os.path.join(OUTPUT_DIR, 'overview_QC.csv')
+    log: os.path.join(LOG_DIR, "create_overviewQC_table.log")
+    shell: """
+        {RSCRIPT_EXEC} {input.script} {OUTPUT_DIR} {SAMPLE_SHEET_CSV} {READS_DIR} {output} > {log} 2>&1
+    """
+    
 rule render_index:
     input:
       script=os.path.join(SCRIPTS_DIR, "renderReport.R"),
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "index.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       mutations = os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv'),
-      overviewQC = os.path.join(OUTPUT_DIR, 'overview_QC.csv')
+      overviewQC = os.path.join(OUTPUT_DIR, 'overview_QC.csv'),
       # TODO: see comment below
       side_effects=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
       # This can only be done after all other reports have been built,
