@@ -56,13 +56,11 @@ df_mut <- read.table(params$mutations_csv, sep = "\t", header=TRUE, check.names 
 # function for downloadable tables
 create_dt <- function(x){
   DT::datatable(x,
-                extensions = 'Buttons',
-                options = list(
-                               fixedColumns = TRUE, 
+                options = list(fixedColumns = TRUE, 
                                scrollY = 180,
                                scrollX = TRUE,
                                scroller = TRUE, 
-                               dom = 'Blfrtip'),
+                               dom = 'lfrtip'),
                   filter = "bottom")
 }
 ```
@@ -303,7 +301,7 @@ if (nrow(approved_mut_plot) > 0){
                                                      coordinates_lat, coordinates_long, 
                                                      mutations_sig$mutation))
     approved_mut_plot_pooled <- pool_by_mean(approved_mut_plot, na_handling = TRUE)
-    cat("\n Mutations whith significant increase in frequency over time")
+    mutations_sig <- mutations_sig %>% slice_head(n = 20)
     create_dt(mutations_sig)
 } else { create_dt(mutations_sig) }
 if (nrow(mutations_sig_unfiltered) > 0){  
@@ -469,12 +467,14 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
 cat("Table x: Frequencies per variant per sample, derived by deconvollution, pooled by weighted mean by read number")
 ```
 ```{r table_var_frqs, echo = FALSE}
+df_var <- df_var %>% slice_head(n=20)
 create_dt(df_var)
 ```
 ```{r title_mutfreq_table, echo = FALSE, results = 'asis'}
 cat("Table x: Frequencies per mutation per sample")
 ```
 ```{r table_mut_freqs, echo = FALSE}
+df_mut <- df_mut %>% slice_head(n=20)
 create_dt(df_mut)
 ```
 ```{r title_mt_coun, echo=FALSE, esults = 'asis'}
@@ -496,12 +496,14 @@ write.csv(mutations_sig_unfiltered, file.path(output_dir, "linear_regression_res
           na = "NA", row.names = FALSE, quote = FALSE)
 
 # show and make downloadable
+count_frame <- count_frame %>% slice_head(n=20)
 create_dt(count_frame)
 ``` 
 ```{r title_lin_reg_table, echo = FALSE, results = 'asis'}
 cat("Table x: results of linear regression for all samples and all mutations hat appear at least two times")
 ```
 ```{r lin_reg_download, echo = FALSE}
+mutations_sig_unfiltered <- mutations_sig_unfiltered %>% slice_head(n=20)
 create_dt(mutations_sig_unfiltered)
 ```
 
@@ -548,6 +550,7 @@ datatable(df, escape=FALSE)
 ```{r table_ample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
 if ( !(length(coverages.df) == 0)){
     # TODO refine column names --> e.g "coverage in percent", 
+    bad_samples.df <- bad_samples.df %>% slice_head(n=20)
     create_dt(bad_samples.df)
 } else {
     cat("\n No coverage values found.")
