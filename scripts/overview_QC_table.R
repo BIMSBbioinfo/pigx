@@ -1,6 +1,6 @@
 library(dplyr)
 
-WIP_concat_overview_table <- function ( sample_sheet, reads_dir, sample_dir ) {
+concat_overview_table <- function ( sample_sheet, reads_dir, sample_dir ) {
   
   sample_sheet.df <- read.csv(sample_sheet, header = TRUE)
   # get read files matching samples
@@ -78,5 +78,5 @@ sample_sheet <- args[2]
 reads_dir <- args[3] 
 output <- args[4]
 
-df <- WIP_concat_overview_table(sample_sheet, reads_dir, sample_dir)
+df <- concat_overview_table(sample_sheet, reads_dir, sample_dir)
 write.csv(df, output, row.names = FALSE)
