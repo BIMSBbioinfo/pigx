@@ -302,7 +302,7 @@ if (nrow(approved_mut_plot) > 0){
     approved_mut_plot_pooled <- pool_by_mean(approved_mut_plot, na_handling = TRUE)
     cat("\n Mutations whith significant increase in frequency over time")
     create_dt(mutations_sig)
-}
+} else { create_dt(mutations_sig) }
 if (nrow(mutations_sig_unfiltered) > 0){  
     mutations_sig_unfiltered <- mutations_sig_unfiltered %>%
       rowwise() %>%
@@ -426,7 +426,9 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
                                           "coordinates_long")))
     
     plot_ly (type = 'scattermapbox',
-             mode = 'markers') %>%
+             mode = 'markers',
+                               width = 900,
+                               height = 500) %>%
         add_trace(size = 1,
                   data = locations,
                   lon = ~coordinates_long,
