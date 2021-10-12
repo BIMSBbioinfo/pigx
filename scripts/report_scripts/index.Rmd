@@ -278,6 +278,9 @@ reported for VOCs.
 
 WIP: To show the dynamic of significantly changing mutations over time.... 
 As a first step...linear regression. The following table shows the most significant mutations, also indicating if increasing or decreasing.
+```{r title_lm_table, echo = FALSE, results = 'asis'}
+cat("\n Mutations with significant increase in frequency over time")
+```
 ### linear regression 
 ```{r linear_regression, echo=F, message=F, warning=F}
 source(params$fun_lm)
@@ -308,6 +311,7 @@ if (nrow(mutations_sig_unfiltered) > 0){
       rowwise() %>%
       mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, "::")[[1]][2]), "sigmut", ''))}
 ```
+
 
 
 These plots show the relative frequency of detected signature
