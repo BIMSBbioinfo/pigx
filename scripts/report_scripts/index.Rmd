@@ -111,7 +111,9 @@ approved_var_plot <- df_var %>% filter( samplename  %in% good_samples.df$samplen
 approved_var_plot <- unique(approved_var_plot)
 approved_mut_plot <- df_mut %>% filter( samplename  %in% good_samples.df$samplename )
 # pool the samples per day, discard locations
-approved_var_plot_pooled <- pool_by_weighted_mean(approved_var_plot, params$overviewQC)
+weights <- read.csv(params$overviewQC, header = TRUE, check.names = FALSE)
+weights <- weights %>% dplyr::select( c(samplename, total_reads))
+approved_var_plot_pooled <- pool_by_weighted_mean(approved_var_plot, weights)
 
 ```
 ## Frequency of variants of concern over time for each location
