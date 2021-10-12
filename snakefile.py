@@ -571,6 +571,7 @@ rule render_index:
       report=os.path.join(SCRIPTS_DIR, "report_scripts", "index.Rmd"),
       header=os.path.join(REPORT_DIR, "_navbar.html"),
       mutations = os.path.join(VARIANTS_DIR, 'data_mutation_plot.csv'),
+      overviewQC = os.path.join(OUTPUT_DIR, 'overview_QC.csv')
       # TODO: see comment below
       side_effects=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES),
       # This can only be done after all other reports have been built,
@@ -587,7 +588,8 @@ rule render_index:
       variants = os.path.join(VARIANTS_DIR, 'data_variant_plot.csv'),
       fun_cvrg_scr = os.path.join(SCRIPTS_DIR, 'sample_coverage_score.R'),
       fun_lm = os.path.join(SCRIPTS_DIR, 'pred_mutation_increase.R'),
-      fun_tbls = os.path.join(SCRIPTS_DIR, 'table_extraction.R')
+      fun_tbls = os.path.join(SCRIPTS_DIR, 'table_extraction.R'),
+      fun_pool = os.path.join(SCRIPTS_DIR, 'pooling.R')
     output: report = os.path.join(REPORT_DIR, "index.html"), 
             tbl_mut_count = os.path.join(OUTPUT_DIR, "mutations_counts.csv"),
             tbl_lm_res = os.path.join(OUTPUT_DIR, "linear_regression_results.csv")
@@ -604,5 +606,7 @@ rule render_index:
   "fun_cvrg_scr": "{params.fun_cvrg_scr}", \
   "fun_lm": "{params.fun_lm}", \
   "fun_tbls": "{params.fun_tbls}", \
+  "fun_pool": "{params.fun_pool}", \
+  "overviewQC": "{input.overviewQC}", \
   "output_dir": "{OUTPUT_DIR}" \
 }}' > {log} 2>&1"""
