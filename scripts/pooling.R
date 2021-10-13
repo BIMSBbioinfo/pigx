@@ -1,25 +1,21 @@
-group_by_date <- function( df ){
+group_by_day_location <- function( df ){
   require(dplyr)
-  df %>% 
+  df_grouped <- df %>% 
         # discard location
         dplyr::select ( -location_name, -coordinates_long, -coordinates_lat) %>%
         # discard time only keep day
         mutate(dates = as.Date( dates )) %>%
         # pool samples per date and calc. the mean for every mutation column
         group_by(dates)
+  return(df_grouped)
 }
-
-pool_by_mean <- function(df, na_handling) {
-  #' docstring missing
-  #' 
-    df_pooled <- group_by_date(df) %>%
-                summarize(across(where(is.numeric), mean, na.rm = na_handling)) %>%
-                # rename samples to indicated that they were pooled
-                mutate(samplename = paste0(dates, "_pooled")) %>%
-                # put names first again
-                relocate(samplename) %>%
-                ungroup()
-    return (df_pooled)
+group_by_day <- function( df ){
+  require(dplyr)
+  df_grouped <- df %>% # discard time only keep day
+        mutate(dates = as.Date( dates )) %>%
+        # pool samples per date and calc. the mean for every mutation column
+        group_by(dates, location_name, coordinates_long, coordinates_lat)
+  return(df_grouped)
 }
 
 read_files <- function ( sample_sheet.df ){
