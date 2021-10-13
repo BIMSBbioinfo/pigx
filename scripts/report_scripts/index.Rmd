@@ -55,13 +55,11 @@ df_mut <- read.table(params$mutations_csv, sep = "\t", header=TRUE, check.names 
 
 # function for downloadable tables
 create_dt <- function(x){
-  DT::datatable(x,
-                options = list(fixedColumns = TRUE, 
+  DT::datatable(x, options = list(fixedColumns = TRUE, 
                                scrollY = 180,
                                scrollX = TRUE,
                                scroller = TRUE, 
-                               dom = 'lfrtip'),
-                  filter = "bottom")
+                               dom = 'Slfrtip'))
 }
 ```
 
@@ -308,8 +306,13 @@ if (nrow(mutations_sig_unfiltered) > 0){
     mutations_sig_unfiltered <- mutations_sig_unfiltered %>%
       rowwise() %>%
       mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, "::")[[1]][2]), "sigmut", ''))}
-```
+    mutations_sig_unfiltered_download <- mutations_sig_unfiltered %>% paste0(collapse="\n") %>% base64url::base64_urlencode()
 
+
+```
+### Download linear regression results:
+[Download significant_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_download)`) (only p-values)    
+[Download lm_res_all_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered_download)`) (p-values, coefficients)
 
 
 These plots show the relative frequency of detected signature
@@ -467,19 +470,17 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
 cat("Table x: Frequencies per variant per sample, derived by deconvollution, pooled by weighted mean by read number")
 ```
 ```{r table_var_frqs, echo = FALSE}
-df_var <- df_var %>% slice_head(n=20)
-create_dt(df_var)
+df_var_download <- df_var %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
-```{r title_mutfreq_table, echo = FALSE, results = 'asis'}
-cat("Table x: Frequencies per mutation per sample")
-```
+### Frequencies per variant per sample, derived by deconvollution, pooled by weighted mean by read number")
+[Download variant_frequencies.csv](`r sprintf('data:text/csv;base64,%s', df_var_download)`)
+
 ```{r table_mut_freqs, echo = FALSE}
-df_mut <- df_mut %>% slice_head(n=20)
-create_dt(df_mut)
+df_mut_download <- df_mut %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
-```{r title_mt_coun, echo=FALSE, esults = 'asis'}
-cat("Table x: Counts of mutations found across all sample and per sample")
-```
+### Frequencies per mutation per sample
+[Download mutation_frequencies.csv](`r sprintf('data:text/csv;base64,%s', df_mut_download)`)
+
 
 ```{r mutation_counts, message = FALSE, echo = FALSE}
 # get functions for counting and writing
@@ -496,16 +497,10 @@ write.csv(mutations_sig_unfiltered, file.path(output_dir, "linear_regression_res
           na = "NA", row.names = FALSE, quote = FALSE)
 
 # show and make downloadable
-count_frame <- count_frame %>% slice_head(n=20)
-create_dt(count_frame)
+count_frame <- count_frame %>% paste0(collapse="\n") %>% base64_urlencode()
 ``` 
-```{r title_lin_reg_table, echo = FALSE, results = 'asis'}
-cat("Table x: results of linear regression for all samples and all mutations hat appear at least two times")
-```
-```{r lin_reg_download, echo = FALSE}
-mutations_sig_unfiltered <- mutations_sig_unfiltered %>% slice_head(n=20)
-create_dt(mutations_sig_unfiltered)
-```
+### Counts of mutations found across all sample and per sample
+[Download mutation_counts.csv](`r sprintf('data:text/csv;base64,%s', count_frame)`)
 
 # Detailed per-sample reports
 
@@ -543,7 +538,7 @@ datatable(df, options = list( fixedColumns = TRUE,
                                scrollY = 180,
                                scrollX = TRUE,
                                scroller = TRUE,
-                               dom = 'lfrtip'))
+                               dom = 'Slfrtip'))
 ```
 ## Discarded samples after alignment quality control
 ```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE, results = 'asis'}
