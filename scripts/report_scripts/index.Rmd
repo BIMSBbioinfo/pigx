@@ -109,7 +109,7 @@ approved_mut_plot <- df_mut %>% filter( samplename  %in% good_samples.df$samplen
 # pool the samples per day, discard locations
 weights <- read.csv(params$overviewQC, header = TRUE, check.names = FALSE)
 weights <- weights %>% dplyr::select( c(samplename, total_reads))
-approved_var_plot_pooled <- pool_by_weighted_mean(approved_var_plot, weights)
+approved_var_plot_location_pooled <- pool_by_weighted_mean(approved_var_plot, weights, "day_location")
 
 ```
 ## Frequency of variants of concern over time for each location
@@ -126,7 +126,7 @@ Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f6
 "#6638c6", "#005f29", "#5d73cc", "#616524", "#a8a041", "#e9f600", "#3eaca8", "#62a273", "#4ea5d0", "#655c95", "#67a04e")
 ```
 ```{r variants_pooled, message = FALSE, echo = FALSE}
-melted <- reshape2::melt(approved_var_plot_pooled,
+melted <- reshape2::melt(approved_var_plot_location_pooled,
                          id.vars = c("dates", "samplename"))
 p_variant_pooled <- subset(melted) %>%
    group_by(dates) %>%
@@ -158,7 +158,7 @@ get_h <- function() {
        fig.height*dpi/fig.retina)
 }
 
-
+# plot variant frequencies by location, no pooling
 melted <- reshape2::melt(approved_var_plot,
                          id.vars = c("dates", "samplename", "location_name",
                                      "coordinates_lat", "coordinates_long"))
@@ -218,15 +218,17 @@ selected variant.
 
 ```{r maps_for_variants, echo=F, message=FALSE, warning=FALSE, out.width="900px", out.height="900px"}
 if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual values
-    melted <- melt(approved_var_plot,
+    approved_var_plot_day_pooled  <- pool_by_weighted_mean(approved_var_plot, weights, "day")
+    
+  melted <- melt(approved_var_plot_day_pooled,
                    id.vars = c("dates", "samplename", "location_name",
                                "coordinates_lat", "coordinates_long"),
                    rm.NA = TRUE) %>%
         mutate (value = round (value, 4))
     
-    locations <- unique(melt(approved_var_plot,
-                             id.vars = c("coordinates_lat",
-                                         "coordinates_long")))
+    locations <- approved_var_plot_day_pooled %>% mutate( dates = as.character( strptime(dates, format = "%Y-%m-%d"))) %>%
+                 melt( id.vars = c("coordinates_lat", "coordinates_long"))
+                                                          
     plot_ly (type = 'scattermapbox',
              mode = 'markers',
              colors = Variant_colors,
@@ -247,7 +249,7 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
                   lon = ~coordinates_long,
                   legendgroup = ~variable,
                   showlegend = TRUE,
-                  frame = ~dates,
+                   frame = ~as.character( strptime(dates, format = "%Y-%m-%d")),
                   size = ~value,
                   color = ~variable,
                   hoverinfo = 'text+name',
@@ -298,8 +300,8 @@ if (nrow(approved_mut_plot) > 0){
     approved_mut_plot <- dplyr::select(approved_mut_plot, c(samplename, dates, location_name,
                                                      coordinates_lat, coordinates_long, 
                                                      mutations_sig$mutation))
-    approved_mut_plot_pooled <- pool_by_mean(approved_mut_plot, na_handling = TRUE)
-    mutations_sig <- mutations_sig %>% slice_head(n = 20)
+    approved_mut_plot_location_pooled <- pool_by_mean(approved_mut_plot, na_handling = TRUE, group_fun = "day_location")
+  mutations_sig_download <- mutations_sig %>% paste0(collapse="\n") %>% base64url::base64_urlencode()
     create_dt(mutations_sig)
 } else { create_dt(mutations_sig) }
 if (nrow(mutations_sig_unfiltered) > 0){  
@@ -321,8 +323,8 @@ how the frequencies change over time.
 
 ```{r mutations_pooled, echo = FALSE, message = FALSE, warning = FALSE}
 
-if (length(approved_mut_plot_pooled) > 2){
-  melted <- melt(approved_mut_plot_pooled,
+if (length(approved_mut_plot_location_pooled) > 2){
+  melted <- melt(approved_mut_plot_location_pooled,
                    id.vars = c("dates", "samplename"))
 # flag if mutation is signature mutation
   melted <- melted %>%
@@ -418,17 +420,24 @@ Use the slider to select a specific date or hit the *Play* button to
 display all snapshots successively.
 
 ```{r mutations_for_locations_and_date, echo=F, message=F, warning=F, out.width="900px", out.height="900px"}
+# TODO: remove the light gray date description from the plot
+# TODO: find a way to only show dynamic of one single mutation over the whole time
+    
 if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the filtered df has actual values besides meta data
-    melted <- melt(approved_mut_plot,
+       approved_mut_plot_day_pooled  <- pool_by_mean(approved_mut_plot, TRUE, "day")
+  
+    
+
+  
+    melted <- melt(approved_mut_plot_day_pooled,
                    id.vars = c("dates", "samplename", "location_name",
                                "coordinates_lat", "coordinates_long"),
                    rm.NA = TRUE) 
      # check if there are actual values except the meta data
       melted <- melted %>% mutate (value = round (value, 4))
     
-    locations <- unique(melt (approved_mut_plot,
-                              id.vars = c("coordinates_lat",
-                                          "coordinates_long")))
+   locations <- approved_mut_plot_day_pooled %>% mutate( dates = as.character( strptime(dates, format = "%Y-%m-%d"))) %>%
+                 melt( id.vars = c("coordinates_lat", "coordinates_long"))
     
     plot_ly (type = 'scattermapbox',
              mode = 'markers',
@@ -443,13 +452,13 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
                   hoverinfo = 'none',
                   marker = list(sizemode = 'diameter',
                                 color = 'rgb(150, 150, 150)',
-                                opacity = 0.1)) %>%
+                                opacity = 0)) %>%
         add_trace(data = melted,
                   lat = ~coordinates_lat,
                   lon = ~coordinates_long,
                   legendgroup = ~variable,
                   showlegend = TRUE,
-                  frame = ~dates,
+                  frame = ~as.character( strptime(dates, format = "%Y-%m-%d")),
                   size = ~value,
                   color = ~variable,
                   hoverinfo = 'text+name',
@@ -465,10 +474,8 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
 }
 ```
 
-## Raw data summary and download
-```{r title_var_freq_table, echo = FALSE, results = 'asis'}
-cat("Table x: Frequencies per variant per sample, derived by deconvollution, pooled by weighted mean by read number")
-```
+## Raw data summaries and download
+
 ```{r table_var_frqs, echo = FALSE}
 df_var_download <- df_var %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
