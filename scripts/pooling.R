@@ -50,7 +50,7 @@ get_num_raw_reads <- function (reads_dir, sample_sheet){
   # get read files matching samples
   cat("get samples and reads from sample_sheet...\n")
   read_counts <- read_files ( sample_sheet.df )
-  # fixme can do in one lline with dplyr and across I think
+  # fixme can do in one line with dplyr and across I think
   read_counts$reads_r1 <- read_num_raw(read_counts$raw_reads1, reads_dir)$read_num
   read_counts$reads_r2 <- read_num_raw(read_counts$raw_reads2, reads_dir)$read_num
   read_counts <- read_counts %>% mutate( total_reads = reads_r1 + reads_r2 )
@@ -58,7 +58,7 @@ get_num_raw_reads <- function (reads_dir, sample_sheet){
   return(read_counts)
 }
 
-pool_by_weighted_mean <- function(df, weights) {
+pool_by_weighted_mean <- function(df, weights, group_fun = c("day_location", "day")) {
   #' docstring missing
   #' weigths is a dataframe with minimum samplenames and total_reads as column 
   #' total reads is the number of reads used for alignment of one sample, should be the sum of read1 and read2 with 
@@ -73,27 +73,40 @@ pool_by_weighted_mean <- function(df, weights) {
               df[ ( which( names(df) %in% "coordinates_long")+1) : length( names( df ))]
   )
   
-  df_pooled <- group_by_date(df) %>%
+  if (group_fun == "day_location"){
+     df_grouped <- group_by_day_location(df)
+  } else if (group_fun == "day"){
+    df_grouped <- group_by_day(df)
+  }
+
+  df_pooled <- df_grouped %>%
                 left_join(weights, by = "samplename")  %>%
                 relocate(total_reads) %>%
                 # summarize by calc weighted mean, with the num of raw reads as weight
                 summarise_at(vars( all_of(variants) ), list(~ weighted.mean(., total_reads))) %>%
                 # rename samples to indicated that they were pooled
-                mutate(samplename = paste0(dates, "_pooled")) %>%
+                mutate(samplename = ifelse(group_fun == "day_location", paste0(dates, "_pooled"), paste0(dates, "_", location_name, "_pooled"))) %>%
                 # put names first again
                 relocate(samplename) %>%
                 ungroup()
+  return(df_pooled)
 }
 
-pool_by_mean <- function(df, na_handling) {
+pool_by_mean <- function(df, na_handling, group_fun = c("day_location", "day")) {
   #' docstring missing
   #' 
-    df_pooled <- group_by_date(df) %>%
+  if (group_fun == "day_location"){
+     df_grouped <- group_by_day_location(df)
+  } else if (group_fun == "day"){
+    df_grouped <- group_by_day(df)
+  } 
+  
+  df_pooled <- df_grouped %>%
                 summarize(across(where(is.numeric), mean, na.rm = na_handling)) %>%
                 # rename samples to indicated that they were pooled
-                mutate(samplename = paste0(dates, "_pooled")) %>%
+                mutate(samplename = ifelse(group_fun == "day_location", paste0(dates, "_pooled"), paste0(dates, "_", location_name, "_pooled"))) %>%
                 # put names first again
                 relocate(samplename) %>%
                 ungroup()
-    return (df_pooled)
+  return (df_pooled)
 }
