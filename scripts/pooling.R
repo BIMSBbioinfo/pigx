@@ -72,8 +72,10 @@ pool_by_weighted_mean <- function(df, weights) {
   weights <- weights  %>% 
               # only take weights from approved samples
               semi_join(df, by = "samplename")
-  # TODO make this proper without magic numbers
-  variants <- colnames(df[,-c(1,2,3,4,5)])
+  # get variants from data frame, being every column after the metadata
+  variants <- names (
+              df[ ( which( names(df) %in% "coordinates_long")+1) : length( names( df ))]
+  )
   
   df_pooled <- group_by_date(df) %>%
                 left_join(weights, by = "samplename")  %>%
