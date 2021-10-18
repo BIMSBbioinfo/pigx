@@ -52,10 +52,19 @@ read_num_raw <- function ( raw_reads_vector, reads_dir){
 }
 
 apply_fun_get_read_num <- function (read, reads_dir) {
-  read_num <- as.numeric(
+  require(stringr)
+  
+  if ( any( unlist(str_split(read,'\\.')) %in% 'gz') ){
+    read_num <- as.numeric(
+                        system2(command = "echo", 
+                        args = c ("$(zcat ", file.path(reads_dir, read), "|wc -l)/4|bc"),
+                        stdout = TRUE))
+  } else {
+      read_num <- as.numeric(
                       system2(command = "echo", 
-                      args = c ("$(zcat ", file.path(reads_dir, read), "|wc -l)/4|bc"),
+                      args = c ("$(cat ", file.path(reads_dir, read), "|wc -l)/4|bc"),
                       stdout = TRUE))
+  }
   data.frame( read_num )
 }
 
