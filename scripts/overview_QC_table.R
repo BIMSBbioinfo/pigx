@@ -22,8 +22,18 @@ concat_overview_table <- function ( sample_sheet, reads_dir, sample_dir ) {
   read_counts$read_num_trimmed_r1 <- read_num_raw( trimmed_reads_r1, file.path(sample_dir,"trimmed_reads"))$read_num
   read_counts$read_num_trimmed_r2 <- read_num_raw( trimmed_reads_r2, file.path(sample_dir,"trimmed_reads"))$read_num
   
+  # get read number unaligned from files
+  unaligned_reads <- unlist(lapply(unique(read_counts$samplename), 
+                          function (x){paste0(x,"_unaligned.fastq")}))
+  read_counts$unaligned_reads_from_file <- read_num_raw( unaligned_reads, file.path(sample_dir,"mapped_reads"))$read_num
+  
   cat("join counts together...\n")
-  read_counts<- left_join(read_counts, parse_amplicons( sample_sheet.df, sample_dir), by = "samplename")
+  read_counts <- left_join(read_counts, parse_amplicons( sample_sheet.df, sample_dir), by = "samplename") 
+  
+  # for double check, unaligend reads by calculation
+  read_counts <- read_counts %>% mutate(unaligned_reads_by_calc = total_reads - as.numeric(aligned_reads) )
+  # difference between unaligned reads from file and by calc must be reads filtered by QC
+  read_counts <- read_counts %>% mutate(reads_removed_by_QC = unaligned_reads_by_calc - unaligned_reads_from_file )
   return( read_counts)
 }
 
