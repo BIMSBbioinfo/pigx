@@ -1,5 +1,5 @@
 ---
-title: "Taxonomic Classification"
+title: "Taxonomic Classification of Unaligned Reads"
 nav: "Taxonomy"
 author: "BIMSB Bioinformatics Platform"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
@@ -26,24 +26,35 @@ params:
 suppressMessages(suppressWarnings(library(DT)))
 ```
 
-This report provides an overview of the species found in the provided wastewater samples apart from SARS-Cov-2.
-The SARS-CoV-2 enriched wastewater samples are aligned to the virus
-genome. It provides insight about possible biases and contamination of the 
-samples. In case of abundance of species very similar to SARS-CoV-2 only the taxonomic family will be reported
-which could indicate that an identification/alignment of SARS-CoV-2 could be biased or impossible. In case of a high 
-percentage of read matching SARS-CoV-2 a refining of trimming parameters should be considered. 
+This metagenomic analysis report provides an overview of the taxa that were classified from the set of unaligned reads 
+of the given sample. The analysis of unaligned reads can provide insight about the alignment quality, cleanliness 
+of the sample, possible species with high sequence similarity which could introduce alignment bias and more.  
+<font size="3"> **Note: Because of algorithmic differences between the classification and the sequence alignment, a high 
+number of fragments assigned to the species of interest (in this case SARS-CoV-2) could be a result of differences in 
+thresholds for sequence similarity. In this case, further adjustment of the alignment tool and/or the classifier are
+recommended.** </font>  
 
-# Visualization of taxonomic abundance
+*Note about value comparison:*  
+The number of aligned and unaligned reads of this sample can be found [in the QC overview table](../../overview_QC.csv).
+Kraken2 reports the classification of fragments. Therefore paired-end read data, the number of fragments is half 
+the number of unaligned reads. With single-end read data, the number of fragments should equal the number 
+of unaligned reads. 
 
-This interactive multi-layered pie chart shows the proportions of the classified taxons shown in the table above which 
-were found by the [Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2). 
-It was created using [KronaTools](https://github.com/marbl/Krona/wiki). Shown are the taxonomy nodes as nested sectors, where 
-the level of hierarchy is decreasing moving from the center towards the periphery. 
-Settings for the visualization of the figure can be found on the top left, while on the top right details are displayed for the selected node. 
+
+# Krona Visualization
+
+This interactive multi-layered pie chart displays the proportions of the classified taxons found in the sample. Shown are the taxonomy classes as nested sectors, with decreasing hierarchy from the center towards the periphery. The input values can be found in the table below. 
 
 <iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>
 
-# Taxonomic classification of unaligned reads
+<font size="3"> 
+*Magnitude:* number of fragments covered by currently chosen supergroup displayed in the white middle of the circle   
+*Unassigned magnitude:* number of fragments that have no other classification than “root”   
+*Count:* number of taxa covered by the current supergroup   
+*Unassigned:* number of taxa that have no other ancestor than “root” </font>
+
+
+# Raw classification report
 
 The reads that are left unaligned to SARS-Cov-2 are aligned with the
 [Kraken2 taxonomic sequence classification
