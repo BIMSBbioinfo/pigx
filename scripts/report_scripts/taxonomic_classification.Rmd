@@ -33,6 +33,16 @@ samples. In case of abundance of species very similar to SARS-CoV-2 only the tax
 which could indicate that an identification/alignment of SARS-CoV-2 could be biased or impossible. In case of a high 
 percentage of read matching SARS-CoV-2 a refining of trimming parameters should be considered. 
 
+# Visualization of taxonomic abundance
+
+This interactive multi-layered pie chart shows the proportions of the classified taxons shown in the table above which 
+were found by the [Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2). 
+It was created using [KronaTools](https://github.com/marbl/Krona/wiki). Shown are the taxonomy nodes as nested sectors, where 
+the level of hierarchy is decreasing moving from the center towards the periphery. 
+Settings for the visualization of the figure can be found on the top left, while on the top right details are displayed for the selected node. 
+
+<iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>
+
 # Taxonomic classification of unaligned reads
 
 The reads that are left unaligned to SARS-Cov-2 are aligned with the
@@ -66,12 +76,3 @@ colnames(table) <- c("Proportion in %", "Number of covered fragments", "Number o
 datatable(table, filter="bottom")
 ```
 
-# Visualization of taxonomic abundance
-
-This interactive multi-layered pie chart shows the proportions of the classified taxons shown in the table above which 
-were found by the [Kraken2 taxonomic sequence classification system](https://github.com/DerrickWood/kraken2). 
-It was created using [KronaTools](https://github.com/marbl/Krona/wiki). Shown are the taxonomy nodes as nested sectors, where 
-the level of hierarchy is decreasing moving from the center towards the periphery. 
-Settings for the visualization of the figure can be found on the top left, while on the top right details are displayed for the selected node. 
-
-<iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>
