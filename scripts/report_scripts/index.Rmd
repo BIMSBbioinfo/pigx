@@ -288,8 +288,9 @@ sigmuts.df <- na_if( read.csv(mutation_sheet, header = TRUE), "" )
 sigmuts.df <- sigmuts.df %>% mutate_all( funs(str_replace(.,'^[^:]*:','')))
 if (nrow(approved_mut_plot) > 0){
     changing_muts <- parsing_mutation_plot_data( approved_mut_plot )
-    mutations_sig <- lin_reg_mutation_change( changing_muts )
-    mutations_sig_unfiltered <- gather_lm_values( changing_muts )
+    mutations_sig_unfiltered <- refined_lm_model( changing_muts )
+    mutations_sig <- filter_lm_res_top20( mutations_sig_unfiltered, 0.05 )
+
   
   if (nrow(mutations_sig) > 0){
   # flag if mutation is signature mutation
