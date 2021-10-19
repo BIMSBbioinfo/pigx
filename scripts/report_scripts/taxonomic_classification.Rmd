@@ -29,13 +29,13 @@ suppressMessages(suppressWarnings(library(DT)))
 This metagenomic analysis report provides an overview of the taxa that were classified from the set of unaligned reads 
 of the given sample. The analysis of unaligned reads can provide insight about the alignment quality, cleanliness 
 of the sample, possible species with high sequence similarity which could introduce alignment bias and more.  
-<font size="3"> **Note: Because of algorithmic differences between the classification and the sequence alignment, a high 
+<font size="3"> *Note: Because of algorithmic differences between the classification and the sequence alignment, a high 
 number of fragments assigned to the species of interest (in this case SARS-CoV-2) could be a result of differences in 
 thresholds for sequence similarity. In this case, further adjustment of the alignment tool and/or the classifier are
-recommended.** </font>  
+recommended.* </font>  
 
-*Note about value comparison:*  
-The number of aligned and unaligned reads of this sample can be found [in the QC overview table](../../overview_QC.csv).
+**Note about value comparison:**  
+The number of aligned and unaligned reads of this sample can be found [in the QC overview table](../overview_QC.csv).
 Kraken2 reports the classification of fragments. Therefore paired-end read data, the number of fragments is half 
 the number of unaligned reads. With single-end read data, the number of fragments should equal the number 
 of unaligned reads. 
@@ -48,42 +48,36 @@ This interactive multi-layered pie chart displays the proportions of the classif
 <iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>
 
 <font size="3"> 
-*Magnitude:* number of fragments covered by currently chosen supergroup displayed in the white middle of the circle   
-*Unassigned magnitude:* number of fragments that have no other classification than “root”   
-*Count:* number of taxa covered by the current supergroup   
-*Unassigned:* number of taxa that have no other ancestor than “root” </font>
+**Magnitude:** number of fragments covered by currently chosen supergroup displayed in the white middle of the circle   
+**Unassigned magnitude:** number of fragments that have no other classification than “root”   
+**Count:** number of taxa covered by the current supergroup   
+**Unassigned:** number of taxa that have no other ancestor than “root” </font>
 
 
 # Raw classification report
 
-The reads that are left unaligned to SARS-Cov-2 are aligned with the
-[Kraken2 taxonomic sequence classification
-system](https://github.com/DerrickWood/kraken2) against the [installed
-database](https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-bs-seq.html#installation). The
-[database PlusPFP](https://benlangmead.github.io/aws-indexes/k2) for
-example contains archae, bacteria, viral, plasmid, protozea, fungi &
-plant.
-
-The table below lists all the species found. Since all ranks are listed it can be helpful to use the provided filters at the bottom of the tableto look only at the level of Domains or a minimum pf assigned fragments.
-
-* Column explanation:
-  + **Proportion in %** of fragments covered by the clade rooted at this taxon
-  + **Number of covered fragments** covered by the clade rooted at this taxon
-  + **Number of assigned fragments**  directly to this taxon
-  + **A rank code**, indicating **U**nclassified, **R**oot, **D**omain,
-    **K**ingdom, **P**hylum, **C**lass, **O**rder, **F**amily,
-    **G**enus, or **S**pecies. Taxa that are not at any of these 10
-    ranks have a rank code that is formed by using the rank code of
-    the closest ancestor rank with a number indicating the distance
-    from that rank. E.g., "G2" is a rank code indicating a taxon is
-    between genus and species and the grandparent taxon is at the
-    genus rank.
-  + **NCBI tax ID** NCBI taxonomic identifier number
-  + **Taxonomic class**
-
+The table below lists the classified taxa (**Taxon. class**), its NCBI taxonomic ID (**NCBI tax. ID**), taxonomic rank 
+(**Rank:** **U**nclassified, **R**oot, **D**omain, **K**ingdom, **P**hylum, **C**lass, **O**rder, **F**amily, **G**enus, 
+or **S**pecies ) and the number of fragments that was assigned uniquely to this taxa (Number of assigned fragments). In 
+case of higher taxa covering multiple lower ones, the **"Number of covered fragments”** is the sum of all fragments that 
+are covered by it (e.g. “Viruses” covers all virus species). In addition, it is shown which proportion of all fragments 
+are classified by each taxon (**Propotion in %**) 
+  
 ```{r plot table, echo=FALSE}
 table<- read.table(params$kraken_file, sep = "\t")
 colnames(table) <- c("Proportion in %", "Number of covered fragments", "Number of assigned fragments", "Rank", "NCBI tax. ID", "Taxon. class")
 datatable(table, filter="bottom")
 ```
 
+Example on Interpretation of the countings:   
+|      |     |      |     |     |   
+|:-----|:----|:-----|:----|:----|  
+|Proportion in %|Number of covered fragments|Number of assigned fragments|Rank|Taxonomic class|  
+|40|1000|200|Domain|Virus|  
+|30|800|800|Species|Sars-CoV-2|  
+
+Read: 
+- 40% of all analysed fragments are related to Virus and more precisely  
+- 30% of all analysed fragments are related to one species - Sars-CoV-2  
+- 1000 fragments are related to Virus, but only 200 fragments have no further classification but “Virus”  
+- 800 of the virus-related fragments could be classified further down to species level and could all classified as SARS-CoV-2 
