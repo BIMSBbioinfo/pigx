@@ -41,8 +41,9 @@ refined_lm_model <- function( mutations.df ){
   
   #loop the mutations, doing the linear model, and extracting the pvalues
   for ( i in names( mutations.df[,-which(names(mutations.df) %in% "dates")]) ){
-    # take only mutations that were found in at least 5 samples (equals 5 values above 0) to ensure robust model calculation
-    if ( nrow( filter( tmp, values > 0 ) ) >= 5 ){
+    # take only mutations that were found in at least 20% of samples (equals 20% of the values above 0) to ensure robust model calculation
+    tmp <- data.frame(values <- mutations.df[,i]) # maybe not the most elegant way to do this
+    if ( nrow( filter( tmp, values > 0 ) ) >= (nrow(mutations.df)*0.2)/1){
       # only select mutation columns
       tmp <- mutations.df %>% select( dates, all_of(i) )
       # perform linear regression
