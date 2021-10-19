@@ -24,6 +24,7 @@ params:
 
 ```{r libs, echo=FALSE}
 suppressMessages(suppressWarnings(library(DT)))
+library(knitr)
 ```
 
 This metagenomic analysis report provides an overview of the taxa that were classified from the set of unaligned reads 
@@ -69,15 +70,20 @@ colnames(table) <- c("Proportion in %", "Number of covered fragments", "Number o
 datatable(table, filter="bottom")
 ```
 
-Example on Interpretation of the countings:   
-|      |     |      |     |     |   
-|:-----|:----|:-----|:----|:----|  
-|Proportion in %|Number of covered fragments|Number of assigned fragments|Rank|Taxonomic class|  
-|40|1000|200|Domain|Virus|  
-|30|800|800|Species|Sars-CoV-2|  
+Example on interpretation of the countings:   
+```{r plot example_table, echo = FALSE}
+df <- data.frame( "Proportion in %" = c(40,30),
+                  "Number of covered fragments" = c(1000,800),
+                  "Number of assigned fragments" = c(200,800),
+                  Rank = c("Domain","Species"), 
+                  "Taxonomic class" =c("Virus","Sars-CoV-2"), check.names = FALSE
+)
+kable(df, align = 'l')
+```
 
-Read: 
-- 40% of all analysed fragments are related to Virus and more precisely  
-- 30% of all analysed fragments are related to one species - Sars-CoV-2  
-- 1000 fragments are related to Virus, but only 200 fragments have no further classification but “Virus”  
-- 800 of the virus-related fragments could be classified further down to species level and could all classified as SARS-CoV-2 
+Read:
+
+* 40% of all analysed fragments are related to Virus and more precisely  
+* 30% of all analysed fragments are related to one species - Sars-CoV-2  
+* 1000 fragments are related to Virus, but only 200 fragments have no further classification but “Virus”  
+* 800 of the virus-related fragments could be classified further down to species level and could all classified as SARS-CoV-2 
