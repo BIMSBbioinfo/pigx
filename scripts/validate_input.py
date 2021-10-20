@@ -21,6 +21,10 @@ def validate_config(config):
     for loc in config['locations']:
         if (not loc == 'output-dir') and (not (os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
             raise Exception("ERROR: The following necessary directory/file does not exist: '{}' ({})".format(config['locations'][loc], loc))
+        if not loc == 'output-dir':
+            if config['locations'][loc].endswith(".gz") or config['locations'][loc].endswith(".bz2") or config['locations'][loc].endswith(".xz"):
+                raise Exception("ERROR: The {} file '{}' is referenced in its compressed form like it was downloaded. However, the tools of this workflow expects the reference as plain FASTA/GTF files that are directly readable. Please unpack these files and update the settings to the respective new filename. This does _not_ hold for the FASTQ.gz files of the samples which shall remain compressed.".format(loc,config['locations'][loc]))
+
 
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
     
