@@ -219,6 +219,7 @@ rule get_primer_seqs:
 # TODO the output suffix should be dynamic depending on the input
 # TODO provide the adapter sequence by settings file, maybe also add option for multiple adapter if needed
 # TODO with the use of fastp the use of fastqc becomes partly reduntant, fastqc should be removed or adjusted
+# TODO it should be possible to add customized parameter
 rule fastp:
     input: trim_reads_input
     output:
@@ -254,6 +255,7 @@ rule bwa_align:
     params:
         threads = 4
     log: os.path.join(LOG_DIR, 'bwa_align_{sample}.log')
+    # TODO it should be possible to add customized parameter
     shell: "{BWA_EXEC} mem -t {params.threads} {input.ref} {input.fastq} > {output} 2>> {log} 3>&2"
 
 rule samtools_filter_aligned:
@@ -289,8 +291,9 @@ rule ivar_primer_trim:
     params:
         output = os.path.join(MAPPED_READS_DIR, "{sample}_aligned_sorted_primer-trimmed") 
     log: os.path.join(LOG_DIR, 'ivar_{sample}.log')
+    # TODO number parameter should be accessible over settings file
     shell: """
-        {IVAR_EXEC} trim -b {input.primers} -p {params.output} -i {input.aligned_reads} -q 15 -m 180 -s 4 >> {log} 2>&1 """ # TODO create IVAR variable
+        {IVAR_EXEC} trim -b {input.primers} -p {params.output} -i {input.aligned_reads} -q 15 -m 180 -s 4 >> {log} 2>&1 """ 
 
 # Vic_0825: I don't know if this double sorting and indexing is really necessary but seemed to be since ivar as 
 # well as lofreq ask for sorted and indexed bam files
@@ -375,6 +378,7 @@ def no_variant_vep(sample, lofreq_output):
         open(lofreq_output.format(sample=sample), 'a').write(
             "NC_000000.0\t00\t.\tA\tA\t00\tPASS\tDP=0;AF=0;SB=0;DP4=0,0,0,0")
         
+# TODO it should be possible to add customized parameter
 rule lofreq:
     input:
         aligned_bam = os.path.join(MAPPED_READS_DIR, '{sample}_aligned_sorted_primer-trimmed_sorted.bam'),
@@ -402,7 +406,7 @@ rule vep:
     params:
         species = "sars_cov_2"
     log: os.path.join(LOG_DIR, 'vep_{sample}.log')
-    shell:
+    shell: # TODO number parameter should be customizabel by the settings file
       """
       {VEP_EXEC} --verbose --offline --dir_cache {VEP_DB} --DB_VERSION 101 --appris --biotype --buffer_size 5000 --check_existing\
       --distance 5000 --mane --protein --species {params.species} --symbol --transcript_version --tsl\
