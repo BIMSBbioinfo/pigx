@@ -20,7 +20,7 @@ def validate_config(config):
     # Check that all locations exist
     for loc in config['locations']:
         if (not loc == 'output-dir') and (not (os.path.isdir(config['locations'][loc]) or os.path.isfile(config['locations'][loc]))):
-            raise Exception("ERROR: The following necessary directory/file does not exist: {} ({})".format(config['locations'][loc], loc))
+            raise Exception("ERROR: The following necessary directory/file does not exist: '{}' ({})".format(config['locations'][loc], loc))
 
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
     
@@ -36,7 +36,7 @@ def validate_config(config):
             for group in config['DEanalyses'][analysis]['case_sample_groups'] .split(',') + config['DEanalyses'][analysis]['control_sample_groups'].split(','):
                 group = group.strip() #remove any leading/trailing whitespaces in the sample group names
                 if not any(row['sample_type'] == group for row in sample_sheet):
-                    raise Exception('ERROR: no samples in sample sheet have sample type {}, specified in analysis {}.'.format(group, analysis))
+                    raise Exception("ERROR: no samples in sample sheet have sample type '{}', specified in analysis {}.".format(group, analysis))
 
     # Check that reads files exist; sample names are unique to each row; 
     samples = {}        
@@ -52,7 +52,11 @@ def validate_config(config):
         for filename in filenames:
             fullpath = os.path.join(config['locations']['reads-dir'], filename)
             if not os.path.isfile(fullpath):
-                raise Exception('ERROR: missing reads file: {}'.format(fullpath))
+                filenameFlankedWithWhitespace = filename.startswith(' ')  or filename.endswith(' ') or filename.startswith('\t') or filename.endswith('\t')
+                if filenameFlankedWithWhitespace:
+                    raise Exception("ERROR: missing reads file: '{}', likely caused by blanks flanking the filename, please correct.".format(fullpath))
+                else:
+                    raise Exception("ERROR: missing reads file: '{}'".format(fullpath))
 
                     
 
