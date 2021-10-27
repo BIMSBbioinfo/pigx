@@ -70,7 +70,7 @@ PiGx RNAseq performs differential expression analysis using _DESeq2_, and produc
 This report was generated with PiGx RNAseq version @VERSION@.
 
 # Input Settings
-```{r printInputSettings}
+```{r useInputSettingsFromParamsList}
 
 countDataFile <- params$countDataFile
 colDataFile <- params$colDataFile
