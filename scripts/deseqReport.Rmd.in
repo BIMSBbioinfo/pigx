@@ -81,7 +81,23 @@ covariates <- params$covariates
 prefix <- params$prefix
 workdir <- params$workdir
 organism <- gsub('\\s*', '', params$organism)
+```
 
+Alternatively, if the params list happens not to be available in the environment
+you are executing this code, you may prefer to set these values directly:
+```{r manualSettings,echo = FALSE}
+cat("countDataFile <- \"",countDataFile,"\"\n",sep="")
+cat("colDataFile <- \"",colDataFile,"\"\n",sep="")
+cat("gtfFile <- \"",gtfFile,"\"\n",sep="")
+cat("caseSampleGroups <- \"",caseSampleGroups,"\"\n",sep="")
+cat("controlSampleGroups <- \"",controlSampleGroups,"\"\n",sep="")
+cat("covariates <- \"",covariates,"\"\n",sep="")
+cat("prefix <- \"",prefix,"\"\n",sep="")
+cat("workdir <- \"",workdir,"\"\n",sep="")
+cat("organism <- \"",organism,"\"\n",sep="")
+```
+
+```{r printInputSettings}
 #whether to do GO analysis or not
 runGO <- TRUE
 
