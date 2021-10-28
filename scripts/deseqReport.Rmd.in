@@ -87,7 +87,7 @@ organism <- gsub('\\s*', '', params$organism)
 
 If the parameters list happens not to be available in the environment
 you are executing this code, you may prefer to set these values directly:
-```{r manualSettings,echo = FALSE}
+```{r manualSettings,results='asis',echo = FALSE}
 cat(paste("countDataFile <- \"",      countDataFile,      "\"",sep=""),
     paste("colDataFile <- \"",        colDataFile,        "\"",sep=""),
     paste("gtfFile <- \"",            gtfFile,            "\"",sep=""),
@@ -96,7 +96,7 @@ cat(paste("countDataFile <- \"",      countDataFile,      "\"",sep=""),
     paste("covariates <- \"",         covariates,         "\"",sep=""),
     paste("prefix <- \"",             prefix,             "\"",sep=""),
     paste("workdir <- \"",            workdir,            "\"",sep=""),
-    paste("organism <- \"",           organism,           "\"",sep=""), sep="\n")
+    paste("organism <- \"",           organism,           "\"",sep=""), sep="  \n")
 ```
 
 
