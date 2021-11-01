@@ -70,7 +70,9 @@ PiGx RNAseq performs differential expression analysis using _DESeq2_, and produc
 This report was generated with PiGx RNAseq version @VERSION@.
 
 # Input Settings
-```{r printInputSettings}
+To reproduce the here presentined findings, consider rerunning the respective code blocks. These blocks need to be run in the order in which these appear in this file. It starts with the assignments made in the settings file for this analysis.
+
+```{r useInputSettingsFromParamsList}
 
 countDataFile <- params$countDataFile
 colDataFile <- params$colDataFile
@@ -81,7 +83,24 @@ covariates <- params$covariates
 prefix <- params$prefix
 workdir <- params$workdir
 organism <- gsub('\\s*', '', params$organism)
+```
 
+If the parameters list happens not to be available in the environment
+you are executing this code, you may prefer to set these values directly:
+```{r manualSettings,results='asis',echo = FALSE}
+cat(paste("countDataFile <- \"",      countDataFile,      "\"",sep=""),
+    paste("colDataFile <- \"",        colDataFile,        "\"",sep=""),
+    paste("gtfFile <- \"",            gtfFile,            "\"",sep=""),
+    paste("caseSampleGroups <- \"",   caseSampleGroups,   "\"",sep=""),
+    paste("controlSampleGroups <- \"",controlSampleGroups,"\"",sep=""),
+    paste("covariates <- \"",         covariates,         "\"",sep=""),
+    paste("prefix <- \"",             prefix,             "\"",sep=""),
+    paste("workdir <- \"",            workdir,            "\"",sep=""),
+    paste("organism <- \"",           organism,           "\"",sep=""), sep="  \n")
+```
+
+
+```{r printInputSettings}
 #whether to do GO analysis or not
 runGO <- TRUE
 
