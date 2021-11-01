@@ -186,9 +186,10 @@ if(length(covariates) > 0){
   designFormula <- "~ AnalysisGroup"
 }
 
+require(DESeq2, quietly=TRUE)
 message("design formula:", designFormula)
 dds <- DESeq2::DESeqDataSetFromMatrix(countData = countData, colData = colData, design = stats::as.formula(designFormula))
-dds <- dds[ rowSums(counts(dds)) > 1, ]
+dds <- dds[ rowSums(DESeq2::counts(dds)) > 1, ]
 dds <- DESeq2::DESeq(dds)
 norm.counts = DESeq2::counts(dds, normalized = TRUE)
 
@@ -254,6 +255,9 @@ This section holds a number of plots meant for a quick diagnostic and/or sanity 
 This plot shows the number of reads, in each sample, that are assigned to genes/transcripts. Outlier samples may be faulty and should be examined.
 
 ```{r plot_readcounts}
+
+require(ggplot2,quietly=TRUE)
+require(ggrepel,quietly=TRUE)
 readCounts <- as.data.frame(colSums(countData))
 readCounts$group <- colData[rownames(readCounts),]$group
 readCounts$sample <- rownames(readCounts)
@@ -406,7 +410,8 @@ summary <- do.call(rbind, lapply(pVals, function(p) {
   }))
 }))
 
-mdata <- melt(summary, id.vars = c('log2FoldChange', 'padj'))
+require(reshape2,quietly=TRUE)
+mdata <- reshape2::melt(summary, id.vars = c('log2FoldChange', 'padj'))
 
 p <- ggplot(mdata, aes(x = log2FoldChange, y = value)) + geom_bar(aes(fill = variable), stat = 'identity', position = 'dodge') + facet_grid(~ padj) + theme(legend.position = 'bottom', legend.title = element_blank()) + labs(title = 'Number of differentially up/down regulated genes', subtitle = 'based on different p-value and log2foldChange cut-off values')
 print(p)
@@ -421,6 +426,8 @@ invisible(dev.off())
 This interactive plot lets you see genes' position in the volcano plot, as well as their expression levels in the cases and the controls (in the box plot on the left side). Use the search box to find genes of interest. Notice that only top 1000 genes that have an adjusted p-value less than 0.1 and absolute log2 fold change value of greater than 1 are plotted.
 
 ```{r plot_interactive_boxplots}
+require(plotly,quietly=TRUE)
+require(crosstalk,quietly=TRUE)
 select <- rownames(DEsubset)
 if(length(select) > 1) {
   expressionLevels <- reshape2::melt(norm.counts[select,])
@@ -433,7 +440,7 @@ if(length(select) > 1) {
   expressionLevels$padj <- DE[matchIds,]$padj
   expressionLevels$log2FoldChange <- DE[matchIds,]$log2FoldChange
 
-  sd <- SharedData$new(expressionLevels, ~geneId)
+  sd <- crosstalk::SharedData$new(expressionLevels, ~geneId)
 
   lineplot <- plot_ly(sd, x = ~sampleName, y = ~expressionLevel) %>%
     plotly::group_by(geneId) %>%
@@ -465,7 +472,7 @@ if(runGO == FALSE) {
 }
 ```
 
-```{r goAnalysisTitle, eval = runGO, results='asis'}
+```{r goAnalysisTitle, eval = runGO, results='asis', echo=FALSE}
 cat("# GO Term Enrichment Analysis\n")
 cat("\n The following table list GO terms for differentially expressed genes. GO term analysis was carried out using [g:Profiler](https://cran.r-project.org/web/packages/gprofiler2/) R package. Differentially expressed genes are defined as those genes with adjusted p-value of less than 0.1.")
 ```
@@ -478,6 +485,7 @@ go <- NULL
 
 #search for enriched GO terms within the GO and pathway domains
 if(length(DEgenes) > 0) {
+  require(gprofiler2,quietly=TRUE)
   go <- gprofiler2::gost(query = DEgenes,
                              organism = organism,
                              significant = TRUE,
@@ -515,9 +523,9 @@ if(!is.null(go)) {
                          ),
           filter = 'bottom'
           )
-  } else {
-    cat("Warning: Couldn't detect any enriched functional terms\n")
-  }
+} else {
+  cat("Warning: Couldn't detect any enriched functional terms\n")
+}
 ```
 
 
