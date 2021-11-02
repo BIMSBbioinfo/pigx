@@ -65,13 +65,18 @@ refined_lm_model <- function( mutations.df ){
   
   lm_res.df <-  do.call( rbind, pvalues ) %>%
                 # make proper df from p-values
-                tibble::rownames_to_column( "VALUE" ) %>% 
-                # only take the actual p-value
-                filter( stringr::str_detect( VALUE, "dates" ) ) %>%
-                # split the suffix from the model away
-                mutate(VALUE = str_split(VALUE, ".tmp", simplify = TRUE)[,1]) %>%
+                tibble::rownames_to_column( "VALUE" ) %>%
                 # proper column names
-                rename(mutation = VALUE, pvalues = "summary(test)$coefficients[, 4]" ) %>%
+                rename(mutation = VALUE, pvalues = "summary(test)$coefficients[, 4]" ) 
+  if (!(all(is.nan(lm_res.df$pvalues)))){ 
+    lm_res.df <- lm_res.df %>% 
+      # only take the actual p-value
+      filter( stringr::str_detect( mutation, "dates" ) )  
+  }
+  
+  lm_res.df <- lm_res.df %>%
+                # split the suffix from the model away
+                mutate(mutation = str_split(mutation, ".tmp", simplify = TRUE)[,1]) %>%
                 # join coeffs and pvalues togehter
                 left_join(coeff_df, by = "mutation")
   
@@ -82,16 +87,20 @@ filter_lm_res_top20 <- function ( lm_res.df, pvalue_cutoff){
   #' lm_res.df: a dataframe with variables, pvalues and regression coefficients 
   #' pvalue_cutoff: a numeric value to use as p-value cutoff for filtering
   
-  # generate dataframe with significant results only
-  lm_res_sig.df <- lm_res.df %>% 
-                    # filter for increasing trends only
-                    filter( coefficients > 0) %>%
-                    # filter for significance
-                    filter( pvalues < pvalue_cutoff) %>% 
-                    # sort for decreasing coeffs
-                    arrange( desc(coefficients)) %>% 
-                    # only take the 20 strongest trends
-                    slice_head(n = 20)
+  if (!(all(is.nan(lm_res.df$pvalues)) & all(is.nan(lm_res.df$coefficients)))){
+  
+    # generate dataframe with significant results only
+    lm_res_sig.df <- lm_res.df %>% 
+                      # filter for increasing trends only
+                      filter( coefficients > 0) %>%
+                      # filter for significance
+                      filter( pvalues < pvalue_cutoff) %>% 
+                      # sort for decreasing coeffs
+                      arrange( desc(coefficients)) %>% 
+                      # only take the 20 strongest trends
+                      slice_head(n = 20)
+    
+  } else { lm_res_sig.df <- data.frame() }
   
   return ( lm_res_sig.df )
 }
