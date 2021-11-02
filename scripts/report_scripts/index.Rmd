@@ -486,13 +486,13 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
 ```{r table_var_frqs, echo = FALSE}
 df_var_download <- df_var %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
-### Frequencies per variant per sample, derived by deconvollution, pooled by weighted mean by read number")
+Frequencies per variant per sample, derived by deconvolution, pooled by weighted mean by read number")
 [Download variant_frequencies.csv](`r sprintf('data:text/csv;base64,%s', df_var_download)`)
 
 ```{r table_mut_freqs, echo = FALSE}
 df_mut_download <- df_mut %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
-### Frequencies per mutation per sample
+Frequencies per mutation per sample
 [Download mutation_frequencies.csv](`r sprintf('data:text/csv;base64,%s', df_mut_download)`)
 
 
@@ -513,7 +513,7 @@ write.csv(mutations_sig_unfiltered, file.path(output_dir, "linear_regression_res
 # show and make downloadable
 count_frame <- count_frame %>% paste0(collapse="\n") %>% base64_urlencode()
 ``` 
-### Counts of mutations found across all sample and per sample
+Counts of mutations found across all sample and per sample
 [Download mutation_counts.csv](`r sprintf('data:text/csv;base64,%s', count_frame)`)
 
 # Detailed per-sample reports
