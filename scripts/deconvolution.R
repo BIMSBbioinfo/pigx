@@ -27,7 +27,7 @@ createSigMatrix <- function ( mutations.vector, mutation_sheet ) {
   return( msig[,-match('muts', names(msig))]*1 ) # use the *1 to turn true/false to 0/1
 }
 
-simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataframe) {
+simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataframe, coverage.vector) {
   # for the deconvolution to work we need the "wild type" frequencies too. The matrix from above got mirrored, 
   # wild type mutations are simulated the following: e.g. T210I (mutation) -> T210T ("wild type")
   
@@ -42,11 +42,15 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   msig_inverse <- bind_cols(muts_wt.df, as.data.frame(+(!simple_sigmat.dataframe)))
   
   # fixme: not sure if this really is a nice way to concat those things...
+    # no it's not you could use dplyr and mutate
   muts_all <- c(muts_wt,mutations.vector)
   muts_all.df <- data.frame(muts = unlist(muts_all))
   
   bulk_all <- c(bulk_wt, bulk_freq.vector)
   bulk_all.df <- data.frame(freq = unlist(bulk_all))
+    
+  coverage_all <- c(coverage.vector,coverage.vector)
+  coverage_all.df <- data.frame(cov = unlist(coverage_all))
   
   msig_all <- rbind(msig_inverse[,-which(names(msig_inverse) %in% 'muts')],simple_sigmat.dataframe)
   
@@ -55,9 +59,9 @@ simulateWT <- function ( mutations.vector, bulk_freq.vector, simple_sigmat.dataf
   msig_stable <- bind_cols(muts_all.df,msig_all)
   
   # with bulk freq for export and overview
-  msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df)
+  msig_stable_complete <- bind_cols(muts_all.df,msig_all,bulk_all.df,coverage_all.df)
   
-  return ( list(msig_stable, bulk_all) )
+  return ( list(msig_stable, bulk_all, msig_stable_complete) )
 }
 
 # When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
