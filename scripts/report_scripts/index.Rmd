@@ -49,6 +49,7 @@ library(data.table)
 library(stringr)
 library(ggplot2)
 library(dplyr)
+library(viridis)
 
 df_var <- read.table(params$variants_csv, sep = "\t", header=TRUE, check.names = FALSE)
 df_mut <- read.table(params$mutations_csv, sep = "\t", header=TRUE, check.names = FALSE)
@@ -140,7 +141,7 @@ p_variant_pooled <- subset(melted) %>%
             x = ~dates,
             y = ~value,
             color = ~variable,
-            colors = Variant_colors) %>%
+            colors = viridis_pal(option = "D")(6)) %>%
    layout (title = "Summary over time",
            showlegend = TRUE,
            yaxis = list(title = "Frequency"))
@@ -176,7 +177,7 @@ location_plot <- function (loc) {
                                 x = ~dates,
                                 y = ~value,
                                 color = ~variable,
-                                colors = Variant_colors) %>%
+                                colors = viridis_pal(option = "D")(6)) %>%
                        layout (title = location,
                                showlegend = TRUE,
                                yaxis = list(title = "Frequency"))
@@ -231,7 +232,7 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
                                                           
     plot_ly (type = 'scattermapbox',
              mode = 'markers',
-             colors = Variant_colors,
+             colors = viridis_pal(option = "D")(6),
                                width = 900,
                                height = 500) %>%
         add_trace(data = locations,
@@ -347,12 +348,13 @@ p_mutations_pooled <- subset(melted) %>%
                x = ~ dates,
                y = ~ value,
                name = ~variable,
-               connectgaps = TRUE
+               connectgaps = TRUE, 
+               color = ~ variable,
+               colors = viridis_pal(option = "H")(20)
        ) %>%
        layout(title = summary,
               yaxis = list(title = "Frequency"))
 } # mke sure there are other columns except the name and date
-
 ```
 ## Significantly increasing mutations over time {.tabset .tabset-fade}
 ```{r tab_plotting_mutations, echo = FALSE, message = FALSE, warning = FALSE, results='asis', fig.width=4, fig.height=4}
@@ -369,7 +371,10 @@ plot_muts <- function (location) {
                                x = ~dates,
                                y = ~value,
                                name = ~variable,
-                               connectgaps = TRUE) %>%
+                               color = ~ variable,
+                               colors = viridis_pal(option = "H")(20),
+                               connectgaps = TRUE
+                               ) %>%
                            layout(title = location,
                                   yaxis = list(title = "Frequency"))
 }
@@ -441,6 +446,7 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
                  melt( id.vars = c("coordinates_lat", "coordinates_long"))
     
     plot_ly (type = 'scattermapbox',
+             colors = viridis_pal(option = "H")(20),
              mode = 'markers',
                                width = 900,
                                height = 500) %>%
