@@ -47,4 +47,4 @@ summary_all <- Kraken_summary[[1]]
 summary_summed <- Kraken_summary[[2]]
 
 write.csv( summary_all, output, row.names = FALSE )
-write.csv( summary_summed, paste0( 'summed_', output ), row.names = FALSE )
+write.csv( summary_summed, paste0( output, '_summed.csv' ), row.names = FALSE )
