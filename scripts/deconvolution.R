@@ -114,8 +114,8 @@ deconv <- function (bulk,sig){
   #' This function performs the deconvolution using a signature matrix for the mutations found in the sample 
   #' and bulk frequency values derived by the SNV caller
   #' it was build by Altuna
-  
-  rlm_model = suppressWarnings(MASS::rlm(sig,bulk, maxit = 100))
+    
+  rlm_model = suppressWarnings(MASS::rlm(sig,bulk, maxit = 100, method = "M"))
       
       
   rlm_coefficients = rlm_model$coefficients
@@ -127,4 +127,22 @@ deconv <- function (bulk,sig){
   rlm_coefficients = rlm_coefficients / sumOfCof  #normalize so coefficients add to 1
   
   as.vector(rlm_coefficients)
+}
+
+deconv_debug <- function (bulk,sig){
+  #' This function performs the deconvolution using a signature matrix for the mutations found in the sample
+  #' and bulk frequency values derived by the SNV caller
+  #' it was build by Altuna
+
+  rlm_model = suppressWarnings(MASS::rlm(sig,bulk, maxit = 100, method = "M"))
+    
+  rlm_coefficients = rlm_model$coefficients
+
+  rlm_coefficients = ifelse(rlm_coefficients < 0, 0, rlm_coefficients)
+
+  sumOfCof = sum(rlm_coefficients)
+
+  rlm_coefficients = rlm_coefficients / sumOfCof  #normalize so coefficients add to 1
+
+  return(list(as.vector(rlm_coefficients), rlm_model$fitted.values))
 }
