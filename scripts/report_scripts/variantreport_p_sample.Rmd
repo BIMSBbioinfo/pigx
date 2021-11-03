@@ -1,5 +1,5 @@
----
-title: "SARS-CoV-2 Mutations and Variant report"
+<---
+title: "SARS-CoV-2 Mutations and Lineage report"
 nav: "Variant report"
 author: "BIMSB Bioinformatics Platform"
 date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
