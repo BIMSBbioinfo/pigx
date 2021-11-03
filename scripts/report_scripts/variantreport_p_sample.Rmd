@@ -1,4 +1,4 @@
-<---
+---
 title: "SARS-CoV-2 Mutations and Lineage report"
 nav: "Variant report"
 author: "BIMSB Bioinformatics Platform"
@@ -56,12 +56,8 @@ coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_lon
 
 ``` 
 
-This report shows the variant analysis of SARS-CoV-2 from wastewater samples. Mutations are 
-identified by single-nucleotide-variant (SNV) calling performed by [LoFreq](https://csb5.github.io/lofreq/). 
-Translated to amino acid mutations by using [Ensemble VEP - COVID-19](https://covid-19.ensembl.org/info/docs/tools/vep/index.html).
-The list of found mutations (including synonymous and non-synonymous mutations) were matched against lists of 
-signature mutations characterising variants of concern (VOC) of SARS-CoV-2 provided by [outbreak.info](https://outbreak.info/situation-reports) 
-and [CoVariant.org](https://covariants.org/variants/S.501Y.V1).
+This lineage analysis report provides an overview over all mutations found in the sample and the deconvoluted lineage abundances. The tables below display the summarized results from single-nucleotide-variant (SNV) calling and their translation into protein mutations. A bar chart visualizes the proportions of lineages that are derived by deconvolution of the set of mutations that is matching the provided list of lineage - characterizing mutations (signature mutations). For detailed method description please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html#output-description)  
+*Note: Deconvolution results are biased by the number of reads and by the number of signature mutations that were found for this sample.  Check with the QC report to be able to assess how trustworthy the results are.*
 
 ```{r function_parse_snv_csv, include = FALSE, warning = F, message = F}
 parse_snv_csv <- function (snvfile,...){ # allele frequency from v-pipe vcf
@@ -263,20 +259,9 @@ nomatch.df <- complete.df %>%
                         filter(is.na(name))
 ```
 
-# Mutations matching variants of concern
+# Mutation analysis
 
-The following tables list the called SNVs. Table 1 shows the mutations matching signature mutations for given SARS-CoV-2 
-variants. Table 2 shows all other mutations without any match. The columns are described as follows:
-
-1. **SNV** -- nucleotide mutation in the pattern of: reference base, position nucleotide sequence, mutation base 
-2. annotated gene
-3. translated amino acid (AA) mutation in the pattern of: reference AA, position AA sequence, mutation AA
-    * a asterix `*` denotes a stop codon
-    * a dash `-` denotes a deletion
-4. variant of concern which is described by this mutation
-5. reported allele frequency
-6. read coverage of that particular mutation
-
+The following tables combine the results from the variant calling which are SNVs, their frequency and read coverage. They get translated to get the info about the resulting protein mutation and on which gene they are located. If the SNV matches a provided signature mutation it is marked which of the provided lineages they characterize. 
 ```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
 cat("\n Table 1: SNVs from sample matching signature mutations")
 ```
@@ -319,11 +304,9 @@ DT::datatable(NoSignatureTable,
               filter = "bottom")
 ```
 
-# Deconvolution
+# Lineage analysis
+Lineage proportion values are derived by deconvolution of the tracked signature mutations. Deconvolution is done by using a robust regression model. It aims to predict the individual contributions of the lineages to the observed mutation frequencies in the bulk wastewater sample. For detailed method description, please consult the [documentation](https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html#output-description)
 
-Deconvolution is done by using robust regression. It relies on signature mutations of each variant. It aims 
-to predict the individual contributions of the variants of concern to the observed mutation frequencies in the bulk 
-wastewater sample.
 
 ```{r getting_unique_muts_bulk, message=F, warning=F, include = FALSE}
 
@@ -396,7 +379,7 @@ for (lineage in deconv_lineages){
 }
 
 ```
-```{r calculate_sigmat_weigths, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+```{r simulating_WT_mutations, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 
 # construct additional WT mutations that are not weighted
 
@@ -420,9 +403,8 @@ bulk_all <- as.numeric(msig_stable_all[[2]])
 variant_abundance <- deconv(bulk_all,sig)
 
 ```
-`r if (executeDeconvolution){"The following bar plot shows the percentage of each VOCs in the sample as predicted by the
-deconvolution model. If it is not possible to identify a unique VOC from the reported mutation, 
-the column description shows all VOCs which are realted to the signature mutation."}` 
+`r if (executeDeconvolution){"The following bar plot shows the proportion of each lineage in the sample as predicted by the deconvolution model. For the case of multiple lineages being indistinguishable because of shared signature mutations, the deconvolution result for this group is distributed equally across each grouped lineage and they all get the same value. 
+"}` 
 
 ```{r plot, message=F, warning=F, echo = FALSE, eval = executeDeconvolution}
 
@@ -509,7 +491,8 @@ ggplot(data = df, aes(name,value,
      theme_gray(base_family = font_family)
 ```
 
-# Methods
+# Analysis Parameter
+
 ## LoFreq filter
 | LoFreq is used with default filter settings:       |                   |
 |:---------------------------------------------------|:------------------|
@@ -547,7 +530,7 @@ Variant effect prediction (*Ensemble VEP output*):
 # those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate 
 # file (and maybe rule)
 # get all possible variants
-all_variants <- colnames (msig_stable[, -which( names(msig_stable) %in% "muts" )])
+all_variants <- colnames (msig_simple[, -which( names(msig_simple) %in% "muts" )])
 output_variants <- file.path(csv_output_dir, "data_variant_plot.csv")
 # 1. write dataframe with this information here
 output_variant_plot <- data.frame (samplename = character(),
