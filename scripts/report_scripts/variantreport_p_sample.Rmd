@@ -338,45 +338,75 @@ executeDeconvolution <- length(mutations.vector) > 0
 
 
 ```{r creating_signature_matrix, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
-source(deconvolution_functions) # TODO should be given as input with the params section
+source(deconvolution_functions) 
 # create an empty data frame add a column for the Wildtype
 # Wildtype in this case means the reference version of SARS-Cov-2
 # for the deconvolution to work we need the "wild type" frequencies too. The matrix from above got mirrored, 
 # wild type mutations are simulated the following: e.g. T210I (mutation) -> T210T ("wild type")
 msig_simple <- createSigMatrix(mutations.vector, mutation_sheet)
-msig_stable_all <- simulateWT( mutations.vector, bulk_freq.vector, msig_simple)
-msig_stable <- msig_stable_all[[1]]
 
-```
-
-
-```{r collapse_identicals, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
-source(deconvolution_functions)
 # When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
 # between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
 # a vector with the information about which of the columns were merged. 
-
-msig_transposed <- dedupeDF( msig_stable )
-
+msig_simple <- cbind(muts = mutations.vector, msig_simple)
+msig_transposed <- dedupeDF( msig_simple )
 msig_stable_transposed <- msig_transposed[[1]]
 msig_dedupe_transposed <- msig_transposed[[2]]
 
 dropped_variants <- c()
 # for every variant update the rownames with the group they are in
-for (variant in rownames( msig_stable_transposed[-(row.names(msig_stable_transposed) %in% 'muts'),] )) {
+for (variant in rownames( msig_stable_transposed[-(rownames(msig_stable_transposed) %in% 'muts'),] )) {
   grouping_res <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
   msig_dedupe_transposed <- grouping_res[[1]]
   dropped_variants <- c(dropped_variants, grouping_res[[2]])
 }
 # transpose the data frame back to column format for additional processing
-if ( length(msig_dedupe_transposed) >= 1){ 
-    msig_stable_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) # the 1 get's rid of the additional first row which is an transposing artifact
-
+if ( length(msig_dedupe_transposed) >= 1){
+    # the 1 get's rid of the additional first row which is an transposing artifact
+    msig_simple_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) %>%
+                            mutate(across(!c("muts"), as.numeric))
 }
 # clean the vector to know which variants has to be add with value 0 after deconvolution
 dropped_variants <- unique(dropped_variants)
 dropped_variants <- dropped_variants[!is.na(dropped_variants)]
 ```
+```{r calculate_sigmat_weigths, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+
+deconv_lineages <- colnames(msig_simple_unique[,-which( names(msig_simple_unique) %in% c("muts", "WT") )])
+
+# create list of proportion values that will be used as weigths
+sigmut_proportion_weights <- list()
+for (lineage in deconv_lineages){
+    if ( grepl(",", lineage)){
+        group <- unlist(str_split(lineage, ","))
+        avrg <- sum(sig_mutations.df$name %in% group) / length(group)
+        value <- sum(msig_simple_unique[lineage]) / avrg
+    } else{
+        value <- sum(msig_simple_unique[lineage]) / sum(sig_mutations.df$name == lineage)
+    }
+    sigmut_proportion_weights[lineage] <- value
+}
+sigmut_proportion_weights <- as_tibble(sigmut_proportion_weights)
+
+# applying weights on signature matrix
+# fixme: there should be a way to do this vectorized
+msig_simple_unique_weighted <- msig_simple_unique
+for (lineage in deconv_lineages){
+    msig_simple_unique_weighted[lineage] <- msig_simple_unique_weighted[lineage] / as.numeric(sigmut_proportion_weights[lineage])
+}
+
+```
+```{r calculate_sigmat_weigths, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+
+# construct additional WT mutations that are not weighted
+
+msig_stable_all <- simulateWT( mutations.vector, bulk_freq.vector, 
+                               msig_simple_unique_weighted[,-which(names(msig_simple_unique_weighted) == "muts")],
+                                match.df$cov)
+msig_stable_unique <- msig_stable_all[[1]]
+
+```
+
 ```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
 source(deconvolution_functions)
 
