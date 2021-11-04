@@ -70,7 +70,7 @@ colnames(table) <- c("Proportion in %", "Number of covered fragments", "Number o
 datatable(table, filter="bottom")
 ```
 
-Example on interpretation of the countings:   
+Example on interpretation of the counting:   
 ```{r plot example_table, echo = FALSE}
 df <- data.frame( "Proportion in %" = c(40,30),
                   "Number of covered fragments" = c(1000,800),
