@@ -65,12 +65,11 @@ create_dt <- function(x){
 ```
 
 This pipeline performs mutation analysis of SARS-CoV-2 and reports and quantifies the occurrence of
-*variants of concern* (VOC) and signature mutations by which they are characterised.
+lineages and single nucleotide (single-NT) mutations.
 
 The visualizations below provide an overview of the evolution of VOCs found
 in the analyzed samples across given time points and locations. The abundance values for the variants are derived 
-by deconvolution (for details please see the [variant report](https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/WW_210304_KW1.variantreport_p_sample.html#2_Deconvolution)) 
-The frequencies of the mutations are the output of [LoFreq](https://csb5.github.io/lofreq/).
+by deconvolution. For details please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html#output-description))
 
 This pipeline is part of
 [PiGx](https://bioinformatics.mdc-berlin.de/pigx), a collection of
@@ -94,11 +93,10 @@ if ( !(length(coverages.df) == 0)){
     cat("\n No coverage values found.")
 }
 ```
-# Variants Of Concern
+# Lineage abundance
 
-These plots provide an overview of the relative frequencies of
-identified variants of concern (VOC) of SARS-CoV-2 at specific
-wastewater sampling locations over time.
+These plots provide an overview of the relative frequency dynamics of
+identified lineages at specific wastewater sampling locations over time. 
 
 ```{r filter_plot_frames_samplescore, echo=F, message=F, warning=F}
 source(params$fun_pool)
@@ -113,20 +111,16 @@ weights <- weights %>% dplyr::select( c(samplename, total_reads))
 approved_var_plot_location_pooled <- pool_by_weighted_mean(approved_var_plot, weights, "day_location")
 
 ```
-## Frequency of variants of concern over time for each location
 
-These plots show the relative frequency of detected variants of
-concern in samples at specific wastewater sampling locations, and how
-the frequencies change over time.
 
-Since not all variants of concern are listed, the relative
-frequencies at a given location and time will not necessarily add up
-to one.
 ```{r color_palette, echo=F, message=F, warning=F}
 Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f69e5", "#4cdab2", "#999ce4", "#2ce6f3",
 "#6638c6", "#005f29", "#5d73cc", "#616524", "#a8a041", "#e9f600", "#3eaca8", "#62a273", "#4ea5d0", "#655c95", "#67a04e")
 ```
 ```{r variants_pooled, message = FALSE, echo = FALSE}
+
+# TODO change order or "variable" so that "WT" is always displayed on top
+
 melted <- reshape2::melt(approved_var_plot_location_pooled,
                          id.vars = c("dates", "samplename"))
 p_variant_pooled <- subset(melted) %>%
@@ -146,7 +140,13 @@ p_variant_pooled <- subset(melted) %>%
            showlegend = TRUE,
            yaxis = list(title = "Frequency"))
 ```
-## Proportions of Variants Of Concern {.tabset .tabset-fade}
+## Lineage abundances stacked {.tabset .tabset-fade}
+
+The summary plot shows the results pooled by
+day and across locations by weighted average using the read number as weights.  
+Please use the tabs to access the not-pooled plots for each location.  
+
+
 ```{r tab_plotting_variants, message = FALSE, echo = FALSE, results='asis', fig.width=4, fig.height=4}
 # Get the current figure size in pixels:
 get_w <- function() {
@@ -159,6 +159,7 @@ get_h <- function() {
        fig.height*dpi/fig.retina)
 }
 
+# TODO change order or "variable" so that "WT" is always displayed on top
 # plot variant frequencies by location, no pooling
 melted <- reshape2::melt(approved_var_plot,
                          id.vars = c("dates", "samplename", "location_name",
@@ -201,11 +202,9 @@ for (i in 1:length(locations)){
 ```
 
 
-## Variants of concern per date and location
+## Lineage abundances geo-localized
 
-This plot visualizes the development of local outbreaks and the
-proportions of identified VOCs in that area.  The gray marker at every
-sampling location is overlayed by a colored disks for every variant.
+This plot visualizes proportions of identified lineage abundances at the provided sampling locations.
 
 <div class="notice">
 Locations of wastewater processing plants have been generated arbitrarily and do 
@@ -213,11 +212,14 @@ not correspond to actual locations.
 </div>
 
 Use the slider to select a specific date or hit the *Play* button to
-display all snapshots successively.  Click on a variant in the legend
+display all snapshots successively.  Click on a lineage in the legend
 to toggle its visibility in the map; double-click to view only the
-selected variant.
+selected lineage.
 
 ```{r maps_for_variants, echo=F, message=FALSE, warning=FALSE, out.width="900px", out.height="900px"}
+
+# TODO: the note about arbitray locations should be enable to be turned on and off
+    
 if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual values
     approved_var_plot_day_pooled  <- pool_by_weighted_mean(approved_var_plot, weights, "day")
     
@@ -263,24 +265,27 @@ if (nrow(approved_var_plot) > 0 ){ # check if filtered dataframe has actual valu
 }
 ```
 
-# Signature Mutations
+# Mutation dynamics
 
-Signature mutations are characterizing variants of concern (VOC) of
-SARS-CoV-2.  The following plots provide an overview of detected
-mutations in different locations, and how their relative frequency
-changes over time.
+The following plots provide an overview of detected single nucleotide
+mutations in different locations and how their relative frequency
+changes over time. Furthermore, mutations showing a significant frequency increase over time are highlighted.  
 
-Note that these plots only display signature mutations which where
-reported for VOCs.
+**Mutation notation**  
+Mutations are noted in the pattern of  
+**gene :: protein-sequence mutation : NT-sequence mutation**  
+Please note that this translation was done for single mutations. Combinations of single-NT mutations that taken together 
+may lead to a different amino acid are not yet taken into account. 
 
-## Mutations by location
+## Increasing mutations
 
-WIP: To show the dynamic of significantly changing mutations over time.... 
-As a first step...linear regression. The following table shows the most significant mutations, also indicating if increasing or decreasing.
+To show the dynamic of significantly changing mutations over time a linear regression model was applied to the mutation
+results across all samples. The following table shows the showing the strongest increasing trend (p <= 0.05). The number
+of trending mutation is restricted to the top 20. 
+
 ```{r title_lm_table, echo = FALSE, results = 'asis'}
 cat("\n Mutations with significant increase in frequency over time")
 ```
-### linear regression 
 ```{r linear_regression, echo=F, message=F, warning=F}
 source(params$fun_lm)
 mutation_sheet <- params$mutation_sheet
@@ -314,14 +319,10 @@ if (nrow(mutations_sig_unfiltered) > 0){
 
 
 ```
-### Download linear regression results:
-[Download significant_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_download)`) (only p-values)    
-[Download lm_res_all_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered_download)`) (p-values, coefficients)
 
+[Download significant_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_download)`)     
+[Download lm_res_all_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered_download)`) (unfiltered)
 
-These plots show the relative frequency of detected signature
-mutations in samples at specific wastewater sampling locations, and
-how the frequencies change over time.
 
 ```{r mutations_pooled, echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -356,7 +357,10 @@ p_mutations_pooled <- subset(melted) %>%
               yaxis = list(title = "Frequency"))
 } # mke sure there are other columns except the name and date
 ```
-## Significantly increasing mutations over time {.tabset .tabset-fade}
+## Trending mutations over time {.tabset .tabset-fade}
+
+These plots show the relative frequency of detected mutations with strong increasing trends in samples at specific wastewater sampling locations and how the frequencies change over time. Please use the tabs to access the not-pooled plots for each location.
+
 ```{r tab_plotting_mutations, echo = FALSE, message = FALSE, warning = FALSE, results='asis', fig.width=4, fig.height=4}
 
 plot_muts <- function (location) {
@@ -411,11 +415,10 @@ if (length(approved_mut_plot)>5){ # TODO check if the filtered df has actual val
 }
 
 ```
-## Signature mutations by location
+## Trending mutations geo-localized
 
-This plot visualizes the development of local outbreaks on the level
-of single mutations.  The gray marker at every sampling location is
-overlayed by a colored disks for each mutation.
+This plot visualizes proportions of identified single mutation dynamics at the provided sampling locations.
+
 
 <div class="notice">
 Locations of wastewater processing plants have been generated arbitrarily and do 
@@ -423,10 +426,13 @@ not correspond to actual locations.
 </div>
 
 Use the slider to select a specific date or hit the *Play* button to
-display all snapshots successively.
+display all snapshots successively.  Click on a mutation in the legend
+to toggle its visibility in the map; double-click to view only the
+selected lineage.
+
 
 ```{r mutations_for_locations_and_date, echo=F, message=F, warning=F, out.width="900px", out.height="900px"}
-# TODO: remove the light gray date description from the plot
+# TODO: the note about arbitray locations should be enable to be turned on and off
 # TODO: find a way to only show dynamic of one single mutation over the whole time
     
 if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the filtered df has actual values besides meta data
@@ -481,12 +487,12 @@ if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the 
 }
 ```
 
-## Raw data summaries and download
+# Data summaries and download
 
 ```{r table_var_frqs, echo = FALSE}
 df_var_download <- df_var %>% paste0(collapse="\n") %>% base64_urlencode()
 ```
-Frequencies per variant per sample, derived by deconvolution, pooled by weighted mean by read number")
+Frequencies per lineage per sample, derived by deconvolution, pooled by weighted mean by read number")
 [Download variant_frequencies.csv](`r sprintf('data:text/csv;base64,%s', df_var_download)`)
 
 ```{r table_mut_freqs, echo = FALSE}
@@ -521,7 +527,7 @@ Counts of mutations found across all sample and per sample
 For every sample three reports are generated:  
     
   * a QC report reporting general statistics and amplicon coverage  
-  * a variant report including tables summarizing the mutation
+  * a lineage report including tables summarizing the mutation
     calling and the deconvolution results for the abundance of VOCs  
   * a taxonomic classification report including a pie chart showing the
     analysis of the unaligned reads.
@@ -554,13 +560,21 @@ datatable(df, options = list( fixedColumns = TRUE,
                                scroller = TRUE,
                                dom = 'Slfrtip'))
 ```
-## Discarded samples after alignment quality control
+# Discarded samples 
+
+Prior visualization and regression analysis each sample gets a quality score depending on proportion of covered reference 
+genome and proportion of covered signature mutation locations. Results from samples without sufficient coverage measures 
+(< 90%) are not included in the visualizations or the linear regression calculations. 
+
 ```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE, results = 'asis'}
     # table displaying bad samples which are not further inlcuded 
-    cat("\n Table 1: Samples without sufficient amplicon coverage. They aren't included in the visualization or the linear regression") # TODO refine this text
+    cat("\n Table 1: Discarded samples not matching the provided sample quality scoring") # TODO refine this text
  ```
 
 ```{r table_ample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
+
+# TODO the sample quality measure default: 90% should be able to provide by the settings file
+
 if ( !(length(coverages.df) == 0)){
     # TODO refine column names --> e.g "coverage in percent", 
     bad_samples.df <- bad_samples.df %>% slice_head(n=20)
