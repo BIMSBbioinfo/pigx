@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Collate read counts into one big matrix 
+# Collate read counts into one big matrix
 
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -32,14 +32,14 @@ counts <- lapply(count_files, function(f) {
 })
 
 # merge list of data frames
-counts_all <- as.data.frame(Reduce(function(dtf1, dtf2) 
-  merge(dtf1, dtf2, by = "V1", all.x = TRUE),
+counts_all <- as.data.frame(Reduce(function(dtf1, dtf2)
+  data.table::merge.data.table(dtf1, dtf2, by = "V1", all.x = TRUE),
        counts))
 rownames(counts_all) <- counts_all$V1
 counts_all$V1 <- NULL
 
 # save results to out file
-write.table(counts_all, out_file, quote = FALSE, 
+write.table(counts_all, out_file, quote = FALSE,
             sep = '\t')
 
 
