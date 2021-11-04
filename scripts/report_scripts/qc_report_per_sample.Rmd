@@ -31,6 +31,9 @@ library(magrittr)
 library(base64url)
 ```
 
+This report provides an overview over general quality control measures of the sample  and provides the summarized data as downloadable tables. 
+For detailed information about the methods please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html#output-description). 
+
 ```{r reading data, include = FALSE}
 coverage.df <- read.table(params$coverage_file, sep = "\t", header = T)
 coverage.df <- na_if(coverage.df, "[]")
@@ -39,19 +42,10 @@ coverage.df <- gsub('\\]','',coverage.df)
 # fixme: this can be sure done in a nicer and more compact way
 ```
 # Coverage reports
-## Number of amplicons covered
+Here, the information about read coverage of the reference genome as well as coverage of the mutation locations that were provided are listed. From those values, the overall quality of the sample can be assessed and whether or not its analysis results should and will be used for further trend-analysis and visualization. 
+## Mutation locations
 
-The table below shows how many amplicons are covered. Since paired read alignement is used it is distiguished between:
-
-+ **fully covered** -- covered by both strands
-+ **partially covered** -- covered only by one strand
-+ **drop out** -- not covered.
-
-This is important to know to see if regions and genes which could carry mutations of particular interest are covered or not. 
-The information about the amplicon primer was taken from the [ARTIC bioinformatics platform](https://github.com/joshquick/artic-ncov2019/blob/master/primer_schemes/nCoV-2019/V3/nCoV-2019.bed).
-The name of the reference sequence version ["MN908947.3"](https://www.ncbi.nlm.nih.gov/nuccore/MN908947) was changed 
-to ["NC_045512.2"](https://www.ncbi.nlm.nih.gov/nuccore/1798174254). Those versions of the SARS-CoV-2 reference genome 
-are identical.
+In order to assess variant calling based on mutations of interest it is crucial that its genome locations are covered by read alignment. The table below shows the proportion of covered mutation locations, how many mutations are tracked in total, how many of their locations are covered and which locations have no read coverage at all. 
  
 ```{r amplicon_coverage, message=F, warning=F, echo = FALSE}
 
@@ -63,12 +57,9 @@ datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE)
 
 ```
 
-## Read coverage
+## Reference Genome
 
-This table shows the number of aligned reads, the mean coverage depth
-and percentage of the reference genome covered by pre-processed reads.
-Preprocessing was done by
-[*Prinseq*](http://prinseq.sourceforge.net/index.html).
+This table shows the total number of raw reads, number of aligned reads, the mean coverage depth and percentage of the reference genome covered by pre-processed reads.
 
 ```{r read_coverage, message=F, warning=F, echo = FALSE}
 
