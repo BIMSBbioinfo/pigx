@@ -419,7 +419,7 @@ rule counts_from_SALMON:
       colDataFile = rules.translate_sample_sheet_for_report.output
   output:
       os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.transcripts.tsv"),
-      os.path.join(COUNTS_DIR, "raw_counts", "salmon","counts_from_SALMON.genes.tsv"),
+      os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.genes.tsv"),
       os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
       os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.genes.tsv")
   resources:
@@ -523,6 +523,7 @@ rule report1:
     outdir=os.path.join(OUTPUT_DIR, "report", MAPPER),
     reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
+    description = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['description'].replace("'",".").replace('"','.'),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
@@ -533,7 +534,7 @@ rule report1:
   resources:
     mem_mb = 4000
   shell:
-    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}'  >> {log} 2>&1"
+    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
 
 rule report2:
   input:
@@ -543,6 +544,7 @@ rule report2:
     outdir=os.path.join(OUTPUT_DIR, "report", 'salmon'),
     reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
+    description = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['description'].replace("'",".").replace('"','.'),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
@@ -552,7 +554,7 @@ rule report2:
     os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html')
   resources:
     mem_mb = 4000
-  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
 
 rule report3:
   input:
@@ -562,6 +564,7 @@ rule report3:
     outdir=os.path.join(OUTPUT_DIR, "report", "salmon"),
     reportR=os.path.join(SCRIPTS_DIR, "runDeseqReport.R"),
     reportRmd=os.path.join(SCRIPTS_DIR, "deseqReport.Rmd"),
+    description = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['description'].replace("'",".").replace('"','.'),
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
@@ -571,4 +574,4 @@ rule report3:
     os.path.join(OUTPUT_DIR, "report", "salmon", '{analysis}.salmon.genes.deseq.report.html')
   resources:
     mem_mb = 4000
-  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"

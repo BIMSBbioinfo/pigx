@@ -6,6 +6,7 @@ params:
   countDataFile: ''
   colDataFile: ''
   gtfFile: ''
+  description: ''
   caseSampleGroups: ''
   controlSampleGroups: ''
   covariates: ''
@@ -65,6 +66,17 @@ ggplot2::theme_set(ggpubr::theme_pubclean())
 
 # Description
 
+```{r printInputSettings, results='asis'}
+
+if (!is.null(params$description)) {
+   cat("  \n")
+   cat(params$description)
+   cat("  \n")
+   cat("  \n")
+}
+
+```
+
 PiGx RNAseq performs differential expression analysis using _DESeq2_, and produces this report. The report includes tables and figures summarizing similarities and differences between comparison groups as specified in the settings file. In addition to the differential expression analysis, there are plots and statistics for quality control of the experiment in general with an emphasis on the reproducibility of the sequencing results among the biological replicates.
 
 This report was generated with PiGx RNAseq version @VERSION@.
@@ -77,6 +89,7 @@ To reproduce the here presentined findings, consider rerunning the respective co
 countDataFile <- params$countDataFile
 colDataFile <- params$colDataFile
 gtfFile <- params$gtfFile
+description <- params$description
 caseSampleGroups <- params$caseSampleGroups
 controlSampleGroups <- params$controlSampleGroups
 covariates <- params$covariates

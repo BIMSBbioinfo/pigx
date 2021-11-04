@@ -35,6 +35,7 @@ counting:
 #  # string value.
 #
 #  analysis1:
+#    description: "A couple of sentences describing the purpose to perform this particular comparison and the selection of covariates."
 #    # If multiple sample names are provided, they must be separated by comma.
 #    case_sample_groups: "HBR"
 #    control_sample_groups: "UHR"
@@ -46,6 +47,7 @@ counting:
 #    covariates: ""
 #
 #  analysis2:
+#    description: "Every analysis has its disting description which is then shown in the introduction section of the report."
 #    case_sample_groups: "UHR"
 #    control_sample_groups: "HBR"
 #
