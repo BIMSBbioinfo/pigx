@@ -16,7 +16,7 @@ given variants-of-concern of SARS-CoV-2. The pipeline can be used for continuous
 an intuitive visual overview about the development of variant abundance over time and location. 
 
 **Please note**
-The current release (0.0.3) is a functional prototype of the pipeline. If you would like to test already the latest functional dev version containing feature updates and more robust analysis, please consider to use the [development branch](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/tree/WIP_various_report_improvements).
+The current release (0.0.3) is a functional prototype of the pipeline. If you would like to test already the latest functional dev version containing feature updates and more robust analysis, please consider to use the [development branch](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/tree/development).
 
 # Documentation
 
