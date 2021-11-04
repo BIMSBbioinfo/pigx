@@ -32,17 +32,21 @@ counts <- lapply(count_files, function(f) {
 })
 
 # merge list of data frames
-labs <- apply(combn(LETTERS,3),2,paste,collapse="")
-counts_all <- as.data.frame(Reduce(function(dtf1, dtf2) {
-    cat("I: ncol(dtf1): ",ncol(dtf1), "  ncol(dtf2): ",ncol(dtf2),"\n")
-    colnames(dtf1)[2:ncol(dtf1)] <- labs[1:ncol(dtf1)-1]
-    # it is sufficient to rename one of the two
-    merge(dtf1, dtf2, by = "V1", all.x = TRUE)
-  }, counts))
-
-
+counts_all <- as.data.frame(Reduce(function(dtf1, dtf2) 
+  merge(dtf1, dtf2, by = "V1", all.x = TRUE),
+       counts))
 rownames(counts_all) <- counts_all$V1
 counts_all$V1 <- NULL
 
 # save results to out file
-write.table(counts_all, out_file, quote = FALSE, col.names=FALSE, sep = '\t')
+write.table(counts_all, out_file, quote = FALSE, 
+            sep = '\t')
+
+
+
+
+
+
+
+
+
