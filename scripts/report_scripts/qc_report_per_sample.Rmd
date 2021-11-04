@@ -49,11 +49,12 @@ In order to assess variant calling based on mutations of interest it is crucial 
  
 ```{r amplicon_coverage, message=F, warning=F, echo = FALSE}
 
-AmpliconCoverage <- data.frame("Number of amplicon fully covered" = paste0(coverage.df[1],' out of 98'), 
-                               "Amplicons partially covered" = coverage.df[2],
-                               "Drop-out amplicons" = coverage.df[3]) # maybe more clear title stating which coverage
+mut_cov.df <- data.frame("Total number of tracked mutations" = coverage.df[1], 
+                         "Number of mutations covered" = coverage.df[2],
+                         "Mutation locations (NT) not covered" = coverage.df[3], 
+                         check.names = FALSE)
 
-datatable(t(AmpliconCoverage), options = list(searching = FALSE, paging = FALSE))
+datatable(t(mut_cov.df), options = list(searching = FALSE, paging = FALSE))
 
 ```
 
