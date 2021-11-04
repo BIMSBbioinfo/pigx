@@ -64,9 +64,10 @@ This table shows the total number of raw reads, number of aligned reads, the mea
 
 ```{r read_coverage, message=F, warning=F, echo = FALSE}
 
-Coverage <- data.frame("Total coverage" = coverage.df[4], 
-                       "Aligned reads" = paste(round(as.integer(coverage.df[5]),1),"%"),
-                       "Mean depth" = round(as.integer(coverage.df[6]))) # TODO more clear title stating which coverage
+Coverage <- data.frame("Total ref. genome coverage" = coverage.df[4], 
+                       "Number of aligned reads" = paste(round(as.integer(coverage.df[5]),1),"%"),
+                       "Mean read depth" = round(as.integer(coverage.df[6])), 
+                        check.names = FALSE) # TODO more clear title stating which coverage
 
 datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
 
