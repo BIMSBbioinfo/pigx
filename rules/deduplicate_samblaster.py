@@ -41,5 +41,5 @@ rule samblaster_markdup_sort:
         tool("samblaster"),toolArgs("samblaster"),"2>> {log}","|",
         tool("samtools"),"sort","-T={params.prefix}",
          "-o {output.bam}", "-@ {params.threads}", 
-         "-m {params.memory}", "-l 9","2> {log}",";",
+         "-m {params.memory}", "-l 9","2>> {log}",";",
          tool("samtools"),"index {output.bam}"],("{log}"))
