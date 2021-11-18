@@ -71,6 +71,8 @@ EXTRA_DIST += META.in
 
 clean-local:
 	-rm -rf .snakemake
+	-rm -rf tests/out
+	-rm -rf tests/out/.snakemake
 
 CLEANFILES = $(nodist_bin_SCRIPTS) config.json
 
