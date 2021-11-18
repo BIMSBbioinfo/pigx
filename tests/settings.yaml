@@ -43,3 +43,8 @@ execution:
   nice: 19
   cluster:
     contact-email: none
+  rules:
+    samblaster_markdup_sort:
+      threads: 6
+      memory: 1M
+                      
