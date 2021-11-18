@@ -34,7 +34,7 @@ rule samblaster_markdup_sort:
         prefix=DIR_sorted+"{sample}"
     log:
         DIR_sorted+"{sample}_markdups.log"
-    message: fmt("Deduplicating reads with samblaster for sample {{sample}}")
+    message: fmt("Deduplicating reads with samblaster for sample {wildcards.sample}")
     shell:
         nice("samtools", 
         ["view -h {input}"," | ", 
