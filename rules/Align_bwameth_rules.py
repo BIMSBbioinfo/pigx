@@ -91,7 +91,7 @@ rule bwameth_align_trimmed:
         threads = config['execution']['rules']['bwameth_align_trimmed']['threads']
     log:
         DIR_mapped+"{sample}_bwameth_mapping.log"
-    message: "Mapping reads to genome using bwa-meth for sample {wildcards.sample}."
+    message: fmt("Mapping reads to genome using bwa-meth for sample {wildcards.sample}.")
     shell:
       nice("bwameth",["--reference {GENOMEFILE}","-t {params.threads}",
           "{input.files}","2> {log}","|",
