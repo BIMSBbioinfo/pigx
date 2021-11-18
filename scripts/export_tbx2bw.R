@@ -128,7 +128,7 @@ methList <- lapply(SinfoList,
                 options(scipen = 999)
                 methylKit:::.setMethylDBNames(dt)
                 # merge strands if destrand==TRUE
-                if(destrand) dt <- methylKit:::.CpG.dinuc.unifyOld(dt)
+                if(destrand) dt <- setDT(methylKit:::.CpG.dinuc.unify(dt))
                 dt[,score := numCs/coverage]
                 dt[,c("coverage","numCs","numTs") := NULL] 
                 return(dt)    
