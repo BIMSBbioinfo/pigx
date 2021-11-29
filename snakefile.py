@@ -250,17 +250,18 @@ targets = {
 #     d_targets.append('bwameth-mapping-stats')
 
 selected_targets_default = [] 
+do_DManalyses = "DManalyses" in config.keys()
 
 if USEBISMARK:
     # Should we perform differential analysis?
-    if config["DManalyses"]:
+    if do_DManalyses:
       selected_targets_default += ['final-report', 'diffmeth-report', 'bigwig', 'multiqc']
     else:
       selected_targets_default += ['final-report', 'bigwig','multiqc']
 
 if USEBWAMETH:
     # Should we perform differential analysis?
-    if config["DManalyses"]:
+    if do_DManalyses:
       selected_targets_default += ['final-report-bwameth', 'diffmeth-report-bwameth', 'bigwig-bwameth', 'multiqc-bwameth']
     else:
       selected_targets_default += ['final-report-bwameth', 'bigwig-bwameth','multiqc-bwameth']

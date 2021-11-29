@@ -107,12 +107,16 @@ def validate_config(config):
     treatments = set([config["SAMPLES"][sample]["Treatment"]
                       for sample in config["SAMPLES"]])
     if 'DManalyses' in config:
-        for analysis in config['DManalyses']:
-                for group in config['DManalyses'][analysis]['treatment_sample_groups'].split(",") + config['DManalyses'][analysis]['control_sample_groups'].split(","):
-                    group = group.strip() #remove any leading/trailing whitespaces in the sample group names
-                    if not any(treat == group for treat in treatments):
-                        bail("ERROR: Invalid treatment group '{}' in analysis '{}'".format(
-                        group, analysis))
+        if config['DManalyses']:
+            for analysis in config['DManalyses']:
+                    for group in config['DManalyses'][analysis]['treatment_sample_groups'].split(",") + config['DManalyses'][analysis]['control_sample_groups'].split(","):
+                        group = group.strip() #remove any leading/trailing whitespaces in the sample group names
+                        if not any(treat == group for treat in treatments):
+                            bail("ERROR: Invalid treatment group '{}' in analysis '{}'".format(
+                            group, analysis))
+        else:
+            bail("ERROR: The config file contains empty 'DManalyses' section, please consider removing or commenting out this section.\n")
+            
                         
     if 'treatment-groups' in config['general']['differential-methylation']:
         bail("ERROR: The specification of treatment groups and differential analysis has changed.\n"+
@@ -470,11 +474,12 @@ def diffmeth_input_function(treatments):
 
 # FIXME: create named treatment groups in settings file
 def files_for_treatment(proc):
-    treatment_groups = config['DManalyses']
-    if treatment_groups:
-        return [expand(proc(comparison)) for comparison in treatment_groups if comparison]
-    else:
-        return []
+    if "DManalyses" in config.keys():
+        treatment_groups = config['DManalyses']
+        if treatment_groups:
+            return [expand(proc(comparison)) for comparison in treatment_groups if comparison]
+        else:
+            return []
 
 # FIXME: create files dependend on context
 def list_files_unite_bismark(treatment):
