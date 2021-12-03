@@ -45,8 +45,7 @@ EXTRA_DIST = \
 AM_TESTS_ENVIRONMENT = srcdir="$(abs_top_srcdir)" builddir="$(abs_top_builddir)" PIGX_UNINSTALLED=1 PIGX_UGLY=1
 
 TESTS = \
-  tests/tests/vep.sh \
-  tests/tests/test_deconvolution.R
+  tests/tests/vep.sh 
 
 clean-local:
 	-rm -rf .snakemake
