@@ -71,6 +71,7 @@
         "r-tidyr"
         "r-tidyverse"
         "r-reshape2"
+        "r-r-utils"
         "python-wrapper"
         "python-pyyaml"))
 

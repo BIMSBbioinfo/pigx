@@ -74,6 +74,7 @@ AX_R_PACKAGE([rmarkdown])
 AX_R_PACKAGE([stringr])
 AX_R_PACKAGE([tidyr])
 AX_R_PACKAGE([reshape2])
+AX_R_PACKAGE([r-r-utils])
   ])
 
 AC_ARG_ENABLE([environment-capture],

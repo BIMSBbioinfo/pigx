@@ -1,4 +1,5 @@
 library(dplyr)
+library(R.utils)
 
 concat_overview_table <- function ( sample_sheet, reads_dir, sample_dir ) {
   
