@@ -191,14 +191,16 @@ for ( i in seq_along(locations)) {
   plot_list[[i]] <- plot_name
 }
 
-cat("###", 'Summary over all locations', '{-}', '\n\n')
-print(htmltools::tagList(ggplotly(p_variant_pooled)))
-cat('\n\n')
-for (i in 1:length(locations)){
-  cat("###", locations[i], '{-}', '\n\n')
-  print(htmltools::tagList( ggplotly ( plot_list[[i]])))
+if ( length(plot_list) >= 1 ){
+    cat("###", 'Summary over all locations', '{-}', '\n\n')
+    print(htmltools::tagList(ggplotly(p_variant_pooled)))
     cat('\n\n')
-}
+    for (i in 1:length(locations)){
+      cat("###", locations[i], '{-}', '\n\n')
+      print(htmltools::tagList( ggplotly ( plot_list[[i]])))
+        cat('\n\n')
+    }
+} else (cat("not enought data to summarize & plot or sample quality is not sufficient enough"))
 ```
 
 
@@ -310,23 +312,26 @@ if (nrow(approved_mut_plot) > 0){
     approved_mut_plot_location_pooled <- pool_by_mean(approved_mut_plot, na_handling = TRUE, group_fun = "day_location")
   mutations_sig_download <- mutations_sig %>% paste0(collapse="\n") %>% base64url::base64_urlencode()
     create_dt(mutations_sig)
-} else { create_dt(mutations_sig) }
-if (nrow(mutations_sig_unfiltered) > 0){  
+    
+    if (nrow(mutations_sig_unfiltered) > 0){  
     mutations_sig_unfiltered <- mutations_sig_unfiltered %>%
       rowwise() %>%
       mutate( sigflag = ifelse( any(sigmuts.df == str_split(mutation, "::")[[1]][2]), "sigmut", ''))}
     mutations_sig_unfiltered_download <- mutations_sig_unfiltered %>% paste0(collapse="\n") %>% base64url::base64_urlencode()
+    
+} else { cat("No mutations or not enough mutations found to perform a regression anaylsis.") }
+
 
 
 ```
 
-[Download significant_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_download)`)     
-[Download lm_res_all_mutations.csv](`r sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered_download)`) (unfiltered)
+[Download significant_mutations.csv](`r if (exists("mutations_sig_download")){  sprintf('data:text/csv;base64,%s', mutations_sig_download)}`)     
+[Download lm_res_all_mutations.csv](`r if (exists("mutations_sig_unfiltered_download")){ sprintf('data:text/csv;base64,%s', mutations_sig_unfiltered_download)}`) (unfiltered)
 
 
 ```{r mutations_pooled, echo = FALSE, message = FALSE, warning = FALSE}
 
-if (length(approved_mut_plot_location_pooled) > 2){
+if ( exists("approved_mut_plot_location_pooled") && length(approved_mut_plot_location_pooled) > 2){
   melted <- melt(approved_mut_plot_location_pooled,
                    id.vars = c("dates", "samplename"))
 # flag if mutation is signature mutation
@@ -383,7 +388,7 @@ plot_muts <- function (location) {
                                   yaxis = list(title = "Frequency"))
 }
 
-if (length(approved_mut_plot)>5){ # TODO check if the filtered df has actual values besides meta data
+if (exists("approved_mut_plot") && length(approved_mut_plot)>5 && nrow(approved_mut_plot) > 0){ # TODO check if the filtered df has actual values besides meta data
   
     melted <- melt(approved_mut_plot,
                    id.vars = c("dates", "samplename", "location_name",
@@ -435,7 +440,7 @@ selected lineage.
 # TODO: the note about arbitray locations should be enable to be turned on and off
 # TODO: find a way to only show dynamic of one single mutation over the whole time
     
-if (nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the filtered df has actual values besides meta data
+if (exists("approved_mut_plot") && nrow(approved_mut_plot) > 0 && length(approved_mut_plot)>5){ # check if the filtered df has actual values besides meta data
        approved_mut_plot_day_pooled  <- pool_by_mean(approved_mut_plot, TRUE, "day")
   
     
@@ -505,11 +510,16 @@ Frequencies per mutation per sample
 ```{r mutation_counts, message = FALSE, echo = FALSE}
 # get functions for counting and writing
 source(params$fun_tbls)
-
-# make the mutation count frame
-count_frame <- write_mutations_count(df_mut, sigmuts.df, mutations_sig)
 output_dir <- params$output_dir
+# make the mutation count frame
+if (exists("mutations_sig")){
+count_frame <- write_mutations_count(df_mut, sigmuts.df, mutations_sig)
 
+} else {
+    # write empty files
+    count_frame <- data.frame()
+    mutations_sig_unfiltered <- data.frame()
+}
 # write to file
 write.csv(count_frame, file.path(output_dir, "mutations_counts.csv"), 
          na = "NA", row.names = FALSE, quote = FALSE)
@@ -518,9 +528,10 @@ write.csv(mutations_sig_unfiltered, file.path(output_dir, "linear_regression_res
 
 # show and make downloadable
 count_frame <- count_frame %>% paste0(collapse="\n") %>% base64_urlencode()
+
 ``` 
 Counts of mutations found across all sample and per sample
-[Download mutation_counts.csv](`r sprintf('data:text/csv;base64,%s', count_frame)`)
+[Download mutation_counts.csv](`r if (exists("count_frame")){sprintf('data:text/csv;base64,%s', count_frame)}`)
 
 # Detailed per-sample reports
 
