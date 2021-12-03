@@ -63,18 +63,11 @@ read_num_raw <- function ( raw_reads_vector, reads_dir){
 
 apply_fun_get_read_num <- function (read, reads_dir) {
   require(stringr)
-  
-  if ( any( unlist(str_split(read,'\\.')) %in% 'gz') ){
-    read_num <- as.numeric(
-                        system2(command = "echo", 
-                        args = c ("$(zcat ", file.path(reads_dir, read), "|wc -l)/4|bc"),
-                        stdout = TRUE))
-  } else {
-      read_num <- as.numeric(
-                      system2(command = "echo", 
-                      args = c ("$(cat ", file.path(reads_dir, read), "|wc -l)/4|bc"),
-                      stdout = TRUE))
-  }
+  require(R.utils)
+
+  file <- file.path(reads_dir, read)
+  read_num <- countLines(file)/4
+
   data.frame( read_num )
 }
 
@@ -94,7 +87,7 @@ apply_fun_parse_coverage_file <- function ( sample, sample_dir ){
 args <- commandArgs(trailingOnly = TRUE)
 sample_dir <- args[1]
 sample_sheet <- args[2]
-reads_dir <- args[3] 
+reads_dir <- args[3]
 output <- args[4]
 
 df <- concat_overview_table(sample_sheet, reads_dir, sample_dir)
