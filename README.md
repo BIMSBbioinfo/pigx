@@ -15,6 +15,80 @@ PiGx SARS-CoV-2 is a pipeline for analysing data from sequenced wastewater sampl
 given variants-of-concern of SARS-CoV-2. The pipeline can be used for continuous sampling. The output report will provide 
 an intuitive visual overview about the development of variant abundance over time and location. 
 
+# Installation
+
+## Databases
+Some tools require some databases to be installed locally. For this please either see the Documentation below or run 
+[download_databases.sh](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/scripts/download_databases.sh.in) after
+the pipeline is installed. 
+
+## Installation via Guix (recommended)
+
+You can install this pipeline with all its dependencies using GNU Guix:
+```sh 
+guix package -i pigx-sars-cov-2-ww
+```
+
+Using GNU Guix has many advantages in terms of reproducibility of your projects (see e.g. [here](https://academic.oup.com/gigascience/article/7/12/giy123/5114263)) 
+If you don't have GNU Guix on your system you can also consider using [GNU Guix in a VM](https://guix.gnu.org/manual/en/html_node/Running-Guix-in-a-VM.html)
+
+
+## Installation from source
+
+You can also install PiGx-SARS-CoV-2 from source manually. Make sure that all the required dependencies (for this see e.g [configure.ac](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/blob/main/configure.ac)) 
+are installed e.g. by installing them through a package manager like Conda. However, we can highly recommend using Guix (see above)
+
+<details>
+    <summary> The following tools must be available (latest version): </summary>
+
+    - snakemake  
+    - samtools  
+    - bwa  
+    - bedtools  
+    - fastp  
+    - fastqc  
+    - R  
+    - Rscript  
+    - kraken2  
+    - kraken2-build  
+    - ktImportKrona  
+    - ktImportTaxonomy  
+    - ivar  
+    - lofreq  
+    - vep  
+    - multiqc  
+    - pandoc  
+    - pandoc-citeproc
+
+And the R-packages:  
+
+    - DT  
+    - base64url    
+    - dplyr    
+    - ggplot2    
+    - magrittr  
+    - plotly  
+    - qpcR  
+    - rmarkdown  
+    - stringr  
+    - tidyr  
+    - reshape2  
+    - R.utils  
+
+All of these dependencies must be present in the environment at
+configuration time.
+</details>
+
+Then you can use the buildsteps:  
+```sh
+./bootstrap.sh # to generate the "configure" script
+./configure
+make
+make check
+```
+
+## Use the Docker Image
+Will be available soon
 
 # Documentation
 
