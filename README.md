@@ -23,8 +23,9 @@ https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html
 
 # Sample Reports
 
-See sample HTML reports produced by PiGx pipelines:
-https://bimsbstatic.mdc-berlin.de/akalin/PiGx/sars-cov2-ww/example_report/index.html
+See as example the HTML report produced by PiGx SARS-Cov-2 used for 
+["COVID-19 infection dynamics revealed by SARS-CoV-2 wastewater sequencing analysis and deconvolution"](https://www.medrxiv.org/content/10.1101/2021.11.30.21266952v1)
+https://bimsbstatic.mdc-berlin.de/akalin/AAkalin_pathogenomics/sarscov2_ww_reports/211104_pub_version/index.html 
 
 # Getting help
 
