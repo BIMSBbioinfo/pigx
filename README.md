@@ -11,9 +11,17 @@
 
 -----------
 
-PiGx SARS-CoV-2 is a pipeline for analysing data from sequenced wastewater samples and identifying 
-given variants-of-concern of SARS-CoV-2. The pipeline can be used for continuous sampling. The output report will provide 
-an intuitive visual overview about the development of variant abundance over time and location. 
+PiGx SARS-CoV-2 is a pipeline for analysing data from sequenced wastewater samples and identifying given 
+lineages of SARS-CoV-2. It was developed for wastewater samples, which are enriched for SARS-CoV-2. 
+The pipeline can be used for continuous sampling. The output of the PiGx SARS-CoV-2 pipeline is summarized in a report
+which provides an intuitive visual overview about the development of variant abundance over time and location 
+(see our [example report](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww#sample-reports)). 
+Additionally there will be more detailed reports per sample, which cover the quality control of the samples, 
+the detected variants and a taxonomic classification of all unaligned reads. This version of the pipeline was designed 
+to work with paired-end amplicon sequencing data generated using the ARTIC nCoV-2019 primers.   
+
+Features to enable e.g. single-end input are currently under development. We are happy to hear about any other feature 
+request! Please consider using the Issue Tracker for this. 
 
 # Installation
 
