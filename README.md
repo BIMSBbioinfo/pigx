@@ -34,7 +34,7 @@ the pipeline is installed.
 
 You can install this pipeline with all its dependencies using GNU Guix:
 ```sh 
-guix package -i pigx-sars-cov-2-ww
+guix install pigx-sars-cov2-ww
 ```
 
 Using GNU Guix has many advantages in terms of reproducibility of your projects (see e.g. [here](https://academic.oup.com/gigascience/article/7/12/giy123/5114263)) 
