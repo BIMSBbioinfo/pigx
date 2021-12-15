@@ -81,16 +81,16 @@ execution:
       memory: 16000
     salmon_index:
       threads: 8
-      memory: 4000
+      memory: 5000
     salmon_quant:
       threads: 8
-      memory: 5000
+      memory: 6000
     star_map:
       threads: 2
       memory: 16000
     hisat2:
       threads: 2
-      memory: 4000
+      memory: 8000
     genomeCoverage:
       threads: 1
       memory: 4000
