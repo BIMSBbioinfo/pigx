@@ -72,31 +72,31 @@ execution:
   rules:
     __default__:
       threads: 1
-      memory: 8G
+      memory: 8000
     star_index:
       threads: 2
-      memory: 32G
+      memory: 32000
     hisat2-build:
       threads: 2
-      memory: 16G
+      memory: 16000
     salmon_index:
       threads: 8
-      memory: 4G
+      memory: 5000
     salmon_quant:
       threads: 8
-      memory: 5G
+      memory: 6000
     star_map:
       threads: 2
-      memory: 16G
+      memory: 16000
     hisat2:
       threads: 2
-      memory: 4G
+      memory: 8000
     genomeCoverage:
       threads: 1
-      memory: 4G
+      memory: 4000
     count_reads:
       threads: 1
-      memory: 6G
+      memory: 6000
 
 tools:
   gunzip:
