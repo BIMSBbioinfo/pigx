@@ -46,6 +46,11 @@ counting:
 #    # column field in the sample_sheet.csv file.)
 #    covariates: ""
 #
+#    # reports that are self-contained have all JavaScript code shipping as part of the result file.
+#    # That result file will hence be functional throughout time, which is the default setting.
+#    # For a more modular approach that references external sources set "FALSE"
+#    self_contained: TRUE
+#
 #  analysis2:
 #    description: "Every analysis has its disting description which is then shown in the introduction section of the report."
 #    case_sample_groups: "UHR"
