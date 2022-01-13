@@ -580,7 +580,7 @@ genome and proportion of covered signature mutation locations. Results from samp
 ```{r title_quality_score, echo=FALSE, message=FALSE, warning=FALSE, results = 'asis'}
     # table displaying bad samples which are not further inlcuded 
     cat("\n Table 1: Discarded samples not matching the provided sample quality scoring") # TODO refine this text
- ```
+```
 
 ```{r table_ample_quality_score, echo=FALSE, message=FALSE, warning=FALSE}
 

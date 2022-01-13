@@ -46,7 +46,7 @@ of unaligned reads.
 
 This interactive multi-layered pie chart displays the proportions of the classified taxons found in the sample. Shown are the taxonomy classes as nested sectors, with decreasing hierarchy from the center towards the periphery. The input values can be found in the table below. 
 
-<iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="./`r basename(params$krona_file)`"></iframe>
+<iframe id="krona" style="min-height: 100vh" width="100%" onload="this.height = this.contentWindow.document.body.scrollHeight;" src="`r params$krona_file`"></iframe>
 
 <font size="3"> 
 **Magnitude:** number of fragments covered by currently chosen supergroup displayed in the white middle of the circle   
