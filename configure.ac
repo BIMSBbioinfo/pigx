@@ -56,7 +56,6 @@ find_or_override_prog([VEP],             [vep])
 find_or_override_prog([MULTIQC],         [multiqc])
 find_or_override_prog([WGET],            [wget])
 find_or_override_prog([PANDOC],          [pandoc])
-find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
 
 AC_ARG_ENABLE([r-packages-check],
   AS_HELP_STRING([--disable-r-packages-check], [Do not check any R packages.]),
