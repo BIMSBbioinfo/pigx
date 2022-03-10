@@ -1,0 +1,25 @@
+#!@GNUBASH@
+
+set -e
+set -u
+
+export SOURCE_DATE_EPOCH=1
+export PIGX_UGLY=1
+export PIGX_UNINSTALLED=1
+
+# We do not use "readlink -f" here, because macos does not support it.
+export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' ${srcdir:-.})
+
+chmod -R +w ${srcdir}/tests
+
+# Perform a full paired end run
+
+${builddir}/pigx-sars-cov2-ww --printshellcmds -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
+
+if ! test -f "${srcdir}/tests/output/report/index.html"
+then
+    echo "ERROR: Could not find report for paired-end run."
+    exit 1
+fi
+
+
