@@ -512,7 +512,8 @@ rule count_reads:
 
 rule collate_read_counts:
   input:
-    expand(os.path.join(MAPPED_READS_DIR, MAPPER, "{sample}.read_counts.csv"), sample = SAMPLES)
+    colDataFile = rules.translate_sample_sheet_for_report.output,
+    count_files = expand(os.path.join(MAPPED_READS_DIR, MAPPER, "{sample}.read_counts.csv"), sample = SAMPLES)
   output:
     os.path.join(COUNTS_DIR, "raw_counts", MAPPER, "counts.tsv")
   resources:
@@ -522,7 +523,7 @@ rule collate_read_counts:
     mapped_dir = os.path.join(MAPPED_READS_DIR, MAPPER),
     script = os.path.join(SCRIPTS_DIR, "collate_read_counts.R")
   shell:
-    "{RSCRIPT_EXEC} {params.script} {params.mapped_dir} {output} >> {log} 2>&1"
+    "{RSCRIPT_EXEC} {params.script} {params.mapped_dir} {input.colDataFile} {output} >> {log} 2>&1"
 
 # create a normalized counts table including all samples
 # using the median-of-ratios normalization procedure of

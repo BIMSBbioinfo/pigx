@@ -22,7 +22,8 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 input_dir <- args[1]
-out_file <- args[2]
+colDataFile <- args[2]
+out_file <- args[3]
 
 count_files <- dir(input_dir, pattern = ".read_counts.csv$", full.names = TRUE)
 
@@ -37,6 +38,16 @@ counts_all <- as.data.frame(Reduce(function(dtf1, dtf2)
        counts))
 rownames(counts_all) <- counts_all$V1
 counts_all$V1 <- NULL
+
+# subset to only keep the counts for the samples in the 
+# colDataFile,which is the same as the sample sheet)
+colData <- read.table(colDataFile, header = T, row.names = 1)
+if(sum(!rownames(colData) %in% colnames(counts_all) > 0)){
+ stop("ERROR collating counts for samples in the colData file. 
+      The count data for the following samples are missing:",
+      setdiff(rownames(colData), colnames(counts_all))) 
+}
+counts_all <- subset(counts_all, select = rownames(colData))
 
 # save results to out file
 write.table(counts_all, out_file, quote = FALSE,
