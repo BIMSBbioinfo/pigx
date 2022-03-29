@@ -100,10 +100,7 @@ for analysis in DE_ANALYSIS_LIST.keys():
     )
 
 ## Load sample sheet
-with open(SAMPLE_SHEET_FILE, 'r') as fp:
-  rows =  [row for row in csv.reader(fp, delimiter=',')]
-  header = rows[0]; rows = rows[1:]
-  SAMPLE_SHEET = [dict(zip(header, row)) for row in rows]
+SAMPLE_SHEET = read_sample_sheet(SAMPLE_SHEET_FILE)
 
 # Convenience function to access fields of sample sheet columns that
 # match the predicate.  The predicate may be a string.

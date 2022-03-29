@@ -6,10 +6,11 @@ from glob import glob
 import itertools
 
 def read_sample_sheet(path):
-    with open(path, 'r') as fp:
-        rows =  [row for row in csv.reader(fp, delimiter=',')]
-        header = rows[0]; rows = rows[1:]
-        sample_sheet = [dict(zip(header, row)) for row in rows]
+    fp = open(path, "r")
+    data = csv.reader(fp)
+    rows = [row for row in data if ''.join(row).strip()]
+    header = rows[0]; rows = rows[1:]
+    sample_sheet = [dict(zip(header, row)) for row in rows]
     return sample_sheet
 
 def read_config_file(path):

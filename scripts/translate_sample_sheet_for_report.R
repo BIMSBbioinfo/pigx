@@ -23,7 +23,8 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 sample_sheet = args[1]
-s = read.csv(file = sample_sheet)
+# data.table takes care of empty lines etc. 
+s = data.frame(data.table::fread(sample_sheet), check.names = F) 
 rownames(s) = s$name
 s$group = s$sample_type
 s = s[colnames(s)[-grep("name|reads", colnames(s))]]
