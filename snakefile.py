@@ -297,7 +297,7 @@ rule star_index:
     output:
         star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex")
     resources:
-      mem_mb = 32000
+        mem_mb = config['execution']['rules']['star_index']['memory']
     params:
         star_index_dir = os.path.join(OUTPUT_DIR, 'star_index')
     log: os.path.join(LOG_DIR, 'star_index.log')
@@ -308,7 +308,7 @@ rule hisat2_index:
     output:
         [os.path.join(OUTPUT_DIR, "hisat2_index", f"{GENOME_BUILD}_index.{n}.ht2l") for n in [1, 2, 3, 4, 5, 6, 7, 8]]
     resources:
-      mem_mb = 21000
+        mem_mb = config['execution']['rules']['hisat2-build']['memory']
     params:
         index_directory = os.path.join(OUTPUT_DIR, "hisat2_index"),
     log: os.path.join(LOG_DIR, 'hisat2_index.log')
@@ -340,7 +340,7 @@ rule star_map:
   output:
     os.path.join(MAPPED_READS_DIR, 'star', '{sample}_Aligned.sortedByCoord.out.bam')
   resources:
-    mem_mb = 16000
+    mem_mb = config['execution']['rules']['star_map']['memory']
   params:
     index_dir = rules.star_index.params.star_index_dir,
     output_prefix=os.path.join(MAPPED_READS_DIR, 'star', '{sample}_')
@@ -354,7 +354,7 @@ rule hisat2_map:
   output:
     os.path.join(MAPPED_READS_DIR, 'hisat2', '{sample}_Aligned.sortedByCoord.out.bam')
   resources:
-    mem_mb = 8000
+    mem_mb = config['execution']['rules']['hisat2']['memory']
   params:
     samfile = lambda wildcards: os.path.join(MAPPED_READS_DIR, 'hisat2', "_".join([wildcards.sample, 'Aligned.out.sam'])),
     index_dir = rules.hisat2_index.params.index_directory,
@@ -383,7 +383,7 @@ rule salmon_index:
   output:
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "pos.bin")
   resources:
-      mem_mb = 5000
+      mem_mb = config['execution']['rules']['salmon_index']['memory']
   params:
       salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index')
   log: os.path.join(LOG_DIR, "salmon", 'salmon_index.log')
@@ -400,7 +400,7 @@ rule salmon_quant:
       os.path.join(SALMON_DIR, "{sample}", "quant.sf"),
       os.path.join(SALMON_DIR, "{sample}", "quant.genes.sf")
   resources:
-      mem_mb = 6000
+      mem_mb = config['execution']['rules']['salmon_quant']['memory']
   params:
       index_dir = rules.salmon_index.params.salmon_index_dir,
       outfolder = os.path.join(SALMON_DIR, "{sample}")
@@ -441,7 +441,7 @@ rule genomeCoverage:
     os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.reverse.{sample}.log'),
     os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.{sample}.log')
   resources:
-    mem_mb = 4000
+    mem_mb = config['execution']['rules']['genomeCoverage']['memory']
   shell:
     """
     {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[0]} --filterRNAstrand forward >> {log[0]} 2>&1
@@ -466,7 +466,7 @@ rule count_reads:
   output:
     os.path.join(MAPPED_READS_DIR, MAPPER, "{sample}.read_counts.csv")
   resources:
-    mem_mb = 5000
+    mem_mb = config['execution']['rules']['count_reads']['memory']
   log: os.path.join(LOG_DIR, MAPPER, "{sample}.count_reads.log")
   params:
     single_end = isSingleEnd,
@@ -527,6 +527,7 @@ rule report1:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    selfContained = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['self_contained'],
     logo = LOGO
   log: os.path.join(LOG_DIR, MAPPER, "{analysis}.report.log")
   output:
@@ -534,7 +535,7 @@ rule report1:
   resources:
     mem_mb = 4000
   shell:
-    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
+    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained='{params.selfContained}' >> {log} 2>&1"
 
 rule report2:
   input:
@@ -548,13 +549,14 @@ rule report2:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    selfContained = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['self_contained'],
     logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
   log: os.path.join(LOG_DIR, "salmon", "{analysis}.report.salmon.transcripts.log")
   output:
     os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html')
   resources:
     mem_mb = 4000
-  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained='{params.selfContained}' >> {log} 2>&1"
 
 rule report3:
   input:
@@ -568,10 +570,11 @@ rule report3:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    selfContained = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['self_contained'],
     logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
   log: os.path.join(LOG_DIR, "salmon", "{analysis}.report.salmon.genes.log")
   output:
     os.path.join(OUTPUT_DIR, "report", "salmon", '{analysis}.salmon.genes.deseq.report.html')
   resources:
     mem_mb = 4000
-  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained={params.selfContained}' >> {log} 2>&1"

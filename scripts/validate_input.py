@@ -16,6 +16,13 @@ def read_config_file(path):
         config = yaml.load(infile)
     return config
 
+def validate_memory_restrictions(config):
+    for rule in config['execution']['rules']:
+        if 'memory' in config['execution']['rules'][rule]:
+            value = config['execution']['rules'][rule]['memory']
+            if not type(value) == int and not value.isdigit():
+                raise Exception("ERROR: memory limits must be expressed as a plain number of megabytes.  Got '{}' in '{}'.".format(value, rule))
+
 def validate_config(config):
     # Check that all locations exist
     for loc in config['locations']:
@@ -25,6 +32,7 @@ def validate_config(config):
             if config['locations'][loc].endswith(".gz") or config['locations'][loc].endswith(".bz2") or config['locations'][loc].endswith(".xz"):
                 raise Exception("ERROR: The {} file '{}' is referenced in its compressed form like it was downloaded. However, the tools of this workflow expects the reference as plain FASTA/GTF files that are directly readable. Please unpack these files and update the settings to the respective new filename. This does _not_ hold for the FASTQ.gz files of the samples which shall remain compressed.".format(loc,config['locations'][loc]))
 
+    validate_memory_restrictions(config)
 
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
     
