@@ -15,6 +15,9 @@ mapping:
   mapper: 'hisat2' # options are star or hisat2
   genome_build: 'GRCm38'  #genome build version identifier that is used in hisat2 index file names
 
+coverage:
+  tool: 'megadepth' # options are megadepth or bamCoverage 
+
 # Configuration for how to do read counting using
 # GenomicAlignments::summarizeOverlaps feature type and grouping
 # features must match what is available in the GTF file most GTF files
@@ -96,8 +99,11 @@ execution:
     hisat2:
       threads: 2
       memory: 8000
-    genomeCoverage:
+    coverage_bamCoverage:
       threads: 1
+      memory: 4000
+    coverage_megadepth:
+      threads: 2
       memory: 4000
     count_reads:
       threads: 1
@@ -149,4 +155,8 @@ tools:
     executable: @BAMCOVERAGE@
     args: "--normalizeUsing BPM --numberOfProcessors 2" 
     # see https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html
-    # for more detailed arguments used for normalising coverage data files 
+    # for more detailed arguments used for normalising coverage data files
+  megadepth:
+    executable: @MEGADEPTH@
+    args: ""
+ 
