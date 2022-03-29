@@ -527,6 +527,7 @@ rule report1:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    selfContained = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['self_contained'],
     logo = LOGO
   log: os.path.join(LOG_DIR, MAPPER, "{analysis}.report.log")
   output:
@@ -534,7 +535,7 @@ rule report1:
   resources:
     mem_mb = 4000
   shell:
-    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
+    "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained='{params.selfContained}' >> {log} 2>&1"
 
 rule report2:
   input:
@@ -548,13 +549,14 @@ rule report2:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    selfContained = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['self_contained'],
     logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
   log: os.path.join(LOG_DIR, "salmon", "{analysis}.report.salmon.transcripts.log")
   output:
     os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html')
   resources:
     mem_mb = 4000
-  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained='{params.selfContained}' >> {log} 2>&1"
 
 rule report3:
   input:
@@ -568,10 +570,11 @@ rule report3:
     case = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['case_sample_groups'],
     control = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['control_sample_groups'],
     covariates = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['covariates'],
+    selfContained = lambda wildcards: DE_ANALYSIS_LIST[wildcards.analysis]['self_contained'],
     logo = os.path.join(config['locations']['pkgdatadir'], "images/Logo_PiGx.png") if os.getenv("PIGX_UNINSTALLED") else os.path.join(config['locations']['pkgdatadir'], "Logo_PiGx.png")
   log: os.path.join(LOG_DIR, "salmon", "{analysis}.report.salmon.genes.log")
   output:
     os.path.join(OUTPUT_DIR, "report", "salmon", '{analysis}.salmon.genes.deseq.report.html')
   resources:
     mem_mb = 4000
-  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' >> {log} 2>&1"
+  shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained={params.selfContained}' >> {log} 2>&1"
