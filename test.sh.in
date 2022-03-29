@@ -12,7 +12,7 @@ export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))
 
 chmod -R +w ${srcdir}/tests
 
-./pigx-rnaseq -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
+./pigx-rnaseq --printshellcmds -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
 
 if ! test -f "${srcdir}/tests/output/report/salmon/analysis1.salmon.transcripts.deseq.report.html"
 then
