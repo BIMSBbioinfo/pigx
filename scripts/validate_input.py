@@ -40,13 +40,17 @@ def validate_config(config):
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
     
     # Check if the required fields are found in the sample sheet
-    # also add the list of covariates from the DE analyses
-    covariates = [config['DEanalyses'][x]['covariates'] for x in config['DEanalyses'].keys()]
-    # cleanup and get the set of unique covariates
-    covariates = [y.strip() for y  in itertools.chain(*[x.split(',') for x in covariates])]
-    # remove empty strings
-    covariates = [x for x in covariates if x]
-    required_fields = set(['name', 'reads', 'reads2', 'sample_type'] + covariates)
+    required_fields = ['name', 'reads', 'reads2', 'sample_type']
+    
+    if 'DEanalyses' in config:
+        # also add the list of covariates from the DE analyses if available
+        covariates = [config['DEanalyses'][x]['covariates'] for x in config['DEanalyses'].keys() if 'covariates' in config['DEanalyses'][x]]
+        # cleanup and get the set of unique covariates
+        covariates = [y.strip() for y  in itertools.chain(*[x.split(',') for x in covariates])]
+        # remove empty strings
+        covariates = [x for x in covariates if x]
+        required_fields = required_fields + covariates
+    required_fields = set(required_fields)
     not_found = required_fields.difference(set(sample_sheet[0].keys()))
     if len(not_found) > 0:
         raise Exception("ERROR: Required field(s) {} could not be found in the sample sheet file '{}'".format(not_found, config['locations']['sample-sheet']))
