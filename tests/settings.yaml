@@ -11,6 +11,9 @@ mapping:
   mapper: 'hisat2' # options are star or hisat2
   genome_build: 'GRCm38'  #genome build version identifier that is used in hisat2 index file names
 
+coverage:
+  tool: 'megadepth' # other option is bamCoverage
+
 DEanalyses:
   #names of analyses can be anything but they have to be unique for each
   #combination of case control group comparisons.

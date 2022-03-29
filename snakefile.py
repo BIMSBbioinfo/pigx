@@ -78,6 +78,7 @@ RSCRIPT_EXEC     = tool('Rscript')
 SED_EXEC = tool('sed')
 FASTP_EXEC = tool('fastp')
 BAMCOVERAGE_EXEC = tool('bamCoverage')
+MEGADEPTH_EXEC = tool('megadepth')
 
 STAR_INDEX_THREADS   = config['execution']['rules']['star_index']['threads']
 HISAT2_BUILD_THREADS = config['execution']['rules']['hisat2-build']['threads']
@@ -115,6 +116,19 @@ def lookup(column, predicate, fields=[]):
 
 SAMPLES = [line['name'] for line in SAMPLE_SHEET]
 
+## Conditional output files (some steps can be executed with multiple tools, the output file list
+##  organised according to which tool the user wants to use)
+BIGWIG_OUTPUT = []
+if config['coverage']['tool'] == 'bamCoverage':
+  fw = expand(os.path.join(BIGWIG_DIR, MAPPER, 'bamCoverage', '{sample}.forward.bw'), sample = SAMPLES)
+  rv = expand(os.path.join(BIGWIG_DIR, MAPPER, 'bamCoverage', '{sample}.reverse.bw'), sample = SAMPLES) 
+  both = expand(os.path.join(BIGWIG_DIR, MAPPER, 'bamCoverage', '{sample}.bw'), sample = SAMPLES)
+  BIGWIG_OUTPUT = fw + rv + both
+elif config['coverage']['tool'] == 'megadepth': 
+  BIGWIG_OUTPUT = expand(os.path.join(BIGWIG_DIR, MAPPER, 'megadepth', '{sample}.all.bw'), sample = SAMPLES)
+else:
+  sys.exit("Error with the selected coverage computation method: Allowed options for coverage computation are 'megadepth' or 'bamCoverage'; check the settings file option under coverage->tool.")
+  
 targets = {
     # rule to print all rule descriptions
     'help': {
@@ -132,9 +146,7 @@ targets = {
          os.path.join(COUNTS_DIR, "raw_counts", MAPPER, "counts.tsv"),
          os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_normalized_counts.tsv"),
          os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_size_factors.txt")] +
-        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'), sample = SAMPLES) +
-        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'), sample = SAMPLES) +
-        expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw'), sample = SAMPLES) +
+        BIGWIG_OUTPUT +
         expand(os.path.join(OUTPUT_DIR, "report", MAPPER, '{analysis}.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
         expand(os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys()) +
         expand(os.path.join(OUTPUT_DIR, "report",  'salmon', '{analysis}.salmon.genes.deseq.report.html'), analysis = DE_ANALYSIS_LIST.keys())
@@ -182,9 +194,7 @@ targets = {
     'genome_coverage': {
         'description': "Compute genome coverage values from BAM files - save in bigwig format",
         'files':
-          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'), sample = SAMPLES) +
-          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'), sample = SAMPLES) +
-          expand(os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw'), sample = SAMPLES)
+          BIGWIG_OUTPUT
     },
     'salmon_index' : {
         'description': "Create SALMON index file.",
@@ -427,21 +437,40 @@ rule counts_from_SALMON:
   log: os.path.join(LOG_DIR, "salmon", 'salmon_import_counts.log')
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {COUNTS_DIR} {input.colDataFile} >> {log} 2>&1"
 
-
-rule genomeCoverage:
+# compute genome coverage using megadepth
+rule coverage_megadepth:
   input:
     bam=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'),
     bai=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
   output:
-    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.forward.bw'),
-    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.reverse.bw'),
-    os.path.join(BIGWIG_DIR, MAPPER, '{sample}.bw')
+    os.path.join(BIGWIG_DIR, MAPPER, 'megadepth', '{sample}.all.bw')
+  params:
+    out_prefix = os.path.join(BIGWIG_DIR, MAPPER, 'megadepth', '{sample}')
   log:
-    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.forward.{sample}.log'),
-    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.reverse.{sample}.log'),
-    os.path.join(LOG_DIR, MAPPER, 'genomeCoverage.{sample}.log')
+    os.path.join(LOG_DIR, MAPPER, 'coverage_megadepth.{sample}.log')
   resources:
-    mem_mb = config['execution']['rules']['genomeCoverage']['memory']
+    mem_mb = config['execution']['rules']['coverage_megadepth']['memory'],
+    threads = config['execution']['rules']['coverage_megadepth']['threads']
+  shell:
+    """
+    {MEGADEPTH_EXEC} {input.bam} --threads {resources.threads} --bigwig --prefix {params.out_prefix} >> {log} 2>&1
+    """
+
+# compute genome coverage using bamCoverage
+rule coverage_bamCoverage:
+  input:
+    bam=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'),
+    bai=os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
+  output:
+    os.path.join(BIGWIG_DIR, MAPPER, 'bamCoverage', '{sample}.forward.bw'),
+    os.path.join(BIGWIG_DIR, MAPPER, 'bamCoverage', '{sample}.reverse.bw'),
+    os.path.join(BIGWIG_DIR, MAPPER, 'bamCoverage', '{sample}.bw')
+  log:
+    os.path.join(LOG_DIR, MAPPER, 'coverage_bamCoverage.forward.{sample}.log'),
+    os.path.join(LOG_DIR, MAPPER, 'coverage_bamCoverage.reverse.{sample}.log'),
+    os.path.join(LOG_DIR, MAPPER, 'coverage_bamCoverage.{sample}.log')
+  resources:
+    mem_mb = config['execution']['rules']['coverage_bamCoverage']['memory']
   shell:
     """
     {BAMCOVERAGE_EXEC} -b {input.bam} -o {output[0]} --filterRNAstrand forward >> {log[0]} 2>&1

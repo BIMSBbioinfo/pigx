@@ -37,7 +37,7 @@ rm ${tmp_settings} ${tmp_samplesheet}
 
 rm -rf ${testfolder}/mapped_reads/
 
-if ! test -f ${testfolder}/bigwig_files/hisat2/HBR_Rep1.bw
+if ! test -f ${testfolder}/bigwig_files/hisat2/megadepth/HBR_Rep1.all.bw
 then
   echo "ERROR: failed to create bigwig file from input BAM file"
   exit 1
