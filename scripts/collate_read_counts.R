@@ -28,12 +28,12 @@ count_files <- dir(input_dir, pattern = ".read_counts.csv$", full.names = TRUE)
 
 # get read counts for each sample into a list
 counts <- lapply(count_files, function(f) {
-  data.table::fread(f)
+  data.table::fread(f,header=TRUE)
 })
 
 # merge list of data frames
 counts_all <- as.data.frame(Reduce(function(dtf1, dtf2) 
-  merge(dtf1, dtf2, by = "V1", all.x = TRUE),
+  merge(dtf1, dtf2, by="V1", all.x=TRUE, all.y=TRUE),
        counts))
 rownames(counts_all) <- counts_all$V1
 counts_all$V1 <- NULL
