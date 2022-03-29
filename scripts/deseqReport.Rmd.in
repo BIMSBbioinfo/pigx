@@ -160,9 +160,9 @@ DT::datatable(data = inputSettings,
 
 ```{r prepare_inputs_import_GTF}
 gtfData <- rtracklayer::import.gff(con = gtfFile, format = 'gtf')
-caseSamples <- gsub(' ', '', unlist(strsplit(x = caseSampleGroups, split = ',')))
-controlSamples <- gsub(' ', '', unlist(strsplit(x = controlSampleGroups, split = ',')))
-covariates <- gsub(' ', '', unlist(strsplit(x = covariates, split = ',')))
+caseSamples <- gsub("^\\s+|\\s+$", '', unlist(strsplit(x = caseSampleGroups, split = ',')))
+controlSamples <- gsub("^\\s+|\\s+$", '', unlist(strsplit(x = controlSampleGroups, split = ',')))
+covariates <- gsub("^\\s+|\\s+$", '', unlist(strsplit(x = covariates, split = ',')))
 #read colData and countData files
 colData = read.table(colDataFile, header=T, row.names = 1, sep='\t', stringsAsFactors = T, check.names = FALSE)
 countData = read.table(countDataFile, header=TRUE, row.names=1, sep='\t', stringsAsFactors = T, check.names = FALSE)
