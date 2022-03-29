@@ -25,6 +25,7 @@ def validate_memory_restrictions(config):
             if not type(value) == int and not value.isdigit():
                 raise Exception("ERROR: memory limits must be expressed as a plain number of megabytes.  Got '{}' in '{}'.".format(value, rule))
 
+
 def validate_config(config):
     # Check that all locations exist
     for loc in config['locations']:
@@ -59,7 +60,8 @@ def validate_config(config):
                     raise Exception("ERROR: no samples in sample sheet have sample type '{}', specified in analysis {}.".format(group, analysis))
 
     # Check that reads files exist; sample names are unique to each row; 
-    samples = {}        
+    samples = {}      
+    row_index = 1
     for row in sample_sheet:
         sample = row['name']
         if sample in samples:
@@ -79,6 +81,16 @@ def validate_config(config):
                     raise Exception("ERROR: missing reads file: '{}', likely caused by blanks flanking the filename, please correct.".format(fullpath))
                 else:
                     raise Exception("ERROR: missing reads file: '{}'".format(fullpath))
+        # check if some of the columns contain missing information
+        fields = ['name', 'reads', 'sample_type'] # fields for which missing info is not allowed
+        missing = [f for f in fields if not row[f].strip()]
+        if len(missing) > 0:
+            raise Exception("".join(["ERROR: Missing information in sample sheet at row #",str(row_index),
+                    ". Missing info is not allowed for name/reads/sample_type fields"]))
+        row_index = row_index + 1
+        
+            
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
