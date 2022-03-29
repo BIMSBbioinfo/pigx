@@ -3,6 +3,7 @@ import csv
 import yaml
 import argparse
 from glob import glob
+import itertools
 
 def read_sample_sheet(path):
     with open(path, 'r') as fp:
@@ -37,7 +38,13 @@ def validate_config(config):
     sample_sheet = read_sample_sheet(config['locations']['sample-sheet'])
     
     # Check if the required fields are found in the sample sheet
-    required_fields = set(['name', 'reads', 'reads2', 'sample_type'])
+    # also add the list of covariates from the DE analyses
+    covariates = [config['DEanalyses'][x]['covariates'] for x in config['DEanalyses'].keys()]
+    # cleanup and get the set of unique covariates
+    covariates = [y.strip() for y  in itertools.chain(*[x.split(',') for x in covariates])]
+    # remove empty strings
+    covariates = [x for x in covariates if x]
+    required_fields = set(['name', 'reads', 'reads2', 'sample_type'] + covariates)
     not_found = required_fields.difference(set(sample_sheet[0].keys()))
     if len(not_found) > 0:
         raise Exception("ERROR: Required field(s) {} could not be found in the sample sheet file '{}'".format(not_found, config['locations']['sample-sheet']))
