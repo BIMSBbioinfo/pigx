@@ -59,15 +59,17 @@ def validate_config(config):
 
     # Check that reads files exist; sample names are unique to each row; 
     samples = {}        
-
     for row in sample_sheet:
         sample = row['name']
         if sample in samples:
             raise Exception('ERROR: name "{}" is not unique. Replace it with a unique name in the sample_sheet.'.format(sample))
         else:
             samples[sample] = 1
-                   
         filenames = [row['reads'], row['reads2']] if row['reads2'] else [row['reads']]
+        # don't allow paths in the sample sheet, only allow the base name of the file
+        if sum([os.path.basename(x) != x for x in filenames]) > 0:
+            raise Exception(" ".join(["ERROR: read file names in the sample sheet must be basenames", 
+            "not paths to the files. See sample ", sample, "in the sample sheet"]))
         for filename in filenames:
             fullpath = os.path.join(config['locations']['reads-dir'], filename)
             if not os.path.isfile(fullpath):
@@ -76,8 +78,6 @@ def validate_config(config):
                     raise Exception("ERROR: missing reads file: '{}', likely caused by blanks flanking the filename, please correct.".format(fullpath))
                 else:
                     raise Exception("ERROR: missing reads file: '{}'".format(fullpath))
-
-                    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
