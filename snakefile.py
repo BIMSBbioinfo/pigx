@@ -135,7 +135,8 @@ targets = {
     'final-report': {
         'description': "Produce a comprehensive report.  This is the default target.",
         'files':
-        [os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
+        [os.path.join(OUTPUT_DIR, "input_annotation_stats.tsv"), 
+         os.path.join(MULTIQC_DIR, 'multiqc_report.html'),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.transcripts.tsv"),
          os.path.join(COUNTS_DIR, "raw_counts", "salmon", "counts_from_SALMON.genes.tsv"),
          os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
@@ -230,6 +231,16 @@ OUTPUT_FILES = list(chain.from_iterable([targets[name]['files'] for name in sele
 rule all:
   input: OUTPUT_FILES
 
+rule check_annotation_files:
+  input: 
+    dna = GENOME_FASTA
+    cdna = CDNA_FASTA
+    gtf = GTF_FILE
+  output: 
+    os.path.join(OUTPUT_DIR, 'input_annotation_stats.tsv')
+  log: os.path.join(LOG_DIR, 'check_annotation_files.log')
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/validate_input_annotation.R {input.gtf} {input.cdna} {input.dna} {OUTPUT_DIR}"
+
 rule help:
   run:
     for key in sorted(targets.keys()):
@@ -300,7 +311,9 @@ rule trim_qc_reads_se:
   shell: "{FASTP_EXEC} --in1 {input[0]} --out1 {output.r} -h {output.html} -j {output.json} >> {log} 2>&1 "
 
 rule star_index:
-    input: GENOME_FASTA
+    input: 
+      GENOME_FASTA,
+      rules.check_annotation_files.output 
     output:
         star_index_file = os.path.join(OUTPUT_DIR, 'star_index', "SAindex")
     resources:
@@ -308,10 +321,12 @@ rule star_index:
     params:
         star_index_dir = os.path.join(OUTPUT_DIR, 'star_index')
     log: os.path.join(LOG_DIR, 'star_index.log')
-    shell: "{STAR_EXEC_INDEX} --runMode genomeGenerate --runThreadN {STAR_INDEX_THREADS} --genomeDir {params.star_index_dir} --genomeFastaFiles {input} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
+    shell: "{STAR_EXEC_INDEX} --runMode genomeGenerate --runThreadN {STAR_INDEX_THREADS} --genomeDir {params.star_index_dir} --genomeFastaFiles {input[0]} --sjdbGTFfile {GTF_FILE} >> {log} 2>&1"
 
 rule hisat2_index:
-    input: GENOME_FASTA
+    input: 
+      GENOME_FASTA,
+      rules.check_annotation_files.output
     output:
         [os.path.join(OUTPUT_DIR, "hisat2_index", f"{GENOME_BUILD}_index.{n}.ht2l") for n in [1, 2, 3, 4, 5, 6, 7, 8]]
     resources:
@@ -319,7 +334,7 @@ rule hisat2_index:
     params:
         index_directory = os.path.join(OUTPUT_DIR, "hisat2_index"),
     log: os.path.join(LOG_DIR, 'hisat2_index.log')
-    shell: "{HISAT2_BUILD_EXEC} -f -p {HISAT2_BUILD_THREADS} --large-index {input} {params.index_directory}/{GENOME_BUILD}_index >> {log} 2>&1"
+    shell: "{HISAT2_BUILD_EXEC} -f -p {HISAT2_BUILD_THREADS} --large-index {input[0]} {params.index_directory}/{GENOME_BUILD}_index >> {log} 2>&1"
 
 def map_input(args):
   sample = args[0]
@@ -386,7 +401,8 @@ rule index_bam:
 
 rule salmon_index:
   input:
-      CDNA_FASTA
+      CDNA_FASTA,
+      rules.check_annotation_files.output
   output:
       salmon_index_file = os.path.join(OUTPUT_DIR, 'salmon_index', "pos.bin")
   resources:
@@ -394,7 +410,7 @@ rule salmon_index:
   params:
       salmon_index_dir = os.path.join(OUTPUT_DIR, 'salmon_index')
   log: os.path.join(LOG_DIR, "salmon", 'salmon_index.log')
-  shell: "{SALMON_INDEX_EXEC} -t {input} -i {params.salmon_index_dir} -p {SALMON_INDEX_THREADS} >> {log} 2>&1"
+  shell: "{SALMON_INDEX_EXEC} -t {input[0]} -i {params.salmon_index_dir} -p {SALMON_INDEX_THREADS} >> {log} 2>&1"
 
 rule salmon_quant:
   input:
