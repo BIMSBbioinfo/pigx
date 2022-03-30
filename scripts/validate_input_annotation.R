@@ -31,8 +31,8 @@ message(date(), " Checking annotation files for potential issues")
 
 # Check to see if the input GTF file is parseable.
 message(date()," => Checking to see if GTF file can be properly imported from here: ",gtfFile)
-message(date()," => Imported ",length(gtf)," features from the GTF file")
 gtf <- rtracklayer::import.gff(gtfFile)
+message(date()," => Imported ",length(gtf)," features from the GTF file")
 if(length(gtf) == 0) {
   stop("ERROR: GTF file seems to be empty here:",gtfFile)
 } 
@@ -69,9 +69,8 @@ if(matched < 0.1 * length(unique(gtf$transcript_id))) {
           fasta file: example entry for the transcript 'ENST00000202017' in GTF file is 
           'ENST00000202017.5 cdna chromosome:GRCh38:20:31944342:31952092 ...' in the Fasta File. 
           If using annotations from ENSEMBL, the fasta file can be cleaned up with the following 
-          `sed` command: 
-          sed 's/\(ENST[0-9]*\)\.[0-9]*.*/\1/g' <cDNA_file_path> > cDNA_file.cleaned.fasta
-          ")
+          `sed` command: ",
+          "sed 's/\\(ENST[0-9]*\\)\\.[0-9]*.*/\\1/g' <cDNA_file_path> > cDNA_file.cleaned.fasta")
 }
 
 

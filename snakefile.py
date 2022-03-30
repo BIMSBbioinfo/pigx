@@ -233,13 +233,13 @@ rule all:
 
 rule check_annotation_files:
   input: 
-    dna = GENOME_FASTA
-    cdna = CDNA_FASTA
+    dna = GENOME_FASTA,
+    cdna = CDNA_FASTA,
     gtf = GTF_FILE
   output: 
     os.path.join(OUTPUT_DIR, 'input_annotation_stats.tsv')
   log: os.path.join(LOG_DIR, 'check_annotation_files.log')
-  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/validate_input_annotation.R {input.gtf} {input.cdna} {input.dna} {OUTPUT_DIR}"
+  shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/validate_input_annotation.R {input.gtf} {input.cdna} {input.dna} {OUTPUT_DIR} >> {log} 2>&1"
 
 rule help:
   run:
