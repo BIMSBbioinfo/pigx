@@ -16,7 +16,8 @@ dist_pkglibexec_scripts_SCRIPTS =					\
   scripts/validate_input.py	\
   scripts/norm_counts_deseq.R	\
   scripts/count_reads.R	\
-  scripts/collate_read_counts.R
+  scripts/collate_read_counts.R \ 
+  scripts/validate_input_annotation.R
 
 dist_pkgdata_DATA =									\
   etc/sample_sheet.csv.example								\
