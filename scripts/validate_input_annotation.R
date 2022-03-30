@@ -22,10 +22,10 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 
-gtfFile <- args[1]
-cDNAfastaFile <- args[2]
-genomeFastaFile <- args[3]
-
+gtfFile <- args[1] # path to gene annotations in GTF format
+cDNAfastaFile <- args[2] # path to transcriptome sequences in fasta format 
+genomeFastaFile <- args[3] # path to DNA sequences in fasta format
+outDir <- args[4] # where to save the annotation stats
 
 message(date(), " Checking annotation files for potential issues")
 
@@ -94,6 +94,35 @@ if(length(match) == 0) {
        "\nUsing genome and annotation files from the same source (e.g. the ENSEMBL database)", 
        " is highly recommended.")
 }
+
+# print out some stats about the input annotations
+
+input_stats <- rbind(data.frame('Type' = 'GTF', 
+                                'Description' = 'Number of genes',
+                                'Value' = length(unique(gtf$gene_id))),
+                     data.frame('Type' = 'GTF', 
+                                'Description' = 'Number of transcripts', 
+                                'Value' = length(unique(gtf$transcript_id))),
+                     data.frame('Type' = 'GTF', 
+                                'Description' = 'Naming convention', 
+                                'Value' = paste(GenomeInfoDb::seqlevelsStyle(gtf), collapse = ' ')),
+                     data.frame('Type' = 'DNA', 
+                                'Description' = 'Number of chromosomes', 
+                                'Value' = length(DNA)), 
+                     data.frame('Type' = 'DNA', 
+                                'Description' = 'Naming convention', 
+                                'Value' = paste(GenomeInfoDb::seqlevelsStyle(DNA), collapse = ' ')), 
+                     data.frame('Type' = 'cDNA', 
+                                'Description' = 'Number of transcripts', 
+                                'Value' = length(cDNA)), 
+                     data.frame('Type' = 'cDNA', 
+                                'Description' = 'Mean length of transcripts', 
+                                'Value' = mean(lengths(cDNA))), 
+                     data.frame('Type' = 'cDNA vs GTF', 
+                                'Description' = 'Number of matching transcript identifiers', 
+                                'Value' = length(intersect(names(cDNA), unique(gtf$transcript_id)))))
+
+write.table(input_stats, file = file.path(outDir, 'input_annotation_stats.tsv'), quote = F, row.names = F)
 
 message(date(), " => Finished checking annotation files.")
 
