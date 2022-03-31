@@ -43,7 +43,6 @@ AS_IF([test -z "$$1"],dnl
 find_or_override_prog([GNUBASH],         [bash])
 find_or_override_prog([SNAKEMAKE],       [snakemake])
 find_or_override_prog([PANDOC],          [pandoc])
-find_or_override_prog([PANDOC_CITEPROC], [pandoc-citeproc])
 find_or_override_prog([FASTQC],          [fastqc])
 find_or_override_prog([STAR],            [STAR])
 find_or_override_prog([SAMTOOLS],        [samtools])
