@@ -11,6 +11,7 @@ configure
 config.log
 config.status
 pigx-scrnaseq
+scripts/scrnaReport.Rmd
 Makefile.in
 Makefile
 autom4te.cache/
