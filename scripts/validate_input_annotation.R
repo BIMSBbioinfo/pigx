@@ -53,7 +53,7 @@ cDNA <- Biostrings::readDNAStringSet(cDNAfastaFile, format = 'fasta')
 if(length(cDNA) == 0){
   stop("ERROR: cDNA fasta file seems to be empty")
 }
-message(date(), " => Imported ",length(cDNA), " transcripts from the cDNA fasta file at", cDNAfastaFile)
+message(date(), " => Imported ",length(cDNA), " transcripts from the cDNA fasta file at ", cDNAfastaFile)
 # Check to see if the transcript ids in the GTF file match the transcript ids in the cDNA Fasta file
 # if not, give a warning how this will affect id matching for Salmon and give a suggestion on 
 # how to update the cDNA file 
@@ -77,7 +77,7 @@ if(matched < 0.1 * length(unique(gtf$transcript_id))) {
 # see if the chromosome names in the genome fasta are on 
 # the same convention as used in the GTF file
 DNA <- Biostrings::readDNAStringSet(genomeFastaFile, format = 'fasta')
-message(date(), " => Imported ",length(DNA)," chromosomes/contigs from the DNA fasta files at",genomeFastaFile)
+message(date(), " => Imported ",length(DNA)," chromosomes/contigs from the DNA fasta files at ",genomeFastaFile)
 # ignore annotations in the fasta file next the chromosome ids:
 # we have to assume the fasta header contains chromosome name + optional annotations separated by space
 names(DNA) <- gsub(" .+$", "", names(DNA))
@@ -86,7 +86,7 @@ matched <- intersect(GenomeInfoDb::seqlevels(DNA), GenomeInfoDb::seqlevels(gtf))
 message(date(), " => Number of chromosomes/contigs matching between the GTF file and the genome fasta file: ",length(matched))
 message(date(), " => List of chromosomes/contigs matching between the GTF file and the genome fasta file:\n",
         paste(matched, collapse = ' '))
-if(matched == 0) {
+if(length(matched) == 0) {
   stop("ERROR: Couldn't match any of the chrosomosome ids between the GTF file and the genome fasta file.",
        "\nThis will cause problems in getting expression estimates.",
        "\nExample chromosome names in the genome fasta file: ", paste(head(GenomeInfoDb::seqlevels(DNA)), collapse = ' '),
@@ -119,7 +119,8 @@ input_stats <- rbind(data.frame('Type' = 'GTF',
                                 'Description' = 'Number of matching transcript identifiers', 
                                 'Value' = length(intersect(names(cDNA), unique(gtf$transcript_id)))))
 
-write.table(input_stats, file = file.path(outDir, 'input_annotation_stats.tsv'), quote = F, row.names = F)
+write.table(input_stats, file = file.path(outDir, 'input_annotation_stats.tsv'), 
+            sep = '\t', quote = F, row.names = F)
 
 message(date(), " => Finished checking annotation files.")
 
