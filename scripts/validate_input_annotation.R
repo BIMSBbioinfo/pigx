@@ -57,7 +57,6 @@ message(date(), " => Imported ",length(cDNA), " transcripts from the cDNA fasta 
 # Check to see if the transcript ids in the GTF file match the transcript ids in the cDNA Fasta file
 # if not, give a warning how this will affect id matching for Salmon and give a suggestion on 
 # how to update the cDNA file 
-
 matched <- length(intersect(names(cDNA), unique(gtf$transcript_id)))
 message(date(), " => Number of transcript ids matching between the GTF file and the cDNA fasta file: ",matched)
 if(matched < 0.1 * length(unique(gtf$transcript_id))) {
@@ -79,23 +78,22 @@ if(matched < 0.1 * length(unique(gtf$transcript_id))) {
 # the same convention as used in the GTF file
 DNA <- Biostrings::readDNAStringSet(genomeFastaFile, format = 'fasta')
 message(date(), " => Imported ",length(DNA)," chromosomes/contigs from the DNA fasta files at",genomeFastaFile)
-
+# ignore annotations in the fasta file next the chromosome ids:
+# we have to assume the fasta header contains chromosome name + optional annotations separated by space
+names(DNA) <- gsub(" .+$", "", names(DNA))
 # abort if the chromosome names don't match in DNA and GTF 
-match <- intersect(GenomeInfoDb::seqlevelsStyle(DNA), GenomeInfoDb::seqlevelsStyle(gtf))
-message(date(), " Chromosome naming convention for the genome:",
-        paste(GenomeInfoDb::seqlevelsStyle(DNA), collapse = ' '))
-message(date(), " Chromosome naming convention for the GTF file:", 
-        paste(GenomeInfoDb::seqlevelsStyle(gtf), collapse = ' '))
-if(length(match) == 0) {
-  stop("ERROR: the chromosome naming conventions in the DNA file and the GTF file don't agree.\n",
-       "Example names from DNA file:",paste(head(unique(names(DNA))), collapse = ' '),
-       "\nExample names from GTF file:",paste(head(unique(GenomicRanges::seqnames(gtf))), collapse = ' '),
-       "\nUsing genome and annotation files from the same source (e.g. the ENSEMBL database)", 
-       " is highly recommended.")
+matched <- intersect(GenomeInfoDb::seqlevels(DNA), GenomeInfoDb::seqlevels(gtf))
+message(date(), " => Number of chromosomes/contigs matching between the GTF file and the genome fasta file: ",length(matched))
+message(date(), " => List of chromosomes/contigs matching between the GTF file and the genome fasta file:\n",
+        paste(matched, collapse = ' '))
+if(matched == 0) {
+  stop("ERROR: Couldn't match any of the chrosomosome ids between the GTF file and the genome fasta file.",
+       "\nThis will cause problems in getting expression estimates.",
+       "\nExample chromosome names in the genome fasta file: ", paste(head(GenomeInfoDb::seqlevels(DNA)), collapse = ' '),
+       "\nExample chromosome names in the GTF file: ", paste(head(GenomeInfoDb::seqlevels(gtf)), collapse = ' '))
 }
 
 # print out some stats about the input annotations
-
 input_stats <- rbind(data.frame('Type' = 'GTF', 
                                 'Description' = 'Number of genes',
                                 'Value' = length(unique(gtf$gene_id))),
@@ -124,6 +122,7 @@ input_stats <- rbind(data.frame('Type' = 'GTF',
 write.table(input_stats, file = file.path(outDir, 'input_annotation_stats.tsv'), quote = F, row.names = F)
 
 message(date(), " => Finished checking annotation files.")
+
 
 
 
