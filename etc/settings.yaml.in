@@ -109,6 +109,9 @@ execution:
     count_reads:
       threads: 1
       memory: 6000
+    check_annotation_files: 
+      threads: 1
+      memory: 16000  
 
 tools:
   gunzip:
