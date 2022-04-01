@@ -81,25 +81,44 @@ execution:
   rules:
     __default__:
       threads: 1
-      memory: 8000
+      memory: 2000
+    translate_sample_sheet_for_report:
+      threads: 1
+      memory: 500
+    trim_qc_reads:
+      threads: 1
+      memory: 4000
     star_index:
       threads: 2
       memory: 32000
     hisat2-build:
-      threads: 2
-      memory: 16000
+      threads: 2 
+      memory: 32000
     salmon_index:
       threads: 8
       memory: 5000
     salmon_quant:
       threads: 8
       memory: 6000
+    counts_from_salmon: 
+      threads: 1
+      memory: 200
+    collate_read_counts:
+      threads: 1
+      memory: 200
+    norm_counts_deseq:
+      threads: 1
+      memory: 1000 
     star_map:
       threads: 2
       memory: 16000
     hisat2:
       threads: 2
       memory: 8000
+    index_bam:
+      memory: 500
+    multiqc: 
+      memory: 500
     coverage_bamCoverage:
       threads: 1
       memory: 4000
@@ -111,7 +130,10 @@ execution:
       memory: 6000
     check_annotation_files: 
       threads: 1
-      memory: 16000  
+      memory: 16000
+    reports:
+      threads: 1
+      memory: 4000  
 
 tools:
   gunzip:

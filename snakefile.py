@@ -297,6 +297,8 @@ rule trim_qc_reads_pe:
     r2=os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.R2.fq.gz"),
     html=os.path.join(QC_DIR, "{sample}.pe.fastp.html"),
     json=os.path.join(QC_DIR, "{sample}.pe.fastp.json") #notice that multiqc recognizes files ending with fast.json
+  resources:
+    mem_mb = config['execution']['rules']['trim_qc_reads']['memory']
   log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
   shell: "{FASTP_EXEC} --in1 {input[0]} --in2 {input[1]} --out1 {output.r1} --out2 {output.r2} -h {output.html} -j {output.json} >> {log} 2>&1"
 
@@ -307,6 +309,8 @@ rule trim_qc_reads_se:
     r = os.path.join(TRIMMED_READS_DIR, "{sample}.trimmed.fq.gz"),
     html=os.path.join(QC_DIR, "{sample}.se.fastp.html"),
     json=os.path.join(QC_DIR, "{sample}.se.fastp.json") #notice that multiqc recognizes files ending with fast.json
+  resources:
+    mem_mb = config['execution']['rules']['trim_qc_reads']['memory']
   log: os.path.join(LOG_DIR, 'trim_reads.{sample}.log')
   shell: "{FASTP_EXEC} --in1 {input[0]} --out1 {output.r} -h {output.html} -j {output.json} >> {log} 2>&1 "
 
@@ -395,7 +399,7 @@ rule index_bam:
   input: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam')
   output: os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam.bai')
   resources:
-    mem_mb = 100
+    mem_mb = config['execution']['rules']['index_bam']['memory']
   log: os.path.join(LOG_DIR, 'samtools_index_{sample}.log')
   shell: "{SAMTOOLS_EXEC} index {input} {output} >> {log} 2>&1"
 
@@ -446,7 +450,7 @@ rule counts_from_SALMON:
       os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.transcripts.tsv"),
       os.path.join(COUNTS_DIR, "normalized", "salmon", "TPM_counts_from_SALMON.genes.tsv")
   resources:
-      mem_mb = 1000
+      mem_mb = config['execution']['rules']['counts_from_salmon']['memory']
   log: os.path.join(LOG_DIR, "salmon", 'salmon_import_counts.log')
   shell: "{RSCRIPT_EXEC} {SCRIPTS_DIR}/counts_matrix_from_SALMON.R {SALMON_DIR} {COUNTS_DIR} {input.colDataFile} >> {log} 2>&1"
 
@@ -497,7 +501,7 @@ rule multiqc:
     mapping_output=expand(os.path.join(MAPPED_READS_DIR, MAPPER, '{sample}_Aligned.sortedByCoord.out.bam'), sample=SAMPLES)
   output: os.path.join(MULTIQC_DIR, 'multiqc_report.html')
   resources:
-    mem_mb = 200
+    mem_mb = config['execution']['rules']['multiqc']['memory']
   log: os.path.join(LOG_DIR, f'multiqc.{MAPPER}.log')
   shell: "{MULTIQC_EXEC} -f -o {MULTIQC_DIR} {OUTPUT_DIR} >> {log} 2>&1"
 
@@ -530,7 +534,7 @@ rule collate_read_counts:
   output:
     os.path.join(COUNTS_DIR, "raw_counts", MAPPER, "counts.tsv")
   resources:
-    mem_mb = 200
+    mem_mb = config['execution']['rules']['collate_read_counts']['memory']
   log: os.path.join(LOG_DIR, MAPPER, "collate_read_counts.log")
   params:
     mapped_dir = os.path.join(MAPPED_READS_DIR, MAPPER),
@@ -549,7 +553,7 @@ rule norm_counts_deseq:
         size_factors = os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_size_factors.txt"),
         norm_counts = os.path.join(COUNTS_DIR, "normalized", MAPPER, "deseq_normalized_counts.tsv")
     resources:
-      mem_mb = 1000
+      mem_mb = config['execution']['rules']['norm_counts_deseq']['memory']
     log:
         os.path.join(LOG_DIR, MAPPER, "norm_counts_deseq.log")
     params:
@@ -576,7 +580,7 @@ rule report1:
   output:
     os.path.join(OUTPUT_DIR, "report", MAPPER, '{analysis}.deseq.report.html')
   resources:
-    mem_mb = 4000
+    mem_mb = config['execution']['rules']['reports']['memory']
   shell:
     "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}'  --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained='{params.selfContained}' >> {log} 2>&1"
 
@@ -598,7 +602,7 @@ rule report2:
   output:
     os.path.join(OUTPUT_DIR, "report", 'salmon', '{analysis}.salmon.transcripts.deseq.report.html')
   resources:
-    mem_mb = 4000
+    mem_mb = config['execution']['rules']['reports']['memory']
   shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.transcripts' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained='{params.selfContained}' >> {log} 2>&1"
 
 rule report3:
@@ -619,5 +623,5 @@ rule report3:
   output:
     os.path.join(OUTPUT_DIR, "report", "salmon", '{analysis}.salmon.genes.deseq.report.html')
   resources:
-    mem_mb = 4000
+    mem_mb = config['execution']['rules']['reports']['memory']
   shell: "{RSCRIPT_EXEC} {params.reportR} --logo={params.logo} --prefix='{wildcards.analysis}.salmon.genes' --reportFile={params.reportRmd} --countDataFile={input.counts} --colDataFile={input.coldata} --gtfFile={GTF_FILE} --caseSampleGroups='{params.case}' --controlSampleGroups='{params.control}' --covariates='{params.covariates}' --workdir={params.outdir} --organism='{ORGANISM}' --description='{params.description}' --selfContained='{params.selfContained}' >> {log} 2>&1"
