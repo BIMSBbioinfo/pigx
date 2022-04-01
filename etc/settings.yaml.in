@@ -76,6 +76,7 @@ execution:
     stack: 128M
     queue: all
     contact-email: none
+    log-dir: '.'
     args: ''
   rules:
     __default__:
