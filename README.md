@@ -138,7 +138,7 @@ Any additional arguments to `run.sh` after the argument for the number of cpus a
 
 # How to cite
 
-See the pre-print on [Biorxiv](https://www.biorxiv.org/content/10.1101/2020.07.28.224998v2)
+See the publication on [Cell Reports](https://www.cell.com/cell-reports/pdf/S2211-1247(21)00302-8.pdf)
 
 # Credits
 
