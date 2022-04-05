@@ -1,0 +1,81 @@
+---
+title: "sgRNA efficiency stats"
+output: html_document
+params: 
+  @PARAMS_TARGET_NAME@: 
+---
+
+Read config.yml for the locations of sample sheet, pipeline output and cut sites coordinates. 
+```{r, child="_settings.Rmd"}
+```
+
+Subset sample sheet for those that match the target region of interest
+```{r}
+targetName <- params$target_name
+sampleSheet <- sampleSheet[target_name == targetName]
+```
+
+```{r getdata}
+cutSiteStats <- as.data.table(do.call(rbind, lapply(sampleSheet$sample_name, function(sampleName) {
+  f <- file.path(pipeline_output_dir, 'indels', sampleName, paste0(sampleName, '.sgRNA_efficiency.tsv'))
+  if(file.exists(f)) {
+    dt <- fread(f)
+    return(dt)
+  }
+})))
+
+sampleGuides <- lapply(sampleSheet$sample_name, function(s) {
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                            split = ':'))
+  if(sgRNAs[1] == 'none') {
+    sgRNAs <- setdiff(unique(unlist(strsplit(x = sampleSheet[target_name == targetName,]$sgRNA_ids, split = ':'))), 'none')
+  }
+  return(sgRNAs)
+})
+names(sampleGuides) <- as.character(sampleSheet$sample_name)
+
+cutSiteStats$sampleMatchesGuide <- as.factor(apply(cutSiteStats, 1, function(x) {
+  s <- as.character(x[['sample']])
+  g <- as.character(x[['sgRNA']])
+  return(g %in% sampleGuides[[s]])
+}))
+
+```
+
+Guide RNA efficiencies across samples as a table
+```{r}
+dt <- cutSiteStats[sampleMatchesGuide == TRUE][,-4][,c(1,3,2)]
+colnames(dt)[3] <- 'percentEfficiency'
+DT::datatable(dt, 
+          extensions = c('Buttons', 'FixedColumns', 'Scroller'), 
+          options = list(fixedColumns = TRUE, 
+                         scroller = TRUE,
+                         scrollY = 400,
+                         dom = 'Bfrtip',
+                         buttons = c('copy', 'print', 'csv','excel', 'pdf')),
+          filter = 'bottom'
+          )
+```
+
+Guide RNA efficiencies across samples displayed as a heatmap
+```{r, fig.width=8, fig.height=8, eval=FALSE}
+dt <- dcast(cutSiteStats[sampleMatchesGuide == TRUE], sample ~ sgRNA, value.var = 'scores')
+M <- as.matrix(dt[,-1])
+rownames(M) <- dt$sample
+
+pheatmap::pheatmap(t(M), cluster_rows = F, cluster_cols = F, 
+                   na_col = 'black', 
+                   display_numbers = ncol(M) < 15 & nrow(M) < 15, 
+                   number_color = 'black', 
+                   main = '% Indel Efficiency Values at Cut Sites (+/- 5bp)')
+```
+
+Compare guide efficiencies across samples 
+```{r, eval=FALSE}
+ggplot(cutSiteStats[sampleMatchesGuide == TRUE], 
+       aes(x = sgRNA, y = scores)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(height = 0) + 
+  coord_flip() + 
+  labs(y = 'percent sgRNA efficiencies \n each dot represents a sample')
+```

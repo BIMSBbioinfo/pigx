@@ -1,0 +1,4 @@
+sample_name,target_name,target_region,reads,reads2,sgRNA_ids,tech
+lin41_L1_1516.pacbio,lin-41,I:9334710-9336652:-,lin41_L1_1516.pacbio.fastq.gz,,lin-41_UTR_sg15:lin-41_UTR_sg16,pacbio
+phen_dpy-10_N2_16,dpy-10,II:6709617-6710936:-,phen_dpy-10_N2_16_S31_R1_001.fastq.gz,,none,illumina
+phen_dpy-10_sg1sg2_16,dpy-10,II:6709617-6710936:-,phen_dpy-10_sg1sg2_16_S20_R1_001.fastq.gz,,dpy-10_UTR_sg1:dpy-10_UTR_sg2,illumina

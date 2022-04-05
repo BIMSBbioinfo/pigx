@@ -1,0 +1,71 @@
+Reading Config File: 
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(ggrepel)))
+suppressMessages(suppressWarnings(library(data.table)))
+suppressMessages(suppressWarnings(library(rtracklayer)))
+suppressMessages(suppressWarnings(library(plotly)))
+suppressMessages(suppressWarnings(library(GenomicRanges)))
+suppressMessages(suppressWarnings(library(parallel)))
+suppressMessages(suppressWarnings(library(pbapply)))
+suppressMessages(suppressWarnings(library(DT)))
+
+targetName <- params$target_name
+config <- yaml::read_yaml('./config.yml')
+sampleSheet <- data.table::fread(config$sample_sheet)
+pipeline_output_dir <- config$pipeline_output_dir
+cut_sites <- rtracklayer::import.bed(config$cut_sites_file)
+sampleComparisons <- data.table::fread(config$comparisons_file)
+```
+
+Declare some common functions
+```{r}
+importSampleBigWig <- function(pipeline_output_dir, samples, suffix = '.alnCoverage.bigwig') {
+  sapply(simplify = F, USE.NAMES = T, 
+                      X = unique(as.character(samples)), 
+                      FUN = function(s) {
+  f <- file.path(pipeline_output_dir, 'indels', s, paste0(s, suffix))
+  if(file.exists(f)) {
+    rtracklayer::import.bw(f, as = 'RleList')
+  } else {
+    stop("Can't find bigwig file for sample: ",s," at: ",
+         "\n",f,"\n")
+  }})
+}
+
+subsetRleListByRange <- function(input.rle, input.gr) {
+  as.vector(input.rle[[seqnames(input.gr)]])[start(input.gr):end(input.gr)]
+}
+
+
+getReadsWithIndels <- function(pipeline_output_dir, samples) {
+  readsWithIndels <- lapply(samples, function(sample) {
+  dt <- data.table::fread(file.path(pipeline_output_dir, 
+                                                 'indels',
+                                                 sample, 
+                                                 paste0(sample, ".reads_with_indels.tsv")))
+  })
+  names(readsWithIndels) <- samples
+  return(readsWithIndels)
+}
+
+getIndels <- function(pipeline_output_dir, samples) {
+  indels <- sapply(simplify = FALSE, samples, function(s) {
+  f <- file.path(pipeline_output_dir, 
+                 'indels',
+                 s, 
+                 paste0(s, ".indels.tsv"))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    dt$sample <- s
+    return(dt)
+  } else {
+    stop("Can't open indels.tsv file for sample",s,
+            "at",f,"\n")
+  }})
+  return(indels)
+}
+```

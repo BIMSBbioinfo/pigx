@@ -1,0 +1,22 @@
+sample_sheet: ./sample_data/sample_sheet.csv
+cutsites: ./sample_data/cutsites.bed
+reads-dir: ./sample_data/reads
+reference_fasta: ./sample_data/fasta/chrI_II.fa
+output-dir: ./output_test
+source-dir: '.'
+
+nodeN: 4
+
+tools:
+  Rscript: /usr/bin/Rscript
+  java:
+    path: ~/.conda/envs/test_dart/bin/java
+    mem: "-Xmx8G"
+    threads: "-XX:ParallelGCThreads=2"
+  gatk: ~/tools/GenomeAnalysisTK.jar
+  bbmap:
+    memory: "-Xmx20G"
+    options: "threads=2" # See bbmap.sh --help for all options 
+  reformat:
+    memory: "-Xmx1G"
+comparisonsFile: ./sample_data/comparisons.tsv

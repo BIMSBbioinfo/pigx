@@ -1,0 +1,292 @@
+---
+title: "Indel Diversity"
+output: html_document
+params: 
+  @PARAMS_TARGET_NAME@: 
+---
+
+```{r, child="_settings.Rmd"}
+```
+
+Subset sample sheet for those that match the target region of interest
+```{r}
+targetName <- params$target_name
+sampleSheet <- sampleSheet[target_name == targetName]
+targetRegion <- as(sampleSheet[target_name == targetName]$target_region[1], 'GRanges')
+
+#get the list of all guides used for the target region 
+#get sample-specific cut sites at the target region
+sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$target_name == targetName,]$sgRNA_ids, 
+                   split = ':'))
+cutSites <- cut_sites[cut_sites$name %in% sgRNAs]
+```
+
+```{r}
+#import deletion coordinates 
+deletions <- do.call(rbind, lapply(getIndels(pipeline_output_dir, sampleSheet$sample_name), 
+                    function(dt) {
+                      dt[indelType == 'D']
+                    }))
+
+sampleGuides <- lapply(sampleSheet$sample_name, function(s) {
+  sgRNAs <- unlist(strsplit(x = sampleSheet[sampleSheet$sample_name == s,]$sgRNA_ids, 
+                            split = ':'))
+  if(sgRNAs[1] == 'none') {
+    sgRNAs <- setdiff(unique(unlist(strsplit(x = sampleSheet[target_name == targetName,]$sgRNA_ids, split = ':'))), 'none')
+  }
+  return(sgRNAs)
+})
+names(sampleGuides) <- as.character(sampleSheet$sample_name)
+
+```
+
+```{r}
+#find cut sites overlapping with the indels
+# indels: a data.table object with minimal columns: start, end, 
+# cutSites: a GRanges object of cut site coordinates 
+# return: data.frame (nrow = nrow(indels), columns are sgRNA ids, 
+#         values are 1 if indel overlaps cutsite, otherwise 0. 
+overlapCutSites <- function(indels, cutSites, extend = 5) {
+  cutSites_ext <- flank(cutSites, width = extend, both = TRUE)
+  #check if indel overlaps with the cut site
+  query <- GenomicRanges::makeGRangesFromDataFrame(indels)
+  overlaps <- as.data.table(findOverlaps(query, cutSites_ext, type = 'any', ignore.strand = TRUE))
+  
+  M <- matrix(data = rep(0, nrow(indels) * length(cutSites)), 
+              nrow = nrow(indels), ncol = length(cutSites))
+  colnames(M) <- cutSites$name
+  
+  M[as.matrix(overlaps)] <- 1
+  
+  return(M)
+}
+
+#get deletions within the target region
+deletions <- as.data.table(subsetByOverlaps(GRanges(deletions), targetRegion, ignore.strand = TRUE))
+
+#define deletion frequency: read support / coverage
+deletions$freq <- deletions$ReadSupport/deletions$coverage
+
+#find overlaps with cut sites (only considering guides used in the corresponding sample)
+deletionCutsiteOverlaps <- cbind(deletions, overlapCutSites(deletions, cutSites))
+deletionCutsiteOverlaps <- do.call(rbind, lapply(unique(deletionCutsiteOverlaps$sample), function(sampleName) {
+  dt <- deletionCutsiteOverlaps[sample == sampleName]
+  sgRNAs <- sampleGuides[[sampleName]]
+  dt$atCutSite <- apply(subset(dt, select = sgRNAs), 1, function(x) sum(x > 0) > 0)
+  return(dt)
+}))
+```
+
+```{r deletion_segment_plots}
+# cs: data.frame with cut site coordinates. minimual columns: start, end, name
+plotSegments <- function(dt, cs, readSupportThreshold = 0, freqThreshold = 0) {
+  dt <- dt[ReadSupport >= readSupportThreshold & freq >= freqThreshold]
+  if(nrow(dt) == 0){
+    return(NULL)
+  }
+  #first randomize the order (to avoid sorting by start position)
+  dt <- dt[sample(1:nrow(dt), nrow(dt))]
+  dt <- dt[order(end - start)]
+  dt$linePos <- 1:nrow(dt)
+  ggplot2::ggplot(dt, aes(x = linePos, ymin = start, ymax = end)) + 
+    geom_linerange(size = 0.5) + 
+    labs(title = "Deletions at cut sites") + 
+    geom_point(data = dt, aes(x = linePos, y = start), size = 1, color = 'red') + 
+    geom_point(data = dt, aes(x = linePos, y = end), size = 1, color = 'blue') + 
+    geom_hline(data = cs, 
+              aes(yintercept = start, color = name), show.legend = FALSE) +
+    theme(axis.text.y = element_blank(), 
+          axis.title.y = element_blank(), 
+          axis.ticks.y = element_blank(), 
+          axis.text.x = element_text(angle = 90), 
+          plot.title = element_text(hjust = 0.5)) + 
+    scale_y_continuous(sec.axis = dup_axis(breaks = cs$start,
+                                           labels = cs$name)) + 
+    coord_flip()
+}
+
+plots <- lapply(unique(deletionCutsiteOverlaps$sample), function(s) {
+  dt <- deletionCutsiteOverlaps[sample == s]
+  if(nrow(dt) == 0) {
+    return(NULL)
+  }
+  #segment plots with varying frequency thresholds
+  freqThresholds <- c(0, 0.00001, 0.0001, 0.001, 0.01, 0.1)
+  plots <- lapply(freqThresholds, function(t) {
+      p <- plotSegments(dt = dt[atCutSite == TRUE], #only plot those at cut sites 
+                        cs = as.data.frame(cutSites[cutSites$name %in% sampleGuides[[s]]]), 
+                        freqThreshold = t)
+      if(!is.null(p)) {
+         p <- p + labs(y = paste(targetName, targetRegion))
+      }
+      return(p)
+  })
+  names(plots) <- freqThresholds
+  return(plots)
+})
+names(plots) <- unique(deletionCutsiteOverlaps$sample)
+```
+
+# Deletion diversity at cut sites
+
+```{r plotDeletionDiversity, results='asis', fig.height=8, fig.width=10}
+# folder to save pdf versions of the segment plots
+dirPath <- paste(targetName, 'Indel_Diversity.deletion_segment_plots', sep = '.')
+if(!dir.exists(dirPath)) {
+  dir.create(dirPath)
+}
+for (sample in names(plots)) {
+  cat('## ',sample,'{.tabset .tabset-fade .tabset-pills}\n\n')
+  for(i in names(plots[[sample]])) {
+    cat('### Freq:',i,'\n\n')
+    p <- plots[[sample]][[i]]
+    if(!is.null(p)) {
+      print(p)
+      ggsave(filename = file.path(dirPath, paste(sample, 'freq', i, 'pdf', sep = '.')), 
+             plot = p, width = 10, height = 8, units = 'in')
+    } else {
+      cat("No plot to show\n\n")
+    }
+    cat("\n\n")
+  }
+  cat("\n\n")
+}
+```
+
+# Insertion diversity at cut sites
+
+These plots show the diversity of insertions at the cut sites taking into account the actual sequence that is inserted. 
+
+```{r insertionDiversityPrepare}
+## import insertions data (that contains inserted sequences, too) and make some summary plots 
+insertions <- as.data.table(do.call(rbind, lapply(1:nrow(sampleSheet), function(i) {
+  sampleName <- sampleSheet[i, 'sample_name']
+  
+  f <- file.path(pipeline_output_dir, 'indels', sampleName, paste0(sampleName, '.insertedSequences.tsv'))
+  if(file.exists(f)) {
+    dt <- data.table::fread(f)
+    dt$sample <- sampleName
+    dt$end <- dt$start
+    return(dt)
+  } else {
+    warning("Can't open .insertedSequences.tsv file for sample ",sampleName,
+            " at ",f,"\n")
+    return(NULL)
+  }
+})))
+
+#collapse insertions 
+insertions <- insertions[,length(name), 
+                         by = c('seqname', 'sample', 'start', 
+                                'end', 'insertedSequence', 
+                                'insertionWidth')]
+colnames(insertions)[7] <- 'ReadSupport'
+
+# get alignment coverage - will need for insertion coverage 
+alnCoverage <- importSampleBigWig(pipeline_output_dir, 
+                                  sampleSheet$sample_name, ".alnCoverage.bigwig")
+
+insertions <- do.call(rbind, lapply(unique(insertions$sample), function(s) {
+  do.call(rbind, lapply(unique(insertions[sample == s]$seqname), function(chr) {
+    dt <- insertions[sample == s & seqname == chr]
+    dt$coverage <- as.vector(alnCoverage[[s]][[chr]])[dt$start]
+    return(dt)
+  }))
+}))
+
+#compute frequency value for each insertion 
+#(number of reads supporting the insertion divided by coverage at insertion site)
+insertions$freq <- insertions$ReadSupport/insertions$coverage
+
+#find overlaps with cut sites 
+insertions <- cbind(insertions, overlapCutSites(indels = insertions, cutSites = cutSites))
+
+# for each sample, find the guides used in the sample and find out if the indels overlap cut sites 
+# warnings: only restrict to the cut sites relevant for the sample
+# warnings: if the sample is untreated, then we check overlaps for all cut sites 
+# for the corresponding amplicon
+insertions <- do.call(rbind, lapply(unique(insertions$sample), function(sampleName) {
+  dt <- insertions[sample == sampleName]
+  sgRNAs <- sampleGuides[[sampleName]]
+  dt$atCutSite <- apply(subset(dt, select = sgRNAs), 1, function(x) sum(x > 0) > 0)
+  return(dt)
+}))
+```
+
+```{r}
+plotInsertions <- function(dt, cutSites, sgRNAs) {
+  #first randomize the order (to avoid sorting by start position)
+  dt <- dt[sample(1:nrow(dt), nrow(dt))]
+  #sort insertions by width of insertion
+  dt <- dt[order(insertionWidth)]
+  dt$linePos <- 1:nrow(dt)
+  
+  ggplot2::ggplot(dt, aes(x = linePos, ymin = start - insertionWidth/2, 
+                          ymax = start + insertionWidth/2)) + 
+    geom_linerange(size = 0.5, alpha = 0.5) + 
+    geom_point(aes(x = linePos, y = start), shape = 24, fill = 'red') +
+    geom_hline(data = as.data.frame(cutSites[cutSites$name %in% sgRNAs,]), 
+           aes(yintercept = start, color = name), linetype = 'dashed', show.legend = FALSE) +
+    theme(axis.text.y = element_blank(), 
+          axis.title.y = element_blank(), 
+          axis.title.x = element_blank(),
+          axis.ticks.y = element_blank(), 
+          axis.text.x = element_text(angle = 90), 
+          plot.title = element_text(hjust = 0.5), 
+          plot.subtitle = element_text(hjust = 0.5)) + 
+    scale_y_continuous(sec.axis = dup_axis(breaks = cutSites[cutSites$sgRNA %in% sgRNAs,]$cutSite,
+                                           labels = cutSites[cutSites$sgRNA %in% sgRNAs,]$sgRNA)) + 
+    coord_flip()
+}
+
+insertions$freqInterval <- cut_interval(log10(insertions$freq), length = 1)
+
+plots <- lapply(unique(insertions$sample), function(sampleName) {
+  dt <- insertions[sample == sampleName & atCutSite == TRUE]
+  if(nrow(dt) == 0) {
+    return(NULL)
+  }
+  #dt$freqInterval <- cut_interval(log10(dt$freq), length = 1)
+  #segment plots with different frequency thresholds 
+  segmentPlots <- lapply(unique(as.character(dt$freqInterval)), function(x) {
+    if(nrow(dt[freqInterval == x]) > 0) {
+      p <-  plotInsertions(dt[freqInterval == x], cutSites, sampleGuides[[sampleName]])
+      p <- p + labs(title = 'Insertions at cut sites', 
+                    subtitle = paste(targetName, targetRegion))
+    } else {
+      p <- NULL
+    }
+    return(p)
+  })
+  names(segmentPlots) <- lapply(unique(as.character(dt$freqInterval)), function(x) {
+    paste(10^(as.numeric(unlist(strsplit(sub("(\\[|\\()(.+)(\\]|\\))", "\\2", x), ',')))), 
+                               collapse = ' - ')
+  })
+  return(segmentPlots)
+})
+names(plots) <- unique(insertions$sample)
+```
+
+```{r plotInsertionDiversity, results='asis', fig.height=8, fig.width=10}
+# folder to save pdf versions of the segment plots
+dirPath <- paste(targetName, 'Indel_Diversity.insertion_segment_plots', sep = '.')
+if(!dir.exists(dirPath)) {
+  dir.create(dirPath)
+}
+for (sample in names(plots)) {
+  cat('## ',sample,'{.tabset .tabset-fade .tabset-pills}\n\n')
+  for(i in names(plots[[sample]])) {
+    cat('### Freq:',i,'\n\n')
+    p <- plots[[sample]][[i]]
+    if(!is.null(p)) {
+      print(p)
+      ggsave(filename = file.path(dirPath, paste(sample, 'freq', i, 'pdf', sep = '.')), 
+             plot = p, width = 10, height = 8, units = 'in')
+    } else {
+      cat("No plot to show\n\n")
+    }
+    cat("\n\n")
+  }
+  cat("\n\n")
+}
+```
