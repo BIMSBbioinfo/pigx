@@ -6,7 +6,7 @@
 </a>
 </div>
 
-**Copyright 2017-2020: Vedran Franke, Bora Uyar, Ricardo Wurmus, Altuna Akalin.**
+**Copyright 2017-2022: Vedran Franke, Bora Uyar, Ricardo Wurmus, Altuna Akalin.**
 **This work is distributed under the terms of the GNU General Public License, version 3 or later.  It is free to use for all purposes.**
 
 -----------

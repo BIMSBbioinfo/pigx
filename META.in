@@ -2,7 +2,7 @@ version = """
 PiGx scRNAseq Pipeline.
 Version: @PACKAGE_VERSION@
 
-Copyright © 2017-2021 Vedran Franke, Bora Uyar, Ricardo Wurmus.
+Copyright © 2017-2022 Vedran Franke, Bora Uyar, Ricardo Wurmus.
 """
 
 description = """
