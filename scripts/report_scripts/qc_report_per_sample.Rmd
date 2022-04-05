@@ -32,7 +32,7 @@ library(base64url)
 ```
 
 This report provides an overview over general quality control measures of the sample  and provides the summarized data as downloadable tables. 
-For detailed information about the methods please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html#output-description). 
+For detailed information about the methods please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov-2.html#output-description).
 
 ```{r reading data, include = FALSE}
 coverage.df <- read.table(params$coverage_file, sep = "\t", header = T)
@@ -76,7 +76,7 @@ datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
 # Read processing
 
 To improve alignment rates and mutation calling the pipeline contains trimming steps for primer, read-quality and adapter trimming. Parameter for read processing can be provided by [the pipeline’s settings file](link/to/etc/settings_file). For detailed method information please
-consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html#introduction).   
+consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov-2.html#introduction).
 
 ## MultiQC 
 In order to be able to assess and compare the read quality after each step multiple quality reports are generated which are presented below in a summarized format:

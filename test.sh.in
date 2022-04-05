@@ -14,7 +14,7 @@ chmod -R +w ${srcdir}/tests
 
 # Perform a full paired end run
 
-${builddir}/pigx-sars-cov2-ww --printshellcmds -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
+${builddir}/pigx-sars-cov-2 --printshellcmds -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
 
 if ! test -f "${srcdir}/tests/output/report/index.html"
 then

@@ -1,8 +1,8 @@
-# PiGx SARS CoV2 wastewater sequencing pipeline
+# PiGx SARS-CoV-2 wastewater sequencing pipeline
 #
 # Copyright © 2021 Akalin lab.
 #
-# This file is part of the PiGx SARS-CoV2 wastewater sequencing pipeline.
+# This file is part of the PiGx SARS-CoV-2 wastewater sequencing pipeline.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Snakefile for PiGx SARS CoV2 wastewater sequencing pipeline
+Snakefile for PiGx SARS-CoV-2 wastewater sequencing pipeline
 """
 
 import os
@@ -594,7 +594,7 @@ rule render_index:
       qc=expand(os.path.join(REPORT_DIR, "{sample}.qc_report_per_sample.html"), sample = SAMPLES),
       variant=expand(os.path.join(REPORT_DIR, "{sample}.variantreport_p_sample.html"), sample = SAMPLES)
     # TODO: these CSV files should be declared as inputs!  Due to
-    # https://github.com/BIMSBbioinfo/pigx_sarscov2_ww/issues/19 we
+    # https://github.com/BIMSBbioinfo/pigx_sars-cov-2/issues/19 we
     # cannot do this yet, so we just add the variant reports for all
     # samples as inputs.
     params:

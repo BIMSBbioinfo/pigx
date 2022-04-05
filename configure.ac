@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 
-AC_INIT([PiGx_sars-cov2-ww], [m4_translit(m4_esyscmd([cat VERSION]),m4_newline)])
+AC_INIT([PiGx_sars-cov-2], [m4_translit(m4_esyscmd([cat VERSION]),m4_newline)])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([gnu color-tests tar-pax -Wall -Wno-portability foreign])
@@ -94,5 +94,5 @@ AC_CONFIG_FILES([tests/tests/vep.sh], [chmod +x tests/tests/vep.sh])
 AC_CONFIG_FILES([test.sh], [chmod +x test.sh])
 AC_CONFIG_FILES([scripts/download_databases.sh], [chmod +x scripts/download_databases.sh])
 AC_CONFIG_FILES([qsub-template.sh:pigx-common/common/qsub-template.sh.in])
-AC_CONFIG_FILES([pigx-sars-cov2-ww:pigx-common/common/pigx-runner.in], [chmod +x pigx-sars-cov2-ww])
+AC_CONFIG_FILES([pigx-sars-cov-2:pigx-common/common/pigx-runner.in], [chmod +x pigx-sars-cov-2])
 AC_OUTPUT

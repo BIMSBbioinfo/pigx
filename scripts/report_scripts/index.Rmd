@@ -69,12 +69,12 @@ lineages and single nucleotide (single-NT) mutations.
 
 The visualizations below provide an overview of the evolution of VOCs found
 in the analyzed samples across given time points and locations. The abundance values for the variants are derived 
-by deconvolution. For details please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov2-ww.html#output-description))
+by deconvolution. For details please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov-2.html#output-description))
 
 This pipeline is part of
 [PiGx](https://bioinformatics.mdc-berlin.de/pigx), a collection of
 highly reproducible genomics pipelines
-[developed](https://github.com/BIMSBbioinfo/pigx_sarscov2_ww) by the
+[developed](https://github.com/BIMSBbioinfo/pigx_sars-cov-2) by the
 [Bioinformatics & Omics Data Science
 platform](https://bioinformatics.mdc-berlin.de/) at the Berlin
 Institute of Medical System Biology (BIMSB).
