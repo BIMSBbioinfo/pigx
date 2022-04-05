@@ -66,7 +66,6 @@ are installed e.g. by installing them through a package manager like Conda. Howe
     - vep  
     - multiqc  
     - pandoc  
-    - pandoc-citeproc
 
 And the R-packages:  
 
