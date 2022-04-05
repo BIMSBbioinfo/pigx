@@ -1,0 +1,33 @@
+#!@GNUBASH@
+
+set -e
+set -u
+
+export SOURCE_DATE_EPOCH=1
+export PIGX_UGLY=1
+export PIGX_UNINSTALLED=1
+
+# We do not use "readlink -f" here, because macos does not support it.
+export srcdir=$(@PYTHON@ -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' ${srcdir:-.})
+
+chmod -R +w ${srcdir}/tests
+
+./pigx-rnaseq --printshellcmds -s ${srcdir}/tests/settings.yaml ${srcdir}/tests/sample_sheet.csv
+
+if ! test -f "${srcdir}/tests/output/report/salmon/analysis1.salmon.transcripts.deseq.report.html"
+then
+  echo "ERROR: could not find report for SALMON at transcript level"
+  exit 1
+fi
+
+if ! test -f "${srcdir}/tests/output/report/salmon/analysis1.salmon.genes.deseq.report.html"
+then
+  echo "ERROR: could not find report for SALMON at gene level"
+  exit 1
+fi
+
+if ! test -f "${srcdir}/tests/output/report/hisat2/analysis1.deseq.report.html"
+then
+  echo "ERROR: could not find report for HISAT2"
+  exit 1
+fi

@@ -1,0 +1,29 @@
+locations:
+  reads-dir: sample_data/reads/
+  output-dir: output/
+  genome-fasta: sample_data/sample.fasta
+  cdna-fasta: sample_data/sample.cdna.fasta
+  gtf-file: sample_data/sample.gtf
+
+organism: ''
+
+mapping:
+  mapper: 'hisat2' # options are star or hisat2
+  genome_build: 'GRCm38'  #genome build version identifier that is used in hisat2 index file names
+
+coverage:
+  tool: 'megadepth' # other option is bamCoverage
+
+DEanalyses:
+  #names of analyses can be anything but they have to be unique for each
+  #combination of case control group comparisons.
+  analysis1:
+    description: "This analysis is part of the pigx-rnaseq build-time tests."
+    #if multiple sample names is provided, they must be separated by comma
+    case_sample_groups: "HBR"
+    control_sample_groups: "UHR"
+    covariates: ''
+    #self-contained reports have all JavaScript code shipping as part of #the result file.
+    #The file will hence be functional throughout time, which is the default setting.
+    #For a more modular approach that references external sources set "FALSE"
+    self_contained: TRUE

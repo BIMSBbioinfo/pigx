@@ -1,0 +1,25 @@
+{
+    "read_files": [
+        "/data/local/buyar/pigx/rnaseq/pigx_rnaseq/tests/output/trimmed_reads/HBR_Rep3_R1.fastq.gz",
+        "/data/local/buyar/pigx/rnaseq/pigx_rnaseq/tests/output/trimmed_reads/HBR_Rep3_R2.fastq.gz"
+    ],
+    "expected_format": "IU",
+    "compatible_fragment_ratio": 1.0,
+    "num_compatible_fragments": 455,
+    "num_assigned_fragments": 455,
+    "num_frags_with_concordant_consistent_mappings": 443,
+    "num_frags_with_inconsistent_or_orphan_mappings": 13,
+    "strand_mapping_bias": 0.9932279909706546,
+    "MSF": 0,
+    "OSF": 0,
+    "ISF": 3,
+    "MSR": 0,
+    "OSR": 0,
+    "ISR": 440,
+    "SF": 4,
+    "SR": 9,
+    "MU": 0,
+    "OU": 0,
+    "IU": 0,
+    "U": 0
+}

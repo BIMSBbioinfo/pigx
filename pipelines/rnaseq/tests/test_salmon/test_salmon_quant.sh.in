@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -e
+set -u
+
+root=$(mktemp --tmpdir -d "pigx.XXXX")
+testfolder=${root}/tests/test_salmon
+mkdir -p ${testfolder}
+
+echo "TEST FOLDER: ${testfolder}"
+
+# copy necessary input files to the test folder
+# we copy them to avoid re-creating these files when testing the pipeline
+cp -r ${srcdir}/tests/sample_data/preprocessed/trimmed_reads ${testfolder}
+
+# make these copies writable
+chmod +w -R ${testfolder}
+
+# prepare temporary sample sheet and settings files
+settings=${srcdir}/tests/settings_no_de.yaml
+tmp_settings="${testfolder}/settings.yaml"
+sed -e "s,reads-dir: ,reads-dir: ${srcdir}/tests/,g" \
+    -e "s,genome-fasta: ,genome-fasta: ${srcdir}/tests/,g" \
+    -e "s,cdna-fasta: ,cdna-fasta: ${srcdir}/tests/,g" \
+    -e "s,gtf-file: ,gtf-file: ${srcdir}/tests/,g" \
+    -e "s,output-dir:.*,output-dir: ${testfolder},g" \
+    ${settings} > ${tmp_settings}
+
+samplesheet=${srcdir}/tests/sample_sheet.csv
+tmp_samplesheet=${testfolder}/sample_sheet.test_salmon.csv
+head -n 2 ${samplesheet} > ${tmp_samplesheet}
+
+${builddir}/pigx-rnaseq -s ${tmp_settings} --target salmon_quant ${tmp_samplesheet}
+
+rm ${tmp_settings} ${tmp_samplesheet}
+
+rm -rf ${testfolder}/trimmed_reads
+
+if ! test -f ${testfolder}/salmon_output/HBR_Rep1/quant.sf
+then
+  echo "ERROR: failed the SALMON quantification test"
+  exit 1
+fi

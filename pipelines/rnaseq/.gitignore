@@ -1,0 +1,23 @@
+.snakemake
+*~
+
+# generated files
+META
+qsub-template.sh
+configure
+config.log
+config.status
+pigx-rnaseq
+Makefile.in
+Makefile
+autom4te.cache/
+etc/settings.yaml
+test.sh
+config.json
+scripts/deseqReport.Rmd
+build-aux/*
+aclocal.m4
+test*.sh
+test*.log
+test*.trs
+tests/output/
