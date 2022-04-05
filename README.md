@@ -6,7 +6,7 @@
 
 # What is PiGx?
 
-PiGx is a collection of genomics pipelines. More information can be found in [PiGx website](http://bioinformatics.mdc-berlin.de/pigx/)
+PiGx is a collection of genomics pipelines. More information can be found in [PiGx website](https://bioinformatics.mdc-berlin.de/pigx/)
 
 It includes the following pipelines:
 
