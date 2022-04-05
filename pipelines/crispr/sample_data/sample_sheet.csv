@@ -1,4 +1,0 @@
-sample_name,amplicon,reads,sgRNA_ids
-lin41RNA_pool1,lin-41,lin41RNA_pool1_S67_R1_001.fastq.gz,lin-41_UTR_sg1:lin-41_UTR_sg4:lin-41_UTR_sg10:lin-41_UTR_sg16:lin-41_UTR_sg22
-phen_dpy-10_N2_16,dpy-10,phen_dpy-10_N2_16_S31_R1_001.fastq.gz,''
-phen_dpy-10_sg1sg2_16,dpy-10,phen_dpy-10_sg1sg2_16_S20_R1_001.fastq.gz,dpy-10_UTR_sg1:dpy-10_UTR_sg2

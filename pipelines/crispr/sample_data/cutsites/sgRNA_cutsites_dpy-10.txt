@@ -1,2 +1,0 @@
-dpy-10_UTR_sg1	624
-dpy-10_UTR_sg2	739
