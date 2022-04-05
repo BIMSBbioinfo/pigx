@@ -8,7 +8,7 @@
 # Copyright © 2017, 2018 Alexander Gosdschan <alexander.gosdschan@mdc-berlin.de>
 # Copyright © 2017, 2018 Katarzyna Wreczycka <katwre@gmail.com>
 # Copyright © 2017, 2018 Altuna Akalin <altuna.akalin@mdc-berlin.de>
-# Copyright © 2017, 2018 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
+# Copyright © 2017-2022 Ricardo Wurmus <ricardo.wurmus@mdc-berlin.de>
 #
 # This file is part of PiGx.
 #
@@ -39,13 +39,13 @@ PiGx Pipelines.
 PiGx is a collection of data processing pipelines.
 """
 
-epilog = 'These pipelines were developed by the Akalin group at MDC in Berlin in 2017-2018.'
+epilog = 'These pipelines were developed by the Akalin group at MDC in Berlin in 2017-2022.'
 
 version = """\
 PiGx Pipelines.
 Version: @PACKAGE_VERSION@
 
-Copyright © 2017, 2018 BIMSB Bioinformatics (Akalin Lab).
+Copyright © 2017-2022 BIMSB Bioinformatics (Akalin Lab).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
 This is free software: you are free to change and redistribute it.
