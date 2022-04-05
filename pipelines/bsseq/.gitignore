@@ -1,0 +1,74 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Emacs backup files
+*~
+
+# autoconf generated files
+META
+qsub-template.sh
+configure
+config.status
+pigx-bsseq
+Makefile.in
+Makefile
+autom4te.cache/
+etc/settings.yaml
+test.sh
+report_templates/*.Rmd
+
+# on install generated
+libexec/
+share/
+
+# releases
+pigx_bsseq-*.tar.gz
+pigx_bsseq-*.tar.gz.sig
+
+# dev
+dev/guix/.guix-profile*
+dev/guix/load_env.sh
+dev/guix/init_env.sh
+
+# test generated files
+test.sh.trs
+tests/*
+
+# pipeline generated files
+*.log
+snakemakeObj.RData
+report_templates/*.md
+report_templates/*.nb.html
+cluster_conf.json
+
+# ignore all folders, except for:
+#*/
+!scripts/
+!images/
+!report_templates/
+!rules/
+!tests/
+!test_dataset/sample_bam_files/
+
+# ignore on all machines 
+report_templates/pigx_bsseq_logo.html
+
+# ignore on my (alex) machine
+.snakemake/
+annotation/
+methylation_calls/
+segmentation/
+bam_files/
+new.config.json
+config.json
+*.Rproj
+*.DS_Store
+scripts/.snakemake*
+test_dataset/TableSheet_test.csv
+test_dataset/PROGS.json
+tmp
+config2.json
+local_install/
+.vscode/settings.json

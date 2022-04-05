@@ -1,0 +1,6 @@
+## minmal initialisation to run pipeline in git folder with ./pigx-bsseq ...
+# ./bootstrap.sh && ./configure && make && export PIGX_UNINSTALLED=1
+
+## initialisation to run pipeline both from git folder and 
+## from any folder with absolute path as [git-folder]/local_install/pigx-bsseq ...
+./bootstrap.sh && ./configure --prefix=$PWD/local_install && make install && export PIGX_UNINSTALLED=1

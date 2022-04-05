@@ -1,0 +1,15 @@
+
+## sample.fasta
+
+The `sample.fasta` is extracted from chr1:7291263-7302041 of the hg19 human genome assembly.
+
+```samtools faidx hg19.fa chr1:7291263-7302041 | sed 's/:.*//g' > sample.fasta ```
+
+## cpgIslandExt.hg19.bed.gz
+
+The `cpgIslandExt.hg19.bed.gz` is downloaded from UCSC.
+
+## refGene.hg19.bed.gz
+
+The `refGene.hg19.bed.gz` is downloaded from UCSC.
+
