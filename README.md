@@ -51,7 +51,7 @@ differences in occupancy between defined groups.
 
 You can install this pipeline with all its dependencies using GNU Guix:
 
-    guix package -i pigx-chipseq
+    guix install pigx-chipseq
     
 After exporting the guix profile to the PATH you should be able to [get started](#getting-started).
 
@@ -147,7 +147,7 @@ Assuming you have Guix installed, the following command spawns a
 sub-shell in which all dependencies are available:
 
 ```sh
-guix environment -l guix.scm
+guix shell
 ```
 
 
