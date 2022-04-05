@@ -1,0 +1,379 @@
+import itertools
+import os
+import yaml
+import sys
+from itertools import chain
+import xlrd
+import csv
+
+# ---------------------------------------------------------------------------- #
+# config dict of dicts
+# sample_sheet_dict - list of dicts
+# sample_sheet_column_names - list of allowed column names for sample sheet
+def validate_config(config, structure_variables):
+
+    # Checks whether the sample sheet file exists
+    if config['locations']['sample-sheet'] == None:
+        message = 'ERROR: sample-sheet file is not defined\n'
+        sys.exit(message)
+    elif not os.path.isfile(config['locations']['sample-sheet']):
+        message = 'ERROR: sample-sheet file does not exist\n'
+        sys.exit(message)
+
+    sample_sheet_dict = read_SAMPLE_SHEET(config)
+
+    message = ''
+    message = check_sample_sheet(sample_sheet_dict,  structure_variables, message)
+    if len(message) > 0:
+        message = 'ERROR: Sample Sheet is not properly formated:\n' + message
+        sys.exit(message)
+
+
+    message = check_locations(config, structure_variables , message)
+    if len(message) > 0:
+        message = 'ERROR: Invalid Location given in settings file:\n' + message
+        sys.exit(message)
+
+    message = check_settings(sample_sheet_dict, config, structure_variables , message)
+    if len(message) > 0:
+        message = 'ERROR: Settings file is not properly formated:\n' + message
+        sys.exit(message)
+
+    return(0)
+
+
+# ---------------------------------------------------------------------------- #
+# checks the proper structure of the sample_sheet file
+# ---------------------------------------------------------------------------- #
+def check_sample_sheet(sample_sheet_dict, structure_variables, message):
+
+    sample_sheet_column_names = set(structure_variables['SAMPLE_SHEET_COLUMN_NAMES'])
+    if len(sample_sheet_dict) > 0:
+        not_found = sample_sheet_column_names.difference(set(sample_sheet_dict[0].keys()))
+        if(len(not_found) > 0):
+            message = message + "\t required columns " + str(not_found) + " were not found in sample sheet: " + config['locations']['sample-sheet'] + "\n"
+    else:
+        message = message + "\t" + "There are no input samples!\n"
+
+    return message
+
+# ---------------------------------------------------------------------------- #
+# checks the locations defined in settings file
+# ---------------------------------------------------------------------------- #
+def check_locations(config, structure_variables, message):
+
+    # ---------------------------------------------------------------------------- #
+    # sets obligatory genome files
+    # checks for index or genome specification - obligatory
+    locations_dict = config['locations']
+    for obligatory_file in structure_variables['OBLIGATORY_FILES']:
+        if not obligatory_file in locations_dict:
+            message = message + "\t" + obligatory_file + " is not specified\n"
+
+    # checks whether the locations files exist if they are specified
+    for location in sorted(list(set(locations_dict.keys()))):
+        message = check_file_exists(locations_dict, location, message)
+    
+    return message 
+
+# ---------------------------------------------------------------------------- #
+# checks the proper structure of the settings file
+# ---------------------------------------------------------------------------- #
+def check_settings(sample_sheet_dict, config, structure_variables, message):
+
+    # ---------------------------------------------------------------------------- #
+    # checks for proper top level config categories
+    message = check_params(config, structure_variables['SETTING_SUBSECTIONS'], message)
+
+    # ---------------------------------------------------------------------------- #
+    # checks whether the fasta header contains whitespaces
+    locations_dict = config['locations']
+    message = check_fasta_header(locations_dict['genome-file'], message, locations_dict['gff-file'])
+
+    # ---------------------------------------------------------------------------- #
+    # checks whether the general section is properly formatted
+    message = check_general_section(config['general'], structure_variables, message)
+
+    # ---------------------------------------------------------------------------- #
+    # checks for ChIP and Cont specifications
+    peak_calling_desciptors = ['ChIP', 'Cont']
+    if 'peak_calling' in set(config.keys()):
+        if len(config['peak_calling'].keys()) > 0:
+            for samp in config['peak_calling'].keys():
+                if config['peak_calling'][samp]['ChIP'] == None:
+                    message = message + '\t' + samp + ": " + "ChIP not specified\n"
+
+            # if sample_sheet_dict['peak_calling'][samp]['Cont'] == None:
+#                 message = message + '\t' + samp + ": " + "Cont not specified\n"
+
+    # checks for correspondence between peak calling and samples
+        if(len(sample_sheet_dict) > 0 and len(config['peak_calling']) > 0):
+            samples = [sample_dict['SampleName'] for sample_dict in sample_sheet_dict]
+            keys = list(config['peak_calling'].keys())
+            peaks = [[config['peak_calling'][i]['ChIP'],
+                      config['peak_calling'][i]['Cont']] for i in keys]
+            peaks = flatten(peaks)
+            peaks = list(filter(None, peaks))
+            samples_diff = (set(peaks) - set(samples))
+            if len(samples_diff) > 0:
+                message = message + "\tsome peak calling samples are not specified\n"
+
+
+    # ------------------------------------------------------------------------ #
+    # checks whether the idr samples correspond to the peaks_calling samples
+    if 'idr' in set(config.keys()):
+        if(len(config['peak_calling']) > 0 and len(config['idr']) > 0):
+            peaks_calling = set(config['peak_calling'].keys())
+            for i in config['idr'].keys():
+                peaks_idr = set([config['idr'][i][j] for j in config['idr'][i].keys()])
+                if not len(peaks_idr) == 2:
+                    message = message + "\tIDR: " + i + " Cannot do comparisons of more than two peak sets.\n"
+                peaks_not_defined = peaks_idr - peaks_calling    
+                if len(peaks_not_defined) > 0:
+                    message = message + "\tIDR: " + i + " Contains samples not in peak calling: "+ " ".join(peaks_not_defined) +"\n"
+
+    # ------------------------------------------------------------------------ #
+    # checks for proper feature combination
+    # This check is temporary. Once Check_sample_sheet_dict is updated, can be removed.
+    if 'feature_combination' in set(config.keys()):
+        if len(config['feature_combination']) > 0:
+            feature_keys = config['feature_combination'].keys()
+            samps = []
+            if 'idr' in set(config.keys()):
+                samps = samps + list(config['idr'].keys())
+
+            if 'peak_calling' in set(config.keys()):
+                samps = samps + list(config['peak_calling'].keys())
+            
+            ## TODO: check that there are no duplicated samples given
+            # if len(samps) != len(set(samps)):
+            #     message = message + "\tfeature_combination contains samples defined in both idr and peak calling"
+                 
+            samps = set(samps)
+
+            for key in feature_keys:
+                key_diff = set(config['feature_combination'][key])  - samps
+                if(len(key_diff) > 0):
+                        message = message + "\tfeature_combination contains unknown peak files: " + " ".join(key_diff) +"\n"
+
+    # ------------------------------------------------------------------------ #
+    # checks for proper differential analysis
+    if 'differential_analysis' in set(config.keys()):
+        if len(config['differential_analysis']) > 0:
+            
+            # check for grouping column in sample sheet
+            sample_sheet_group_name = structure_variables['SAMPLE_SHEET_GROUP_NAME']
+            if not sample_sheet_group_name in sample_sheet_dict[0].keys():
+                message = ''.join([
+                    message, "\t'", str(sample_sheet_group_name),
+                    "' column specifying grouping for differential analysis ",
+                    "was not found in sample sheet: ",
+                    config['locations']['sample-sheet'], "\n"])
+            
+            # check that peak calling used are already defined
+            feature_keys = config['differential_analysis'].keys()
+            if 'idr' in set(config.keys()):
+                idr_samps = list(config['idr'].keys())
+
+            if 'peak_calling' in set(config.keys()):
+                peak_samps = list(config['peak_calling'].keys())
+
+            samps = set(idr_samps + peak_samps)
+            
+            samples_da = []
+            for key in feature_keys:
+                diffAnnDict = config['differential_analysis'][key]
+                if ( 'Peakset' in diffAnnDict ) and ( diffAnnDict['Peakset']):
+                    key_diff = set(diffAnnDict['Peakset'])  - samps
+                    if(len(key_diff) > 0):
+                        message = message + "\tdifferential_analysis contains unknown peak files: " + " ".join(key_diff) +"\n"
+                groups = [diffAnnDict['Case']] + [diffAnnDict['Control']]
+                groupCol = STRUCTURE_VARIABLES['SAMPLE_SHEET_GROUP_NAME']
+                for group in groups:
+                    samples_da += [sample['SampleName'] for sample in sample_sheet_dict if sample[groupCol]==group]
+            
+            samples_da = flatten(samples_da)
+
+            # check if samples used as Control for ChIP are used for differential analysis 
+            if 'peak_calling' in set(config.keys()) and peak_samps:
+                peakInput = [ config['peak_calling'][peak]['Cont'] for peak in peak_samps if config['peak_calling'][peak]['Cont']]
+                peakInput = flatten(peakInput) 
+                samples_cont = set(samples_da).intersection(set(peakInput))
+                if(len(samples_cont) > 0):
+                    message = ''.join([
+                    message, "\tChIP input samples should not be used for differential analysis, ",
+                    "Please remove or change value for '", groupCol,"' column ",
+                    "in samplesheet for those samples: "," ".join(samples_cont), "\n"])
+
+
+    # ---------------------------------------------------------------------------- #
+    # checks for correspondence between Spike-in in sample_sheet_dict and settings
+    spike_in_indicator = False
+    for sample in sample_sheet_dict:
+        if 'Spike-in' in set(sample.keys()):
+            if sample['Spike-in'].upper() == 'YES':
+                spike_in_indicator = True
+
+    # checks whether the spikein-file field is defined
+    if spike_in_indicator:
+        if not config['locations']['spikein-file']:
+            message = message + 'spike-in normalisation is requested, but: '
+            message = message + 'spike-in genome fasta file is not defined. Please set locations: spikein-file'            
+        else:
+            # checks whether the spikein-file fasta is a valid file
+            message = check_file_exists(config['locations'],'spikein-file',message)
+            # checks whether the spikein fasta file contains header with spaces
+            message = check_fasta_header(locations_dict['spikein-file'], message)
+
+    # ------------------------------------------------------------------------ #
+    # checks whether the designated files exist
+    message = check_sample_exists(sample_sheet_dict, config, message)
+
+
+    return(message)
+
+
+# ---------------------------------------------------------------------------- #
+# checks whether the supplied file or directory exists in the settings file
+def check_file_exists(locations_dict, file_name, message=''):
+
+    if not locations_dict[file_name] == None:
+       dirfile = locations_dict[file_name]
+       if not ( os.path.isfile(dirfile) or os.path.isdir(dirfile)):
+           message = message + "\t" + "{} ({}) is not a valid file/directory\n".format(file_name,dirfile)
+
+    return(message)
+
+# ---------------------------------------------------------------------------- #
+def check_sample_exists(sample_sheet_dict, config, message=''):
+
+    # checks whether the fastq path is specified
+    locations_dict = config['locations']
+    if not locations_dict['input-dir']:
+        message = message + "\tfastq input directory is not specified\n"
+
+    elif not os.path.isdir(locations_dict['input-dir']):
+        message = message + "\tfastq input directory does not exist\n"
+
+    else:
+        input_dir = locations_dict['input-dir']
+        for sample_dict in sample_sheet_dict:
+            files = []
+            if sample_dict['library_type'] == 'single':
+                files = [sample_dict['Read']]
+
+            elif sample_dict['library_type'] == 'paired':
+                files = [sample_dict['Read'], sample_dict['Read2']]
+
+                for file in files:
+                    if not os.path.isfile(os.path.join(input_dir, file)):
+                        message = message + '\t' + file + ": file does not exist\n"
+    return(message)
+
+# ---------------------------------------------------------------------------- #
+# given a dict, checks for existence of params
+def check_params(config_dict, params, message):
+    params_diff = list(set(config_dict.keys()) - set(params))
+    params_str = " ".join(params_diff)
+    if len(params_diff) > 0:
+        message = message + "config file contains unknown parameters:" + params_str + "\n"
+
+    return(message)
+
+# ---------------------------------------------------------------------------- #
+# checks fasta header for spaces
+def check_fasta_header(genome_file, message, gtf_file = None):
+    import re
+    import sys
+    import magic as mg
+    import gzip
+
+    genome_file_type = mg.from_file(genome_file, mime=True)
+    if genome_file_type.find('gzip') > 0:
+        file = gzip.open(genome_file, 'rb')
+    else:
+        file = open(genome_file, "rb")
+    
+    # get ascii for '>', ' ' and '\t'
+    gt = ord('>')
+    ws = ord(' ')
+    tab= ord('\t')
+    bar = ord('|')
+    
+    chr_list = []
+    for line in file:
+        if line[0] == gt:
+            if (ws in line) or (tab in line) or (bar in line) : 
+                message = message + 'Genome fasta headers contain whitespaces.\n Please reformat the headers\n'
+                return(message)
+            if gtf_file:
+                chr_list.append(line.split()[0])
+
+    if gtf_file:
+        message = message + check_gtf_sequence_names(gtf_file, chr_list, message)
+
+    return(message)
+
+
+def check_gtf_sequence_names(gtf_file, chr_list, message):
+    import re
+    import sys
+    import magic as mg
+    import gzip
+
+    gtf_file_type = mg.from_file(gtf_file, mime=True)
+    if gtf_file_type.find('gzip') > 0:
+        file = gzip.open(gtf_file, 'rb')
+    else:
+        file = open(gtf_file, "rb")
+   
+    chroms = [ chrom.decode().replace('>','').encode() for chrom in chr_list ]
+    for line in file:
+        if not line.split()[0] in chroms:
+            message = message + ''.join([
+                'GTF file contains sequence names not found in genome fasta headers: ',
+                line.split()[0].decode(),'\n',
+                'Please check for matching assemblies and providers.','\n'])
+            return(message)
+
+    return(message)
+
+
+# ---------------------------------------------------------------------------- #
+# given a string checks if it is a number
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+# ---------------------------------------------------------------------------- #
+# checks general section for common mistakes
+def check_general_section(general_dict, structure_variables, message):
+
+    # checks wether assembly is set
+    if not general_dict['analysis']:
+        message = message + "GENERAL: analysis type needs to be supplied\n"
+    else:
+        if not general_dict['analysis'].upper() in structure_variables['ANALYSIS_TYPES']:
+            message = message + "GENERAL: supported analysis types are:" + ','.join(sort(list(structure_variables['ANALYSIS_TYPES']))) + "\n"
+
+    if not general_dict['assembly']:
+        message = message + "GENERAL: genome assembly is not given\n"
+
+    # checks whether bigwig extend is a number
+    if not (is_number(general_dict['params']['export_bigwig']['extend'])):
+        message = message + "GENERAL PARAMS: export_bigwig: extend must be a number\n"
+
+    # checks whether idr-threshold is a number
+    if not (is_number(general_dict['params']['idr']['idr-threshold'])):
+        message = message + "GENERAL PARAMS: idr: idr-threshold must be a number\n"
+
+    # checks whether custom scripts get a number
+    for param in ['extract_signal', 'peak_statistics', 'width_params']:
+        for key in general_dict['params'][param].keys():
+            if not (is_number(general_dict['params'][param][key])):
+                message = message + "GENERAL PARAMS: {}: {} must be a number\n".format(param,key)
+
+    return(message)

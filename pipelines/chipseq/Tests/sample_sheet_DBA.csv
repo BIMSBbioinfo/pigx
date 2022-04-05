@@ -1,0 +1,8 @@
+SampleName, Read, Read2,Spike-in,Group
+ChIP1, ChIP.fq.gz,,No,Group1
+Cont1, Cont.fq.gz,,No,Group1_Input
+ChIPpe_2, ChIPpe_var2_R1.fq.gz, ChIPpe_var2_R2.fq.gz,No, Group2
+ChIP2, ChIP_2.fq.gz,,No,Group2
+Cont2, Cont.fq.gz,,No, Group2_Input
+ChIPpe, ChIPpe_R1.fq.gz, ChIPpe_R2.fq.gz,No, Group3
+HEK,HEK.fq.gz,,Yes, 

@@ -1,0 +1,45 @@
+# Emacs backup files
+*~
+# VIM swp files
+*.swp
+# autoconf generated files
+META
+qsub-template.sh
+configure
+config.status
+config.log
+pigx-chipseq
+Makefile.in
+Makefile
+autom4te.cache/
+automake
+etc/settings.yaml
+.guix-profile
+.snakemake
+run/
+Tests/out
+Tests/test.sh
+.DS_Store
+config.json
+Snippet.rmd
+log$
+# release tarballs, folders and signatures
+pigx_chipseq-*.tar.gz
+pigx_chipseq-*.tar.gz.asc
+pigx_chipseq-*.tar.gz.sig
+pigx_chipseq-*/
+share
+libexec
+test-suite.log
+cluster_conf.json
+pigx_chipseq.Rproj
+releases
+gpg-key.asc
+._.DS_Store
+build_for_release.sh
+# R stuff
+.Rproj.user
+.RData
+.Rhistory
+# test dirs
+Tests/*

@@ -1,0 +1,401 @@
+## ~~~~~~~~~~~~~~~~~~~~~~~~~LOCATIONS~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+## This section needs to be adjusted to the planned analysis.   #
+## ------------------------------------------------------------ #
+locations:
+  input-dir: in/
+  output-dir: out/
+  genome-file: genome/
+  spikein-file: 
+  index-dir:
+  gff-file:
+
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~GENERAL~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+## This section needs to be adjusted to the planned analysis.   #
+## ------------------------------------------------------------ #
+general:
+  analysis:
+    ChIP
+  assembly:
+  spikein_name:
+  # The "organism" field is needed for GO term analysis in the 
+  # differential analysis report. Leave it empty if not interested 
+  # in GO analysis.  Otherwise provide a string with the initial 
+  # of genus and the species name (e.g. hsapiens, mmusculus,
+  # dmelanogaster, celegans)
+  # organism: 'mmusculus'
+  params:
+    # adjust export of bigwig coverage tracks
+    export_bigwig:
+        extend: 200
+        scale_bw: 'yes'
+        # removing duplicate reads is suggested for ATACseq,
+        # should be omitted for CHIPseq
+        deduplicate: 'no'
+        minmapq: 0
+    # adjust any bowtie2 parameters for mapping
+    bowtie2:
+        # set k if you want to report at most k alignments per read
+        #k: 4
+        N: 0
+    # adjust sensitivity in idr
+    idr:
+        idr-threshold: 0.1
+    # adjust any macs2 parameters for peak calling
+    macs2:
+        keep-dup: auto
+        q: 0.05
+    # 
+    extract_signal:
+        expand_peak: 200
+        number_of_bins: 50
+    # 
+    peak_statistics:
+        resize: 500
+    # adjust widths for the Signal profiles around genomic features
+    width_params:
+        tss_width: 1000
+        tts_width: 1000
+        tss_wide_width: 10000
+        tts_wide_width: 10000
+        tss_body_upstream: 1000
+        tss_body_downstream: 10000
+        tts_body_upstream: 10000
+        tts_body_downstream: 1000
+        splicing_donor_width: 200
+        splicing_accep_width: 200
+    chipqc:
+        # adjust name of mitochondrial chrom
+        chrM_givenName: 'chrM'
+        # substract chrM counts from total mapped reads
+        discard_chrM: 'no'
+        # analyse only longest chr for speeding up
+        use_longest_chr: 'yes'
+    feature_counting:
+        countMultiMappingReads: 'no'
+        minMQS: 20
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~ANALYSIS~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+## This section needs to be adjusted to the planned analysis.   #
+## ------------------------------------------------------------ #
+## define peak calling analysis
+## ChIP and Cont are hardcoded and must exist in the config file
+#peak_calling:
+#    # analysis can have any name, but the names have to be unique
+#    Peaks1:
+#        # sample(s) to be used as treatment sample
+#        ChIP: ChIP1
+#        # sample(s) to be used as control sample
+#        Cont: Cont1
+#        params:
+#            macs2:
+#                # each analysis can be adjusted independently
+#                # add/modify available parameters of the analysis
+#                nomodel: ''
+#                extsize: 300
+#    Peaks2:
+#        ChIP: ChIP2
+#        Cont: Cont2
+#        params:
+#            macs2:
+#                # each analysis can be adjusted independently
+#                nomodel: ''
+#                extsize: 147
+#    Peaks4:
+#        ChIP:
+#            # multiple samples can be used as treatment
+#            - ChIP1
+#            - ChIP2
+#        Cont:
+#            # multiple samples can be used as control
+#            - Cont1
+#            - Cont2
+#        params:
+#            macs2:
+#                nomodel: ''
+#
+#    Peaks5:
+#        # the number of samples per group can differ
+#        ChIP: ChIP2
+#        Cont:
+#            - Cont1
+#            - Cont2
+#        params:
+#            macs2:
+#                nomodel: ''
+#
+#    Peaks6:
+#        # analysis can be performed without control
+#        ChIP: ChIP1
+#        Cont:
+#        params:
+#            macs2:
+#                nomodel: ''
+#
+## ------------------------------------------------------------ #
+#idr:
+#    # idr analysis can have any name, but the names have to be unique
+#    ChIP_IDR:
+#        # define the pair of samples, add more combinations for more replicates
+#        # ChIP1 and ChIP2 are required labels, only adjust values of those
+#        ChIP1: Peaks1
+#        ChIP2: Peaks2
+## ------------------------------------------------------------ #
+#hub:
+#    name: PiGx_Hub
+#    shortLabel: PiGx_Short
+#    longLabel: PiGx_Hub_Long
+#    email: my.mail@domain.com
+#    descriptionUrl: pigx_hub.html
+#    super_tracks:
+#        # track groups can have any name, but the names have to be unique
+#        Tracks1:
+#            # tracks can have any name, but the names have to be unique
+#            track11:
+#                # to add peaks as a track, define "type: macs"
+#                name: Peaks1
+#                type: macs
+#            track12:
+#                # to add coverage signal as a track, define "type: bigwig"
+#                name: ChIP1
+#                type: bigWig
+#            # descriptive longer label for track group is
+#            # displayed as description in track settings
+#            long_label: Tracks1_long
+## ------------------------------------------------------------ #
+#feature_combination:
+#    # features can have any name, but the names have to be unique
+#    Feature1:
+#        # define feature based on only one result
+#        - ChIP_IDR
+#    Feature2:
+#        # define feature based on more than one result
+#        - Peaks6
+#        - Peaks5
+#    Feature3:
+#        # define feature based on different analysis types
+#        - ChIP_IDR
+# 
+# # ------------------------------------------------------------ #
+# differential_analysis:
+# # to use the differential_analysis feature, 
+# # please add a 'Group' column to your sample sheet. 
+# # These defined Groups are specified here to include all
+# # samples of the given group as Case/Control samples
+#     Analysis1:
+#         Case:
+#             - Group1 
+#             - Group2
+#         Control:
+#             - Group3
+#         # comma separated list of additional co-variates to control for
+#         # in differential expression analysis (e.g. batch, age,
+#         # temperature, sequencing_technology etc.). Must correspond to a
+#         # column field in the sample_sheet.csv file.)    
+#         Covariates: ''
+#         Peakset: # choose peaks to define consensus peak set
+#             - ChIP_IDR
+#             - Peaks6
+#             - Peaks5
+#         params:
+#             feature_counting:
+#                 minFragLength: 50
+#                 maxFragLength: 150
+#     Analysis2:
+#         Case:
+#             - Group1 
+#             - Group2
+#         Control:
+#             - Group3
+#         Peakset: # if no peaks given call joint peaks for given samples
+#     Analysis3:
+#         Case:
+#             - Group1 
+#             - Group2
+#         Control:
+#             - Group3
+#         params:
+#             macs2:
+#                 nomodel: ''
+#                 extsize: 147
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~EXECUTION~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+## This section should only be adjusted by advanced users.      #
+## ------------------------------------------------------------ #
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    missing-file-timeout: 120
+    memory: 8G
+    stack: 128M
+    contact-email: none
+    log-dir: 'Log/Cluster'
+    args: ''
+  rules:
+    __default__:
+      threads:   1
+      memory:    8G
+    annotate_peaks:
+      threads:   1
+      memory:    16G
+    bam2bed:
+      threads:   1
+      memory:    16G
+    bam2bigWig:
+      threads:   1
+      memory:    16G
+    bedTobigBed:
+      threads:   1
+      memory:    8G
+    bowtie2:
+      threads:   2
+      memory:    16G
+    bowtie2_build:
+      threads:   1
+      memory:    32G
+    chipqc:
+      threads:   1
+      memory:    8G
+    extract_signal_annotation:
+      threads:   1
+      memory:    16G
+    extract_signal_peaks:
+      threads:   1
+      memory:    16G
+    fastqc:
+      threads:   1
+      memory:    8G
+    feature_combination:
+      threads:   1
+      memory:    8G
+    feature_counting:
+      threads:   1
+      memory:    8G
+    idr:
+      threads:   1
+      memory:    8G
+    index_to_chrlen:
+      threads:   1
+      memory:    1G
+    knit_report:
+      threads:   1
+      memory:    32G
+    link_annotation:
+      threads:   1
+      memory:    16G
+    link_genome:
+      threads:   1
+      memory:    1G
+    macs2:
+      threads:   1
+      memory:    16G
+    make_ucsc_hub:
+      threads:   1
+      memory:    8G
+    peak_statistics:
+      threads:   4
+      memory:    16G
+    prepare_annotation:
+      threads:   1
+      memory:    16G
+    samtools_index:
+      threads:   1
+      memory:    8G
+    samtools_sort:
+      threads:   4
+      memory:    16G
+    samtools_quality_filter:
+      threads:   1
+      memory:    8G
+    summarize_data_for_report:
+      threads:   1
+      memory:    32G
+    sort_peak:
+      threads:   1
+      memory:    8G
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~TOOLS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+## This section should only be adjusted by advanced users.      #
+## ------------------------------------------------------------ #
+tools:
+    fastqc:
+        executable: @FASTQC@
+        args: ""
+    bamToBed:
+        executable: @BAMTOBED@
+        args: ""
+    bowtie2:
+        executable: @BOWTIE2@
+        args: ""
+        help: '-h'
+        remove:
+             - S
+             - x
+             - 1
+             - 2
+             - U
+    bowtie2-build:
+        executable: @BOWTIE2_BUILD@
+        args: ""
+    bowtie2-inspect:
+        executable: @BOWTIE2_INSPECT@
+        args: ""
+    idr:
+        executable: @IDR@
+        args: ""
+        help: '-h'
+        remove:
+            - samples
+            - input-file-type
+            - rank
+            - output-file
+            - l
+            - plot
+    macs2:
+        executable: @MACS2@
+        args: ""
+        help: 'callpeak -h'
+        remove:
+            - t
+            - c
+            - outdir
+            - n
+            - g
+    perl:
+        executable: @PERL@
+        args: ""
+    Rscript:
+        executable: @RSCRIPT@
+        args: "--vanilla"
+    samtools:
+        executable: @SAMTOOLS@
+        args: ""
+    python:
+        executable: @PYTHON@
+        args: ""
+    bedToBigBed:
+        executable: @BEDTOBIGBED@
+        args: ""
+    trim_galore:
+        executable: @TRIMGALORE@
+        args: ""
+    multiqc:
+        executable: @MULTIQC@
+        args: ""
+    grep:
+        executable: @GREP@
+        args: ""
+    cut:
+        executable: @CUT@
+        args: ""
+    sort:
+        executable: @SORT@
+        args: ""
+    mv:
+        executable: @MV@
+        args: ""
+    nice:
+        executable: @NICE@
+        args: "-19"
