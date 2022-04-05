@@ -1,0 +1,21 @@
+locations:
+  output-dir: out/
+  reads-dir: sample_data/reads/
+  tempdir:
+
+annotation:
+  primary:
+    genome:
+      name: hg19
+      fasta: sample_data/hg19_chr19.10094960.25108012.fa
+    gtf: sample_data/hg19_chr19.10094960.25108012.gtf
+
+execution:
+  submit-to-cluster: yes
+  jobs: 12
+  nice: 19
+  cluster:
+    missing-file-timeout: 120
+    stack: 128M
+    contact-email: none
+    args: ''

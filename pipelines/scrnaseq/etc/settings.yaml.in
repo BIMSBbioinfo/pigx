@@ -1,0 +1,185 @@
+locations:
+  output-dir: output/
+  reads-dir: reads/
+  sample-sheet: sample_sheet.csv
+  tempdir:
+
+annotation:
+  primary:
+    genome:
+      name: hg19
+      fasta: hg19_chr19.10094960.25108012.fa
+    gtf: hg19_chr19.10094960.25108012.gtf
+  # The secondary annotation is optional
+  secondary:
+
+covariates: 'replicate'
+
+general:
+    # defines the maximal, per sample, number of cell which will be considered in the analysis; used in find_absolute_read_cutoff
+    cell_maximal_number: 50000
+
+    # tools specific parameters
+    params:
+        # star reference construction
+        make_star_reference:
+            sjdbOverhang: 99
+            
+        # star mapping
+        map_star:
+
+execution:
+  submit-to-cluster: no
+  jobs: 6
+  nice: 19
+  cluster:
+    missing-file-timeout: 120
+    stack: 128M
+    contact-email: none
+    args: ''
+  rules:
+    __default__:
+      threads: 1
+      memory: 8G
+    link_primary_annotation:
+      threads: 1
+      memory: 4G
+    combine_reference:
+      threads: 1
+      memory: 4G
+    make_star_reference:
+      threads:  8
+      memory: 40G
+    combine_gtf:
+      threads: 1,
+      memory: 4G
+    change_gtf_id:
+      threads:  1
+      memory: 4G
+    filter_reads:
+      threads: 2
+      memory: 4G
+    merge_technical_replicates:
+      threads:  1
+      memory: 2G
+    map_star:
+      threads:  4
+      memory: 32G
+    sort_bam:
+      threads:  1
+      memory: 5G
+    convert_matrix_from_mtx_to_loom:
+      threads:  1
+      memory: 16G
+    combine_loom_files:
+      threads:  1
+      memory: 16G
+    convert_loom_to_singleCellExperiment:
+      threads:  1
+      memory: 16G
+    convert_loom_to_seurat:
+      threads:  1
+      memory: 16G
+    extract_read_statistics:
+      threads:  1
+      memory: 8G
+    cell_barcode_histogram:
+      threads:  1
+      memory: 16G
+    find_absolute_read_cutoff:
+      threads:  1
+      memory: 8G
+    bam_to_BigWig:
+      threads:  1
+      memory: 16G
+    fastqc:
+      threads:  1
+      memory: 16G
+
+tools:
+  fastqc:
+    executable: @FASTQC@
+  STAR:
+    executable: @STAR@
+    args: ""
+    help: "-h"
+  java:
+    executable: @JAVA@
+  perl:
+    executable: @PERL@
+    args: ""
+  python:
+    executable: @PYTHON@
+    args: ""
+  cat:
+    executable: @CAT@
+  zcat:
+    executable: @ZCAT@
+  rm:
+    executable: @RM@
+  touch:
+    executable: @TOUCH@
+  ln:
+    executable: @LN@
+  Rscript:
+    executable: @RSCRIPT@
+    args: "--vanilla"
+  samtools:
+    executable: @SAMTOOLS@
+    args: ""
+  flexbar:
+    executable: @FLEXBAR@
+    args: ""
+    help: "-hh"
+  jellyfish:
+    executable: @JELLYFISH@
+
+
+# ---------------------------------------------------------------------------- #
+# HARDCODED adapter parameters
+# This variable extands the pipeline to various technologies. It defines
+# The locations of cell and UMI adapters in fastq1
+# Currently supprorted technologies are dropseq, chromium10x, and 1cellbio
+# base_min/max define the position of the adapters in the fastq file
+adapter_parameters:
+    dropseq:
+        cell_barcode:
+            base_min: 1
+            base_max: 12
+        umi_barcode:
+            base_min: 13
+            base_max: 20
+
+    chromium10x:
+        cell_barcode:
+            base_min: 1
+            base_max: 16
+        umi_barcode:
+            base_min: 17
+            base_max: 26
+
+    chromium10xV3:
+        cell_barcode:
+            base_min: 1
+            base_max: 16
+        umi_barcode:
+            base_min: 17
+            base_max: 28
+
+    ICell8:
+        cell_barcode:
+    ICell8:
+        cell_barcode:
+            base_min: 1
+            base_max: 11
+        umi_barcode:
+            base_min: 12
+            base_max: 25
+
+    CEL-Seq2:
+        cell_barcode:
+            base_min: 7
+            base_max: 12
+        umi_barcode:
+            base_min: 1
+            base_max: 6

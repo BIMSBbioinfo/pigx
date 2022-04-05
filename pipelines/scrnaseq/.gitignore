@@ -1,0 +1,24 @@
+.DS_Store
+*.snakemake.*
+*.Rproj.*
+*~
+*._*
+
+# generated files
+pigx-scrnaseq
+META
+configure
+config.log
+config.status
+pigx-scrnaseq
+scripts/scrnaReport.Rmd
+Makefile.in
+Makefile
+autom4te.cache/
+etc/settings.yaml
+test.sh
+config.json
+.snakemake
+tests/out
+run/
+qsub-template.sh

@@ -1,0 +1,214 @@
+---
+title: "PiGx-scRNAseq Report"
+author: "BIMSB Bioinformatics Platform"
+date: "`r date()`"
+output:
+  html_document:
+    df_print: paged
+params:
+  sceRds_file:
+  read_stats: NULL
+  output_file: 'test.scRNA.html'
+  workdir: './'
+  path_mapped: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = params$workdir)
+```
+
+```{r libraries, include=FALSE}
+suppressPackageStartupMessages({
+  library(cowplot)
+  library(SingleCellExperiment)
+  library(data.table)
+  library(dplyr)
+  library(pheatmap)
+  library(DT)
+  library(ggplot2)
+})
+```
+
+# Description
+
+PiGx scRNAseq
+
+This report was generated with PiGx-scRNAseq version @VERSION@.
+
+# Input Settings
+
+```{r printInputSettings}
+
+sceRds_file = params$sceRds_file
+workdir     = params$workdir
+output_file = params$output_file
+
+inputParameterDesc = c('RDS format file containing a SingleCellExperiment object',
+                     'Working directory',
+                     'Path to HTML report output'
+                     )
+inputParameterValues = c(sceRds_file,
+                          workdir,
+                          output_file)
+inputSettings = data.frame(parameters = inputParameterDesc,
+                            values = inputParameterValues,
+                            stringsAsFactors = FALSE)
+DT::datatable(data = inputSettings,
+              extensions = 'FixedColumns',
+              options = list(fixedColumns = TRUE,
+                         scrollX = TRUE,
+                         pageLength = length(inputParameterValues),
+                         dom = 't'))
+```
+
+
+```{r read-sce-object, include=FALSE, echo=FALSE}
+sce = readRDS(file = sceRds_file)
+```
+
+```{r input, include=FALSE, echo=FALSE}
+read_statistics = do.call(rbind, lapply(params$read_stats, read.table, header=TRUE))
+```
+
+
+# Sample Statistics
+
+The following set of figures provide the basic statistics about the quality of the single cell data sets.
+
+### Total number of reads per sample
+
+The plot displays the numbers of mapped reads (in millions) for total (green bars) and uniquely-mapped UMI (orange bars) for each sample.
+
+```{r TotalReads, results='asis', echo = FALSE}
+read_statistics %>%
+    dplyr::filter(mapped %in% c('reads.total','map.uniq')) %>%
+    mutate(mapped = case_when(
+        mapped == 'reads.total' ~ 'total UMI',
+        mapped == 'map.uniq'    ~ 'uniquely mapped UMI'
+    )) %>%
+    ggplot(aes(sample, cnts, fill=mapped)) +
+    geom_bar(stat='identity', position='dodge') +
+    xlab('Sample') +
+    ylab('Number of mapped reads (in milions)') +
+    scale_fill_brewer(name='Mapped reads', palette='Set2') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+### Number of cell barcodes
+
+The figure shows the total number of detected cells per sample.
+
+```{r Read_Statistics}
+read_statistics %>%
+  filter(mapped == 'nCellBarcodes') %>%
+  filter(type   ==  'Gene') %>%
+  ggplot(aes(sample, cnts)) +
+  geom_bar(stat='identity') +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  xlab('Sample Name') +
+  ylab('Number of detected cells') +
+  scale_fill_manual(values=c('black','lightgray'))
+```
+
+### Number of UMI
+
+The figure shows the total number of detected UMIs per sample.
+
+```{r exon_reads}
+read_statistics %>%
+  filter(mapped == 'nUMIs') %>%
+  filter(type   ==  'Gene') %>%
+  ggplot(aes(sample, cnts)) +
+  geom_bar(stat='identity') +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  xlab('Sample Name') +
+  ylab('Number of detected UMI') +
+  scale_fill_manual(values=c('black','lightgray'))
+```
+
+### Read Distribution in Genomic Features
+
+The plot displays the numbers of mapped reads (in millions) categorized by annotation (as indicated by the legend) for each sample.
+
+```{r ReadDistribution, results='asis', echo = FALSE}
+read_statistics %>%
+  mutate(type = as.character(type)) %>%
+  mutate(type  = case_when(
+    type == 'GeneFull' ~ 'gene',
+    type == 'Gene'     ~ 'exon',
+    TRUE ~ type
+  )) %>%
+    dplyr::filter(type   %in% c('exon','gene','mapped')) %>%
+    dplyr::filter(mapped %in% c('map.total','nUMIs')) %>%
+    reshape2::dcast(sample ~ type, value.var='cnts')  %>%
+    mutate(intron = gene - exon) %>%
+    mutate(other  = mapped - gene) %>%
+    dplyr::select(sample, other, exon, intron) %>%
+    reshape2::melt() %>%
+    mutate(sample = factor(sample, ordered=TRUE, levels=unique(sample))) %>%
+    mutate(value = value * 1e-6) %>%
+    ggplot(aes(sample, value, fill=variable)) +
+    geom_bar(stat='identity') +
+    xlab('Sample') +
+    ylab('Number of mapped reads (in milions)') +
+    scale_fill_brewer(name = 'Annotation', palette='Set2') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r cell-stats}
+plotCellStats = function(df, x, y, label_x, label_y, title) {
+  p = ggplot(df, aes_string(x=x, y=y)) +
+  geom_boxplot() +
+  labs(x = label_x, y = label_y, title = title) +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+  return(p)
+}
+
+plotDesc = list('nGene' = c('Sample',
+                          'Number of detected genes',
+                          'Number of detected genes per cell'),
+              'max_gene' = c('Sample',
+                             'Maximum gene expression per cell',
+                             'Maximum gene expression'),
+              'mean_expr' = c('Sample',
+                              'Average gene expression',
+                              'Average gene expression per cell\nfor genes with >0 UMI'))
+
+
+cellStatsPlots = lapply(names(plotDesc), function(y){
+  p = plotCellStats(
+    df      = as.data.frame(colData(sce)),
+    x       = 'sample_name',
+    y       = y,
+    label_x = plotDesc[[y]][1],
+    label_y = plotDesc[[y]][2],
+    title   = plotDesc[[y]][3])
+  return(p)
+})
+names(cellStatsPlots) = paste(lapply(plotDesc, function(x) x[2]))
+```
+
+### Cell Statistics{.tabset}
+
+These are boxplots of cell statistics.
+
+__Number of detected genes__ displays the distributions of numbers of detected genes per cell.
+__Maximum gene expression per cell__ displays the distributions of maximum gene expression per cell.
+__Average gene expression__ displays the distributions of average gene expression for genes with at least 1 UMI per cell.
+
+```{r cellStatsPlots, results='asis', echo = FALSE}
+for (i in 1:length(cellStatsPlots)) {
+  cat("### ",names(cellStatsPlots)[i],"\n")
+  print(cellStatsPlots[[i]])
+  cat('\n\n')
+}
+```
+
+# Session Information
+```{r sessionInfo}
+sessionInfo()
+```

@@ -1,0 +1,17 @@
+#!@GNUBASH@
+
+echo "start: `date`"
+
+chmod -R +w ${srcdir}/tests
+
+CONFIGFILE="${srcdir}/tests/settings.yaml"
+
+${builddir}/pigx-scrnaseq --settings=${CONFIGFILE} ${srcdir}/tests/sample_sheet.csv
+
+if ! test -f "${srcdir}/tests/out/Mapped/hg19.scRNA-Seq.report.html"
+then
+  echo "ERROR: could not find report output"
+  exit 1
+fi
+
+echo "end: `date`"
