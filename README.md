@@ -50,7 +50,7 @@ _Figure 1: An overview of the PiGx scRNA-seq workflow_
 You can install this pipeline and all of its dependencies through GNU
 Guix:
 
-    guix package -i pigx-scrnaseq
+    guix install pigx-scrnaseq
 
 You can also install it manually from source.  You can find the [latest
 release](https://github.com/BIMSBbioinfo/pigx_scrnaseq/releases/latest)
@@ -81,17 +81,8 @@ Assuming you have Guix installed, the following command spawns a
 sub-shell in which all dependencies are available:
 
 ```sh
-guix environment -l guix.scm
+guix shell
 ```
-
-If you do not use one of these package
-managers, you will need to ensure that the following software is
-installed:
-
-<details>
-<summary>Software dependencies</summary>
-
-</details>
 
 # Getting started
 
@@ -154,7 +145,7 @@ The sample sheet is a tabular file describing the experiment. The table has the 
 |------|---------|-------|---------|------------|------------|
 
 - _name_ - name for the sample, which will be used to label the sample in all downstream analysis
-- _baarcode_ - fastq file containing the **adapter sequences**
+- _barcode_ - fastq file containing the **adapter sequences**
 - _reads_ - fastq file containing the **sequenced reads**
   - location of these files is specified in `settings.yaml`
 - _method_ - sequencing platform on which the experiment was performed (i.e. dropseq)
@@ -334,7 +325,7 @@ An example can be found in the `tests` directory.  The
 The easiest way to install all of the dependencies is through the [guix](https://www.gnu.org/software/guix/download/)
 package management system. 
 Firstly download and install guix to your computer. 
-**guix.scm** file in the root of the project directory contains the description recipe for installing all of the necessary
+The **guix.scm** file in the root of the project directory contains the description recipe for installing all of the necessary
 tools.
 The following command will install all of the dependencies to the **.guix-profile** folder
 
@@ -379,7 +370,7 @@ and will not react to changes to scripts.
 If you already have a pre-installed dependencies, then execute the following commands to setup your environment
 
     # loads the guix environment.
-    guixr package -p run/.guix-profile --search-path=prefix
+    guix package -p run/.guix-profile --search-path=prefix
     export PIGX_UNINSTALLED=1
     
     # runs the pipeline on the test data
@@ -387,21 +378,21 @@ If you already have a pre-installed dependencies, then execute the following com
    
 
 # loads the dependencies into PATH
-    guixr package -p ./run/.guix-profile --search-path="prefix"
+    guix package -p ./run/.guix-profile --search-path="prefix"
 
 ### Scripts and Executables
 
 #### pigx-scrnaseq
 
 pigx-scrnaseq is the main driver script for the pipeline (user entry point).
-It is constructed from the pigx-scrnaseq.in during the configuration step.
-If you want to update the pigx-scrnaseq, change the pigx-scrnaseq.in, and run the `installs the pipeline`
-step of the developemnt installation, to update the changes.
+It is constructed from `pigx-runner.in` (from the `pigx-common` repository) during the configuration step.
+If you want to update the pigx-scrnaseq, change the copy of common/pigx-runner.in, and run the `install the pipeline`
+step of the development installation, to update the changes.
 
-#### Snake_Dropseq.py
+#### snakefile.py
 
 Is the main SnakeMake script which constructs the execution graph and executes the pipeline.
-Any changes to the Snake_Dropseq.py are observed directly upon execution.
+Any changes to the `snakefile.py` are observed directly upon execution.
 
 #### ./scripts
 
@@ -428,4 +419,4 @@ To make changes or add improvements to the pipeline, follow these steps:
 
  
 ----------------------------------------
-2020
+2022
