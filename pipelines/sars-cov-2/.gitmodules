@@ -1,0 +1,4 @@
+[submodule "pigx-common"]
+	path = pigx-common
+	url = https://github.com/BIMSBbioinfo/pigx-common/
+	branch = main

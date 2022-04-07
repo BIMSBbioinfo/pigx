@@ -1,0 +1,56 @@
+#!@GNUBASH@
+
+set -o nounset -o pipefail -o errexit
+
+function install_kraken_db {
+    echo "Downloading Kraken database."
+
+    local DBNAME="kraken_db"
+    mkdir -p "$DBNAME"
+
+    # NOTE: This command will download a very large file, after unpacking this will
+    # require about 100GB of disc space. If this is not feasible use another
+    # database instead. For this please see link above or commented lines below.
+    @WGET@ -qO- https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_20210127.tar.gz | tar -C $DBNAME -xzv
+
+    # Use the following two lines to use smaller 8GB version instead.
+    # @WGET@ -qO- https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_8gb_20210127.tar.gz | tar -C $DIR -xzv
+
+    @KRAKEN2_BUILD@ --use-ftp --download-taxonomy --db $DBNAME
+    @KRAKEN2_BUILD@ --build --db $DBNAME
+}
+
+
+function install_krona_db {
+    echo "Downloading Krona database."
+
+    local DBNAME="krona_db"
+    mkdir -p "$DBNAME"
+
+    KRONA="$(dirname @IMPORT_TAXONOMY@)/../share/krona-tools/"
+    $KRONA/updateTaxonomy.sh "$DBNAME"
+    $KRONA/updateAccessions.sh "$DBNAME"
+}
+
+
+function install_vep_db {
+    echo "Downloading VEP database."
+
+    local DBNAME="vep_db"
+    mkdir -p "$DBNAME"
+    @WGET@ -qO- ftp://ftp.ensemblgenomes.org/pub/viruses/variation/indexed_vep_cache/sars_cov_2_vep_101_ASM985889v3.tar.gz | tar -C $DBNAME -xzv
+}
+
+
+
+
+# Each of the procedures expect to be operating in $DBDIR.
+DBDIR=$PWD/databases
+mkdir -p $DBDIR
+
+cd $DBDIR
+install_kraken_db
+install_krona_db
+install_vep_db
+
+echo "Done."

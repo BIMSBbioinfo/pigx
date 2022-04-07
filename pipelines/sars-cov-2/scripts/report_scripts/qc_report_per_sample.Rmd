@@ -1,0 +1,106 @@
+---
+title: "SARS-CoV-2 QC report"
+nav: "Quality control"
+author: "BIMSB Bioinformatics Platform"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+params:
+  sample_name: ''
+  coverage_file: ''
+  multiqc_report: ''
+  logo: ''
+---
+
+<style>
+.dropdown-menu {
+  max-height: 200px;
+  overflow-y: scroll;}
+</style>
+
+<div id="logo" align="top">
+`r knitr::include_graphics(params$logo)`
+</div>
+
+
+<sample>`r params$sample_name`</sample>
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(DT)
+library(magrittr)
+library(base64url)
+```
+
+This report provides an overview over general quality control measures of the sample  and provides the summarized data as downloadable tables. 
+For detailed information about the methods please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov-2.html#output-description).
+
+```{r reading data, include = FALSE}
+coverage.df <- read.table(params$coverage_file, sep = "\t", header = T)
+coverage.df <- na_if(coverage.df, "[]")
+coverage.df <- gsub('\\[','',coverage.df)
+coverage.df <- gsub('\\]','',coverage.df)
+# fixme: this can be sure done in a nicer and more compact way
+```
+# Coverage reports
+Here, the information about read coverage of the reference genome as well as coverage of the mutation locations that were provided are listed. From those values, the overall quality of the sample can be assessed and whether or not its analysis results should and will be used for further trend-analysis and visualization. 
+## Mutation locations
+
+In order to assess variant calling based on mutations of interest it is crucial that its genome locations are covered by read alignment. The table below shows the proportion of covered mutation locations, how many mutations are tracked in total, how many of their locations are covered and which locations have no read coverage at all. 
+ 
+```{r amplicon_coverage, message=F, warning=F, echo = FALSE}
+
+mut_cov.df <- data.frame("Total number of tracked mutations" = coverage.df[1], 
+                         "Number of mutations covered" = coverage.df[2],
+                         "Mutation locations (NT) not covered" = coverage.df[3], 
+                         check.names = FALSE)
+
+datatable(t(mut_cov.df), options = list(searching = FALSE, paging = FALSE))
+
+```
+
+## Reference Genome
+
+This table shows the total number of raw reads, number of aligned reads, the mean coverage depth and percentage of the reference genome covered by pre-processed reads.
+
+```{r read_coverage, message=F, warning=F, echo = FALSE}
+
+Coverage <- data.frame("Number of aligned reads" = coverage.df[4], 
+                        "Total ref. genome coverage" = paste(round(as.integer(coverage.df[5]),1),"%"),
+                       "Mean read depth" = round(as.integer(coverage.df[6])), 
+                        check.names = FALSE) # TODO more clear title stating which coverage
+
+datatable(t(Coverage), options = list(searching = FALSE, paging = FALSE))
+
+```
+
+# Read processing
+
+To improve alignment rates and mutation calling the pipeline contains trimming steps for primer, read-quality and adapter trimming. Parameter for read processing can be provided by [the pipeline’s settings file](link/to/etc/settings_file). For detailed method information please
+consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov-2.html#introduction).
+
+## MultiQC 
+In order to be able to assess and compare the read quality after each step multiple quality reports are generated which are presented below in a summarized format:
+
+Download: [MultiQC report of raw and processed data](`r params$multiqc_report`)
+
+## Trimming
+
+To improve alignment rates and mutation calling proper trimming of reads should be considered e.g. based on the provided
+fastqc-reports. Read preprocessing is performed by [*Prinseq*](http://prinseq.sourceforge.net/index.html).
+
+This sample was processed with these settings:
+
+|      |     |  
+|:-----|:----|  
+|trim length cutoff prinseq |0.2|
+
+# Download Stats csv
+```{r data_download, include = F}
+
+write.csv2(coverage.df, file.path(dirname(params$coverage_file), "report_download_coverage.csv")) # not sure about the funct of the dataframe here, but it works so I leave it for now
+
+coverage <- readLines(params$coverage_file) %>% paste0(collapse="\n") %>% base64_urlencode()
+```
+Coverage statistics:  
+[Download Coverage_stats.csv](`r sprintf('data:text/csv;base64,%s', coverage)`)
+

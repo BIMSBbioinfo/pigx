@@ -1,0 +1,162 @@
+## Hacking
+
+We recommend using Guix to hack on this pipeline.  To enter a
+reproducible environment with a known-good version of Guix use this
+(slow) command:
+
+```sh
+USE_GUIX_INFERIOR=t guix environment --pure -m manifest.scm --preserve=GUIX_LOCPATH
+```
+
+To use your current Guix channels instead of the fixed set of
+channels, just omit the `USE_GUIX_INFERIOR` shell variable:
+
+```sh
+guix environment --pure -m manifest.scm --preserve=GUIX_LOCPATH
+```
+
+To fetch code that is common to all PiGx pipelines run this:
+
+```sh
+git submodule update --init
+```
+
+Inside the environment you can then perform the usual build steps:
+
+```sh
+./bootstrap.sh # to generate the "configure" script
+./configure
+make
+make check
+```
+
+To run the whole pipeline on the included test data sets execute this:
+
+```sh
+rm -r tests/output
+make integration
+```
+
+You can run the pipeline from the source directory without installing
+it by setting the `PIGX_UNINSTALLED` shell variable to any value.  This command runs the pipeline on the included test data:
+
+```sh
+PIGX_UNINSTALLED=t ./pigx-sars-cov-2 -s tests/settings.yaml tests/sample_sheet.csv
+```
+
+Please, also see https://github.com/BIMSBbioinfo/pigx_sars-cov-2/blob/main/documentation/user_installation_doc.md for setting up the pipeline and the needed databases.
+
+## Collaborating
+
+before:
+- clarify everyone knows their tasks
+- who are the persons to ask for content questions/ software problems
+- provide links if there are similar pipelines -> inspiration
+- is everyone familiar with git basics (if necessary)
+- agree on a test data set early, so everyone knows how the input data looks like
+
+in general:
+- communicate if you are working on something ( e.g working on x today and will plan to merge in afternoon) 
+- ALSO communicate if tasks are unexpectedly not going to be finished in time -> so other people don't wait OR ask for help 
+- use github issues to specify issues/ problems/ possible enhancement you detect (and assign someone )
+- implement checks: e.g. when data is not imported it should print an error message "data not found" 
+- write comments in your code so other people can follow what was the purpose of the code chunk
+
+## GitHub how-tos
+
+in general:
+- make small, atomic commits with clear commit messages
+- make use of `git rebase` (in different situations, see below)
+- merge often to main branch
+- keep the commit history clean --> more useful
+
+### useful commands 
+ 
+Working with Git in the command line can be confusing but is possible. There are tools like : [..] which make your life easier. Make sure the default settings ( username etc) are correct [..].
+
+```
+git status  
+git branch # check in which branch you are currently
+```
+
+### create a feature branch
+
+Create your first feature branch locally and then push to the repo.
+
+```
+git clone <link>
+git checkout -b <mybranch name> # create and move into the new branch
+#make some changes, as soon as one issue/topic is done: 
+git add <file> # add the file to the commit you are about to make
+git commit -m 'message'
+#now you can repeat this multiple times if you want, but dont wait too long until: 
+git push origin <branch name> # this will upload your local feature branch to the repo
+# consider making pull request
+```
+
+### rebase
+
+basics:
+go to feature branch; fetch remote branches and then rebase local commits on top of the remote `main` branch
+check if there are untracked changes, if so run `git stash` first
+run `git stash pop` when the rebase is complete to get back the untracked changes
+
+```
+git fetch origin
+git rebase origin/main
+```
+example situation -- collaborating on one branch:
+- Person A and B are working on the same branch X. Person A pushes her recent commits to X. Now, B has to git fetch origin + git rebase origin/X 
+- if there are any, resolve conflicts (see https://codeinthehole.com/guides/resolving-conflicts-during-a-git-rebase/)
+
+further reading on git workflows:
+- a long version; note, that working with fork is not necessary when having push permission: https://medium.com/singlestone/a-git-workflow-using-rebase-1b1210de83e5
+- a shorter version: https://gist.github.com/alper/846c187892fe2f74b78a
+
+
+### contribute to someone else's repo assuming you have permission to push
+
+If you are certain the feature branch is rebased on main you can do the following to push some changes to that feature branch:
+
+```
+git clone <link>
+git checkout master
+git checkout -b <new branch name e.g. fix/issue71>
+# --> make some changes
+git add <file>
+git commit -m 'message'
+git push origin <branch name>
+# --> make pull request
+```
+If the feature branch is behind main, create a new feature branch locally and then git pull origin <branch name> into your local branch. Then you can make changes and push to that remote feature branch (rebasing is preferred). The naming of the local and the remote branch can divert, just be sure that once it is pushed to the origin it has the correct feature branch name.
+
+### Pull request/ Merge into main 
+
+befor merging a feature branch into main branch:
+- is the feature branch rebased on main? The one who contributes sth. should deal with merge conflicts before making a pull request (instead of the person merging the feature)
+- resolving conflicts during a merge --> not easy, because one may not be the best person to decide on a resolution
+- resolving conflicts during a rebase beforehand is easier 
+- testing the pipeline (make integration and run pipeline (see #hacking))?
+- if there are multiple commits belonging together consider to modify commit history 
+- create a pull request ( assign reviewers if needed).Keep in mind that by the time you corrected the requested changes "main" could already be ahead -> rebase
+
+
+### modify commit history (example: squash)
+```
+git rebase -i HEAD~4 # HEAD~4 is an example and shows last 4 commits; -i for interactive
+```
+- git opens editor
+- e.g. put 'squash' instead of 'pick' in front of the last commit, rearrange the order s.t. the last commit gets combined with the commit you want it to
+- git again opens editor
+- modify commit message
+- if commit was already pushed before, do a force push to 'override' it
+```
+git push origin <branch name> --force
+```
+
+
+### take & apply commit from different branch
+If one need just one commit from a different branch to continue developing, cherry-picking it might be useful
+```
+git cherry-pick <commit hash>
+```

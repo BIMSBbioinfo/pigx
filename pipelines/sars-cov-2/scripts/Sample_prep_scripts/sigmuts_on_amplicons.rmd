@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+date: 31.08.21
+output:
+rmarkdown::html_document:
+theme: darkly
+---
+ 
+```{r libraries, message = FALSE}
+library(GenomicRanges)
+library(tidyverse)
+```
+```{r read_primer}
+primer <- read.table ( "../../tests/sample_data/nCoV-2019_NCref.bed", header = FALSE) # TODO provide as input
+# naming bc it has no header but makeGRanges needs them
+names(primer) <- c ( "chr", "start", "end", "name", "name2", "strand" )
+# make proper amplicon names from the 4th column on the bed file
+primer$amplicon <- str_remove_all( primer$name,"_LEFT|_RIGHT|_alt\\d*" ) 
+```
+```{r}
+# group by and take the start from the primer F, the end from primer R, otherwise we have the ranges from primers and not amplicons 
+amplicon <- primer %>% group_by(amplicon) %>% summarise( start=min(start), end=max(end) )
+# we dont care about stands when overlaping so we assing + to all
+amplicon$strand = "+"
+# we need to have the same seqname on primers and mutations to make findoverlap
+amplicon$seqname = primer$chr[1]
+```
+```{r genomic_ranges, message = FALSE}
+#Gr for primers only
+primer_gr <- makeGRangesFromDataFrame ( primer, keep.extra.columns = TRUE )
+#Gr for the whole amplicon, from start of primer F to end of primer R
+amplicon_gr <- makeGRangesFromDataFrame ( amplicon, keep.extra.columns = TRUE )
+```
+```{r}
+# TODO: make the mutation sheet with nt position for ALL mutatation and loop through it
+# mut <- read.csv("../tests/mutation_sheet_detailed.csv", header = TRUE ) # TODO provide as input
+mut <- read.table("../tests/sample_data/signature_mutations/B117_outbreakinfo_mutation_report_data_2021-03-06.tsv", header = TRUE)
+#assigning chr name with "NC_045512.2"
+mut$chr <- primer$chr[1]
+mut$strand = "+"
+```
+```{r}
+mut_gr <- makeGRangesFromDataFrame( mut, keep.extra.columns = TRUE, start.field = "pos", end.field = "pos", strand.field = "strand" )
+#check if mutation in inside the primer region
+mutations_in_primer <- findOverlaps( primer_gr,mut_gr )
+```
+```{r}
+# check in whitch amplicon the mutations are and join the tables
+mutation_in_amplicon <- findOverlaps( mut_gr,amplicon_gr,ignore.strand=TRUE )
+tmp_bed2 <- data.frame( mutation_in_amplicon )
+tmp_bed3 <- data.frame( mut_gr[tmp_bed2$queryHits] )
+tmp_bed4 <- data.frame( amplicon_gr[tmp_bed2$subjectHits] )
+final_mutation_in_amplicon <- merge(tmp_bed3,tmp_bed4,by=0)
+```
+```{r}
+table (final_mutation_in_amplicon$amplicon)
+
+```

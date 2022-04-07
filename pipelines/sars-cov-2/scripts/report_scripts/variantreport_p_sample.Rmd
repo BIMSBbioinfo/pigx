@@ -1,0 +1,638 @@
+---
+title: "SARS-CoV-2 Mutations and Lineage report"
+nav: "Variant report"
+author: "BIMSB Bioinformatics Platform"
+date: '`r format(as.POSIXct(if ("" != Sys.getenv("SOURCE_DATE_EPOCH")) { as.numeric(Sys.getenv("SOURCE_DATE_EPOCH")) } else { Sys.time() }, origin="1970-01-01"), "%Y-%m-%d %H:%M:%S")`'
+params:
+  sample_name: ''
+  sigmut_db: ''
+  output_dir: ''
+  vep_file: ''
+  snv_file: ''
+  sample_sheet: ''
+  mutation_sheet: ''
+  deconvolution_functions: ''
+  logo: ''
+---
+
+<style>
+.dropdown-menu {
+  max-height: 200px;
+  overflow-y: scroll;}
+</style>
+
+<div id="logo" align="top">
+`r knitr::include_graphics(params$logo)`
+</div>
+
+<sample>`r params$sample_name`</sample>
+
+```{r libs, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(knitr)
+library(dplyr)
+library(ggplot2)
+library(DT)
+library(tidyr)
+library(qpcR)
+library(stringr)
+library(magrittr)
+library(base64url)
+```
+
+```{r printInputSettings, echo = FALSE}
+sample_name <- params$sample_name
+sample_sheet <- data.table::fread(params$sample_sheet) 
+mutation_sheet <- params$mutation_sheet 
+location_sigmuts <- params$sigmut_db
+deconvolution_functions <- params$deconvolution_functions
+
+csv_output_dir <- file.path(params$output_dir,'variants')
+mutation_output_dir <- file.path(params$output_dir,'mutations')
+date <- as.character(sample_sheet[name==sample_name]$date)
+location_name <- as.character(sample_sheet[name==sample_name]$location_name)
+coordinates_lat <- as.character(sample_sheet[name==sample_name]$coordinates_lat)
+coordinates_long <- as.character(sample_sheet[name==sample_name]$coordinates_long)
+
+``` 
+
+This lineage analysis report provides an overview over all mutations found in the sample and the deconvoluted lineage abundances. The tables below display the summarized results from single-nucleotide-variant (SNV) calling and their translation into protein mutations. A bar chart visualizes the proportions of lineages that are derived by deconvolution of the set of mutations that is matching the provided list of lineage - characterizing mutations (signature mutations). For detailed method description please consult the [documentation](http://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov-2.html#output-description)
+*Note: Deconvolution results are biased by the number of reads and by the number of signature mutations that were found for this sample.  Check with the QC report to be able to assess how trustworthy the results are.*
+
+```{r function_parse_snv_csv, include = FALSE, warning = F, message = F}
+parse_snv_csv <- function (snvfile,...){ # allele frequency from v-pipe vcf
+  #' input: csv file derived from vpipe vcf when using LoFreq,
+  #' parsing snv-csv file for coverage, frequency and genomic mutation information
+  
+  snvtable <- read.table(snvfile, sep = ',', header = T)
+  freq <- snvtable$AF
+  cov <- snvtable$DP
+  Ref <- snvtable$Ref
+  Pos <- snvtable$Pos
+  Var <- snvtable$Var
+  
+  # concat position value and nucleotides to nucleotide-mutation-notation 
+  snvinfo.df <- data.frame(Ref = Ref,
+                        Pos = Pos, 
+                        Var = Var,
+                        gene_mut = paste0(Ref, Pos, Var),
+                        stringsAsFactors = FALSE)
+  # concat nucleotide-mutation-notation with mutation frequencies and coverage
+  # seperate posistion column will be used for joining data frames
+  snv.info <- cbind(gene_pos=snvinfo.df[,"Pos"], gene_mut=snvinfo.df[,"gene_mut"],freq,cov)
+  
+  return(snv.info)
+}
+
+detectable_deletions <- function (x, colnames) { 
+  #' deletions can span a range of position values indicated by a dash in the prot_mut_loc column.
+  #' In those cases those ranges have to be split up in order to be able to detect single positions. This function should
+  #' be used on a already filtered set of deletions derived from the vep-output. They are then split up and expanded with the 
+  #' number of rows realted to the number of position. The function returns those extended lines as a dataframe which structure
+  #' is matching the df structure which is returned by "get_protein_mut" 
+  
+  # check that the mutations spans multiple nucleotides AND multiple Amino Acids
+  if (x['gene_mut_loc.2'] != x['gene_mut_loc.3'] & str_detect(x['prot_mut_loc'],"-")){
+  
+    # extract columns from input dataframe where the content of the rows won't change, but where rows will be duplicated 
+    # when merging back with the extended deletion rows
+    constant_before <- as.data.frame((cbind(x['gene_mut_loc.1'], x['gene_mut_loc.2'], x['gene_mut_loc.3'])))
+    constant_after <- as.data.frame((cbind(x['Conseq'],x['genes'])))
+  
+    # split the position values denoting a range and make as many new rows as positions spanned with the missing 
+    # position values e.g: 1-3 (1 row) will become 1,2,3 (3 rows)
+    split_prot_pos <- str_split(x['prot_mut_loc'],"-")
+    list_prot_pos <- list()
+    for (i in 1:length(split_prot_pos)){
+      list_prot_pos[[i]] <- seq(as.numeric(split_prot_pos[[i]][1]),as.numeric(split_prot_pos[[i]][2]))
+    }
+    
+    # TODO instead of qpcR bind_cols from dplyer
+    # split groups of reference Amino acids (AAs.1) if necessary, concat the extendet columns
+    extendet <- as.data.frame(qpcR:::cbind.na(as.character(unlist(list_prot_pos)), as.character(unlist(str_split(x['AAs.1'],''))), as.character(str_split(x['AAs.2'],''))))
+    # the dash is the sign for an Amino Acid that was deleted
+    extendet[is.na(extendet)] <- '-' 
+    
+    # join the columns with the extended rows back with the rest of the original dataframe
+    full <- as.data.frame(cbind(constant_before,extendet, constant_after))
+    colnames(full) <- colnames
+    # match the extended rows with added positions values to the Amino acids. If a group of reference Amino acids in AAs.1
+    # is given it's splitted and matched according to their order. The mutation in AAs.2 is only applied to the last position
+    # every other position get's an dash in column AAs.2
+    # e.g.: 1-3 is exended to seperate rows, if htere was ABC in AAs.1 and C in AAs.2, the results would be A1-, B2-, C3C
+    full$prot_mut_loc <- vapply(full$prot_mut_loc, paste, collapse = " ", character(1L))
+    full$AAs.1 <- vapply(full$AAs.1, paste, collapse = " ", character(1L))
+    full$AAs.2 <- vapply(full$AAs.2, paste, collapse = " ", character(1L))
+    
+    return(full)
+  }
+  
+}
+
+get_protein_mut <- function (vepfile){ # parse together from vep output "Protein_position" and "Amino_acid"
+  #' input: []_sarscov2_parsed.txt, parsed vcf from VEP CLI, comma seperated
+  #' this function is for parsing the information about mutation position in the amino acid sequence, the reference aa and
+  #' the alternative mutation into the aa-mutation-notation which is later on comparable to the lists of signature mutations
+  
+  # reading in whole vep txt output
+    vepfile.df <- read.table(vepfile, sep = ',', header = T) # you should include in the vep script to parse out the # 
+      #in the beginning of the line or include that step here. 
+     # parsing snv and protmut location
+  
+    # parsing gene mutation
+    gene_mutation <- data.frame(gene_mut_loc = str_split_fixed(vepfile.df$Location,"[:-]+", n=3),
+                                nucleotides = str_split_fixed(
+                                                str_split_fixed(vepfile.df$Uploaded_variation, 
+                                                                "[_-]+", n=4) [,4], "/", n=2))
+    gene_mutation$gene_mut <- paste0(gene_mutation$nucleotides.1, gene_mutation$gene_mut_loc.2, gene_mutation$nucleotides.2)
+  
+    # parsing snv and protmut location
+    locations <- data.frame(gene_mut_loc = str_split_fixed(vepfile.df$Location,"[:-]+", n=3),
+                            gene_mut = gene_mutation$gene_mut,
+                            prot_mut_loc = vepfile.df$Protein_position, 
+                            AAs = str_split_fixed(vepfile.df$Amino_acids, "/",2), 
+                            Conseq = vepfile.df$Consequence,
+                            genes = vepfile.df$SYMBOL)
+    locations <- dplyr::na_if(locations,'')
+    
+    # delete all rows with no protein position value
+    locations <- distinct(locations %>% filter(!grepl("^-", prot_mut_loc)))
+    # specific B117 mutations: 21990-21993, 21764-21770, maybe also 3675-3677, 69-70 - all there
+  
+    deletions.df <- locations
+    deletions.df <- locations %>%
+                        filter(gene_mut_loc.2 != gene_mut_loc.3 &
+                                Conseq == "inframe_deletion" &
+                                str_detect(deletions.df$prot_mut_loc,"-"))
+    colnames <- colnames(deletions.df)
+    
+    # if there is a deletion the snv would span a couple of positions, if there is not such a spanning region there are no deletions
+    # ! 06/05/2021 Vic - I think, I don't know how robust this is, but it will work for the sig mutations we have so far
+    if ( nrow(locations) >=1 && !(any(is.na(locations[,'gene_mut_loc.3'])))) {
+        deletions <- dplyr::bind_rows(apply(deletions.df,1, detectable_deletions, colnames = colnames))
+        locations <- dplyr::bind_rows(locations,deletions)
+    }
+  
+  # substitute "nothing" at alternative-aa-column (for deletions) with "-"
+  locations$AAs.2[is.na(locations$AAs.2)] <- "-"
+  # clean - characters 
+  locations$AA_mut <- paste(locations$AAs.1,locations$prot_mut_loc,locations$AAs.2, sep = "")
+  locations$AA_mut <- paste(locations$genes, locations$AA_mut, sep = ":")
+  # adding gene information
+  
+  
+  return(locations)
+}
+
+
+dedupeMuts <- function (mut, sigmut.df, dedup.df) {
+        #' this function is a different version of "dedupe" 
+        #' if a signature mutation is shared by multiple variants the mutation-tables
+        #' would have seperate rows for the same mutation. This function is for concatenating all the variants 
+        #' that share that mutation. It requires the original df with all mutations, the deduplicated one 
+        #' (only one row per mutation) and the mutation for which this procedure should be applied
+        #' This function is not yet completely refined and should be improved further
+        # get variant group per mutation
+        duped_muts <- grep (mut, sigmut.df$value)
+        grouped <- sigmut.df$name[duped_muts]
+        groupName <- paste(grouped, collapse = ",")
+      
+        dedup.df$name[dedup.df$value == mut] <- groupName
+        return (dedup.df)
+}  
+```
+
+```{r process_signature_mutations, message=F, warning=F, include = FALSE}
+
+# Read signature data
+sig_mutations.df <- read.csv(mutation_sheet, header = TRUE)
+if ("source" %in% colnames(sig_mutations.df)){
+  sig_mutations.df <- sig_mutations.df[,-(which(names(sig_mutations.df) %in% "source"))]
+}
+sig_mutations.df <- sig_mutations.df %>% 
+                    dplyr::na_if('') %>%
+                    tidyr::pivot_longer(everything(), values_drop_na = TRUE)
+
+vepfile.df <- read.table(params$vep_file, sep = ",", header = T) 
+
+vepfile.df <- na_if(vepfile.df, "-")
+
+# deduplicate dataframe
+# reasoning see description of "dedupeMuts"
+# fixme: I was not sure, how I can include this in my function but should be possible, will come back to it later
+dupes <- duplicated (sig_mutations.df$value, fromLast=TRUE)
+allDupes <- dupes | duplicated (sig_mutations.df$value, fromLast=FALSE)
+
+if (any (allDupes)) {
+    sigmuts_deduped <- sig_mutations.df[!dupes,]
+}
+
+# fixme: I think this should be done with some apply() function? 
+for (mut in sig_mutations.df$value) {
+  sigmuts_deduped <- dedupeMuts(mut, sig_mutations.df, sigmuts_deduped)
+}
+sigmuts_deduped_no_gene <- sigmuts_deduped %>% rowwise() %>% mutate(mutation = str_split(value, ":")[[1]][2]) %>% 
+                           dplyr::select(name, mutation)
+
+```
+
+```{r match_snvs_to_signature_mutations, message=F, warning=F, include = FALSE}
+variant_protein_mut <- get_protein_mut(params$vep_file)
+# match the variant names according to the signature mutations, if there is no signature mutation no name will be given
+# variant characterizing is done by NT mutations
+variant_protein_mut <- dplyr::left_join(variant_protein_mut, sigmuts_deduped_no_gene, by = c('gene_mut'='mutation'))
+```
+
+```{r merge_vep_with_lofreq_info, message=F, warning=F, include = FALSE}
+# get the SNV frequency values and coverage information for the mutations from the LoFreq output
+lofreq.info <- as_data_frame(parse_snv_csv(params$snv_file)) 
+vep.info <- variant_protein_mut
+
+complete.df <- dplyr::left_join(lofreq.info, vep.info, by = c('gene_mut'='gene_mut'), copy = T) %>% 
+               rowwise() %>% mutate(gene_mut_collapsed = paste(genes,gene_mut,sep = ":"))
+
+# filter for mutations which are signature mutations
+match.df <- complete.df %>%
+                    filter(!is.na(name))
+# filter for everything that is not a signature mutation
+nomatch.df <- complete.df %>%
+                        filter(is.na(name))
+```
+
+# Mutation analysis
+
+The following tables combine the results from the variant calling which are SNVs, their frequency and read coverage. They get translated to get the info about the resulting protein mutation and on which gene they are located. If the SNV matches a provided signature mutation it is marked which of the provided lineages they characterize. 
+```{r, message=F, warning=F, echo = FALSE, results = 'asis'}
+cat("\n Table 1: SNVs from sample matching signature mutations")
+```
+```{r sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
+# Display the filtered signature mutations and the variants accordingly in scrollable tables
+
+SignatureTable <-  data.frame("SNV" = match.df$gene_mut, 
+                  "gene" = match.df$genes,
+                  "protein_mutation" = match.df$AA_mut,
+                  "variant" = match.df$name, # TODO: more nice writing of it e.g B1.1.7            
+                  "frequency" = match.df$freq, # TODO: more clear name stating which frequency
+                  "coverage" =  match.df$cov) # TODO: more clear title stating which coverage 
+DT::datatable(SignatureTable,
+              extensions = c('FixedColumns', 'Scroller'),
+              options = list(fixedColumns = TRUE, 
+                         scrollY = 180,
+                         scrollX = TRUE,
+                         scroller = TRUE,
+                         dom = 'Bfrtip'),
+              filter = "bottom")
+```
+```{r nonsig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
+cat("\n Table 2: SNVs from sample not matching any signature mutations")
+```
+```{r non_sig_table, message=F, warning=F, echo = FALSE, results = 'asis'}
+# Display the filtered signature mutations and the variants accordingly in scrollable tables
+
+NoSignatureTable <-  data.frame("SNV" = nomatch.df$gene_mut, 
+                  "gene" = nomatch.df$genes,
+                  "protein_mutation" = nomatch.df$AA_mut,
+                  "frequency" = nomatch.df$freq, # TODO more clear name stating which frequency
+                  "coverage" =  nomatch.df$cov) # TODO more clear title stating which coverage
+DT::datatable(NoSignatureTable,
+              extensions = c('FixedColumns', 'Scroller'),
+              options = list(fixedColumns = TRUE, 
+                         scrollY = 400,
+                         scrollX = TRUE,
+                         scroller = TRUE,
+                         dom = 'Bfrtip'),
+              filter = "bottom")
+```
+
+# Lineage analysis
+Lineage proportion values are derived by deconvolution of the tracked signature mutations. Deconvolution is done by using a robust regression model. It aims to predict the individual contributions of the lineages to the observed mutation frequencies in the bulk wastewater sample. For detailed method description, please consult the [documentation](https://bioinformatics.mdc-berlin.de/pigx_docs/pigx-sars-cov-2.html#output-description)
+
+
+```{r getting_unique_muts_bulk, message=F, warning=F, include = FALSE}
+
+# get  NT mutations only, input for the signature matrix
+mutations.vector <- match.df$gene_mut_collapsed
+# get bulk frequency values, will be input for the deconvolution function
+bulk_freq.vector <- as.numeric(match.df$freq)
+
+# only execute the deconvolution when at least one signature mutation was found
+executeDeconvolution <- length(mutations.vector) > 0
+```
+
+
+```{r creating_signature_matrix, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+source(deconvolution_functions) 
+# create an empty data frame add a column for the Wildtype
+# Wildtype in this case means the reference version of SARS-Cov-2
+# for the deconvolution to work we need the "wild type" frequencies too. The matrix from above got mirrored, 
+# wild type mutations are simulated the following: e.g. T210I (mutation) -> T210T ("wild type")
+msig_simple <- createSigMatrix(mutations.vector, mutation_sheet)
+
+# When multiple columns look like the same, the deconvolution will not work, because the function can't distinguish 
+# between those columns. The workaround for now is to identify those equal columns and merge them into one, returning also
+# a vector with the information about which of the columns were merged. 
+msig_simple <- cbind(muts = mutations.vector, msig_simple)
+msig_transposed <- dedupeDF( msig_simple )
+msig_stable_transposed <- msig_transposed[[1]]
+msig_dedupe_transposed <- msig_transposed[[2]]
+
+dropped_variants <- c()
+# for every variant update the rownames with the group they are in
+for (variant in rownames( msig_stable_transposed[-(rownames(msig_stable_transposed) %in% 'muts'),] )) {
+  grouping_res <- dedupeVariants(variant, msig_stable_transposed, msig_dedupe_transposed)
+  msig_dedupe_transposed <- grouping_res[[1]]
+  dropped_variants <- c(dropped_variants, grouping_res[[2]])
+}
+# transpose the data frame back to column format for additional processing
+if ( length(msig_dedupe_transposed) >= 1){
+    # the 1 get's rid of the additional first row which is an transposing artifact
+    msig_simple_unique <- as.data.frame(t(msig_dedupe_transposed[,-1])) %>%
+                            mutate(across(!c("muts"), as.numeric))
+}
+# clean the vector to know which variants has to be add with value 0 after deconvolution
+dropped_variants <- unique(dropped_variants)
+dropped_variants <- dropped_variants[!is.na(dropped_variants)]
+```
+```{r calculate_sigmat_weigths, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+
+deconv_lineages <- colnames(msig_simple_unique[,-which( names(msig_simple_unique) %in% c("muts", "WT") )])
+
+# create list of proportion values that will be used as weigths
+sigmut_proportion_weights <- list()
+for (lineage in deconv_lineages){
+    if ( grepl(",", lineage)){
+        group <- unlist(str_split(lineage, ","))
+        avrg <- sum(sig_mutations.df$name %in% group) / length(group)
+        value <- sum(msig_simple_unique[lineage]) / avrg
+    } else{
+        value <- sum(msig_simple_unique[lineage]) / sum(sig_mutations.df$name == lineage)
+    }
+    sigmut_proportion_weights[lineage] <- value
+}
+sigmut_proportion_weights <- as_tibble(sigmut_proportion_weights)
+
+# applying weights on signature matrix
+# fixme: there should be a way to do this vectorized
+msig_simple_unique_weighted <- msig_simple_unique
+for (lineage in deconv_lineages){
+    msig_simple_unique_weighted[lineage] <- msig_simple_unique_weighted[lineage] / as.numeric(sigmut_proportion_weights[lineage])
+}
+
+```
+```{r simulating_WT_mutations, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+
+# construct additional WT mutations that are not weighted
+
+msig_stable_all <- simulateWT( mutations.vector, bulk_freq.vector, 
+                               msig_simple_unique_weighted[,-which(names(msig_simple_unique_weighted) == "muts")],
+                                match.df$cov)
+msig_stable_unique <- msig_stable_all[[1]]
+
+```
+
+```{r deconvolution, message=F, warning=F, include = FALSE, eval = executeDeconvolution}
+source(deconvolution_functions)
+
+# this hack is necessary because otherwise the deconvolution will throw: Error in x * wts: non-numeric argument to binary operator
+# also see: https://stackoverflow.com/questions/37707060/converting-data-frame-column-from-character-to-numeric/37707117
+sig <- apply(msig_stable_unique[,-which(names(msig_stable_unique) %in% 'muts')], 2 , function(x) {
+              as.numeric(as.character(x)) })
+
+bulk_all <- as.numeric(msig_stable_all[[2]])
+
+variant_abundance <- deconv(bulk_all,sig)
+
+```
+`r if (executeDeconvolution){"The following bar plot shows the proportion of each lineage in the sample as predicted by the deconvolution model. For the case of multiple lineages being indistinguishable because of shared signature mutations, the deconvolution result for this group is distributed equally across each grouped lineage and they all get the same value. 
+"}` 
+
+```{r plot, message=F, warning=F, echo = FALSE, eval = executeDeconvolution}
+
+Variant_colors <- c("#8a3874", "#4d3da1", "#62c742", "#13317a", "#86e5a3", "#6f69e5", "#4cdab2", "#999ce4", "#2ce6f3",
+"#6638c6", "#005f29", "#5d73cc", "#616524", "#a8a041", "#e9f600", "#3eaca8", "#62a273", "#4ea5d0", "#655c95", "#67a04e")
+# TODO this shoul be put into a seperate color palette function in a seperate file
+
+# work in progress...only to show how it theoretically can look like in the report
+variants <- colnames(msig_stable_unique[,-1])
+df <- data.frame(rbind(variant_abundance))
+
+# XXX: Replace the long column name consisting of concatenated variant
+# names with "others" and put the variant names in a label.
+# TODO: This should be done much earlier when building the data frame.
+
+condensed_variants_names <-
+    unlist( lapply(variants, function (x) { if (str_detect(x, ".*,.*,.*")) { "others" } else { x }}) )
+
+colnames(df) <- condensed_variants_names
+
+variants_labels <-
+    unlist( lapply(variants, function (x) str_replace_all(x, ",", "\n")) )
+
+df <- df %>% 
+    tidyr::pivot_longer( everything() )
+
+# Handling of ambigues cases and grouped variants
+
+# case 1: add dropped variants again with value 0 in case all of the other variants add up to 1
+if ( round( sum(df$value),1) == 1 ){
+  for ( variant in dropped_variants ){
+    df <- rbind( df, c(variant, 0) )
+  }
+}
+
+# case 2: in case "others" == 0, both variants can be split up again and being given the value 0 OR
+# case 3: in case multiple vars can really not be distinguished from each other they will be distributed normaly
+if ( any(str_detect(variants, ",")) ) {
+    grouped_rows <- which(str_detect(variants, ","))
+    for ( row in grouped_rows ){
+       if ( df[row,"value"] == 0 ){ 
+            grouped_variants <- unlist( str_split(df[row,"name"], ",") )
+            for ( variant in grouped_variants ){
+                # add new rows, one for each variant
+                df <- rbind(df, c(variant, 0))
+
+            }
+       } else if (df[row,"value"] != 0){
+            grouped_variants <- unlist( str_split(df[row,"name"], ",") )
+            # normal distribution, devide deconv value by number of grouped variants
+            distributed_freq_value <- as.numeric( as.numeric(df[row,"value"]) / length(grouped_variants))
+            for ( variant in grouped_variants ){
+                # add new rows, one for each variant
+                df <- rbind(df, c(variant, distributed_freq_value))
+            }
+         }
+      # drop grouped row
+      df <- df[-row,]
+    }
+}
+
+df <- transform(df, value = as.numeric(value))
+font_family <- "DejaVu Sans"
+
+ggplot(data = df, aes(name,value, 
+                       fill = name)) +
+        geom_bar(stat="identity") +
+        labs(title = "Proportion of variants of concern inferred from deconvolution",
+             x = "Variants",
+             y = "Percentage") +
+        scale_x_discrete(limits = df$name) +
+        scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.1),
+                           labels = scales::percent_format(accuracy = 1)) +
+        scale_colour_manual(values=Variant_colors) + 
+        # geom_text ignores the theme's default font family, so we
+        # need to provide it here.
+        geom_text(aes(family = font_family,
+                      label = sprintf("%0.3f", round(value, digits = 3))),
+                      position=position_dodge(width=0.9), 
+                      vjust=-0.25) + 
+     scale_fill_discrete(name = "Variants",
+                         breaks = df$name,
+                         labels = df$name) +
+     theme_gray(base_family = font_family)
+```
+
+# Analysis Parameter
+
+## LoFreq filter
+| LoFreq is used with default filter settings:       |                   |
+|:---------------------------------------------------|:------------------|
+| minimum coverage                                   | 10                |
+| Strand-Bias Multiple Testing Correction, fdr corr. | pvalue > 0.001000 |
+| Minimum SNV Quality (Phred)                        | 63                |
+| Minimum Indel Quality (Phred)                      | 47                |
+
+## VEP settings  
+* Species: SARS-CoV-2  
+* Assembly: ASM985889v3  
+
+|                                                   |        |
+|:--------------------------------------------------|:-------|
+| Matched Annotations from NCBI and EMBL-EBI (MANE) | yes    |
+| Restrict results by severity of consequence       | no     |
+| upstream/downstream distance                      | 5000bp |
+
+
+# Raw data 
+
+```{r download_raw, include = F}
+# make raw/input data downloadable
+snvs <- readLines(params$snv_file) %>% paste0(collapse="\n") %>% base64_urlencode()
+vep <- readLines(params$vep_file) %>% paste0(collapse="\n") %>% base64_urlencode()
+```
+Called SNVs:  
+[Download SNVs.csv](`r sprintf('data:text/csv;base64,%s', snvs)`)
+
+Variant effect prediction (*Ensemble VEP output*):  
+[Download VEP_out.csv](`r sprintf('data:text/csv;base64,%s', vep)`)
+
+```{r csv_output_variant_plot, include = F, eval = executeDeconvolution}
+# prepare processed variant values to output them as a csv which will be used for the plots in index.rmd
+# those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate 
+# file (and maybe rule)
+# get all possible variants
+all_variants <- colnames (msig_simple[, -which( names(msig_simple) %in% "muts" )])
+output_variants <- file.path(csv_output_dir, "data_variant_plot.csv")
+# 1. write dataframe with this information here
+output_variant_plot <- data.frame (samplename = character(),
+                                   dates = character(),
+                                   location_name = character(),
+                                   coordinates_lat = character(),
+                                   coordinates_long = character())
+# add columns for all possible variants to the dataframe
+for (variant in all_variants) {
+  output_variant_plot[,variant] <- numeric()
+}
+meta_data <- c (samplename = sample_name,
+                dates = date,
+                location_name = location_name,
+                coordinates_lat = coordinates_lat,
+                coordinates_long = coordinates_long)
+
+output_variant_plot <- bind_rows(output_variant_plot, meta_data)
+
+# get rownumber for current sample
+sample_row <- which(grepl(sample_name, output_variant_plot$samplename))
+
+# write mutation frequency values to df
+for (i in all_variants){
+  if (i %in% df$name){
+    # check if variant already has a column
+    if (i %in% colnames(output_variant_plot)) {
+        output_variant_plot[sample_row,][i] <- df$value[df$name == i]
+        output_variant_plot <- output_variant_plot %>% mutate(others = 1-rowSums(across(all_of(all_variants)), na.rm = TRUE))
+}
+  }
+}
+
+# 2. check if file exists already
+if (file.exists (output_variants)) {
+  previous_df <- read.table (output_variants, 
+                             sep = "\t", header = TRUE, colClasses = "character", check.names = FALSE)
+  # convert numeric values to character
+  output_variant_plot <- as.data.frame(lapply(output_variant_plot, as.character), check.names = FALSE)
+  # merge with adding cols and rows
+  output_variant_plot <- full_join(previous_df, output_variant_plot, by = colnames(previous_df), copy = TRUE)
+}
+
+# 3. write to output file
+   write.table(output_variant_plot, output_variants, sep = "\t",
+            na = "NA", row.names = FALSE, quote = FALSE)
+
+```
+```{r csv_output_mutation_plot, message = FALSE, warning = FALSE, include = FALSE}
+# prepare processed mutation values to output them as a csv which will be used for the plots in index.rmd
+# those outputs are not offically declared as outputs which can lead to issues - that part should be handled by a seperate
+# file (and maybe rule)
+# get all possible mutations
+
+# one aa mutation can have different codon mutations reported with different freqs- for the summary table they have to be summed up
+# (process see line 1872 of documentation)
+complete.df <- complete.df  %>%
+  group_by(across(c(-freq,-gene_mut, -gene_mut_collapsed, AA_mut))) %>%
+  summarise(freq = sum(as.numeric(freq)), gene_mut = paste(gene_mut, collapse = ",")) %>%
+  rowwise() %>%
+  mutate(AA_mut = replace(AA_mut,is.na(AA_mut), '\\:\\')) %>%
+  # 211006 this exclusion is necessary because this mutation has a wrong entry in VEP which gives two AA_muts instead of probably 1 deletion
+  filter(!(gene_mut %in% "G13477A")) %>%
+  ungroup()
+
+# report the gene, translated_AA_mut and NT mut accordingly
+# easier to spot translation inconsitentcies that way
+all_mutations <- paste(complete.df$AA_mut[!is.na(complete.df$AA_mut)],complete.df$gene_mut,sep = "::")
+output_mutations <- file.path(mutation_output_dir, paste0(sample_name, "_mutations.csv"))
+
+# 1. write dataframe with this information here
+output_mutation_frame <- data.frame (samplename = character(),
+                                   dates = character(),
+                                   location_name = character(),
+                                   coordinates_lat = character(),
+                                   coordinates_long = character())
+# add columns for all possible mutations to the dataframe
+for (mutation in all_mutations) {
+  output_mutation_frame[,mutation] <- numeric()
+}
+meta_data <- c (samplename = sample_name,
+                dates = date,
+                location_name = location_name,
+                coordinates_lat = coordinates_lat,
+                coordinates_long = coordinates_long)
+
+output_mutation_frame <- bind_rows(output_mutation_frame, meta_data)
+
+# write mutation frequency values to df
+for (i in all_mutations){
+  i_NT <- str_split(i,"::")[[1]][2]
+  if (i_NT %in% complete.df$gene_mut ){ # split gene name to match with AA mut
+    # check if variant already has a column
+    if ( i %in% colnames(output_mutation_frame)) {
+        output_mutation_frame[,i] <- complete.df$freq[ which(complete.df$gene_mut == i_NT)]
+}}}
+colnames( output_mutation_frame ) <- as.character( colnames( output_mutation_frame ))
+output_mutation_frame <- output_mutation_frame %>% dplyr::select( -contains("NA" , ignore.case = FALSE))
+# convert numeric values to character
+output_mutation_frame <- as.data.frame( lapply( output_mutation_frame, as.character ), check.names = FALSE)
+
+# 3. write to output file
+write.table(output_mutation_frame, output_mutations, sep = "\t",
+        row.names = FALSE, quote = FALSE)
+```

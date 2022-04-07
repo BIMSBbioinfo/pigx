@@ -1,0 +1,9 @@
+mutation	gene	ref_aa	alt_aa	codon_num	type	source
+"S:D614G"	"S"	"D"	"G"	614	"substitution"	
+"ORF1a:T265I"	"ORF1a"	"T"	"I"	265	"substitution"	
+"ORF1b:D1183Y"	"ORF1b"	"D"	"Y"	1183	"substitution"	
+"N:T205I"	"N"	"T"	"I"	205	"substitution"	
+"S:L452R"	"S"	"L"	"R"	452	"substitution"	
+"ORF1a:S3158T"	"ORF1a"	"S"	"T"	3158	"substitution"	
+"ORF1b:P976L"	"ORF1b"	"P"	"L"	976	"substitution"	
+"ORF3a:Q57H"	"ORF3a"	"Q"	"H"	57	"substitution"	
