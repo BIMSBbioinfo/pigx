@@ -1,0 +1,20 @@
+[submodule "bsseq--pigx-common"]
+	path = pipelines/bsseq/pigx-common
+	url = https://github.com/BIMSBbioinfo/pigx-common/
+	branch = main
+[submodule "rnaseq--pigx-common"]
+	path = pipelines/rnaseq/pigx-common
+	url = https://github.com/BIMSBbioinfo/pigx-common/
+	branch = main
+[submodule "chipseq--pigx-common"]
+	path = pipelines/chipseq/pigx-common
+	url = https://github.com/BIMSBbioinfo/pigx-common/
+	branch = main
+[submodule "scrnaseq--pigx-common"]
+	path = pipelines/scrnaseq/pigx-common
+	url = https://github.com/BIMSBbioinfo/pigx-common/
+	branch = main
+[submodule "sars-cov-2--pigx-common"]
+	path = pipelines/sars-cov-2/pigx-common
+	url = https://github.com/BIMSBbioinfo/pigx-common/
+	branch = main
