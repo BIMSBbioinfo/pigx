@@ -75,6 +75,18 @@ if test "x$enable_scrnaseq" != "xno"; then
   pipelines="$pipelines scrnaseq"
 fi
 
+AC_ARG_ENABLE([sars-cov-2],
+   AS_HELP_STRING([--disable-sars-cov-2], [Do not build the SARS-CoV-2 pipeline.]))
+if test "x$enable_sars-cov-2" != "xno"; then
+  if test "x$enable_bundle" = "xyes"; then
+    AC_CONFIG_SUBDIRS([pipelines/sars-cov-2])
+  else
+    AC_PATH_PROG([PIGX_SARS_COV_2], [pigx-sars-cov-2])
+  fi
+  pipelines="$pipelines sars-cov-2"
+fi
+
+
 AC_SUBST([pipelines], [$pipelines])
 AC_CONFIG_FILES([pigx], [chmod +x pigx])
 AC_CONFIG_FILES([Makefile])

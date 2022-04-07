@@ -81,11 +81,12 @@ if os.getenv('PIGX_PIPELINES_PATH'):
     pipeline_script = shutil.which("pigx-" + args.pipeline, path=os.getenv('PIGX_PIPELINES_PATH'))
 else:
     scripts = {
-        "bsseq"   : "@PIGX_BSSEQ@",
-        "rnaseq"  : "@PIGX_RNASEQ@",
-        "chipseq" : "@PIGX_CHIPSEQ@",
-        "scrnaseq": "@PIGX_SCRNASEQ@",
-        "crispr"  : "@PIGX_CRISPR@"
+        "bsseq"     : "@PIGX_BSSEQ@",
+        "rnaseq"    : "@PIGX_RNASEQ@",
+        "chipseq"   : "@PIGX_CHIPSEQ@",
+        "scrnaseq"  : "@PIGX_SCRNASEQ@",
+        "sars-cov-2": "@PIGX_SARS_COV_2@",
+        "crispr"    : "@PIGX_CRISPR@"
     }
     pipeline_script = scripts.get(args.pipeline)
 
