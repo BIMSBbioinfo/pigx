@@ -94,3 +94,7 @@ Your contributions are welcome!
 Consider [subscribing here to infrequent announcements regarding
 PiGx](https://groups.google.com/forum/#!forum/pigx-announcements/join),
 such as release announcements.
+
+[![de.NBI logo](images/denbi-logo-color.svg)](https://www.surveymonkey.de/r/denbi-service?sc=rbc&tool=pigx)
+
+**Your feedback matters!** Take our quick [user satisfaction survey](https://www.surveymonkey.de/r/denbi-service?sc=rbc&tool=pigx).
