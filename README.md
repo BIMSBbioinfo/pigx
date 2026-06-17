@@ -90,6 +90,12 @@ You can enable or disable each of the pipelines with the
 `scrnaseq`, `chipseq`, and `crispr`.  For more options run
 `./configure --help`.
 
+# PiGx is a de.NBI service
+
+<img src="website/static/images/denbi-logo-color.svg" alt="de.NBI logo" width="220">
+
+This software is provided as a service by the German Network for Bioinformatics Infrastructure (de.NBI).
+Your feedback matters! Please take our quick [user satisfaction survey](https://www.surveymonkey.de/r/denbi-service?sc=rbc&tool=pigx).
 
 # License
 
