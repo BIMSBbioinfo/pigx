@@ -203,6 +203,15 @@ div#page {
       margin-left: 0.8rem;
       -moz-border-radius: 15px;
       border-radius: 15px; }
+    div#page p img[alt="de.NBI logo"] {
+      float: left;
+      width: 7rem;
+      height: auto;
+      margin-left: 0;
+      margin-right: 1rem;
+      margin-bottom: 1rem;
+      -moz-border-radius: 0;
+      border-radius: 0; }
   div#page p.back {
     margin-top: 1.5rem;
     width: 50%; }
@@ -321,6 +330,7 @@ li:before {
 }
 
 footer {
+    clear: both;
     text-align: center;
     padding-top: 1rem;
     padding-bottom: 3rem; }
